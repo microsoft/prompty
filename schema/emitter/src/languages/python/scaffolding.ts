@@ -161,6 +161,10 @@ export function emitPythonInit(baseTypes: TypeNode[], types: TypeNode[]): string
   for (const type of baseTypes) {
     if (type.childTypes.length > 0) {
       const names = [type.typeName.name, ...type.childTypes.map(c => c.typeName.name)];
+      // Also import the <Name>Helpers Protocol if this concrete type has @method stubs.
+      if (!type.isProtocol && type.methods.length > 0) {
+        names.push(`${type.typeName.name}Helpers`);
+      }
       lines.push('');
       lines.push(`from ._${type.typeName.name} import (`);
       for (const name of names) {
@@ -168,8 +172,20 @@ export function emitPythonInit(baseTypes: TypeNode[], types: TypeNode[]): string
       }
       lines.push(')');
     } else {
+      const names = [type.typeName.name];
+      if (!type.isProtocol && type.methods.length > 0) {
+        names.push(`${type.typeName.name}Helpers`);
+      }
       lines.push('');
-      lines.push(`from ._${type.typeName.name} import ${type.typeName.name}`);
+      if (names.length === 1) {
+        lines.push(`from ._${type.typeName.name} import ${type.typeName.name}`);
+      } else {
+        lines.push(`from ._${type.typeName.name} import (`);
+        for (const name of names) {
+          lines.push(`  ${name},`);
+        }
+        lines.push(')');
+      }
     }
   }
 
@@ -179,6 +195,9 @@ export function emitPythonInit(baseTypes: TypeNode[], types: TypeNode[]): string
   lines.push('    "SaveContext",');
   for (const type of types) {
     lines.push(`    "${type.typeName.name}",`);
+    if (!type.isProtocol && type.methods.length > 0) {
+      lines.push(`    "${type.typeName.name}Helpers",`);
+    }
   }
   lines.push(']');
 

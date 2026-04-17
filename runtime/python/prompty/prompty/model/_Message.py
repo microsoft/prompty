@@ -165,6 +165,7 @@ class MessageHelpers(Protocol):
         """Return plain string if all parts are text, else a list of content part dicts for wire serialization"""
         ...
 
+    @property
     def text(self) -> str:
         """Concatenate all TextPart values joined by newline"""
         ...

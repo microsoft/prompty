@@ -253,13 +253,46 @@ function emitMethodHelpersProtocol(type: TypeDecl, lines: string[]): void {
       .join(", ");
     const paramList = params ? `, ${params}` : "";
     const ret = protocolType(m.returns);
+    const snakeName = toSnakeCase(m.name);
+    // Zero-param, non-verb methods are emitted as @property — idiomatic Python
+    // for accessor-style helpers (matches the C# emitter's heuristic).
+    const isProperty = Object.keys(m.params).length === 0 && !isMethodStyle(m.name);
     lines.push("");
-    lines.push(`    def ${toSnakeCase(m.name)}(self${paramList}) -> ${ret}:`);
+    if (isProperty) {
+      lines.push("    @property");
+    }
+    lines.push(`    def ${snakeName}(self${paramList}) -> ${ret}:`);
     if (m.description) {
       lines.push(`        """${m.description}"""`);
     }
     lines.push("        ...");
   }
+}
+
+/**
+ * Verbs that indicate an action — zero-param @methods whose name starts with
+ * one of these are emitted as regular Python methods. Everything else becomes
+ * a ``@property``. Mirrors the C# emitter's heuristic so both runtimes expose
+ * ``message.text`` as a property and ``message.to_text_content()`` as a method.
+ */
+const PY_METHOD_VERB_PREFIXES = [
+  "to", "get", "set", "fetch", "compute", "make", "build", "create",
+  "load", "save", "convert", "parse", "format", "render", "serialize",
+  "deserialize", "find", "calculate", "invoke", "execute", "run",
+];
+
+function isMethodStyle(name: string): boolean {
+  const lower = name.toLowerCase();
+  for (const prefix of PY_METHOD_VERB_PREFIXES) {
+    if (lower === prefix) return true;
+    if (lower.startsWith(prefix) && name.length > prefix.length) {
+      const next = name[prefix.length];
+      if (next === next.toUpperCase() && next !== next.toLowerCase()) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 // ============================================================================

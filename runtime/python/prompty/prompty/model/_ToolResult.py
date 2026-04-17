@@ -140,6 +140,7 @@ class ToolResultHelpers(Protocol):
     or by calling isinstance(instance, ToolResultHelpers) at runtime.
     """
 
+    @property
     def text(self) -> str:
         """Concatenate all TextPart values joined by newline"""
         ...

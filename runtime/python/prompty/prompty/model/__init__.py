@@ -30,7 +30,10 @@ from ._Executor import Executor
 from ._FormatConfig import FormatConfig
 from ._GuardrailResult import GuardrailResult
 from ._McpApprovalMode import McpApprovalMode
-from ._Message import Message
+from ._Message import (
+    Message,
+    MessageHelpers,
+)
 from ._MessagesUpdatedPayload import MessagesUpdatedPayload
 from ._Model import Model
 from ._ModelInfo import ModelInfo
@@ -70,7 +73,10 @@ from ._ToolCall import ToolCall
 from ._ToolCallStartPayload import ToolCallStartPayload
 from ._ToolContext import ToolContext
 from ._ToolDispatchResult import ToolDispatchResult
-from ._ToolResult import ToolResult
+from ._ToolResult import (
+    ToolResult,
+    ToolResultHelpers,
+)
 from ._ToolResultPayload import ToolResultPayload
 from ._TurnOptions import TurnOptions
 
@@ -107,8 +113,10 @@ __all__ = [
     "FilePart",
     "AudioPart",
     "Message",
+    "MessageHelpers",
     "ToolContext",
     "ToolResult",
+    "ToolResultHelpers",
     "ToolDispatchResult",
     "ToolCall",
     "GuardrailResult",
