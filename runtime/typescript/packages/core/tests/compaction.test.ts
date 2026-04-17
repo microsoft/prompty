@@ -19,8 +19,8 @@ import { Prompty } from "../src/model/prompty.js";
 describe("formatDroppedMessages", () => {
   it("formats user and assistant messages as readable text", () => {
     const msgs = [
-      new Message("user", [text("What is AI?")]),
-      new Message("assistant", [text("AI is artificial intelligence.")]),
+      new Message({ role: "user", parts: [text("What is AI?")] }),
+      new Message({ role: "assistant", parts: [text("AI is artificial intelligence.")] }),
     ];
     const result = formatDroppedMessages(msgs);
     expect(result).toContain("[user]: What is AI?");
@@ -29,11 +29,11 @@ describe("formatDroppedMessages", () => {
 
   it("includes tool calls as Called: name(args)", () => {
     const msgs = [
-      new Message("assistant", [text("Let me check.")], {
+      new Message({ role: "assistant", parts: [text("Let me check.")], metadata: {
         tool_calls: [
           { name: "get_weather", arguments: '{"city":"Seattle"}' },
         ],
-      }),
+      } }),
     ];
     const result = formatDroppedMessages(msgs);
     expect(result).toContain("[assistant]: Let me check.");
@@ -42,11 +42,11 @@ describe("formatDroppedMessages", () => {
 
   it("handles function-style tool calls", () => {
     const msgs = [
-      new Message("assistant", [text("Checking...")], {
+      new Message({ role: "assistant", parts: [text("Checking...")], metadata: {
         tool_calls: [
           { function: { name: "lookup", arguments: '{"q":"test"}' } },
         ],
-      }),
+      } }),
     ];
     const result = formatDroppedMessages(msgs);
     expect(result).toContain('Called: lookup({"q":"test"})');
@@ -58,9 +58,9 @@ describe("formatDroppedMessages", () => {
 
   it("skips messages with empty text but includes tool calls", () => {
     const msgs = [
-      new Message("assistant", [], {
+      new Message({ role: "assistant", parts: [], metadata: {
         tool_calls: [{ name: "fn", arguments: "" }],
-      }),
+      } }),
     ];
     const result = formatDroppedMessages(msgs);
     expect(result).toBe("Called: fn()");
@@ -82,8 +82,8 @@ class StubParser implements Parser {
   parse(_agent: Prompty, rendered: string): Message[] {
     // Simple two-message output
     return [
-      new Message("system", [text("You are helpful.")]),
-      new Message("user", [text("Hello")]),
+      new Message({ role: "system", parts: [text("You are helpful.")] }),
+      new Message({ role: "user", parts: [text("Hello")] }),
     ];
   }
 }
@@ -139,12 +139,12 @@ describe("Context Compaction", () => {
   it("function compaction replaces default summary", async () => {
     // Build a parser that returns many messages to exceed the budget
     const longMessages = [
-      new Message("system", [text("System prompt")]),
-      new Message("user", [text("q1 " + "x".repeat(500))]),
-      new Message("assistant", [text("a1 " + "x".repeat(500))]),
-      new Message("user", [text("q2 " + "x".repeat(500))]),
-      new Message("assistant", [text("a2 " + "x".repeat(500))]),
-      new Message("user", [text("Final question")]),
+      new Message({ role: "system", parts: [text("System prompt")] }),
+      new Message({ role: "user", parts: [text("q1 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a1 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("q2 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a2 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("Final question")] }),
     ];
     registerParser("compact-stub", {
       parse: () => [...longMessages],
@@ -169,12 +169,12 @@ describe("Context Compaction", () => {
 
   it("async function compaction works", async () => {
     const longMessages = [
-      new Message("system", [text("System prompt")]),
-      new Message("user", [text("q1 " + "x".repeat(500))]),
-      new Message("assistant", [text("a1 " + "x".repeat(500))]),
-      new Message("user", [text("q2 " + "x".repeat(500))]),
-      new Message("assistant", [text("a2 " + "x".repeat(500))]),
-      new Message("user", [text("Final question")]),
+      new Message({ role: "system", parts: [text("System prompt")] }),
+      new Message({ role: "user", parts: [text("q1 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a1 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("q2 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a2 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("Final question")] }),
     ];
     registerParser("compact-stub", {
       parse: () => [...longMessages],
@@ -200,12 +200,12 @@ describe("Context Compaction", () => {
 
   it("compaction failure preserves default summary", async () => {
     const longMessages = [
-      new Message("system", [text("System prompt")]),
-      new Message("user", [text("q1 " + "x".repeat(500))]),
-      new Message("assistant", [text("a1 " + "x".repeat(500))]),
-      new Message("user", [text("q2 " + "x".repeat(500))]),
-      new Message("assistant", [text("a2 " + "x".repeat(500))]),
-      new Message("user", [text("Final question")]),
+      new Message({ role: "system", parts: [text("System prompt")] }),
+      new Message({ role: "user", parts: [text("q1 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a1 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("q2 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a2 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("Final question")] }),
     ];
     registerParser("compact-stub", {
       parse: () => [...longMessages],
@@ -241,12 +241,12 @@ describe("Context Compaction", () => {
 
   it("compaction events are emitted on success", async () => {
     const longMessages = [
-      new Message("system", [text("System prompt")]),
-      new Message("user", [text("q1 " + "x".repeat(500))]),
-      new Message("assistant", [text("a1 " + "x".repeat(500))]),
-      new Message("user", [text("q2 " + "x".repeat(500))]),
-      new Message("assistant", [text("a2 " + "x".repeat(500))]),
-      new Message("user", [text("Final question")]),
+      new Message({ role: "system", parts: [text("System prompt")] }),
+      new Message({ role: "user", parts: [text("q1 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a1 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("q2 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a2 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("Final question")] }),
     ];
     registerParser("compact-stub", {
       parse: () => [...longMessages],
@@ -273,12 +273,12 @@ describe("Context Compaction", () => {
 
   it("no compaction when compaction option is undefined", async () => {
     const longMessages = [
-      new Message("system", [text("System prompt")]),
-      new Message("user", [text("q1 " + "x".repeat(500))]),
-      new Message("assistant", [text("a1 " + "x".repeat(500))]),
-      new Message("user", [text("q2 " + "x".repeat(500))]),
-      new Message("assistant", [text("a2 " + "x".repeat(500))]),
-      new Message("user", [text("Final question")]),
+      new Message({ role: "system", parts: [text("System prompt")] }),
+      new Message({ role: "user", parts: [text("q1 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a1 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("q2 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a2 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("Final question")] }),
     ];
     registerParser("compact-stub", {
       parse: () => [...longMessages],
@@ -307,12 +307,12 @@ describe("Context Compaction", () => {
 
   it("empty compaction result emits compaction_failed", async () => {
     const longMessages = [
-      new Message("system", [text("System prompt")]),
-      new Message("user", [text("q1 " + "x".repeat(500))]),
-      new Message("assistant", [text("a1 " + "x".repeat(500))]),
-      new Message("user", [text("q2 " + "x".repeat(500))]),
-      new Message("assistant", [text("a2 " + "x".repeat(500))]),
-      new Message("user", [text("Final question")]),
+      new Message({ role: "system", parts: [text("System prompt")] }),
+      new Message({ role: "user", parts: [text("q1 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a1 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("q2 " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("a2 " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("Final question")] }),
     ];
     registerParser("compact-stub", {
       parse: () => [...longMessages],

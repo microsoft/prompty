@@ -82,14 +82,14 @@ describe("CancelledError", () => {
 
 describe("estimateChars", () => {
   it("counts text parts correctly", () => {
-    const msgs = [new Message("user", [text("Hello")])];
+    const msgs = [new Message({ role: "user", parts: [text("Hello")] })];
     // "user".length (4) + 4 overhead + "Hello".length (5) = 13
     expect(estimateChars(msgs)).toBe(13);
   });
 
   it("adds 200 for non-text parts", () => {
     const msgs = [
-      new Message("user", [{ kind: "image", source: "data:image/png;base64,abc" }]),
+      new Message({ role: "user", parts: [{ kind: "image", source: "data:image/png;base64,abc" }] }),
     ];
     // "user".length (4) + 4 overhead + 200 (non-text) = 208
     expect(estimateChars(msgs)).toBe(208);
@@ -97,8 +97,8 @@ describe("estimateChars", () => {
 
   it("includes role length + 4 overhead per message", () => {
     const msgs = [
-      new Message("system", [text("Hi")]),
-      new Message("assistant", [text("OK")]),
+      new Message({ role: "system", parts: [text("Hi")] }),
+      new Message({ role: "assistant", parts: [text("OK")] }),
     ];
     // "system"(6) + 4 + "Hi"(2) = 12
     // "assistant"(9) + 4 + "OK"(2) = 15
@@ -107,7 +107,7 @@ describe("estimateChars", () => {
 
   it("counts tool_calls metadata", () => {
     const tc = [{ name: "fn", arguments: "{}" }];
-    const msgs = [new Message("assistant", [text("x")], { tool_calls: tc })];
+    const msgs = [new Message({ role: "assistant", parts: [text("x")], metadata: { tool_calls: tc } })];
     const base = "assistant".length + 4 + 1; // role + overhead + "x"
     const tcLen = JSON.stringify(tc).length;
     expect(estimateChars(msgs)).toBe(base + tcLen);
@@ -117,8 +117,8 @@ describe("estimateChars", () => {
 describe("summarizeDropped", () => {
   it("creates summary from user/assistant messages", () => {
     const msgs = [
-      new Message("user", [text("What is AI?")]),
-      new Message("assistant", [text("AI is artificial intelligence.")]),
+      new Message({ role: "user", parts: [text("What is AI?")] }),
+      new Message({ role: "assistant", parts: [text("AI is artificial intelligence.")] }),
     ];
     const result = summarizeDropped(msgs);
     expect(result).toContain("[Context summary:");
@@ -133,9 +133,9 @@ describe("summarizeDropped", () => {
 
   it("includes tool call names in summary", () => {
     const msgs = [
-      new Message("assistant", [text("Let me check.")], {
+      new Message({ role: "assistant", parts: [text("Let me check.")], metadata: {
         tool_calls: [{ name: "get_weather" }],
-      }),
+      } }),
     ];
     const result = summarizeDropped(msgs);
     expect(result).toContain("get_weather");
@@ -144,7 +144,7 @@ describe("summarizeDropped", () => {
 
 describe("trimToContextWindow", () => {
   it("returns [0, []] when within budget", () => {
-    const msgs = [new Message("user", [text("Hi")])];
+    const msgs = [new Message({ role: "user", parts: [text("Hi")] })];
     const [count, dropped] = trimToContextWindow(msgs, 100_000);
     expect(count).toBe(0);
     expect(dropped).toEqual([]);
@@ -152,11 +152,11 @@ describe("trimToContextWindow", () => {
 
   it("drops oldest non-system messages when over budget", () => {
     const msgs = [
-      new Message("system", [text("You are helpful.")]),
-      new Message("user", [text("First question " + "x".repeat(500))]),
-      new Message("assistant", [text("First answer " + "x".repeat(500))]),
-      new Message("user", [text("Second question")]),
-      new Message("assistant", [text("Second answer")]),
+      new Message({ role: "system", parts: [text("You are helpful.")] }),
+      new Message({ role: "user", parts: [text("First question " + "x".repeat(500))] }),
+      new Message({ role: "assistant", parts: [text("First answer " + "x".repeat(500))] }),
+      new Message({ role: "user", parts: [text("Second question")] }),
+      new Message({ role: "assistant", parts: [text("Second answer")] }),
     ];
     // Budget is small enough to force drops but big enough to keep system + last 2
     const [count, dropped] = trimToContextWindow(msgs, 200);
@@ -168,11 +168,11 @@ describe("trimToContextWindow", () => {
 
   it("preserves system messages", () => {
     const msgs = [
-      new Message("system", [text("System prompt")]),
-      new Message("user", [text("a".repeat(1000))]),
-      new Message("assistant", [text("b".repeat(1000))]),
-      new Message("user", [text("c".repeat(1000))]),
-      new Message("assistant", [text("d".repeat(1000))]),
+      new Message({ role: "system", parts: [text("System prompt")] }),
+      new Message({ role: "user", parts: [text("a".repeat(1000))] }),
+      new Message({ role: "assistant", parts: [text("b".repeat(1000))] }),
+      new Message({ role: "user", parts: [text("c".repeat(1000))] }),
+      new Message({ role: "assistant", parts: [text("d".repeat(1000))] }),
     ];
     trimToContextWindow(msgs, 300);
     // System messages must survive trimming
@@ -188,8 +188,8 @@ describe("trimToContextWindow", () => {
 describe("Guardrails", () => {
   it("with no hooks always allows", () => {
     const g = new Guardrails();
-    expect(g.checkInput([new Message("user", [text("hi")])])).toEqual({ allowed: true });
-    expect(g.checkOutput(new Message("assistant", [text("ok")]))).toEqual({ allowed: true });
+    expect(g.checkInput([new Message({ role: "user", parts: [text("hi")] })])).toEqual({ allowed: true });
+    expect(g.checkOutput(new Message({ role: "assistant", parts: [text("ok")] }))).toEqual({ allowed: true });
     expect(g.checkTool("fn", {})).toEqual({ allowed: true });
   });
 
@@ -202,8 +202,8 @@ describe("Guardrails", () => {
         return { allowed: true };
       },
     });
-    expect(g.checkInput([new Message("user", [text("hello")])])).toEqual({ allowed: true });
-    expect(g.checkInput([new Message("user", [text("bad stuff")])])).toEqual({
+    expect(g.checkInput([new Message({ role: "user", parts: [text("hello")] })])).toEqual({ allowed: true });
+    expect(g.checkInput([new Message({ role: "user", parts: [text("bad stuff")] })])).toEqual({
       allowed: false,
       reason: "bad input",
     });
@@ -218,8 +218,8 @@ describe("Guardrails", () => {
         return { allowed: true };
       },
     });
-    expect(g.checkOutput(new Message("assistant", [text("fine")]))).toEqual({ allowed: true });
-    expect(g.checkOutput(new Message("assistant", [text("the secret is...")]))).toEqual({
+    expect(g.checkOutput(new Message({ role: "assistant", parts: [text("fine")] }))).toEqual({ allowed: true });
+    expect(g.checkOutput(new Message({ role: "assistant", parts: [text("the secret is...")] }))).toEqual({
       allowed: false,
       reason: "leaked secret",
     });
@@ -318,7 +318,7 @@ class StubRenderer implements Renderer {
 
 class StubParser implements Parser {
   async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
-    return [new Message("user", [text(rendered)])];
+    return [new Message({ role: "user", parts: [text(rendered)] })];
   }
 }
 
@@ -349,16 +349,16 @@ function makeStubExecutor(executeFn: (agent: Prompty, messages: Message[]) => Pr
         function: { name: tc.name, arguments: tc.arguments },
       }));
       messages.push(
-        new Message("assistant", textContent ? [text(textContent)] : [], {
+        new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: {
           tool_calls: rawToolCalls,
-        }),
+        } }),
       );
       for (let i = 0; i < toolCalls.length; i++) {
         messages.push(
-          new Message("tool", [text(toolResults[i])], {
+          new Message({ role: "tool", parts: [text(toolResults[i])], metadata: {
             tool_call_id: toolCalls[i].id,
             name: toolCalls[i].name,
-          }),
+          } }),
         );
       }
       return messages;
@@ -472,12 +472,12 @@ describe("turn integration", () => {
     const longParser: Parser = {
       async parse(_agent: Prompty, _rendered: string): Promise<Message[]> {
         return [
-          new Message("system", [text("System prompt")]),
-          new Message("user", [text("A".repeat(2000))]),
-          new Message("assistant", [text("B".repeat(2000))]),
-          new Message("user", [text("C".repeat(2000))]),
-          new Message("assistant", [text("D".repeat(2000))]),
-          new Message("user", [text("Final question")]),
+          new Message({ role: "system", parts: [text("System prompt")] }),
+          new Message({ role: "user", parts: [text("A".repeat(2000))] }),
+          new Message({ role: "assistant", parts: [text("B".repeat(2000))] }),
+          new Message({ role: "user", parts: [text("C".repeat(2000))] }),
+          new Message({ role: "assistant", parts: [text("D".repeat(2000))] }),
+          new Message({ role: "user", parts: [text("Final question")] }),
         ];
       },
     };
@@ -498,7 +498,7 @@ describe("turn integration", () => {
 
   // ---- §13.4 Input guardrail rewrite ----
   it("input guardrail rewrite replaces messages sent to executor", async () => {
-    const replacement = [new Message("user", [text("Rewritten input")])];
+    const replacement = [new Message({ role: "user", parts: [text("Rewritten input")] })];
     const guardrails = new Guardrails({
       input: () => ({ allowed: true, rewrite: replacement }),
     });

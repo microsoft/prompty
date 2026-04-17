@@ -23,7 +23,7 @@ const mockRenderer: Renderer = {
 
 const mockParser: Parser = {
   async parse(_agent, rendered) {
-    return [new Message("user", [{ kind: "text", value: rendered }])];
+    return [new Message({ role: "user", parts: [{ kind: "text", value: rendered }] })];
   },
 };
 

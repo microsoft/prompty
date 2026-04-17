@@ -143,7 +143,7 @@ export class PromptyChatParser implements Parser {
       if (k !== "nonce") metadata[k] = v;
     }
 
-    return new Message(role as Message["role"], parts, metadata);
+    return new Message({ role: role as Message["role"], parts, metadata });
   }
 
   private parseAttrs(raw: string): Record<string, unknown> {
