@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CompactionConfig.yaml
+type: object
+properties:
+  strategy:
+    type: string
+    description: The compaction strategy identifier. Built-in strategies include 'summarize'. Can also be a path to a .prompty file used as the summarization prompt.
+  budget:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Character budget for the compacted context. Overrides TurnOptions.contextBudget when set.
+  options:
+    $ref: RecordUnknown.yaml
+    description: Additional strategy-specific options
+description: |-
+  Configuration for context window compaction. When the message history
+  exceeds the context budget, the compaction strategy is applied to
+  reduce the message list while preserving essential information.

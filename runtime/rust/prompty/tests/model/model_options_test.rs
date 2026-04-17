@@ -27,42 +27,23 @@ fn test_model_options_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = ModelOptions::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
-    assert!(
-        instance.frequency_penalty.is_some(),
-        "Expected frequency_penalty to be Some"
-    );
+    assert!(instance.frequency_penalty.is_some(), "Expected frequency_penalty to be Some");
     assert_eq!(instance.frequency_penalty.as_ref().unwrap(), &0.5);
-    assert!(
-        instance.max_output_tokens.is_some(),
-        "Expected max_output_tokens to be Some"
-    );
+    assert!(instance.max_output_tokens.is_some(), "Expected max_output_tokens to be Some");
     assert_eq!(instance.max_output_tokens.as_ref().unwrap(), &2048);
-    assert!(
-        instance.presence_penalty.is_some(),
-        "Expected presence_penalty to be Some"
-    );
+    assert!(instance.presence_penalty.is_some(), "Expected presence_penalty to be Some");
     assert_eq!(instance.presence_penalty.as_ref().unwrap(), &0.3);
     assert!(instance.seed.is_some(), "Expected seed to be Some");
     assert_eq!(instance.seed.as_ref().unwrap(), &42);
-    assert!(
-        instance.temperature.is_some(),
-        "Expected temperature to be Some"
-    );
+    assert!(instance.temperature.is_some(), "Expected temperature to be Some");
     assert_eq!(instance.temperature.as_ref().unwrap(), &0.7);
     assert!(instance.top_k.is_some(), "Expected top_k to be Some");
     assert_eq!(instance.top_k.as_ref().unwrap(), &40);
     assert!(instance.top_p.is_some(), "Expected top_p to be Some");
     assert_eq!(instance.top_p.as_ref().unwrap(), &0.9);
-    assert!(
-        instance.allow_multiple_tool_calls.is_some(),
-        "Expected allow_multiple_tool_calls to be Some"
-    );
+    assert!(instance.allow_multiple_tool_calls.is_some(), "Expected allow_multiple_tool_calls to be Some");
     assert_eq!(instance.allow_multiple_tool_calls.as_ref().unwrap(), &true);
 }
 
@@ -87,35 +68,16 @@ additionalProperties:
 "####;
     let ctx = LoadContext::default();
     let result = ModelOptions::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
-    assert!(
-        instance.frequency_penalty.is_some(),
-        "Expected frequency_penalty to be Some"
-    );
-    assert!(
-        instance.max_output_tokens.is_some(),
-        "Expected max_output_tokens to be Some"
-    );
-    assert!(
-        instance.presence_penalty.is_some(),
-        "Expected presence_penalty to be Some"
-    );
+    assert!(instance.frequency_penalty.is_some(), "Expected frequency_penalty to be Some");
+    assert!(instance.max_output_tokens.is_some(), "Expected max_output_tokens to be Some");
+    assert!(instance.presence_penalty.is_some(), "Expected presence_penalty to be Some");
     assert!(instance.seed.is_some(), "Expected seed to be Some");
-    assert!(
-        instance.temperature.is_some(),
-        "Expected temperature to be Some"
-    );
+    assert!(instance.temperature.is_some(), "Expected temperature to be Some");
     assert!(instance.top_k.is_some(), "Expected top_k to be Some");
     assert!(instance.top_p.is_some(), "Expected top_p to be Some");
-    assert!(
-        instance.allow_multiple_tool_calls.is_some(),
-        "Expected allow_multiple_tool_calls to be Some"
-    );
+    assert!(instance.allow_multiple_tool_calls.is_some(), "Expected allow_multiple_tool_calls to be Some");
 }
 
 #[test]
@@ -146,9 +108,6 @@ fn test_model_options_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
+

@@ -24,3 +24,9 @@ type SaveContext struct {
 func NewSaveContext() *SaveContext {
 	return &SaveContext{}
 }
+
+// ptrOf returns a pointer to the given value. Used by factory functions
+// to set optional (pointer) fields in struct literals.
+func ptrOf[T any](v T) *T {
+	return &v
+}

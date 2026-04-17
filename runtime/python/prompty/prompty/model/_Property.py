@@ -33,7 +33,7 @@ class Property:
         The default value of the property - this represents the default value if none is provided
     example : Optional[Any]
         Example value used for either initialization or tooling
-    enumValues : list[Any]
+    enum_values : Optional[list[Any]]
         Allowed enumeration values for the property
     """
 
@@ -45,7 +45,7 @@ class Property:
     required: bool | None = None
     default: Any | None = None
     example: Any | None = None
-    enumValues: list[Any] = field(default_factory=list)
+    enum_values: list[Any] = field(default_factory=list)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Property":
@@ -63,13 +63,33 @@ class Property:
 
         # handle alternate representations
         if isinstance(data, bool):
-            data = {"kind": "boolean", "example": data}
+            instance = Property()
+            instance.kind = "boolean"
+            instance.example = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         if isinstance(data, float):
-            data = {"kind": "float", "example": data}
+            instance = Property()
+            instance.kind = "float"
+            instance.example = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         if isinstance(data, int):
-            data = {"kind": "integer", "example": data}
+            instance = Property()
+            instance.kind = "integer"
+            instance.example = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
         if isinstance(data, str):
-            data = {"kind": "string", "example": data}
+            instance = Property()
+            instance.kind = "string"
+            instance.example = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Property: {data}")
@@ -90,7 +110,7 @@ class Property:
         if data is not None and "example" in data:
             instance.example = data["example"]
         if data is not None and "enumValues" in data:
-            instance.enumValues = data["enumValues"]
+            instance.enum_values = data["enumValues"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -108,7 +128,6 @@ class Property:
             else:
                 # create new instance (stop recursion)
                 return Property()
-
         else:
             # create new instance
             return Property()
@@ -139,8 +158,8 @@ class Property:
             result["default"] = obj.default
         if obj.example is not None:
             result["example"] = obj.example
-        if obj.enumValues is not None:
-            result["enumValues"] = obj.enumValues
+        if obj.enum_values is not None:
+            result["enumValues"] = obj.enum_values
 
         if context is not None:
             result = context.process_dict(result)
@@ -237,7 +256,6 @@ class ArrayProperty(Property):
             result["kind"] = obj.kind
         if obj.items is not None:
             result["items"] = obj.items.save(context)
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -323,7 +341,7 @@ class ObjectProperty(Property):
                     result.append({"name": k, **v})
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "": v})
+                    result.append({"name": k, "kind": v})
             data = result
         return [Property.load(item, context) for item in data]
 
@@ -332,28 +350,8 @@ class ObjectProperty(Property):
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # This type doesn't have a 'name' property, so always use array format
+        return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ObjectProperty instance to a dictionary.
@@ -374,7 +372,6 @@ class ObjectProperty(Property):
             result["kind"] = obj.kind
         if obj.properties is not None:
             result["properties"] = ObjectProperty.save_properties(obj.properties, context)
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

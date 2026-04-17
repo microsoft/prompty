@@ -1,0 +1,148 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class ToolResultPayloadConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+
+""";
+
+        var instance = ToolResultPayload.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("get_weather", instance.Name);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "name": "get_weather",
+  "result": {
+    "parts": [
+      {
+        "kind": "text",
+        "value": "72°F and sunny"
+      }
+    ]
+  }
+}
+""";
+
+        var instance = ToolResultPayload.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("get_weather", instance.Name);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "name": "get_weather",
+  "result": {
+    "parts": [
+      {
+        "kind": "text",
+        "value": "72°F and sunny"
+      }
+    ]
+  }
+}
+""";
+
+        var original = ToolResultPayload.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = ToolResultPayload.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("get_weather", reloaded.Name);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+
+""";
+
+        var original = ToolResultPayload.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = ToolResultPayload.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("get_weather", reloaded.Name);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "name": "get_weather",
+  "result": {
+    "parts": [
+      {
+        "kind": "text",
+        "value": "72°F and sunny"
+      }
+    ]
+  }
+}
+""";
+
+        var instance = ToolResultPayload.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+
+""";
+
+        var instance = ToolResultPayload.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

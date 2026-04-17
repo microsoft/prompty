@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TokenEventPayload.yaml
+type: object
+properties:
+  token:
+    type: string
+    description: The streamed token text
+required:
+  - token
+description: Payload for "token" events — a single text token streamed from the LLM.

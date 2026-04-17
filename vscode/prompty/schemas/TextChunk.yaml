@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TextChunk.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: text
+    description: The kind identifier for text chunks
+  value:
+    type: string
+    description: The text content of the chunk
+required:
+  - kind
+  - value
+allOf:
+  - $ref: StreamChunk.yaml
+description: A text content chunk from the LLM response stream.

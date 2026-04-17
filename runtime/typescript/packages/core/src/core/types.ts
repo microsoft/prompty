@@ -1,12 +1,20 @@
 /**
- * Core message types for the Prompty pipeline.
+ * Runtime extensions for the canonical {@link Message} type.
  *
- * These types are protocol-agnostic — they represent the abstract
- * message format that executors translate to provider-specific
- * wire formats (e.g., OpenAI JSON).
+ * The generated model at ``../model/message`` defines the canonical data shape
+ * and a {@link MessageHelpers} contract that declares ``text`` (getter) and
+ * ``toTextContent()``. This module keeps a positional-constructor convenience
+ * class for now, but wires it up to ``implements MessageHelpers`` so the
+ * TypeScript compiler enforces the generated contract.
+ *
+ * TODO (E1/B2 follow-up): migrate call sites from ``new Message(role, parts)``
+ * to ``new Message({ role, parts })`` and delete this wrapper class, leaving
+ * only the generated class as the canonical type.
  *
  * @module
  */
+
+import type { MessageHelpers } from "../model/message";
 
 // ---------------------------------------------------------------------------
 // Content Parts (discriminated union by `kind`)
@@ -60,8 +68,13 @@ export type Role = "system" | "user" | "assistant" | "developer" | "tool";
  *
  * Executors convert this to provider-specific wire format.
  * Parsers produce this from rendered template text.
+ *
+ * Implements {@link MessageHelpers} — the contract generated from the
+ * TypeSpec ``@method`` stubs on ``Message``. The TypeScript compiler verifies
+ * that ``text`` and ``toTextContent`` stay in sync with the generated
+ * interface.
  */
-export class Message {
+export class Message implements MessageHelpers {
   role: Role;
   parts: ContentPart[];
   metadata: Record<string, unknown>;

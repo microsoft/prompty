@@ -16,6 +16,7 @@ export interface PromptyEmitterOptions {
   "root-alias"?: string;
   "omit-models"?: string[];
   "schema-output-dir"?: string;
+  "additional-roots"?: string[];
 }
 
 const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
@@ -90,19 +91,30 @@ const PromptyEmitterOptionsSchema: JSONSchemaType<PromptyEmitterOptions> = {
       type: "string",
       nullable: true,
       description: "Directory containing JSON schema files. If set, omitted models will be deleted from this directory after generation."
+    },
+    "additional-roots": {
+      type: "array",
+      items: { type: "string" },
+      nullable: true,
+      description: "Additional root types to resolve and generate alongside the main root object. These types need not be referenced from the main root. Specified as fully-qualified names (e.g., 'Prompty.Message')."
     }
   },
   required: ["root-object"],
 };
 
 export const $lib = createTypeSpecLibrary({
-  name: "agentschema-emitter",
+  name: "prompty-emitter",
   diagnostics: {},
   emitter: { options: PromptyEmitterOptionsSchema },
   state: {
     samples: { description: "Sample values for properties" },
-    shorthands: { description: "Shorthand models creation" },
-    abstracts: { description: "Abstract models" }
+    coercions: { description: "Scalar-to-object implicit conversions" },
+    abstracts: { description: "Abstract models" },
+    factories: { description: "Factory methods for model construction" },
+    methods: { description: "Method stubs for model types" },
+    knownAs: { description: "Wire field name mappings per target system" },
+    defaultFor: { description: "Per-target required default values" },
+    protocols: { description: "Pipeline interface markers" }
   }
 });
 

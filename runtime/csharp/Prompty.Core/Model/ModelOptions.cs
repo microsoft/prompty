@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Options for configuring the behavior of the AI model.
 /// </summary>
-public class ModelOptions
+public partial class ModelOptions
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -74,6 +74,7 @@ public class ModelOptions
     /// Additional custom properties for model options
     /// </summary>
     public IDictionary<string, object>? AdditionalProperties { get; set; }
+
 
 
     #region Load Methods
@@ -154,7 +155,6 @@ public class ModelOptions
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -181,45 +181,54 @@ public class ModelOptions
             result["frequencyPenalty"] = obj.FrequencyPenalty;
         }
 
+
         if (obj.MaxOutputTokens is not null)
         {
             result["maxOutputTokens"] = obj.MaxOutputTokens;
         }
+
 
         if (obj.PresencePenalty is not null)
         {
             result["presencePenalty"] = obj.PresencePenalty;
         }
 
+
         if (obj.Seed is not null)
         {
             result["seed"] = obj.Seed;
         }
+
 
         if (obj.Temperature is not null)
         {
             result["temperature"] = obj.Temperature;
         }
 
+
         if (obj.TopK is not null)
         {
             result["topK"] = obj.TopK;
         }
+
 
         if (obj.TopP is not null)
         {
             result["topP"] = obj.TopP;
         }
 
+
         if (obj.StopSequences is not null)
         {
             result["stopSequences"] = obj.StopSequences;
         }
 
+
         if (obj.AllowMultipleToolCalls is not null)
         {
             result["allowMultipleToolCalls"] = obj.AllowMultipleToolCalls;
         }
+
 
         if (obj.AdditionalProperties is not null)
         {
@@ -232,6 +241,35 @@ public class ModelOptions
             result = context.ProcessDict(result);
         }
 
+        return result;
+    }
+
+    /// <summary>
+    /// Convert this instance to a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <returns>A dictionary with provider-specific field names.</returns>
+    public Dictionary<string, object?> ToWire(string provider)
+    {
+        var data = Save();
+        var result = new Dictionary<string, object?>();
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["frequencyPenalty"] = new Dictionary<string, string> { ["openai"] = "frequency_penalty" },
+            ["maxOutputTokens"] = new Dictionary<string, string> { ["openai"] = "max_completion_tokens", ["responses"] = "max_output_tokens", ["anthropic"] = "max_tokens" },
+            ["presencePenalty"] = new Dictionary<string, string> { ["openai"] = "presence_penalty" },
+            ["seed"] = new Dictionary<string, string> { ["openai"] = "seed" },
+            ["temperature"] = new Dictionary<string, string> { ["openai"] = "temperature", ["responses"] = "temperature", ["anthropic"] = "temperature" },
+            ["topK"] = new Dictionary<string, string> { ["openai"] = "top_k", ["anthropic"] = "top_k" },
+            ["topP"] = new Dictionary<string, string> { ["openai"] = "top_p", ["responses"] = "top_p", ["anthropic"] = "top_p" },
+            ["stopSequences"] = new Dictionary<string, string> { ["openai"] = "stop", ["anthropic"] = "stop_sequences" },
+            ["allowMultipleToolCalls"] = new Dictionary<string, string> { ["openai"] = "parallel_tool_calls" },
+        };
+        foreach (var (key, value) in data)
+        {
+            if (wireMap.TryGetValue(key, out var mapping) && mapping.TryGetValue(provider, out var wireName))
+                result[wireName] = value;
+        }
         return result;
     }
 

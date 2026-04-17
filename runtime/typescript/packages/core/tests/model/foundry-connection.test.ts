@@ -21,15 +21,9 @@ describe("FoundryConnection", () => {
       const json = `{\n  "kind": "foundry",\n  "endpoint": "https://myresource.services.ai.azure.com/api/projects/myproject",\n  "name": "my-openai-connection",\n  "connectionType": "model"\n}`;
       const instance = FoundryConnection.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("foundry");
-
-      expect(instance.endpoint).toEqual(
-        "https://myresource.services.ai.azure.com/api/projects/myproject",
-      );
-
+      expect(instance.endpoint).toEqual("https://myresource.services.ai.azure.com/api/projects/myproject");
       expect(instance.name).toEqual("my-openai-connection");
-
       expect(instance.connectionType).toEqual("model");
     });
 
@@ -38,13 +32,9 @@ describe("FoundryConnection", () => {
       const instance = FoundryConnection.fromJson(json);
       const output = instance.toJson();
       const reloaded = FoundryConnection.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.connectionType).toEqual(instance.connectionType);
     });
   });
@@ -54,15 +44,9 @@ describe("FoundryConnection", () => {
       const yaml = `kind: foundry\nendpoint: "https://myresource.services.ai.azure.com/api/projects/myproject"\nname: my-openai-connection\nconnectionType: model\n`;
       const instance = FoundryConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("foundry");
-
-      expect(instance.endpoint).toEqual(
-        "https://myresource.services.ai.azure.com/api/projects/myproject",
-      );
-
+      expect(instance.endpoint).toEqual("https://myresource.services.ai.azure.com/api/projects/myproject");
       expect(instance.name).toEqual("my-openai-connection");
-
       expect(instance.connectionType).toEqual("model");
     });
 
@@ -71,13 +55,9 @@ describe("FoundryConnection", () => {
       const instance = FoundryConnection.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = FoundryConnection.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.connectionType).toEqual(instance.connectionType);
     });
   });

@@ -10,9 +10,10 @@ namespace Prompty.Core;
 /// A tool that references another .prompty file to be invoked as a tool.
 /// 
 /// In `single` mode, the child prompty is executed with a single LLM call.
+/// 
 /// In `agentic` mode, the child prompty runs a full agent loop with its own tools.
 /// </summary>
-public class PromptyTool : Tool
+public partial class PromptyTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -42,6 +43,7 @@ public class PromptyTool : Tool
     /// Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
     /// </summary>
     public string Mode { get; set; } = "single";
+
 
 
     #region Load Methods
@@ -87,7 +89,6 @@ public class PromptyTool : Tool
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -110,20 +111,13 @@ public class PromptyTool : Tool
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Path is not null)
-        {
-            result["path"] = obj.Path;
-        }
 
-        if (obj.Mode is not null)
-        {
-            result["mode"] = obj.Mode;
-        }
+        result["path"] = obj.Path;
+
+
+        result["mode"] = obj.Mode;
 
 
         return result;

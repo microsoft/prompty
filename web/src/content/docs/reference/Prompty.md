@@ -24,7 +24,6 @@ config:
 ---
 classDiagram
     class Prompty {
-      
         +string name
         +string displayName
         +string description
@@ -197,7 +196,7 @@ instructions: |-
 | ---- | ---- | ----------- |
 | name | string | Human-readable name of the prompt |
 | displayName | string | Display name for UI purposes |
-| description | string | Description of the prompt&#39;s purpose |
+| description | string | Description of the prompt's purpose |
 | metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties |
 | inputs | [Property[]](../property/) | Input parameters that participate in template rendering(Related Types: [ArrayProperty](../arrayproperty/), [ObjectProperty](../objectproperty/)) |
 | outputs | [Property[]](../property/) | Expected output format and structure |

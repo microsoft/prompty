@@ -76,14 +76,14 @@ public static class Pipeline
     /// <summary>
     /// Parse rendered text into a list of Messages.
     /// </summary>
-    public static async Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public static async Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
     {
         return await Trace.TraceAsync<List<Message>>("Prompty.Core.Pipeline.ParseAsync", async (emit) =>
         {
             emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name });
             var parserKind = agent.Template?.Parser?.Kind ?? "prompty";
             var parser = InvokerRegistry.GetParser(parserKind);
-            return await parser.ParseAsync(agent, rendered);
+            return await parser.ParseAsync(agent, rendered, null);
         });
     }
 
@@ -151,7 +151,7 @@ public static class Pipeline
                 rendered = await RenderAsync(agent, validatedInputs);
             }
 
-            var messages = await parser.ParseAsync(agent, rendered);
+            var messages = await parser.ParseAsync(agent, rendered, parserContext);
             messages = ExpandThreadMarkers(messages, validatedInputs);
             return messages;
         });
@@ -769,7 +769,7 @@ public static class Pipeline
                 {
                     Role = msg.Role,
                     Parts = [new TextPart { Value = before }],
-                    Metadata = new Dictionary<string, object?>(msg.Metadata),
+                    Metadata = msg.Metadata is not null ? new Dictionary<string, object>(msg.Metadata) : null,
                 });
             }
 
@@ -783,23 +783,13 @@ public static class Pipeline
                 {
                     Role = msg.Role,
                     Parts = [new TextPart { Value = after }],
-                    Metadata = new Dictionary<string, object?>(msg.Metadata),
+                    Metadata = msg.Metadata is not null ? new Dictionary<string, object>(msg.Metadata) : null,
                 });
             }
         }
 
         return result;
     }
-}
-
-/// <summary>
-/// Represents a tool call requested by the LLM.
-/// </summary>
-public class ToolCall
-{
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Arguments { get; set; } = "";
 }
 
 /// <summary>

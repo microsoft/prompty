@@ -10,13 +10,16 @@ namespace Prompty.Core;
 /// Template model for defining prompt templates.
 /// 
 /// This model specifies the rendering engine used for slot filling prompts,
+/// 
 /// the parser used to process the rendered template into API-compatible format,
+/// 
 /// and additional options for the template engine.
 /// 
 /// It allows for the creation of reusable templates that can be filled with dynamic data
+/// 
 /// and processed to generate prompts for AI models.
 /// </summary>
-public class Template
+public partial class Template
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -41,6 +44,7 @@ public class Template
     /// Parser used to process the rendered template into API-compatible format
     /// </summary>
     public ParserConfig Parser { get; set; }
+
 
 
     #region Load Methods
@@ -81,7 +85,6 @@ public class Template
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -103,15 +106,10 @@ public class Template
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Format is not null)
-        {
-            result["format"] = obj.Format?.Save(context);
-        }
+        result["format"] = obj.Format?.Save(context);
 
-        if (obj.Parser is not null)
-        {
-            result["parser"] = obj.Parser?.Save(context);
-        }
+
+        result["parser"] = obj.Parser?.Save(context);
 
 
         if (context is not null)

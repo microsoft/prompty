@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ToolCall.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: The unique identifier of the tool call
+  name:
+    type: string
+    description: The name of the tool to call
+  arguments:
+    type: string
+    description: The serialized JSON arguments for the tool call
+required:
+  - id
+  - name
+  - arguments
+description: |-
+  A tool call requested by the LLM. Contains the function name and serialized
+  arguments that should be dispatched to the appropriate tool handler.

@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ToolCallStartPayload.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: The name of the tool being called
+  arguments:
+    type: string
+    description: The serialized JSON arguments for the tool call
+required:
+  - name
+  - arguments
+description: Payload for "tool_call_start" events — the LLM has requested a tool call.

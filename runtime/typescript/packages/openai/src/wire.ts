@@ -207,15 +207,7 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result: Record<string, unknown> = {};
-
-  if (opts.temperature !== undefined) result.temperature = opts.temperature;
-  if (opts.maxOutputTokens !== undefined) result.max_completion_tokens = opts.maxOutputTokens;
-  if (opts.topP !== undefined) result.top_p = opts.topP;
-  if (opts.frequencyPenalty !== undefined) result.frequency_penalty = opts.frequencyPenalty;
-  if (opts.presencePenalty !== undefined) result.presence_penalty = opts.presencePenalty;
-  if (opts.stopSequences !== undefined && opts.stopSequences.length > 0) result.stop = opts.stopSequences;
-  if (opts.seed !== undefined) result.seed = opts.seed;
+  const result = opts.toWire("openai");
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {
@@ -496,11 +488,7 @@ function buildResponsesOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result: Record<string, unknown> = {};
-
-  if (opts.temperature !== undefined) result.temperature = opts.temperature;
-  if (opts.maxOutputTokens !== undefined) result.max_output_tokens = opts.maxOutputTokens;
-  if (opts.topP !== undefined) result.top_p = opts.topP;
+  const result = opts.toWire("responses");
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {

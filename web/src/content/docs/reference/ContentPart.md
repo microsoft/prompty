@@ -1,0 +1,65 @@
+---
+title: "ContentPart"
+description: "Documentation for the ContentPart type."
+slug: "reference/contentpart"
+---
+
+A part of a message's content. Content parts are discriminated on the `kind`
+field and represent the different modalities that can appear in a message.
+
+## Class Diagram
+
+```mermaid
+---
+title: ContentPart
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class ContentPart {
+      <<abstract>>
+        +string kind
+    }
+    class TextPart {
+        +string kind
+        +string value
+    }
+    ContentPart <|-- TextPart
+    class ImagePart {
+        +string kind
+        +string source
+        +string detail
+        +string mediaType
+    }
+    ContentPart <|-- ImagePart
+    class FilePart {
+        +string kind
+        +string source
+        +string mediaType
+    }
+    ContentPart <|-- FilePart
+    class AudioPart {
+        +string kind
+        +string source
+        +string mediaType
+    }
+    ContentPart <|-- AudioPart
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| kind | string | The kind of content part |
+
+## Child Types
+
+The following types extend `ContentPart`:
+
+- [TextPart](../textpart/)
+- [ImagePart](../imagepart/)
+- [FilePart](../filepart/)
+- [AudioPart](../audiopart/)

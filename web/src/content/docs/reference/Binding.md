@@ -19,7 +19,6 @@ config:
 ---
 classDiagram
     class Binding {
-      
         +string name
         +string input
     }

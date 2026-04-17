@@ -428,15 +428,14 @@
           {
             "name": "helper",
             "kind": "prompty",
-            "path": "./helper.prompty",
-            "mode": "single"
+            "path": "./helper.prompty"
           }
         ]
       }
     },
     "expected": {
       "tools": [
-        { "name": "helper", "kind": "prompty", "path": "./helper.prompty", "mode": "single" }
+        { "name": "helper", "kind": "prompty", "path": "./helper.prompty" }
       ]
     }
   },

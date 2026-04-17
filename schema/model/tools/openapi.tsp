@@ -1,6 +1,6 @@
-import "../core.tsp";
-import "../tools.tsp";
-import "../connection.tsp";
+import "../core/core.tsp";
+import "./tool.tsp";
+import "../connection/connection.tsp";
 
 namespace Prompty;
 

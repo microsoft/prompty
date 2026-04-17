@@ -1,0 +1,40 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelInfo.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: The model identifier (e.g., 'gpt-4o', 'claude-3-opus')
+  displayName:
+    type: string
+    description: Human-readable display name
+  ownedBy:
+    type: string
+    description: The organization or entity that owns the model
+  contextWindow:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Maximum context window size in tokens
+  inputModalities:
+    type: array
+    items:
+      type: string
+    description: Input modalities the model accepts (e.g., 'text', 'image', 'audio')
+  outputModalities:
+    type: array
+    items:
+      type: string
+    description: Output modalities the model can produce (e.g., 'text', 'audio')
+  additionalProperties:
+    $ref: RecordUnknown.yaml
+    description: Additional provider-specific properties
+required:
+  - id
+description: |-
+  Information about a model available from a provider. Used by provider-level
+  model discovery to report which models are available and their capabilities.
+
+  Not all providers return all fields — implementations SHOULD populate as
+  many fields as the provider's API supports and MAY enrich sparse results
+  from a built-in lookup table of known models.

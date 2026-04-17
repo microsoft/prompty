@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ThinkingEventPayload.yaml
+type: object
+properties:
+  token:
+    type: string
+    description: The thinking/reasoning token text
+required:
+  - token
+description: Payload for "thinking" events — reasoning/chain-of-thought tokens.

@@ -21,14 +21,9 @@ describe("RemoteConnection", () => {
       const json = `{\n  "kind": "remote",\n  "name": "my-reference-connection",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"\n}`;
       const instance = RemoteConnection.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("remote");
-
       expect(instance.name).toEqual("my-reference-connection");
-
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -36,11 +31,8 @@ describe("RemoteConnection", () => {
       const instance = RemoteConnection.fromJson(json);
       const output = instance.toJson();
       const reloaded = RemoteConnection.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
     });
   });
@@ -50,14 +42,9 @@ describe("RemoteConnection", () => {
       const yaml = `kind: remote\nname: my-reference-connection\nendpoint: "https://{your-custom-endpoint}.openai.azure.com/"\n`;
       const instance = RemoteConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("remote");
-
       expect(instance.name).toEqual("my-reference-connection");
-
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -65,11 +52,8 @@ describe("RemoteConnection", () => {
       const instance = RemoteConnection.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = RemoteConnection.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
     });
   });

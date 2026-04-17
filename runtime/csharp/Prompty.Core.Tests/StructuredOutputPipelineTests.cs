@@ -247,7 +247,7 @@ internal class PassthroughRenderer : IRenderer
 /// </summary>
 internal class SingleMessageParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult<List<Message>>(
             [new Message { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }]);
 }
@@ -265,7 +265,7 @@ internal class RawJsonExecutor : IExecutor
         => Task.FromResult<object>(_rawJson);
 
     public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
-        => [];
+        => new List<Message>();
 }
 
 /// <summary>

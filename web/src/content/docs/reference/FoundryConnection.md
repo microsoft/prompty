@@ -27,7 +27,6 @@ classDiagram
     }
     Connection <|-- FoundryConnection
     class FoundryConnection {
-      
         +string kind
         +string endpoint
         +string name
@@ -51,4 +50,4 @@ connectionType: model
 | kind | string | The connection kind for Foundry project access |
 | endpoint | string | The Foundry project endpoint URL |
 | name | string | The named connection within the Foundry project |
-| connectionType | string | The connection type within the Foundry project (e.g., &#39;model&#39;, &#39;index&#39;, &#39;storage&#39;) |
+| connectionType | string | The connection type within the Foundry project (e.g., 'model', 'index', 'storage') |

@@ -17,7 +17,6 @@ pub type PostSaveFn = Box<dyn Fn(serde_json::Value) -> serde_json::Value + Send 
 ///
 /// Provides hooks for pre-processing input data before parsing and
 /// post-processing output data after instantiation.
-#[derive(Default)]
 pub struct LoadContext {
     /// Optional callback to transform input data before parsing.
     pub pre_process: Option<PreProcessFn>,
@@ -31,6 +30,15 @@ impl std::fmt::Debug for LoadContext {
             .field("pre_process", &self.pre_process.as_ref().map(|_| "..."))
             .field("post_process", &self.post_process.as_ref().map(|_| "..."))
             .finish()
+    }
+}
+
+impl Default for LoadContext {
+    fn default() -> Self {
+        Self {
+            pre_process: None,
+            post_process: None,
+        }
     }
 }
 
@@ -152,11 +160,7 @@ impl SaveContext {
     }
 
     /// Convert a value to a JSON string.
-    pub fn to_json(
-        &self,
-        data: &serde_json::Value,
-        indent: bool,
-    ) -> Result<String, serde_json::Error> {
+    pub fn to_json(&self, data: &serde_json::Value, indent: bool) -> Result<String, serde_json::Error> {
         if indent {
             serde_json::to_string_pretty(data)
         } else {

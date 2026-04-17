@@ -8,10 +8,12 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Connection configuration for Microsoft Foundry projects.
+/// 
 /// Provides project-scoped access to models, tools, and services
+/// 
 /// via Entra ID (DefaultAzureCredential) authentication.
 /// </summary>
-public class FoundryConnection : Connection
+public partial class FoundryConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -46,6 +48,7 @@ public class FoundryConnection : Connection
     /// The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
     /// </summary>
     public string? ConnectionType { get; set; }
+
 
 
     #region Load Methods
@@ -96,7 +99,6 @@ public class FoundryConnection : Connection
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -119,20 +121,17 @@ public class FoundryConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Endpoint is not null)
-        {
-            result["endpoint"] = obj.Endpoint;
-        }
+
+        result["endpoint"] = obj.Endpoint;
+
 
         if (obj.Name is not null)
         {
             result["name"] = obj.Name;
         }
+
 
         if (obj.ConnectionType is not null)
         {

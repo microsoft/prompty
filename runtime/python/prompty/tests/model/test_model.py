@@ -28,7 +28,7 @@ def test_load_json_model():
     assert instance is not None
     assert instance.id == "gpt-35-turbo"
     assert instance.provider == "foundry"
-    assert instance.apiType == "chat"
+    assert instance.api_type == "chat"
 
 
 def test_load_yaml_model():
@@ -51,7 +51,7 @@ def test_load_yaml_model():
     assert instance is not None
     assert instance.id == "gpt-35-turbo"
     assert instance.provider == "foundry"
-    assert instance.apiType == "chat"
+    assert instance.api_type == "chat"
 
 
 def test_roundtrip_json_model():
@@ -80,7 +80,7 @@ def test_roundtrip_json_model():
     assert reloaded is not None
     assert reloaded.id == "gpt-35-turbo"
     assert reloaded.provider == "foundry"
-    assert reloaded.apiType == "chat"
+    assert reloaded.api_type == "chat"
 
 
 def test_to_json_model():

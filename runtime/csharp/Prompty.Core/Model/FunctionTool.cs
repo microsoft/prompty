@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a local function tool.
 /// </summary>
-public class FunctionTool : Tool
+public partial class FunctionTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -39,6 +39,7 @@ public class FunctionTool : Tool
     /// Indicates whether the function tool enforces strict validation on its parameters
     /// </summary>
     public bool? Strict { get; set; }
+
 
 
     #region Load Methods
@@ -138,7 +139,6 @@ public class FunctionTool : Tool
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -161,15 +161,11 @@ public class FunctionTool : Tool
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Parameters is not null)
-        {
-            result["parameters"] = SaveParameters(obj.Parameters, context);
-        }
+
+        result["parameters"] = SaveParameters(obj.Parameters, context);
+
 
         if (obj.Strict is not null)
         {
@@ -188,39 +184,8 @@ public class FunctionTool : Tool
     {
         context ??= new SaveContext();
 
-
-        if (context.CollectionFormat == "array")
-        {
-            return items.Select(item => item.Save(context)).ToList();
-        }
-
-        // Object format: use name as key
-        var result = new Dictionary<string, object?>();
-        foreach (var item in items)
-        {
-            var itemData = item.Save(context);
-            if (itemData.TryGetValue("name", out var nameValue) && nameValue is string name)
-            {
-                itemData.Remove("name");
-
-                // Check if we can use shorthand
-                if (context.UseShorthand && Property.ShorthandProperty is string shorthandProp)
-                {
-                    if (itemData.Count == 1 && itemData.ContainsKey(shorthandProp))
-                    {
-                        result[name] = itemData[shorthandProp];
-                        continue;
-                    }
-                }
-                result[name] = itemData;
-            }
-            else
-            {
-                // No name, can't use object format for this item
-                throw new InvalidOperationException("Cannot save item in object format: missing 'name' property");
-            }
-        }
-        return result;
+        // This collection type does not have a 'name' property, only array format is supported
+        return items.Select(item => item.Save(context)).ToList();
 
     }
 

@@ -1,0 +1,44 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnOptions.yaml
+type: object
+properties:
+  maxIterations:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 10
+    description: Maximum number of tool-call iterations before the loop terminates
+  maxLlmRetries:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 3
+    description: Maximum number of LLM call retries on transient failure within a single iteration
+  contextBudget:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Character budget for the context window. When set, the loop trims older messages to stay within budget before each LLM call. System messages are never dropped.
+  parallelToolCalls:
+    type: boolean
+    default: false
+    description: Whether to execute multiple tool calls concurrently when the LLM returns several in one response
+  raw:
+    type: boolean
+    default: false
+    description: When true, return the raw LLM response without processor post-processing
+  turn:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Turn number for trace labeling. Useful when the caller maintains an outer conversation loop.
+  compaction:
+    $ref: CompactionConfig.yaml
+    description: Context compaction configuration. Controls how messages are summarized when the context window exceeds the budget.
+description: |-
+  Configuration for the agent loop's turn() function. Controls iteration
+  limits, retry policy, context management, and execution behavior.
+
+  Runtimes accept these as either a TurnOptions object or individual
+  keyword/named parameters — the TypeSpec model defines the canonical
+  field set.

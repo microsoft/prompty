@@ -5,7 +5,7 @@ slug: "reference/model"
 ---
 
 Model for defining the structure and behavior of AI agents.
-This model includes properties for specifying the model&#39;s provider, connection details, and various options.
+This model includes properties for specifying the model's provider, connection details, and various options.
 It allows for flexible configuration of AI models to suit different use cases and requirements.
 
 ## Class Diagram
@@ -21,7 +21,6 @@ config:
 ---
 classDiagram
     class Model {
-      
         +string id
         +string provider
         +string apiType
@@ -70,8 +69,8 @@ options:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | id | string | The unique identifier of the model - can be used as the single property shorthand |
-| provider | string | The provider of the model (e.g., &#39;openai&#39;, &#39;foundry&#39;, &#39;anthropic&#39;) |
-| apiType | string | The type of API to use for the model (e.g., &#39;chat&#39;, &#39;response&#39;, etc.) |
+| provider | string | The provider of the model (e.g., 'openai', 'foundry', 'anthropic') |
+| apiType | string | The type of API to use for the model (e.g., 'chat', 'response', etc.) |
 | connection | [Connection](../connection/) | The connection configuration for the model(Related Types: [ReferenceConnection](../referenceconnection/), [RemoteConnection](../remoteconnection/), [ApiKeyConnection](../apikeyconnection/), [AnonymousConnection](../anonymousconnection/), [FoundryConnection](../foundryconnection/), [OAuthConnection](../oauthconnection/)) |
 | options | [ModelOptions](../modeloptions/) | Additional options for the model |
 

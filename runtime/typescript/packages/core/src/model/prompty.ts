@@ -7,107 +7,46 @@ import { Property } from "./property";
 import { Template } from "./template";
 import { Tool } from "./tool";
 
-/**
- * A Prompty is a markdown file format for LLM prompts. The frontmatter defines
- * structured metadata including model configuration, input/output schemas, tools,
- * and template settings. The markdown body becomes the instructions.
- *
- * This is the single root type for the Prompty schema — there is no abstract base
- * class or kind discriminator. A .prompty file always produces a Prompty instance.
- *
- */
 export class Prompty {
-  /**
-   * The shorthand property name for this type, if any.
-   */
   static readonly shorthandProperty: string | undefined = undefined;
 
-  /**
-   * Human-readable name of the prompt
-   */
   name: string = "";
-
-  /**
-   * Display name for UI purposes
-   */
   displayName?: string | undefined;
-
-  /**
-   * Description of the prompt's purpose
-   */
   description?: string | undefined;
-
-  /**
-   * Additional metadata including authors, tags, and other arbitrary properties
-   */
-  metadata?: Record<string, unknown> | undefined = {};
-
-  /**
-   * Input parameters that participate in template rendering
-   */
+  metadata?: Record<string, unknown> | undefined;
   inputs?: Property[] = [];
-
-  /**
-   * Expected output format and structure
-   */
   outputs?: Property[] = [];
-
-  /**
-   * AI model configuration
-   */
-  model: Model;
-
-  /**
-   * Tools available for extended functionality
-   */
+  model!: Model;
   tools?: Tool[] = [];
-
-  /**
-   * Template configuration for prompt rendering
-   */
   template?: Template | undefined;
-
-  /**
-   * Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body.
-   */
   instructions?: string | undefined;
 
-  /**
-   * Initializes a new instance of Prompty.
-   */
   constructor(init?: Partial<Prompty>) {
     this.name = init?.name ?? "";
-
     if (init?.displayName !== undefined) {
       this.displayName = init.displayName;
     }
-
     if (init?.description !== undefined) {
       this.description = init.description;
     }
-
     if (init?.metadata !== undefined) {
       this.metadata = init.metadata;
     }
-
     if (init?.inputs !== undefined) {
       this.inputs = init.inputs;
     }
-
     if (init?.outputs !== undefined) {
       this.outputs = init.outputs;
     }
-
-    this.model = init?.model ?? undefined!;
-
+    if (init?.model !== undefined) {
+      this.model = init.model;
+    }
     if (init?.tools !== undefined) {
       this.tools = init.tools;
     }
-
     if (init?.template !== undefined) {
       this.template = init.template;
     }
-
     if (init?.instructions !== undefined) {
       this.instructions = init.instructions;
     }
@@ -115,62 +54,40 @@ export class Prompty {
 
   //#region Load Methods
 
-  /**
-   * Load a Prompty instance from a dictionary.
-   * @param data - The dictionary containing the data.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Prompty instance.
-   */
   static load(data: Record<string, unknown>, context?: LoadContext): Prompty {
     if (context) {
-      data = context.processInput(data);
+      data = context.processInput(data) as Record<string, unknown>;
     }
 
-    // Create new instance
     const instance = new Prompty();
 
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
-
     if (data["displayName"] !== undefined && data["displayName"] !== null) {
       instance.displayName = String(data["displayName"]);
     }
-
     if (data["description"] !== undefined && data["description"] !== null) {
       instance.description = String(data["description"]);
     }
-
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
     }
-
     if (data["inputs"] !== undefined && data["inputs"] !== null) {
-      instance.inputs = Prompty.loadInputs(data["inputs"], context);
+      instance.inputs = Prompty.loadInputs(data["inputs"] as unknown[], context);
     }
-
     if (data["outputs"] !== undefined && data["outputs"] !== null) {
-      instance.outputs = Prompty.loadOutputs(data["outputs"], context);
+      instance.outputs = Prompty.loadOutputs(data["outputs"] as unknown[], context);
     }
-
     if (data["model"] !== undefined && data["model"] !== null) {
-      instance.model = Model.load(
-        data["model"] as Record<string, unknown>,
-        context,
-      );
+      instance.model = Model.load(data["model"] as Record<string, unknown>, context);
     }
-
     if (data["tools"] !== undefined && data["tools"] !== null) {
-      instance.tools = Prompty.loadTools(data["tools"], context);
+      instance.tools = Prompty.loadTools(data["tools"] as unknown[], context);
     }
-
     if (data["template"] !== undefined && data["template"] !== null) {
-      instance.template = Template.load(
-        data["template"] as Record<string, unknown>,
-        context,
-      );
+      instance.template = Template.load(data["template"] as Record<string, unknown>, context);
     }
-
     if (data["instructions"] !== undefined && data["instructions"] !== null) {
       instance.instructions = String(data["instructions"]);
     }
@@ -181,132 +98,128 @@ export class Prompty {
     return instance;
   }
 
-  /**
-   * Load a collection of Property from a dictionary or array.
-   * @param data - The data to load from.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded array of Property.
-   */
-  static loadInputs(data: unknown, context?: LoadContext): Property[] {
-    const result: Property[] = [];
-
-    if (data && typeof data === "object" && !Array.isArray(data)) {
-      // Convert named dictionary to array
-      for (const [key, value] of Object.entries(
-        data as Record<string, unknown>,
-      )) {
-        if (Array.isArray(value)) {
-          throw new Error(
-            `Invalid 'inputs' format: key '${key}' has an array value. ` +
-              `'inputs' must be a flat list of objects or a name-keyed dict — ` +
-              `not a nested { ${key}: [...] } structure.`,
-          );
-        }
-        if (value && typeof value === "object") {
-          // Value is an object, add name to it
-          (value as Record<string, unknown>)["name"] = key;
-          result.push(Property.load(value as Record<string, unknown>, context));
+  static loadInputs(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          // Value is a scalar — let Property.load() infer kind from value
-          const prop = Property.load(value as Record<string, unknown>, context);
-          prop.name = key;
-          result.push(prop);
+          result.push({ name: k, "kind": v });
         }
       }
-    } else if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item && typeof item === "object") {
-          result.push(Property.load(item as Record<string, unknown>, context));
-        }
-      }
+      data = result;
+    }
+    return data.map(item => Property.load(item as Record<string, unknown>, context));
+  }
+
+  static saveInputs(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
     }
 
+    if (context.collectionFormat === "array") {
+      return items.map(item => item.save(context));
+    }
+
+    // Object format: use name as key
+    const result: Record<string, unknown> = {};
+    for (const item of items) {
+      const itemData = item.save(context) as Record<string, unknown>;
+      const name = itemData["name"] as string | undefined;
+      delete itemData["name"];
+      if (name) {
+        // Check if we can use shorthand (only primary property set)
+        const shorthand = (item.constructor as typeof Property).shorthandProperty;
+        if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+          result[name] = itemData[shorthand];
+          continue;
+        }
+        result[name] = itemData;
+      } else {
+        // No name, fall back to array format for this item
+        if (!result["_unnamed"]) {
+          result["_unnamed"] = [];
+        }
+        (result["_unnamed"] as unknown[]).push(itemData);
+      }
+    }
     return result;
   }
 
-  /**
-   * Load a collection of Property from a dictionary or array.
-   * @param data - The data to load from.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded array of Property.
-   */
-  static loadOutputs(data: unknown, context?: LoadContext): Property[] {
-    const result: Property[] = [];
-
-    if (data && typeof data === "object" && !Array.isArray(data)) {
-      // Convert named dictionary to array
-      for (const [key, value] of Object.entries(
-        data as Record<string, unknown>,
-      )) {
-        if (Array.isArray(value)) {
-          throw new Error(
-            `Invalid 'outputs' format: key '${key}' has an array value. ` +
-              `'outputs' must be a flat list of objects or a name-keyed dict — ` +
-              `not a nested { ${key}: [...] } structure.`,
-          );
-        }
-        if (value && typeof value === "object") {
-          // Value is an object, add name to it
-          (value as Record<string, unknown>)["name"] = key;
-          result.push(Property.load(value as Record<string, unknown>, context));
+  static loadOutputs(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          // Value is a scalar — let Property.load() infer kind from value
-          const prop = Property.load(value as Record<string, unknown>, context);
-          prop.name = key;
-          result.push(prop);
+          result.push({ name: k, "kind": v });
         }
       }
-    } else if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item && typeof item === "object") {
-          result.push(Property.load(item as Record<string, unknown>, context));
-        }
-      }
+      data = result;
     }
-
-    return result;
+    return data.map(item => Property.load(item as Record<string, unknown>, context));
   }
 
-  /**
-   * Load a collection of Tool from a dictionary or array.
-   * @param data - The data to load from.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded array of Tool.
-   */
-  static loadTools(data: unknown, context?: LoadContext): Tool[] {
-    const result: Tool[] = [];
-
-    if (data && typeof data === "object" && !Array.isArray(data)) {
-      // Convert named dictionary to array
-      for (const [key, value] of Object.entries(
-        data as Record<string, unknown>,
-      )) {
-        if (Array.isArray(value)) {
-          throw new Error(
-            `Invalid 'tools' format: key '${key}' has an array value. ` +
-              `'tools' must be a flat list of objects or a name-keyed dict — ` +
-              `not a nested { ${key}: [...] } structure.`,
-          );
-        }
-        if (value && typeof value === "object") {
-          // Value is an object, add name to it
-          (value as Record<string, unknown>)["name"] = key;
-          result.push(Tool.load(value as Record<string, unknown>, context));
-        } else {
-          // Value is a scalar — let Tool.load() infer kind from value
-          const prop = Tool.load(value as Record<string, unknown>, context);
-          prop.name = key;
-          result.push(prop);
-        }
-      }
-    } else if (Array.isArray(data)) {
-      for (const item of data) {
-        if (item && typeof item === "object") {
-          result.push(Tool.load(item as Record<string, unknown>, context));
-        }
-      }
+  static saveOutputs(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
     }
 
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map(item => item.save(context));
+  }
+
+  static loadTools(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Tool[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, "kind": v });
+        }
+      }
+      data = result;
+    }
+    return data.map(item => Tool.load(item as Record<string, unknown>, context));
+  }
+
+  static saveTools(items: Tool[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
+    }
+
+    if (context.collectionFormat === "array") {
+      return items.map(item => item.save(context));
+    }
+
+    // Object format: use name as key
+    const result: Record<string, unknown> = {};
+    for (const item of items) {
+      const itemData = item.save(context) as Record<string, unknown>;
+      const name = itemData["name"] as string | undefined;
+      delete itemData["name"];
+      if (name) {
+        // Check if we can use shorthand (only primary property set)
+        const shorthand = (item.constructor as typeof Tool).shorthandProperty;
+        if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+          result[name] = itemData[shorthand];
+          continue;
+        }
+        result[name] = itemData;
+      } else {
+        // No name, fall back to array format for this item
+        if (!result["_unnamed"]) {
+          result["_unnamed"] = [];
+        }
+        (result["_unnamed"] as unknown[]).push(itemData);
+      }
+    }
     return result;
   }
 
@@ -314,52 +227,41 @@ export class Prompty {
 
   //#region Save Methods
 
-  /**
-   * Save the Prompty instance to a dictionary.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The dictionary representation of this instance.
-   */
   save(context?: SaveContext): Record<string, unknown> {
-    const obj = context ? (context.processObject(this) as Prompty) : this;
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
 
     const result: Record<string, unknown> = {};
 
     if (obj.name !== undefined && obj.name !== null) {
       result["name"] = obj.name;
     }
-
     if (obj.displayName !== undefined && obj.displayName !== null) {
       result["displayName"] = obj.displayName;
     }
-
     if (obj.description !== undefined && obj.description !== null) {
       result["description"] = obj.description;
     }
-
     if (obj.metadata !== undefined && obj.metadata !== null) {
       result["metadata"] = obj.metadata;
     }
-
     if (obj.inputs !== undefined && obj.inputs !== null) {
       result["inputs"] = Prompty.saveInputs(obj.inputs, context);
     }
-
     if (obj.outputs !== undefined && obj.outputs !== null) {
       result["outputs"] = Prompty.saveOutputs(obj.outputs, context);
     }
-
     if (obj.model !== undefined && obj.model !== null) {
-      result["model"] = obj.model?.save(context);
+      result["model"] = obj.model.save(context);
     }
-
     if (obj.tools !== undefined && obj.tools !== null) {
       result["tools"] = Prompty.saveTools(obj.tools, context);
     }
-
     if (obj.template !== undefined && obj.template !== null) {
-      result["template"] = obj.template?.save(context);
+      result["template"] = obj.template.save(context);
     }
-
     if (obj.instructions !== undefined && obj.instructions !== null) {
       result["instructions"] = obj.instructions;
     }
@@ -367,157 +269,30 @@ export class Prompty {
     if (context) {
       return context.processDict(result);
     }
-
     return result;
   }
 
-  /**
-   * Save a collection of Property to object or array format.
-   * @param items - The items to save.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The saved collection in object or array format.
-   */
-  static saveInputs(
-    items: Property[],
-    context?: SaveContext,
-  ): Record<string, unknown> | Record<string, unknown>[] {
-    context = context ?? new SaveContext();
-
-    if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
-    }
-
-    // Object format: use name as key
-    const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context);
-      const name = itemData["name"] as string | undefined;
-      if (name) {
-        delete itemData["name"];
-
-        // Check if we can use shorthand
-        if (context.useShorthand && Property.shorthandProperty) {
-          const shorthandProp = Property.shorthandProperty;
-          const keys = Object.keys(itemData);
-          if (keys.length === 1 && keys[0] === shorthandProp) {
-            result[name] = itemData[shorthandProp];
-            continue;
-          }
-        }
-        result[name] = itemData;
-      } else {
-        throw new Error(
-          "Cannot save item in object format: missing 'name' property",
-        );
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Save a collection of Property to object or array format.
-   * @param items - The items to save.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The saved collection in object or array format.
-   */
-  static saveOutputs(
-    items: Property[],
-    context?: SaveContext,
-  ): Record<string, unknown> | Record<string, unknown>[] {
-    context = context ?? new SaveContext();
-
-    // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
-  }
-
-  /**
-   * Save a collection of Tool to object or array format.
-   * @param items - The items to save.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The saved collection in object or array format.
-   */
-  static saveTools(
-    items: Tool[],
-    context?: SaveContext,
-  ): Record<string, unknown> | Record<string, unknown>[] {
-    context = context ?? new SaveContext();
-
-    if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
-    }
-
-    // Object format: use name as key
-    const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context);
-      const name = itemData["name"] as string | undefined;
-      if (name) {
-        delete itemData["name"];
-
-        // Check if we can use shorthand
-        if (context.useShorthand && Tool.shorthandProperty) {
-          const shorthandProp = Tool.shorthandProperty;
-          const keys = Object.keys(itemData);
-          if (keys.length === 1 && keys[0] === shorthandProp) {
-            result[name] = itemData[shorthandProp];
-            continue;
-          }
-        }
-        result[name] = itemData;
-      } else {
-        throw new Error(
-          "Cannot save item in object format: missing 'name' property",
-        );
-      }
-    }
-    return result;
-  }
-
-  /**
-   * Convert the Prompty instance to a YAML string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The YAML string representation of this instance.
-   */
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
   }
 
-  /**
-   * Convert the Prompty instance to a JSON string.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @param indent - Number of spaces for indentation. Defaults to 2.
-   * @returns The JSON string representation of this instance.
-   */
   toJson(context?: SaveContext, indent: number = 2): string {
     context = context ?? new SaveContext();
     return context.toJson(this.save(context), indent);
   }
 
-  /**
-   * Load a Prompty instance from a JSON string.
-   * @param json - The JSON string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Prompty instance.
-   */
   static fromJson(json: string, context?: LoadContext): Prompty {
     const data = JSON.parse(json);
-
     return Prompty.load(data as Record<string, unknown>, context);
   }
 
-  /**
-   * Load a Prompty instance from a YAML string.
-   * @param yaml - The YAML string to parse.
-   * @param context - Optional context with pre/post processing callbacks.
-   * @returns The loaded Prompty instance.
-   */
   static fromYaml(yaml: string, context?: LoadContext): Prompty {
     const { parse } = require("yaml");
     const data = parse(yaml);
-
     return Prompty.load(data as Record<string, unknown>, context);
   }
 
   //#endregion
 }
+

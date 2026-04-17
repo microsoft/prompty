@@ -193,41 +193,51 @@ fn part_to_wire(part: &ContentPart) -> Value {
 // Options
 // ---------------------------------------------------------------------------
 
+/// Fix f32 precision artifacts in a JSON value.
+/// serde_json serializes f32 via f64, causing 0.1 → 0.10000000149011612.
+/// Round-trip through f32 display to get a clean decimal representation.
+fn fix_f32_value(v: Value) -> Value {
+    if v.is_f64() {
+        if let Some(f) = v.as_f64() {
+            let s = format!("{}", f as f32);
+            let clean: f64 = s.parse().unwrap_or(f);
+            return json!(clean);
+        }
+    }
+    v
+}
+
 /// Apply model options to the request body.
 fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
     let mut max_tokens = DEFAULT_MAX_TOKENS;
 
     if let Some(opts) = &agent.model.options {
-        if let Some(v) = opts.temperature {
-            body.insert("temperature".into(), f32_to_json(v));
+        let wire = opts.to_wire("anthropic");
+        if let Value::Object(map) = wire {
+            for (k, v) in map {
+                if v.is_null() {
+                    continue;
+                }
+                if k == "max_tokens" {
+                    max_tokens = v.as_i64().unwrap_or(DEFAULT_MAX_TOKENS);
+                } else {
+                    body.insert(k, fix_f32_value(v));
+                }
+            }
         }
-        if let Some(v) = opts.top_p {
-            body.insert("top_p".into(), f32_to_json(v));
-        }
-        if let Some(v) = opts.top_k {
-            body.insert("top_k".into(), json!(v));
-        }
-        if let Some(v) = opts.max_output_tokens {
-            max_tokens = v as i64;
-        }
-        if let Some(ref seqs) = opts.stop_sequences {
-            body.insert("stop_sequences".into(), json!(seqs));
-        }
-        if let Some(v) = opts.seed {
-            body.insert("seed".into(), json!(v));
+
+        // additionalProperties — merge any extra keys
+        if let Some(map) = opts.additional_properties.as_object() {
+            for (k, v) in map {
+                if !body.contains_key(k) {
+                    body.insert(k.clone(), v.clone());
+                }
+            }
         }
     }
 
     // max_tokens is always required for Anthropic
     body.insert("max_tokens".into(), json!(max_tokens));
-}
-
-/// Convert f32 to JSON Value without precision artifacts.
-/// f32 0.1 → "0.1" not "0.10000000149011612"
-fn f32_to_json(v: f32) -> Value {
-    let s = format!("{}", v);
-    let f: f64 = s.parse().unwrap_or(v as f64);
-    json!(f)
 }
 
 // ---------------------------------------------------------------------------
@@ -246,7 +256,7 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
-    for prop in &outputs {
+    for prop in outputs {
         let kind_str = prop.kind_str();
         let json_type = match kind_str {
             "float" | "number" => "number",
@@ -341,16 +351,14 @@ fn property_to_json_schema(prop: &Property) -> Value {
             }
         }
         PropertyKind::Object { properties } => {
-            if let Some(arr) = properties.as_array() {
-                let ctx = prompty::model::context::LoadContext::default();
+            if !properties.is_empty() {
                 let mut nested = Map::new();
                 let mut req = Vec::new();
-                for val in arr {
-                    let p = Property::load_from_value(val, &ctx);
+                for p in properties {
                     if p.name.is_empty() {
                         continue;
                     }
-                    nested.insert(p.name.clone(), property_to_json_schema(&p));
+                    nested.insert(p.name.clone(), property_to_json_schema(p));
                     req.push(json!(p.name));
                 }
                 schema.insert("properties".into(), Value::Object(nested));
@@ -367,23 +375,12 @@ fn property_to_json_schema(prop: &Property) -> Value {
     Value::Object(schema)
 }
 
-/// Convert tool parameters (stored as serde_json::Value) to JSON Schema for `input_schema`.
-fn parameters_to_json_schema(params_value: &Value) -> Value {
-    use prompty::model::context::LoadContext;
-
-    let ctx = LoadContext::default();
-    let params: Vec<Property> = if let Some(arr) = params_value.as_array() {
-        arr.iter()
-            .map(|v| Property::load_from_value(v, &ctx))
-            .collect()
-    } else {
-        return json!({"type": "object", "properties": {}});
-    };
-
+/// Convert tool parameters to JSON Schema for `input_schema`.
+fn parameters_to_json_schema(params: &[Property]) -> Value {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
-    for param in &params {
+    for param in params {
         properties.insert(param.name.clone(), property_to_json_schema(param));
         if param.required.unwrap_or(false) {
             required.push(json!(param.name));

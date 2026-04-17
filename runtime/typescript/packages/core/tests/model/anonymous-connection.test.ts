@@ -21,12 +21,8 @@ describe("AnonymousConnection", () => {
       const json = `{\n  "kind": "anonymous",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"\n}`;
       const instance = AnonymousConnection.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("anonymous");
-
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -34,9 +30,7 @@ describe("AnonymousConnection", () => {
       const instance = AnonymousConnection.fromJson(json);
       const output = instance.toJson();
       const reloaded = AnonymousConnection.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
     });
   });
@@ -46,12 +40,8 @@ describe("AnonymousConnection", () => {
       const yaml = `kind: anonymous\nendpoint: "https://{your-custom-endpoint}.openai.azure.com/"\n`;
       const instance = AnonymousConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("anonymous");
-
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -59,9 +49,7 @@ describe("AnonymousConnection", () => {
       const instance = AnonymousConnection.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = AnonymousConnection.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
     });
   });

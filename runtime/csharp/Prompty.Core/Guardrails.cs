@@ -2,9 +2,6 @@
 
 namespace Prompty.Core;
 
-/// <summary>§13.4 Result of a guardrail check.</summary>
-public record GuardrailResult(bool Allowed, string? Reason = null, object? Rewrite = null);
-
 /// <summary>Error thrown when a guardrail denies the operation.</summary>
 public class GuardrailError : Exception
 {

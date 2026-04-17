@@ -117,7 +117,7 @@ class TestModel:
             agent = load(PROMPTS / "basic.prompty")
             assert agent.model.id == "gpt-4"
             assert agent.model.provider == "foundry"
-            assert agent.model.apiType == "chat"
+            assert agent.model.api_type == "chat"
         finally:
             del os.environ["AZURE_OPENAI_ENDPOINT"]
             del os.environ["AZURE_OPENAI_API_KEY"]
@@ -131,7 +131,7 @@ class TestModel:
             conn = agent.model.connection
             assert isinstance(conn, ApiKeyConnection)
             assert conn.endpoint == "https://test.openai.azure.com/"
-            assert conn.apiKey == "test-key-123"
+            assert conn.api_key == "test-key-123"
         finally:
             del os.environ["AZURE_OPENAI_ENDPOINT"]
             del os.environ["AZURE_OPENAI_API_KEY"]
@@ -145,7 +145,7 @@ class TestModel:
             opts = agent.model.options
             assert opts is not None
             assert opts.temperature == 0.7
-            assert opts.maxOutputTokens == 1000
+            assert opts.max_output_tokens == 1000
         finally:
             del os.environ["AZURE_OPENAI_ENDPOINT"]
             del os.environ["AZURE_OPENAI_API_KEY"]
@@ -221,7 +221,7 @@ class TestTools:
         tool = agent.tools[0]
         assert isinstance(tool, McpTool)
         assert tool.name == "filesystem"
-        assert tool.serverName == "filesystem-server"
+        assert tool.server_name == "filesystem-server"
         assert isinstance(tool.connection, ReferenceConnection)
 
     def test_load_tools_openapi(self):
@@ -300,7 +300,7 @@ class TestReferenceResolution:
             conn = agent.model.connection
             assert isinstance(conn, ApiKeyConnection)
             assert conn.endpoint == "https://resolved.openai.azure.com/"
-            assert conn.apiKey == "resolved-key"
+            assert conn.api_key == "resolved-key"
         finally:
             del os.environ["TEST_ENDPOINT"]
             del os.environ["TEST_API_KEY"]
@@ -356,7 +356,7 @@ class TestFileSharedConfig:
         conn = agent.model.connection
         assert isinstance(conn, ApiKeyConnection)
         assert conn.endpoint == "https://shared.openai.azure.com/"
-        assert conn.apiKey == "shared-key"
+        assert conn.api_key == "shared-key"
 
     def test_load_shared_connection_kind(self):
         """Shared connection resolves to correct kind."""

@@ -21,19 +21,11 @@ describe("Property", () => {
       const json = `{\n  "name": "my-input",\n  "kind": "string",\n  "description": "A description of the input property",\n  "required": true,\n  "default": "default value",\n  "example": "example value",\n  "enumValues": [\n    "value1",\n    "value2",\n    "value3"\n  ]\n}`;
       const instance = Property.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.name).toEqual("my-input");
-
       expect(instance.kind).toEqual("string");
-
-      expect(instance.description).toEqual(
-        "A description of the input property",
-      );
-
+      expect(instance.description).toEqual("A description of the input property");
       expect(instance.required).toEqual(true);
-
       expect(instance.default).toEqual("default value");
-
       expect(instance.example).toEqual("example value");
     });
 
@@ -42,17 +34,11 @@ describe("Property", () => {
       const instance = Property.fromJson(json);
       const output = instance.toJson();
       const reloaded = Property.fromJson(output);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.description).toEqual(instance.description);
-
       expect(reloaded.required).toEqual(instance.required);
-
       expect(reloaded.default).toEqual(instance.default);
-
       expect(reloaded.example).toEqual(instance.example);
     });
   });
@@ -62,19 +48,11 @@ describe("Property", () => {
       const yaml = `name: my-input\nkind: string\ndescription: A description of the input property\nrequired: true\ndefault: default value\nexample: example value\nenumValues:\n  - value1\n  - value2\n  - value3\n`;
       const instance = Property.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.name).toEqual("my-input");
-
       expect(instance.kind).toEqual("string");
-
-      expect(instance.description).toEqual(
-        "A description of the input property",
-      );
-
+      expect(instance.description).toEqual("A description of the input property");
       expect(instance.required).toEqual(true);
-
       expect(instance.default).toEqual("default value");
-
       expect(instance.example).toEqual("example value");
     });
 
@@ -83,17 +61,11 @@ describe("Property", () => {
       const instance = Property.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Property.fromYaml(output);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.description).toEqual(instance.description);
-
       expect(reloaded.required).toEqual(instance.required);
-
       expect(reloaded.default).toEqual(instance.default);
-
       expect(reloaded.example).toEqual(instance.example);
     });
   });
@@ -104,47 +76,37 @@ describe("Property", () => {
       const json = JSON.stringify(value);
       const instance = Property.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("boolean");
-
       expect(instance.example).toEqual(false);
     });
-
     it("should handle input alternate representation", () => {
       const value = 3.14;
       const json = JSON.stringify(value);
       const instance = Property.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("float");
-
       expect(instance.example).toEqual(3.14);
     });
-
     it("should handle input alternate representation", () => {
       const value = 4;
       const json = JSON.stringify(value);
       const instance = Property.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("integer");
-
       expect(instance.example).toEqual(4);
     });
-
     it("should handle input alternate representation", () => {
       const value = "example";
       const json = JSON.stringify(value);
       const instance = Property.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("string");
-
       expect(instance.example).toEqual("example");
     });
   });
 
   describe("load and save", () => {
+
     it("should save to dictionary", () => {
       const instance = new Property();
       const data = instance.save();

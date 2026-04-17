@@ -8,10 +8,12 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Connection configuration using OAuth 2.0 client credentials.
+/// 
 /// Useful for tools and services that require OAuth authentication,
+/// 
 /// such as MCP servers, OpenAPI endpoints, or other REST APIs.
 /// </summary>
-public class OAuthConnection : Connection
+public partial class OAuthConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -56,6 +58,7 @@ public class OAuthConnection : Connection
     /// OAuth scopes to request
     /// </summary>
     public IList<string>? Scopes { get; set; }
+
 
 
     #region Load Methods
@@ -116,7 +119,6 @@ public class OAuthConnection : Connection
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -139,30 +141,20 @@ public class OAuthConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Endpoint is not null)
-        {
-            result["endpoint"] = obj.Endpoint;
-        }
 
-        if (obj.ClientId is not null)
-        {
-            result["clientId"] = obj.ClientId;
-        }
+        result["endpoint"] = obj.Endpoint;
 
-        if (obj.ClientSecret is not null)
-        {
-            result["clientSecret"] = obj.ClientSecret;
-        }
 
-        if (obj.TokenUrl is not null)
-        {
-            result["tokenUrl"] = obj.TokenUrl;
-        }
+        result["clientId"] = obj.ClientId;
+
+
+        result["clientSecret"] = obj.ClientSecret;
+
+
+        result["tokenUrl"] = obj.TokenUrl;
+
 
         if (obj.Scopes is not null)
         {

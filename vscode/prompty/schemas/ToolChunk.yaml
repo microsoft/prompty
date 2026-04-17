@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ToolChunk.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: tool
+    description: The kind identifier for tool chunks
+  toolCall:
+    $ref: ToolCall.yaml
+    description: The tool call data
+required:
+  - kind
+  - toolCall
+allOf:
+  - $ref: StreamChunk.yaml
+description: A tool call chunk from the LLM response stream.

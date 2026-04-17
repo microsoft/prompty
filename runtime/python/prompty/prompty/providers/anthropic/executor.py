@@ -130,20 +130,11 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
     if opts is None:
         return {}
 
-    result: dict[str, Any] = {}
-
-    if opts.temperature is not None:
-        result["temperature"] = opts.temperature
-    if opts.topP is not None:
-        result["top_p"] = opts.topP
-    if opts.topK is not None:
-        result["top_k"] = opts.topK
-    if opts.stopSequences:
-        result["stop_sequences"] = opts.stopSequences
+    result = opts.to_wire("anthropic")
 
     # Pass through additionalProperties
-    if opts.additionalProperties:
-        for k, v in opts.additionalProperties.items():
+    if opts.additional_properties:
+        for k, v in opts.additional_properties.items():
             if k not in result and k != "max_tokens":
                 result[k] = v
 
@@ -170,8 +161,8 @@ def _property_to_json_schema(prop: Any) -> dict[str, Any]:
 
     if hasattr(prop, "description") and prop.description:
         schema["description"] = prop.description
-    if hasattr(prop, "enumValues") and prop.enumValues:
-        schema["enum"] = prop.enumValues
+    if hasattr(prop, "enum_values") and prop.enum_values:
+        schema["enum"] = prop.enum_values
 
     if getattr(prop, "kind", None) == "array":
         items = getattr(prop, "items", None)
@@ -289,15 +280,14 @@ def _build_chat_args(agent: Prompty, messages: list[Message]) -> dict[str, Any]:
         else:
             conversation.append(_message_to_wire(msg))
 
-    max_tokens = DEFAULT_MAX_TOKENS
-    if agent.model.options and agent.model.options.maxOutputTokens is not None:
-        max_tokens = agent.model.options.maxOutputTokens
+    opts = _build_options(agent)
+    if "max_tokens" not in opts:
+        opts["max_tokens"] = DEFAULT_MAX_TOKENS
 
     args: dict[str, Any] = {
         "model": model,
         "messages": conversation,
-        "max_tokens": max_tokens,
-        **_build_options(agent),
+        **opts,
     }
 
     if system_parts:
@@ -333,7 +323,7 @@ class AnthropicExecutor:
     @trace
     def execute(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client(agent)
-        api_type = agent.model.apiType or "chat"
+        api_type = agent.model.api_type or "chat"
 
         if api_type == "chat":
             return self._execute_chat(client, agent, data)
@@ -345,7 +335,7 @@ class AnthropicExecutor:
     @trace
     async def execute_async(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client_async(agent)
-        api_type = agent.model.apiType or "chat"
+        api_type = agent.model.api_type or "chat"
 
         if api_type == "chat":
             return await self._execute_chat_async(client, agent, data)
@@ -413,8 +403,8 @@ class AnthropicExecutor:
         conn = agent.model.connection
 
         if isinstance(conn, ApiKeyConnection):
-            if conn.apiKey:
-                kwargs["api_key"] = conn.apiKey
+            if conn.api_key:
+                kwargs["api_key"] = conn.api_key
             if conn.endpoint:
                 kwargs["base_url"] = conn.endpoint
         elif conn:

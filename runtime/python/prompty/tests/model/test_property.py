@@ -27,7 +27,6 @@ def test_load_json_property():
     assert instance.name == "my-input"
     assert instance.kind == "string"
     assert instance.description == "A description of the input property"
-
     assert instance.required
     assert instance.default == "default value"
     assert instance.example == "example value"

@@ -74,34 +74,15 @@ fn test_prompty_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
     assert_eq!(instance.display_name.as_ref().unwrap(), &"Basic Prompt");
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert_eq!(
-        instance.description.as_ref().unwrap(),
-        &"A basic prompt that uses the GPT-3 chat API to answer questions"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
-    assert_eq!(
-        instance.instructions.as_ref().unwrap(),
-        &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    );
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert_eq!(instance.description.as_ref().unwrap(), &"A basic prompt that uses the GPT-3 chat API to answer questions");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
+    assert_eq!(instance.instructions.as_ref().unwrap(), &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
 }
 
 #[test]
@@ -175,25 +156,12 @@ instructions: "system:
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
 }
 
 #[test]
@@ -271,11 +239,7 @@ fn test_prompty_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
 #[test]
@@ -348,34 +312,15 @@ fn test_prompty_load_json_1() {
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
     assert_eq!(instance.display_name.as_ref().unwrap(), &"Basic Prompt");
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert_eq!(
-        instance.description.as_ref().unwrap(),
-        &"A basic prompt that uses the GPT-3 chat API to answer questions"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
-    assert_eq!(
-        instance.instructions.as_ref().unwrap(),
-        &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    );
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert_eq!(instance.description.as_ref().unwrap(), &"A basic prompt that uses the GPT-3 chat API to answer questions");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
+    assert_eq!(instance.instructions.as_ref().unwrap(), &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
 }
 
 #[test]
@@ -449,25 +394,12 @@ instructions: "system:
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
 }
 
 #[test]
@@ -544,11 +476,7 @@ fn test_prompty_roundtrip_1() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
 #[test]
@@ -623,34 +551,15 @@ fn test_prompty_load_json_2() {
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
     assert_eq!(instance.display_name.as_ref().unwrap(), &"Basic Prompt");
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert_eq!(
-        instance.description.as_ref().unwrap(),
-        &"A basic prompt that uses the GPT-3 chat API to answer questions"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
-    assert_eq!(
-        instance.instructions.as_ref().unwrap(),
-        &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    );
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert_eq!(instance.description.as_ref().unwrap(), &"A basic prompt that uses the GPT-3 chat API to answer questions");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
+    assert_eq!(instance.instructions.as_ref().unwrap(), &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
 }
 
 #[test]
@@ -724,25 +633,12 @@ instructions: "system:
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
 }
 
 #[test]
@@ -821,11 +717,7 @@ fn test_prompty_roundtrip_2() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
 #[test]
@@ -899,34 +791,15 @@ fn test_prompty_load_json_3() {
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
     assert_eq!(instance.display_name.as_ref().unwrap(), &"Basic Prompt");
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert_eq!(
-        instance.description.as_ref().unwrap(),
-        &"A basic prompt that uses the GPT-3 chat API to answer questions"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
-    assert_eq!(
-        instance.instructions.as_ref().unwrap(),
-        &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    );
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert_eq!(instance.description.as_ref().unwrap(), &"A basic prompt that uses the GPT-3 chat API to answer questions");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
+    assert_eq!(instance.instructions.as_ref().unwrap(), &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
 }
 
 #[test]
@@ -1000,25 +873,12 @@ instructions: "system:
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
 }
 
 #[test]
@@ -1096,11 +956,7 @@ fn test_prompty_roundtrip_3() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
 #[test]
@@ -1177,34 +1033,15 @@ fn test_prompty_load_json_4() {
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
     assert_eq!(instance.display_name.as_ref().unwrap(), &"Basic Prompt");
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert_eq!(
-        instance.description.as_ref().unwrap(),
-        &"A basic prompt that uses the GPT-3 chat API to answer questions"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
-    assert_eq!(
-        instance.instructions.as_ref().unwrap(),
-        &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    );
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert_eq!(instance.description.as_ref().unwrap(), &"A basic prompt that uses the GPT-3 chat API to answer questions");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
+    assert_eq!(instance.instructions.as_ref().unwrap(), &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
 }
 
 #[test]
@@ -1278,25 +1115,12 @@ instructions: "system:
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
 }
 
 #[test]
@@ -1377,11 +1201,7 @@ fn test_prompty_roundtrip_4() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
 #[test]
@@ -1457,34 +1277,15 @@ fn test_prompty_load_json_5() {
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
     assert_eq!(instance.display_name.as_ref().unwrap(), &"Basic Prompt");
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert_eq!(
-        instance.description.as_ref().unwrap(),
-        &"A basic prompt that uses the GPT-3 chat API to answer questions"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
-    assert_eq!(
-        instance.instructions.as_ref().unwrap(),
-        &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    );
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert_eq!(instance.description.as_ref().unwrap(), &"A basic prompt that uses the GPT-3 chat API to answer questions");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
+    assert_eq!(instance.instructions.as_ref().unwrap(), &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
 }
 
 #[test]
@@ -1558,25 +1359,12 @@ instructions: "system:
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
 }
 
 #[test]
@@ -1656,11 +1444,7 @@ fn test_prompty_roundtrip_5() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
 #[test]
@@ -1738,34 +1522,15 @@ fn test_prompty_load_json_6() {
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
     assert_eq!(instance.display_name.as_ref().unwrap(), &"Basic Prompt");
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert_eq!(
-        instance.description.as_ref().unwrap(),
-        &"A basic prompt that uses the GPT-3 chat API to answer questions"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
-    assert_eq!(
-        instance.instructions.as_ref().unwrap(),
-        &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    );
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert_eq!(instance.description.as_ref().unwrap(), &"A basic prompt that uses the GPT-3 chat API to answer questions");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
+    assert_eq!(instance.instructions.as_ref().unwrap(), &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
 }
 
 #[test]
@@ -1839,25 +1604,12 @@ instructions: "system:
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
 }
 
 #[test]
@@ -1939,11 +1691,7 @@ fn test_prompty_roundtrip_6() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
 
 #[test]
@@ -2020,34 +1768,15 @@ fn test_prompty_load_json_7() {
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_json(json, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from JSON: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
     assert_eq!(instance.display_name.as_ref().unwrap(), &"Basic Prompt");
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert_eq!(
-        instance.description.as_ref().unwrap(),
-        &"A basic prompt that uses the GPT-3 chat API to answer questions"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
-    assert_eq!(
-        instance.instructions.as_ref().unwrap(),
-        &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    );
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert_eq!(instance.description.as_ref().unwrap(), &"A basic prompt that uses the GPT-3 chat API to answer questions");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
+    assert_eq!(instance.instructions.as_ref().unwrap(), &"system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}");
 }
 
 #[test]
@@ -2121,25 +1850,12 @@ instructions: "system:
 "####;
     let ctx = LoadContext::default();
     let result = Prompty::from_yaml(yaml, &ctx);
-    assert!(
-        result.is_ok(),
-        "Failed to load from YAML: {:?}",
-        result.err()
-    );
+    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
-    assert!(
-        instance.display_name.is_some(),
-        "Expected display_name to be Some"
-    );
-    assert!(
-        instance.description.is_some(),
-        "Expected description to be Some"
-    );
-    assert!(
-        instance.instructions.is_some(),
-        "Expected instructions to be Some"
-    );
+    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(instance.description.is_some(), "Expected description to be Some");
+    assert!(instance.instructions.is_some(), "Expected instructions to be Some");
 }
 
 #[test]
@@ -2220,9 +1936,6 @@ fn test_prompty_roundtrip_7() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(
-        json_output.is_ok(),
-        "Failed to serialize to JSON: {:?}",
-        json_output.err()
-    );
+    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
 }
+

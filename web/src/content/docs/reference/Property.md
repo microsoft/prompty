@@ -24,7 +24,6 @@ config:
 ---
 classDiagram
     class Property {
-      
         +string name
         +string kind
         +string description

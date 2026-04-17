@@ -696,7 +696,7 @@ public class SpecVectorAgentTests : IDisposable
 
     private class PassthroughParser : IParser
     {
-        public Task<List<Message>> ParseAsync(Core.Prompty agent, string rendered)
+        public Task<List<Message>> ParseAsync(Core.Prompty agent, string rendered, Dictionary<string, object?>? context)
         {
             var msgs = new List<Message>
             {
@@ -722,10 +722,10 @@ public class SpecVectorAgentTests : IDisposable
         {
             var messages = new List<Message>
             {
-                new() { Role = Roles.Assistant, Parts = [], Metadata = new() { ["tool_calls"] = toolCalls } },
+                new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
             };
             for (var i = 0; i < toolCalls.Count; i++)
-                messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+                messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
             return messages;
         }
     }

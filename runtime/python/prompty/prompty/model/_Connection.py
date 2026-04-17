@@ -21,17 +21,17 @@ class Connection(ABC):
     ----------
     kind : str
         The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
-    authenticationMode : Optional[str]
+    authentication_mode : Optional[str]
         The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
-    usageDescription : Optional[str]
+    usage_description : Optional[str]
         The usage description for the connection, providing context on how this connection will be used
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="")
-    authenticationMode: str | None = None
-    usageDescription: str | None = None
+    authentication_mode: str | None = None
+    usage_description: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Connection":
@@ -56,9 +56,9 @@ class Connection(ABC):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "authenticationMode" in data:
-            instance.authenticationMode = data["authenticationMode"]
+            instance.authentication_mode = data["authenticationMode"]
         if data is not None and "usageDescription" in data:
-            instance.usageDescription = data["usageDescription"]
+            instance.usage_description = data["usageDescription"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -76,10 +76,10 @@ class Connection(ABC):
                 return ApiKeyConnection.load(data, context)
             elif discriminator_value == "anonymous":
                 return AnonymousConnection.load(data, context)
-            elif discriminator_value == "foundry":
-                return FoundryConnection.load(data, context)
             elif discriminator_value == "oauth":
                 return OAuthConnection.load(data, context)
+            elif discriminator_value == "foundry":
+                return FoundryConnection.load(data, context)
 
             else:
                 raise ValueError(f"Unknown Connection discriminator value: {discriminator_value}")
@@ -102,10 +102,10 @@ class Connection(ABC):
 
         if obj.kind is not None:
             result["kind"] = obj.kind
-        if obj.authenticationMode is not None:
-            result["authenticationMode"] = obj.authenticationMode
-        if obj.usageDescription is not None:
-            result["usageDescription"] = obj.usageDescription
+        if obj.authentication_mode is not None:
+            result["authenticationMode"] = obj.authentication_mode
+        if obj.usage_description is not None:
+            result["usageDescription"] = obj.usage_description
 
         if context is not None:
             result = context.process_dict(result)
@@ -208,7 +208,6 @@ class ReferenceConnection(Connection):
             result["name"] = obj.name
         if obj.target is not None:
             result["target"] = obj.target
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -308,7 +307,6 @@ class RemoteConnection(Connection):
             result["name"] = obj.name
         if obj.endpoint is not None:
             result["endpoint"] = obj.endpoint
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -347,7 +345,7 @@ class ApiKeyConnection(Connection):
         The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
     endpoint : str
         The endpoint URL for the AI service
-    apiKey : str
+    api_key : str
         The API key for authenticating with the AI service
     """
 
@@ -355,7 +353,7 @@ class ApiKeyConnection(Connection):
 
     kind: str = field(default="key")
     endpoint: str = field(default="")
-    apiKey: str = field(default="")
+    api_key: str = field(default="")
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ApiKeyConnection":
@@ -382,7 +380,7 @@ class ApiKeyConnection(Connection):
         if data is not None and "endpoint" in data:
             instance.endpoint = data["endpoint"]
         if data is not None and "apiKey" in data:
-            instance.apiKey = data["apiKey"]
+            instance.api_key = data["apiKey"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -406,9 +404,8 @@ class ApiKeyConnection(Connection):
             result["kind"] = obj.kind
         if obj.endpoint is not None:
             result["endpoint"] = obj.endpoint
-        if obj.apiKey is not None:
-            result["apiKey"] = obj.apiKey
-
+        if obj.api_key is not None:
+            result["apiKey"] = obj.api_key
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -501,7 +498,6 @@ class AnonymousConnection(Connection):
             result["kind"] = obj.kind
         if obj.endpoint is not None:
             result["endpoint"] = obj.endpoint
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -531,6 +527,128 @@ class AnonymousConnection(Connection):
 
 
 @dataclass
+class OAuthConnection(Connection):
+    """Connection configuration using OAuth 2.0 client credentials.
+    Useful for tools and services that require OAuth authentication,
+    such as MCP servers, OpenAPI endpoints, or other REST APIs.
+
+    Attributes
+    ----------
+    kind : str
+        The connection kind for OAuth authentication
+    endpoint : str
+        The endpoint URL for the service
+    client_id : str
+        The OAuth client ID
+    client_secret : str
+        The OAuth client secret
+    token_url : str
+        The OAuth token endpoint URL
+    scopes : Optional[list[str]]
+        OAuth scopes to request
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="oauth")
+    endpoint: str = field(default="")
+    client_id: str = field(default="")
+    client_secret: str = field(default="")
+    token_url: str = field(default="")
+    scopes: list[str] = field(default_factory=list)
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "OAuthConnection":
+        """Load a OAuthConnection instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            OAuthConnection: The loaded OAuthConnection instance.
+
+        """
+
+        if context is not None:
+            data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for OAuthConnection: {data}")
+
+        # create new instance
+        instance = OAuthConnection()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "endpoint" in data:
+            instance.endpoint = data["endpoint"]
+        if data is not None and "clientId" in data:
+            instance.client_id = data["clientId"]
+        if data is not None and "clientSecret" in data:
+            instance.client_secret = data["clientSecret"]
+        if data is not None and "tokenUrl" in data:
+            instance.token_url = data["tokenUrl"]
+        if data is not None and "scopes" in data:
+            instance.scopes = data["scopes"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the OAuthConnection instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        if obj.endpoint is not None:
+            result["endpoint"] = obj.endpoint
+        if obj.client_id is not None:
+            result["clientId"] = obj.client_id
+        if obj.client_secret is not None:
+            result["clientSecret"] = obj.client_secret
+        if obj.token_url is not None:
+            result["tokenUrl"] = obj.token_url
+        if obj.scopes is not None:
+            result["scopes"] = obj.scopes
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the OAuthConnection instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the OAuthConnection instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
 class FoundryConnection(Connection):
     """Connection configuration for Microsoft Foundry projects.
     Provides project-scoped access to models, tools, and services
@@ -544,7 +662,7 @@ class FoundryConnection(Connection):
         The Foundry project endpoint URL
     name : Optional[str]
         The named connection within the Foundry project
-    connectionType : Optional[str]
+    connection_type : Optional[str]
         The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
     """
 
@@ -553,7 +671,7 @@ class FoundryConnection(Connection):
     kind: str = field(default="foundry")
     endpoint: str = field(default="")
     name: str | None = None
-    connectionType: str | None = None
+    connection_type: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "FoundryConnection":
@@ -582,7 +700,7 @@ class FoundryConnection(Connection):
         if data is not None and "name" in data:
             instance.name = data["name"]
         if data is not None and "connectionType" in data:
-            instance.connectionType = data["connectionType"]
+            instance.connection_type = data["connectionType"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -608,9 +726,8 @@ class FoundryConnection(Connection):
             result["endpoint"] = obj.endpoint
         if obj.name is not None:
             result["name"] = obj.name
-        if obj.connectionType is not None:
-            result["connectionType"] = obj.connectionType
-
+        if obj.connection_type is not None:
+            result["connectionType"] = obj.connection_type
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -627,129 +744,6 @@ class FoundryConnection(Connection):
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the FoundryConnection instance to a JSON string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-            indent (int): Number of spaces for indentation. Defaults to 2.
-        Returns:
-            str: The JSON string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_json(self.save(context), indent)
-
-
-@dataclass
-class OAuthConnection(Connection):
-    """Connection configuration using OAuth 2.0 client credentials.
-    Useful for tools and services that require OAuth authentication,
-    such as MCP servers, OpenAPI endpoints, or other REST APIs.
-
-    Attributes
-    ----------
-    kind : str
-        The connection kind for OAuth authentication
-    endpoint : str
-        The endpoint URL for the service
-    clientId : str
-        The OAuth client ID
-    clientSecret : str
-        The OAuth client secret
-    tokenUrl : str
-        The OAuth token endpoint URL
-    scopes : list[str]
-        OAuth scopes to request
-    """
-
-    _shorthand_property: ClassVar[str | None] = None
-
-    kind: str = field(default="oauth")
-    endpoint: str = field(default="")
-    clientId: str = field(default="")
-    clientSecret: str = field(default="")
-    tokenUrl: str = field(default="")
-    scopes: list[str] = field(default_factory=list)
-
-    @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "OAuthConnection":
-        """Load a OAuthConnection instance.
-        Args:
-            data (Any): The data to load the instance from.
-            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            OAuthConnection: The loaded OAuthConnection instance.
-
-        """
-
-        if context is not None:
-            data = context.process_input(data)
-
-        if not isinstance(data, dict):
-            raise ValueError(f"Invalid data for OAuthConnection: {data}")
-
-        # create new instance
-        instance = OAuthConnection()
-
-        if data is not None and "kind" in data:
-            instance.kind = data["kind"]
-        if data is not None and "endpoint" in data:
-            instance.endpoint = data["endpoint"]
-        if data is not None and "clientId" in data:
-            instance.clientId = data["clientId"]
-        if data is not None and "clientSecret" in data:
-            instance.clientSecret = data["clientSecret"]
-        if data is not None and "tokenUrl" in data:
-            instance.tokenUrl = data["tokenUrl"]
-        if data is not None and "scopes" in data:
-            instance.scopes = data["scopes"]
-        if context is not None:
-            instance = context.process_output(instance)
-        return instance
-
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
-        """Save the OAuthConnection instance to a dictionary.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            dict[str, Any]: The dictionary representation of this instance.
-
-        """
-        obj = self
-        if context is not None:
-            obj = context.process_object(obj)
-
-        # Start with parent class properties
-        result = super().save(context)
-
-        if obj.kind is not None:
-            result["kind"] = obj.kind
-        if obj.endpoint is not None:
-            result["endpoint"] = obj.endpoint
-        if obj.clientId is not None:
-            result["clientId"] = obj.clientId
-        if obj.clientSecret is not None:
-            result["clientSecret"] = obj.clientSecret
-        if obj.tokenUrl is not None:
-            result["tokenUrl"] = obj.tokenUrl
-        if obj.scopes is not None:
-            result["scopes"] = obj.scopes
-
-        return result
-
-    def to_yaml(self, context: SaveContext | None = None) -> str:
-        """Convert the OAuthConnection instance to a YAML string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            str: The YAML string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_yaml(self.save(context))
-
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
-        """Convert the OAuthConnection instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

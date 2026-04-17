@@ -7,9 +7,8 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// 
 /// </summary>
-public class AnonymousConnection : Connection
+public partial class AnonymousConnection : Connection
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -34,6 +33,7 @@ public class AnonymousConnection : Connection
     /// The endpoint for authenticating with the AI service
     /// </summary>
     public string Endpoint { get; set; } = string.Empty;
+
 
 
     #region Load Methods
@@ -74,7 +74,6 @@ public class AnonymousConnection : Connection
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -97,15 +96,10 @@ public class AnonymousConnection : Connection
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Endpoint is not null)
-        {
-            result["endpoint"] = obj.Endpoint;
-        }
+
+        result["endpoint"] = obj.Endpoint;
 
 
         return result;

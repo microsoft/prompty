@@ -571,7 +571,7 @@ public class TracingTests : IDisposable
 
     private class PassthroughParser : IParser
     {
-        public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+        public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
             => Task.FromResult<List<Message>>([new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }]);
     }
 

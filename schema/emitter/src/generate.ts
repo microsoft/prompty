@@ -1,6 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
+import { execSync, execFileSync } from "child_process";
 import { existsSync, mkdirSync, writeFileSync, unlinkSync } from "fs";
 import * as YAML from "yaml";
 
@@ -93,7 +93,7 @@ export interface GenerateResult {
  * 
  * @example
  * ```typescript
- * import { generate } from 'agentschema-emitter/generate';
+ * import { generate } from 'prompty-emitter/generate';
  * 
  * await generate({
  *   output: './generated',
@@ -131,9 +131,9 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
 
   // Create temporary tspconfig.yaml
   const tspConfig = {
-    emit: ["agentschema-emitter"],
+    emit: ["prompty-emitter"],
     options: {
-      "agentschema-emitter": {
+      "prompty-emitter": {
         "emitter-output-dir": outputDir,
         "root-object": rootObject,
         "root-namespace": namespace,
@@ -149,8 +149,8 @@ export async function generate(options: GenerateOptions): Promise<GenerateResult
   writeFileSync(tempConfigPath, YAML.stringify(tspConfig));
 
   try {
-    // Run tsp compile
-    execSync(`tsp compile "${modelPath}" --config "${tempConfigPath}"`, {
+    // Run tsp compile — use execFileSync to avoid shell injection
+    execFileSync("tsp", ["compile", modelPath, "--config", tempConfigPath], {
       stdio: "inherit",
       cwd: outputDir,
     });

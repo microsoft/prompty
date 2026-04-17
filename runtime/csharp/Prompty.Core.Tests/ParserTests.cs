@@ -15,7 +15,7 @@ public class PromptyChatParserTests
     [Fact]
     public async Task Parse_SingleSystemRole()
     {
-        var messages = await _parser.ParseAsync(CreateAgent(), "system:\nYou are helpful.");
+        var messages = await _parser.ParseAsync(CreateAgent(), "system:\nYou are helpful.", null);
         Assert.Single(messages);
         Assert.Equal(Roles.System, messages[0].Role);
         Assert.Equal("You are helpful.", messages[0].Text);
@@ -25,7 +25,7 @@ public class PromptyChatParserTests
     public async Task Parse_MultipleRoles()
     {
         var text = "system:\nYou are helpful.\n\nuser:\nHello\n\nassistant:\nHi there!";
-        var messages = await _parser.ParseAsync(CreateAgent(), text);
+        var messages = await _parser.ParseAsync(CreateAgent(), text, null);
         Assert.Equal(3, messages.Count);
         Assert.Equal(Roles.System, messages[0].Role);
         Assert.Equal(Roles.User, messages[1].Role);
@@ -35,7 +35,7 @@ public class PromptyChatParserTests
     [Fact]
     public async Task Parse_DeveloperRole()
     {
-        var messages = await _parser.ParseAsync(CreateAgent(), "developer:\nInstructions here.");
+        var messages = await _parser.ParseAsync(CreateAgent(), "developer:\nInstructions here.", null);
         Assert.Single(messages);
         Assert.Equal(Roles.Developer, messages[0].Role);
     }
@@ -43,7 +43,7 @@ public class PromptyChatParserTests
     [Fact]
     public async Task Parse_ToolRole()
     {
-        var messages = await _parser.ParseAsync(CreateAgent(), "tool:\nTool response");
+        var messages = await _parser.ParseAsync(CreateAgent(), "tool:\nTool response", null);
         Assert.Single(messages);
         Assert.Equal(Roles.Tool, messages[0].Role);
     }
@@ -56,7 +56,7 @@ public class PromptyChatParserTests
     public async Task Parse_TrimsLeadingTrailingBlankLines()
     {
         var text = "system:\n\n\nHello\n\n";
-        var messages = await _parser.ParseAsync(CreateAgent(), text);
+        var messages = await _parser.ParseAsync(CreateAgent(), text, null);
         Assert.Equal("Hello", messages[0].Text);
     }
 
@@ -64,7 +64,7 @@ public class PromptyChatParserTests
     public async Task Parse_PreservesInternalWhitespace()
     {
         var text = "system:\nLine 1\n\nLine 3";
-        var messages = await _parser.ParseAsync(CreateAgent(), text);
+        var messages = await _parser.ParseAsync(CreateAgent(), text, null);
         Assert.Contains("Line 1\n\nLine 3", messages[0].Text);
     }
 
@@ -72,7 +72,7 @@ public class PromptyChatParserTests
     public async Task Parse_MultilineContent()
     {
         var text = "system:\nLine 1\nLine 2\nLine 3";
-        var messages = await _parser.ParseAsync(CreateAgent(), text);
+        var messages = await _parser.ParseAsync(CreateAgent(), text, null);
         Assert.Contains("Line 1", messages[0].Text);
         Assert.Contains("Line 3", messages[0].Text);
     }
@@ -84,7 +84,7 @@ public class PromptyChatParserTests
     [Fact]
     public async Task Parse_NoRoleMarkers_DefaultsToSystem()
     {
-        var messages = await _parser.ParseAsync(CreateAgent(), "Just some text");
+        var messages = await _parser.ParseAsync(CreateAgent(), "Just some text", null);
         Assert.Single(messages);
         Assert.Equal(Roles.System, messages[0].Role);
         Assert.Equal("Just some text", messages[0].Text);
@@ -93,14 +93,14 @@ public class PromptyChatParserTests
     [Fact]
     public async Task Parse_EmptyInput_ReturnsNoMessages()
     {
-        var messages = await _parser.ParseAsync(CreateAgent(), "");
+        var messages = await _parser.ParseAsync(CreateAgent(), "", null);
         Assert.Empty(messages);
     }
 
     [Fact]
     public async Task Parse_WhitespaceOnly_ReturnsNoMessages()
     {
-        var messages = await _parser.ParseAsync(CreateAgent(), "   \n\n  ");
+        var messages = await _parser.ParseAsync(CreateAgent(), "   \n\n  ", null);
         Assert.Empty(messages);
     }
 
@@ -112,7 +112,7 @@ public class PromptyChatParserTests
     public async Task Parse_RoleWithAttributes()
     {
         var text = "tool[tool_call_id=\"call_123\", name=\"get_weather\"]:\nResult here";
-        var messages = await _parser.ParseAsync(CreateAgent(), text);
+        var messages = await _parser.ParseAsync(CreateAgent(), text, null);
         Assert.Single(messages);
         Assert.Equal(Roles.Tool, messages[0].Role);
         Assert.Equal("call_123", messages[0].Metadata["tool_call_id"]);
@@ -154,10 +154,10 @@ public class PromptyChatParserTests
         var (sanitized, _) = parser.PreRender(template);
 
         // Parsing the pre-rendered template should work (nonce matches)
-        var messages = await parser.ParseAsync(CreateAgent(), sanitized);
+        var messages = await parser.ParseAsync(CreateAgent(), sanitized, null);
         Assert.Equal(2, messages.Count);
         // Nonce should NOT be in metadata
-        Assert.False(messages[0].Metadata.ContainsKey("nonce"));
+        Assert.False(messages[0].Metadata?.ContainsKey("nonce") ?? false);
     }
 
     // -----------------------------------------------------------------------
@@ -170,7 +170,7 @@ public class PromptyChatParserTests
         // Thread nonces appear in rendered text; parser should preserve them as-is
         // (thread expansion happens in pipeline, not parser)
         var text = "system:\nYou are helpful.\n__PROMPTY_THREAD_abcd1234_conversation__\nuser:\nHello";
-        var messages = await _parser.ParseAsync(CreateAgent(), text);
+        var messages = await _parser.ParseAsync(CreateAgent(), text, null);
         Assert.Equal(2, messages.Count);
         Assert.Contains("__PROMPTY_THREAD_abcd1234_conversation__", messages[0].Text);
     }

@@ -406,8 +406,8 @@ def _check_model(model: Model, expected: dict, errors: list[str]):
         if model.provider != expected["provider"]:
             errors.append(f"  model.provider: {model.provider!r} != expected {expected['provider']!r}")
     if "apiType" in expected:
-        if model.apiType != expected["apiType"]:
-            errors.append(f"  model.apiType: {model.apiType!r} != expected {expected['apiType']!r}")
+        if model.api_type != expected["apiType"]:
+            errors.append(f"  model.api_type: {model.api_type!r} != expected {expected['apiType']!r}")
     if "connection" in expected and expected["connection"] is not None:
         conn = model.connection
         exp_conn = expected["connection"]
@@ -423,9 +423,9 @@ def _check_model(model: Model, expected: dict, errors: list[str]):
                 if actual_ep != exp_conn["endpoint"]:
                     errors.append(f"  model.connection.endpoint: {actual_ep!r} != expected {exp_conn['endpoint']!r}")
             if "apiKey" in exp_conn:
-                actual_key = getattr(conn, "apiKey", None)
+                actual_key = getattr(conn, "api_key", None)
                 if actual_key != exp_conn["apiKey"]:
-                    errors.append(f"  model.connection.apiKey: {actual_key!r} != expected {exp_conn['apiKey']!r}")
+                    errors.append(f"  model.connection.api_key: {actual_key!r} != expected {exp_conn['apiKey']!r}")
     if "options" in expected and expected["options"] is not None:
         opts = model.options
         exp_opts = expected["options"]
@@ -434,9 +434,9 @@ def _check_model(model: Model, expected: dict, errors: list[str]):
         else:
             if "temperature" in exp_opts and opts.temperature != exp_opts["temperature"]:
                 errors.append(f"  model.options.temperature: {opts.temperature} != {exp_opts['temperature']}")
-            if "maxOutputTokens" in exp_opts and opts.maxOutputTokens != exp_opts["maxOutputTokens"]:
+            if "maxOutputTokens" in exp_opts and opts.max_output_tokens != exp_opts["maxOutputTokens"]:
                 errors.append(
-                    f"  model.options.maxOutputTokens: {opts.maxOutputTokens} != {exp_opts['maxOutputTokens']}"
+                    f"  model.options.max_output_tokens: {opts.max_output_tokens} != {exp_opts['maxOutputTokens']}"
                 )
 
 
@@ -478,9 +478,9 @@ def _check_tools(actual: list, expected: list[dict], errors: list[str]):
             act_params = getattr(act, "parameters", []) or []
             _check_properties(act_params, exp["parameters"], f"{prefix}.parameters", errors)
         if "serverName" in exp:
-            act_val = getattr(act, "serverName", None)
+            act_val = getattr(act, "server_name", None)
             if act_val != exp["serverName"]:
-                errors.append(f"  {prefix}.serverName: {act_val!r} != expected {exp['serverName']!r}")
+                errors.append(f"  {prefix}.server_name: {act_val!r} != expected {exp['serverName']!r}")
         if "specification" in exp:
             act_val = getattr(act, "specification", None)
             if act_val != exp["specification"]:

@@ -1,0 +1,5 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Renderer.yaml
+type: object
+properties: {}
+description: Renders a template string with input values to produce the final prompt text.

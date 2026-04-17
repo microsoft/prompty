@@ -1,0 +1,5 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Parser.yaml
+type: object
+properties: {}
+description: Parses rendered prompt text into an array of structured messages with role markers.

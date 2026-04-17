@@ -24,7 +24,7 @@ class Model:
         The unique identifier of the model - can be used as the single property shorthand
     provider : Optional[str]
         The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
-    apiType : Optional[str]
+    api_type : Optional[str]
         The type of API to use for the model (e.g., 'chat', 'response', etc.)
     connection : Optional[Connection]
         The connection configuration for the model
@@ -36,7 +36,7 @@ class Model:
 
     id: str = field(default="")
     provider: str | None = None
-    apiType: str | None = None
+    api_type: str | None = None
     connection: Connection | None = None
     options: ModelOptions | None = None
 
@@ -56,7 +56,11 @@ class Model:
 
         # handle alternate representations
         if isinstance(data, str):
-            data = {"id": data}
+            instance = Model()
+            instance.id = data
+            if context is not None:
+                instance = context.process_output(instance)
+            return instance
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Model: {data}")
@@ -69,7 +73,7 @@ class Model:
         if data is not None and "provider" in data:
             instance.provider = data["provider"]
         if data is not None and "apiType" in data:
-            instance.apiType = data["apiType"]
+            instance.api_type = data["apiType"]
         if data is not None and "connection" in data:
             instance.connection = Connection.load(data["connection"], context)
         if data is not None and "options" in data:
@@ -96,8 +100,8 @@ class Model:
             result["id"] = obj.id
         if obj.provider is not None:
             result["provider"] = obj.provider
-        if obj.apiType is not None:
-            result["apiType"] = obj.apiType
+        if obj.api_type is not None:
+            result["apiType"] = obj.api_type
         if obj.connection is not None:
             result["connection"] = obj.connection.save(context)
         if obj.options is not None:

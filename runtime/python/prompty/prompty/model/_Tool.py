@@ -27,7 +27,7 @@ class Tool(ABC):
         The kind identifier for the tool
     description : Optional[str]
         A short description of the tool for metadata purposes
-    bindings : list[Binding]
+    bindings : Optional[list[Binding]]
         Tool argument bindings to input properties
     """
 
@@ -130,7 +130,6 @@ class Tool(ABC):
             else:
                 # load default instance
                 return CustomTool.load(data, context)
-
         else:
             raise ValueError("Missing Tool discriminator property: 'kind'")
 
@@ -248,7 +247,7 @@ class FunctionTool(Tool):
                     result.append({"name": k, **v})
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "": v})
+                    result.append({"name": k, "kind": v})
             data = result
         return [Property.load(item, context) for item in data]
 
@@ -257,28 +256,8 @@ class FunctionTool(Tool):
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # This type doesn't have a 'name' property, so always use array format
+        return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FunctionTool instance to a dictionary.
@@ -301,7 +280,6 @@ class FunctionTool(Tool):
             result["parameters"] = FunctionTool.save_parameters(obj.parameters, context)
         if obj.strict is not None:
             result["strict"] = obj.strict
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -405,7 +383,6 @@ class CustomTool(Tool):
             result["connection"] = obj.connection.save(context)
         if obj.options is not None:
             result["options"] = obj.options
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -444,13 +421,13 @@ class McpTool(Tool):
         The kind identifier for MCP tools
     connection : Connection
         The connection configuration for the MCP tool
-    serverName : str
+    server_name : str
         The server name of the MCP tool
-    serverDescription : Optional[str]
+    server_description : Optional[str]
         The description of the MCP tool
-    approvalMode : McpApprovalMode
+    approval_mode : McpApprovalMode
         The approval mode for the MCP tool
-    allowedTools : list[str]
+    allowed_tools : Optional[list[str]]
         List of allowed operations or resources for the MCP tool
     """
 
@@ -458,10 +435,10 @@ class McpTool(Tool):
 
     kind: str = field(default="mcp")
     connection: Connection = field(default_factory=Connection)
-    serverName: str = field(default="")
-    serverDescription: str | None = None
-    approvalMode: McpApprovalMode = field(default_factory=McpApprovalMode)
-    allowedTools: list[str] = field(default_factory=list)
+    server_name: str = field(default="")
+    server_description: str | None = None
+    approval_mode: McpApprovalMode = field(default_factory=McpApprovalMode)
+    allowed_tools: list[str] = field(default_factory=list)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "McpTool":
@@ -488,13 +465,13 @@ class McpTool(Tool):
         if data is not None and "connection" in data:
             instance.connection = Connection.load(data["connection"], context)
         if data is not None and "serverName" in data:
-            instance.serverName = data["serverName"]
+            instance.server_name = data["serverName"]
         if data is not None and "serverDescription" in data:
-            instance.serverDescription = data["serverDescription"]
+            instance.server_description = data["serverDescription"]
         if data is not None and "approvalMode" in data:
-            instance.approvalMode = McpApprovalMode.load(data["approvalMode"], context)
+            instance.approval_mode = McpApprovalMode.load(data["approvalMode"], context)
         if data is not None and "allowedTools" in data:
-            instance.allowedTools = data["allowedTools"]
+            instance.allowed_tools = data["allowedTools"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -518,15 +495,14 @@ class McpTool(Tool):
             result["kind"] = obj.kind
         if obj.connection is not None:
             result["connection"] = obj.connection.save(context)
-        if obj.serverName is not None:
-            result["serverName"] = obj.serverName
-        if obj.serverDescription is not None:
-            result["serverDescription"] = obj.serverDescription
-        if obj.approvalMode is not None:
-            result["approvalMode"] = obj.approvalMode.save(context)
-        if obj.allowedTools is not None:
-            result["allowedTools"] = obj.allowedTools
-
+        if obj.server_name is not None:
+            result["serverName"] = obj.server_name
+        if obj.server_description is not None:
+            result["serverDescription"] = obj.server_description
+        if obj.approval_mode is not None:
+            result["approvalMode"] = obj.approval_mode.save(context)
+        if obj.allowed_tools is not None:
+            result["allowedTools"] = obj.allowed_tools
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -626,7 +602,6 @@ class OpenApiTool(Tool):
             result["connection"] = obj.connection.save(context)
         if obj.specification is not None:
             result["specification"] = obj.specification
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
@@ -729,7 +704,6 @@ class PromptyTool(Tool):
             result["path"] = obj.path
         if obj.mode is not None:
             result["mode"] = obj.mode
-
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

@@ -21,21 +21,13 @@ describe("ModelOptions", () => {
       const json = `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`;
       const instance = ModelOptions.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.frequencyPenalty).toEqual(0.5);
-
       expect(instance.maxOutputTokens).toEqual(2048);
-
       expect(instance.presencePenalty).toEqual(0.3);
-
       expect(instance.seed).toEqual(42);
-
       expect(instance.temperature).toEqual(0.7);
-
       expect(instance.topK).toEqual(40);
-
       expect(instance.topP).toEqual(0.9);
-
       expect(instance.allowMultipleToolCalls).toEqual(true);
     });
 
@@ -44,24 +36,14 @@ describe("ModelOptions", () => {
       const instance = ModelOptions.fromJson(json);
       const output = instance.toJson();
       const reloaded = ModelOptions.fromJson(output);
-
       expect(reloaded.frequencyPenalty).toEqual(instance.frequencyPenalty);
-
       expect(reloaded.maxOutputTokens).toEqual(instance.maxOutputTokens);
-
       expect(reloaded.presencePenalty).toEqual(instance.presencePenalty);
-
       expect(reloaded.seed).toEqual(instance.seed);
-
       expect(reloaded.temperature).toEqual(instance.temperature);
-
       expect(reloaded.topK).toEqual(instance.topK);
-
       expect(reloaded.topP).toEqual(instance.topP);
-
-      expect(reloaded.allowMultipleToolCalls).toEqual(
-        instance.allowMultipleToolCalls,
-      );
+      expect(reloaded.allowMultipleToolCalls).toEqual(instance.allowMultipleToolCalls);
     });
   });
 
@@ -70,21 +52,13 @@ describe("ModelOptions", () => {
       const yaml = `frequencyPenalty: 0.5\nmaxOutputTokens: 2048\npresencePenalty: 0.3\nseed: 42\ntemperature: 0.7\ntopK: 40\ntopP: 0.9\nstopSequences:\n  - "\\n"\n  - "###"\nallowMultipleToolCalls: true\nadditionalProperties:\n  customProperty: value\n  anotherProperty: anotherValue\n`;
       const instance = ModelOptions.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.frequencyPenalty).toEqual(0.5);
-
       expect(instance.maxOutputTokens).toEqual(2048);
-
       expect(instance.presencePenalty).toEqual(0.3);
-
       expect(instance.seed).toEqual(42);
-
       expect(instance.temperature).toEqual(0.7);
-
       expect(instance.topK).toEqual(40);
-
       expect(instance.topP).toEqual(0.9);
-
       expect(instance.allowMultipleToolCalls).toEqual(true);
     });
 
@@ -93,24 +67,14 @@ describe("ModelOptions", () => {
       const instance = ModelOptions.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ModelOptions.fromYaml(output);
-
       expect(reloaded.frequencyPenalty).toEqual(instance.frequencyPenalty);
-
       expect(reloaded.maxOutputTokens).toEqual(instance.maxOutputTokens);
-
       expect(reloaded.presencePenalty).toEqual(instance.presencePenalty);
-
       expect(reloaded.seed).toEqual(instance.seed);
-
       expect(reloaded.temperature).toEqual(instance.temperature);
-
       expect(reloaded.topK).toEqual(instance.topK);
-
       expect(reloaded.topP).toEqual(instance.topP);
-
-      expect(reloaded.allowMultipleToolCalls).toEqual(
-        instance.allowMultipleToolCalls,
-      );
+      expect(reloaded.allowMultipleToolCalls).toEqual(instance.allowMultipleToolCalls);
     });
   });
 

@@ -151,7 +151,7 @@ public class SpecVectorTests
 
             try
             {
-                var messages = await parser.ParseAsync(agent, rendered);
+                var messages = await parser.ParseAsync(agent, rendered, null);
                 var errors = CompareMessages(messages, expectedMessages);
 
                 if (errors.Count > 0)

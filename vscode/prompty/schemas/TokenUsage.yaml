@@ -1,0 +1,23 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TokenUsage.yaml
+type: object
+properties:
+  promptTokens:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of tokens in the prompt/input sent to the model
+  completionTokens:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of tokens generated in the model's completion/output
+  totalTokens:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Total tokens consumed (prompt + completion). May be provided by the API or computed.
+description: |-
+  Tracks token consumption for a single LLM call. Provider-specific field
+  names (e.g., OpenAI's `prompt_tokens` vs Anthropic's `input_tokens`)
+  are mapped via `knownAs` augments in the wire directory.

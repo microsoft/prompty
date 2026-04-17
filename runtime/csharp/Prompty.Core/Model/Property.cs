@@ -10,11 +10,14 @@ namespace Prompty.Core;
 /// Represents a single property.
 /// 
 /// - This model defines the structure of properties that can be used in prompts,
+/// 
 /// including their type, description, whether they are required, and other attributes.
+/// 
 /// - It allows for the definition of dynamic inputs that can be filled with data
+/// 
 /// and processed to generate prompts for AI models.
 /// </summary>
-public class Property
+public partial class Property
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -66,6 +69,7 @@ public class Property
     public IList<object>? EnumValues { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -82,7 +86,6 @@ public class Property
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Load polymorphic Property instance
         var instance = LoadKind(data, context);
@@ -131,7 +134,6 @@ public class Property
     }
 
 
-
     /// <summary>
     /// Load polymorphic Property based on discriminator.
     /// </summary>
@@ -174,35 +176,35 @@ public class Property
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Name is not null)
-        {
-            result["name"] = obj.Name;
-        }
+        result["name"] = obj.Name;
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+
+        result["kind"] = obj.Kind;
+
 
         if (obj.Description is not null)
         {
             result["description"] = obj.Description;
         }
 
+
         if (obj.Required is not null)
         {
             result["required"] = obj.Required;
         }
+
 
         if (obj.Default is not null)
         {
             result["default"] = obj.Default;
         }
 
+
         if (obj.Example is not null)
         {
             result["example"] = obj.Example;
         }
+
 
         if (obj.EnumValues is not null)
         {
@@ -263,15 +265,15 @@ public class Property
                     ["kind"] = "boolean",
                     ["example"] = boolValue,
                 },
-                string stringValue => new Dictionary<string, object?>
-                {
-                    ["kind"] = "string",
-                    ["example"] = stringValue,
-                },
                 float floatValue => new Dictionary<string, object?>
                 {
                     ["kind"] = "float",
                     ["example"] = floatValue,
+                },
+                double doubleValue => new Dictionary<string, object?>
+                {
+                    ["kind"] = "float",
+                    ["example"] = doubleValue,
                 },
                 int intValue => new Dictionary<string, object?>
                 {
@@ -283,10 +285,10 @@ public class Property
                     ["kind"] = "integer",
                     ["example"] = longValue,
                 },
-                double doubleValue => new Dictionary<string, object?>
+                string stringValue => new Dictionary<string, object?>
                 {
-                    ["kind"] = "float",
-                    ["example"] = doubleValue,
+                    ["kind"] = "string",
+                    ["example"] = stringValue,
                 },
                 _ => new Dictionary<string, object?>
                 {
@@ -338,15 +340,15 @@ public class Property
                     ["kind"] = "boolean",
                     ["example"] = boolValue,
                 },
-                string stringValue => new Dictionary<string, object?>
-                {
-                    ["kind"] = "string",
-                    ["example"] = stringValue,
-                },
                 float floatValue => new Dictionary<string, object?>
                 {
                     ["kind"] = "float",
                     ["example"] = floatValue,
+                },
+                double doubleValue => new Dictionary<string, object?>
+                {
+                    ["kind"] = "float",
+                    ["example"] = doubleValue,
                 },
                 int intValue => new Dictionary<string, object?>
                 {
@@ -358,10 +360,10 @@ public class Property
                     ["kind"] = "integer",
                     ["example"] = longValue,
                 },
-                double doubleValue => new Dictionary<string, object?>
+                string stringValue => new Dictionary<string, object?>
                 {
-                    ["kind"] = "float",
-                    ["example"] = doubleValue,
+                    ["kind"] = "string",
+                    ["example"] = stringValue,
                 },
                 _ => new Dictionary<string, object?>
                 {

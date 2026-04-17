@@ -1,0 +1,36 @@
+---
+title: "ThinkingEventPayload"
+description: "Documentation for the ThinkingEventPayload type."
+slug: "reference/thinkingeventpayload"
+---
+
+Payload for "thinking" events — reasoning/chain-of-thought tokens.
+
+## Class Diagram
+
+```mermaid
+---
+title: ThinkingEventPayload
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class ThinkingEventPayload {
+        +string token
+    }
+```
+
+## Yaml Example
+
+```yaml
+token: Let me consider...
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| token | string | The thinking/reasoning token text |

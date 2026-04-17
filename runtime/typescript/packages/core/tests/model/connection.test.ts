@@ -21,14 +21,9 @@ describe("Connection", () => {
       const json = `{\n  "kind": "reference",\n  "authenticationMode": "system",\n  "usageDescription": "This will allow the agent to respond to an email on your behalf"\n}`;
       const instance = Connection.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("reference");
-
       expect(instance.authenticationMode).toEqual("system");
-
-      expect(instance.usageDescription).toEqual(
-        "This will allow the agent to respond to an email on your behalf",
-      );
+      expect(instance.usageDescription).toEqual("This will allow the agent to respond to an email on your behalf");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -36,11 +31,8 @@ describe("Connection", () => {
       const instance = Connection.fromJson(json);
       const output = instance.toJson();
       const reloaded = Connection.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.authenticationMode).toEqual(instance.authenticationMode);
-
       expect(reloaded.usageDescription).toEqual(instance.usageDescription);
     });
   });
@@ -50,14 +42,9 @@ describe("Connection", () => {
       const yaml = `kind: reference\nauthenticationMode: system\nusageDescription: This will allow the agent to respond to an email on your behalf\n`;
       const instance = Connection.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("reference");
-
       expect(instance.authenticationMode).toEqual("system");
-
-      expect(instance.usageDescription).toEqual(
-        "This will allow the agent to respond to an email on your behalf",
-      );
+      expect(instance.usageDescription).toEqual("This will allow the agent to respond to an email on your behalf");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -65,12 +52,10 @@ describe("Connection", () => {
       const instance = Connection.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Connection.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.authenticationMode).toEqual(instance.authenticationMode);
-
       expect(reloaded.usageDescription).toEqual(instance.usageDescription);
     });
   });
+
 });

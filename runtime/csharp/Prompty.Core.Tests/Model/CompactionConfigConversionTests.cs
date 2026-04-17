@@ -1,0 +1,137 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class CompactionConfigConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+strategy: summarize
+budget: 50000
+options:
+  preserveSystemMessages: true
+
+""";
+
+        var instance = CompactionConfig.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("summarize", instance.Strategy);
+        Assert.Equal(50000, instance.Budget);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "strategy": "summarize",
+  "budget": 50000,
+  "options": {
+    "preserveSystemMessages": true
+  }
+}
+""";
+
+        var instance = CompactionConfig.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("summarize", instance.Strategy);
+        Assert.Equal(50000, instance.Budget);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "strategy": "summarize",
+  "budget": 50000,
+  "options": {
+    "preserveSystemMessages": true
+  }
+}
+""";
+
+        var original = CompactionConfig.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = CompactionConfig.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("summarize", reloaded.Strategy);
+        Assert.Equal(50000, reloaded.Budget);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+strategy: summarize
+budget: 50000
+options:
+  preserveSystemMessages: true
+
+""";
+
+        var original = CompactionConfig.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = CompactionConfig.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("summarize", reloaded.Strategy);
+        Assert.Equal(50000, reloaded.Budget);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "strategy": "summarize",
+  "budget": 50000,
+  "options": {
+    "preserveSystemMessages": true
+  }
+}
+""";
+
+        var instance = CompactionConfig.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+strategy: summarize
+budget: 50000
+options:
+  preserveSystemMessages: true
+
+""";
+
+        var instance = CompactionConfig.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

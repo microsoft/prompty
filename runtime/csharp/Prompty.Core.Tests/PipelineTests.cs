@@ -323,7 +323,7 @@ public class PipelineTests : IDisposable
     public async Task ParseAsync_UsesParserKind()
     {
         var agent = CreateAgent();
-        var messages = await Pipeline.ParseAsync(agent, "system:\nHello");
+        var messages = await Pipeline.ParseAsync(agent, "system:\nHello", null);
         Assert.Single(messages); // MockParser returns 1 message
     }
 
@@ -595,7 +595,7 @@ internal class MockRenderer : IRenderer
 
 internal class MockParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult<List<Message>>([new Message { Role = Roles.System, Parts = [new TextPart { Value = rendered }] }]);
 }
 
@@ -608,10 +608,10 @@ internal class MockExecutor : IExecutor
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.Assistant, Parts = [], Metadata = new() { ["tool_calls"] = toolCalls } },
+            new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }
@@ -643,10 +643,10 @@ internal class ToolCallingExecutor : IExecutor
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.Assistant, Parts = [], Metadata = new() { ["tool_calls"] = toolCalls } },
+            new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new() { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }

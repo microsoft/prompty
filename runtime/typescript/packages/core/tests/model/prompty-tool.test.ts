@@ -21,11 +21,8 @@ describe("PromptyTool", () => {
       const json = `{\n  "kind": "prompty",\n  "path": "./summarize.prompty",\n  "mode": "single"\n}`;
       const instance = PromptyTool.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("prompty");
-
       expect(instance.path).toEqual("./summarize.prompty");
-
       expect(instance.mode).toEqual("single");
     });
 
@@ -34,11 +31,8 @@ describe("PromptyTool", () => {
       const instance = PromptyTool.fromJson(json);
       const output = instance.toJson();
       const reloaded = PromptyTool.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.path).toEqual(instance.path);
-
       expect(reloaded.mode).toEqual(instance.mode);
     });
   });
@@ -48,11 +42,8 @@ describe("PromptyTool", () => {
       const yaml = `kind: prompty\npath: ./summarize.prompty\nmode: single\n`;
       const instance = PromptyTool.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("prompty");
-
       expect(instance.path).toEqual("./summarize.prompty");
-
       expect(instance.mode).toEqual("single");
     });
 
@@ -61,11 +52,8 @@ describe("PromptyTool", () => {
       const instance = PromptyTool.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = PromptyTool.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.path).toEqual(instance.path);
-
       expect(reloaded.mode).toEqual(instance.mode);
     });
   });

@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Template parser definition
 /// </summary>
-public class ParserConfig
+public partial class ParserConfig
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -36,6 +36,7 @@ public class ParserConfig
     public IDictionary<string, object>? Options { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -52,7 +53,6 @@ public class ParserConfig
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Create new instance
         var instance = new ParserConfig();
@@ -76,7 +76,6 @@ public class ParserConfig
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -98,10 +97,8 @@ public class ParserConfig
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["kind"] = obj.Kind;
+
 
         if (obj.Options is not null)
         {

@@ -4,6 +4,9 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 from ._Binding import Binding
+from ._CompactionCompletePayload import CompactionCompletePayload
+from ._CompactionConfig import CompactionConfig
+from ._CompactionFailedPayload import CompactionFailedPayload
 from ._Connection import (
     AnonymousConnection,
     ApiKeyConnection,
@@ -13,16 +16,69 @@ from ._Connection import (
     ReferenceConnection,
     RemoteConnection,
 )
+from ._ContentPart import (
+    AudioPart,
+    ContentPart,
+    FilePart,
+    ImagePart,
+    TextPart,
+)
 from ._context import LoadContext, SaveContext
+from ._DoneEventPayload import DoneEventPayload
+from ._ErrorEventPayload import ErrorEventPayload
+from ._Executor import Executor
 from ._FormatConfig import FormatConfig
+from ._GuardrailResult import GuardrailResult
 from ._McpApprovalMode import McpApprovalMode
+from ._Message import (
+    Message,
+    MessageHelpers,
+)
+from ._MessagesUpdatedPayload import MessagesUpdatedPayload
 from ._Model import Model
+from ._ModelInfo import ModelInfo
 from ._ModelOptions import ModelOptions
+from ._Parser import Parser
 from ._ParserConfig import ParserConfig
+from ._Processor import Processor
 from ._Prompty import Prompty
-from ._Property import ArrayProperty, ObjectProperty, Property
+from ._Property import (
+    ArrayProperty,
+    ObjectProperty,
+    Property,
+)
+from ._Renderer import Renderer
+from ._StatusEventPayload import StatusEventPayload
+from ._StreamChunk import (
+    ErrorChunk,
+    StreamChunk,
+    TextChunk,
+    ThinkingChunk,
+    ToolChunk,
+)
 from ._Template import Template
-from ._Tool import CustomTool, FunctionTool, McpTool, OpenApiTool, PromptyTool, Tool
+from ._ThinkingEventPayload import ThinkingEventPayload
+from ._ThreadMarker import ThreadMarker
+from ._TokenEventPayload import TokenEventPayload
+from ._TokenUsage import TokenUsage
+from ._Tool import (
+    CustomTool,
+    FunctionTool,
+    McpTool,
+    OpenApiTool,
+    PromptyTool,
+    Tool,
+)
+from ._ToolCall import ToolCall
+from ._ToolCallStartPayload import ToolCallStartPayload
+from ._ToolContext import ToolContext
+from ._ToolDispatchResult import ToolDispatchResult
+from ._ToolResult import (
+    ToolResult,
+    ToolResultHelpers,
+)
+from ._ToolResultPayload import ToolResultPayload
+from ._TurnOptions import TurnOptions
 
 __all__ = [
     "LoadContext",
@@ -35,8 +91,8 @@ __all__ = [
     "RemoteConnection",
     "ApiKeyConnection",
     "AnonymousConnection",
-    "FoundryConnection",
     "OAuthConnection",
+    "FoundryConnection",
     "ModelOptions",
     "Model",
     "Binding",
@@ -51,4 +107,41 @@ __all__ = [
     "ParserConfig",
     "Template",
     "Prompty",
+    "ContentPart",
+    "TextPart",
+    "ImagePart",
+    "FilePart",
+    "AudioPart",
+    "Message",
+    "MessageHelpers",
+    "ToolContext",
+    "ToolResult",
+    "ToolResultHelpers",
+    "ToolDispatchResult",
+    "ToolCall",
+    "GuardrailResult",
+    "ThreadMarker",
+    "TokenUsage",
+    "ModelInfo",
+    "CompactionConfig",
+    "TurnOptions",
+    "Renderer",
+    "Parser",
+    "Executor",
+    "Processor",
+    "TokenEventPayload",
+    "ThinkingEventPayload",
+    "ToolCallStartPayload",
+    "ToolResultPayload",
+    "StatusEventPayload",
+    "MessagesUpdatedPayload",
+    "DoneEventPayload",
+    "ErrorEventPayload",
+    "CompactionCompletePayload",
+    "CompactionFailedPayload",
+    "StreamChunk",
+    "TextChunk",
+    "ThinkingChunk",
+    "ToolChunk",
+    "ErrorChunk",
 ]

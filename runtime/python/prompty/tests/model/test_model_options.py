@@ -29,15 +29,14 @@ def test_load_json_modeloptions():
     data = json.loads(json_data, strict=False)
     instance = ModelOptions.load(data)
     assert instance is not None
-    assert instance.frequencyPenalty == 0.5
-    assert instance.maxOutputTokens == 2048
-    assert instance.presencePenalty == 0.3
+    assert instance.frequency_penalty == 0.5
+    assert instance.max_output_tokens == 2048
+    assert instance.presence_penalty == 0.3
     assert instance.seed == 42
     assert instance.temperature == 0.7
-    assert instance.topK == 40
-    assert instance.topP == 0.9
-
-    assert instance.allowMultipleToolCalls
+    assert instance.top_k == 40
+    assert instance.top_p == 0.9
+    assert instance.allow_multiple_tool_calls
 
 
 def test_load_yaml_modeloptions():
@@ -61,14 +60,14 @@ def test_load_yaml_modeloptions():
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ModelOptions.load(data)
     assert instance is not None
-    assert instance.frequencyPenalty == 0.5
-    assert instance.maxOutputTokens == 2048
-    assert instance.presencePenalty == 0.3
+    assert instance.frequency_penalty == 0.5
+    assert instance.max_output_tokens == 2048
+    assert instance.presence_penalty == 0.3
     assert instance.seed == 42
     assert instance.temperature == 0.7
-    assert instance.topK == 40
-    assert instance.topP == 0.9
-    assert instance.allowMultipleToolCalls
+    assert instance.top_k == 40
+    assert instance.top_p == 0.9
+    assert instance.allow_multiple_tool_calls
 
 
 def test_roundtrip_json_modeloptions():
@@ -98,14 +97,14 @@ def test_roundtrip_json_modeloptions():
     saved_data = instance.save()
     reloaded = ModelOptions.load(saved_data)
     assert reloaded is not None
-    assert reloaded.frequencyPenalty == 0.5
-    assert reloaded.maxOutputTokens == 2048
-    assert reloaded.presencePenalty == 0.3
+    assert reloaded.frequency_penalty == 0.5
+    assert reloaded.max_output_tokens == 2048
+    assert reloaded.presence_penalty == 0.3
     assert reloaded.seed == 42
     assert reloaded.temperature == 0.7
-    assert reloaded.topK == 40
-    assert reloaded.topP == 0.9
-    assert reloaded.allowMultipleToolCalls
+    assert reloaded.top_k == 40
+    assert reloaded.top_p == 0.9
+    assert reloaded.allow_multiple_tool_calls
 
 
 def test_to_json_modeloptions():

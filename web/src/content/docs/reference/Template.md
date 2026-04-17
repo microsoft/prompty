@@ -26,7 +26,6 @@ config:
 ---
 classDiagram
     class Template {
-      
         +FormatConfig format
         +ParserConfig parser
     }

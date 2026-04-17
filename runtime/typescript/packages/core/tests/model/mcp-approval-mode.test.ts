@@ -21,7 +21,6 @@ describe("McpApprovalMode", () => {
       const json = `{\n  "kind": "never",\n  "alwaysRequireApprovalTools": [\n    "operation1"\n  ],\n  "neverRequireApprovalTools": [\n    "operation2"\n  ]\n}`;
       const instance = McpApprovalMode.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("never");
     });
 
@@ -30,7 +29,6 @@ describe("McpApprovalMode", () => {
       const instance = McpApprovalMode.fromJson(json);
       const output = instance.toJson();
       const reloaded = McpApprovalMode.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
     });
   });
@@ -40,7 +38,6 @@ describe("McpApprovalMode", () => {
       const yaml = `kind: never\nalwaysRequireApprovalTools:\n  - operation1\nneverRequireApprovalTools:\n  - operation2\n`;
       const instance = McpApprovalMode.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("never");
     });
 
@@ -49,7 +46,6 @@ describe("McpApprovalMode", () => {
       const instance = McpApprovalMode.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = McpApprovalMode.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
     });
   });
@@ -60,7 +56,6 @@ describe("McpApprovalMode", () => {
       const json = JSON.stringify(value);
       const instance = McpApprovalMode.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("never");
     });
   });

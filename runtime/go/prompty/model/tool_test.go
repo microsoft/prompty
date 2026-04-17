@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/microsoft/agentschema-go/prompty"
+	"prompty/model"
 )
 
 // TestToolLoadJSON tests loading Tool from JSON

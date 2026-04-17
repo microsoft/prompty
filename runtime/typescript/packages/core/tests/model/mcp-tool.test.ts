@@ -21,14 +21,9 @@ describe("McpTool", () => {
       const json = `{\n  "kind": "mcp",\n  "connection": {\n    "kind": "reference"\n  },\n  "serverName": "My MCP Server",\n  "serverDescription": "This tool allows access to MCP services.",\n  "approvalMode": {\n    "kind": "always"\n  },\n  "allowedTools": [\n    "operation1",\n    "operation2"\n  ]\n}`;
       const instance = McpTool.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("mcp");
-
       expect(instance.serverName).toEqual("My MCP Server");
-
-      expect(instance.serverDescription).toEqual(
-        "This tool allows access to MCP services.",
-      );
+      expect(instance.serverDescription).toEqual("This tool allows access to MCP services.");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -36,11 +31,8 @@ describe("McpTool", () => {
       const instance = McpTool.fromJson(json);
       const output = instance.toJson();
       const reloaded = McpTool.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.serverName).toEqual(instance.serverName);
-
       expect(reloaded.serverDescription).toEqual(instance.serverDescription);
     });
   });
@@ -50,14 +42,9 @@ describe("McpTool", () => {
       const yaml = `kind: mcp\nconnection:\n  kind: reference\nserverName: My MCP Server\nserverDescription: This tool allows access to MCP services.\napprovalMode:\n  kind: always\nallowedTools:\n  - operation1\n  - operation2\n`;
       const instance = McpTool.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("mcp");
-
       expect(instance.serverName).toEqual("My MCP Server");
-
-      expect(instance.serverDescription).toEqual(
-        "This tool allows access to MCP services.",
-      );
+      expect(instance.serverDescription).toEqual("This tool allows access to MCP services.");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -65,11 +52,8 @@ describe("McpTool", () => {
       const instance = McpTool.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = McpTool.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.serverName).toEqual(instance.serverName);
-
       expect(reloaded.serverDescription).toEqual(instance.serverDescription);
     });
   });

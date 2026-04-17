@@ -30,7 +30,6 @@ classDiagram
     }
     Property <|-- ArrayProperty
     class ArrayProperty {
-      
         +string kind
         +Property items
     }

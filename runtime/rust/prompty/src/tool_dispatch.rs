@@ -172,11 +172,7 @@ pub fn resolve_bindings(
         return args;
     };
 
-    let Some(bindings) = tool_def.get("bindings").and_then(|b| b.as_array()) else {
-        return args;
-    };
-
-    if bindings.is_empty() {
+    if tool_def.bindings.is_empty() {
         return args;
     }
 
@@ -185,15 +181,9 @@ pub fn resolve_bindings(
         None => return args,
     };
 
-    for binding in bindings {
-        let Some(target_name) = binding.get("name").and_then(|n| n.as_str()) else {
-            continue;
-        };
-        let Some(source_input) = binding.get("input").and_then(|i| i.as_str()) else {
-            continue;
-        };
-        if let Some(value) = parent_obj.get(source_input) {
-            args_obj.insert(target_name.to_string(), value.clone());
+    for binding in &tool_def.bindings {
+        if let Some(value) = parent_obj.get(&binding.input) {
+            args_obj.insert(binding.name.clone(), value.clone());
         }
     }
 
@@ -345,11 +335,8 @@ pub async fn dispatch_tool(
 
     // Layer 3: kind handler — look up tool definition in agent.tools
     let tool_def = find_tool_def(agent, &tool_call.name);
-    if let Some(def) = &tool_def {
-        let kind = def
-            .get("kind")
-            .and_then(|k| k.as_str())
-            .unwrap_or("function");
+    if let Some(def) = tool_def {
+        let kind = def.kind_str();
 
         // Try specific kind handler, then fallback to "*" wildcard
         // Clone the Arc before dropping the read guard to avoid holding it across .await
@@ -363,7 +350,9 @@ pub async fn dispatch_tool(
                 .or_else(|| handlers.get("*").cloned())
         };
         if let Some(handler) = handler {
-            return match handler.execute_tool(def, args, agent, parent_inputs).await {
+            // Serialize the typed Tool to JSON for the trait boundary
+            let def_value = def.to_value(&crate::model::SaveContext::default());
+            return match handler.execute_tool(&def_value, args, agent, parent_inputs).await {
                 Ok(r) => r,
                 Err(e) => format!("Error: {e}"),
             };
@@ -375,15 +364,8 @@ pub async fn dispatch_tool(
 }
 
 /// Find a tool definition in `agent.tools` by name.
-fn find_tool_def(agent: &Prompty, name: &str) -> Option<serde_json::Value> {
-    let tools = agent.tools.as_array()?;
-    for tool in tools {
-        let tool_name = tool.get("name").and_then(|n| n.as_str());
-        if tool_name == Some(name) {
-            return Some(tool.clone());
-        }
-    }
-    None
+fn find_tool_def<'a>(agent: &'a Prompty, name: &str) -> Option<&'a crate::model::Tool> {
+    agent.tools.iter().find(|t| t.name == name)
 }
 
 /// Execute a user-provided tool handler (from TurnOptions.tools).
@@ -667,8 +649,12 @@ mod tests {
     }
 
     fn agent_with_tools(tools: serde_json::Value) -> Prompty {
+        use crate::model::context::LoadContext;
         let mut agent = Prompty::default();
-        agent.tools = tools;
+        if let Some(arr) = tools.as_array() {
+            let ctx = LoadContext::default();
+            agent.tools = arr.iter().map(|v| crate::model::Tool::load_from_value(v, &ctx)).collect();
+        }
         agent
     }
 

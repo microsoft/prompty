@@ -1,0 +1,23 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ImagePart.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: image
+    description: The kind identifier for image content
+  source:
+    type: string
+    description: URL or base64-encoded image data
+  detail:
+    type: string
+    description: Detail level hint for the model (e.g., 'auto', 'low', 'high')
+  mediaType:
+    type: string
+    description: MIME type of the image (e.g., 'image/png')
+required:
+  - kind
+  - source
+allOf:
+  - $ref: ContentPart.yaml
+description: An image content part. The source may be a URL or base64-encoded data.

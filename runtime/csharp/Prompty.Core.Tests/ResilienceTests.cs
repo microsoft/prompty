@@ -73,7 +73,7 @@ file class PassthroughRenderer : IRenderer
 /// <summary>A passthrough parser for resilience tests.</summary>
 file class PassthroughParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult(new List<Message>
         {
             new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }

@@ -27,19 +27,19 @@ class Prompty:
     ----------
     name : str
         Human-readable name of the prompt
-    displayName : Optional[str]
+    display_name : Optional[str]
         Display name for UI purposes
     description : Optional[str]
         Description of the prompt's purpose
     metadata : Optional[dict[str, Any]]
         Additional metadata including authors, tags, and other arbitrary properties
-    inputs : list[Property]
+    inputs : Optional[list[Property]]
         Input parameters that participate in template rendering
-    outputs : list[Property]
+    outputs : Optional[list[Property]]
         Expected output format and structure
     model : Model
         AI model configuration
-    tools : list[Tool]
+    tools : Optional[list[Tool]]
         Tools available for extended functionality
     template : Optional[Template]
         Template configuration for prompt rendering
@@ -50,7 +50,7 @@ class Prompty:
     _shorthand_property: ClassVar[str | None] = None
 
     name: str = field(default="")
-    displayName: str | None = None
+    display_name: str | None = None
     description: str | None = None
     metadata: dict[str, Any] | None = None
     inputs: list[Property] = field(default_factory=list)
@@ -83,7 +83,7 @@ class Prompty:
         if data is not None and "name" in data:
             instance.name = data["name"]
         if data is not None and "displayName" in data:
-            instance.displayName = data["displayName"]
+            instance.display_name = data["displayName"]
         if data is not None and "description" in data:
             instance.description = data["description"]
         if data is not None and "metadata" in data:
@@ -158,7 +158,7 @@ class Prompty:
                     result.append({"name": k, **v})
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "": v})
+                    result.append({"name": k, "kind": v})
             data = result
         return [Property.load(item, context) for item in data]
 
@@ -167,28 +167,8 @@ class Prompty:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # This type doesn't have a 'name' property, so always use array format
+        return [item.save(context) for item in items]
 
     @staticmethod
     def load_tools(data: dict | list, context: LoadContext | None) -> list[Tool]:
@@ -249,8 +229,8 @@ class Prompty:
 
         if obj.name is not None:
             result["name"] = obj.name
-        if obj.displayName is not None:
-            result["displayName"] = obj.displayName
+        if obj.display_name is not None:
+            result["displayName"] = obj.display_name
         if obj.description is not None:
             result["description"] = obj.description
         if obj.metadata is not None:

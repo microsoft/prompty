@@ -27,8 +27,8 @@ def test_load_json_mcptool():
     instance = McpTool.load(data)
     assert instance is not None
     assert instance.kind == "mcp"
-    assert instance.serverName == "My MCP Server"
-    assert instance.serverDescription == "This tool allows access to MCP services."
+    assert instance.server_name == "My MCP Server"
+    assert instance.server_description == "This tool allows access to MCP services."
 
 
 def test_load_yaml_mcptool():
@@ -49,8 +49,8 @@ def test_load_yaml_mcptool():
     instance = McpTool.load(data)
     assert instance is not None
     assert instance.kind == "mcp"
-    assert instance.serverName == "My MCP Server"
-    assert instance.serverDescription == "This tool allows access to MCP services."
+    assert instance.server_name == "My MCP Server"
+    assert instance.server_description == "This tool allows access to MCP services."
 
 
 def test_roundtrip_json_mcptool():
@@ -78,8 +78,8 @@ def test_roundtrip_json_mcptool():
     reloaded = McpTool.load(saved_data)
     assert reloaded is not None
     assert reloaded.kind == "mcp"
-    assert reloaded.serverName == "My MCP Server"
-    assert reloaded.serverDescription == "This tool allows access to MCP services."
+    assert reloaded.server_name == "My MCP Server"
+    assert reloaded.server_description == "This tool allows access to MCP services."
 
 
 def test_to_json_mcptool():

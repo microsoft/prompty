@@ -19,7 +19,6 @@ config:
 ---
 classDiagram
     class ModelOptions {
-      
         +float32 frequencyPenalty
         +int32 maxOutputTokens
         +float32 presencePenalty
@@ -57,9 +56,9 @@ additionalProperties:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| frequencyPenalty | float32 | The frequency penalty to apply to the model&#39;s output |
+| frequencyPenalty | float32 | The frequency penalty to apply to the model's output |
 | maxOutputTokens | int32 | The maximum number of tokens to generate in the output |
-| presencePenalty | float32 | The presence penalty to apply to the model&#39;s output |
+| presencePenalty | float32 | The presence penalty to apply to the model's output |
 | seed | int32 | A random seed for deterministic output |
 | temperature | float32 | The temperature to use for sampling |
 | topK | int32 | The top-K sampling value |

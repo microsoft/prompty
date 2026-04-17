@@ -25,7 +25,6 @@ classDiagram
     }
     Connection <|-- ReferenceConnection
     class ReferenceConnection {
-      
         +string kind
         +string name
         +string target
@@ -44,6 +43,6 @@ target: my-target-resource
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | The Authentication kind for the AI service (e.g., &#39;key&#39; for API key, &#39;oauth&#39; for OAuth tokens) |
+| kind | string | The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens) |
 | name | string | The name of the connection |
 | target | string | The target resource or service that this connection refers to |

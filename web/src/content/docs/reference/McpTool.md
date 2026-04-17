@@ -26,7 +26,6 @@ classDiagram
     }
     Tool <|-- McpTool
     class McpTool {
-      
         +string kind
         +Connection connection
         +string serverName

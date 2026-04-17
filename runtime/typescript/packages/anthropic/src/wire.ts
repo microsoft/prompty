@@ -80,7 +80,10 @@ function partToWire(part: ContentPart): Record<string, unknown> {
       if (part.source.startsWith("data:")) {
         // Data URL — extract base64 payload and MIME type
         const [header, data] = part.source.split(",", 2);
-        const mediaType = header?.match(/data:(.*?);/)?.[1] ?? "image/png";
+        // Extract MIME type between "data:" and ";" without regex backtracking
+        const mimeStart = header?.indexOf("data:") === 0 ? 5 : 0;
+        const mimeEnd = header?.indexOf(";", mimeStart) ?? -1;
+        const mediaType = mimeEnd > mimeStart ? header!.slice(mimeStart, mimeEnd) : "image/png";
         return {
           type: "image",
           source: {
@@ -130,12 +133,18 @@ export function buildChatArgs(
     }
   }
 
+  const opts = buildOptions(agent);
+
   const args: Record<string, unknown> = {
     model,
     messages: conversationMessages,
-    max_tokens: agent.model?.options?.maxOutputTokens ?? DEFAULT_MAX_TOKENS,
-    ...buildOptions(agent),
+    ...opts,
   };
+
+  // Anthropic requires max_tokens — use default if toWire didn't emit it
+  if (!("max_tokens" in args)) {
+    args.max_tokens = DEFAULT_MAX_TOKENS;
+  }
 
   // System prompt as separate parameter
   if (systemParts.length > 0) {
@@ -176,12 +185,7 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result: Record<string, unknown> = {};
-
-  if (opts.temperature !== undefined) result.temperature = opts.temperature;
-  if (opts.topP !== undefined) result.top_p = opts.topP;
-  if (opts.topK !== undefined) result.top_k = opts.topK;
-  if (opts.stopSequences !== undefined) result.stop_sequences = opts.stopSequences;
+  const result = opts.toWire("anthropic");
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {

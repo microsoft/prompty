@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Represents a binding between an input property and a tool parameter.
 /// </summary>
-public class Binding
+public partial class Binding
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -36,6 +36,7 @@ public class Binding
     public string Input { get; set; } = string.Empty;
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -52,7 +53,6 @@ public class Binding
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Create new instance
         var instance = new Binding();
@@ -76,7 +76,6 @@ public class Binding
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -98,15 +97,10 @@ public class Binding
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Name is not null)
-        {
-            result["name"] = obj.Name;
-        }
+        result["name"] = obj.Name;
 
-        if (obj.Input is not null)
-        {
-            result["input"] = obj.Input;
-        }
+
+        result["input"] = obj.Input;
 
 
         if (context is not null)

@@ -77,7 +77,7 @@ def test_load_json_prompty():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -167,7 +167,7 @@ def test_load_yaml_prompty():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -260,7 +260,7 @@ def test_roundtrip_json_prompty():
     reloaded = Prompty.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
-    assert reloaded.displayName == "Basic Prompt"
+    assert reloaded.display_name == "Basic Prompt"
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
@@ -503,7 +503,7 @@ def test_load_json_prompty_1():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -593,7 +593,7 @@ def test_load_yaml_prompty_1():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -685,7 +685,7 @@ def test_roundtrip_json_prompty_1():
     reloaded = Prompty.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
-    assert reloaded.displayName == "Basic Prompt"
+    assert reloaded.display_name == "Basic Prompt"
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
@@ -928,7 +928,7 @@ def test_load_json_prompty_2():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -1018,7 +1018,7 @@ def test_load_yaml_prompty_2():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -1112,7 +1112,7 @@ def test_roundtrip_json_prompty_2():
     reloaded = Prompty.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
-    assert reloaded.displayName == "Basic Prompt"
+    assert reloaded.display_name == "Basic Prompt"
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
@@ -1358,7 +1358,7 @@ def test_load_json_prompty_3():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -1448,7 +1448,7 @@ def test_load_yaml_prompty_3():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -1541,7 +1541,7 @@ def test_roundtrip_json_prompty_3():
     reloaded = Prompty.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
-    assert reloaded.displayName == "Basic Prompt"
+    assert reloaded.display_name == "Basic Prompt"
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
@@ -1788,7 +1788,7 @@ def test_load_json_prompty_4():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -1878,7 +1878,7 @@ def test_load_yaml_prompty_4():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -1974,7 +1974,7 @@ def test_roundtrip_json_prompty_4():
     reloaded = Prompty.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
-    assert reloaded.displayName == "Basic Prompt"
+    assert reloaded.display_name == "Basic Prompt"
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
@@ -2226,7 +2226,7 @@ def test_load_json_prompty_5():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -2316,7 +2316,7 @@ def test_load_yaml_prompty_5():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -2411,7 +2411,7 @@ def test_roundtrip_json_prompty_5():
     reloaded = Prompty.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
-    assert reloaded.displayName == "Basic Prompt"
+    assert reloaded.display_name == "Basic Prompt"
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
@@ -2663,7 +2663,7 @@ def test_load_json_prompty_6():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -2753,7 +2753,7 @@ def test_load_yaml_prompty_6():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -2850,7 +2850,7 @@ def test_roundtrip_json_prompty_6():
     reloaded = Prompty.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
-    assert reloaded.displayName == "Basic Prompt"
+    assert reloaded.display_name == "Basic Prompt"
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
@@ -3105,7 +3105,7 @@ def test_load_json_prompty_7():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -3195,7 +3195,7 @@ def test_load_yaml_prompty_7():
     instance = Prompty.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
-    assert instance.displayName == "Basic Prompt"
+    assert instance.display_name == "Basic Prompt"
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
@@ -3291,7 +3291,7 @@ def test_roundtrip_json_prompty_7():
     reloaded = Prompty.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
-    assert reloaded.displayName == "Basic Prompt"
+    assert reloaded.display_name == "Basic Prompt"
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions

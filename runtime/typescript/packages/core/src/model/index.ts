@@ -3,7 +3,11 @@
 
 export { LoadContext, SaveContext } from "./context";
 
-export { Property, ArrayProperty, ObjectProperty } from "./property";
+export {
+  Property,
+  ArrayProperty,
+  ObjectProperty,
+} from "./property";
 
 export {
   Connection,
@@ -11,14 +15,11 @@ export {
   RemoteConnection,
   ApiKeyConnection,
   AnonymousConnection,
-  FoundryConnection,
   OAuthConnection,
+  FoundryConnection,
 } from "./connection";
-
 export { ModelOptions } from "./model-options";
-
 export { Model } from "./model";
-
 export { Binding } from "./binding";
 
 export {
@@ -29,13 +30,49 @@ export {
   OpenApiTool,
   PromptyTool,
 } from "./tool";
-
 export { McpApprovalMode } from "./mcp-approval-mode";
-
 export { FormatConfig } from "./format-config";
-
 export { ParserConfig } from "./parser-config";
-
 export { Template } from "./template";
-
 export { Prompty } from "./prompty";
+
+export {
+  ContentPart,
+  TextPart,
+  ImagePart,
+  FilePart,
+  AudioPart,
+} from "./content-part";
+export { Message } from "./message";
+export { ToolContext } from "./tool-context";
+export { ToolResult } from "./tool-result";
+export { ToolDispatchResult } from "./tool-dispatch-result";
+export { ToolCall } from "./tool-call";
+export { GuardrailResult } from "./guardrail-result";
+export { ThreadMarker } from "./thread-marker";
+export { TokenUsage } from "./token-usage";
+export { ModelInfo } from "./model-info";
+export { CompactionConfig } from "./compaction-config";
+export { TurnOptions } from "./turn-options";
+export type { Renderer } from "./renderer";
+export type { Parser } from "./parser";
+export type { Executor } from "./executor";
+export type { Processor } from "./processor";
+export { TokenEventPayload } from "./token-event-payload";
+export { ThinkingEventPayload } from "./thinking-event-payload";
+export { ToolCallStartPayload } from "./tool-call-start-payload";
+export { ToolResultPayload } from "./tool-result-payload";
+export { StatusEventPayload } from "./status-event-payload";
+export { MessagesUpdatedPayload } from "./messages-updated-payload";
+export { DoneEventPayload } from "./done-event-payload";
+export { ErrorEventPayload } from "./error-event-payload";
+export { CompactionCompletePayload } from "./compaction-complete-payload";
+export { CompactionFailedPayload } from "./compaction-failed-payload";
+
+export {
+  StreamChunk,
+  TextChunk,
+  ThinkingChunk,
+  ToolChunk,
+  ErrorChunk,
+} from "./stream-chunk";

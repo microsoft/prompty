@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CompactionCompletePayload.yaml
+type: object
+properties:
+  removed:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of messages removed during compaction
+  remaining:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of messages remaining after compaction
+required:
+  - removed
+  - remaining
+description: Payload for "compaction_complete" events — context compaction finished.

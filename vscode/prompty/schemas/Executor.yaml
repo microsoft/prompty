@@ -1,0 +1,5 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Executor.yaml
+type: object
+properties: {}
+description: Calls an LLM provider with messages and returns the raw provider response.

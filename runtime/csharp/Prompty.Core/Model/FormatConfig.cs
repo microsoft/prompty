@@ -9,7 +9,7 @@ namespace Prompty.Core;
 /// <summary>
 /// Template format definition
 /// </summary>
-public class FormatConfig
+public partial class FormatConfig
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -41,6 +41,7 @@ public class FormatConfig
     public IDictionary<string, object>? Options { get; set; }
 
 
+
     #region Load Methods
 
     /// <summary>
@@ -57,7 +58,6 @@ public class FormatConfig
         }
 
         // Note: Alternate (shorthand) representations are handled by the converter
-
 
         // Create new instance
         var instance = new FormatConfig();
@@ -86,7 +86,6 @@ public class FormatConfig
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -108,15 +107,14 @@ public class FormatConfig
         var result = new Dictionary<string, object?>();
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["kind"] = obj.Kind;
+
 
         if (obj.Strict is not null)
         {
             result["strict"] = obj.Strict;
         }
+
 
         if (obj.Options is not null)
         {

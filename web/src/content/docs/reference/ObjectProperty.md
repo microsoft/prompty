@@ -30,7 +30,6 @@ classDiagram
     }
     Property <|-- ObjectProperty
     class ObjectProperty {
-      
         +string kind
         +Property[] properties
     }

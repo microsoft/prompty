@@ -4,10 +4,10 @@ import { generate, TargetLanguage } from "./generate.js";
 import { parseArgs } from "util";
 
 const HELP = `
-agentschema-generate - Generate Prompty runtime libraries
+prompty-generate - Generate Prompty runtime libraries
 
 Usage:
-  npx agentschema-generate [options]
+  npx prompty-generate [options]
 
 Options:
   -o, --output <dir>       Output directory (required)
@@ -21,16 +21,16 @@ Options:
 
 Examples:
   # Generate all runtimes to ./generated
-  npx agentschema-generate -o ./generated
+  npx prompty-generate -o ./generated
 
   # Generate only Python and C# 
-  npx agentschema-generate -o ./lib -t python,csharp
+  npx prompty-generate -o ./lib -t python,csharp
 
   # Generate AgentDefinition instead of AgentManifest
-  npx agentschema-generate -o ./lib -r Prompty.AgentDefinition
+  npx prompty-generate -o ./lib -r Prompty.AgentDefinition
 
   # Omit specific models
-  npx agentschema-generate -o ./lib --omit AgentManifest,ContainerAgent
+  npx prompty-generate -o ./lib --omit AgentManifest,ContainerAgent
 
 Targets:
   python       Python dataclasses with YAML/JSON serialization

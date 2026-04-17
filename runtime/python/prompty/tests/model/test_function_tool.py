@@ -30,7 +30,6 @@ def test_load_json_functiontool():
     instance = FunctionTool.load(data)
     assert instance is not None
     assert instance.kind == "function"
-
     assert instance.strict
 
 
@@ -176,7 +175,6 @@ def test_load_json_functiontool_1():
     instance = FunctionTool.load(data)
     assert instance is not None
     assert instance.kind == "function"
-
     assert instance.strict
 
 

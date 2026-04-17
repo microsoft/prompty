@@ -3,6 +3,6 @@ import { createTestLibrary, TypeSpecTestLibrary } from "@typespec/compiler/testi
 import { fileURLToPath } from "url";
 
 export const PromptyEmitTestLibrary: TypeSpecTestLibrary = createTestLibrary({
-  name: "agentschema-emit",
+  name: "prompty-emitter",
   packageRoot: resolvePath(fileURLToPath(import.meta.url), "../../../../"),
 });

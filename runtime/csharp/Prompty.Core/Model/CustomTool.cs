@@ -8,12 +8,16 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Represents a generic server tool that runs on a server
+/// 
 /// This tool kind is designed for operations that require server-side execution
+/// 
 /// It may include features such as authentication, data storage, and long-running processes
+/// 
 /// This tool kind is ideal for tasks that involve complex computations or access to secure resources
+/// 
 /// Server tools can be used to offload heavy processing from client applications
 /// </summary>
-public class CustomTool : Tool
+public partial class CustomTool : Tool
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -43,6 +47,7 @@ public class CustomTool : Tool
     /// Configuration options for the server tool
     /// </summary>
     public IDictionary<string, object> Options { get; set; } = new Dictionary<string, object>();
+
 
 
     #region Load Methods
@@ -88,7 +93,6 @@ public class CustomTool : Tool
     }
 
 
-
     #endregion
 
     #region Save Methods
@@ -111,20 +115,13 @@ public class CustomTool : Tool
         var result = base.Save(context);
 
 
-        if (obj.Kind is not null)
-        {
-            result["kind"] = obj.Kind;
-        }
+        result["kind"] = obj.Kind;
 
-        if (obj.Connection is not null)
-        {
-            result["connection"] = obj.Connection?.Save(context);
-        }
 
-        if (obj.Options is not null)
-        {
-            result["options"] = obj.Options;
-        }
+        result["connection"] = obj.Connection?.Save(context);
+
+
+        result["options"] = obj.Options;
 
 
         return result;

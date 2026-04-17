@@ -22,7 +22,7 @@ file class PassthroughRenderer : IRenderer
 /// </summary>
 file class PassthroughParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult(new List<Message>
         {
             new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }
@@ -35,7 +35,7 @@ file class PassthroughParser : IParser
 /// </summary>
 file class MultiMessageParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered)
+    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
     {
         var filler = new string('z', 300);
         return Task.FromResult(new List<Message>
@@ -282,7 +282,7 @@ public class AgentLoopIntegrationTests : IDisposable
         };
 
         var guardrails = new Guardrails(
-            input: _ => new GuardrailResult(true, Rewrite: rewritten));
+            input: _ => new GuardrailResult(true, rewrite: rewritten));
 
         var result = await Pipeline.TurnAsync(agent, guardrails: guardrails);
 
@@ -327,7 +327,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var agent = AgentLoopHelper.CreateAgent();
         var guardrails = new Guardrails(
-            output: _ => new GuardrailResult(true, Rewrite: "redacted answer"));
+            output: _ => new GuardrailResult(true, rewrite: "redacted answer"));
 
         var result = await Pipeline.TurnAsync(agent, guardrails: guardrails);
 
@@ -367,7 +367,7 @@ public class AgentLoopIntegrationTests : IDisposable
 
         var rewrittenArgs = new Dictionary<string, object?> { ["city"] = "Seattle" };
         var guardrails = new Guardrails(
-            tool: (name, args) => new GuardrailResult(true, Rewrite: rewrittenArgs));
+            tool: (name, args) => new GuardrailResult(true, rewrite: rewrittenArgs));
 
         var result = await Pipeline.TurnAsync(agent, tools: tools, guardrails: guardrails);
 

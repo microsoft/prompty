@@ -21,13 +21,8 @@ describe("ApiKeyConnection", () => {
       const json = `{\n  "kind": "key",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n  "apiKey": "your-api-key"\n}`;
       const instance = ApiKeyConnection.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("key");
-
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
-
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
       expect(instance.apiKey).toEqual("your-api-key");
     });
 
@@ -36,11 +31,8 @@ describe("ApiKeyConnection", () => {
       const instance = ApiKeyConnection.fromJson(json);
       const output = instance.toJson();
       const reloaded = ApiKeyConnection.fromJson(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
-
       expect(reloaded.apiKey).toEqual(instance.apiKey);
     });
   });
@@ -50,13 +42,8 @@ describe("ApiKeyConnection", () => {
       const yaml = `kind: key\nendpoint: "https://{your-custom-endpoint}.openai.azure.com/"\napiKey: your-api-key\n`;
       const instance = ApiKeyConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.kind).toEqual("key");
-
-      expect(instance.endpoint).toEqual(
-        "https://{your-custom-endpoint}.openai.azure.com/",
-      );
-
+      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
       expect(instance.apiKey).toEqual("your-api-key");
     });
 
@@ -65,11 +52,8 @@ describe("ApiKeyConnection", () => {
       const instance = ApiKeyConnection.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ApiKeyConnection.fromYaml(output);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.endpoint).toEqual(instance.endpoint);
-
       expect(reloaded.apiKey).toEqual(instance.apiKey);
     });
   });

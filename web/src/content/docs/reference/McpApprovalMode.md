@@ -5,8 +5,8 @@ slug: "reference/mcpapprovalmode"
 ---
 
 The approval mode for MCP server tools.
-When kind is &quot;specify&quot;, use alwaysRequireApprovalTools and neverRequireApprovalTools
-to control per-tool approval. For &quot;always&quot; and &quot;never&quot;, those fields are ignored.
+When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
+to control per-tool approval. For "always" and "never", those fields are ignored.
 
 ## Class Diagram
 
@@ -21,7 +21,6 @@ config:
 ---
 classDiagram
     class McpApprovalMode {
-      
         +string kind
         +string[] alwaysRequireApprovalTools
         +string[] neverRequireApprovalTools
@@ -42,9 +41,9 @@ neverRequireApprovalTools:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| kind | string | The approval mode: &#39;always&#39;, &#39;never&#39;, or &#39;specify&#39; |
-| alwaysRequireApprovalTools | string[] | List of tools that always require approval (only used when kind is &#39;specify&#39;) |
-| neverRequireApprovalTools | string[] | List of tools that never require approval (only used when kind is &#39;specify&#39;) |
+| kind | string | The approval mode: 'always', 'never', or 'specify' |
+| alwaysRequireApprovalTools | string[] | List of tools that always require approval (only used when kind is 'specify') |
+| neverRequireApprovalTools | string[] | List of tools that never require approval (only used when kind is 'specify') |
 
 ## Alternate Constructions
 

@@ -16,40 +16,40 @@ class ModelOptions:
 
     Attributes
     ----------
-    frequencyPenalty : Optional[float]
+    frequency_penalty : Optional[float]
         The frequency penalty to apply to the model's output
-    maxOutputTokens : Optional[int]
+    max_output_tokens : Optional[int]
         The maximum number of tokens to generate in the output
-    presencePenalty : Optional[float]
+    presence_penalty : Optional[float]
         The presence penalty to apply to the model's output
     seed : Optional[int]
         A random seed for deterministic output
     temperature : Optional[float]
         The temperature to use for sampling
-    topK : Optional[int]
+    top_k : Optional[int]
         The top-K sampling value
-    topP : Optional[float]
+    top_p : Optional[float]
         The top-P sampling value
-    stopSequences : list[str]
+    stop_sequences : Optional[list[str]]
         Stop sequences to end generation
-    allowMultipleToolCalls : Optional[bool]
+    allow_multiple_tool_calls : Optional[bool]
         Whether to allow multiple tool calls in a single response
-    additionalProperties : Optional[dict[str, Any]]
+    additional_properties : Optional[dict[str, Any]]
         Additional custom properties for model options
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
-    frequencyPenalty: float | None = None
-    maxOutputTokens: int | None = None
-    presencePenalty: float | None = None
+    frequency_penalty: float | None = None
+    max_output_tokens: int | None = None
+    presence_penalty: float | None = None
     seed: int | None = None
     temperature: float | None = None
-    topK: int | None = None
-    topP: float | None = None
-    stopSequences: list[str] = field(default_factory=list)
-    allowMultipleToolCalls: bool | None = None
-    additionalProperties: dict[str, Any] | None = None
+    top_k: int | None = None
+    top_p: float | None = None
+    stop_sequences: list[str] = field(default_factory=list)
+    allow_multiple_tool_calls: bool | None = None
+    additional_properties: dict[str, Any] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ModelOptions":
@@ -72,25 +72,25 @@ class ModelOptions:
         instance = ModelOptions()
 
         if data is not None and "frequencyPenalty" in data:
-            instance.frequencyPenalty = data["frequencyPenalty"]
+            instance.frequency_penalty = data["frequencyPenalty"]
         if data is not None and "maxOutputTokens" in data:
-            instance.maxOutputTokens = data["maxOutputTokens"]
+            instance.max_output_tokens = data["maxOutputTokens"]
         if data is not None and "presencePenalty" in data:
-            instance.presencePenalty = data["presencePenalty"]
+            instance.presence_penalty = data["presencePenalty"]
         if data is not None and "seed" in data:
             instance.seed = data["seed"]
         if data is not None and "temperature" in data:
             instance.temperature = data["temperature"]
         if data is not None and "topK" in data:
-            instance.topK = data["topK"]
+            instance.top_k = data["topK"]
         if data is not None and "topP" in data:
-            instance.topP = data["topP"]
+            instance.top_p = data["topP"]
         if data is not None and "stopSequences" in data:
-            instance.stopSequences = data["stopSequences"]
+            instance.stop_sequences = data["stopSequences"]
         if data is not None and "allowMultipleToolCalls" in data:
-            instance.allowMultipleToolCalls = data["allowMultipleToolCalls"]
+            instance.allow_multiple_tool_calls = data["allowMultipleToolCalls"]
         if data is not None and "additionalProperties" in data:
-            instance.additionalProperties = data["additionalProperties"]
+            instance.additional_properties = data["additionalProperties"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -109,29 +109,60 @@ class ModelOptions:
 
         result: dict[str, Any] = {}
 
-        if obj.frequencyPenalty is not None:
-            result["frequencyPenalty"] = obj.frequencyPenalty
-        if obj.maxOutputTokens is not None:
-            result["maxOutputTokens"] = obj.maxOutputTokens
-        if obj.presencePenalty is not None:
-            result["presencePenalty"] = obj.presencePenalty
+        if obj.frequency_penalty is not None:
+            result["frequencyPenalty"] = obj.frequency_penalty
+        if obj.max_output_tokens is not None:
+            result["maxOutputTokens"] = obj.max_output_tokens
+        if obj.presence_penalty is not None:
+            result["presencePenalty"] = obj.presence_penalty
         if obj.seed is not None:
             result["seed"] = obj.seed
         if obj.temperature is not None:
             result["temperature"] = obj.temperature
-        if obj.topK is not None:
-            result["topK"] = obj.topK
-        if obj.topP is not None:
-            result["topP"] = obj.topP
-        if obj.stopSequences is not None:
-            result["stopSequences"] = obj.stopSequences
-        if obj.allowMultipleToolCalls is not None:
-            result["allowMultipleToolCalls"] = obj.allowMultipleToolCalls
-        if obj.additionalProperties is not None:
-            result["additionalProperties"] = obj.additionalProperties
+        if obj.top_k is not None:
+            result["topK"] = obj.top_k
+        if obj.top_p is not None:
+            result["topP"] = obj.top_p
+        if obj.stop_sequences is not None:
+            result["stopSequences"] = obj.stop_sequences
+        if obj.allow_multiple_tool_calls is not None:
+            result["allowMultipleToolCalls"] = obj.allow_multiple_tool_calls
+        if obj.additional_properties is not None:
+            result["additionalProperties"] = obj.additional_properties
 
         if context is not None:
             result = context.process_dict(result)
+        return result
+
+    def to_wire(self, provider: str) -> dict[str, Any]:
+        """Convert to provider-specific wire format.
+        Args:
+            provider (str): The provider to convert to (e.g., "openai", "anthropic").
+        Returns:
+            dict[str, Any]: The wire-format dictionary with provider-specific field names.
+
+        """
+        data = self.save()
+        result: dict[str, Any] = {}
+        wire_map: dict[str, dict[str, str]] = {
+            "frequencyPenalty": {"openai": "frequency_penalty"},
+            "maxOutputTokens": {
+                "openai": "max_completion_tokens",
+                "responses": "max_output_tokens",
+                "anthropic": "max_tokens",
+            },
+            "presencePenalty": {"openai": "presence_penalty"},
+            "seed": {"openai": "seed"},
+            "temperature": {"openai": "temperature", "responses": "temperature", "anthropic": "temperature"},
+            "topK": {"openai": "top_k", "anthropic": "top_k"},
+            "topP": {"openai": "top_p", "responses": "top_p", "anthropic": "top_p"},
+            "stopSequences": {"openai": "stop", "anthropic": "stop_sequences"},
+            "allowMultipleToolCalls": {"openai": "parallel_tool_calls"},
+        }
+        for key, value in data.items():
+            mapping = wire_map.get(key)
+            if mapping is not None and provider in mapping:
+                result[mapping[provider]] = value
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

@@ -24,6 +24,7 @@ import { buildChatArgs, messageToWire, toolsToWire, outputSchemaToWire } from ".
 import { registerExecutor, registerProcessor } from "@prompty/core";
 import { Message } from "@prompty/core";
 import type { TextPart } from "@prompty/core";
+import { ModelOptions } from "@prompty/core";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -127,7 +128,7 @@ describe("wire format", () => {
 
     // buildChatArgs needs a Prompty-like agent
     const mockAgent = {
-      model: { id: "claude-sonnet-4-5-20250929", options: { maxOutputTokens: 512 } },
+      model: { id: "claude-sonnet-4-5-20250929", options: new ModelOptions({ maxOutputTokens: 512 }) },
       tools: [],
       outputs: [],
     };
@@ -150,13 +151,13 @@ describe("wire format", () => {
       {
         model: {
           id: "claude-haiku-4-5-20250929",
-          options: {
+          options: new ModelOptions({
             temperature: 0.5,
             topP: 0.9,
             topK: 40,
             maxOutputTokens: 2000,
             stopSequences: ["END"],
-          },
+          }),
         },
       } as any,
       msgs,

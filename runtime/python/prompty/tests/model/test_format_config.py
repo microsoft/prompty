@@ -19,7 +19,6 @@ def test_load_json_formatconfig():
     instance = FormatConfig.load(data)
     assert instance is not None
     assert instance.kind == "mustache"
-
     assert instance.strict
 
 

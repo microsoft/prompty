@@ -1,0 +1,12 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MessagesUpdatedPayload.yaml
+type: object
+properties:
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    description: The current full message list after the update
+required:
+  - messages
+description: Payload for "messages_updated" events — the conversation state has changed.

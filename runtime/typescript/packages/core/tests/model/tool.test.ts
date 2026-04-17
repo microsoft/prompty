@@ -21,11 +21,8 @@ describe("Tool", () => {
       const json = `{\n  "name": "my-tool",\n  "kind": "function",\n  "description": "A description of the tool",\n  "bindings": {\n    "input": "value"\n  }\n}`;
       const instance = Tool.fromJson(json);
       expect(instance).toBeDefined();
-
       expect(instance.name).toEqual("my-tool");
-
       expect(instance.kind).toEqual("function");
-
       expect(instance.description).toEqual("A description of the tool");
     });
 
@@ -34,11 +31,8 @@ describe("Tool", () => {
       const instance = Tool.fromJson(json);
       const output = instance.toJson();
       const reloaded = Tool.fromJson(output);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.description).toEqual(instance.description);
     });
   });
@@ -48,11 +42,8 @@ describe("Tool", () => {
       const yaml = `name: my-tool\nkind: function\ndescription: A description of the tool\nbindings:\n  input: value\n`;
       const instance = Tool.fromYaml(yaml);
       expect(instance).toBeDefined();
-
       expect(instance.name).toEqual("my-tool");
-
       expect(instance.kind).toEqual("function");
-
       expect(instance.description).toEqual("A description of the tool");
     });
 
@@ -61,12 +52,10 @@ describe("Tool", () => {
       const instance = Tool.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Tool.fromYaml(output);
-
       expect(reloaded.name).toEqual(instance.name);
-
       expect(reloaded.kind).toEqual(instance.kind);
-
       expect(reloaded.description).toEqual(instance.description);
     });
   });
+
 });

@@ -204,8 +204,8 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
 
     if prop.description:
         schema["description"] = prop.description
-    if prop.enumValues:
-        schema["enum"] = prop.enumValues
+    if prop.enum_values:
+        schema["enum"] = prop.enum_values
 
     # Array items — default to string if unspecified
     if prop.kind == "array":
@@ -270,30 +270,15 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
 
 def _build_options(agent: Prompty) -> dict[str, Any]:
     """Extract model options into kwargs for the chat completions API call."""
-    opts: dict[str, Any] = {}
     if agent.model.options is None:
-        return opts
+        return {}
 
     mo = agent.model.options
-
-    if mo.temperature is not None:
-        opts["temperature"] = mo.temperature
-    if mo.maxOutputTokens is not None:
-        opts["max_completion_tokens"] = mo.maxOutputTokens
-    if mo.topP is not None:
-        opts["top_p"] = mo.topP
-    if mo.frequencyPenalty is not None:
-        opts["frequency_penalty"] = mo.frequencyPenalty
-    if mo.presencePenalty is not None:
-        opts["presence_penalty"] = mo.presencePenalty
-    if mo.seed is not None:
-        opts["seed"] = mo.seed
-    if mo.stopSequences:
-        opts["stop"] = mo.stopSequences
+    opts = mo.to_wire("openai")
 
     # Pass through additional properties
-    if mo.additionalProperties:
-        for k, v in mo.additionalProperties.items():
+    if mo.additional_properties:
+        for k, v in mo.additional_properties.items():
             if k not in opts:
                 opts[k] = v
 
@@ -307,22 +292,15 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
 
 def _build_responses_options(agent: Prompty) -> dict[str, Any]:
     """Extract model options for the Responses API (different param names)."""
-    opts: dict[str, Any] = {}
     if agent.model.options is None:
-        return opts
+        return {}
 
     mo = agent.model.options
-
-    if mo.temperature is not None:
-        opts["temperature"] = mo.temperature
-    if mo.maxOutputTokens is not None:
-        opts["max_output_tokens"] = mo.maxOutputTokens
-    if mo.topP is not None:
-        opts["top_p"] = mo.topP
+    opts = mo.to_wire("responses")
 
     # Pass through additional properties
-    if mo.additionalProperties:
-        for k, v in mo.additionalProperties.items():
+    if mo.additional_properties:
+        for k, v in mo.additional_properties.items():
             if k not in opts:
                 opts[k] = v
 
@@ -737,7 +715,7 @@ class OpenAIExecutor(_BaseExecutor):
     @trace
     def execute(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client(agent)
-        api_type = agent.model.apiType or "chat"
+        api_type = agent.model.api_type or "chat"
 
         if api_type == "chat":
             return self._execute_chat(client, agent, data)
@@ -753,7 +731,7 @@ class OpenAIExecutor(_BaseExecutor):
     @trace
     async def execute_async(self, agent: Prompty, data: Any) -> Any:
         client = self._resolve_client_async(agent)
-        api_type = agent.model.apiType or "chat"
+        api_type = agent.model.api_type or "chat"
 
         if api_type == "chat":
             return await self._execute_chat_async(client, agent, data)
@@ -815,8 +793,8 @@ class OpenAIExecutor(_BaseExecutor):
         kwargs: dict[str, Any] = {}
         conn = agent.model.connection
         if conn and isinstance(conn, ApiKeyConnection):
-            if conn.apiKey:
-                kwargs["api_key"] = conn.apiKey
+            if conn.api_key:
+                kwargs["api_key"] = conn.api_key
             if conn.endpoint:
                 kwargs["base_url"] = conn.endpoint
         elif conn:

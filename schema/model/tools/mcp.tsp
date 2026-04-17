@@ -1,6 +1,6 @@
-import "../core.tsp";
-import "../tools.tsp";
-import "../connection.tsp";
+import "../core/core.tsp";
+import "./tool.tsp";
+import "../connection/connection.tsp";
 
 namespace Prompty;
 
@@ -40,7 +40,7 @@ alias mcpApprovalModeKind = "always" | "never" | "specify";
  * When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
  * to control per-tool approval. For "always" and "never", those fields are ignored.
  */
-@shorthand(string, #{ kind: "{value}" }, "kind", "Mcp Approval Mode", "never")
+@coerce(string, #{ kind: "{value}" }, "kind", "Mcp Approval Mode", "never")
 model McpApprovalMode {
   @doc("The approval mode: 'always', 'never', or 'specify'")
   @sample(#{ kind: "never" })
