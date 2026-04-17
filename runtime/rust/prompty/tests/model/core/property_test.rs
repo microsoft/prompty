@@ -22,7 +22,11 @@ fn test_property_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = Property::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -42,7 +46,11 @@ enumValues:
 "####;
     let ctx = LoadContext::default();
     let result = Property::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -98,4 +106,3 @@ fn test_property_from_input_4() {
     let instance = Property::load_from_value(&value, &ctx);
     let _ = instance; // abstract type, load succeeded
 }
-

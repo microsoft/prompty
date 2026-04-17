@@ -15,7 +15,11 @@ fn test_parser_config_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = ParserConfig::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -28,7 +32,11 @@ options:
 "####;
     let ctx = LoadContext::default();
     let result = ParserConfig::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -53,4 +61,3 @@ fn test_parser_config_from_parser() {
     let instance = ParserConfig::load_from_value(&value, &ctx);
     let _ = instance; // abstract type, load succeeded
 }
-

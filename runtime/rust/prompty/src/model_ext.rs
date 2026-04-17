@@ -4,7 +4,10 @@
 //! adds convenience accessors, trait impls (PartialEq, Serialize, Deserialize),
 //! and helper methods used by the pipeline and other hand-written code.
 
-use crate::model::{ContentPart, ContentPartKind, Message, MessageHelpers, Property, Prompty, Role, Tool, ToolResult, ToolResultHelpers};
+use crate::model::{
+    ContentPart, ContentPartKind, Message, MessageHelpers, Prompty, Property, Role, Tool,
+    ToolResult, ToolResultHelpers,
+};
 
 // ---------------------------------------------------------------------------
 // Prompty helpers
@@ -47,7 +50,10 @@ impl MessageHelpers for Message {
     fn to_text_content(&self) -> serde_json::Value {
         // If all parts are text, return a single joined string.
         // Otherwise return an array of content part dicts for wire serialization.
-        let all_text = self.parts.iter().all(|p| matches!(&p.kind, ContentPartKind::TextPart { .. }));
+        let all_text = self
+            .parts
+            .iter()
+            .all(|p| matches!(&p.kind, ContentPartKind::TextPart { .. }));
         if all_text {
             let text = self
                 .parts
@@ -62,9 +68,7 @@ impl MessageHelpers for Message {
         } else {
             use crate::model::context::SaveContext;
             let ctx = SaveContext::default();
-            serde_json::Value::Array(
-                self.parts.iter().map(|p| p.to_value(&ctx)).collect(),
-            )
+            serde_json::Value::Array(self.parts.iter().map(|p| p.to_value(&ctx)).collect())
         }
     }
 
@@ -104,22 +108,46 @@ impl ToolResultHelpers for ToolResult {
 impl ContentPart {
     /// Create a text content part.
     pub fn text(value: impl Into<String>) -> Self {
-        Self { kind: ContentPartKind::TextPart { value: value.into() } }
+        Self {
+            kind: ContentPartKind::TextPart {
+                value: value.into(),
+            },
+        }
     }
 
     /// Create an image content part.
-    pub fn image(source: impl Into<String>, detail: Option<String>, media_type: Option<String>) -> Self {
-        Self { kind: ContentPartKind::ImagePart { source: source.into(), detail, media_type } }
+    pub fn image(
+        source: impl Into<String>,
+        detail: Option<String>,
+        media_type: Option<String>,
+    ) -> Self {
+        Self {
+            kind: ContentPartKind::ImagePart {
+                source: source.into(),
+                detail,
+                media_type,
+            },
+        }
     }
 
     /// Create a file content part.
     pub fn file(source: impl Into<String>, media_type: Option<String>) -> Self {
-        Self { kind: ContentPartKind::FilePart { source: source.into(), media_type } }
+        Self {
+            kind: ContentPartKind::FilePart {
+                source: source.into(),
+                media_type,
+            },
+        }
     }
 
     /// Create an audio content part.
     pub fn audio(source: impl Into<String>, media_type: Option<String>) -> Self {
-        Self { kind: ContentPartKind::AudioPart { source: source.into(), media_type } }
+        Self {
+            kind: ContentPartKind::AudioPart {
+                source: source.into(),
+                media_type,
+            },
+        }
     }
 }
 
@@ -130,18 +158,40 @@ impl ContentPart {
 impl PartialEq for ContentPartKind {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
-            (ContentPartKind::TextPart { value: a }, ContentPartKind::TextPart { value: b }) => a == b,
+            (ContentPartKind::TextPart { value: a }, ContentPartKind::TextPart { value: b }) => {
+                a == b
+            }
             (
-                ContentPartKind::ImagePart { source: a, detail: ad, media_type: am },
-                ContentPartKind::ImagePart { source: b, detail: bd, media_type: bm },
+                ContentPartKind::ImagePart {
+                    source: a,
+                    detail: ad,
+                    media_type: am,
+                },
+                ContentPartKind::ImagePart {
+                    source: b,
+                    detail: bd,
+                    media_type: bm,
+                },
             ) => a == b && ad == bd && am == bm,
             (
-                ContentPartKind::FilePart { source: a, media_type: am },
-                ContentPartKind::FilePart { source: b, media_type: bm },
+                ContentPartKind::FilePart {
+                    source: a,
+                    media_type: am,
+                },
+                ContentPartKind::FilePart {
+                    source: b,
+                    media_type: bm,
+                },
             ) => a == b && am == bm,
             (
-                ContentPartKind::AudioPart { source: a, media_type: am },
-                ContentPartKind::AudioPart { source: b, media_type: bm },
+                ContentPartKind::AudioPart {
+                    source: a,
+                    media_type: am,
+                },
+                ContentPartKind::AudioPart {
+                    source: b,
+                    media_type: bm,
+                },
             ) => a == b && am == bm,
             _ => false,
         }

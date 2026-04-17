@@ -345,10 +345,7 @@ mod tests {
     fn test_message_multipart_text() {
         let msg = Message {
             role: Role::Assistant,
-            parts: vec![
-                ContentPart::text("Hello "),
-                ContentPart::text("world"),
-            ],
+            parts: vec![ContentPart::text("Hello "), ContentPart::text("world")],
             ..Default::default()
         };
         assert_eq!(msg.text_content(), "Hello world");

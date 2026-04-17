@@ -160,7 +160,11 @@ impl SaveContext {
     }
 
     /// Convert a value to a JSON string.
-    pub fn to_json(&self, data: &serde_json::Value, indent: bool) -> Result<String, serde_json::Error> {
+    pub fn to_json(
+        &self,
+        data: &serde_json::Value,
+        indent: bool,
+    ) -> Result<String, serde_json::Error> {
         if indent {
             serde_json::to_string_pretty(data)
         } else {

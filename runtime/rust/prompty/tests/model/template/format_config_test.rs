@@ -16,7 +16,11 @@ fn test_format_config_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = FormatConfig::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -30,7 +34,11 @@ options:
 "####;
     let ctx = LoadContext::default();
     let result = FormatConfig::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
 }
 
 #[test]
@@ -56,4 +64,3 @@ fn test_format_config_from_format() {
     let instance = FormatConfig::load_from_value(&value, &ctx);
     let _ = instance; // abstract type, load succeeded
 }
-

@@ -123,7 +123,10 @@ async fn test_compaction_function_replaces_summary() {
         Box::pin(async { Ok("LLM-powered summary of the conversation".to_string()) })
     });
 
-    let dropped = vec![Message::with_text(Role::User, "old content that was dropped")];
+    let dropped = vec![Message::with_text(
+        Role::User,
+        "old content that was dropped",
+    )];
 
     let span = prompty::tracing::Tracer::start("test");
     prompty::pipeline::apply_compaction(

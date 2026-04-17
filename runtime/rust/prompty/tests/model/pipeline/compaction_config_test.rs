@@ -16,7 +16,11 @@ fn test_compaction_config_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = CompactionConfig::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     assert!(instance.strategy.is_some(), "Expected strategy to be Some");
     assert_eq!(instance.strategy.as_ref().unwrap(), &"summarize");
@@ -35,7 +39,11 @@ options:
 "####;
     let ctx = LoadContext::default();
     let result = CompactionConfig::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     assert!(instance.strategy.is_some(), "Expected strategy to be Some");
     assert!(instance.budget.is_some(), "Expected budget to be Some");
@@ -58,6 +66,9 @@ fn test_compaction_config_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
+    assert!(
+        json_output.is_ok(),
+        "Failed to serialize to JSON: {:?}",
+        json_output.err()
+    );
 }
-

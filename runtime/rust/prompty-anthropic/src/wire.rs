@@ -157,7 +157,9 @@ fn part_to_wire(part: &ContentPart) -> Value {
             "type": "text",
             "text": value,
         }),
-        ContentPartKind::ImagePart { source, media_type, .. } => {
+        ContentPartKind::ImagePart {
+            source, media_type, ..
+        } => {
             if source.starts_with("http://") || source.starts_with("https://") {
                 json!({
                     "type": "image",
@@ -546,7 +548,11 @@ mod tests {
     fn test_image_url_format() {
         let msg = Message {
             role: Role::User,
-            parts: vec![ContentPart::image("https://example.com/image.png", None, None)],
+            parts: vec![ContentPart::image(
+                "https://example.com/image.png",
+                None,
+                None,
+            )],
             ..Default::default()
         };
         let wire = message_to_wire(&msg);

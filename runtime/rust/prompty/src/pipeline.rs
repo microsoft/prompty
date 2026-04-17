@@ -1592,7 +1592,10 @@ fn expand_threads(
         let mut expanded = false;
 
         for part in &msg.parts {
-            if let ContentPartKind::TextPart { value: ref text_value } = part.kind {
+            if let ContentPartKind::TextPart {
+                value: ref text_value,
+            } = part.kind
+            {
                 for (nonce, name) in &nonce_to_name {
                     if text_value.contains(*nonce) {
                         let idx = text_value.find(*nonce).unwrap();

@@ -17,7 +17,11 @@ fn test_template_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = Template::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     let _ = instance; // load succeeded, no scalar properties to validate
 }
@@ -33,7 +37,11 @@ parser:
 "####;
     let ctx = LoadContext::default();
     let result = Template::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     let _ = instance; // load succeeded, no scalar properties to validate
 }
@@ -56,6 +64,9 @@ fn test_template_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
+    assert!(
+        json_output.is_ok(),
+        "Failed to serialize to JSON: {:?}",
+        json_output.err()
+    );
 }
-

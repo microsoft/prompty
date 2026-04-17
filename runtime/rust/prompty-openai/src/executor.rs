@@ -22,7 +22,12 @@ pub struct OpenAIExecutor;
 #[async_trait]
 impl Executor for OpenAIExecutor {
     async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
-        let api_type = agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat");
+        let api_type = agent
+            .model
+            .api_type
+            .as_ref()
+            .map(|t| t.as_str())
+            .unwrap_or("chat");
 
         let (url, body) = match api_type {
             "chat" | "agent" => {
@@ -97,7 +102,12 @@ impl Executor for OpenAIExecutor {
         agent: &Prompty,
         messages: &[Message],
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
-        let api_type = agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat");
+        let api_type = agent
+            .model
+            .api_type
+            .as_ref()
+            .map(|t| t.as_str())
+            .unwrap_or("chat");
 
         let (url, mut body) = match api_type {
             "chat" | "agent" => {
@@ -152,7 +162,12 @@ impl Executor for OpenAIExecutor {
 impl OpenAIExecutor {
     /// Build the request args without sending — useful for testing wire format.
     pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
-        let api_type = agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat");
+        let api_type = agent
+            .model
+            .api_type
+            .as_ref()
+            .map(|t| t.as_str())
+            .unwrap_or("chat");
         Ok(match api_type {
             "chat" | "agent" => wire::build_chat_args(agent, messages),
             "embedding" => wire::build_embedding_args(agent, messages),

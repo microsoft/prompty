@@ -17,7 +17,11 @@ fn test_tool_result_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = ToolResult::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     let _ = instance; // load succeeded, no scalar properties to validate
 }
@@ -32,7 +36,11 @@ parts:
 "####;
     let ctx = LoadContext::default();
     let result = ToolResult::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     let _ = instance; // load succeeded, no scalar properties to validate
 }
@@ -55,11 +63,14 @@ fn test_tool_result_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
+    assert!(
+        json_output.is_ok(),
+        "Failed to serialize to JSON: {:?}",
+        json_output.err()
+    );
 }
 
 #[test]
 fn test_tool_result_factory_text() {
     let instance = ToolResult::text("test".to_string());
 }
-

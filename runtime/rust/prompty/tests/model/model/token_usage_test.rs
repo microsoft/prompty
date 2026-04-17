@@ -14,13 +14,26 @@ fn test_token_usage_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = TokenUsage::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
-    assert!(instance.prompt_tokens.is_some(), "Expected prompt_tokens to be Some");
+    assert!(
+        instance.prompt_tokens.is_some(),
+        "Expected prompt_tokens to be Some"
+    );
     assert_eq!(instance.prompt_tokens.as_ref().unwrap(), &150);
-    assert!(instance.completion_tokens.is_some(), "Expected completion_tokens to be Some");
+    assert!(
+        instance.completion_tokens.is_some(),
+        "Expected completion_tokens to be Some"
+    );
     assert_eq!(instance.completion_tokens.as_ref().unwrap(), &42);
-    assert!(instance.total_tokens.is_some(), "Expected total_tokens to be Some");
+    assert!(
+        instance.total_tokens.is_some(),
+        "Expected total_tokens to be Some"
+    );
     assert_eq!(instance.total_tokens.as_ref().unwrap(), &192);
 }
 
@@ -34,11 +47,24 @@ totalTokens: 192
 "####;
     let ctx = LoadContext::default();
     let result = TokenUsage::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
-    assert!(instance.prompt_tokens.is_some(), "Expected prompt_tokens to be Some");
-    assert!(instance.completion_tokens.is_some(), "Expected completion_tokens to be Some");
-    assert!(instance.total_tokens.is_some(), "Expected total_tokens to be Some");
+    assert!(
+        instance.prompt_tokens.is_some(),
+        "Expected prompt_tokens to be Some"
+    );
+    assert!(
+        instance.completion_tokens.is_some(),
+        "Expected completion_tokens to be Some"
+    );
+    assert!(
+        instance.total_tokens.is_some(),
+        "Expected total_tokens to be Some"
+    );
 }
 
 #[test]
@@ -56,6 +82,9 @@ fn test_token_usage_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
+    assert!(
+        json_output.is_ok(),
+        "Failed to serialize to JSON: {:?}",
+        json_output.err()
+    );
 }
-

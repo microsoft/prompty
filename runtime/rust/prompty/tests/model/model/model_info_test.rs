@@ -25,14 +25,24 @@ fn test_model_info_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = ModelInfo::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     assert_eq!(instance.id, "gpt-4o");
-    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(
+        instance.display_name.is_some(),
+        "Expected display_name to be Some"
+    );
     assert_eq!(instance.display_name.as_ref().unwrap(), &"GPT-4o");
     assert!(instance.owned_by.is_some(), "Expected owned_by to be Some");
     assert_eq!(instance.owned_by.as_ref().unwrap(), &"openai");
-    assert!(instance.context_window.is_some(), "Expected context_window to be Some");
+    assert!(
+        instance.context_window.is_some(),
+        "Expected context_window to be Some"
+    );
     assert_eq!(instance.context_window.as_ref().unwrap(), &128000);
 }
 
@@ -54,12 +64,22 @@ additionalProperties:
 "####;
     let ctx = LoadContext::default();
     let result = ModelInfo::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     assert_eq!(instance.id, "gpt-4o");
-    assert!(instance.display_name.is_some(), "Expected display_name to be Some");
+    assert!(
+        instance.display_name.is_some(),
+        "Expected display_name to be Some"
+    );
     assert!(instance.owned_by.is_some(), "Expected owned_by to be Some");
-    assert!(instance.context_window.is_some(), "Expected context_window to be Some");
+    assert!(
+        instance.context_window.is_some(),
+        "Expected context_window to be Some"
+    );
 }
 
 #[test]
@@ -88,6 +108,9 @@ fn test_model_info_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
+    assert!(
+        json_output.is_ok(),
+        "Failed to serialize to JSON: {:?}",
+        json_output.err()
+    );
 }
-

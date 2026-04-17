@@ -21,7 +21,11 @@ fn test_tool_dispatch_result_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = ToolDispatchResult::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     assert_eq!(instance.tool_call_id, "call_abc123");
     assert_eq!(instance.name, "get_weather");
@@ -40,7 +44,11 @@ result:
 "####;
     let ctx = LoadContext::default();
     let result = ToolDispatchResult::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     assert_eq!(instance.tool_call_id, "call_abc123");
     assert_eq!(instance.name, "get_weather");
@@ -68,6 +76,9 @@ fn test_tool_dispatch_result_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
+    assert!(
+        json_output.is_ok(),
+        "Failed to serialize to JSON: {:?}",
+        json_output.err()
+    );
 }
-

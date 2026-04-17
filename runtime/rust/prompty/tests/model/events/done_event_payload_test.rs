@@ -12,7 +12,11 @@ fn test_done_event_payload_load_json() {
 "####;
     let ctx = LoadContext::default();
     let result = DoneEventPayload::from_json(json, &ctx);
-    assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     assert_eq!(instance.response, "The weather in Paris is 72°F and sunny.");
 }
@@ -25,7 +29,11 @@ response: The weather in Paris is 72°F and sunny.
 "####;
     let ctx = LoadContext::default();
     let result = DoneEventPayload::from_yaml(yaml, &ctx);
-    assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
     let instance = result.unwrap();
     assert_eq!(instance.response, "The weather in Paris is 72°F and sunny.");
 }
@@ -43,6 +51,9 @@ fn test_done_event_payload_roundtrip() {
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
     let json_output = instance.to_json(&save_ctx);
-    assert!(json_output.is_ok(), "Failed to serialize to JSON: {:?}", json_output.err());
+    assert!(
+        json_output.is_ok(),
+        "Failed to serialize to JSON: {:?}",
+        json_output.err()
+    );
 }
-

@@ -46,11 +46,15 @@ fn build_messages(input: &Value) -> Vec<Message> {
                         "image" => ContentPart::image(
                             p["value"].as_str().unwrap(),
                             None,
-                            p.get("mediaType").and_then(|v| v.as_str()).map(String::from),
+                            p.get("mediaType")
+                                .and_then(|v| v.as_str())
+                                .map(String::from),
                         ),
                         "audio" => ContentPart::audio(
                             p["value"].as_str().unwrap(),
-                            p.get("mediaType").and_then(|v| v.as_str()).map(String::from),
+                            p.get("mediaType")
+                                .and_then(|v| v.as_str())
+                                .map(String::from),
                         ),
                         _ => panic!("Unknown content kind: {kind}"),
                     }

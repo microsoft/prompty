@@ -3,7 +3,9 @@
 //! Converts Prompty `Message`s, tools, options, and output schemas into the
 //! JSON bodies expected by the OpenAI API.
 
-use prompty::model::{MessageHelpers, ModelOptions, Prompty, Property, PropertyKind, Tool, ToolKind};
+use prompty::model::{
+    MessageHelpers, ModelOptions, Prompty, Property, PropertyKind, Tool, ToolKind,
+};
 use prompty::types::{ContentPart, ContentPartKind, Message};
 use serde_json::{Map, Value, json};
 
@@ -55,7 +57,9 @@ fn part_to_wire(part: &ContentPart) -> Value {
                 "image_url": Value::Object(img),
             })
         }
-        ContentPartKind::AudioPart { source, media_type, .. } => {
+        ContentPartKind::AudioPart {
+            source, media_type, ..
+        } => {
             let format = media_type
                 .as_deref()
                 .map(mime_to_audio_format)
@@ -269,11 +273,8 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
     }
 
     // Collect bound parameter names to strip from wire format (§7.1.3)
-    let bound_names: std::collections::HashSet<String> = tool
-        .bindings
-        .iter()
-        .map(|b| b.name.clone())
-        .collect();
+    let bound_names: std::collections::HashSet<String> =
+        tool.bindings.iter().map(|b| b.name.clone()).collect();
 
     // Parameters → JSON Schema, filtering out bound params
     {
@@ -556,11 +557,8 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Value {
     }
 
     // Collect bound parameter names to strip (§7.1.3)
-    let bound_names: std::collections::HashSet<String> = tool
-        .bindings
-        .iter()
-        .map(|b| b.name.clone())
-        .collect();
+    let bound_names: std::collections::HashSet<String> =
+        tool.bindings.iter().map(|b| b.name.clone()).collect();
 
     {
         let typed_params: Vec<&Property> = parameters
@@ -696,7 +694,10 @@ mod tests {
     fn test_message_to_wire_audio() {
         let msg = Message {
             role: prompty::Role::User,
-            parts: vec![ContentPart::audio("base64data", Some("audio/mpeg".to_string()))],
+            parts: vec![ContentPart::audio(
+                "base64data",
+                Some("audio/mpeg".to_string()),
+            )],
             ..Default::default()
         };
         let wire = message_to_wire(&msg);

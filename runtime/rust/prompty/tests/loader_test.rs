@@ -83,7 +83,10 @@ fn test_basic_load() {
     );
     assert_eq!(agent.model.id, "gpt-4");
     assert_eq!(agent.model.provider.as_deref(), Some("openai"));
-    assert_eq!(agent.model.api_type.as_ref().map(|t| t.as_str()), Some("chat"));
+    assert_eq!(
+        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        Some("chat")
+    );
 
     // Connection
     let conn = agent.model.connection.as_object().unwrap();
@@ -248,7 +251,10 @@ fn test_tools_function_load() {
     let agent = load_fixture("tools_function.prompty", &[]).unwrap();
 
     assert_eq!(agent.name, "function-tools");
-    assert_eq!(agent.model.api_type.as_ref().map(|t| t.as_str()), Some("chat"));
+    assert_eq!(
+        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        Some("chat")
+    );
 
     let tools = agent.as_tools().unwrap();
     assert_eq!(tools.len(), 1);
@@ -270,7 +276,10 @@ fn test_embedding_load() {
 
     assert_eq!(agent.name, "embedding");
     assert_eq!(agent.model.id, "text-embedding-3-small");
-    assert_eq!(agent.model.api_type.as_ref().map(|t| t.as_str()), Some("embedding"));
+    assert_eq!(
+        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        Some("embedding")
+    );
 }
 
 #[test]
