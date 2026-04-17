@@ -30,7 +30,7 @@ func LoadFormatConfig(data interface{}, ctx *LoadContext) (FormatConfig, error) 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["strict"]; ok && val != nil {
 			v := val.(bool)

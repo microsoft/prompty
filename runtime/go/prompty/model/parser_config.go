@@ -29,7 +29,7 @@ func LoadParserConfig(data interface{}, ctx *LoadContext) (ParserConfig, error) 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["options"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {

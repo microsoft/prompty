@@ -24,13 +24,13 @@ func LoadToolCall(data interface{}, ctx *LoadContext) (ToolCall, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["id"]; ok && val != nil {
-			result.Id = val.(string)
+			result.Id = string(val.(string))
 		}
 		if val, ok := m["name"]; ok && val != nil {
-			result.Name = val.(string)
+			result.Name = string(val.(string))
 		}
 		if val, ok := m["arguments"]; ok && val != nil {
-			result.Arguments = val.(string)
+			result.Arguments = string(val.(string))
 		}
 	}
 

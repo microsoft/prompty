@@ -8,11 +8,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Role represents the allowed values for Role.
+type Role string
+
+const (
+	RoleSystem    Role = "system"
+	RoleUser      Role = "user"
+	RoleAssistant Role = "assistant"
+	RoleDeveloper Role = "developer"
+	RoleTool      Role = "tool"
+)
+
 // Message represents A message in a conversation. Messages have a role and a list of content parts
 // representing the different modalities of the message content.
 
 type Message struct {
-	Role     string                 `json:"role" yaml:"role"`
+	Role     Role                   `json:"role" yaml:"role"`
 	Parts    []interface{}          `json:"parts" yaml:"parts"`
 	Metadata map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
@@ -24,7 +35,7 @@ func LoadMessage(data interface{}, ctx *LoadContext) (Message, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["role"]; ok && val != nil {
-			result.Role = val.(string)
+			result.Role = Role(val.(string))
 		}
 		if val, ok := m["parts"]; ok && val != nil {
 			if arr, ok := val.([]interface{}); ok {

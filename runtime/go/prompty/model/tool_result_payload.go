@@ -22,7 +22,7 @@ func LoadToolResultPayload(data interface{}, ctx *LoadContext) (ToolResultPayloa
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["name"]; ok && val != nil {
-			result.Name = val.(string)
+			result.Name = string(val.(string))
 		}
 		if val, ok := m["result"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {

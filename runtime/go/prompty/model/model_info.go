@@ -32,14 +32,14 @@ func LoadModelInfo(data interface{}, ctx *LoadContext) (ModelInfo, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["id"]; ok && val != nil {
-			result.Id = val.(string)
+			result.Id = string(val.(string))
 		}
 		if val, ok := m["displayName"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.DisplayName = &v
 		}
 		if val, ok := m["ownedBy"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.OwnedBy = &v
 		}
 		if val, ok := m["contextWindow"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip

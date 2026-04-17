@@ -8,14 +8,23 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// mcpApprovalModeKind represents the allowed values for mcpApprovalModeKind.
+type mcpApprovalModeKind string
+
+const (
+	mcpApprovalModeKindAlways  mcpApprovalModeKind = "always"
+	mcpApprovalModeKindNever   mcpApprovalModeKind = "never"
+	mcpApprovalModeKindSpecify mcpApprovalModeKind = "specify"
+)
+
 // McpApprovalMode represents The approval mode for MCP server tools.
 // When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools
 // to control per-tool approval. For "always" and "never", those fields are ignored.
 
 type McpApprovalMode struct {
-	Kind                       string   `json:"kind" yaml:"kind"`
-	AlwaysRequireApprovalTools []string `json:"alwaysRequireApprovalTools,omitempty" yaml:"alwaysRequireApprovalTools,omitempty"`
-	NeverRequireApprovalTools  []string `json:"neverRequireApprovalTools,omitempty" yaml:"neverRequireApprovalTools,omitempty"`
+	Kind                       mcpApprovalModeKind `json:"kind" yaml:"kind"`
+	AlwaysRequireApprovalTools []string            `json:"alwaysRequireApprovalTools,omitempty" yaml:"alwaysRequireApprovalTools,omitempty"`
+	NeverRequireApprovalTools  []string            `json:"neverRequireApprovalTools,omitempty" yaml:"neverRequireApprovalTools,omitempty"`
 }
 
 // LoadMcpApprovalMode creates a McpApprovalMode from a map[string]interface{}
@@ -32,7 +41,7 @@ func LoadMcpApprovalMode(data interface{}, ctx *LoadContext) (McpApprovalMode, e
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = mcpApprovalModeKind(val.(string))
 		}
 		if val, ok := m["alwaysRequireApprovalTools"]; ok && val != nil {
 			if arr, ok := val.([]interface{}); ok {

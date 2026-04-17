@@ -25,7 +25,7 @@ func LoadCompactionConfig(data interface{}, ctx *LoadContext) (CompactionConfig,
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["strategy"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.Strategy = &v
 		}
 		if val, ok := m["budget"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip

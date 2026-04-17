@@ -22,7 +22,7 @@ func LoadDoneEventPayload(data interface{}, ctx *LoadContext) (DoneEventPayload,
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["response"]; ok && val != nil {
-			result.Response = val.(string)
+			result.Response = string(val.(string))
 		}
 		if val, ok := m["messages"]; ok && val != nil {
 			if arr, ok := val.([]interface{}); ok {

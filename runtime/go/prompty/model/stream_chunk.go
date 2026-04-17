@@ -38,7 +38,7 @@ func LoadStreamChunk(data interface{}, ctx *LoadContext) (interface{}, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 	}
 
@@ -111,10 +111,10 @@ func LoadTextChunk(data interface{}, ctx *LoadContext) (TextChunk, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["value"]; ok && val != nil {
-			result.Value = val.(string)
+			result.Value = string(val.(string))
 		}
 	}
 
@@ -186,10 +186,10 @@ func LoadThinkingChunk(data interface{}, ctx *LoadContext) (ThinkingChunk, error
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["value"]; ok && val != nil {
-			result.Value = val.(string)
+			result.Value = string(val.(string))
 		}
 	}
 
@@ -261,7 +261,7 @@ func LoadToolChunk(data interface{}, ctx *LoadContext) (ToolChunk, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["toolCall"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -340,10 +340,10 @@ func LoadErrorChunk(data interface{}, ctx *LoadContext) (ErrorChunk, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["message"]; ok && val != nil {
-			result.Message = val.(string)
+			result.Message = string(val.(string))
 		}
 	}
 

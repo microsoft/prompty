@@ -29,10 +29,10 @@ func LoadBinding(data interface{}, ctx *LoadContext) (Binding, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["name"]; ok && val != nil {
-			result.Name = val.(string)
+			result.Name = string(val.(string))
 		}
 		if val, ok := m["input"]; ok && val != nil {
-			result.Input = val.(string)
+			result.Input = string(val.(string))
 		}
 	}
 

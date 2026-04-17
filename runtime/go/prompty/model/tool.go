@@ -8,6 +8,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// promptyToolMode represents the allowed values for promptyToolMode.
+type promptyToolMode string
+
+const (
+	promptyToolModeSingle  promptyToolMode = "single"
+	promptyToolModeAgentic promptyToolMode = "agentic"
+)
+
 // Tool represents Represents a tool that can be used in prompts.
 
 type Tool struct {
@@ -42,13 +50,13 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["name"]; ok && val != nil {
-			result.Name = val.(string)
+			result.Name = string(val.(string))
 		}
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["description"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.Description = &v
 		}
 		if val, ok := m["bindings"]; ok && val != nil {
@@ -145,7 +153,7 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["parameters"]; ok && val != nil {
 			if arr, ok := val.([]interface{}); ok {
@@ -255,7 +263,7 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -353,7 +361,7 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -363,10 +371,10 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 			}
 		}
 		if val, ok := m["serverName"]; ok && val != nil {
-			result.ServerName = val.(string)
+			result.ServerName = string(val.(string))
 		}
 		if val, ok := m["serverDescription"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.ServerDescription = &v
 		}
 		if val, ok := m["approvalMode"]; ok && val != nil {
@@ -469,7 +477,7 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -479,7 +487,7 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 			}
 		}
 		if val, ok := m["specification"]; ok && val != nil {
-			result.Specification = val.(string)
+			result.Specification = string(val.(string))
 		}
 	}
 
@@ -553,9 +561,9 @@ func OpenApiToolFromYAML(yamlStr string) (OpenApiTool, error) {
 // In `agentic` mode, the child prompty runs a full agent loop with its own tools.
 
 type PromptyTool struct {
-	Kind string `json:"kind" yaml:"kind"`
-	Path string `json:"path" yaml:"path"`
-	Mode string `json:"mode" yaml:"mode"`
+	Kind string          `json:"kind" yaml:"kind"`
+	Path string          `json:"path" yaml:"path"`
+	Mode promptyToolMode `json:"mode" yaml:"mode"`
 }
 
 // LoadPromptyTool creates a PromptyTool from a map[string]interface{}
@@ -565,13 +573,13 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["path"]; ok && val != nil {
-			result.Path = val.(string)
+			result.Path = string(val.(string))
 		}
 		if val, ok := m["mode"]; ok && val != nil {
-			result.Mode = val.(string)
+			result.Mode = promptyToolMode(val.(string))
 		}
 	}
 

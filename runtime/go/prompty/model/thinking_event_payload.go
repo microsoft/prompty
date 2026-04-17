@@ -21,7 +21,7 @@ func LoadThinkingEventPayload(data interface{}, ctx *LoadContext) (ThinkingEvent
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["token"]; ok && val != nil {
-			result.Token = val.(string)
+			result.Token = string(val.(string))
 		}
 	}
 

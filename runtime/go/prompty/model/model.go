@@ -8,6 +8,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// apiType represents the allowed values for apiType.
+type apiType string
+
+const (
+	apiTypeChat      apiType = "chat"
+	apiTypeEmbedding apiType = "embedding"
+	apiTypeImage     apiType = "image"
+	apiTypeResponses apiType = "responses"
+)
+
 // Model represents Model for defining the structure and behavior of AI agents.
 // This model includes properties for specifying the model's provider, connection details, and various options.
 // It allows for flexible configuration of AI models to suit different use cases and requirements.
@@ -15,7 +25,7 @@ import (
 type Model struct {
 	Id         string        `json:"id" yaml:"id"`
 	Provider   *string       `json:"provider,omitempty" yaml:"provider,omitempty"`
-	ApiType    *string       `json:"apiType,omitempty" yaml:"apiType,omitempty"`
+	ApiType    *apiType      `json:"apiType,omitempty" yaml:"apiType,omitempty"`
 	Connection interface{}   `json:"connection,omitempty" yaml:"connection,omitempty"`
 	Options    *ModelOptions `json:"options,omitempty" yaml:"options,omitempty"`
 }
@@ -34,14 +44,14 @@ func LoadModel(data interface{}, ctx *LoadContext) (Model, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["id"]; ok && val != nil {
-			result.Id = val.(string)
+			result.Id = string(val.(string))
 		}
 		if val, ok := m["provider"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.Provider = &v
 		}
 		if val, ok := m["apiType"]; ok && val != nil {
-			v := val.(string)
+			v := apiType(val.(string))
 			result.ApiType = &v
 		}
 		if val, ok := m["connection"]; ok && val != nil {

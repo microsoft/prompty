@@ -38,7 +38,7 @@ func LoadContentPart(data interface{}, ctx *LoadContext) (interface{}, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 	}
 
@@ -111,10 +111,10 @@ func LoadTextPart(data interface{}, ctx *LoadContext) (TextPart, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["value"]; ok && val != nil {
-			result.Value = val.(string)
+			result.Value = string(val.(string))
 		}
 	}
 
@@ -188,17 +188,17 @@ func LoadImagePart(data interface{}, ctx *LoadContext) (ImagePart, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["source"]; ok && val != nil {
-			result.Source = val.(string)
+			result.Source = string(val.(string))
 		}
 		if val, ok := m["detail"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.Detail = &v
 		}
 		if val, ok := m["mediaType"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.MediaType = &v
 		}
 	}
@@ -278,13 +278,13 @@ func LoadFilePart(data interface{}, ctx *LoadContext) (FilePart, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["source"]; ok && val != nil {
-			result.Source = val.(string)
+			result.Source = string(val.(string))
 		}
 		if val, ok := m["mediaType"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.MediaType = &v
 		}
 	}
@@ -361,13 +361,13 @@ func LoadAudioPart(data interface{}, ctx *LoadContext) (AudioPart, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["source"]; ok && val != nil {
-			result.Source = val.(string)
+			result.Source = string(val.(string))
 		}
 		if val, ok := m["mediaType"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.MediaType = &v
 		}
 	}

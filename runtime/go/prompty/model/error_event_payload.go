@@ -21,7 +21,7 @@ func LoadErrorEventPayload(data interface{}, ctx *LoadContext) (ErrorEventPayloa
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["message"]; ok && val != nil {
-			result.Message = val.(string)
+			result.Message = string(val.(string))
 		}
 	}
 

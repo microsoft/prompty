@@ -107,7 +107,7 @@ func ToolResultFromYAML(yamlStr string) (ToolResult, error) {
 
 // NewTextToolResult creates a ToolResult with preset field values.
 func NewTextToolResult(value string) ToolResult {
-	return ToolResult{Parts: []interface{}{TextPart{Kind: "text", Value: value}}}
+	return ToolResult{ Parts: []interface{}{TextPart{ Kind: "text", Value: value }} }
 }
 
 // ToolResultHelpers defines helper methods for ToolResult.

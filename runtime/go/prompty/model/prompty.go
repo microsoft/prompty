@@ -35,14 +35,14 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["name"]; ok && val != nil {
-			result.Name = val.(string)
+			result.Name = string(val.(string))
 		}
 		if val, ok := m["displayName"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.DisplayName = &v
 		}
 		if val, ok := m["description"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.Description = &v
 		}
 		if val, ok := m["metadata"]; ok && val != nil {
@@ -99,7 +99,7 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 			}
 		}
 		if val, ok := m["instructions"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.Instructions = &v
 		}
 	}

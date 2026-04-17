@@ -28,7 +28,7 @@ func LoadGuardrailResult(data interface{}, ctx *LoadContext) (GuardrailResult, e
 			result.Allowed = val.(bool)
 		}
 		if val, ok := m["reason"]; ok && val != nil {
-			v := val.(string)
+			v := string(val.(string))
 			result.Reason = &v
 		}
 		if val, ok := m["rewrite"]; ok && val != nil {
