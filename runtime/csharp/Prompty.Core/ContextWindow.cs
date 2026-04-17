@@ -11,7 +11,7 @@ public static class ContextWindow
         int total = 0;
         foreach (var msg in messages)
         {
-            total += msg.Role.Length + 4;
+            total += msg.Role.ToString().Length + 4;
             foreach (var part in msg.Parts)
             {
                 if (part is TextPart tp)
@@ -32,9 +32,9 @@ public static class ContextWindow
         foreach (var msg in messages)
         {
             var msgText = msg.Text.Trim();
-            if (msg.Role == "user" && msgText.Length > 0)
+            if (msg.Role == Role.User && msgText.Length > 0)
                 lines.Add($"User asked: {Truncate(msgText)}");
-            else if (msg.Role == "assistant")
+            else if (msg.Role == Role.Assistant)
             {
                 if (msg.Metadata is not null && msg.Metadata.TryGetValue("tool_calls", out var toolCalls) && toolCalls is System.Collections.IEnumerable tcList)
                 {
@@ -81,7 +81,7 @@ public static class ContextWindow
         int systemEnd = 0;
         for (int i = 0; i < messages.Count; i++)
         {
-            if (messages[i].Role != "system")
+            if (messages[i].Role != Role.System)
             {
                 systemEnd = i;
                 break;
@@ -110,7 +110,7 @@ public static class ContextWindow
             if (summaryText.Length > 0)
                 messages.Add(new Message
                 {
-                    Role = "user",
+                    Role = Role.User,
                     Parts = [new TextPart { Value = summaryText }]
                 });
         }

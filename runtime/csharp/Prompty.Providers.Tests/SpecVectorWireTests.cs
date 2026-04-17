@@ -506,7 +506,7 @@ public class SpecVectorWireTests
                         break;
                 }
             }
-            messages.Add(new Message { Role = role, Parts = parts });
+            messages.Add(new Message { Role = Enum.Parse<Role>(role, true), Parts = parts });
         }
         return messages;
     }

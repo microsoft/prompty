@@ -46,7 +46,7 @@ file class ThrowingMockExecutor : IExecutor
         var msgs = new List<Message>();
         msgs.Add(new Message
         {
-            Role = Roles.Assistant,
+            Role = Role.Assistant,
             Parts = [new TextPart { Value = textContent ?? "" }],
             Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls }
         });
@@ -54,7 +54,7 @@ file class ThrowingMockExecutor : IExecutor
         {
             msgs.Add(new Message
             {
-                Role = Roles.Tool,
+                Role = Role.Tool,
                 Parts = [new TextPart { Value = toolResults[i] }],
                 Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
@@ -76,7 +76,7 @@ file class PassthroughParser : IParser
     public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult(new List<Message>
         {
-            new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }
+            new() { Role = Role.User, Parts = [new TextPart { Value = rendered }] }
         });
 }
 
@@ -307,7 +307,7 @@ public class ToolExecutionErrorSafetyTests : IDisposable
         // The second call should have the error result in the messages
         var secondCallMessages = executor.Calls[1];
         var errorMsg = secondCallMessages.FirstOrDefault(m =>
-            m.Role == Roles.Tool && m.Text.Contains("Error:") && m.Text.Contains("tool went wrong"));
+            m.Role == Role.Tool && m.Text.Contains("Error:") && m.Text.Contains("tool went wrong"));
         Assert.NotNull(errorMsg);
     }
 
@@ -374,7 +374,7 @@ public class ToolExecutionErrorSafetyTests : IDisposable
         // The second call messages should contain an error about JSON parsing
         var secondCallMessages = executor.Calls[1];
         var errorToolMsg = secondCallMessages.FirstOrDefault(m =>
-            m.Role == Roles.Tool && m.Text.Contains("Error:") && m.Text.Contains("Invalid JSON"));
+            m.Role == Role.Tool && m.Text.Contains("Error:") && m.Text.Contains("Invalid JSON"));
         Assert.NotNull(errorToolMsg);
     }
 
@@ -547,7 +547,7 @@ public class LlmCallRetryTests : IDisposable
 
         // Messages should contain the prepared messages
         Assert.NotEmpty(ex.Messages);
-        var hasUserMsg = ex.Messages.Any(m => m.Role == Roles.User && m.Text.Contains("My prompt"));
+        var hasUserMsg = ex.Messages.Any(m => m.Role == Role.User && m.Text.Contains("My prompt"));
         Assert.True(hasUserMsg);
     }
 

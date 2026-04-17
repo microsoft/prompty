@@ -37,7 +37,7 @@ public abstract partial class Connection
     /// <summary>
     /// The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
     /// </summary>
-    public string? AuthenticationMode { get; set; }
+    public AuthenticationMode? AuthenticationMode { get; set; }
 
     /// <summary>
     /// The usage description for the connection, providing context on how this connection will be used
@@ -73,7 +73,7 @@ public abstract partial class Connection
 
         if (data.TryGetValue("authenticationMode", out var authenticationModeValue) && authenticationModeValue is not null)
         {
-            instance.AuthenticationMode = authenticationModeValue?.ToString()!;
+            instance.AuthenticationMode = Enum.Parse<AuthenticationMode>(authenticationModeValue?.ToString()!, true);
         }
 
         if (data.TryGetValue("usageDescription", out var usageDescriptionValue) && usageDescriptionValue is not null)
@@ -103,8 +103,8 @@ public abstract partial class Connection
                 "remote" => RemoteConnection.Load(data, context),
                 "key" => ApiKeyConnection.Load(data, context),
                 "anonymous" => AnonymousConnection.Load(data, context),
-                "foundry" => FoundryConnection.Load(data, context),
                 "oauth" => OAuthConnection.Load(data, context),
+                "foundry" => FoundryConnection.Load(data, context),
                 _ => throw new ArgumentException($"Unknown Connection discriminator value: {discriminator}"),
             };
         }
@@ -140,7 +140,7 @@ public abstract partial class Connection
 
         if (obj.AuthenticationMode is not null)
         {
-            result["authenticationMode"] = obj.AuthenticationMode;
+            result["authenticationMode"] = obj.AuthenticationMode.ToString().ToLowerInvariant();
         }
 
 

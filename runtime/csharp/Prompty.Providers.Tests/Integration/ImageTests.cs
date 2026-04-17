@@ -15,7 +15,7 @@ public class ImageTests : IntegrationTestBase
     [
         new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts = [new TextPart { Value = prompt }],
         },
     ];

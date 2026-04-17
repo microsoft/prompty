@@ -17,7 +17,7 @@ public class OpenAIProviderTests
         var executor = new OpenAIExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
+            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Role.User, "Hello")]));
 
         Assert.Contains("API key", ex.Message);
     }
@@ -42,7 +42,7 @@ public class OpenAIProviderTests
         var executor = new OpenAIExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
+            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Role.User, "Hello")]));
 
         Assert.Contains("not supported", ex.Message);
     }
@@ -54,7 +54,7 @@ public class OpenAIProviderTests
         var executor = new OpenAIExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
+            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Role.User, "Hello")]));
 
         Assert.Contains("Unsupported API type", ex.Message);
     }
@@ -112,7 +112,7 @@ public class OpenAIProviderTests
         var executor = new OpenAIExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
+            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Role.User, "Hello")]));
 
         Assert.Contains("not found in ConnectionRegistry", ex.Message);
         Assert.Contains("my-openai-client", ex.Message);

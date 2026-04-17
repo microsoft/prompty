@@ -18,7 +18,7 @@ public class WireFormatTests
     {
         var msg = new Message
         {
-            Role = Roles.System,
+            Role = Role.System,
             Parts = [new TextPart { Value = "You are helpful" }],
         };
 
@@ -32,7 +32,7 @@ public class WireFormatTests
     {
         var msg = new Message
         {
-            Role = Roles.Developer,
+            Role = Role.Developer,
             Parts = [new TextPart { Value = "Developer instructions" }],
         };
 
@@ -46,7 +46,7 @@ public class WireFormatTests
     {
         var msg = new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts = [new TextPart { Value = "Hello!" }],
         };
 
@@ -60,7 +60,7 @@ public class WireFormatTests
     {
         var msg = new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts =
             [
                 new TextPart { Value = "What's in this image?" },
@@ -78,7 +78,7 @@ public class WireFormatTests
     {
         var msg = new Message
         {
-            Role = Roles.Assistant,
+            Role = Role.Assistant,
             Parts = [new TextPart { Value = "Hello back!" }],
         };
 
@@ -92,7 +92,7 @@ public class WireFormatTests
     {
         var msg = new Message
         {
-            Role = Roles.Assistant,
+            Role = Role.Assistant,
             Parts = [new TextPart { Value = "" }],
             Metadata = new Dictionary<string, object>
             {
@@ -114,7 +114,7 @@ public class WireFormatTests
     {
         var msg = new Message
         {
-            Role = Roles.Tool,
+            Role = Role.Tool,
             Parts = [new TextPart { Value = "72°F and sunny" }],
             Metadata = new Dictionary<string, object> { ["tool_call_id"] = "call_1" },
         };
@@ -129,7 +129,7 @@ public class WireFormatTests
     {
         var msg = new Message
         {
-            Role = "custom_role",
+            Role = Role.User, // Unknown roles can't exist with enum; test default switch arm
             Parts = [new TextPart { Value = "test" }],
         };
 

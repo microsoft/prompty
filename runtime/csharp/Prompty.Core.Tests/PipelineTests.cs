@@ -15,7 +15,7 @@ public class MessageTests
     {
         var msg = new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts = [new TextPart { Value = "Hello " }, new TextPart { Value = "World" }]
         };
         Assert.Equal("Hello World", msg.Text);
@@ -69,7 +69,7 @@ public class MessageTests
     [Fact]
     public void DefaultRole_IsUser()
     {
-        Assert.Equal(Roles.User, new Message().Role);
+        Assert.Equal(Role.User, new Message().Role);
     }
 }
 
@@ -428,14 +428,14 @@ public class PipelineTests : IDisposable
     {
         var threadMessages = new List<Message>
         {
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "Hi" }] },
-            new() { Role = Roles.Assistant, Parts = [new TextPart { Value = "Hello!" }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "Hi" }] },
+            new() { Role = Role.Assistant, Parts = [new TextPart { Value = "Hello!" }] },
         };
 
         var messages = new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "You are helpful.\n__PROMPTY_THREAD_abcd1234_conversation__" }] },
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "Final question" }] },
+            new() { Role = Role.System, Parts = [new TextPart { Value = "You are helpful.\n__PROMPTY_THREAD_abcd1234_conversation__" }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "Final question" }] },
         };
 
         var inputs = new Dictionary<string, object?> { ["conversation"] = threadMessages };
@@ -443,13 +443,13 @@ public class PipelineTests : IDisposable
 
         // System text before nonce + 2 thread messages + user message = 4
         Assert.Equal(4, result.Count);
-        Assert.Equal(Roles.System, result[0].Role);
+        Assert.Equal(Role.System, result[0].Role);
         Assert.Equal("You are helpful.", result[0].Text);
-        Assert.Equal(Roles.User, result[1].Role);
+        Assert.Equal(Role.User, result[1].Role);
         Assert.Equal("Hi", result[1].Text);
-        Assert.Equal(Roles.Assistant, result[2].Role);
+        Assert.Equal(Role.Assistant, result[2].Role);
         Assert.Equal("Hello!", result[2].Text);
-        Assert.Equal(Roles.User, result[3].Role);
+        Assert.Equal(Role.User, result[3].Role);
         Assert.Equal("Final question", result[3].Text);
     }
 
@@ -458,12 +458,12 @@ public class PipelineTests : IDisposable
     {
         var threadMessages = new List<Message>
         {
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "Prior turn" }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "Prior turn" }] },
         };
 
         var messages = new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "Before\n__PROMPTY_THREAD_abcd1234_history__\nAfter" }] },
+            new() { Role = Role.System, Parts = [new TextPart { Value = "Before\n__PROMPTY_THREAD_abcd1234_history__\nAfter" }] },
         };
 
         var inputs = new Dictionary<string, object?> { ["history"] = threadMessages };
@@ -481,8 +481,8 @@ public class PipelineTests : IDisposable
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "Hello world" }] },
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "Question" }] },
+            new() { Role = Role.System, Parts = [new TextPart { Value = "Hello world" }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "Question" }] },
         };
 
         var inputs = new Dictionary<string, object?>();
@@ -498,7 +498,7 @@ public class PipelineTests : IDisposable
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "__PROMPTY_THREAD_abcd1234_missing__" }] },
+            new() { Role = Role.System, Parts = [new TextPart { Value = "__PROMPTY_THREAD_abcd1234_missing__" }] },
         };
 
         var inputs = new Dictionary<string, object?>();
@@ -513,7 +513,7 @@ public class PipelineTests : IDisposable
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "__PROMPTY_THREAD_abcd1234_data__" }] },
+            new() { Role = Role.System, Parts = [new TextPart { Value = "__PROMPTY_THREAD_abcd1234_data__" }] },
         };
 
         // Input exists but is a string, not IList<Message>
@@ -529,14 +529,14 @@ public class PipelineTests : IDisposable
     {
         var threadMessages = new List<Message>
         {
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "Turn1" }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "Turn1" }] },
         };
 
         var messages = new List<Message>
         {
             new()
             {
-                Role = Roles.System,
+                Role = Role.System,
                 Parts = [new TextPart { Value = "Prefix __PROMPTY_THREAD_abcd1234_conv__" }],
                 Metadata = new Dictionary<string, object?> { ["source"] = "test" },
             },
@@ -596,7 +596,7 @@ internal class MockRenderer : IRenderer
 internal class MockParser : IParser
 {
     public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
-        => Task.FromResult<List<Message>>([new Message { Role = Roles.System, Parts = [new TextPart { Value = rendered }] }]);
+        => Task.FromResult<List<Message>>([new Message { Role = Role.System, Parts = [new TextPart { Value = rendered }] }]);
 }
 
 internal class MockExecutor : IExecutor
@@ -608,10 +608,10 @@ internal class MockExecutor : IExecutor
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }
@@ -643,10 +643,10 @@ internal class ToolCallingExecutor : IExecutor
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }

@@ -82,7 +82,7 @@ public class AnthropicExecutor : IExecutor
 
         foreach (var msg in messages)
         {
-            if (msg.Role == Roles.System || msg.Role == Roles.Developer)
+            if (msg.Role == Role.System || msg.Role == Role.Developer)
             {
                 systemParts.Add(msg.Text);
             }
@@ -146,13 +146,13 @@ public class AnthropicExecutor : IExecutor
     {
         var role = msg.Role switch
         {
-            Roles.Assistant => "assistant",
-            Roles.Tool => "user", // Tool results go as user messages
+            Role.Assistant => "assistant",
+            Role.Tool => "user", // Tool results go as user messages
             _ => "user",
         };
 
         // Handle tool results
-        if (msg.Role == Roles.Tool)
+        if (msg.Role == Role.Tool)
         {
             var toolCallId = msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var id)
                 ? id?.ToString() ?? ""
@@ -334,7 +334,7 @@ public class AnthropicExecutor : IExecutor
 
         messages.Add(new Message
         {
-            Role = Roles.Assistant,
+            Role = Role.Assistant,
             Parts = !string.IsNullOrEmpty(textContent)
                 ? [new TextPart { Value = textContent }]
                 : [],
@@ -355,7 +355,7 @@ public class AnthropicExecutor : IExecutor
 
         messages.Add(new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts = toolResults.Select(r => (ContentPart)new TextPart { Value = r }).ToList(),
             Metadata = new Dictionary<string, object?> { ["tool_results"] = toolResultBlocks },
         });

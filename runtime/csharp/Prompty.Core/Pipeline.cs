@@ -495,13 +495,13 @@ public static class Pipeline
                     {
                         string resultText => new Message
                         {
-                            Role = Roles.Assistant,
+                            Role = Role.Assistant,
                             Parts = [new TextPart { Value = resultText }]
                         },
                         Message msg => msg,
                         _ => new Message
                         {
-                            Role = Roles.Assistant,
+                            Role = Role.Assistant,
                             Parts = [new TextPart { Value = result?.ToString() ?? "" }]
                         },
                     };

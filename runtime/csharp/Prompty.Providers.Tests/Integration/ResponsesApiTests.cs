@@ -39,8 +39,8 @@ public class ResponsesApiTests : IntegrationTestBase
 
         var messages = new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "You are a helpful assistant. Reply in one short sentence." }] },
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "Say hello in exactly 3 words." }] },
+            new() { Role = Role.System, Parts = [new TextPart { Value = "You are a helpful assistant. Reply in one short sentence." }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "Say hello in exactly 3 words." }] },
         };
 
         var executor = new OpenAIExecutor();
@@ -68,8 +68,8 @@ public class ResponsesApiTests : IntegrationTestBase
 
         var messages = new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "You are a helpful assistant. Reply in one short sentence." }] },
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "Say hello in exactly 3 words." }] },
+            new() { Role = Role.System, Parts = [new TextPart { Value = "You are a helpful assistant. Reply in one short sentence." }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "Say hello in exactly 3 words." }] },
         };
 
         var executor = new OpenAIExecutor();

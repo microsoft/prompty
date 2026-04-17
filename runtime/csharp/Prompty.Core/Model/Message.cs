@@ -30,7 +30,7 @@ public partial class Message : IMessageHelpers
     /// <summary>
     /// The role of the message sender
     /// </summary>
-    public string Role { get; set; } = "user";
+    public Role Role { get; set; } = Role.User;
 
     /// <summary>
     /// The content parts of the message
@@ -66,7 +66,7 @@ public partial class Message : IMessageHelpers
 
         if (data.TryGetValue("role", out var roleValue) && roleValue is not null)
         {
-            instance.Role = roleValue?.ToString()!;
+            instance.Role = Enum.Parse<Role>(roleValue?.ToString()!, true);
         }
 
         if (data.TryGetValue("parts", out var partsValue) && partsValue is not null)
@@ -162,7 +162,7 @@ public partial class Message : IMessageHelpers
         var result = new Dictionary<string, object?>();
 
 
-        result["role"] = obj.Role;
+        result["role"] = obj.Role.ToString().ToLowerInvariant();
 
 
         result["parts"] = SaveParts(obj.Parts, context);
@@ -255,7 +255,7 @@ public partial class Message : IMessageHelpers
     /// </summary>
     public static Message Assistant(string text)
     {
-        return new Message { Role = "assistant", Parts = new List<ContentPart> { new TextPart { Value = text } } };
+        return new Message { Role = Role.Assistant, Parts = new List<ContentPart> { new TextPart { Value = text } } };
     }
 
     /// <summary>
@@ -263,7 +263,7 @@ public partial class Message : IMessageHelpers
     /// </summary>
     public static Message System(string text)
     {
-        return new Message { Role = "system", Parts = new List<ContentPart> { new TextPart { Value = text } } };
+        return new Message { Role = Role.System, Parts = new List<ContentPart> { new TextPart { Value = text } } };
     }
 
     /// <summary>
@@ -271,7 +271,7 @@ public partial class Message : IMessageHelpers
     /// </summary>
     public static Message User(string text)
     {
-        return new Message { Role = "user", Parts = new List<ContentPart> { new TextPart { Value = text } } };
+        return new Message { Role = Role.User, Parts = new List<ContentPart> { new TextPart { Value = text } } };
     }
 
     #endregion

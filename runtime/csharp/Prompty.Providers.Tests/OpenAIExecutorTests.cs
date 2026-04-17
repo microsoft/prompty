@@ -24,7 +24,7 @@ public class OpenAIExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class OpenAIExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class OpenAIExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class OpenAIExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -132,16 +132,16 @@ public class OpenAIExecutorTests
         Assert.Equal(3, messages.Count);
 
         // Assistant message with tool_calls metadata
-        Assert.Equal(Roles.Assistant, messages[0].Role);
+        Assert.Equal(Role.Assistant, messages[0].Role);
         Assert.Equal("Let me check.", messages[0].Text);
         Assert.NotNull(messages[0].Metadata["tool_calls"]);
 
         // Individual tool messages
-        Assert.Equal(Roles.Tool, messages[1].Role);
+        Assert.Equal(Role.Tool, messages[1].Role);
         Assert.Equal("72°F", messages[1].Text);
         Assert.Equal("call_1", messages[1].Metadata["tool_call_id"]);
 
-        Assert.Equal(Roles.Tool, messages[2].Role);
+        Assert.Equal(Role.Tool, messages[2].Role);
         Assert.Equal("3:00 PM", messages[2].Text);
         Assert.Equal("call_2", messages[2].Metadata["tool_call_id"]);
     }

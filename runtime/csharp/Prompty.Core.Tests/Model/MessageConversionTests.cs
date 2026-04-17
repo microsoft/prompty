@@ -23,7 +23,7 @@ metadata:
         var instance = Message.FromYaml(yamlData);
 
         Assert.NotNull(instance);
-        Assert.Equal("user", instance.Role);
+        Assert.Equal(Role.User, instance.Role);
     }
 
     [Fact]
@@ -46,7 +46,7 @@ metadata:
 
         var instance = Message.FromJson(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal("user", instance.Role);
+        Assert.Equal(Role.User, instance.Role);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ metadata:
 
         var reloaded = Message.FromJson(json);
         Assert.NotNull(reloaded);
-        Assert.Equal("user", reloaded.Role);
+        Assert.Equal(Role.User, reloaded.Role);
     }
 
     [Fact]
@@ -101,7 +101,7 @@ metadata:
 
         var reloaded = Message.FromYaml(yaml);
         Assert.NotNull(reloaded);
-        Assert.Equal("user", reloaded.Role);
+        Assert.Equal(Role.User, reloaded.Role);
     }
 
     [Fact]
@@ -157,7 +157,7 @@ metadata:
     {
         var instance = Message.Assistant("test");
         Assert.NotNull(instance);
-        Assert.Equal("assistant", instance.Role);
+        Assert.Equal(Role.Assistant, instance.Role);
     }
 
     [Fact]
@@ -165,7 +165,7 @@ metadata:
     {
         var instance = Message.System("test");
         Assert.NotNull(instance);
-        Assert.Equal("system", instance.Role);
+        Assert.Equal(Role.System, instance.Role);
     }
 
     [Fact]
@@ -173,6 +173,6 @@ metadata:
     {
         var instance = Message.User("test");
         Assert.NotNull(instance);
-        Assert.Equal("user", instance.Role);
+        Assert.Equal(Role.User, instance.Role);
     }
 }

@@ -32,7 +32,7 @@ public class FoundryProviderTests
         var executor = new FoundryExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
+            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Role.User, "Hello")]));
 
         Assert.Contains("endpoint", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -58,7 +58,7 @@ public class FoundryProviderTests
         var executor = new FoundryExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
+            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Role.User, "Hello")]));
 
         Assert.Contains("endpoint", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -112,7 +112,7 @@ public class FoundryProviderTests
         var executor = new FoundryExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Roles.User, "Hello")]));
+            () => executor.ExecuteAsync(agent, [TestHelpers.CreateMessage(Role.User, "Hello")]));
 
         Assert.Contains("endpoint", ex.Message, StringComparison.OrdinalIgnoreCase);
     }

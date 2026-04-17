@@ -27,7 +27,7 @@ public class Steering
             return items.Select(text =>
                 new Message
                 {
-                    Role = "user",
+                    Role = Role.User,
                     Parts = [new TextPart { Value = text }]
                 }
             ).ToList();

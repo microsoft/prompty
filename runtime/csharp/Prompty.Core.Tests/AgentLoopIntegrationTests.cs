@@ -25,7 +25,7 @@ file class PassthroughParser : IParser
     public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult(new List<Message>
         {
-            new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }
+            new() { Role = Role.User, Parts = [new TextPart { Value = rendered }] }
         });
 }
 
@@ -40,13 +40,13 @@ file class MultiMessageParser : IParser
         var filler = new string('z', 300);
         return Task.FromResult(new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "System prompt." }] },
-            new() { Role = Roles.User, Parts = [new TextPart { Value = filler }] },
-            new() { Role = Roles.Assistant, Parts = [new TextPart { Value = filler }] },
-            new() { Role = Roles.User, Parts = [new TextPart { Value = filler }] },
-            new() { Role = Roles.Assistant, Parts = [new TextPart { Value = filler }] },
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "latest question" }] },
-            new() { Role = Roles.Assistant, Parts = [new TextPart { Value = "latest answer" }] },
+            new() { Role = Role.System, Parts = [new TextPart { Value = "System prompt." }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = filler }] },
+            new() { Role = Role.Assistant, Parts = [new TextPart { Value = filler }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = filler }] },
+            new() { Role = Role.Assistant, Parts = [new TextPart { Value = filler }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "latest question" }] },
+            new() { Role = Role.Assistant, Parts = [new TextPart { Value = "latest answer" }] },
         });
     }
 }
@@ -81,7 +81,7 @@ file class MockExecutor : IExecutor
         // assistant message with tool calls
         msgs.Add(new Message
         {
-            Role = Roles.Assistant,
+            Role = Role.Assistant,
             Parts = [new TextPart { Value = textContent ?? "" }],
             Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls }
         });
@@ -90,7 +90,7 @@ file class MockExecutor : IExecutor
         {
             msgs.Add(new Message
             {
-                Role = Roles.Tool,
+                Role = Role.Tool,
                 Parts = [new TextPart { Value = toolResults[i] }],
                 Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
@@ -232,7 +232,7 @@ public class AgentLoopIntegrationTests : IDisposable
         Assert.True(sentMessages.Count >= 2, $"Expected ≥2 messages, got {sentMessages.Count}");
 
         var steeringMsg = sentMessages.FirstOrDefault(m =>
-            m.Role == Roles.User && m.Text.Contains("injected guidance"));
+            m.Role == Role.User && m.Text.Contains("injected guidance"));
         Assert.NotNull(steeringMsg);
     }
 
@@ -261,7 +261,7 @@ public class AgentLoopIntegrationTests : IDisposable
         Assert.True(sentMessages.Count < 7,
             $"Expected fewer than 7 messages after trim, got {sentMessages.Count}");
         // System message is always preserved
-        Assert.Equal(Roles.System, sentMessages[0].Role);
+        Assert.Equal(Role.System, sentMessages[0].Role);
     }
 
     // ──────────────────────────────────────
@@ -277,8 +277,8 @@ public class AgentLoopIntegrationTests : IDisposable
         var agent = AgentLoopHelper.CreateAgent();
         var rewritten = new List<Message>
         {
-            new() { Role = Roles.System, Parts = [new TextPart { Value = "rewritten system" }] },
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "rewritten user" }] }
+            new() { Role = Role.System, Parts = [new TextPart { Value = "rewritten system" }] },
+            new() { Role = Role.User, Parts = [new TextPart { Value = "rewritten user" }] }
         };
 
         var guardrails = new Guardrails(

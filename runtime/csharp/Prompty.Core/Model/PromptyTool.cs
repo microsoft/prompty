@@ -42,7 +42,7 @@ public partial class PromptyTool : Tool
     /// <summary>
     /// Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
     /// </summary>
-    public string Mode { get; set; } = "single";
+    public PromptyToolMode Mode { get; set; } = PromptyToolMode.Single;
 
 
 
@@ -78,7 +78,7 @@ public partial class PromptyTool : Tool
 
         if (data.TryGetValue("mode", out var modeValue) && modeValue is not null)
         {
-            instance.Mode = modeValue?.ToString()!;
+            instance.Mode = Enum.Parse<PromptyToolMode>(modeValue?.ToString()!, true);
         }
 
         if (context is not null)
@@ -117,7 +117,7 @@ public partial class PromptyTool : Tool
         result["path"] = obj.Path;
 
 
-        result["mode"] = obj.Mode;
+        result["mode"] = obj.Mode.ToString().ToLowerInvariant();
 
 
         return result;

@@ -25,7 +25,7 @@ public class ResponsesApiTests
         var agent = TestHelpers.CreateAgent(apiType: "responses");
         var messages = new List<Message>
         {
-            TestHelpers.CreateMessage(Roles.User, "Hello"),
+            TestHelpers.CreateMessage(Role.User, "Hello"),
         };
 
         var options = WireFormat.BuildResponsesOptions("gpt-4", agent, messages);
@@ -39,8 +39,8 @@ public class ResponsesApiTests
         var agent = TestHelpers.CreateAgent(apiType: "responses");
         var messages = new List<Message>
         {
-            TestHelpers.CreateMessage(Roles.System, "You are helpful"),
-            TestHelpers.CreateMessage(Roles.User, "Hello"),
+            TestHelpers.CreateMessage(Role.System, "You are helpful"),
+            TestHelpers.CreateMessage(Role.User, "Hello"),
         };
 
         var options = WireFormat.BuildResponsesOptions("gpt-4", agent, messages);
@@ -56,8 +56,8 @@ public class ResponsesApiTests
         var agent = TestHelpers.CreateAgent(apiType: "responses");
         var messages = new List<Message>
         {
-            TestHelpers.CreateMessage(Roles.Developer, "Developer guidance"),
-            TestHelpers.CreateMessage(Roles.User, "Hello"),
+            TestHelpers.CreateMessage(Role.Developer, "Developer guidance"),
+            TestHelpers.CreateMessage(Role.User, "Hello"),
         };
 
         var options = WireFormat.BuildResponsesOptions("gpt-4", agent, messages);
@@ -71,9 +71,9 @@ public class ResponsesApiTests
         var agent = TestHelpers.CreateAgent(apiType: "responses");
         var messages = new List<Message>
         {
-            TestHelpers.CreateMessage(Roles.System, "First instruction"),
-            TestHelpers.CreateMessage(Roles.Developer, "Second instruction"),
-            TestHelpers.CreateMessage(Roles.User, "Hello"),
+            TestHelpers.CreateMessage(Role.System, "First instruction"),
+            TestHelpers.CreateMessage(Role.Developer, "Second instruction"),
+            TestHelpers.CreateMessage(Role.User, "Hello"),
         };
 
         var options = WireFormat.BuildResponsesOptions("gpt-4", agent, messages);
@@ -94,7 +94,7 @@ public class ResponsesApiTests
             });
         var messages = new List<Message>
         {
-            TestHelpers.CreateMessage(Roles.User, "Hello"),
+            TestHelpers.CreateMessage(Role.User, "Hello"),
         };
 
         var options = WireFormat.BuildResponsesOptions("gpt-4", agent, messages);
@@ -111,7 +111,7 @@ public class ResponsesApiTests
     [Fact]
     public void MessageToResponsesInput_UserMessage_CreatesUserItem()
     {
-        var msg = TestHelpers.CreateMessage(Roles.User, "Hello world");
+        var msg = TestHelpers.CreateMessage(Role.User, "Hello world");
 
         var item = WireFormat.MessageToResponsesInput(msg);
 
@@ -123,7 +123,7 @@ public class ResponsesApiTests
     [Fact]
     public void MessageToResponsesInput_AssistantMessage_CreatesAssistantItem()
     {
-        var msg = TestHelpers.CreateMessage(Roles.Assistant, "I can help");
+        var msg = TestHelpers.CreateMessage(Role.Assistant, "I can help");
 
         var item = WireFormat.MessageToResponsesInput(msg);
 
@@ -151,7 +151,7 @@ public class ResponsesApiTests
         // System messages should be handled by BuildResponsesOptions (as Instructions),
         // but if MessageToResponsesInput is called directly with a system message,
         // it falls through to the default (user)
-        var msg = TestHelpers.CreateMessage(Roles.System, "System text");
+        var msg = TestHelpers.CreateMessage(Role.System, "System text");
 
         var item = WireFormat.MessageToResponsesInput(msg);
 
@@ -165,7 +165,7 @@ public class ResponsesApiTests
         var storedItem = ResponseItem.CreateFunctionCallOutputItem("call_abc", "result");
         var msg = new Message
         {
-            Role = Roles.Assistant,
+            Role = Role.Assistant,
             Parts = [new TextPart { Value = "" }],
             Metadata = new Dictionary<string, object?>
             {
@@ -260,7 +260,7 @@ public class ResponsesApiTests
             ]);
         var messages = new List<Message>
         {
-            TestHelpers.CreateMessage(Roles.User, "Extract info"),
+            TestHelpers.CreateMessage(Role.User, "Extract info"),
         };
 
         var options = WireFormat.BuildResponsesOptions("gpt-4", agent, messages);
@@ -275,7 +275,7 @@ public class ResponsesApiTests
         var agent = TestHelpers.CreateAgent(apiType: "responses");
         var messages = new List<Message>
         {
-            TestHelpers.CreateMessage(Roles.User, "Hello"),
+            TestHelpers.CreateMessage(Role.User, "Hello"),
         };
 
         var options = WireFormat.BuildResponsesOptions("gpt-4", agent, messages);
@@ -299,7 +299,7 @@ public class ResponsesApiTests
             ]);
         var messages = new List<Message>
         {
-            TestHelpers.CreateMessage(Roles.User, "Search for something"),
+            TestHelpers.CreateMessage(Role.User, "Search for something"),
         };
 
         var options = WireFormat.BuildResponsesOptions("gpt-4", agent, messages);

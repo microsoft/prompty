@@ -130,7 +130,7 @@ parts:
     [Fact]
     public void FactoryText()
     {
-        var instance = ToolResult.CreateText("test");
+        var instance = ToolResult.Text("test");
         Assert.NotNull(instance);
     }
 }

@@ -63,7 +63,7 @@ internal static class TestHelpers
     /// <summary>
     /// Create a simple text message.
     /// </summary>
-    internal static Message CreateMessage(string role, string text)
+    internal static Message CreateMessage(Role role, string text)
     {
         return new Message
         {
@@ -75,7 +75,7 @@ internal static class TestHelpers
     /// <summary>
     /// Create a message with text and image parts.
     /// </summary>
-    internal static Message CreateMultipartMessage(string role, string text, string imageUrl, string? detail = null)
+    internal static Message CreateMultipartMessage(Role role, string text, string imageUrl, string? detail = null)
     {
         return new Message
         {
@@ -95,7 +95,7 @@ internal static class TestHelpers
     {
         return new Message
         {
-            Role = Roles.Assistant,
+            Role = Role.Assistant,
             Parts = [new TextPart { Value = text }],
             Metadata = new Dictionary<string, object?>
             {
@@ -111,7 +111,7 @@ internal static class TestHelpers
     {
         return new Message
         {
-            Role = Roles.Tool,
+            Role = Role.Tool,
             Parts = [new TextPart { Value = content }],
             Metadata = new Dictionary<string, object?>
             {

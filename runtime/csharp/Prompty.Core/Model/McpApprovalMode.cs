@@ -32,7 +32,7 @@ public partial class McpApprovalMode
     /// <summary>
     /// The approval mode: 'always', 'never', or 'specify'
     /// </summary>
-    public string Kind { get; set; } = string.Empty;
+    public McpApprovalModeKind Kind { get; set; } = McpApprovalModeKind.Always;
 
     /// <summary>
     /// List of tools that always require approval (only used when kind is 'specify')
@@ -69,7 +69,7 @@ public partial class McpApprovalMode
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
         {
-            instance.Kind = kindValue?.ToString()!;
+            instance.Kind = Enum.Parse<McpApprovalModeKind>(kindValue?.ToString()!, true);
         }
 
         if (data.TryGetValue("alwaysRequireApprovalTools", out var alwaysRequireApprovalToolsValue) && alwaysRequireApprovalToolsValue is not null)
@@ -111,7 +111,7 @@ public partial class McpApprovalMode
         var result = new Dictionary<string, object?>();
 
 
-        result["kind"] = obj.Kind;
+        result["kind"] = obj.Kind.ToString().ToLowerInvariant();
 
 
         if (obj.AlwaysRequireApprovalTools is not null)

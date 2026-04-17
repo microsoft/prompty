@@ -122,7 +122,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
             {
                 messages.Add(new Message
                 {
-                    Role = Roles.System,
+                    Role = Role.System,
                     Parts = [new TextPart { Value = text }]
                 });
             }
@@ -154,7 +154,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
 
         var message = new Message
         {
-            Role = role,
+            Role = Enum.Parse<Role>(role, true),
             Parts = [new TextPart { Value = text }]
         };
 
