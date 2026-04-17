@@ -1,9 +1,10 @@
 //! Extension methods for generated model types.
 //!
 //! The TypeSpec emitter generates the model structs in `model/`. This module
-//! adds convenience accessors used by the pipeline and other hand-written code.
+//! adds convenience accessors, trait impls (PartialEq, Serialize, Deserialize),
+//! and helper methods used by the pipeline and other hand-written code.
 
-use crate::model::{ContentPartKind, Message, MessageHelpers, Property, Prompty, Tool, ToolResult, ToolResultHelpers};
+use crate::model::{ContentPart, ContentPartKind, Message, MessageHelpers, Property, Prompty, Role, Tool, ToolResult, ToolResultHelpers};
 
 // ---------------------------------------------------------------------------
 // Prompty helpers
@@ -93,5 +94,182 @@ impl ToolResultHelpers for ToolResult {
             })
             .collect::<Vec<_>>()
             .join("\n")
+    }
+}
+
+// ---------------------------------------------------------------------------
+// ContentPart convenience constructors
+// ---------------------------------------------------------------------------
+
+impl ContentPart {
+    /// Create a text content part.
+    pub fn text(value: impl Into<String>) -> Self {
+        Self { kind: ContentPartKind::TextPart { value: value.into() } }
+    }
+
+    /// Create an image content part.
+    pub fn image(source: impl Into<String>, detail: Option<String>, media_type: Option<String>) -> Self {
+        Self { kind: ContentPartKind::ImagePart { source: source.into(), detail, media_type } }
+    }
+
+    /// Create a file content part.
+    pub fn file(source: impl Into<String>, media_type: Option<String>) -> Self {
+        Self { kind: ContentPartKind::FilePart { source: source.into(), media_type } }
+    }
+
+    /// Create an audio content part.
+    pub fn audio(source: impl Into<String>, media_type: Option<String>) -> Self {
+        Self { kind: ContentPartKind::AudioPart { source: source.into(), media_type } }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// PartialEq for ContentPartKind, ContentPart
+// ---------------------------------------------------------------------------
+
+impl PartialEq for ContentPartKind {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (ContentPartKind::TextPart { value: a }, ContentPartKind::TextPart { value: b }) => a == b,
+            (
+                ContentPartKind::ImagePart { source: a, detail: ad, media_type: am },
+                ContentPartKind::ImagePart { source: b, detail: bd, media_type: bm },
+            ) => a == b && ad == bd && am == bm,
+            (
+                ContentPartKind::FilePart { source: a, media_type: am },
+                ContentPartKind::FilePart { source: b, media_type: bm },
+            ) => a == b && am == bm,
+            (
+                ContentPartKind::AudioPart { source: a, media_type: am },
+                ContentPartKind::AudioPart { source: b, media_type: bm },
+            ) => a == b && am == bm,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for ContentPartKind {}
+
+impl PartialEq for ContentPart {
+    fn eq(&self, other: &Self) -> bool {
+        self.kind == other.kind
+    }
+}
+
+impl Eq for ContentPart {}
+
+// ---------------------------------------------------------------------------
+// Serialize / Deserialize for ContentPart
+// ---------------------------------------------------------------------------
+
+impl serde::Serialize for ContentPartKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let part = ContentPart { kind: self.clone() };
+        part.serialize(serializer)
+    }
+}
+
+impl serde::Serialize for ContentPart {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use crate::model::context::SaveContext;
+        let value = self.to_value(&SaveContext::default());
+        value.serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ContentPart {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        use crate::model::context::LoadContext;
+        let value = serde_json::Value::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Message convenience methods
+// ---------------------------------------------------------------------------
+
+impl Message {
+    /// Create a message with a single text part for any role.
+    pub fn with_text(role: Role, content: impl Into<String>) -> Self {
+        Self {
+            role,
+            parts: vec![ContentPart::text(content)],
+            metadata: serde_json::Value::Object(serde_json::Map::new()),
+        }
+    }
+
+    /// Create a tool-result message.
+    pub fn tool_result(tool_call_id: impl Into<String>, content: impl Into<String>) -> Self {
+        Self {
+            role: Role::Tool,
+            parts: vec![ContentPart::text(content)],
+            metadata: serde_json::json!({"tool_call_id": tool_call_id.into()}),
+        }
+    }
+
+    /// Concatenate all text parts into a single string (no separator).
+    pub fn text_content(&self) -> String {
+        self.parts
+            .iter()
+            .filter_map(|p| match &p.kind {
+                ContentPartKind::TextPart { value } => Some(value.as_str()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("")
+    }
+
+    /// True if this message has any non-text content parts.
+    pub fn has_rich_content(&self) -> bool {
+        self.parts
+            .iter()
+            .any(|p| !matches!(&p.kind, ContentPartKind::TextPart { .. }))
+    }
+
+    /// Get a mutable reference to the metadata map.
+    /// If metadata is not an Object, replaces it with an empty Object first.
+    pub fn metadata_mut(&mut self) -> &mut serde_json::Map<String, serde_json::Value> {
+        if !self.metadata.is_object() {
+            self.metadata = serde_json::Value::Object(serde_json::Map::new());
+        }
+        self.metadata.as_object_mut().unwrap()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// PartialEq / Serialize / Deserialize for Message
+// ---------------------------------------------------------------------------
+
+impl PartialEq for Message {
+    fn eq(&self, other: &Self) -> bool {
+        self.role == other.role && self.parts == other.parts && self.metadata == other.metadata
+    }
+}
+
+impl serde::Serialize for Message {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use crate::model::context::SaveContext;
+        let value = self.to_value(&SaveContext::default());
+        value.serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Message {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        use crate::model::context::LoadContext;
+        let value = serde_json::Value::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Role — case-insensitive from_str helper for backward compat
+// ---------------------------------------------------------------------------
+
+impl Role {
+    /// Parse a role string case-insensitively. Returns `None` for unrecognised values.
+    pub fn from_str_ignore_case(s: &str) -> Option<Self> {
+        Self::from_str_opt(s.to_lowercase().as_str())
     }
 }

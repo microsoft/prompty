@@ -449,7 +449,7 @@ mod tests {
     #[serial]
     fn test_build_args_chat() {
         let agent = make_agent(json!({"id": "gpt-4", "apiType": "chat"}));
-        let messages = vec![Message::text(prompty::Role::User, "Hello")];
+        let messages = vec![Message::with_text(prompty::Role::User, "Hello")];
         let args = OpenAIExecutor::build_args(&agent, &messages).unwrap();
         assert_eq!(args["model"], "gpt-4");
         assert!(args["messages"].is_array());
@@ -459,7 +459,7 @@ mod tests {
     #[serial]
     fn test_build_args_embedding() {
         let agent = make_agent(json!({"id": "text-embedding-3-small", "apiType": "embedding"}));
-        let messages = vec![Message::text(prompty::Role::User, "Hello world")];
+        let messages = vec![Message::with_text(prompty::Role::User, "Hello world")];
         let args = OpenAIExecutor::build_args(&agent, &messages).unwrap();
         assert_eq!(args["model"], "text-embedding-3-small");
         assert!(args.get("input").is_some());

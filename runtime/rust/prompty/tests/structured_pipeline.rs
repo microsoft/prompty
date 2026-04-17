@@ -155,8 +155,8 @@ async fn test_run_unwraps_structured_output() {
 
     // Pre-prepare messages (what `prepare()` would produce)
     let messages = vec![
-        Message::text(Role::System, "Return JSON."),
-        Message::text(Role::User, "What is the capital of France?"),
+        Message::with_text(Role::System, "Return JSON."),
+        Message::with_text(Role::User, "What is the capital of France?"),
     ];
 
     let result = prompty::run(&agent, &messages).await.unwrap();
@@ -265,8 +265,8 @@ async fn test_run_plain_output_unchanged() {
     });
     let agent = Prompty::load_from_value(&data, &LoadContext::default());
     let messages = vec![
-        Message::text(Role::System, "Answer."),
-        Message::text(Role::User, "What is 6*7?"),
+        Message::with_text(Role::System, "Answer."),
+        Message::with_text(Role::User, "What is 6*7?"),
     ];
 
     let result = prompty::run(&agent, &messages).await.unwrap();

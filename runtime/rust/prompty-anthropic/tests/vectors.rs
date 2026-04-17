@@ -5,7 +5,7 @@
 
 use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
-use prompty::types::{AudioPart, ContentPart, ImagePart, Message, Role, TextPart};
+use prompty::types::{ContentPart, ContentPartKind, Message, Role};
 use prompty_anthropic::wire;
 use serde_json::{Value, json};
 
@@ -51,24 +51,16 @@ fn build_messages(input: &Value) -> Vec<Message> {
                 .map(|p| {
                     let kind = p["kind"].as_str().unwrap();
                     match kind {
-                        "text" => ContentPart::Text(TextPart {
-                            value: p["value"].as_str().unwrap().to_string(),
-                        }),
-                        "image" => ContentPart::Image(ImagePart {
-                            source: p["value"].as_str().unwrap().to_string(),
-                            detail: None,
-                            media_type: p
-                                .get("mediaType")
-                                .and_then(|v| v.as_str())
-                                .map(String::from),
-                        }),
-                        "audio" => ContentPart::Audio(AudioPart {
-                            source: p["value"].as_str().unwrap().to_string(),
-                            media_type: p
-                                .get("mediaType")
-                                .and_then(|v| v.as_str())
-                                .map(String::from),
-                        }),
+                        "text" => ContentPart::text(p["value"].as_str().unwrap()),
+                        "image" => ContentPart::image(
+                            p["value"].as_str().unwrap(),
+                            None,
+                            p.get("mediaType").and_then(|v| v.as_str()).map(String::from),
+                        ),
+                        "audio" => ContentPart::audio(
+                            p["value"].as_str().unwrap(),
+                            p.get("mediaType").and_then(|v| v.as_str()).map(String::from),
+                        ),
                         _ => panic!("Unknown content kind: {kind}"),
                     }
                 })
@@ -76,7 +68,7 @@ fn build_messages(input: &Value) -> Vec<Message> {
             Message {
                 role,
                 parts,
-                metadata: serde_json::Map::new(),
+                ..Default::default()
             }
         })
         .collect()
