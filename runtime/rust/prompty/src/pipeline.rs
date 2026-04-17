@@ -177,7 +177,7 @@ fn serialize_agent(agent: &Prompty) -> Value {
             "metadata": metadata,
             "model": {
                 "id": agent.model.id,
-                "apiType": agent.model.api_type.as_deref().unwrap_or("chat"),
+                "apiType": agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat"),
                 "provider": agent.model.provider.as_deref().unwrap_or(""),
             },
             "inputs": inputs,

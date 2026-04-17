@@ -32,7 +32,7 @@ pub struct FoundryExecutor;
 #[async_trait]
 impl Executor for FoundryExecutor {
     async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
-        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
+        let api_type = agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat");
 
         let body = match api_type {
             "chat" | "agent" => wire::build_chat_args(agent, messages),
@@ -91,7 +91,7 @@ impl Executor for FoundryExecutor {
         agent: &Prompty,
         messages: &[Message],
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
-        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
+        let api_type = agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
                 format!("Foundry streaming only supports apiType 'chat', got: {api_type}").into(),

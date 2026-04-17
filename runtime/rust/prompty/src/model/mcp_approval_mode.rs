@@ -6,11 +6,53 @@
 
 use super::context::{LoadContext, SaveContext};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum mcpApprovalModeKind {
+    Always,
+    Never,
+    Specify,
+}
+
+impl Default for mcpApprovalModeKind {
+    fn default() -> Self {
+        Self::Always
+    }
+}
+
+impl std::fmt::Display for mcpApprovalModeKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Always => write!(f, "always"),
+            Self::Never => write!(f, "never"),
+            Self::Specify => write!(f, "specify"),
+        }
+    }
+}
+
+impl mcpApprovalModeKind {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "always" => Some(Self::Always),
+            "never" => Some(Self::Never),
+            "specify" => Some(Self::Specify),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Always => "always",
+            Self::Never => "never",
+            Self::Specify => "specify",
+        }
+    }
+}
+
 /// The approval mode for MCP server tools. When kind is "specify", use alwaysRequireApprovalTools and neverRequireApprovalTools to control per-tool approval. For "always" and "never", those fields are ignored.
 #[derive(Debug, Clone, Default)]
 pub struct McpApprovalMode {
     /// The approval mode: 'always', 'never', or 'specify'
-    pub kind: String,
+    pub kind: mcpApprovalModeKind,
     /// List of tools that always require approval (only used when kind is 'specify')
     pub always_require_approval_tools: Option<Vec<String>>,
     /// List of tools that never require approval (only used when kind is 'specify')
@@ -42,10 +84,10 @@ impl McpApprovalMode {
         let value = ctx.process_input(value.clone());
         if let Some(s) = value.as_str() {
             let value = s.to_string();
-            return McpApprovalMode { kind: value.into(), ..Default::default() };
+            return McpApprovalMode { kind: mcpApprovalModeKind::from_str_opt(&value).unwrap_or_default(), ..Default::default() };
         }
         Self {
-            kind: value.get("kind").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+            kind: value.get("kind").and_then(|v| v.as_str()).and_then(|s| mcpApprovalModeKind::from_str_opt(s)).unwrap_or(mcpApprovalModeKind::Always),
             always_require_approval_tools: value.get("alwaysRequireApprovalTools").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect()),
             never_require_approval_tools: value.get("neverRequireApprovalTools").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect()),
         }
@@ -57,9 +99,7 @@ impl McpApprovalMode {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if !self.kind.is_empty() {
-            result.insert("kind".to_string(), serde_json::Value::String(self.kind.clone()));
-        }
+        result.insert("kind".to_string(), serde_json::Value::String(self.kind.to_string()));
         if let Some(ref items) = self.always_require_approval_tools {
             result.insert("alwaysRequireApprovalTools".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
         }

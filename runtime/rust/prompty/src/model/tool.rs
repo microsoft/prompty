@@ -14,6 +14,44 @@ use super::mcp_approval_mode::McpApprovalMode;
 
 use super::property::Property;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum promptyToolMode {
+    Single,
+    Agentic,
+}
+
+impl Default for promptyToolMode {
+    fn default() -> Self {
+        Self::Single
+    }
+}
+
+impl std::fmt::Display for promptyToolMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Single => write!(f, "single"),
+            Self::Agentic => write!(f, "agentic"),
+        }
+    }
+}
+
+impl promptyToolMode {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "single" => Some(Self::Single),
+            "agentic" => Some(Self::Agentic),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Single => "single",
+            Self::Agentic => "agentic",
+        }
+    }
+}
+
 
 /// Variant-specific data for [`Tool`], discriminated by `kind`.
 #[derive(Debug, Clone)]
@@ -50,7 +88,7 @@ pub enum ToolKind {
         /// Path to the child .prompty file, relative to the parent
         path: String,
         /// Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
-        mode: String,
+        mode: promptyToolMode,
     },
     /// Wildcard / catch-all variant for unrecognized `kind` values.
     Custom {
@@ -127,7 +165,7 @@ impl Tool {
             },
             "prompty" => ToolKind::Prompty {
                 path: value.get("path").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-                mode: value.get("mode").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                mode: value.get("mode").and_then(|v| v.as_str()).and_then(promptyToolMode::from_str_opt).unwrap_or_default(),
             },
             _ => ToolKind::Custom {
                 connection: value.get("connection").cloned().unwrap_or(serde_json::Value::Null),
@@ -213,8 +251,8 @@ impl Tool {
                 if !path.is_empty() {
                     result.insert("path".to_string(), serde_json::Value::String(path.clone()));
                 }
-                if !mode.is_empty() {
-                    result.insert("mode".to_string(), serde_json::Value::String(mode.clone()));
+                if mode != &promptyToolMode::default() {
+                    result.insert("mode".to_string(), serde_json::Value::String(mode.as_str().to_string()));
                 }
             }
             ToolKind::Custom { connection, options, kind_name: _, .. } => {
