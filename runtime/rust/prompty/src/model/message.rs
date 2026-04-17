@@ -8,11 +8,61 @@ use super::context::{LoadContext, SaveContext};
 
 use super::content_part::{ContentPart, ContentPartKind};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Role {
+    System,
+    User,
+    Assistant,
+    Developer,
+    Tool,
+}
+
+impl Default for Role {
+    fn default() -> Self {
+        Self::System
+    }
+}
+
+impl std::fmt::Display for Role {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::System => write!(f, "system"),
+            Self::User => write!(f, "user"),
+            Self::Assistant => write!(f, "assistant"),
+            Self::Developer => write!(f, "developer"),
+            Self::Tool => write!(f, "tool"),
+        }
+    }
+}
+
+impl Role {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "system" => Some(Self::System),
+            "user" => Some(Self::User),
+            "assistant" => Some(Self::Assistant),
+            "developer" => Some(Self::Developer),
+            "tool" => Some(Self::Tool),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::System => "system",
+            Self::User => "user",
+            Self::Assistant => "assistant",
+            Self::Developer => "developer",
+            Self::Tool => "tool",
+        }
+    }
+}
+
 /// A message in a conversation. Messages have a role and a list of content parts representing the different modalities of the message content.
 #[derive(Debug, Clone, Default)]
 pub struct Message {
     /// The role of the message sender
-    pub role: String,
+    pub role: Role,
     /// The content parts of the message
     pub parts: Vec<ContentPart>,
     /// Optional metadata associated with the message
@@ -43,7 +93,7 @@ impl Message {
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
         Self {
-            role: value.get("role").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+            role: value.get("role").and_then(|v| v.as_str()).and_then(|s| Role::from_str_opt(s)).unwrap_or(Role::User),
             parts: value.get("parts").map(|v| Self::load_parts(v, ctx)).unwrap_or_default(),
             metadata: value.get("metadata").cloned().unwrap_or(serde_json::Value::Null),
         }
@@ -55,9 +105,7 @@ impl Message {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if !self.role.is_empty() {
-            result.insert("role".to_string(), serde_json::Value::String(self.role.clone()));
-        }
+        result.insert("role".to_string(), serde_json::Value::String(self.role.to_string()));
         if !self.parts.is_empty() {
             result.insert("parts".to_string(), Self::save_parts(&self.parts, ctx));
         }
@@ -104,15 +152,15 @@ impl Message {
     }
     /// Create a Message with preset field values.
     pub fn assistant(text: impl Into<String>) -> Self {
-        Message { role: "assistant".to_string(), parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
+        Message { role: Role::Assistant, parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
     }
     /// Create a Message with preset field values.
     pub fn system(text: impl Into<String>) -> Self {
-        Message { role: "system".to_string(), parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
+        Message { role: Role::System, parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
     }
     /// Create a Message with preset field values.
     pub fn user(text: impl Into<String>) -> Self {
-        Message { role: "user".to_string(), parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
+        Message { role: Role::User, parts: vec![ContentPart { kind: ContentPartKind::TextPart { value: text.into() }, ..Default::default() }], ..Default::default() }
     }
 }
 /// Helpers for [`Message`]. Implement in a separate file.

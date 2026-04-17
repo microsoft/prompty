@@ -11,7 +11,8 @@ from ._Prompty import Prompty
 
 @runtime_checkable
 class Processor(Protocol):
-    """Extracts a clean, typed result from a raw LLM provider response."""
+    """Extracts a clean, typed result from a raw LLM provider response.
+    """
 
     def process(self, agent: Prompty, response: Any) -> Any:
         """Extract a clean result from a raw LLM response"""
@@ -28,3 +29,4 @@ class Processor(Protocol):
     async def process_stream_async(self, stream: Any) -> Any:
         """Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support. (async variant)"""
         return None
+

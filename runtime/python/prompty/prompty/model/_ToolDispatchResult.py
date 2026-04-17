@@ -7,8 +7,8 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._context import LoadContext, SaveContext
 from ._ToolResult import ToolResult
+from ._context import LoadContext, SaveContext
 
 
 @dataclass
@@ -16,7 +16,7 @@ class ToolDispatchResult:
     """The result of dispatching a single tool call. Pairs the tool call
     identifier with the tool's name and result for correlation in the
     agent loop's message assembly.
-
+    
     Attributes
     ----------
     tool_call_id : str
@@ -46,7 +46,7 @@ class ToolDispatchResult:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolDispatchResult: {data}")
 
@@ -63,6 +63,8 @@ class ToolDispatchResult:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolDispatchResult instance to a dictionary.
         Args:
@@ -74,6 +76,7 @@ class ToolDispatchResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -112,3 +115,5 @@ class ToolDispatchResult:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

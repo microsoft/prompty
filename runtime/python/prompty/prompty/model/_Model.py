@@ -5,11 +5,13 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from ._Connection import Connection
-from ._context import LoadContext, SaveContext
 from ._ModelOptions import ModelOptions
+from ._context import LoadContext, SaveContext
+
+apiType = Literal["chat", "embedding", "image", "responses"] | str
 
 
 @dataclass
@@ -17,7 +19,7 @@ class Model:
     """Model for defining the structure and behavior of AI agents.
     This model includes properties for specifying the model's provider, connection details, and various options.
     It allows for flexible configuration of AI models to suit different use cases and requirements.
-
+    
     Attributes
     ----------
     id : str
@@ -36,7 +38,7 @@ class Model:
 
     id: str = field(default="")
     provider: str | None = None
-    api_type: str | None = None
+    api_type: apiType | None = None
     connection: Connection | None = None
     options: ModelOptions | None = None
 
@@ -53,7 +55,7 @@ class Model:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         # handle alternate representations
         if isinstance(data, str):
             instance = Model()
@@ -61,7 +63,7 @@ class Model:
             if context is not None:
                 instance = context.process_output(instance)
             return instance
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Model: {data}")
 
@@ -82,6 +84,8 @@ class Model:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Model instance to a dictionary.
         Args:
@@ -93,6 +97,7 @@ class Model:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -135,3 +140,5 @@ class Model:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

@@ -7,8 +7,8 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._context import LoadContext, SaveContext
 from ._Message import Message
+from ._context import LoadContext, SaveContext
 
 
 @dataclass
@@ -16,7 +16,7 @@ class ToolContext:
     """Context passed to tool handlers during agent loop execution. Provides
     access to the agent configuration, current conversation state, and
     arbitrary metadata for tool implementations that need broader context.
-
+    
     Attributes
     ----------
     messages : list[Message]
@@ -43,7 +43,7 @@ class ToolContext:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolContext: {data}")
 
@@ -57,6 +57,8 @@ class ToolContext:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -93,6 +95,7 @@ class ToolContext:
         if context is not None:
             obj = context.process_object(obj)
 
+
         result: dict[str, Any] = {}
 
         if obj.messages is not None:
@@ -128,3 +131,5 @@ class ToolContext:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

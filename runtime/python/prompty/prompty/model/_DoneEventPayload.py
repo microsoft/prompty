@@ -7,14 +7,14 @@
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from ._context import LoadContext, SaveContext
 from ._Message import Message
+from ._context import LoadContext, SaveContext
 
 
 @dataclass
 class DoneEventPayload:
     """Payload for "done" events — the agent loop completed successfully.
-
+    
     Attributes
     ----------
     response : str
@@ -41,7 +41,7 @@ class DoneEventPayload:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for DoneEventPayload: {data}")
 
@@ -55,6 +55,8 @@ class DoneEventPayload:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -91,6 +93,7 @@ class DoneEventPayload:
         if context is not None:
             obj = context.process_object(obj)
 
+
         result: dict[str, Any] = {}
 
         if obj.response is not None:
@@ -126,3 +129,5 @@ class DoneEventPayload:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

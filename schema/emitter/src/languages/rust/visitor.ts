@@ -53,9 +53,19 @@ export class RustExprVisitor implements ExprVisitor {
     if (expr.fields.length === 0) {
       return `${typeName} { ..Default::default() }`;
     }
-    const fields = expr.fields.map(f =>
-      `${toSnakeCase(f.propertyName)}: ${this.wrapFieldValue(f)}`
-    ).join(", ");
+    const fields = expr.fields.map(f => {
+      let val = this.wrapFieldValue(f);
+      // For enum fields, convert string literals to EnumName::VariantName
+      if (f.value.kind === "string" && typeNode) {
+        const prop = typeNode.properties.find(p => p.name === f.propertyName);
+        if (prop?.enumName) {
+          const variantName = f.value.value.charAt(0).toUpperCase() + f.value.value.slice(1);
+          const enumVal = `${prop.enumName}::${variantName}`;
+          val = f.isOptional ? `Some(${enumVal})` : enumVal;
+        }
+      }
+      return `${toSnakeCase(f.propertyName)}: ${val}`;
+    }).join(", ");
     return `${typeName} { ${fields}, ..Default::default() }`;
   }
 

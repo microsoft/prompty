@@ -13,7 +13,7 @@ from ._context import LoadContext, SaveContext
 @dataclass
 class ToolCallStartPayload:
     """Payload for "tool_call_start" events — the LLM has requested a tool call.
-
+    
     Attributes
     ----------
     name : str
@@ -40,7 +40,7 @@ class ToolCallStartPayload:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolCallStartPayload: {data}")
 
@@ -55,6 +55,8 @@ class ToolCallStartPayload:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolCallStartPayload instance to a dictionary.
         Args:
@@ -66,6 +68,7 @@ class ToolCallStartPayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -102,3 +105,5 @@ class ToolCallStartPayload:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

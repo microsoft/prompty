@@ -7,6 +7,8 @@ import { Connection } from "./connection";
 import { McpApprovalMode } from "./mcp-approval-mode";
 import { Property } from "./property";
 
+export type promptyToolMode = "single" | "agentic";
+
 export abstract class Tool {
   static readonly shorthandProperty: string | undefined = undefined;
 
@@ -600,7 +602,7 @@ export class PromptyTool extends Tool {
 
   kind: string = "prompty";
   path: string = "";
-  mode: string = "single";
+  mode: promptyToolMode = "single";
 
   constructor(init?: Partial<PromptyTool>) {
     super(init);
@@ -625,7 +627,7 @@ export class PromptyTool extends Tool {
       instance.path = String(data["path"]);
     }
     if (data["mode"] !== undefined && data["mode"] !== null) {
-      instance.mode = String(data["mode"]);
+      instance.mode = String(data["mode"]) as promptyToolMode;
     }
 
     if (context) {

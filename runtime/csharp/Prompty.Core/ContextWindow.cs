@@ -134,13 +134,13 @@ public static class ContextWindow
                 {
                     var name = tc?.GetType().GetProperty("Name")?.GetValue(tc)?.ToString() ?? "unknown";
                     var args = tc?.GetType().GetProperty("Arguments")?.GetValue(tc)?.ToString() ?? "";
-                    lines.Add($"[{msg.Role}]: Called: {name}({args})");
+                    lines.Add($"[{msg.Role.ToString().ToLowerInvariant()}]: Called: {name}({args})");
                 }
             }
 
             var text = msg.Text.Trim();
             if (text.Length > 0)
-                lines.Add($"[{msg.Role}]: {text}");
+                lines.Add($"[{msg.Role.ToString().ToLowerInvariant()}]: {text}");
         }
         return string.Join("\n", lines);
     }

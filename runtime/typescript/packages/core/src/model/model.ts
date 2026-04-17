@@ -5,12 +5,14 @@ import { LoadContext, SaveContext } from "./context";
 import { Connection } from "./connection";
 import { ModelOptions } from "./model-options";
 
+export type apiType = "chat" | "embedding" | "image" | "responses" | (string & {});
+
 export class Model {
   static readonly shorthandProperty: string | undefined = "id";
 
   id: string = "";
   provider?: string | undefined;
-  apiType?: string | undefined;
+  apiType?: apiType | undefined;
   connection?: Connection | undefined;
   options?: ModelOptions | undefined;
 
@@ -56,7 +58,7 @@ export class Model {
       instance.provider = String(data["provider"]);
     }
     if (data["apiType"] !== undefined && data["apiType"] !== null) {
-      instance.apiType = String(data["apiType"]);
+      instance.apiType = String(data["apiType"]) as apiType;
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
       instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context);

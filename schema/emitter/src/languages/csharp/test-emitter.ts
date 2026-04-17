@@ -10,6 +10,7 @@
 
 import { FactoryEntry } from "../../decorators.js";
 import { TypeNode } from "../../ir/ast.js";
+import { toPascalCase } from "../../ir/visitor.js";
 
 // ============================================================================
 // Public types
@@ -227,7 +228,16 @@ export function emitCSharpTest(ctx: CSharpTestContext): string {
         } else if (typeof value === 'number') {
           L.push(`        Assert.Equal(${value}, instance.${ctx.renderName(propName)});`);
         } else if (typeof value === 'string') {
-          L.push(`        Assert.Equal("${value}", instance.${ctx.renderName(propName)});`);
+          // Check if this property is a closed enum (skip discriminator fields)
+          const prop = ctx.node.properties.find(p => p.name === propName);
+          const isDiscriminator = ctx.node.discriminator === propName;
+          if (prop && prop.enumName && !prop.isOpenEnum && !isDiscriminator) {
+            const csEnumName = toPascalCase(prop.enumName);
+            const memberName = toPascalCase(value);
+            L.push(`        Assert.Equal(${csEnumName}.${memberName}, instance.${ctx.renderName(propName)});`);
+          } else {
+            L.push(`        Assert.Equal("${value}", instance.${ctx.renderName(propName)});`);
+          }
         }
       }
 
@@ -273,6 +283,10 @@ function emitCoercionAssertions(
         `        Assert.IsType<bool>(instance.${v.key});`,
         `        Assert.${valueStr === "False" ? "False" : "True"}((bool)instance.${v.key});`,
       ].join('\n');
+    }
+    // Enum values (e.g., McpApprovalModeKind.Never) — emit direct assertion
+    if (v.delimiter === '' && /^[A-Z]/.test(valueStr)) {
+      return `        Assert.Equal(${v.value}, instance.${v.key});`;
     }
     // isFloat: value string contains '.'
     if (valueStr.includes('.')) {

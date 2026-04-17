@@ -21,7 +21,7 @@ usageDescription: This will allow the agent to respond to an email on your behal
 
         Assert.NotNull(instance);
         Assert.Equal("reference", instance.Kind);
-        Assert.Equal("system", instance.AuthenticationMode);
+        Assert.Equal(AuthenticationMode.System, instance.AuthenticationMode);
         Assert.Equal("This will allow the agent to respond to an email on your behalf", instance.UsageDescription);
     }
 
@@ -39,7 +39,7 @@ usageDescription: This will allow the agent to respond to an email on your behal
         var instance = Connection.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("reference", instance.Kind);
-        Assert.Equal("system", instance.AuthenticationMode);
+        Assert.Equal(AuthenticationMode.System, instance.AuthenticationMode);
         Assert.Equal("This will allow the agent to respond to an email on your behalf", instance.UsageDescription);
     }
 
@@ -64,7 +64,7 @@ usageDescription: This will allow the agent to respond to an email on your behal
         var reloaded = Connection.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("reference", reloaded.Kind);
-        Assert.Equal("system", reloaded.AuthenticationMode);
+        Assert.Equal(AuthenticationMode.System, reloaded.AuthenticationMode);
         Assert.Equal("This will allow the agent to respond to an email on your behalf", reloaded.UsageDescription);
     }
 
@@ -88,7 +88,7 @@ usageDescription: This will allow the agent to respond to an email on your behal
         var reloaded = Connection.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("reference", reloaded.Kind);
-        Assert.Equal("system", reloaded.AuthenticationMode);
+        Assert.Equal(AuthenticationMode.System, reloaded.AuthenticationMode);
         Assert.Equal("This will allow the agent to respond to an email on your behalf", reloaded.UsageDescription);
     }
 

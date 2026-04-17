@@ -3,11 +3,13 @@
 
 import { LoadContext, SaveContext } from "./context";
 
+export type AuthenticationMode = "user" | "system";
+
 export abstract class Connection {
   static readonly shorthandProperty: string | undefined = undefined;
 
   kind: string = "";
-  authenticationMode?: string | undefined;
+  authenticationMode?: AuthenticationMode | undefined;
   usageDescription?: string | undefined;
 
   constructor(init?: Partial<Connection>) {
@@ -34,7 +36,7 @@ export abstract class Connection {
       instance.kind = String(data["kind"]);
     }
     if (data["authenticationMode"] !== undefined && data["authenticationMode"] !== null) {
-      instance.authenticationMode = String(data["authenticationMode"]);
+      instance.authenticationMode = String(data["authenticationMode"]) as AuthenticationMode;
     }
     if (data["usageDescription"] !== undefined && data["usageDescription"] !== null) {
       instance.usageDescription = String(data["usageDescription"]);

@@ -15,10 +15,10 @@ from ._context import LoadContext, SaveContext
 class ToolResult:
     """The result of a tool execution. Contains a list of content parts, enabling
     rich tool results (text, images, files, audio) rather than just strings.
-
+    
     Implementations MUST support conversion from a plain string to a ToolResult
     containing a single TextPart for backward compatibility.
-
+    
     Attributes
     ----------
     parts : list[ContentPart]
@@ -42,7 +42,7 @@ class ToolResult:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolResult: {data}")
 
@@ -54,6 +54,8 @@ class ToolResult:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
@@ -90,6 +92,7 @@ class ToolResult:
         if context is not None:
             obj = context.process_object(obj)
 
+
         result: dict[str, Any] = {}
 
         if obj.parts is not None:
@@ -124,10 +127,13 @@ class ToolResult:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
 
+
     @classmethod
     def text(cls, value: str) -> "ToolResult":
         """Create a ToolResult with preset field values."""
         return ToolResult(parts=[TextPart(value=value)])
+
+
 
 
 @runtime_checkable

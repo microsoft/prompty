@@ -13,7 +13,7 @@ from ._context import LoadContext, SaveContext
 @dataclass
 class CompactionFailedPayload:
     """Payload for "compaction_failed" events — compaction could not be completed.
-
+    
     Attributes
     ----------
     message : str
@@ -37,7 +37,7 @@ class CompactionFailedPayload:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for CompactionFailedPayload: {data}")
 
@@ -50,6 +50,8 @@ class CompactionFailedPayload:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the CompactionFailedPayload instance to a dictionary.
         Args:
@@ -61,6 +63,7 @@ class CompactionFailedPayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -95,3 +98,5 @@ class CompactionFailedPayload:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

@@ -139,6 +139,10 @@ export class PropertyNode {
 
   public defaultValue: string | number | boolean | null = null;
   public allowedValues: string[] = [];
+  /** Name of the string-literal union alias (e.g., "Role"), null if unnamed or not an enum. */
+  public enumName: string | null = null;
+  /** True when the union includes a bare `string` variant (open enum — accepts any string). */
+  public isOpenEnum: boolean = false;
 
   public property: ModelProperty;
   public type: TypeNode | undefined = undefined;
@@ -166,6 +170,8 @@ export class PropertyNode {
 
       defaultValue: this.defaultValue || "null",
       allowedValues: this.allowedValues,
+      enumName: this.enumName,
+      isOpenEnum: this.isOpenEnum,
       type: this.type ? this.type.getSanitizedObject() : undefined,
     };
   }
@@ -567,8 +573,25 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
       if (property.defaultValue && property.defaultValue.valueKind === "StringValue") {
         prop.defaultValue = property.defaultValue?.value || null;
       }
-      prop.allowedValues = variants.filter(v => v.kind === "String").map(v => v.value)
-      const s = 1;
+      prop.allowedValues = variants.filter(v => v.kind === "String").map(v => v.value);
+      // Resolve enum type name from union.name (named unions) or alias name (alias statements)
+      let enumName: string | undefined = union.name;
+      if (!enumName && union.node) {
+        const node = union.node as any;
+        // For aliases: union.node is a UnionExpression whose parent is the AliasStatement
+        if (node.parent?.id?.sv && typeof node.parent.id.sv === "string") {
+          // Guard against parent.id being a file path (happens for named union declarations)
+          const parentId: string = node.parent.id.sv;
+          if (!parentId.includes("/") && !parentId.includes("\\")) {
+            enumName = parentId;
+          }
+        }
+      }
+      if (enumName) {
+        prop.enumName = enumName;
+      }
+      // Check if the union includes a bare `string` scalar (open enum)
+      prop.isOpenEnum = variants.some(v => v.kind === "Scalar" && v.name === "string");
     } else {
       program.reportDiagnostic({
         code: "prompty-emitter-unsupported-union-types",

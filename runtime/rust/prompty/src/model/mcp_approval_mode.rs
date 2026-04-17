@@ -84,7 +84,7 @@ impl McpApprovalMode {
         let value = ctx.process_input(value.clone());
         if let Some(s) = value.as_str() {
             let value = s.to_string();
-            return McpApprovalMode { kind: mcpApprovalModeKind::from_str_opt(&value).unwrap_or_default(), ..Default::default() };
+            return McpApprovalMode { kind: mcpApprovalModeKind::from_str_opt(&value).unwrap_or(mcpApprovalModeKind::Always), ..Default::default() };
         }
         Self {
             kind: value.get("kind").and_then(|v| v.as_str()).and_then(|s| mcpApprovalModeKind::from_str_opt(s)).unwrap_or(mcpApprovalModeKind::Always),

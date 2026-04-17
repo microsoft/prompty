@@ -37,6 +37,7 @@ import {
   FileDecl,
   TypeDecl,
   FieldDecl,
+  EnumDef,
   LoadAssignment,
   SaveAssignment,
   CollectionHelperDecl,
@@ -59,6 +60,90 @@ function emitDocComment(description: string, indent: string, lines: string[]): v
   // Collapse multi-line descriptions to a single line
   const oneLine = description.replace(/\r?\n/g, " ").replace(/\s+/g, " ").trim();
   lines.push(`${indent}/// ${oneLine}`);
+}
+
+/**
+ * Convert a string literal value to a PascalCase Rust variant name.
+ * e.g., "system" → "System", "tool" → "Tool", "text" → "Text"
+ */
+function toPascalCase(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/**
+ * Emit a Rust enum for a named string-literal type.
+ * Uses serde rename for string ↔ enum round-tripping.
+ */
+function emitStringEnum(enumDef: EnumDef, lines: string[]): void {
+  const firstVariant = toPascalCase(enumDef.values[0]);
+  if (enumDef.isOpen) {
+    // Open enums carry String data in Other variant — no Copy
+    lines.push("#[derive(Debug, Clone, PartialEq, Eq, Hash)]");
+  } else {
+    lines.push("#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]");
+  }
+  lines.push(`pub enum ${enumDef.name} {`);
+  for (const value of enumDef.values) {
+    const variant = toPascalCase(value);
+    lines.push(`    ${variant},`);
+  }
+  if (enumDef.isOpen) {
+    lines.push("    /// Unknown variant (open enum — accepts any string).");
+    lines.push("    Other(String),");
+  }
+  lines.push("}");
+  lines.push("");
+
+  // impl Default — first variant (only for closed enums; open enums use first variant too)
+  lines.push(`impl Default for ${enumDef.name} {`);
+  lines.push("    fn default() -> Self {");
+  lines.push(`        Self::${firstVariant}`);
+  lines.push("    }");
+  lines.push("}");
+  lines.push("");
+
+  // impl Display
+  lines.push(`impl std::fmt::Display for ${enumDef.name} {`);
+  lines.push("    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {");
+  lines.push("        match self {");
+  for (const value of enumDef.values) {
+    lines.push(`            Self::${toPascalCase(value)} => write!(f, "${value}"),`);
+  }
+  if (enumDef.isOpen) {
+    lines.push("            Self::Other(s) => write!(f, \"{}\", s),");
+  }
+  lines.push("        }");
+  lines.push("    }");
+  lines.push("}");
+  lines.push("");
+
+  // impl From<&str>
+  lines.push(`impl ${enumDef.name} {`);
+  lines.push("    pub fn from_str_opt(s: &str) -> Option<Self> {");
+  lines.push("        match s {");
+  for (const value of enumDef.values) {
+    lines.push(`            "${value}" => Some(Self::${toPascalCase(value)}),`);
+  }
+  if (enumDef.isOpen) {
+    lines.push("            other => Some(Self::Other(other.to_string())),");
+  } else {
+    lines.push("            _ => None,");
+  }
+  lines.push("        }");
+  lines.push("    }");
+  lines.push("");
+  lines.push("    pub fn as_str(&self) -> &str {");
+  lines.push("        match self {");
+  for (const value of enumDef.values) {
+    lines.push(`            Self::${toPascalCase(value)} => "${value}",`);
+  }
+  if (enumDef.isOpen) {
+    lines.push("            Self::Other(s) => s.as_str(),");
+  }
+  lines.push("        }");
+  lines.push("    }");
+  lines.push("}");
+  lines.push("");
 }
 
 /**
@@ -134,6 +219,11 @@ export function emitRustFile(
   }
 
   lines.push("");
+
+  // String-literal enum types
+  for (const enumDef of file.enums) {
+    emitStringEnum(enumDef, lines);
+  }
 
   // Find the base type (the one that owns the polymorphic dispatch)
   const baseType = file.types.find(t => t.polymorphicDispatch) || file.types[0];
@@ -529,9 +619,15 @@ function emitCoercionBranch(
   const fieldAssignments = c.assignments.map(a => {
     const snake = toSnakeCase(a.fieldName);
     if (a.isInput) {
-      // Check if the target field is optional — wrap with Some() if so
+      // Check if the target field is optional or an enum
       const targetField = type.fields.find(f => f.name === a.fieldName);
       const isOptional = targetField?.isOptional ?? false;
+      // If target field is a named enum, use from_str_opt instead of .into()
+      if (targetField?.enumName && targetField.allowedValues.length > 0) {
+        const defaultVal = String(targetField.defaultValue || targetField.allowedValues[0]);
+        const enumExpr = `${targetField.enumName}::from_str_opt(&value).unwrap_or(${targetField.enumName}::${toPascalCase(defaultVal)})`;
+        return isOptional ? `${snake}: Some(${enumExpr})` : `${snake}: ${enumExpr}`;
+      }
       const expr = isOptional ? "Some(value.into())" : "value.into()";
       return `${snake}: ${expr}`;
     }
@@ -1144,6 +1240,10 @@ function emitProtocolTrait(type: TypeDecl, lines: string[]): void {
 // ============================================================================
 
 function fieldType(field: FieldDecl, polymorphicTypeNames: Set<string>): string {
+  // Named enum field — use the enum type
+  if (field.enumName && field.allowedValues.length > 0) {
+    return field.isOptional ? `Option<${field.enumName}>` : field.enumName;
+  }
   const cat = field.category;
   switch (cat.kind) {
     case "scalar": {
@@ -1188,6 +1288,13 @@ function isValueType(scalarType: string): boolean {
 }
 
 function fieldDefault(field: FieldDecl, polymorphicTypeNames: Set<string>): string {
+  // Named enum — default to field default value or first variant
+  if (field.enumName && field.allowedValues.length > 0) {
+    if (field.isOptional) return "None";
+    const dv = typeof field.defaultValue === "string" ? field.defaultValue : null;
+    const defaultVal = dv && field.allowedValues.includes(dv) ? dv : field.allowedValues[0];
+    return `${field.enumName}::${toPascalCase(defaultVal)}`;
+  }
   const cat = field.category;
   switch (cat.kind) {
     case "scalar": {
@@ -1224,6 +1331,16 @@ function fieldDefault(field: FieldDecl, polymorphicTypeNames: Set<string>): stri
 function loadExpr(a: LoadAssignment, polymorphicTypeNames: Set<string>): string {
   const key = a.sourceName;
   const cat = a.category;
+
+  // Named enum — parse from string via from_str_opt
+  if (a.enumName && a.allowedValues.length > 0) {
+    const dv = typeof a.defaultValue === "string" ? a.defaultValue : null;
+    const defaultVal = dv && a.allowedValues.includes(dv) ? dv : a.allowedValues[0];
+    if (a.isOptional) {
+      return `value.get("${key}").and_then(|v| v.as_str()).and_then(|s| ${a.enumName}::from_str_opt(s))`;
+    }
+    return `value.get("${key}").and_then(|v| v.as_str()).and_then(|s| ${a.enumName}::from_str_opt(s)).unwrap_or(${a.enumName}::${toPascalCase(defaultVal)})`;
+  }
 
   switch (cat.kind) {
     case "scalar":
@@ -1323,6 +1440,15 @@ function variantLoadExpr(
   const key = field.name;
   const cat = field.category;
 
+  // Named enum — parse from string via from_str_opt
+  if (field.enumName && field.allowedValues.length > 0) {
+    const defaultVal = String(field.defaultValue || field.allowedValues[0]);
+    if (field.isOptional) {
+      return `value.get("${key}").and_then(|v| v.as_str()).and_then(|s| ${field.enumName}::from_str_opt(s))`;
+    }
+    return `value.get("${key}").and_then(|v| v.as_str()).and_then(|s| ${field.enumName}::from_str_opt(s)).unwrap_or(${field.enumName}::${toPascalCase(defaultVal)})`;
+  }
+
   switch (cat.kind) {
     case "scalar":
       return scalarLoadExpr(key, cat.scalarType, field.isOptional);
@@ -1361,6 +1487,18 @@ function emitSaveField(
   const key = a.targetName;
   const fieldRef = `${prefix}${toSnakeCase(a.fieldName)}`;
   const cat = a.category;
+
+  // Named enum — serialize via .to_string()
+  if (a.enumName) {
+    if (a.isOptional) {
+      lines.push(`${indent}if let Some(ref val) = ${fieldRef} {`);
+      lines.push(`${indent}    result.insert("${key}".to_string(), serde_json::Value::String(val.to_string()));`);
+      lines.push(`${indent}}`);
+    } else {
+      lines.push(`${indent}result.insert("${key}".to_string(), serde_json::Value::String(${fieldRef}.to_string()));`);
+    }
+    return;
+  }
 
   switch (cat.kind) {
     case "scalar":
@@ -1507,6 +1645,18 @@ function emitVariantSaveField(
   const fieldRef = toSnakeCase(field.name);
   const cat = field.category;
   const indent = "                ";
+
+  // Named enum — serialize via .to_string()
+  if (field.enumName && field.allowedValues.length > 0) {
+    if (field.isOptional) {
+      lines.push(`${indent}if let Some(ref val) = ${fieldRef} {`);
+      lines.push(`${indent}    result.insert("${key}".to_string(), serde_json::Value::String(val.to_string()));`);
+      lines.push(`${indent}}`);
+    } else {
+      lines.push(`${indent}result.insert("${key}".to_string(), serde_json::Value::String(${fieldRef}.to_string()));`);
+    }
+    return;
+  }
 
   switch (cat.kind) {
     case "scalar":

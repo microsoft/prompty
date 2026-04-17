@@ -3,15 +3,17 @@
 
 import { LoadContext, SaveContext } from "./context";
 
+export type mcpApprovalModeKind = "always" | "never" | "specify";
+
 export class McpApprovalMode {
   static readonly shorthandProperty: string | undefined = "kind";
 
-  kind: string = "";
+  kind: mcpApprovalModeKind = "always";
   alwaysRequireApprovalTools?: string[] = [];
   neverRequireApprovalTools?: string[] = [];
 
   constructor(init?: Partial<McpApprovalMode>) {
-    this.kind = init?.kind ?? "";
+    this.kind = init?.kind ?? "always";
     if (init?.alwaysRequireApprovalTools !== undefined) {
       this.alwaysRequireApprovalTools = init.alwaysRequireApprovalTools;
     }
@@ -30,7 +32,7 @@ export class McpApprovalMode {
     // Handle alternate representations
     if (typeof data === "string") {
       const instance = new McpApprovalMode();
-      instance.kind = data as string;
+      instance.kind = data as mcpApprovalModeKind;
       if (context) {
         return context.processOutput(instance) as McpApprovalMode;
       }
@@ -40,7 +42,7 @@ export class McpApprovalMode {
     const instance = new McpApprovalMode();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
-      instance.kind = String(data["kind"]);
+      instance.kind = String(data["kind"]) as mcpApprovalModeKind;
     }
     if (data["alwaysRequireApprovalTools"] !== undefined && data["alwaysRequireApprovalTools"] !== null) {
       instance.alwaysRequireApprovalTools = (data["alwaysRequireApprovalTools"] as unknown[]).map(v => String(v));

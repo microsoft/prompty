@@ -10,6 +10,56 @@ use super::connection::Connection;
 
 use super::model_options::ModelOptions;
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum apiType {
+    Chat,
+    Embedding,
+    Image,
+    Responses,
+    /// Unknown variant (open enum — accepts any string).
+    Other(String),
+}
+
+impl Default for apiType {
+    fn default() -> Self {
+        Self::Chat
+    }
+}
+
+impl std::fmt::Display for apiType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Chat => write!(f, "chat"),
+            Self::Embedding => write!(f, "embedding"),
+            Self::Image => write!(f, "image"),
+            Self::Responses => write!(f, "responses"),
+            Self::Other(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl apiType {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "chat" => Some(Self::Chat),
+            "embedding" => Some(Self::Embedding),
+            "image" => Some(Self::Image),
+            "responses" => Some(Self::Responses),
+            other => Some(Self::Other(other.to_string())),
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Chat => "chat",
+            Self::Embedding => "embedding",
+            Self::Image => "image",
+            Self::Responses => "responses",
+            Self::Other(s) => s.as_str(),
+        }
+    }
+}
+
 /// Model for defining the structure and behavior of AI agents. This model includes properties for specifying the model's provider, connection details, and various options. It allows for flexible configuration of AI models to suit different use cases and requirements.
 #[derive(Debug, Clone, Default)]
 pub struct Model {
@@ -18,7 +68,7 @@ pub struct Model {
     /// The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
     pub provider: Option<String>,
     /// The type of API to use for the model (e.g., 'chat', 'response', etc.)
-    pub api_type: Option<String>,
+    pub api_type: Option<apiType>,
     /// The connection configuration for the model
     pub connection: serde_json::Value,
     /// Additional options for the model
@@ -55,7 +105,7 @@ impl Model {
         Self {
             id: value.get("id").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             provider: value.get("provider").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            api_type: value.get("apiType").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            api_type: value.get("apiType").and_then(|v| v.as_str()).and_then(|s| apiType::from_str_opt(s)),
             connection: value.get("connection").cloned().unwrap_or(serde_json::Value::Null),
             options: value.get("options").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| ModelOptions::load_from_value(v, ctx)),
         }
@@ -74,7 +124,7 @@ impl Model {
             result.insert("provider".to_string(), serde_json::Value::String(val.clone()));
         }
         if let Some(ref val) = self.api_type {
-            result.insert("apiType".to_string(), serde_json::Value::String(val.clone()));
+            result.insert("apiType".to_string(), serde_json::Value::String(val.to_string()));
         }
         if !self.connection.is_null() {
             result.insert("connection".to_string(), self.connection.clone());

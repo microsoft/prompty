@@ -134,6 +134,20 @@ export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespa
   }
   lines.push("");
 
+  // 2.5. Enum type aliases
+  for (const enumDef of decl.enums) {
+    const values = enumDef.values.map(v => `"${v}"`).join(" | ");
+    if (enumDef.isOpen) {
+      // Open enum — known values + any string
+      lines.push(`export type ${enumDef.name} = ${values} | (string & {});`);
+    } else {
+      lines.push(`export type ${enumDef.name} = ${values};`);
+    }
+  }
+  if (decl.enums.length > 0) {
+    lines.push("");
+  }
+
   // 3. Emit each type
   for (const type of decl.types) {
     emitType(type, lines, visitor);
@@ -348,6 +362,10 @@ function emitProtocolInterface(type: TypeDecl, lines: string[]): void {
 }
 
 function tsTypeAnnotation(f: FieldDecl): string {
+  // Named enum field — use the enum type alias
+  if (f.enumName && f.allowedValues.length > 0) {
+    return f.isOptional ? `${f.enumName} | undefined` : f.enumName;
+  }
   const cat = f.category;
   switch (cat.kind) {
     case "dict":
@@ -378,6 +396,14 @@ function tsDefaultValue(f: FieldDecl): string {
 
   if (f.isOptional) {
     return "";
+  }
+
+  // Enum fields — use the field's default value or the first allowed value
+  if (f.enumName && f.allowedValues.length > 0) {
+    const dv = typeof f.defaultValue === "string" && f.allowedValues.includes(f.defaultValue)
+      ? f.defaultValue
+      : f.allowedValues[0];
+    return ` = "${dv}"`;
   }
 
   if (cat.kind === "dict") {
@@ -442,6 +468,11 @@ function emitConstructor(type: TypeDecl, lines: string[]): void {
       lines.push(`    this.${field.name} = init?.${field.name} ?? [];`);
     } else if (cat.kind === "dict") {
       lines.push(`    this.${field.name} = init?.${field.name} ?? {};`);
+    } else if (field.enumName && field.allowedValues.length > 0 && !field.isOptional) {
+      const dv = typeof field.defaultValue === "string" && field.allowedValues.includes(field.defaultValue)
+        ? field.defaultValue
+        : field.allowedValues[0];
+      lines.push(`    this.${field.name} = init?.${field.name} ?? "${dv}";`);
     } else if (cat.kind === "scalar") {
       const def = tsConstructorDefault(cat.scalarType, field.defaultValue);
       lines.push(`    this.${field.name} = init?.${field.name} ?? ${def};`);
@@ -535,6 +566,10 @@ function emitLoadMethod(type: TypeDecl, lines: string[]): void {
 }
 
 function emitLoadAssignment(a: LoadAssignment): string {
+  // Named enum — cast string to enum type alias
+  if (a.enumName && a.allowedValues.length > 0) {
+    return `instance.${a.fieldName} = String(data["${a.sourceName}"]) as ${a.enumName};`;
+  }
   const cat = a.category;
   switch (cat.kind) {
     case "scalar": {
@@ -668,7 +703,12 @@ function emitCoercionBody(
     lines.push(`${indent}const instance = new ${typeName}();`);
     for (const a of c.assignments) {
       if (a.isInput) {
-        lines.push(`${indent}instance.${a.fieldName} = data as ${TYPE_MAP[c.scalarType] || "unknown"};`);
+        // Check if the target field is an enum — cast to enum type instead of scalar
+        const targetField = type.fields.find(f => f.name === a.fieldName);
+        const castType = targetField?.enumName && targetField.allowedValues.length > 0
+          ? targetField.enumName
+          : (TYPE_MAP[c.scalarType] || "unknown");
+        lines.push(`${indent}instance.${a.fieldName} = data as ${castType};`);
       } else {
         lines.push(`${indent}instance.${a.fieldName} = "${a.literalValue}";`);
       }

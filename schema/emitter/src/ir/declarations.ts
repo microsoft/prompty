@@ -47,6 +47,30 @@ export type PropertyCategory =
   | { kind: "dict" };
 
 // ============================================================================
+// EnumDef — a string-literal enum type
+// ============================================================================
+
+/**
+ * Represents a named string-literal enum type (e.g., `Role`, `AuthenticationMode`).
+ * Derived from TypeSpec `alias X = "a" | "b" | "c"` unions.
+ *
+ * Language emitters use this to produce:
+ *   - Python: `Role = Literal["system", "user", ...]`
+ *   - TypeScript: `type Role = "system" | "user" | ...`
+ *   - C#: `public enum Role { ... }` (with JSON string conversion)
+ *   - Rust: `pub enum Role { ... }` (with serde rename_all)
+ *   - Go: `type Role string` with const block
+ */
+export interface EnumDef {
+  /** Enum type name (PascalCase from the TypeSpec alias, e.g., "Role") */
+  name: string;
+  /** Known string values (e.g., ["system", "user", "assistant", "developer", "tool"]) */
+  values: string[];
+  /** True when the alias includes `| string` — accepts arbitrary strings beyond the known values */
+  isOpen: boolean;
+}
+
+// ============================================================================
 // FileDecl — a complete generated file
 // ============================================================================
 
@@ -64,6 +88,8 @@ export interface FileDecl {
   imports: ImportRef[];
   /** Whether any type in the file is abstract */
   containsAbstract: boolean;
+  /** String-literal enum types used by fields in this file */
+  enums: EnumDef[];
 }
 
 /**
@@ -136,6 +162,10 @@ export interface FieldDecl {
   defaultValue: string | number | boolean | null;
   /** Allowed string values (for enum-like constraints) */
   allowedValues: string[];
+  /** Named enum type for this field (e.g., "Role"), null if not an enum field */
+  enumName: string | null;
+  /** True when the enum includes a bare `string` variant (open — accepts any string) */
+  isOpenEnum: boolean;
   /** Human-readable description for docstrings */
   description: string;
   /** Wire name mappings per provider (e.g., { openai: "max_completion_tokens" }) */
@@ -206,6 +236,14 @@ export interface LoadAssignment {
   isOptional: boolean;
   /** Parent type name (needed for calling collection helpers like Parent.load_items) */
   parentTypeName: string;
+  /** Enum type name (if this field references a named enum) */
+  enumName: string | null;
+  /** Allowed values for enum fields */
+  allowedValues: string[];
+  /** Default value (for fallback on missing/invalid data) */
+  defaultValue: string | number | boolean | null;
+  /** Whether the enum is open (accepts arbitrary string values) */
+  isOpenEnum: boolean;
 }
 
 // ============================================================================
@@ -238,6 +276,10 @@ export interface SaveAssignment {
   isOptional: boolean;
   /** Parent type name (for collection save helpers) */
   parentTypeName: string;
+  /** Enum type name (if this field references a named enum) */
+  enumName: string | null;
+  /** Whether the enum is open (accepts arbitrary string values) */
+  isOpenEnum: boolean;
 }
 
 // ============================================================================

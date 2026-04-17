@@ -5,17 +5,19 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Protocol, runtime_checkable
+from typing import Any, ClassVar, Literal, Protocol, runtime_checkable
 
 from ._ContentPart import ContentPart, TextPart
 from ._context import LoadContext, SaveContext
+
+Role = Literal["system", "user", "assistant", "developer", "tool"]
 
 
 @dataclass
 class Message:
     """A message in a conversation. Messages have a role and a list of content parts
     representing the different modalities of the message content.
-
+    
     Attributes
     ----------
     role : str
@@ -28,7 +30,7 @@ class Message:
 
     _shorthand_property: ClassVar[str | None] = None
 
-    role: str = field(default="user")
+    role: Role = field(default="user")
     parts: list[ContentPart] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -45,7 +47,7 @@ class Message:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Message: {data}")
 
@@ -61,6 +63,8 @@ class Message:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
@@ -96,6 +100,7 @@ class Message:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -135,6 +140,7 @@ class Message:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
 
+
     @classmethod
     def assistant(cls, text: str) -> "Message":
         """Create a Message with preset field values."""
@@ -149,6 +155,8 @@ class Message:
     def user(cls, text: str) -> "Message":
         """Create a Message with preset field values."""
         return Message(role="user", parts=[TextPart(value=text)])
+
+
 
 
 @runtime_checkable

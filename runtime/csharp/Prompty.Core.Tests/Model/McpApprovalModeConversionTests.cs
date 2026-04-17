@@ -22,7 +22,7 @@ neverRequireApprovalTools:
         var instance = McpApprovalMode.FromYaml(yamlData);
 
         Assert.NotNull(instance);
-        Assert.Equal("never", instance.Kind);
+        Assert.Equal(McpApprovalModeKind.Never, instance.Kind);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ neverRequireApprovalTools:
 
         var instance = McpApprovalMode.FromJson(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal("never", instance.Kind);
+        Assert.Equal(McpApprovalModeKind.Never, instance.Kind);
     }
 
     [Fact]
@@ -69,7 +69,7 @@ neverRequireApprovalTools:
 
         var reloaded = McpApprovalMode.FromJson(json);
         Assert.NotNull(reloaded);
-        Assert.Equal("never", reloaded.Kind);
+        Assert.Equal(McpApprovalModeKind.Never, reloaded.Kind);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ neverRequireApprovalTools:
 
         var reloaded = McpApprovalMode.FromYaml(yaml);
         Assert.NotNull(reloaded);
-        Assert.Equal("never", reloaded.Kind);
+        Assert.Equal(McpApprovalModeKind.Never, reloaded.Kind);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ neverRequireApprovalTools:
         var data = "\"never\"";
         var instance = McpApprovalMode.FromJson(data);
         Assert.NotNull(instance);
-        Assert.Equal("never", instance.Kind);
+        Assert.Equal(McpApprovalModeKind.Never, instance.Kind);
     }
 
     [Fact]
@@ -158,6 +158,6 @@ neverRequireApprovalTools:
         var instance = McpApprovalMode.FromYaml(data);
         Assert.NotNull(instance);
 
-        Assert.Equal("never", instance.Kind);
+        Assert.Equal(McpApprovalModeKind.Never, instance.Kind);
     }
 }

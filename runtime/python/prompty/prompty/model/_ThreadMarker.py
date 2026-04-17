@@ -13,11 +13,11 @@ from ._context import LoadContext, SaveContext
 @dataclass
 class ThreadMarker:
     """Positional marker for conversation history insertion during template rendering.
-
+    
     During `prepare()`, nonce strings in rendered text are replaced with
     ThreadMarker objects. The pipeline then replaces them with actual
     conversation messages from the inputs.
-
+    
     Attributes
     ----------
     name : str
@@ -44,7 +44,7 @@ class ThreadMarker:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ThreadMarker: {data}")
 
@@ -59,6 +59,8 @@ class ThreadMarker:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ThreadMarker instance to a dictionary.
         Args:
@@ -70,6 +72,7 @@ class ThreadMarker:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -106,3 +109,5 @@ class ThreadMarker:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

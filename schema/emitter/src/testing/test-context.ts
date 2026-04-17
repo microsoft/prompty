@@ -7,6 +7,7 @@
 
 import { TypeNode, PropertyValidation, TestExample, CoercionTest, BaseTestContext } from "../ir/ast.js";
 import { getCombinations, scalarValue, toSnakeCase } from "../ir/utilities.js";
+import { toPascalCase } from "../ir/visitor.js";
 import * as YAML from "yaml";
 
 /**
@@ -36,6 +37,14 @@ export interface TestContextOptions {
 
   /** Type mapper for scalar types */
   typeMapper: Record<string, string>;
+
+  /**
+   * Render an enum assertion value for a closed enum field.
+   * Called with (enumName, rawStringValue, fieldName).
+   * If provided and returns non-null, overrides default string/bool/number rendering.
+   * The returned value+delimiter replace the default.
+   */
+  renderEnumValue?: (enumName: string, rawValue: string, fieldName: string) => { value: string; delimiter: string } | null;
 }
 
 /**
@@ -122,6 +131,20 @@ function buildValidations(
       const prop = node.properties.find(p => p.name === key);
       const rawValue = sample[key];
 
+      // Check for enum field (skip discriminator fields)
+      const isDiscriminator = node.discriminator === key;
+      if (prop && prop.enumName && !isDiscriminator && typeof rawValue === 'string' && options.renderEnumValue) {
+        const enumResult = options.renderEnumValue(prop.enumName, rawValue, key);
+        if (enumResult) {
+          return {
+            key: options.renderKey(key),
+            value: enumResult.value,
+            delimiter: enumResult.delimiter,
+            isOptional: prop?.isOptional || false,
+          };
+        }
+      }
+
       let value: any;
       let delimiter = '';
 
@@ -165,6 +188,22 @@ function buildCoercions(node: TypeNode, options: TestContextOptions): CoercionTe
         const rawValue = alt.expansion[key];
         const isValuePlaceholder = rawValue === "{value}";
         const value = isValuePlaceholder ? example : rawValue;
+
+        // Check for closed enum field (skip discriminator fields)
+        const isDiscriminator = node.discriminator === key;
+        if (prop && prop.enumName && !isDiscriminator && options.renderEnumValue) {
+          // Extract the raw string value (strip quotes if present from example substitution)
+          const strValue = typeof value === 'string' ? value.replace(/^"|"$/g, '') : String(value);
+          const enumResult = options.renderEnumValue(prop.enumName, strValue, key);
+          if (enumResult) {
+            return {
+              key: options.renderKey(key),
+              value: enumResult.value,
+              delimiter: enumResult.delimiter,
+              isOptional: prop?.isOptional || false,
+            };
+          }
+        }
 
         // Determine delimiter - don't add quotes if it's the {value} placeholder (already has quotes)
         const needsQuotes = typeof value === 'string' && !value.includes('"') && !isValuePlaceholder;
@@ -309,6 +348,10 @@ export const rustTestOptions: TestContextOptions = {
     .replace(/\r/g, '\\r')
     .replace(/\t/g, '\\t'),
   getDelimiter: (str: string) => '"',
+  renderEnumValue: (enumName: string, rawValue: string) => ({
+    value: `${enumName}::${toPascalCase(rawValue)}`,
+    delimiter: '',
+  }),
   escapeJsonForTemplate: undefined,
   escapeYamlForTemplate: undefined,
   scalarValues: {

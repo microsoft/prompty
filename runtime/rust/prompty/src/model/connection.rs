@@ -6,6 +6,44 @@
 
 use super::context::{LoadContext, SaveContext};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum AuthenticationMode {
+    User,
+    System,
+}
+
+impl Default for AuthenticationMode {
+    fn default() -> Self {
+        Self::User
+    }
+}
+
+impl std::fmt::Display for AuthenticationMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::User => write!(f, "user"),
+            Self::System => write!(f, "system"),
+        }
+    }
+}
+
+impl AuthenticationMode {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "user" => Some(Self::User),
+            "system" => Some(Self::System),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::User => "user",
+            Self::System => "system",
+        }
+    }
+}
+
 
 /// Variant-specific data for [`Connection`], discriminated by `kind`.
 #[derive(Debug, Clone)]
@@ -72,7 +110,7 @@ impl Default for ConnectionKind {
 #[derive(Debug, Clone, Default)]
 pub struct Connection {
     /// The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
-    pub authentication_mode: Option<String>,
+    pub authentication_mode: Option<AuthenticationMode>,
     /// The usage description for the connection, providing context on how this connection will be used
     pub usage_description: Option<String>,
     /// Variant-specific data, discriminated by `kind`.
@@ -134,7 +172,7 @@ impl Connection {
             _ => ConnectionKind::default(),
         };
         Self {
-            authentication_mode: value.get("authenticationMode").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            authentication_mode: value.get("authenticationMode").and_then(|v| v.as_str()).and_then(|s| AuthenticationMode::from_str_opt(s)),
             usage_description: value.get("usageDescription").and_then(|v| v.as_str()).map(|s| s.to_string()),
             kind: kind,
         }
@@ -161,7 +199,7 @@ impl Connection {
         result.insert("kind".to_string(), serde_json::Value::String(self.kind_str().to_string()));
         // Write base fields
         if let Some(ref val) = self.authentication_mode {
-            result.insert("authenticationMode".to_string(), serde_json::Value::String(val.clone()));
+            result.insert("authenticationMode".to_string(), serde_json::Value::String(val.to_string()));
         }
         if let Some(ref val) = self.usage_description {
             result.insert("usageDescription".to_string(), serde_json::Value::String(val.clone()));

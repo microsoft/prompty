@@ -77,7 +77,7 @@ export const generateGo = async (
     // Skip child types - they're rendered with their parent
     if (!n.base) {
       const fileDecl = lowerFile(n, registry, polymorphicTypeNames);
-      const fileContent = emitGoFileContent(fileDecl.types, packageName, visitor, polymorphicTypeNames);
+      const fileContent = emitGoFileContent(fileDecl.types, packageName, visitor, polymorphicTypeNames, fileDecl.enums);
       const fileName = toSnakeCase(n.typeName.name) + '.go';
       await emitGoFile(context, fileName, fileContent, emitTarget["output-dir"]);
     }

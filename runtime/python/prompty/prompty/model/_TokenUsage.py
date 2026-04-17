@@ -4,7 +4,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from ._context import LoadContext, SaveContext
@@ -15,7 +15,7 @@ class TokenUsage:
     """Tracks token consumption for a single LLM call. Provider-specific field
     names (e.g., OpenAI's `prompt_tokens` vs Anthropic's `input_tokens`)
     are mapped via `knownAs` augments in the wire directory.
-
+    
     Attributes
     ----------
     prompt_tokens : Optional[int]
@@ -45,7 +45,7 @@ class TokenUsage:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TokenUsage: {data}")
 
@@ -62,6 +62,8 @@ class TokenUsage:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TokenUsage instance to a dictionary.
         Args:
@@ -73,6 +75,7 @@ class TokenUsage:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -132,3 +135,5 @@ class TokenUsage:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

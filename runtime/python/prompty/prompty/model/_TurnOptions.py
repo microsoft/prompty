@@ -4,7 +4,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from ._CompactionConfig import CompactionConfig
@@ -15,11 +15,11 @@ from ._context import LoadContext, SaveContext
 class TurnOptions:
     """Configuration for the agent loop's turn() function. Controls iteration
     limits, retry policy, context management, and execution behavior.
-
+    
     Runtimes accept these as either a TurnOptions object or individual
     keyword/named parameters — the TypeSpec model defines the canonical
     field set.
-
+    
     Attributes
     ----------
     max_iterations : Optional[int]
@@ -61,7 +61,7 @@ class TurnOptions:
 
         if context is not None:
             data = context.process_input(data)
-
+        
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnOptions: {data}")
 
@@ -86,6 +86,8 @@ class TurnOptions:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TurnOptions instance to a dictionary.
         Args:
@@ -97,6 +99,7 @@ class TurnOptions:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -143,3 +146,5 @@ class TurnOptions:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+

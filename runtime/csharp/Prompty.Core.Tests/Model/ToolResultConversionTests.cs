@@ -128,9 +128,9 @@ parts:
     }
 
     [Fact]
-    public void FactoryText()
+    public void FactoryCreateText()
     {
-        var instance = ToolResult.Text("test");
+        var instance = ToolResult.CreateText("test");
         Assert.NotNull(instance);
     }
 }

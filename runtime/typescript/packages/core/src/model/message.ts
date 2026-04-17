@@ -4,10 +4,12 @@
 import { LoadContext, SaveContext } from "./context";
 import { ContentPart, TextPart } from "./content-part";
 
+export type Role = "system" | "user" | "assistant" | "developer" | "tool";
+
 export class Message {
   static readonly shorthandProperty: string | undefined = undefined;
 
-  role: string = "user";
+  role: Role = "user";
   parts: ContentPart[] = [];
   metadata: Record<string, unknown> = {};
 
@@ -27,7 +29,7 @@ export class Message {
     const instance = new Message();
 
     if (data["role"] !== undefined && data["role"] !== null) {
-      instance.role = String(data["role"]);
+      instance.role = String(data["role"]) as Role;
     }
     if (data["parts"] !== undefined && data["parts"] !== null) {
       instance.parts = Message.loadParts(data["parts"] as unknown[], context);

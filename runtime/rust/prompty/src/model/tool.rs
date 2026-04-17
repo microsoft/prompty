@@ -165,7 +165,7 @@ impl Tool {
             },
             "prompty" => ToolKind::Prompty {
                 path: value.get("path").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-                mode: value.get("mode").and_then(|v| v.as_str()).and_then(promptyToolMode::from_str_opt).unwrap_or_default(),
+                mode: value.get("mode").and_then(|v| v.as_str()).and_then(|s| promptyToolMode::from_str_opt(s)).unwrap_or(promptyToolMode::Single),
             },
             _ => ToolKind::Custom {
                 connection: value.get("connection").cloned().unwrap_or(serde_json::Value::Null),
@@ -251,9 +251,7 @@ impl Tool {
                 if !path.is_empty() {
                     result.insert("path".to_string(), serde_json::Value::String(path.clone()));
                 }
-                if *mode != promptyToolMode::default() {
-                    result.insert("mode".to_string(), serde_json::Value::String(mode.to_string()));
-                }
+                result.insert("mode".to_string(), serde_json::Value::String(mode.to_string()));
             }
             ToolKind::Custom { connection, options, kind_name: _, .. } => {
                 if !connection.is_null() {
