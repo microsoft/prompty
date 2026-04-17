@@ -251,8 +251,8 @@ impl Tool {
                 if !path.is_empty() {
                     result.insert("path".to_string(), serde_json::Value::String(path.clone()));
                 }
-                if mode != &promptyToolMode::default() {
-                    result.insert("mode".to_string(), serde_json::Value::String(mode.as_str().to_string()));
+                if *mode != promptyToolMode::default() {
+                    result.insert("mode".to_string(), serde_json::Value::String(mode.to_string()));
                 }
             }
             ToolKind::Custom { connection, options, kind_name: _, .. } => {
