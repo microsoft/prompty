@@ -1,5 +1,5 @@
 import "prompty-emitter";
-import "./message.tsp";
+import "../message/message.tsp";
 
 namespace Prompty;
 

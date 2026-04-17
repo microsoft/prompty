@@ -1,5 +1,5 @@
-import "../core.tsp";
-import "../tools.tsp";
+import "../core/core.tsp";
+import "./base.tsp";
 
 namespace Prompty;
 

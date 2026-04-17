@@ -51,14 +51,14 @@ pub use tool_result::*;
 pub mod tool_dispatch_result;
 pub use tool_dispatch_result::*;
 
+pub mod guardrail_result;
+pub use guardrail_result::*;
+
 pub mod tool_call;
 pub use tool_call::*;
 
 pub mod thread_marker;
 pub use thread_marker::*;
-
-pub mod guardrail_result;
-pub use guardrail_result::*;
 
 pub mod token_event_payload;
 pub use token_event_payload::*;

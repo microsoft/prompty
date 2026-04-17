@@ -1,10 +1,10 @@
 import "prompty-emitter";
 import "@typespec/json-schema";
-import "./core.tsp";
-import "./model.tsp";
-import "./properties.tsp";
-import "./tools.tsp";
-import "./template.tsp";
+import "../core/core.tsp";
+import "../model/model.tsp";
+import "../core/properties.tsp";
+import "../tools/base.tsp";
+import "../template/template.tsp";
 
 using TypeSpec.JsonSchema;
 

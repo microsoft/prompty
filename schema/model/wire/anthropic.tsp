@@ -1,6 +1,6 @@
 import "prompty-emitter";
-import "../model.tsp";
-import "../usage.tsp";
+import "../model/model.tsp";
+import "../model/usage.tsp";
 
 using Prompty;
 

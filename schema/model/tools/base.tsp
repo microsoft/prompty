@@ -1,7 +1,7 @@
 import "prompty-emitter";
-import "./core.tsp";
-import "./tools";
-import "./properties.tsp";
+import "../core/core.tsp";
+import "./main.tsp";
+import "../core/properties.tsp";
 
 namespace Prompty;
 
