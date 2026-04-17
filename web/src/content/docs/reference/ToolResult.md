@@ -45,6 +45,20 @@ parts:
 | ---- | ---- | ----------- |
 | parts | [ContentPart[]](../contentpart/) | The content parts of the tool result(Related Types: [TextPart](../textpart/), [ImagePart](../imagepart/), [FilePart](../filepart/), [AudioPart](../audiopart/)) |
 
+## Helper Methods
+
+The following helper methods are declared via `@method` and must be implemented by every runtime. Idiomatic language shape (e.g. zero-param accessor may be a property) is chosen per-language by the emitter.
+
+| Name | Signature | Description |
+| ---- | --------- | ----------- |
+| `text` | `text() -> string` | Concatenate all TextPart values joined by newline |
+
+## Factory Methods
+
+The following factory methods are declared via `@factory` and are generated automatically by the emitter in every language.
+
+- `text(value: string)`
+
 ## Composed Types
 
 The following types are composed within `ToolResult`:

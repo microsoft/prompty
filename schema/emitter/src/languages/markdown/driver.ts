@@ -149,6 +149,31 @@ classDiagram`;
     }
   }
 
+  if (node.methods.length > 0) {
+    out += `\n\n## Helper Methods\n\nThe following helper methods are declared via \`@method\` and must be implemented by every runtime. Idiomatic language shape (e.g. zero-param accessor may be a property) is chosen per-language by the emitter.\n\n| Name | Signature | Description |\n| ---- | --------- | ----------- |`;
+    for (const method of node.methods) {
+      const paramList = Object.entries(method.params)
+        .map(([n, t]) => `${n}: ${t}`)
+        .join(", ");
+      const sig = `${method.name}(${paramList}) -> ${method.returns}`;
+      const flags: string[] = [];
+      if (method.optional) flags.push("optional");
+      if (method.sync) flags.push("sync");
+      const suffix = flags.length > 0 ? ` _(${flags.join(", ")})_` : "";
+      out += `\n| \`${method.name}\` | \`${sig}\`${suffix} | ${method.description.trim()} |`;
+    }
+  }
+
+  if (node.factories.length > 0) {
+    out += `\n\n## Factory Methods\n\nThe following factory methods are declared via \`@factory\` and are generated automatically by the emitter in every language.\n`;
+    for (const factory of node.factories) {
+      const paramList = Object.entries(factory.params)
+        .map(([n, t]) => `${n}: ${t}`)
+        .join(", ");
+      out += `\n- \`${factory.name}(${paramList})\``;
+    }
+  }
+
   if (node.childTypes.length > 0) {
     out += `\n\n## Child Types\n\nThe following types extend \`${node.typeName.name}\`:\n`;
     for (const type of node.childTypes) {

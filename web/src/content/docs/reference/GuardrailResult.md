@@ -41,3 +41,11 @@ reason: Content is safe
 | allowed | boolean | Whether the content passed the guardrail check |
 | reason | string | Explanation of why the content was allowed or denied |
 | rewrite | unknown | Optional rewritten content to replace the original |
+
+## Factory Methods
+
+The following factory methods are declared via `@factory` and are generated automatically by the emitter in every language.
+
+- `rewrite(rewrite: unknown)`
+- `deny(reason: string)`
+- `allow()`
