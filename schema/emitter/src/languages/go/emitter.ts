@@ -679,19 +679,16 @@ function emitSaveScalar(
 ): void {
   const goType = GO_TYPE_MAP[scalarType] || "interface{}";
 
+  // Named enum fields must be cast back to string so roundtrip Load can do val.(string)
+  const saveExpr = assign.enumName ? `string(obj.${fieldName})` : `obj.${fieldName}`;
+  const saveExprDeref = assign.enumName ? `string(*obj.${fieldName})` : `*obj.${fieldName}`;
+
   if (assign.isOptional) {
-    if (goType === "interface{}") {
-      // *interface{} optional
-      lines.push(`\tif obj.${fieldName} != nil {`);
-      lines.push(`\t\tresult["${assign.targetName}"] = *obj.${fieldName}`);
-      lines.push("\t}");
-    } else {
-      lines.push(`\tif obj.${fieldName} != nil {`);
-      lines.push(`\t\tresult["${assign.targetName}"] = *obj.${fieldName}`);
-      lines.push("\t}");
-    }
+    lines.push(`\tif obj.${fieldName} != nil {`);
+    lines.push(`\t\tresult["${assign.targetName}"] = ${saveExprDeref}`);
+    lines.push("\t}");
   } else {
-    lines.push(`\tresult["${assign.targetName}"] = obj.${fieldName}`);
+    lines.push(`\tresult["${assign.targetName}"] = ${saveExpr}`);
   }
 }
 

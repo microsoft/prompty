@@ -68,7 +68,7 @@ func LoadMcpApprovalMode(data interface{}, ctx *LoadContext) (McpApprovalMode, e
 // Save serializes McpApprovalMode to map[string]interface{}
 func (obj *McpApprovalMode) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
-	result["kind"] = obj.Kind
+	result["kind"] = string(obj.Kind)
 	result["alwaysRequireApprovalTools"] = obj.AlwaysRequireApprovalTools
 	result["neverRequireApprovalTools"] = obj.NeverRequireApprovalTools
 

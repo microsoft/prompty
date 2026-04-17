@@ -74,7 +74,7 @@ func (obj *Connection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	if obj.AuthenticationMode != nil {
-		result["authenticationMode"] = *obj.AuthenticationMode
+		result["authenticationMode"] = string(*obj.AuthenticationMode)
 	}
 	if obj.UsageDescription != nil {
 		result["usageDescription"] = *obj.UsageDescription

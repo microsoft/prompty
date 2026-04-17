@@ -81,7 +81,7 @@ func (obj *Model) Save(ctx *SaveContext) map[string]interface{} {
 		result["provider"] = *obj.Provider
 	}
 	if obj.ApiType != nil {
-		result["apiType"] = *obj.ApiType
+		result["apiType"] = string(*obj.ApiType)
 	}
 	if obj.Connection != nil {
 		// Handle polymorphic type (stored as interface{} without pointer)

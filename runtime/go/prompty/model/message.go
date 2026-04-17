@@ -63,7 +63,7 @@ func LoadMessage(data interface{}, ctx *LoadContext) (Message, error) {
 // Save serializes Message to map[string]interface{}
 func (obj *Message) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
-	result["role"] = obj.Role
+	result["role"] = string(obj.Role)
 	if obj.Parts != nil {
 		arr := make([]interface{}, len(obj.Parts))
 		for i, item := range obj.Parts {

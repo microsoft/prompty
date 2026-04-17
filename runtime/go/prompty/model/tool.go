@@ -592,7 +592,7 @@ func (obj *PromptyTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["path"] = obj.Path
-	result["mode"] = obj.Mode
+	result["mode"] = string(obj.Mode)
 
 	return result
 }
