@@ -118,6 +118,6 @@ export class ToolResult {
  */
 export interface ToolResultHelpers {
   /** Concatenate all TextPart values joined by newline */
-  text(): string;
+  readonly text: string;
 }
 

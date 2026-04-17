@@ -271,9 +271,44 @@ function emitMethodHelpersInterface(type: TypeDecl, lines: string[]): void {
       .map(([pName, pType]) => `${pName}: ${returnType(pType)}`)
       .join(", ");
     const ret = returnType(m.returns);
-    lines.push(`  ${m.name}(${params}): ${ret};`);
+    // Zero-param non-verb methods are emitted as getter-style readonly
+    // properties (matches C#/Python emitters). Callers access them without
+    // parens, e.g. ``msg.text``.
+    const isGetter = Object.keys(m.params).length === 0 && !isMethodStyle(m.name);
+    if (isGetter) {
+      lines.push(`  readonly ${m.name}: ${ret};`);
+    } else {
+      lines.push(`  ${m.name}(${params}): ${ret};`);
+    }
   }
   lines.push("}");
+}
+
+/**
+ * Verbs that indicate an action — zero-param @methods whose name starts with
+ * one of these are emitted as regular TypeScript methods. Everything else
+ * becomes a ``readonly`` getter-style property. Mirrors the C#/Python emitter
+ * heuristic so that ``message.text`` stays a property and
+ * ``message.toTextContent()`` stays a method in every runtime.
+ */
+const TS_METHOD_VERB_PREFIXES = [
+  "to", "get", "set", "fetch", "compute", "make", "build", "create",
+  "load", "save", "convert", "parse", "format", "render", "serialize",
+  "deserialize", "find", "calculate", "invoke", "execute", "run",
+];
+
+function isMethodStyle(name: string): boolean {
+  const lower = name.toLowerCase();
+  for (const prefix of TS_METHOD_VERB_PREFIXES) {
+    if (lower === prefix) return true;
+    if (lower.startsWith(prefix) && name.length > prefix.length) {
+      const next = name[prefix.length];
+      if (next === next.toUpperCase() && next !== next.toLowerCase()) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 // ============================================================================

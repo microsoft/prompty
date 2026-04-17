@@ -144,6 +144,6 @@ export interface MessageHelpers {
   /** Return plain string if all parts are text, else a list of content part dicts for wire serialization */
   toTextContent(): unknown;
   /** Concatenate all TextPart values joined by newline */
-  text(): string;
+  readonly text: string;
 }
 
