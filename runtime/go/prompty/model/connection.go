@@ -35,10 +35,10 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 				return LoadApiKeyConnection(data, ctx)
 			case "anonymous":
 				return LoadAnonymousConnection(data, ctx)
-			case "foundry":
-				return LoadFoundryConnection(data, ctx)
 			case "oauth":
 				return LoadOAuthConnection(data, ctx)
+			case "foundry":
+				return LoadFoundryConnection(data, ctx)
 			}
 		}
 	}
@@ -435,99 +435,6 @@ func AnonymousConnectionFromYAML(yamlStr string) (AnonymousConnection, error) {
 	return LoadAnonymousConnection(data, ctx)
 }
 
-// FoundryConnection represents Connection configuration for Microsoft Foundry projects.
-// Provides project-scoped access to models, tools, and services
-// via Entra ID (DefaultAzureCredential) authentication.
-
-type FoundryConnection struct {
-	Kind           string  `json:"kind" yaml:"kind"`
-	Endpoint       string  `json:"endpoint" yaml:"endpoint"`
-	Name           *string `json:"name,omitempty" yaml:"name,omitempty"`
-	ConnectionType *string `json:"connectionType,omitempty" yaml:"connectionType,omitempty"`
-}
-
-// LoadFoundryConnection creates a FoundryConnection from a map[string]interface{}
-func LoadFoundryConnection(data interface{}, ctx *LoadContext) (FoundryConnection, error) {
-	result := FoundryConnection{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = val.(string)
-		}
-		if val, ok := m["endpoint"]; ok && val != nil {
-			result.Endpoint = val.(string)
-		}
-		if val, ok := m["name"]; ok && val != nil {
-			v := val.(string)
-			result.Name = &v
-		}
-		if val, ok := m["connectionType"]; ok && val != nil {
-			v := val.(string)
-			result.ConnectionType = &v
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes FoundryConnection to map[string]interface{}
-func (obj *FoundryConnection) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["kind"] = obj.Kind
-	result["endpoint"] = obj.Endpoint
-	if obj.Name != nil {
-		result["name"] = *obj.Name
-	}
-	if obj.ConnectionType != nil {
-		result["connectionType"] = *obj.ConnectionType
-	}
-
-	return result
-}
-
-// ToJSON serializes FoundryConnection to JSON string
-func (obj *FoundryConnection) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes FoundryConnection to YAML string
-func (obj *FoundryConnection) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// FromJSON creates FoundryConnection from JSON string
-func FoundryConnectionFromJSON(jsonStr string) (FoundryConnection, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return FoundryConnection{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadFoundryConnection(data, ctx)
-}
-
-// FromYAML creates FoundryConnection from YAML string
-func FoundryConnectionFromYAML(yamlStr string) (FoundryConnection, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return FoundryConnection{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadFoundryConnection(data, ctx)
-}
-
 // OAuthConnection represents Connection configuration using OAuth 2.0 client credentials.
 // Useful for tools and services that require OAuth authentication,
 // such as MCP servers, OpenAPI endpoints, or other REST APIs.
@@ -628,4 +535,97 @@ func OAuthConnectionFromYAML(yamlStr string) (OAuthConnection, error) {
 	}
 	ctx := NewLoadContext()
 	return LoadOAuthConnection(data, ctx)
+}
+
+// FoundryConnection represents Connection configuration for Microsoft Foundry projects.
+// Provides project-scoped access to models, tools, and services
+// via Entra ID (DefaultAzureCredential) authentication.
+
+type FoundryConnection struct {
+	Kind           string  `json:"kind" yaml:"kind"`
+	Endpoint       string  `json:"endpoint" yaml:"endpoint"`
+	Name           *string `json:"name,omitempty" yaml:"name,omitempty"`
+	ConnectionType *string `json:"connectionType,omitempty" yaml:"connectionType,omitempty"`
+}
+
+// LoadFoundryConnection creates a FoundryConnection from a map[string]interface{}
+func LoadFoundryConnection(data interface{}, ctx *LoadContext) (FoundryConnection, error) {
+	result := FoundryConnection{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = val.(string)
+		}
+		if val, ok := m["endpoint"]; ok && val != nil {
+			result.Endpoint = val.(string)
+		}
+		if val, ok := m["name"]; ok && val != nil {
+			v := val.(string)
+			result.Name = &v
+		}
+		if val, ok := m["connectionType"]; ok && val != nil {
+			v := val.(string)
+			result.ConnectionType = &v
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes FoundryConnection to map[string]interface{}
+func (obj *FoundryConnection) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+	result["endpoint"] = obj.Endpoint
+	if obj.Name != nil {
+		result["name"] = *obj.Name
+	}
+	if obj.ConnectionType != nil {
+		result["connectionType"] = *obj.ConnectionType
+	}
+
+	return result
+}
+
+// ToJSON serializes FoundryConnection to JSON string
+func (obj *FoundryConnection) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes FoundryConnection to YAML string
+func (obj *FoundryConnection) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := yaml.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// FromJSON creates FoundryConnection from JSON string
+func FoundryConnectionFromJSON(jsonStr string) (FoundryConnection, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return FoundryConnection{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadFoundryConnection(data, ctx)
+}
+
+// FromYAML creates FoundryConnection from YAML string
+func FoundryConnectionFromYAML(yamlStr string) (FoundryConnection, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return FoundryConnection{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadFoundryConnection(data, ctx)
 }

@@ -59,10 +59,10 @@ export abstract class Connection {
           return ApiKeyConnection.load(data, context);
         case "anonymous":
           return AnonymousConnection.load(data, context);
-        case "foundry":
-          return FoundryConnection.load(data, context);
         case "oauth":
           return OAuthConnection.load(data, context);
+        case "foundry":
+          return FoundryConnection.load(data, context);
         default:
           throw new Error(`Unknown Connection discriminator value: ${discriminator}`);
       }
@@ -468,106 +468,6 @@ export class AnonymousConnection extends Connection {
   //#endregion
 }
 
-export class FoundryConnection extends Connection {
-  static readonly shorthandProperty: string | undefined = undefined;
-
-  kind: string = "foundry";
-  endpoint: string = "";
-  name?: string | undefined;
-  connectionType?: string | undefined;
-
-  constructor(init?: Partial<FoundryConnection>) {
-    super(init);
-    this.kind = init?.kind ?? "foundry";
-    this.endpoint = init?.endpoint ?? "";
-    if (init?.name !== undefined) {
-      this.name = init.name;
-    }
-    if (init?.connectionType !== undefined) {
-      this.connectionType = init.connectionType;
-    }
-  }
-
-  //#region Load Methods
-
-  static load(data: Record<string, unknown>, context?: LoadContext): FoundryConnection {
-    if (context) {
-      data = context.processInput(data) as Record<string, unknown>;
-    }
-
-    const instance = new FoundryConnection();
-
-    if (data["kind"] !== undefined && data["kind"] !== null) {
-      instance.kind = String(data["kind"]);
-    }
-    if (data["endpoint"] !== undefined && data["endpoint"] !== null) {
-      instance.endpoint = String(data["endpoint"]);
-    }
-    if (data["name"] !== undefined && data["name"] !== null) {
-      instance.name = String(data["name"]);
-    }
-    if (data["connectionType"] !== undefined && data["connectionType"] !== null) {
-      instance.connectionType = String(data["connectionType"]);
-    }
-
-    if (context) {
-      return context.processOutput(instance) as FoundryConnection;
-    }
-    return instance;
-  }
-
-  //#endregion
-
-  //#region Save Methods
-
-  save(context?: SaveContext): Record<string, unknown> {
-    let obj: this = this;
-    if (context) {
-      obj = context.processObject(obj) as this;
-    }
-
-    // Start with parent class properties
-    const result = super.save(context);
-
-    if (obj.kind !== undefined && obj.kind !== null) {
-      result["kind"] = obj.kind;
-    }
-    if (obj.endpoint !== undefined && obj.endpoint !== null) {
-      result["endpoint"] = obj.endpoint;
-    }
-    if (obj.name !== undefined && obj.name !== null) {
-      result["name"] = obj.name;
-    }
-    if (obj.connectionType !== undefined && obj.connectionType !== null) {
-      result["connectionType"] = obj.connectionType;
-    }
-    return result;
-  }
-
-  toYaml(context?: SaveContext): string {
-    context = context ?? new SaveContext();
-    return context.toYaml(this.save(context));
-  }
-
-  toJson(context?: SaveContext, indent: number = 2): string {
-    context = context ?? new SaveContext();
-    return context.toJson(this.save(context), indent);
-  }
-
-  static fromJson(json: string, context?: LoadContext): FoundryConnection {
-    const data = JSON.parse(json);
-    return FoundryConnection.load(data as Record<string, unknown>, context);
-  }
-
-  static fromYaml(yaml: string, context?: LoadContext): FoundryConnection {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
-    return FoundryConnection.load(data as Record<string, unknown>, context);
-  }
-
-  //#endregion
-}
-
 export class OAuthConnection extends Connection {
   static readonly shorthandProperty: string | undefined = undefined;
 
@@ -677,6 +577,106 @@ export class OAuthConnection extends Connection {
     const { parse } = require("yaml");
     const data = parse(yaml);
     return OAuthConnection.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class FoundryConnection extends Connection {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  kind: string = "foundry";
+  endpoint: string = "";
+  name?: string | undefined;
+  connectionType?: string | undefined;
+
+  constructor(init?: Partial<FoundryConnection>) {
+    super(init);
+    this.kind = init?.kind ?? "foundry";
+    this.endpoint = init?.endpoint ?? "";
+    if (init?.name !== undefined) {
+      this.name = init.name;
+    }
+    if (init?.connectionType !== undefined) {
+      this.connectionType = init.connectionType;
+    }
+  }
+
+  //#region Load Methods
+
+  static load(data: Record<string, unknown>, context?: LoadContext): FoundryConnection {
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new FoundryConnection();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+    if (data["endpoint"] !== undefined && data["endpoint"] !== null) {
+      instance.endpoint = String(data["endpoint"]);
+    }
+    if (data["name"] !== undefined && data["name"] !== null) {
+      instance.name = String(data["name"]);
+    }
+    if (data["connectionType"] !== undefined && data["connectionType"] !== null) {
+      instance.connectionType = String(data["connectionType"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as FoundryConnection;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+    if (obj.endpoint !== undefined && obj.endpoint !== null) {
+      result["endpoint"] = obj.endpoint;
+    }
+    if (obj.name !== undefined && obj.name !== null) {
+      result["name"] = obj.name;
+    }
+    if (obj.connectionType !== undefined && obj.connectionType !== null) {
+      result["connectionType"] = obj.connectionType;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): FoundryConnection {
+    const data = JSON.parse(json);
+    return FoundryConnection.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): FoundryConnection {
+    const { parse } = require("yaml");
+    const data = parse(yaml);
+    return FoundryConnection.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

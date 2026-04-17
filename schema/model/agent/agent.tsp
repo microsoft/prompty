@@ -3,7 +3,11 @@ import "@typespec/json-schema";
 import "../core/core.tsp";
 import "../model/model.tsp";
 import "../core/properties.tsp";
-import "../tools/base.tsp";
+import "../tools/tool.tsp";
+import "../tools/mcp.tsp";
+import "../tools/openapi.tsp";
+import "../tools/prompty.tsp";
+import "../tools/dispatch.tsp";
 import "../template/template.tsp";
 
 using TypeSpec.JsonSchema;

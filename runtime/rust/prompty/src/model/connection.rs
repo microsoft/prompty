@@ -36,15 +36,6 @@ pub enum ConnectionKind {
         /// The endpoint for authenticating with the AI service
         endpoint: String,
     },
-    /// `kind` = `"foundry"`
-    Foundry {
-        /// The Foundry project endpoint URL
-        endpoint: String,
-        /// The named connection within the Foundry project
-        name: Option<String>,
-        /// The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
-        connection_type: Option<String>,
-    },
     /// `kind` = `"oauth"`
     OAuth {
         /// The endpoint URL for the service
@@ -57,6 +48,15 @@ pub enum ConnectionKind {
         token_url: String,
         /// OAuth scopes to request
         scopes: Option<Vec<String>>,
+    },
+    /// `kind` = `"foundry"`
+    Foundry {
+        /// The Foundry project endpoint URL
+        endpoint: String,
+        /// The named connection within the Foundry project
+        name: Option<String>,
+        /// The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
+        connection_type: Option<String>,
     },
 }
 
@@ -119,17 +119,17 @@ impl Connection {
             "anonymous" => ConnectionKind::Anonymous {
                 endpoint: value.get("endpoint").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             },
-            "foundry" => ConnectionKind::Foundry {
-                endpoint: value.get("endpoint").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-                name: value.get("name").and_then(|v| v.as_str()).map(|s| s.to_string()),
-                connection_type: value.get("connectionType").and_then(|v| v.as_str()).map(|s| s.to_string()),
-            },
             "oauth" => ConnectionKind::OAuth {
                 endpoint: value.get("endpoint").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
                 client_id: value.get("clientId").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
                 client_secret: value.get("clientSecret").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
                 token_url: value.get("tokenUrl").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
                 scopes: value.get("scopes").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect()),
+            },
+            "foundry" => ConnectionKind::Foundry {
+                endpoint: value.get("endpoint").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+                name: value.get("name").and_then(|v| v.as_str()).map(|s| s.to_string()),
+                connection_type: value.get("connectionType").and_then(|v| v.as_str()).map(|s| s.to_string()),
             },
             _ => ConnectionKind::default(),
         };
@@ -147,8 +147,8 @@ impl Connection {
             ConnectionKind::Remote { .. } => "remote",
             ConnectionKind::ApiKey { .. } => "key",
             ConnectionKind::Anonymous { .. } => "anonymous",
-            ConnectionKind::Foundry { .. } => "foundry",
             ConnectionKind::OAuth { .. } => "oauth",
+            ConnectionKind::Foundry { .. } => "foundry",
         }
     }
 
@@ -197,17 +197,6 @@ impl Connection {
                     result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
                 }
             }
-            ConnectionKind::Foundry { endpoint, name, connection_type,  .. } => {
-                if !endpoint.is_empty() {
-                    result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
-                }
-                if let Some(val) = name {
-                    result.insert("name".to_string(), serde_json::Value::String(val.clone()));
-                }
-                if let Some(val) = connection_type {
-                    result.insert("connectionType".to_string(), serde_json::Value::String(val.clone()));
-                }
-            }
             ConnectionKind::OAuth { endpoint, client_id, client_secret, token_url, scopes,  .. } => {
                 if !endpoint.is_empty() {
                     result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
@@ -223,6 +212,17 @@ impl Connection {
                 }
                 if let Some(items) = scopes {
                     result.insert("scopes".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));
+                }
+            }
+            ConnectionKind::Foundry { endpoint, name, connection_type,  .. } => {
+                if !endpoint.is_empty() {
+                    result.insert("endpoint".to_string(), serde_json::Value::String(endpoint.clone()));
+                }
+                if let Some(val) = name {
+                    result.insert("name".to_string(), serde_json::Value::String(val.clone()));
+                }
+                if let Some(val) = connection_type {
+                    result.insert("connectionType".to_string(), serde_json::Value::String(val.clone()));
                 }
             }
         }

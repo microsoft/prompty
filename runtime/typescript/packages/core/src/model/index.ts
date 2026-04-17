@@ -15,8 +15,8 @@ export {
   RemoteConnection,
   ApiKeyConnection,
   AnonymousConnection,
-  FoundryConnection,
   OAuthConnection,
+  FoundryConnection,
 } from "./connection";
 export { ModelOptions } from "./model-options";
 export { Model } from "./model";
@@ -47,9 +47,17 @@ export { Message } from "./message";
 export { ToolContext } from "./tool-context";
 export { ToolResult } from "./tool-result";
 export { ToolDispatchResult } from "./tool-dispatch-result";
-export { GuardrailResult } from "./guardrail-result";
 export { ToolCall } from "./tool-call";
+export { GuardrailResult } from "./guardrail-result";
 export { ThreadMarker } from "./thread-marker";
+export { TokenUsage } from "./token-usage";
+export { ModelInfo } from "./model-info";
+export { CompactionConfig } from "./compaction-config";
+export { TurnOptions } from "./turn-options";
+export type { Renderer } from "./renderer";
+export type { Parser } from "./parser";
+export type { Executor } from "./executor";
+export type { Processor } from "./processor";
 export { TokenEventPayload } from "./token-event-payload";
 export { ThinkingEventPayload } from "./thinking-event-payload";
 export { ToolCallStartPayload } from "./tool-call-start-payload";
@@ -68,11 +76,3 @@ export {
   ToolChunk,
   ErrorChunk,
 } from "./stream-chunk";
-export { ModelInfo } from "./model-info";
-export { CompactionConfig } from "./compaction-config";
-export { TurnOptions } from "./turn-options";
-export { TokenUsage } from "./token-usage";
-export type { Renderer } from "./renderer";
-export type { Parser } from "./parser";
-export type { Executor } from "./executor";
-export type { Processor } from "./processor";

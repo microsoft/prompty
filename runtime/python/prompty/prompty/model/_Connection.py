@@ -76,10 +76,10 @@ class Connection(ABC):
                 return ApiKeyConnection.load(data, context)
             elif discriminator_value == "anonymous":
                 return AnonymousConnection.load(data, context)
-            elif discriminator_value == "foundry":
-                return FoundryConnection.load(data, context)
             elif discriminator_value == "oauth":
                 return OAuthConnection.load(data, context)
+            elif discriminator_value == "foundry":
+                return FoundryConnection.load(data, context)
 
             else:
                 raise ValueError(f"Unknown Connection discriminator value: {discriminator_value}")
@@ -527,114 +527,6 @@ class AnonymousConnection(Connection):
 
 
 @dataclass
-class FoundryConnection(Connection):
-    """Connection configuration for Microsoft Foundry projects.
-    Provides project-scoped access to models, tools, and services
-    via Entra ID (DefaultAzureCredential) authentication.
-
-    Attributes
-    ----------
-    kind : str
-        The connection kind for Foundry project access
-    endpoint : str
-        The Foundry project endpoint URL
-    name : Optional[str]
-        The named connection within the Foundry project
-    connection_type : Optional[str]
-        The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
-    """
-
-    _shorthand_property: ClassVar[str | None] = None
-
-    kind: str = field(default="foundry")
-    endpoint: str = field(default="")
-    name: str | None = None
-    connection_type: str | None = None
-
-    @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "FoundryConnection":
-        """Load a FoundryConnection instance.
-        Args:
-            data (Any): The data to load the instance from.
-            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            FoundryConnection: The loaded FoundryConnection instance.
-
-        """
-
-        if context is not None:
-            data = context.process_input(data)
-
-        if not isinstance(data, dict):
-            raise ValueError(f"Invalid data for FoundryConnection: {data}")
-
-        # create new instance
-        instance = FoundryConnection()
-
-        if data is not None and "kind" in data:
-            instance.kind = data["kind"]
-        if data is not None and "endpoint" in data:
-            instance.endpoint = data["endpoint"]
-        if data is not None and "name" in data:
-            instance.name = data["name"]
-        if data is not None and "connectionType" in data:
-            instance.connection_type = data["connectionType"]
-        if context is not None:
-            instance = context.process_output(instance)
-        return instance
-
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
-        """Save the FoundryConnection instance to a dictionary.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            dict[str, Any]: The dictionary representation of this instance.
-
-        """
-        obj = self
-        if context is not None:
-            obj = context.process_object(obj)
-
-        # Start with parent class properties
-        result = super().save(context)
-
-        if obj.kind is not None:
-            result["kind"] = obj.kind
-        if obj.endpoint is not None:
-            result["endpoint"] = obj.endpoint
-        if obj.name is not None:
-            result["name"] = obj.name
-        if obj.connection_type is not None:
-            result["connectionType"] = obj.connection_type
-        return result
-
-    def to_yaml(self, context: SaveContext | None = None) -> str:
-        """Convert the FoundryConnection instance to a YAML string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            str: The YAML string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_yaml(self.save(context))
-
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
-        """Convert the FoundryConnection instance to a JSON string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-            indent (int): Number of spaces for indentation. Defaults to 2.
-        Returns:
-            str: The JSON string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_json(self.save(context), indent)
-
-
-@dataclass
 class OAuthConnection(Connection):
     """Connection configuration using OAuth 2.0 client credentials.
     Useful for tools and services that require OAuth authentication,
@@ -744,6 +636,114 @@ class OAuthConnection(Connection):
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the OAuthConnection instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class FoundryConnection(Connection):
+    """Connection configuration for Microsoft Foundry projects.
+    Provides project-scoped access to models, tools, and services
+    via Entra ID (DefaultAzureCredential) authentication.
+
+    Attributes
+    ----------
+    kind : str
+        The connection kind for Foundry project access
+    endpoint : str
+        The Foundry project endpoint URL
+    name : Optional[str]
+        The named connection within the Foundry project
+    connection_type : Optional[str]
+        The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="foundry")
+    endpoint: str = field(default="")
+    name: str | None = None
+    connection_type: str | None = None
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "FoundryConnection":
+        """Load a FoundryConnection instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            FoundryConnection: The loaded FoundryConnection instance.
+
+        """
+
+        if context is not None:
+            data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for FoundryConnection: {data}")
+
+        # create new instance
+        instance = FoundryConnection()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "endpoint" in data:
+            instance.endpoint = data["endpoint"]
+        if data is not None and "name" in data:
+            instance.name = data["name"]
+        if data is not None and "connectionType" in data:
+            instance.connection_type = data["connectionType"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the FoundryConnection instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        if obj.endpoint is not None:
+            result["endpoint"] = obj.endpoint
+        if obj.name is not None:
+            result["name"] = obj.name
+        if obj.connection_type is not None:
+            result["connectionType"] = obj.connection_type
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the FoundryConnection instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the FoundryConnection instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

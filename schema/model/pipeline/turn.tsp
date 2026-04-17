@@ -56,5 +56,5 @@ model CompactionConfig {
 
   @doc("Additional strategy-specific options")
   @sample(#{ options: #{ preserveSystemMessages: true } })
-  options?: Record<unknown>;
+  options?: Record<unknown> = #{};
 }
