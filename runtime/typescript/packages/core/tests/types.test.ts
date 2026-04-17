@@ -12,37 +12,37 @@ import {
 
 describe("Message", () => {
   it("creates a message with text parts", () => {
-    const msg = new Message("user", [{ kind: "text", value: "Hello" }]);
+    const msg = new Message({ role: "user", parts: [{ kind: "text", value: "Hello" }] });
     expect(msg.role).toBe("user");
     expect(msg.text).toBe("Hello");
     expect(msg.parts).toHaveLength(1);
   });
 
   it("concatenates multiple text parts", () => {
-    const msg = new Message("user", [
+    const msg = new Message({ role: "user", parts: [
       { kind: "text", value: "Hello " },
       { kind: "text", value: "world" },
-    ]);
+    ] });
     expect(msg.text).toBe("Hello world");
   });
 
   it("returns string for single text part in toTextContent", () => {
-    const msg = new Message("user", [{ kind: "text", value: "Hello" }]);
+    const msg = new Message({ role: "user", parts: [{ kind: "text", value: "Hello" }] });
     expect(msg.toTextContent()).toBe("Hello");
   });
 
   it("returns array for multimodal content in toTextContent", () => {
-    const msg = new Message("user", [
+    const msg = new Message({ role: "user", parts: [
       { kind: "text", value: "Look at this" },
       { kind: "image", source: "https://example.com/img.png" },
-    ]);
+    ] });
     const content = msg.toTextContent();
     expect(Array.isArray(content)).toBe(true);
     expect(content).toHaveLength(2);
   });
 
   it("defaults to empty parts and metadata", () => {
-    const msg = new Message("system");
+    const msg = new Message({ role: "system" });
     expect(msg.parts).toEqual([]);
     expect(msg.metadata).toEqual({});
   });

@@ -73,7 +73,7 @@ class MockRenderer implements Renderer {
 
 class MockParser implements Parser {
   async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
-    return [new Message("user", [text(rendered)])];
+    return [new Message({ role: "user", parts: [text(rendered)] })];
   }
 }
 
@@ -227,9 +227,9 @@ describe("turn() with bindings", () => {
         const rawToolCalls = toolCalls.map((tc) => ({
           id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
         }));
-        messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+        messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResults[i] })], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
         }
         return messages;
       }
@@ -297,9 +297,9 @@ describe("turn() with bindings", () => {
         const rawToolCalls = toolCalls.map((tc) => ({
           id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
         }));
-        messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+        messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
         for (let i = 0; i < toolCalls.length; i++) {
-          messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+          messages.push(new Message({ role: "tool", parts: [text(toolResults[i] })], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
         }
         return messages;
       }

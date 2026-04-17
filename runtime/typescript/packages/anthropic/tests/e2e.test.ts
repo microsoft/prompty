@@ -31,7 +31,7 @@ import * as os from "os";
 
 /** Helper: create a Message with a single text part. */
 function textMsg(role: "system" | "user" | "assistant" | "tool", text: string, metadata: Record<string, unknown> = {}): Message {
-  return new Message(role, [{ kind: "text", value: text } as TextPart], metadata);
+  return new Message({ role, parts: [{ kind: "text", value: text } as TextPart], metadata });
 }
 
 // ---------------------------------------------------------------------------
