@@ -15,6 +15,10 @@ export { ToolCall } from "./conversation/tool-call";
 export { ThreadMarker } from "./conversation/thread-marker";
 
 export { Property, ArrayProperty, ObjectProperty } from "./core/property";
+export { FileNotFoundError } from "./core/file-not-found-error";
+export { InvokerError } from "./core/invoker-error";
+export { ValidationError } from "./core/validation-error";
+export { ValidationResult } from "./core/validation-result";
 
 export { TokenEventPayload } from "./events/token-event-payload";
 export { ThinkingEventPayload } from "./events/thinking-event-payload";
@@ -49,3 +53,21 @@ export { Tool, FunctionTool, CustomTool, McpTool, OpenApiTool, PromptyTool } fro
 export { McpApprovalMode } from "./tools/mcp-approval-mode";
 export { ToolContext } from "./tools/tool-context";
 export { ToolDispatchResult } from "./tools/tool-dispatch-result";
+
+export { AnthropicTextBlock } from "./wire/anthropic-text-block";
+export { AnthropicImageSource } from "./wire/anthropic-image-source";
+export { AnthropicImageBlock } from "./wire/anthropic-image-block";
+export { AnthropicToolUseBlock } from "./wire/anthropic-tool-use-block";
+export { AnthropicToolResultBlock } from "./wire/anthropic-tool-result-block";
+export { AnthropicWireMessage } from "./wire/anthropic-wire-message";
+export { AnthropicToolDefinition } from "./wire/anthropic-tool-definition";
+export { AnthropicMessagesRequest } from "./wire/anthropic-messages-request";
+export { AnthropicUsage } from "./wire/anthropic-usage";
+export { AnthropicMessagesResponse } from "./wire/anthropic-messages-response";
+
+export { StreamOptions } from "./streaming/stream-options";
+
+export { TraceTime } from "./tracing/trace-time";
+export { TraceSpan } from "./tracing/trace-span";
+export { TraceFile } from "./tracing/trace-file";
+
