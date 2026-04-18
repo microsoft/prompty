@@ -1,0 +1,44 @@
+---
+title: "InvokerError"
+description: "Documentation for the InvokerError type."
+slug: "reference/invokererror"
+---
+
+Raised when no invoker implementation is registered for a given component
+and key. For example, if no renderer is registered for the key "jinja2",
+an InvokerError is raised.
+
+## Class Diagram
+
+```mermaid
+---
+title: InvokerError
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class InvokerError {
+        +string message
+        +string component
+        +string key
+    }
+```
+
+## Yaml Example
+
+```yaml
+message: "No renderer registered for key: jinja2"
+component: renderer
+key: jinja2
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| message | string | Human-readable error message |
+| component | string | The pipeline component type that was being looked up (e.g., 'renderer', 'parser', 'executor', 'processor') |
+| key | string | The registration key that was not found |

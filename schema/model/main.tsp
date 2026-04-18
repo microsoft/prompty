@@ -10,6 +10,10 @@ import "./conversation/content.tsp";
 import "./conversation/tool-invocation.tsp";
 import "./conversation/thread.tsp";
 
+// Core (properties, errors, validation)
+import "./core/errors.tsp";
+import "./core/validation.tsp";
+
 // Model + usage + discovery
 import "./model/usage.tsp";
 import "./model/discovery.tsp";
@@ -24,6 +28,12 @@ import "./pipeline/processor.tsp";
 // Events
 import "./events/payloads.tsp";
 import "./events/stream-chunks.tsp";
+
+// Streaming
+import "./streaming/stream.tsp";
+
+// Tracing
+import "./tracing/tracer.tsp";
 
 // Tools (declarations + dispatch)
 import "./tools/tool.tsp";
@@ -40,3 +50,4 @@ import "./connection/foundry.tsp";
 // Wire format mappings (augment existing models with provider field names)
 import "./wire/openai.tsp";
 import "./wire/anthropic.tsp";
+import "./wire/anthropic-types.tsp";

@@ -1,0 +1,45 @@
+---
+title: "AnthropicImageBlock"
+description: "Documentation for the AnthropicImageBlock type."
+slug: "reference/anthropicimageblock"
+---
+
+An image content block using base64-encoded data.
+Anthropic requires images as base64 with an explicit media type.
+
+## Class Diagram
+
+```mermaid
+---
+title: AnthropicImageBlock
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class AnthropicImageBlock {
+        +string type
+        +AnthropicImageSource source
+    }
+    class AnthropicImageSource {
+        +string type
+        +string media_type
+        +string data
+    }
+    AnthropicImageBlock *-- AnthropicImageSource
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| type | string | The content block type |
+| source | [AnthropicImageSource](../anthropicimagesource/) | The image source (base64-encoded) |
+
+## Composed Types
+
+The following types are composed within `AnthropicImageBlock`:
+
+- [AnthropicImageSource](../anthropicimagesource/)

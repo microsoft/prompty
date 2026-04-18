@@ -1,0 +1,38 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TraceSpan.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: The name of this span (typically the function signature)
+  __time:
+    $ref: TraceTime.yaml
+    description: Timing information for this span
+  signature:
+    type: string
+    description: Fully-qualified function signature that produced this span
+  inputs:
+    $ref: RecordUnknown.yaml
+    description: Serialized input parameters (redacted per §3.4)
+  output:
+    description: Serialized return value or error information (redacted per §3.4)
+  error:
+    type: string
+    description: Error message if the span ended with an exception
+  __usage:
+    $ref: TokenUsage.yaml
+    description: Aggregated token usage hoisted from child spans (§3.5)
+  attributes:
+    $ref: RecordUnknown.yaml
+    description: Additional span attributes (e.g., OpenTelemetry GenAI attributes)
+  __frames:
+    type: array
+    items: {}
+    description: Nested child spans forming the execution tree (recursive; each element is a TraceSpan)
+required:
+  - name
+  - __time
+description: |-
+  A single trace span capturing one pipeline stage or function invocation.
+  Spans nest via the `__frames` field to form a tree representing the
+  full execution (§3.6.1).

@@ -1,0 +1,41 @@
+---
+title: "AnthropicImageSource"
+description: "Documentation for the AnthropicImageSource type."
+slug: "reference/anthropicimagesource"
+---
+
+Source descriptor for an Anthropic base64 image.
+
+## Class Diagram
+
+```mermaid
+---
+title: AnthropicImageSource
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class AnthropicImageSource {
+        +string type
+        +string media_type
+        +string data
+    }
+```
+
+## Yaml Example
+
+```yaml
+media_type: image/png
+data: iVBORw0KGgo...
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| type | string | The encoding type (always 'base64' for inline images) |
+| media_type | string | The MIME type of the image (e.g., 'image/png', 'image/jpeg') |
+| data | string | The base64-encoded image data |

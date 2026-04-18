@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ValidationResult.yaml
+type: object
+properties:
+  valid:
+    type: boolean
+    description: Whether all inputs passed validation
+  errors:
+    type: array
+    items:
+      $ref: ValidationError.yaml
+    description: List of validation errors (empty when valid is true)
+required:
+  - valid
+  - errors
+description: |-
+  The result of validating inputs against an agent's inputSchema.
+  Returned by `validate_inputs` (§12.2) to indicate whether all
+  required inputs are present and satisfy their constraints.

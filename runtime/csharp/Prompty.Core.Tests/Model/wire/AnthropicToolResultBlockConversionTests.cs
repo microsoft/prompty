@@ -1,0 +1,122 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class AnthropicToolResultBlockConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+tool_use_id: toolu_01A09q90qw90lq917835lq9
+content: 72°F and sunny in Paris
+
+""";
+
+        var instance = AnthropicToolResultBlock.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("toolu_01A09q90qw90lq917835lq9", instance.ToolUseId);
+        Assert.Equal("72°F and sunny in Paris", instance.Content);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "tool_use_id": "toolu_01A09q90qw90lq917835lq9",
+  "content": "72°F and sunny in Paris"
+}
+""";
+
+        var instance = AnthropicToolResultBlock.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("toolu_01A09q90qw90lq917835lq9", instance.ToolUseId);
+        Assert.Equal("72°F and sunny in Paris", instance.Content);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "tool_use_id": "toolu_01A09q90qw90lq917835lq9",
+  "content": "72°F and sunny in Paris"
+}
+""";
+
+        var original = AnthropicToolResultBlock.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = AnthropicToolResultBlock.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("toolu_01A09q90qw90lq917835lq9", reloaded.ToolUseId);
+        Assert.Equal("72°F and sunny in Paris", reloaded.Content);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+tool_use_id: toolu_01A09q90qw90lq917835lq9
+content: 72°F and sunny in Paris
+
+""";
+
+        var original = AnthropicToolResultBlock.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = AnthropicToolResultBlock.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("toolu_01A09q90qw90lq917835lq9", reloaded.ToolUseId);
+        Assert.Equal("72°F and sunny in Paris", reloaded.Content);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "tool_use_id": "toolu_01A09q90qw90lq917835lq9",
+  "content": "72°F and sunny in Paris"
+}
+""";
+
+        var instance = AnthropicToolResultBlock.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+tool_use_id: toolu_01A09q90qw90lq917835lq9
+content: 72°F and sunny in Paris
+
+""";
+
+        var instance = AnthropicToolResultBlock.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

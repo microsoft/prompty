@@ -1,0 +1,122 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class AnthropicImageSourceConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+media_type: image/png
+data: iVBORw0KGgo...
+
+""";
+
+        var instance = AnthropicImageSource.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("image/png", instance.MediaType);
+        Assert.Equal("iVBORw0KGgo...", instance.Data);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "media_type": "image/png",
+  "data": "iVBORw0KGgo..."
+}
+""";
+
+        var instance = AnthropicImageSource.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("image/png", instance.MediaType);
+        Assert.Equal("iVBORw0KGgo...", instance.Data);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "media_type": "image/png",
+  "data": "iVBORw0KGgo..."
+}
+""";
+
+        var original = AnthropicImageSource.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = AnthropicImageSource.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("image/png", reloaded.MediaType);
+        Assert.Equal("iVBORw0KGgo...", reloaded.Data);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+media_type: image/png
+data: iVBORw0KGgo...
+
+""";
+
+        var original = AnthropicImageSource.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = AnthropicImageSource.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("image/png", reloaded.MediaType);
+        Assert.Equal("iVBORw0KGgo...", reloaded.Data);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "media_type": "image/png",
+  "data": "iVBORw0KGgo..."
+}
+""";
+
+        var instance = AnthropicImageSource.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+media_type: image/png
+data: iVBORw0KGgo...
+
+""";
+
+        var instance = AnthropicImageSource.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

@@ -1,0 +1,68 @@
+import json
+import yaml
+
+from prompty.model import AnthropicTextBlock
+
+def test_load_json_anthropictextblock():
+    json_data = r'''
+    {
+      "text": "Hello, how can I help?"
+    }
+    '''
+    data = json.loads(json_data, strict=False)
+    instance = AnthropicTextBlock.load(data)
+    assert instance is not None
+    assert instance.text == "Hello, how can I help?"
+
+def test_load_yaml_anthropictextblock():
+    yaml_data = r'''
+    text: Hello, how can I help?
+    
+    '''
+    data = yaml.load(yaml_data, Loader=yaml.FullLoader)
+    instance = AnthropicTextBlock.load(data)
+    assert instance is not None
+    assert instance.text == "Hello, how can I help?"
+
+def test_roundtrip_json_anthropictextblock():
+    """Test that load -> save -> load produces equivalent data."""
+    json_data = r'''
+    {
+      "text": "Hello, how can I help?"
+    }
+    '''
+    original_data = json.loads(json_data, strict=False)
+    instance = AnthropicTextBlock.load(original_data)
+    saved_data = instance.save()
+    reloaded = AnthropicTextBlock.load(saved_data)
+    assert reloaded is not None
+    assert reloaded.text == "Hello, how can I help?"
+
+def test_to_json_anthropictextblock():
+    """Test that to_json produces valid JSON."""
+    json_data = r'''
+    {
+      "text": "Hello, how can I help?"
+    }
+    '''
+    data = json.loads(json_data, strict=False)
+    instance = AnthropicTextBlock.load(data)
+    json_output = instance.to_json()
+    assert json_output is not None
+    parsed = json.loads(json_output)
+    assert isinstance(parsed, dict)
+
+def test_to_yaml_anthropictextblock():
+    """Test that to_yaml produces valid YAML."""
+    json_data = r'''
+    {
+      "text": "Hello, how can I help?"
+    }
+    '''
+    data = json.loads(json_data, strict=False)
+    instance = AnthropicTextBlock.load(data)
+    yaml_output = instance.to_yaml()
+    assert yaml_output is not None
+    parsed = yaml.safe_load(yaml_output)
+    assert isinstance(parsed, dict)
+

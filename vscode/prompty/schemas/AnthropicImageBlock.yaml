@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicImageBlock.yaml
+type: object
+properties:
+  type:
+    type: string
+    const: image
+    description: The content block type
+  source:
+    $ref: AnthropicImageSource.yaml
+    description: The image source (base64-encoded)
+required:
+  - type
+  - source
+description: |-
+  An image content block using base64-encoded data.
+  Anthropic requires images as base64 with an explicit media type.

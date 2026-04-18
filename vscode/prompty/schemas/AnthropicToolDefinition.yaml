@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicToolDefinition.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: The tool name
+  description:
+    type: string
+    description: A description of what the tool does
+  input_schema:
+    $ref: RecordUnknown.yaml
+    description: JSON Schema describing the tool's input parameters
+required:
+  - name
+  - input_schema
+description: |-
+  A tool definition in Anthropic's format. Unlike OpenAI which wraps
+  tools in `{type: "function", function: {...}}`, Anthropic uses a
+  flat structure with `input_schema` (§7.5).

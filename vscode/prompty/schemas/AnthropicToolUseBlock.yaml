@@ -1,0 +1,25 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicToolUseBlock.yaml
+type: object
+properties:
+  type:
+    type: string
+    const: tool_use
+    description: The content block type
+  id:
+    type: string
+    description: Unique identifier for this tool invocation
+  name:
+    type: string
+    description: The name of the tool to invoke
+  input:
+    $ref: RecordUnknown.yaml
+    description: The JSON arguments for the tool call
+required:
+  - type
+  - id
+  - name
+  - input
+description: |-
+  A tool use content block returned in an assistant message when
+  the model wants to invoke a tool.
