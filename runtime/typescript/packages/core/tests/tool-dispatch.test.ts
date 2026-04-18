@@ -10,7 +10,7 @@ import {
   clearToolHandlers,
   dispatchTool,
 } from "../src/core/tool-dispatch.js";
-import { Prompty } from "../src/model/prompty.js";
+import { Prompty } from "../src/model/index.js";
 
 // ---------------------------------------------------------------------------
 // Helpers

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { tool, bindTools, type ToolFunction } from "../src/core/tool-decorator.js";
 import { getTool, clearTools } from "../src/core/tool-dispatch.js";
-import { FunctionTool } from "../src/model/tool.js";
-import { Prompty } from "../src/model/prompty.js";
+import { FunctionTool } from "../src/model/index.js";
+import { Prompty } from "../src/model/index.js";
 
 // ===========================================================================
 // tool() wrapper
