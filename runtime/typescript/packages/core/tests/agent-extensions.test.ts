@@ -13,7 +13,7 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
-import { Prompty } from "../src/model/prompty.js";
+import { Prompty } from "../src/model/index.js";
 
 // ===========================================================================
 // §13.1 Agent Events
