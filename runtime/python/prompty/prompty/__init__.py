@@ -120,6 +120,8 @@ __all__ = [
     "AzureProcessor",
     "PromptAgent",
     "AgentDefinition",
+    # Model discovery
+    "ModelInfo",
 ]
 
 # Re-export generated model types
@@ -190,6 +192,7 @@ from .model import (
     McpApprovalMode,
     McpTool,
     Model,
+    ModelInfo,
     ModelOptions,
     OAuthConnection,
     ObjectProperty,
