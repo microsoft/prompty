@@ -141,6 +141,7 @@ export {
   Prompty,
   Model,
   ModelOptions,
+  ModelInfo,
   Template,
   FormatConfig,
   ParserConfig,

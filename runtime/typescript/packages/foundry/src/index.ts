@@ -12,6 +12,7 @@ export { FoundryExecutor } from "./executor.js";
 export { FoundryProcessor } from "./processor.js";
 export { AzureExecutor } from "./azure-executor.js";
 export { AzureProcessor } from "./azure-processor.js";
+export { listAzureModels } from "./azure-models.js";
 
 // Auto-register on import
 import { registerExecutor, registerProcessor } from "@prompty/core";

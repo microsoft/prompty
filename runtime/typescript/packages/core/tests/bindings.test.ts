@@ -13,6 +13,7 @@ import { Prompty } from "@prompty/core";
 import { Tool, Binding, Property } from "../src/model/index.js";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 
+
 // ---------------------------------------------------------------------------
 // resolveBindings — exported for direct testing
 // ---------------------------------------------------------------------------
