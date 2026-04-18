@@ -32,8 +32,12 @@ from .conversation import (
 )
 from .core import (
     ArrayProperty,
+    FileNotFoundError,
+    InvokerError,
     ObjectProperty,
     Property,
+    ValidationError,
+    ValidationResult,
 )
 from .events import (
     CompactionCompletePayload,
@@ -90,6 +94,10 @@ __all__ = [
     "Property",
     "ObjectProperty",
     "ArrayProperty",
+    "FileNotFoundError",
+    "InvokerError",
+    "ValidationError",
+    "ValidationResult",
     "Connection",
     "ReferenceConnection",
     "RemoteConnection",
