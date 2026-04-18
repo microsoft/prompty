@@ -317,30 +317,30 @@ fn property_to_json_schema(prop: &Property) -> Value {
     }
 
     match &prop.kind {
-        PropertyKind::Array { items } => {
-            if !items.is_null() {
-                let ctx = prompty::model::context::LoadContext::default();
-                let item_prop = Property::load_from_value(items, &ctx);
-                schema.insert("items".to_string(), property_to_json_schema(&item_prop));
-            }
-            // When items is null/unspecified, emit bare {"type": "array"}
+        PropertyKind::Array { items } if !items.is_null() => {
+            let ctx = prompty::model::context::LoadContext::default();
+            let item_prop = Property::load_from_value(items, &ctx);
+            schema.insert("items".to_string(), property_to_json_schema(&item_prop));
         }
-        PropertyKind::Object { properties } => {
-            if !properties.is_empty() {
-                let mut nested = Map::new();
-                let mut req = Vec::new();
-                for p in properties {
-                    if p.name.is_empty() {
-                        continue;
-                    }
-                    nested.insert(p.name.clone(), property_to_json_schema(p));
-                    req.push(Value::String(p.name.clone()));
+        PropertyKind::Array { .. } => {
+            // bare {"type": "array"} when items is null/unspecified
+        }
+        PropertyKind::Object { properties } if !properties.is_empty() => {
+            let mut nested = Map::new();
+            let mut req = Vec::new();
+            for p in properties {
+                if p.name.is_empty() {
+                    continue;
                 }
-                schema.insert("properties".to_string(), Value::Object(nested));
-                schema.insert("required".to_string(), Value::Array(req));
-                schema.insert("additionalProperties".to_string(), Value::Bool(false));
+                nested.insert(p.name.clone(), property_to_json_schema(p));
+                req.push(Value::String(p.name.clone()));
             }
-            // When properties is empty or absent, emit bare {"type": "object"}
+            schema.insert("properties".to_string(), Value::Object(nested));
+            schema.insert("required".to_string(), Value::Array(req));
+            schema.insert("additionalProperties".to_string(), Value::Bool(false));
+        }
+        PropertyKind::Object { .. } => {
+            // bare {"type": "object"} when properties is empty or absent
         }
         _ => {}
     }
