@@ -83,7 +83,7 @@ function returnType(typeStr: string): string {
 /**
  * Emit a complete Python file from a FileDecl.
  */
-export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor): string {
+export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor, group: string = ""): string {
   const lines: string[] = [];
 
   // 1. Header
@@ -110,16 +110,29 @@ export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor): string {
   }
   const typingImports = ["Any"];
   if (hasNonProtocol) typingImports.push("ClassVar");
+  if (decl.enums.length > 0) typingImports.push("Literal");
   if (hasProtocol || hasMethodHelpers) typingImports.push("Protocol", "runtime_checkable");
   typingImports.sort();
   stdlibImports.push(`from typing import ${typingImports.join(", ")}`);
 
-  // Context import + local type imports — sorted alphabetically
+  // Context import — go up one level when inside a group subfolder
   if (hasNonProtocol) {
-    localImports.push("from ._context import LoadContext, SaveContext");
+    const ctxPrefix = group ? ".." : ".";
+    localImports.push(`from ${ctxPrefix}_context import LoadContext, SaveContext`);
   }
+
+  // Cross-group and same-group type imports
   for (const imp of decl.imports) {
-    localImports.push(`from ._${imp.module} import ${imp.names.join(", ")}`);
+    if (imp.group === group) {
+      // Same group (or both root): relative sibling import
+      localImports.push(`from ._${imp.module} import ${imp.names.join(", ")}`);
+    } else if (imp.group) {
+      // Different non-empty group: go up to model root, then into the group subfolder
+      localImports.push(`from ..${imp.group}._${imp.module} import ${imp.names.join(", ")}`);
+    } else {
+      // Imported module is at model root (no group): go up one level
+      localImports.push(`from .._${imp.module} import ${imp.names.join(", ")}`);
+    }
   }
   localImports.sort();
 
@@ -129,6 +142,20 @@ export function emitPythonFile(decl: FileDecl, visitor: ExprVisitor): string {
   lines.push("");
   for (const line of localImports) {
     lines.push(line);
+  }
+
+  // 2.5. Enum type aliases
+  if (decl.enums.length > 0) {
+    lines.push("");
+    for (const enumDef of decl.enums) {
+      const values = enumDef.values.map(v => `"${v}"`).join(", ");
+      if (enumDef.isOpen) {
+        // Open enum — Literal values or any str
+        lines.push(`${enumDef.name} = Literal[${values}] | str`);
+      } else {
+        lines.push(`${enumDef.name} = Literal[${values}]`);
+      }
+    }
   }
 
   // 3. Emit each type
@@ -423,6 +450,10 @@ function emitDocstring(type: TypeDecl, lines: string[]): void {
 // ============================================================================
 
 function pythonTypeAnnotation(f: FieldDecl): string {
+  // Named enum field — use the enum type alias
+  if (f.enumName && f.allowedValues.length > 0) {
+    return f.isOptional ? `${f.enumName} | None` : f.enumName;
+  }
   const cat = f.category;
   switch (cat.kind) {
     case "dict":
@@ -477,6 +508,14 @@ function pythonDefaultValue(f: FieldDecl): string {
 
   if (f.isOptional) {
     return " = None";
+  }
+
+  // Enum fields — use the field's default value or the first allowed value
+  if (f.enumName && f.allowedValues.length > 0) {
+    const dv = typeof f.defaultValue === "string" && f.allowedValues.includes(f.defaultValue)
+      ? f.defaultValue
+      : f.allowedValues[0];
+    return ` = field(default="${dv}")`;
   }
 
   if (cat.kind === "scalar") {

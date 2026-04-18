@@ -77,7 +77,7 @@ public class SteeringTests
         var messages = steering.Drain();
 
         Assert.Single(messages);
-        Assert.Equal("user", messages[0].Role);
+        Assert.Equal(Role.User, messages[0].Role);
         Assert.IsType<TextPart>(messages[0].Parts[0]);
         Assert.Equal("hello", ((TextPart)messages[0].Parts[0]).Value);
     }
@@ -134,7 +134,7 @@ public class SteeringTests
 public class ContextWindowTests
 {
     private static Message TextMsg(string role, string text) =>
-        new() { Role = role, Parts = [new TextPart { Value = text }] };
+        new() { Role = Enum.Parse<Role>(role, true), Parts = [new TextPart { Value = text }] };
 
     [Fact]
     public void EstimateChars_CountsTextParts()
@@ -152,7 +152,7 @@ public class ContextWindowTests
     {
         var msg = new Message
         {
-            Role = "user",
+            Role = Role.User,
             Parts = [new ImagePart { Source = "data:image/png;base64,abc" }]
         };
         var messages = new List<Message> { msg };
@@ -236,7 +236,7 @@ public class ContextWindowTests
         ContextWindow.TrimToContextWindow(messages, budget);
 
         // System message should always be first
-        Assert.Equal("system", messages[0].Role);
+        Assert.Equal(Role.System, messages[0].Role);
         Assert.Equal("System prompt.", ((TextPart)messages[0].Parts[0]).Value);
     }
 }
@@ -253,7 +253,7 @@ public class GuardrailsTests
         var guard = new Guardrails();
 
         var inputResult = guard.CheckInput(new List<Message>());
-        var outputResult = guard.CheckOutput(new Message { Role = "assistant", Parts = [] });
+        var outputResult = guard.CheckOutput(new Message { Role = Role.Assistant, Parts = [] });
         var toolResult = guard.CheckTool("tool", new Dictionary<string, object?>());
 
         Assert.True(inputResult.Allowed);
@@ -270,7 +270,7 @@ public class GuardrailsTests
 
         var messages = new List<Message>
         {
-            new() { Role = "user", Parts = [new TextPart { Value = "test" }] }
+            new() { Role = Role.User, Parts = [new TextPart { Value = "test" }] }
         };
 
         var result = guard.CheckInput(messages);
@@ -287,7 +287,7 @@ public class GuardrailsTests
         var guard = new Guardrails(
             output: msg => { capturedMessage = msg; return new GuardrailResult(true); });
 
-        var msg = new Message { Role = "assistant", Parts = [new TextPart { Value = "response" }] };
+        var msg = new Message { Role = Role.Assistant, Parts = [new TextPart { Value = "response" }] };
 
         var result = guard.CheckOutput(msg);
 

@@ -71,7 +71,7 @@ options:
 | id | string | The unique identifier of the model - can be used as the single property shorthand |
 | provider | string | The provider of the model (e.g., 'openai', 'foundry', 'anthropic') |
 | apiType | string | The type of API to use for the model (e.g., 'chat', 'response', etc.) |
-| connection | [Connection](../connection/) | The connection configuration for the model(Related Types: [ReferenceConnection](../referenceconnection/), [RemoteConnection](../remoteconnection/), [ApiKeyConnection](../apikeyconnection/), [AnonymousConnection](../anonymousconnection/), [FoundryConnection](../foundryconnection/), [OAuthConnection](../oauthconnection/)) |
+| connection | [Connection](../connection/) | The connection configuration for the model(Related Types: [ReferenceConnection](../referenceconnection/), [RemoteConnection](../remoteconnection/), [ApiKeyConnection](../apikeyconnection/), [AnonymousConnection](../anonymousconnection/), [OAuthConnection](../oauthconnection/), [FoundryConnection](../foundryconnection/)) |
 | options | [ModelOptions](../modeloptions/) | Additional options for the model |
 
 ## Composed Types

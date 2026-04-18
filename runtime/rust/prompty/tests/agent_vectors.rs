@@ -252,7 +252,7 @@ fn build_messages(vector: &Value) -> Vec<Message> {
             let role_str = m["role"].as_str()?;
             let role = Role::from_str_opt(role_str)?;
             let content = m.get("content").and_then(|c| c.as_str()).unwrap_or("");
-            Some(Message::text(role, content))
+            Some(Message::with_text(role, content))
         })
         .collect()
 }

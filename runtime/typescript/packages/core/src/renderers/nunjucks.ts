@@ -9,7 +9,7 @@
  */
 
 import nunjucks from "nunjucks";
-import type { Prompty } from "../model/prompty.js";
+import type { Prompty } from "../model/agent/prompty.js";
 import type { Renderer } from "../core/interfaces.js";
 import { prepareRenderInputs } from "./common.js";
 

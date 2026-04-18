@@ -12,7 +12,7 @@ import { readFileSync } from "node:fs";
 import { resolve, dirname, extname } from "node:path";
 import matter from "gray-matter";
 import { LoadContext, SaveContext } from "../model/context.js";
-import { Prompty } from "../model/prompty.js";
+import { Prompty } from "../model/agent/prompty.js";
 
 // ---------------------------------------------------------------------------
 // Public API

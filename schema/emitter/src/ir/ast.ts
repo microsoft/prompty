@@ -58,6 +58,47 @@ export interface Coercion {
 }
 
 
+/**
+ * Walk up the AST parent chain from `node` to find the enclosing
+ * TypeSpecScriptNode (identified by presence of `file.path`), which
+ * carries the source file path. Returns `""` if not found.
+ *
+ * We use `any` because TypeSpec does not export `Node`, `SyntaxKind`,
+ * or `TypeSpecScriptNode` from its public API surface.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getNodeFilePath(node: any): string {
+  let current = node;
+  while (current) {
+    if (current?.file?.path) {
+      return current.file.path as string;
+    }
+    current = current.parent;
+  }
+  return "";
+}
+
+/**
+ * Extract the semantic group (subfolder) name from a TypeSpec source file path.
+ *
+ * The TSP model files are organised under `schema/model/{group}/{file}.tsp`.
+ * This function finds the first `/model/` segment and returns the folder name
+ * immediately after it (the group), or `""` if the file is at the model root.
+ *
+ * Examples:
+ *   ".../schema/model/connection/connection.tsp"  → "connection"
+ *   ".../schema/model/model/model.tsp"            → "model"
+ *   ".../schema/model/main.tsp"                   → ""
+ */
+function extractGroup(sourcePath: string): string {
+  const normalized = sourcePath.replace(/\\/g, "/");
+  const idx = normalized.indexOf("/model/");
+  if (idx < 0) return "";
+  const afterModel = normalized.slice(idx + "/model/".length);
+  const slash = afterModel.indexOf("/");
+  return slash >= 0 ? afterModel.slice(0, slash) : "";
+}
+
 export class TypeNode {
   public typeName: TypeName = {
     namespace: "",
@@ -73,6 +114,8 @@ export class TypeNode {
   public discriminator: string | undefined = undefined;
   public factories: FactoryEntry[] = [];
   public methods: MethodEntry[] = [];
+  /** Semantic group derived from the TSP source subfolder (e.g. "connection", "tools"). */
+  public group: string = "";
 
   constructor(public model: Model, description: string) {
     this.model = model;
@@ -139,6 +182,10 @@ export class PropertyNode {
 
   public defaultValue: string | number | boolean | null = null;
   public allowedValues: string[] = [];
+  /** Name of the string-literal union alias (e.g., "Role"), null if unnamed or not an enum. */
+  public enumName: string | null = null;
+  /** True when the union includes a bare `string` variant (open enum — accepts any string). */
+  public isOpenEnum: boolean = false;
 
   public property: ModelProperty;
   public type: TypeNode | undefined = undefined;
@@ -166,6 +213,8 @@ export class PropertyNode {
 
       defaultValue: this.defaultValue || "null",
       allowedValues: this.allowedValues,
+      enumName: this.enumName,
+      isOpenEnum: this.isOpenEnum,
       type: this.type ? this.type.getSanitizedObject() : undefined,
     };
   }
@@ -229,6 +278,7 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     // factory and method stubs
     node.factories = getStateValue<FactoryEntry>(program, StateKeys.factories, innerModel);
     node.methods = getStateValue<MethodEntry>(program, StateKeys.methods, innerModel);
+    node.group = extractGroup(getNodeFilePath(innerModel.node));
     visited.add(innerModel.name);
   } else {
     node.typeName = getModelType(model, rootNamespace, rootAlias);
@@ -242,6 +292,7 @@ export const resolveModel = (program: Program, model: Model, visited: Set<string
     // factory and method stubs
     node.factories = getStateValue<FactoryEntry>(program, StateKeys.factories, model);
     node.methods = getStateValue<MethodEntry>(program, StateKeys.methods, model);
+    node.group = extractGroup(getNodeFilePath(model.node));
     visited.add(model.name);
   }
 
@@ -567,8 +618,25 @@ export const resolveUnionProperty = (program: Program, property: ModelProperty, 
       if (property.defaultValue && property.defaultValue.valueKind === "StringValue") {
         prop.defaultValue = property.defaultValue?.value || null;
       }
-      prop.allowedValues = variants.filter(v => v.kind === "String").map(v => v.value)
-      const s = 1;
+      prop.allowedValues = variants.filter(v => v.kind === "String").map(v => v.value);
+      // Resolve enum type name from union.name (named unions) or alias name (alias statements)
+      let enumName: string | undefined = union.name;
+      if (!enumName && union.node) {
+        const node = union.node as any;
+        // For aliases: union.node is a UnionExpression whose parent is the AliasStatement
+        if (node.parent?.id?.sv && typeof node.parent.id.sv === "string") {
+          // Guard against parent.id being a file path (happens for named union declarations)
+          const parentId: string = node.parent.id.sv;
+          if (!parentId.includes("/") && !parentId.includes("\\")) {
+            enumName = parentId;
+          }
+        }
+      }
+      if (enumName) {
+        prop.enumName = enumName;
+      }
+      // Check if the union includes a bare `string` scalar (open enum)
+      prop.isOpenEnum = variants.some(v => v.kind === "Scalar" && v.name === "string");
     } else {
       program.reportDiagnostic({
         code: "prompty-emitter-unsupported-union-types",

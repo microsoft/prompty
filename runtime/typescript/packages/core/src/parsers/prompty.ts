@@ -12,7 +12,7 @@
 
 import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
-import type { Prompty } from "../model/prompty.js";
+import type { Prompty } from "../model/agent/prompty.js";
 import {
   type TextPart,
   Message,
@@ -118,8 +118,13 @@ export class PromptyChatParser implements Parser {
     nonce: string | undefined,
     basePath: string | undefined,
   ): Message {
-    // Strip leading/trailing blank lines from content
-    let content = lines.join("\n").replace(/^\n+|\n+$/g, "");
+    // Strip leading/trailing newlines from content (linear trim, not regex)
+    let content = lines.join("\n");
+    let start = 0;
+    while (start < content.length && content[start] === "\n") start++;
+    let end = content.length;
+    while (end > start && content[end - 1] === "\n") end--;
+    content = content.slice(start, end);
 
     // Validate nonce in strict mode
     if (nonce !== undefined) {
@@ -143,7 +148,7 @@ export class PromptyChatParser implements Parser {
       if (k !== "nonce") metadata[k] = v;
     }
 
-    return new Message(role as Message["role"], parts, metadata);
+    return new Message({ role: role as Message["role"], parts, metadata });
   }
 
   private parseAttrs(raw: string): Record<string, unknown> {

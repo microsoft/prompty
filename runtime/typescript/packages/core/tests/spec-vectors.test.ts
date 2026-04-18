@@ -646,7 +646,7 @@ function manualThreadExpand(
         const after = part.value.slice(match.index + match[0].length).replace(/^\n+|\n+$/g, "");
 
         if (before) {
-          result.push(new Message(msg.role, [{ kind: "text", value: before }]));
+          result.push(new Message({ role: msg.role, parts: [{ kind: "text", value: before }] }));
         }
 
         const threadMessages = threadInputs[inputName];
@@ -657,12 +657,12 @@ function manualThreadExpand(
               .filter((c: any) => c.kind === "text")
               .map((c: any) => c.value)
               .join("");
-            result.push(new Message(role, [{ kind: "text", value: text }]));
+            result.push(new Message({ role, parts: [{ kind: "text", value: text }] }));
           }
         }
 
         if (after) {
-          result.push(new Message(msg.role, [{ kind: "text", value: after }]));
+          result.push(new Message({ role: msg.role, parts: [{ kind: "text", value: after }] }));
         }
 
         expanded = true;
@@ -698,7 +698,7 @@ describe("Spec Vectors: Wire", () => {
           if (c.kind === "audio") return { kind: "audio" as const, source: c.value, mediaType: c.mediaType };
           return { kind: "text" as const, value: JSON.stringify(c) };
         });
-        return new Message(m.role, parts);
+        return new Message({ role: m.role, parts });
       });
 
       // Build a real Prompty agent from vector input data
@@ -917,9 +917,9 @@ describe("Spec Vectors: Agent", () => {
           const rawToolCalls = toolCalls.map((tc) => ({
             id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
           }));
-          messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+          messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
           for (let i = 0; i < toolCalls.length; i++) {
-            messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+            messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
           }
           return messages;
         },
@@ -974,7 +974,7 @@ describe("Spec Vectors: Agent", () => {
 
       // Build input messages to return from prepare()
       const inputMessages = input.messages.map((m: any) =>
-        new Message(m.role, typeof m.content === "string" ? [{ kind: "text" as const, value: m.content }] : []),
+        new Message({ role: m.role, parts: typeof m.content === "string" ? [{ kind: "text" as const, value: m.content }] : [] }),
       );
 
       // Mock prepare() to return our pre-built messages
@@ -1104,9 +1104,9 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
           const rawToolCalls = toolCalls.map((tc) => ({
             id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments },
           }));
-          messages.push(new Message("assistant", textContent ? [text(textContent)] : [], { tool_calls: rawToolCalls }));
+          messages.push(new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { tool_calls: rawToolCalls } }));
           for (let i = 0; i < toolCalls.length; i++) {
-            messages.push(new Message("tool", [text(toolResults[i])], { tool_call_id: toolCalls[i].id, name: toolCalls[i].name }));
+            messages.push(new Message({ role: "tool", parts: [text(toolResults[i])], metadata: { tool_call_id: toolCalls[i].id, name: toolCalls[i].name } }));
           }
           return messages;
         },
@@ -1162,7 +1162,7 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
       registerProcessor("specmock", mockProcessor);
 
       const inputMessages = input.messages.map((m: any) =>
-        new Message(m.role, typeof m.content === "string" ? [{ kind: "text" as const, value: m.content }] : []),
+        new Message({ role: m.role, parts: typeof m.content === "string" ? [{ kind: "text" as const, value: m.content }] : [] }),
       );
 
       const { vi } = await import("vitest");

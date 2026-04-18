@@ -352,7 +352,10 @@ pub async fn dispatch_tool(
         if let Some(handler) = handler {
             // Serialize the typed Tool to JSON for the trait boundary
             let def_value = def.to_value(&crate::model::SaveContext::default());
-            return match handler.execute_tool(&def_value, args, agent, parent_inputs).await {
+            return match handler
+                .execute_tool(&def_value, args, agent, parent_inputs)
+                .await
+            {
                 Ok(r) => r,
                 Err(e) => format!("Error: {e}"),
             };
@@ -653,7 +656,10 @@ mod tests {
         let mut agent = Prompty::default();
         if let Some(arr) = tools.as_array() {
             let ctx = LoadContext::default();
-            agent.tools = arr.iter().map(|v| crate::model::Tool::load_from_value(v, &ctx)).collect();
+            agent.tools = arr
+                .iter()
+                .map(|v| crate::model::Tool::load_from_value(v, &ctx))
+                .collect();
         }
         agent
     }

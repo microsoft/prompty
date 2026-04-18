@@ -341,9 +341,9 @@ public class SpecVectorTests
 
             // Compare role
             var expectedRole = expectedMsg.GetProperty("role").GetString();
-            if (actualMsg.Role != expectedRole)
+            if (actualMsg.Role.ToString().ToLowerInvariant() != expectedRole)
             {
-                errors.Add($"[{i}].role: expected '{expectedRole}', got '{actualMsg.Role}'");
+                errors.Add($"[{i}].role: expected '{expectedRole}', got '{actualMsg.Role.ToString().ToLowerInvariant()}'");
             }
 
             // Compare content (text)

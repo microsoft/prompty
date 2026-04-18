@@ -5,6 +5,9 @@
  *   - `context.py.njk`  → emitPythonContext()
  *   - `init.py.njk`     → emitPythonInit()
  *
+ * Also provides:
+ *   - emitPythonGroupInit()  → per-group __init__.py (re-exports group types)
+ *
  * These emit files whose content depends only on the type graph
  * shape (not on the Declaration IR used for per-type files).
  */
@@ -147,6 +150,9 @@ class SaveContext:
 /**
  * Emit the __init__.py file content.
  * Replaces init.py.njk template.
+ *
+ * When types are organised into group subfolders, the root __init__.py imports
+ * from each group sub-package (e.g. `from .connection import Connection`).
  */
 export function emitPythonInit(baseTypes: TypeNode[], types: TypeNode[]): string {
   const lines: string[] = [];
@@ -158,34 +164,65 @@ export function emitPythonInit(baseTypes: TypeNode[], types: TypeNode[]): string
   lines.push('##########################################');
   lines.push('from ._context import LoadContext, SaveContext');
 
+  // Group root types by their semantic group folder.
+  // Types without a group are emitted directly in the root model folder.
+  const groupMap = new Map<string, TypeNode[]>();
   for (const type of baseTypes) {
-    if (type.childTypes.length > 0) {
-      const names = [type.typeName.name, ...type.childTypes.map(c => c.typeName.name)];
-      // Also import the <Name>Helpers Protocol if this concrete type has @method stubs.
-      if (!type.isProtocol && type.methods.length > 0) {
-        names.push(`${type.typeName.name}Helpers`);
+    const g = type.group || "";
+    if (!groupMap.has(g)) groupMap.set(g, []);
+    groupMap.get(g)!.push(type);
+  }
+
+  // Sort groups for deterministic output
+  const sortedGroups = Array.from(groupMap.keys()).sort();
+
+  for (const group of sortedGroups) {
+    const groupTypes = groupMap.get(group)!;
+    if (!group) {
+      // Root-level types — import directly from the file
+      for (const type of groupTypes) {
+        if (type.childTypes.length > 0) {
+          const names = [type.typeName.name, ...type.childTypes.map(c => c.typeName.name)];
+          if (!type.isProtocol && type.methods.length > 0) {
+            names.push(`${type.typeName.name}Helpers`);
+          }
+          lines.push('');
+          lines.push(`from ._${type.typeName.name} import (`);
+          for (const name of names) {
+            lines.push(`  ${name},`);
+          }
+          lines.push(')');
+        } else {
+          const names = [type.typeName.name];
+          if (!type.isProtocol && type.methods.length > 0) {
+            names.push(`${type.typeName.name}Helpers`);
+          }
+          lines.push('');
+          if (names.length === 1) {
+            lines.push(`from ._${type.typeName.name} import ${type.typeName.name}`);
+          } else {
+            lines.push(`from ._${type.typeName.name} import (`);
+            for (const name of names) {
+              lines.push(`  ${name},`);
+            }
+            lines.push(')');
+          }
+        }
       }
+    } else {
+      // Group subfolder — import from the group's __init__.py (which re-exports all group types)
       lines.push('');
-      lines.push(`from ._${type.typeName.name} import (`);
-      for (const name of names) {
-        lines.push(`  ${name},`);
+      lines.push(`from .${group} import (`);
+      for (const type of groupTypes) {
+        const allNames = [type.typeName.name, ...type.childTypes.map(c => c.typeName.name)];
+        if (!type.isProtocol && type.methods.length > 0) {
+          allNames.push(`${type.typeName.name}Helpers`);
+        }
+        for (const name of allNames) {
+          lines.push(`    ${name},`);
+        }
       }
       lines.push(')');
-    } else {
-      const names = [type.typeName.name];
-      if (!type.isProtocol && type.methods.length > 0) {
-        names.push(`${type.typeName.name}Helpers`);
-      }
-      lines.push('');
-      if (names.length === 1) {
-        lines.push(`from ._${type.typeName.name} import ${type.typeName.name}`);
-      } else {
-        lines.push(`from ._${type.typeName.name} import (`);
-        for (const name of names) {
-          lines.push(`  ${name},`);
-        }
-        lines.push(')');
-      }
     }
   }
 
@@ -197,6 +234,52 @@ export function emitPythonInit(baseTypes: TypeNode[], types: TypeNode[]): string
     lines.push(`    "${type.typeName.name}",`);
     if (!type.isProtocol && type.methods.length > 0) {
       lines.push(`    "${type.typeName.name}Helpers",`);
+    }
+  }
+  lines.push(']');
+
+  return lines.join('\n') + '\n';
+}
+
+/**
+ * Emit a group-level __init__.py that re-exports all types defined in that group.
+ * This file lives at `model/{group}/__init__.py` and lets the root `__init__.py`
+ * import from the group package with `from .{group} import TypeA, TypeB, ...`.
+ */
+export function emitPythonGroupInit(group: string, groupNodes: TypeNode[]): string {
+  const lines: string[] = [];
+
+  lines.push('##########################################');
+  lines.push('# WARNING: This is an auto-generated file.');
+  lines.push('# DO NOT EDIT THIS FILE DIRECTLY');
+  lines.push('# ANY EDITS WILL BE LOST');
+  lines.push('##########################################');
+
+  for (const type of groupNodes) {
+    const names = [type.typeName.name, ...type.childTypes.map(c => c.typeName.name)];
+    if (!type.isProtocol && type.methods.length > 0) {
+      names.push(`${type.typeName.name}Helpers`);
+    }
+    if (names.length === 1) {
+      lines.push(`from ._${type.typeName.name} import ${names[0]}`);
+    } else {
+      lines.push(`from ._${type.typeName.name} import (`);
+      for (const name of names) {
+        lines.push(`    ${name},`);
+      }
+      lines.push(')');
+    }
+  }
+
+  lines.push('');
+  lines.push('__all__ = [');
+  for (const type of groupNodes) {
+    const names = [type.typeName.name, ...type.childTypes.map(c => c.typeName.name)];
+    if (!type.isProtocol && type.methods.length > 0) {
+      names.push(`${type.typeName.name}Helpers`);
+    }
+    for (const name of names) {
+      lines.push(`    "${name}",`);
     }
   }
   lines.push(']');

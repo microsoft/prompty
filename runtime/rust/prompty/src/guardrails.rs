@@ -175,7 +175,7 @@ mod tests {
     #[tokio::test]
     async fn test_no_guardrails_allow() {
         let g = Guardrails::default();
-        let msgs = vec![Message::text(Role::User, "hello")];
+        let msgs = vec![Message::with_text(Role::User, "hello")];
         let result = g.check_input(&msgs, &default_agent()).await;
         assert!(result.allowed);
     }
@@ -188,7 +188,7 @@ mod tests {
             })),
             ..Default::default()
         };
-        let msgs = vec![Message::text(Role::User, "my SSN is 123-45-6789")];
+        let msgs = vec![Message::with_text(Role::User, "my SSN is 123-45-6789")];
         let result = g.check_input(&msgs, &default_agent()).await;
         assert!(!result.allowed);
         assert_eq!(result.reason.unwrap(), "PII detected");
@@ -242,7 +242,7 @@ mod tests {
             ..Default::default()
         };
         let result = g
-            .check_input(&[Message::text(Role::User, "hi")], &default_agent())
+            .check_input(&[Message::with_text(Role::User, "hi")], &default_agent())
             .await;
         assert!(result.allowed);
         assert!(result.rewrite.is_some());

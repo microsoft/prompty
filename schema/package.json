@@ -6,8 +6,9 @@
     "build:emitter": "cd emitter && npm run build",
     "format:tsp": "npx tsp format \"model/**/*.tsp\"",
     "format:tsp:check": "npx tsp format \"model/**/*.tsp\" --check",
+    "format:rust": "cargo fmt --all --manifest-path ../runtime/rust/prompty/Cargo.toml",
     "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml",
-    "build": "npm run build:emitter && npm run format:tsp && npm run generate"
+    "build": "npm run build:emitter && npm run format:tsp && npm run generate && npm run format:rust"
   },
   "dependencies": {
     "prompty-emitter": "file:./emitter",

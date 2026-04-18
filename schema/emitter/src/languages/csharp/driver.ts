@@ -6,17 +6,40 @@ import { getCombinations, scalarValue } from "../../ir/utilities.js";
 import * as YAML from "yaml";
 import { resolve, dirname } from "path";
 import { execFileSync } from "child_process";
-import { existsSync, readdirSync } from "fs";
+import { existsSync, readdirSync, statSync, unlinkSync } from "fs";
 import { TypeRegistry } from "../../ir/expansion.js";
 import { CSharpExprVisitor } from "./visitor.js";
 import { lowerType, collectPolymorphicTypeNames } from "../../ir/lower.js";
-import { emitCSharpClass } from "./emitter.js";
+import { emitCSharpClass, emitCSharpEnum } from "./emitter.js";
 import { emitCSharpContext, emitCSharpUtils } from "./scaffolding.js";
 import { emitCSharpTest } from "./test-emitter.js";
+import { toPascalCase } from "../../ir/visitor.js";
+
+/**
+ * Remove stale flat type files from `relDir` that now live in group subdirectories.
+ */
+function cleanupFlatTypeFiles(relDir: string | undefined, isTypeFile: (name: string) => boolean): void {
+  if (!relDir) return;
+  const absDir = resolve(process.cwd(), relDir);
+  if (!existsSync(absDir)) return;
+  for (const name of readdirSync(absDir)) {
+    const absPath = resolve(absDir, name);
+    if (statSync(absPath).isFile() && isTypeFile(name)) {
+      try { unlinkSync(absPath); } catch { /* ignore — file may be locked */ }
+    }
+  }
+}
 
 export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>, node: TypeNode, emitTarget: EmitTarget, options?: GeneratorOptions) => {
   const allTypes = Array.from(enumerateTypes(node));
   const nodes = filterNodes(allTypes, options);
+
+  // Remove stale flat type files from root output dir (they now live in group subdirs)
+  const isCsTypeFile = (name: string) =>
+    name.endsWith(".cs") && name !== "Context.cs" && name !== "Utils.cs" &&
+    !name.endsWith("Helpers.cs") && !name.endsWith("Extensions.cs");
+  cleanupFlatTypeFiles(emitTarget["output-dir"], isCsTypeFile);
+  cleanupFlatTypeFiles(emitTarget["test-dir"], isCsTypeFile);
 
   // Build the expression IR infrastructure
   const registry = TypeRegistry.fromTypeGraph(allTypes);
@@ -39,12 +62,44 @@ export const generateCsharp = async (context: EmitContext<PromptyEmitterOptions>
   const allTypeDecls = nodes.map(nd => lowerType(nd, registry, polyNames));
   const findTypeDecl = (name: string) => allTypeDecls.find(t => t.typeName.name === name);
 
+  // Collect and emit unique enum types from all fields
+  // Map each enum to the group of the first type that uses it
+  const emittedEnums = new Set<string>();
+  const enumGroup = new Map<string, string>(); // enumName → group
+  for (let i = 0; i < allTypeDecls.length; i++) {
+    const typeDecl = allTypeDecls[i];
+    const nodeGroup = nodes[i]?.group || "";
+    for (const field of typeDecl.fields) {
+      if (field.enumName && !emittedEnums.has(field.enumName)) {
+        enumGroup.set(field.enumName, nodeGroup);
+      }
+    }
+  }
+  for (const typeDecl of allTypeDecls) {
+    for (const field of typeDecl.fields) {
+      if (field.enumName && !field.isOpenEnum && field.allowedValues.length > 0 && !emittedEnums.has(field.enumName)) {
+        emittedEnums.add(field.enumName);
+        const enumCode = emitCSharpEnum(
+          { name: field.enumName, values: field.allowedValues, isOpen: field.isOpenEnum },
+          csharpNamespace,
+        );
+        const csEnumName = field.enumName.charAt(0).toUpperCase() + field.enumName.slice(1);
+        const grp = enumGroup.get(field.enumName) || "";
+        const enumOutDir = grp ? `${emitTarget["output-dir"]}/${grp}` : emitTarget["output-dir"];
+        await emitCsharpFile(context, nodes[0], enumCode, `${csEnumName}.cs`, enumOutDir);
+      }
+    }
+  }
+
   for (const n of nodes) {
     const typeDecl = lowerType(n, registry, polyNames);
     const classCode = emitCSharpClass(typeDecl, csharpNamespace, visitor, allTypeDecls, findTypeDecl);
-    await emitCsharpFile(context, n, classCode, `${n.typeName.name}.cs`, emitTarget["output-dir"]);
+    // Emit into group subfolder (C# uses namespaces, no re-export files needed)
+    const outDir = n.group ? `${emitTarget["output-dir"]}/${n.group}` : emitTarget["output-dir"];
+    await emitCsharpFile(context, n, classCode, `${n.typeName.name}.cs`, outDir);
     if (emitTarget["test-dir"] && !n.isProtocol) {
-      await emitCsharpFile(context, n, renderTests(n, csharpNamespace), `${n.typeName.name}ConversionTests.cs`, emitTarget["test-dir"]);
+      const testDir = n.group ? `${emitTarget["test-dir"]}/${n.group}` : emitTarget["test-dir"];
+      await emitCsharpFile(context, n, renderTests(n, csharpNamespace), `${n.typeName.name}ConversionTests.cs`, testDir);
     }
   }
 
@@ -97,6 +152,20 @@ const renderTests = (node: TypeNode, namespace: string): string => {
       // get all scalars in the sample - using 'validations' (plural) for consistency across languages
       validations: Object.keys(sample).filter(key => typeof sample[key] !== 'object').map(key => {
         const val = sample[key];
+        // Check if this field is a closed enum — if so, use EnumName.MemberName syntax
+        // Skip discriminator fields — their enums are excluded from generation
+        const prop = node.properties.find(p => p.name === key);
+        const isDiscriminator = node.discriminator === key;
+        if (prop && prop.enumName && !prop.isOpenEnum && !isDiscriminator && typeof val === 'string') {
+          const csEnumName = toPascalCase(prop.enumName);
+          const memberName = toPascalCase(val);
+          return {
+            key: renderName(key),
+            value: `${csEnumName}.${memberName}`,
+            startDelim: '',
+            endDelim: '',
+          };
+        }
         const needsVerbatim = typeof val === 'string' && (val.includes('\n') || val.includes('"'));
         return {
           key: renderName(key),
@@ -119,6 +188,20 @@ const renderTests = (node: TypeNode, namespace: string): string => {
       // using 'validations' (plural) for consistency across languages
       validations: Object.keys(alt.expansion).filter(key => typeof alt.expansion[key] !== 'object').map(key => {
         const value = alt.expansion[key] === "{value}" ? example : alt.expansion[key];
+        // Check if this field is a closed enum (skip discriminator fields)
+        const prop = node.properties.find(p => p.name === key);
+        const isDiscriminator = node.discriminator === key;
+        if (prop && prop.enumName && !prop.isOpenEnum && !isDiscriminator) {
+          // Extract the raw string value (strip quotes if present from example substitution)
+          const rawValue = typeof value === 'string' ? value.replace(/^"|"$/g, '') : String(value);
+          const csEnumName = toPascalCase(prop.enumName);
+          const memberName = toPascalCase(rawValue);
+          return {
+            key: renderName(key),
+            value: `${csEnumName}.${memberName}`,
+            delimiter: '',
+          };
+        }
         return {
           key: renderName(key),
           value: value,
@@ -165,6 +248,15 @@ const renderCsharpFactoryParamType = (typeStr: string): string => {
 const renderCsharpFactoryMethodName = (factoryName: string, node: TypeNode): string => {
   const methodName = factoryName.charAt(0).toUpperCase() + factoryName.slice(1);
   const propertyNames = node.properties.map(p => renderName(p.name));
+  // Also consider zero-param non-verb method stubs that C# emits as properties
+  for (const m of node.methods) {
+    if (!m.params?.length) {
+      const mName = renderName(m.name);
+      if (!propertyNames.includes(mName)) {
+        propertyNames.push(mName);
+      }
+    }
+  }
   if (propertyNames.includes(methodName)) {
     return `Create${methodName}`;
   }

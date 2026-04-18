@@ -17,7 +17,7 @@ public class PromptyChatParserTests
     {
         var messages = await _parser.ParseAsync(CreateAgent(), "system:\nYou are helpful.", null);
         Assert.Single(messages);
-        Assert.Equal(Roles.System, messages[0].Role);
+        Assert.Equal(Role.System, messages[0].Role);
         Assert.Equal("You are helpful.", messages[0].Text);
     }
 
@@ -27,9 +27,9 @@ public class PromptyChatParserTests
         var text = "system:\nYou are helpful.\n\nuser:\nHello\n\nassistant:\nHi there!";
         var messages = await _parser.ParseAsync(CreateAgent(), text, null);
         Assert.Equal(3, messages.Count);
-        Assert.Equal(Roles.System, messages[0].Role);
-        Assert.Equal(Roles.User, messages[1].Role);
-        Assert.Equal(Roles.Assistant, messages[2].Role);
+        Assert.Equal(Role.System, messages[0].Role);
+        Assert.Equal(Role.User, messages[1].Role);
+        Assert.Equal(Role.Assistant, messages[2].Role);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class PromptyChatParserTests
     {
         var messages = await _parser.ParseAsync(CreateAgent(), "developer:\nInstructions here.", null);
         Assert.Single(messages);
-        Assert.Equal(Roles.Developer, messages[0].Role);
+        Assert.Equal(Role.Developer, messages[0].Role);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public class PromptyChatParserTests
     {
         var messages = await _parser.ParseAsync(CreateAgent(), "tool:\nTool response", null);
         Assert.Single(messages);
-        Assert.Equal(Roles.Tool, messages[0].Role);
+        Assert.Equal(Role.Tool, messages[0].Role);
     }
 
     // -----------------------------------------------------------------------
@@ -86,7 +86,7 @@ public class PromptyChatParserTests
     {
         var messages = await _parser.ParseAsync(CreateAgent(), "Just some text", null);
         Assert.Single(messages);
-        Assert.Equal(Roles.System, messages[0].Role);
+        Assert.Equal(Role.System, messages[0].Role);
         Assert.Equal("Just some text", messages[0].Text);
     }
 
@@ -114,7 +114,7 @@ public class PromptyChatParserTests
         var text = "tool[tool_call_id=\"call_123\", name=\"get_weather\"]:\nResult here";
         var messages = await _parser.ParseAsync(CreateAgent(), text, null);
         Assert.Single(messages);
-        Assert.Equal(Roles.Tool, messages[0].Role);
+        Assert.Equal(Role.Tool, messages[0].Role);
         Assert.Equal("call_123", messages[0].Metadata["tool_call_id"]);
         Assert.Equal("get_weather", messages[0].Metadata["name"]);
     }

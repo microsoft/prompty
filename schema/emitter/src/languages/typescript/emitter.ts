@@ -112,8 +112,13 @@ function returnType(typeStr: string): string {
 
 /**
  * Emit a complete TypeScript file from a FileDecl.
+ *
+ * @param decl - The file declaration to emit
+ * @param visitor - Expression visitor for rendering expressions
+ * @param namespace - Optional namespace override
+ * @param group - Semantic group folder this file lives in (e.g. "connection"). Empty string = root.
  */
-export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespace?: string): string {
+export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespace?: string, group: string = ""): string {
   const lines: string[] = [];
 
   // 1. Header
@@ -125,14 +130,39 @@ export function emitTypeScriptFile(decl: FileDecl, visitor: ExprVisitor, namespa
   // Protocol-only files don't need LoadContext/SaveContext
   const hasNonProtocol = decl.types.some(t => !t.isProtocol);
   if (hasNonProtocol) {
-    lines.push(`import { LoadContext, SaveContext } from "./context";`);
+    // Context file is always at the model root — go up one level when inside a group subfolder
+    const contextPath = group ? "../context" : "./context";
+    lines.push(`import { LoadContext, SaveContext } from "${contextPath}";`);
   }
 
   for (const imp of decl.imports) {
     const kebab = toKebabCase(imp.module);
-    lines.push(`import { ${imp.names.join(", ")} } from "./${kebab}";`);
+    if (imp.group === group) {
+      // Same group (or both root): relative sibling
+      lines.push(`import { ${imp.names.join(", ")} } from "./${kebab}";`);
+    } else if (imp.group) {
+      // Different non-empty group: go up to model root, then into the group subfolder
+      lines.push(`import { ${imp.names.join(", ")} } from "../${imp.group}/${kebab}";`);
+    } else {
+      // Root-level module: go up one level from group subfolder
+      lines.push(`import { ${imp.names.join(", ")} } from "../${kebab}";`);
+    }
   }
   lines.push("");
+
+  // 2.5. Enum type aliases
+  for (const enumDef of decl.enums) {
+    const values = enumDef.values.map(v => `"${v}"`).join(" | ");
+    if (enumDef.isOpen) {
+      // Open enum — known values + any string
+      lines.push(`export type ${enumDef.name} = ${values} | (string & {});`);
+    } else {
+      lines.push(`export type ${enumDef.name} = ${values};`);
+    }
+  }
+  if (decl.enums.length > 0) {
+    lines.push("");
+  }
 
   // 3. Emit each type
   for (const type of decl.types) {
@@ -348,6 +378,10 @@ function emitProtocolInterface(type: TypeDecl, lines: string[]): void {
 }
 
 function tsTypeAnnotation(f: FieldDecl): string {
+  // Named enum field — use the enum type alias
+  if (f.enumName && f.allowedValues.length > 0) {
+    return f.isOptional ? `${f.enumName} | undefined` : f.enumName;
+  }
   const cat = f.category;
   switch (cat.kind) {
     case "dict":
@@ -378,6 +412,14 @@ function tsDefaultValue(f: FieldDecl): string {
 
   if (f.isOptional) {
     return "";
+  }
+
+  // Enum fields — use the field's default value or the first allowed value
+  if (f.enumName && f.allowedValues.length > 0) {
+    const dv = typeof f.defaultValue === "string" && f.allowedValues.includes(f.defaultValue)
+      ? f.defaultValue
+      : f.allowedValues[0];
+    return ` = "${dv}"`;
   }
 
   if (cat.kind === "dict") {
@@ -442,6 +484,11 @@ function emitConstructor(type: TypeDecl, lines: string[]): void {
       lines.push(`    this.${field.name} = init?.${field.name} ?? [];`);
     } else if (cat.kind === "dict") {
       lines.push(`    this.${field.name} = init?.${field.name} ?? {};`);
+    } else if (field.enumName && field.allowedValues.length > 0 && !field.isOptional) {
+      const dv = typeof field.defaultValue === "string" && field.allowedValues.includes(field.defaultValue)
+        ? field.defaultValue
+        : field.allowedValues[0];
+      lines.push(`    this.${field.name} = init?.${field.name} ?? "${dv}";`);
     } else if (cat.kind === "scalar") {
       const def = tsConstructorDefault(cat.scalarType, field.defaultValue);
       lines.push(`    this.${field.name} = init?.${field.name} ?? ${def};`);
@@ -535,6 +582,10 @@ function emitLoadMethod(type: TypeDecl, lines: string[]): void {
 }
 
 function emitLoadAssignment(a: LoadAssignment): string {
+  // Named enum — cast string to enum type alias
+  if (a.enumName && a.allowedValues.length > 0) {
+    return `instance.${a.fieldName} = String(data["${a.sourceName}"]) as ${a.enumName};`;
+  }
   const cat = a.category;
   switch (cat.kind) {
     case "scalar": {
@@ -668,7 +719,12 @@ function emitCoercionBody(
     lines.push(`${indent}const instance = new ${typeName}();`);
     for (const a of c.assignments) {
       if (a.isInput) {
-        lines.push(`${indent}instance.${a.fieldName} = data as ${TYPE_MAP[c.scalarType] || "unknown"};`);
+        // Check if the target field is an enum — cast to enum type instead of scalar
+        const targetField = type.fields.find(f => f.name === a.fieldName);
+        const castType = targetField?.enumName && targetField.allowedValues.length > 0
+          ? targetField.enumName
+          : (TYPE_MAP[c.scalarType] || "unknown");
+        lines.push(`${indent}instance.${a.fieldName} = data as ${castType};`);
       } else {
         lines.push(`${indent}instance.${a.fieldName} = "${a.literalValue}";`);
       }

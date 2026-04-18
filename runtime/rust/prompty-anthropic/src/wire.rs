@@ -12,7 +12,7 @@
 //! - Options: `top_k`, `stop_sequences` (not `stop`)
 
 use prompty::model::{Prompty, Property, PropertyKind, Tool, ToolKind};
-use prompty::types::{ContentPart, Message, Role, ToolCall};
+use prompty::types::{ContentPart, ContentPartKind, Message, Role, ToolCall};
 use serde_json::{Map, Value, json};
 
 /// Default max_tokens when not specified (Anthropic requires this field).
@@ -77,8 +77,8 @@ fn extract_system(messages: &[Message]) -> String {
         .map(|m| {
             m.parts
                 .iter()
-                .filter_map(|p| match p {
-                    ContentPart::Text(t) => Some(t.value.clone()),
+                .filter_map(|p| match &p.kind {
+                    ContentPartKind::TextPart { value, .. } => Some(value.clone()),
                     _ => None,
                 })
                 .collect::<Vec<_>>()
@@ -118,8 +118,8 @@ pub fn message_to_wire(msg: &Message) -> Value {
         let text = msg
             .parts
             .iter()
-            .filter_map(|p| match p {
-                ContentPart::Text(t) => Some(t.value.as_str()),
+            .filter_map(|p| match &p.kind {
+                ContentPartKind::TextPart { value, .. } => Some(value.as_str()),
                 _ => None,
             })
             .collect::<Vec<_>>()
@@ -152,18 +152,20 @@ pub fn message_to_wire(msg: &Message) -> Value {
 
 /// Convert a ContentPart to an Anthropic content block.
 fn part_to_wire(part: &ContentPart) -> Value {
-    match part {
-        ContentPart::Text(t) => json!({
+    match &part.kind {
+        ContentPartKind::TextPart { value, .. } => json!({
             "type": "text",
-            "text": t.value,
+            "text": value,
         }),
-        ContentPart::Image(img) => {
-            if img.source.starts_with("http://") || img.source.starts_with("https://") {
+        ContentPartKind::ImagePart {
+            source, media_type, ..
+        } => {
+            if source.starts_with("http://") || source.starts_with("https://") {
                 json!({
                     "type": "image",
                     "source": {
                         "type": "url",
-                        "url": img.source,
+                        "url": source,
                     },
                 })
             } else {
@@ -171,18 +173,18 @@ fn part_to_wire(part: &ContentPart) -> Value {
                     "type": "image",
                     "source": {
                         "type": "base64",
-                        "media_type": img.media_type.as_deref().unwrap_or("image/png"),
-                        "data": img.source,
+                        "media_type": media_type.as_deref().unwrap_or("image/png"),
+                        "data": source,
                     },
                 })
             }
         }
         // Audio and File parts degrade to text placeholders (Anthropic doesn't support them)
-        ContentPart::Audio(_) => json!({
+        ContentPartKind::AudioPart { .. } => json!({
             "type": "text",
             "text": "[audio content not supported by Anthropic]",
         }),
-        ContentPart::File(_) => json!({
+        ContentPartKind::FilePart { .. } => json!({
             "type": "text",
             "text": "[file content not supported by Anthropic]",
         }),
@@ -419,9 +421,9 @@ pub fn format_tool_messages(
         .get("content")
         .cloned()
         .unwrap_or_else(|| json!([]));
-    let mut assistant_msg = Message::text(Role::Assistant, "");
+    let mut assistant_msg = Message::with_text(Role::Assistant, "");
     assistant_msg
-        .metadata
+        .metadata_mut()
         .insert("content".into(), content_blocks);
     messages.push(assistant_msg);
 
@@ -438,9 +440,9 @@ pub fn format_tool_messages(
         })
         .collect();
 
-    let mut user_msg = Message::text(Role::User, "");
+    let mut user_msg = Message::with_text(Role::User, "");
     user_msg
-        .metadata
+        .metadata_mut()
         .insert("tool_results".into(), json!(tool_result_blocks));
     messages.push(user_msg);
 
@@ -456,7 +458,6 @@ mod tests {
     use super::*;
     use prompty::model::Prompty;
     use prompty::model::context::LoadContext;
-    use prompty::types::{ImagePart, TextPart};
 
     fn make_agent(model_json: Value) -> Prompty {
         let mut data = json!({
@@ -483,8 +484,8 @@ mod tests {
     fn test_system_extracted() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
         let messages = vec![
-            Message::text(Role::System, "Be helpful"),
-            Message::text(Role::User, "Hello"),
+            Message::with_text(Role::System, "Be helpful"),
+            Message::with_text(Role::User, "Hello"),
         ];
         let args = build_chat_args(&agent, &messages);
         assert_eq!(args["system"], "Be helpful");
@@ -497,7 +498,7 @@ mod tests {
     #[test]
     fn test_max_tokens_default() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
-        let messages = vec![Message::text(Role::User, "Hello")];
+        let messages = vec![Message::with_text(Role::User, "Hello")];
         let args = build_chat_args(&agent, &messages);
         assert_eq!(args["max_tokens"], 4096);
     }
@@ -509,7 +510,7 @@ mod tests {
             "provider": "anthropic",
             "options": {"maxOutputTokens": 2000}
         }));
-        let messages = vec![Message::text(Role::User, "Hello")];
+        let messages = vec![Message::with_text(Role::User, "Hello")];
         let args = build_chat_args(&agent, &messages);
         assert_eq!(args["max_tokens"], 2000);
     }
@@ -517,7 +518,7 @@ mod tests {
     #[test]
     fn test_content_block_format() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
-        let messages = vec![Message::text(Role::User, "Hello")];
+        let messages = vec![Message::with_text(Role::User, "Hello")];
         let args = build_chat_args(&agent, &messages);
         let content = &args["messages"][0]["content"];
         assert!(content.is_array());
@@ -530,16 +531,10 @@ mod tests {
         let msg = Message {
             role: Role::User,
             parts: vec![
-                ContentPart::Text(TextPart {
-                    value: "Describe".to_string(),
-                }),
-                ContentPart::Image(ImagePart {
-                    source: "base64data".to_string(),
-                    detail: None,
-                    media_type: Some("image/png".to_string()),
-                }),
+                ContentPart::text("Describe"),
+                ContentPart::image("base64data", None, Some("image/png".to_string())),
             ],
-            metadata: Map::new(),
+            ..Default::default()
         };
         let wire = message_to_wire(&msg);
         let content = wire["content"].as_array().unwrap();
@@ -553,12 +548,12 @@ mod tests {
     fn test_image_url_format() {
         let msg = Message {
             role: Role::User,
-            parts: vec![ContentPart::Image(ImagePart {
-                source: "https://example.com/image.png".to_string(),
-                detail: None,
-                media_type: None,
-            })],
-            metadata: Map::new(),
+            parts: vec![ContentPart::image(
+                "https://example.com/image.png",
+                None,
+                None,
+            )],
+            ..Default::default()
         };
         let wire = message_to_wire(&msg);
         let content = wire["content"].as_array().unwrap();
@@ -578,7 +573,7 @@ mod tests {
                 ]
             }]),
         );
-        let messages = vec![Message::text(Role::User, "Weather?")];
+        let messages = vec![Message::with_text(Role::User, "Weather?")];
         let args = build_chat_args(&agent, &messages);
         let tools = args["tools"].as_array().unwrap();
         assert_eq!(tools.len(), 1);
@@ -601,7 +596,7 @@ mod tests {
                 "stopSequences": ["END"]
             }
         }));
-        let messages = vec![Message::text(Role::User, "Hi")];
+        let messages = vec![Message::with_text(Role::User, "Hi")];
         let args = build_chat_args(&agent, &messages);
         assert_eq!(args["temperature"], 0.5);
         assert_eq!(args["top_p"], 0.9);
@@ -630,7 +625,7 @@ mod tests {
 
         // Assistant message preserves content blocks
         assert_eq!(msgs[0].role, Role::Assistant);
-        assert!(msgs[0].metadata.contains_key("content"));
+        assert!(msgs[0].metadata.get("content").is_some());
 
         // User message has batched tool results
         assert_eq!(msgs[1].role, Role::User);
@@ -644,7 +639,7 @@ mod tests {
     #[test]
     fn test_no_system_when_none() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
-        let messages = vec![Message::text(Role::User, "Hello")];
+        let messages = vec![Message::with_text(Role::User, "Hello")];
         let args = build_chat_args(&agent, &messages);
         assert!(args.get("system").is_none());
     }
@@ -653,9 +648,9 @@ mod tests {
     fn test_multiple_system_messages_joined() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
         let messages = vec![
-            Message::text(Role::System, "Rule 1"),
-            Message::text(Role::System, "Rule 2"),
-            Message::text(Role::User, "Hello"),
+            Message::with_text(Role::System, "Rule 1"),
+            Message::with_text(Role::System, "Rule 2"),
+            Message::with_text(Role::User, "Hello"),
         ];
         let args = build_chat_args(&agent, &messages);
         assert_eq!(args["system"], "Rule 1\n\nRule 2");
@@ -674,7 +669,7 @@ mod tests {
         });
         data["instructions"] = json!("test");
         let agent = Prompty::load_from_value(&data, &LoadContext::default());
-        let messages = vec![Message::text(Role::User, "Weather?")];
+        let messages = vec![Message::with_text(Role::User, "Weather?")];
         let args = build_chat_args(&agent, &messages);
 
         let oc = &args["output_config"];
@@ -690,7 +685,7 @@ mod tests {
     #[test]
     fn test_no_output_config_without_outputs() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
-        let messages = vec![Message::text(Role::User, "Hello")];
+        let messages = vec![Message::with_text(Role::User, "Hello")];
         let args = build_chat_args(&agent, &messages);
         assert!(args.get("output_config").is_none());
     }

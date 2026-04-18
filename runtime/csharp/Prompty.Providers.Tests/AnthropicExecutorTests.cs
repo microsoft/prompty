@@ -23,7 +23,7 @@ public class AnthropicExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class AnthropicExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class AnthropicExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class AnthropicExecutorTests
         Assert.Equal(2, messages.Count);
 
         // Assistant message preserves text + tool_use content blocks
-        Assert.Equal(Roles.Assistant, messages[0].Role);
+        Assert.Equal(Role.Assistant, messages[0].Role);
         Assert.Equal("Let me check.", messages[0].Text);
         var content = Assert.IsType<List<Dictionary<string, object?>>>(messages[0].Metadata["content"]);
         Assert.Equal(3, content.Count); // 1 text + 2 tool_use
@@ -128,7 +128,7 @@ public class AnthropicExecutorTests
         Assert.Equal("tool_use", content[2]["type"]);
 
         // Single user message with batched tool_result blocks
-        Assert.Equal(Roles.User, messages[1].Role);
+        Assert.Equal(Role.User, messages[1].Role);
         var toolResultBlocks = Assert.IsType<List<Dictionary<string, object?>>>(messages[1].Metadata["tool_results"]);
         Assert.Equal(2, toolResultBlocks.Count);
         Assert.Equal("tool_result", toolResultBlocks[0]["type"]);

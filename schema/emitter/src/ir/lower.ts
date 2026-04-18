@@ -28,6 +28,7 @@ import {
   FileDecl,
   TypeDecl,
   FieldDecl,
+  EnumDef,
   LoadDecl,
   SaveDecl,
   CoercionDecl,
@@ -77,11 +78,16 @@ export function lowerFile(
   // Resolve file-level imports
   const imports = resolveImports(node, types, registry);
 
+  // Collect unique enum definitions from all fields across all types
+  const enums = collectEnums(types);
+
   return {
     typeName: node.typeName,
     types,
     imports,
     containsAbstract: node.isAbstract || node.childTypes.some(c => c.isAbstract),
+    enums,
+    group: node.group,
   };
 }
 
@@ -127,6 +133,16 @@ export function lowerType(
   const polymorphicDispatch = lowerPolymorphicDispatch(node);
   const factories = lowerFactories(node, registry);
   const coercionProperty = findCoercionProperty(node);
+
+  // Clear enum metadata from discriminator fields — they're handled by polymorphic dispatch
+  if (polymorphicDispatch) {
+    for (const field of fields) {
+      if (field.name === polymorphicDispatch.discriminatorField) {
+        field.enumName = null;
+        field.isOpenEnum = false;
+      }
+    }
+  }
 
   // Build load/save method specs
   const load = lowerLoad(node, fields, polymorphicDispatch);
@@ -209,6 +225,8 @@ function lowerField(
     isOptional: prop.isOptional,
     defaultValue: prop.defaultValue,
     allowedValues: prop.allowedValues,
+    enumName: prop.enumName,
+    isOpenEnum: prop.isOpenEnum,
     description: prop.description,
     knownAs,
   };
@@ -264,6 +282,10 @@ function lowerLoad(
     category: f.category,
     isOptional: f.isOptional,
     parentTypeName: node.typeName.name,
+    enumName: f.enumName,
+    allowedValues: f.allowedValues,
+    defaultValue: f.defaultValue,
+    isOpenEnum: f.isOpenEnum,
   }));
 
   return {
@@ -291,6 +313,8 @@ function lowerSave(
     category: f.category,
     isOptional: f.isOptional,
     parentTypeName: node.typeName.name,
+    enumName: f.enumName,
+    isOpenEnum: f.isOpenEnum,
   }));
 
   return {
@@ -455,6 +479,39 @@ function findCoercionProperty(node: TypeNode): string | null {
 }
 
 // ============================================================================
+// Enum collection
+// ============================================================================
+
+/**
+ * Collect unique enum definitions from all fields across all types in a file.
+ * Deduplicates by enum name — same-named enums with the same values share one definition.
+ */
+function collectEnums(types: TypeDecl[]): EnumDef[] {
+  const seen = new Map<string, EnumDef>();
+  // Collect discriminator field names to skip — these are handled by polymorphic dispatch
+  const discriminatorFields = new Set<string>();
+  for (const type of types) {
+    if (type.polymorphicDispatch) {
+      discriminatorFields.add(type.polymorphicDispatch.discriminatorField);
+    }
+  }
+  for (const type of types) {
+    for (const field of type.fields) {
+      // Skip discriminator fields — they use the polymorphic Kind enum instead
+      if (discriminatorFields.has(field.name)) continue;
+      if (field.enumName && field.allowedValues.length > 0 && !seen.has(field.enumName)) {
+        seen.set(field.enumName, {
+          name: field.enumName,
+          values: field.allowedValues,
+          isOpen: field.isOpenEnum,
+        });
+      }
+    }
+  }
+  return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ============================================================================
 // Import resolution
 // ============================================================================
 
@@ -509,7 +566,12 @@ function resolveImports(
   }
 
   return Array.from(importMap.entries())
-    .map(([module, names]) => ({ module, names: Array.from(names).sort() }))
+    .map(([module, names]) => {
+      // Look up the group of the module's root node in the registry
+      const modNode = registry.get(module);
+      const group = modNode?.group ?? "";
+      return { module, names: Array.from(names).sort(), group };
+    })
     .sort((a, b) => a.module.localeCompare(b.module));
 }
 

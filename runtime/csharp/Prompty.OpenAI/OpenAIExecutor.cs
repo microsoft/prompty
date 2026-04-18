@@ -191,7 +191,7 @@ public class OpenAIExecutor : IExecutor
             {
                 messages.Add(new Message
                 {
-                    Role = Roles.Assistant,
+                    Role = Role.Assistant,
                     Parts = [],
                     Metadata = new Dictionary<string, object?> { ["responses_function_call"] = (ResponseItem)fc },
                 });
@@ -202,7 +202,7 @@ public class OpenAIExecutor : IExecutor
             {
                 messages.Add(new Message
                 {
-                    Role = Roles.Tool,
+                    Role = Role.Tool,
                     Parts = [new TextPart { Value = toolResults[i] }],
                     Metadata = new Dictionary<string, object?>
                     {
@@ -222,7 +222,7 @@ public class OpenAIExecutor : IExecutor
 
         messages.Add(new Message
         {
-            Role = Roles.Assistant,
+            Role = Role.Assistant,
             Parts = assistantParts,
             Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls.ToList() },
         });
@@ -232,7 +232,7 @@ public class OpenAIExecutor : IExecutor
         {
             messages.Add(new Message
             {
-                Role = Roles.Tool,
+                Role = Role.Tool,
                 Parts = [new TextPart { Value = toolResults[i] }],
                 Metadata = new Dictionary<string, object?>
                 {

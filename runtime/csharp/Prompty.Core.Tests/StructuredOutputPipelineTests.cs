@@ -86,7 +86,7 @@ public class StructuredOutputPipelineTests : IDisposable
         var agent = CreateAgentWithOutputs();
         var messages = new List<Message>
         {
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "What is the weather?" }] }
+            new() { Role = Role.User, Parts = [new TextPart { Value = "What is the weather?" }] }
         };
 
         var result = await Pipeline.RunAsync(agent, messages);
@@ -105,7 +105,7 @@ public class StructuredOutputPipelineTests : IDisposable
         var agent = CreateAgentWithOutputs();
         var messages = new List<Message>
         {
-            new() { Role = Roles.User, Parts = [new TextPart { Value = "What is the weather?" }] }
+            new() { Role = Role.User, Parts = [new TextPart { Value = "What is the weather?" }] }
         };
 
         var result = await Pipeline.RunAsync(agent, messages, raw: true);
@@ -249,7 +249,7 @@ internal class SingleMessageParser : IParser
 {
     public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult<List<Message>>(
-            [new Message { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }]);
+            [new Message { Role = Role.User, Parts = [new TextPart { Value = rendered }] }]);
 }
 
 /// <summary>

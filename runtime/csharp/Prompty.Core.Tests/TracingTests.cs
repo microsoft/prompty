@@ -572,7 +572,7 @@ public class TracingTests : IDisposable
     private class PassthroughParser : IParser
     {
         public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
-            => Task.FromResult<List<Message>>([new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }]);
+            => Task.FromResult<List<Message>>([new() { Role = Role.User, Parts = [new TextPart { Value = rendered }] }]);
     }
 
     private class MockExecutor(object response) : IExecutor
@@ -582,9 +582,9 @@ public class TracingTests : IDisposable
 
         public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
         {
-            var msgs = new List<Message> { new() { Role = Roles.Assistant, Parts = [] } };
+            var msgs = new List<Message> { new() { Role = Role.Assistant, Parts = [] } };
             for (var i = 0; i < toolCalls.Count; i++)
-                msgs.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }] });
+                msgs.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }] });
             return msgs;
         }
     }

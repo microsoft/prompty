@@ -263,7 +263,7 @@ public class AgentLoopTests : IDisposable
     private class PassthroughParser : IParser
     {
         public Task<List<Message>> ParseAsync(Core.Prompty agent, string rendered, Dictionary<string, object?>? context)
-            => Task.FromResult<List<Message>>([new() { Role = Roles.User, Parts = [new TextPart { Value = rendered }] }]);
+            => Task.FromResult<List<Message>>([new() { Role = Role.User, Parts = [new TextPart { Value = rendered }] }]);
     }
 
     /// <summary>Executor that returns a fixed response.</summary>
@@ -327,10 +327,10 @@ public class AgentLoopTests : IDisposable
     {
         var messages = new List<Message>
         {
-            new() { Role = Roles.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+            new() { Role = Role.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
         return messages;
     }
 }

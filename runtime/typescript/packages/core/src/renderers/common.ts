@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { Prompty } from "../model/prompty.js";
+import type { Prompty } from "../model/agent/prompty.js";
 import { RICH_KINDS } from "../core/types.js";
 
 /** Map of input name → nonce string (set during rendering, read during prepare). */

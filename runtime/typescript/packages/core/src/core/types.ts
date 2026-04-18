@@ -3,18 +3,13 @@
  *
  * The generated model at ``../model/message`` defines the canonical data shape
  * and a {@link MessageHelpers} contract that declares ``text`` (getter) and
- * ``toTextContent()``. This module keeps a positional-constructor convenience
- * class for now, but wires it up to ``implements MessageHelpers`` so the
- * TypeScript compiler enforces the generated contract.
- *
- * TODO (E1/B2 follow-up): migrate call sites from ``new Message(role, parts)``
- * to ``new Message({ role, parts })`` and delete this wrapper class, leaving
- * only the generated class as the canonical type.
+ * ``toTextContent()``. This module provides the same named-argument constructor
+ * as the generated class and adds the ``text`` / ``toTextContent()`` helpers.
  *
  * @module
  */
 
-import type { MessageHelpers } from "../model/message";
+import type { MessageHelpers } from "../model/conversation/message";
 
 // ---------------------------------------------------------------------------
 // Content Parts (discriminated union by `kind`)
@@ -79,14 +74,10 @@ export class Message implements MessageHelpers {
   parts: ContentPart[];
   metadata: Record<string, unknown>;
 
-  constructor(
-    role: Role,
-    parts: ContentPart[] = [],
-    metadata: Record<string, unknown> = {},
-  ) {
-    this.role = role;
-    this.parts = parts;
-    this.metadata = metadata;
+  constructor(init?: { role?: Role; parts?: ContentPart[]; metadata?: Record<string, unknown> }) {
+    this.role = init?.role ?? "user";
+    this.parts = init?.parts ?? [];
+    this.metadata = init?.metadata ?? {};
   }
 
   /** Concatenate all TextPart values into a single string. */
@@ -230,7 +221,7 @@ export function text(value: string): TextPart {
 
 /** Create a Message with a single text part. */
 export function textMessage(role: Role, value: string, metadata: Record<string, unknown> = {}): Message {
-  return new Message(role, [text(value)], metadata);
+  return new Message({ role, parts: [text(value)], metadata });
 }
 
 /** Convert a plain dict `{role, content, ...}` to a Message. */
@@ -259,7 +250,7 @@ export function dictToMessage(d: Record<string, unknown>): Message {
     }
   }
 
-  return new Message(role, parts, metadata);
+  return new Message({ role, parts, metadata });
 }
 
 /** Convert a content dict to a ContentPart. */

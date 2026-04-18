@@ -375,15 +375,14 @@ impl futures::Stream for OpenAIStreamProcessor {
                     std::task::Poll::Pending => std::task::Poll::Pending,
                 }
             }
-            StreamPhase::YieldingTools(tools, idx) => {
-                if *idx < tools.len() {
-                    let tc = tools[*idx].clone();
-                    *idx += 1;
-                    std::task::Poll::Ready(Some(StreamChunk::Tool(tc)))
-                } else {
-                    this.phase = StreamPhase::Done;
-                    std::task::Poll::Ready(None)
-                }
+            StreamPhase::YieldingTools(tools, idx) if *idx < tools.len() => {
+                let tc = tools[*idx].clone();
+                *idx += 1;
+                std::task::Poll::Ready(Some(StreamChunk::Tool(tc)))
+            }
+            StreamPhase::YieldingTools(..) => {
+                this.phase = StreamPhase::Done;
+                std::task::Poll::Ready(None)
             }
             StreamPhase::Done => std::task::Poll::Ready(None),
         }

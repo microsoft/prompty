@@ -92,6 +92,6 @@ pub use tracing::{
 #[cfg(feature = "otel")]
 pub use tracing::{init_otel_stdout, otel_tracer};
 pub use types::{
-    AudioPart, ContentPart, FilePart, ImagePart, Message, PromptyStream, Role, StreamChunk,
-    TextPart, ThreadMarker, ToolCall, consume_stream_chunks,
+    ContentPart, ContentPartKind, Message, PromptyStream, Role, StreamChunk, ThreadMarker,
+    ToolCall, consume_stream_chunks,
 };

@@ -22,7 +22,12 @@ pub struct AnthropicExecutor;
 #[async_trait]
 impl Executor for AnthropicExecutor {
     async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
-        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
+        let api_type = agent
+            .model
+            .api_type
+            .as_ref()
+            .map(|t| t.as_str())
+            .unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
                 format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
@@ -78,7 +83,12 @@ impl Executor for AnthropicExecutor {
         agent: &Prompty,
         messages: &[Message],
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
-        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
+        let api_type = agent
+            .model
+            .api_type
+            .as_ref()
+            .map(|t| t.as_str())
+            .unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
                 format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
@@ -124,7 +134,12 @@ impl Executor for AnthropicExecutor {
 impl AnthropicExecutor {
     /// Build the request args without sending — useful for testing wire format.
     pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
-        let api_type = agent.model.api_type.as_deref().unwrap_or("chat");
+        let api_type = agent
+            .model
+            .api_type
+            .as_ref()
+            .map(|t| t.as_str())
+            .unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
                 format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
@@ -420,7 +435,7 @@ mod tests {
             "provider": "anthropic",
             "apiType": "chat"
         }));
-        let messages = vec![Message::text(prompty::Role::User, "Hello")];
+        let messages = vec![Message::with_text(prompty::Role::User, "Hello")];
         let args = AnthropicExecutor::build_args(&agent, &messages).unwrap();
         assert_eq!(args["model"], "claude-3");
         assert!(args["messages"].is_array());
@@ -435,7 +450,7 @@ mod tests {
             "provider": "anthropic",
             "apiType": "embedding"
         }));
-        let messages = vec![Message::text(prompty::Role::User, "Hello")];
+        let messages = vec![Message::with_text(prompty::Role::User, "Hello")];
         let result = AnthropicExecutor::build_args(&agent, &messages);
         assert!(result.is_err());
     }

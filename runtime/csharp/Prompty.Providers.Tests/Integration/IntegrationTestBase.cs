@@ -226,12 +226,12 @@ public abstract class IntegrationTestBase
     [
         new Message
         {
-            Role = Roles.System,
+            Role = Role.System,
             Parts = [new TextPart { Value = "You are a helpful assistant. Reply in one short sentence." }],
         },
         new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts = [new TextPart { Value = "Say hello." }],
         },
     ];
@@ -240,12 +240,12 @@ public abstract class IntegrationTestBase
     [
         new Message
         {
-            Role = Roles.System,
+            Role = Role.System,
             Parts = [new TextPart { Value = "You are a helpful assistant. Be brief." }],
         },
         new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts = [new TextPart { Value = "Say exactly: hello world" }],
         },
     ];
@@ -253,7 +253,7 @@ public abstract class IntegrationTestBase
     protected static List<Message> EmbeddingMessages(params string[] texts) =>
         texts.Select(t => new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts = [new TextPart { Value = t }],
         }).ToList();
 
@@ -261,12 +261,12 @@ public abstract class IntegrationTestBase
     [
         new Message
         {
-            Role = Roles.System,
+            Role = Role.System,
             Parts = [new TextPart { Value = "You are a data assistant. Always respond with the requested JSON structure." }],
         },
         new Message
         {
-            Role = Roles.User,
+            Role = Role.User,
             Parts = [new TextPart { Value = "Give me information about Tokyo." }],
         },
     ];

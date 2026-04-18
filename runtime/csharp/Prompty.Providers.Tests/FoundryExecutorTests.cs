@@ -23,7 +23,7 @@ public class FoundryExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class FoundryExecutorTests
         };
 
         await Assert.ThrowsAsync<InvalidOperationException>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class FoundryExecutorTests
         // This should get past connection setup and fail at the API call
         // (not at missing endpoint/key validation)
         await Assert.ThrowsAnyAsync<Exception>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class FoundryExecutorTests
 
         // Should get past client creation and fail at the actual API call
         await Assert.ThrowsAnyAsync<Exception>(
-            () => executor.ExecuteAsync(agent, [new Message { Role = Roles.User, Parts = [new TextPart { Value = "hi" }] }]));
+            () => executor.ExecuteAsync(agent, [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }]));
     }
 }
 

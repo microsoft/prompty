@@ -7,12 +7,12 @@ namespace Prompty.Core.Tests;
 public class CompactionTests
 {
     private static Message TextMsg(string role, string text) =>
-        new() { Role = role, Parts = [new TextPart { Value = text }] };
+        new() { Role = Enum.Parse<Role>(role, true), Parts = [new TextPart { Value = text }] };
 
     private static Message ToolCallMsg(string name, string args) =>
         new()
         {
-            Role = "assistant",
+            Role = Role.Assistant,
             Parts = [new TextPart { Value = "" }],
             Metadata = new Dictionary<string, object?>
             {
@@ -238,7 +238,7 @@ public class CompactionTests
         Pipeline.ReplaceSummaryMessage(messages, "Better summary");
 
         Assert.Equal("Better summary", messages[1].Text);
-        Assert.Equal("user", messages[1].Role);
+        Assert.Equal(Role.User, messages[1].Role);
     }
 
     [Fact]

@@ -186,7 +186,7 @@ pub trait Executor: Send + Sync {
         messages.push(Message {
             role: crate::types::Role::Assistant,
             parts: vec![],
-            metadata: assistant_meta,
+            metadata: serde_json::Value::Object(assistant_meta),
         });
 
         // Tool result messages

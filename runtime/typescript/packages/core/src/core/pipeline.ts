@@ -31,7 +31,7 @@
  * @module
  */
 
-import { Prompty } from "../model/prompty.js";
+import { Prompty } from "../model/agent/prompty.js";
 import {
   type ToolCall,
   Message,
@@ -569,7 +569,7 @@ function replaceSummaryMessage(messages: Message[], summary: string): void {
       ),
   );
   if (idx >= 0) {
-    messages[idx] = new Message("user", [text(`[Context summary: ${summary}]`)]);
+    messages[idx] = new Message({ role: "user", parts: [text(`[Context summary: ${summary}]`)] });
   }
 }
 
@@ -718,7 +718,7 @@ export async function turn<T = unknown>(
       // §13.4 — Output guardrail on final response
       if (options?.guardrails) {
         const contentStr = typeof processed === "string" ? processed : JSON.stringify(processed);
-        const assistantMsg = new Message("assistant", [text(contentStr)]);
+        const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
         const gr = options.guardrails.checkOutput(assistantMsg);
         if (!gr.allowed) {
           emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -812,7 +812,7 @@ export async function turn<T = unknown>(
 
         // §13.4 — Output guardrail
         if (guardrails && content) {
-          const assistantMsg = new Message("assistant", [text(content)]);
+          const assistantMsg = new Message({ role: "assistant", parts: [text(content)] });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -856,7 +856,7 @@ export async function turn<T = unknown>(
         const finalResult = options?.raw ? response : await process(agent, response);
         if (guardrails) {
           const contentStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
-          const assistantMsg = new Message("assistant", [text(contentStr)]);
+          const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -879,7 +879,7 @@ export async function turn<T = unknown>(
       if (guardrails) {
         const { textContent } = extractToolInfo(response);
         if (textContent) {
-          const assistantMsg = new Message("assistant", [text(textContent)]);
+          const assistantMsg = new Message({ role: "assistant", parts: [text(textContent)] });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
@@ -1038,7 +1038,7 @@ function expandThreads(
           const after = part.value.slice(part.value.indexOf(nonce) + nonce.length).trim();
 
           if (before) {
-            result.push(new Message(msg.role, [text(before)], { ...msg.metadata }));
+            result.push(new Message({ role: msg.role, parts: [text(before)], metadata: { ...msg.metadata } }));
           }
 
           // Insert thread messages from input
@@ -1054,7 +1054,7 @@ function expandThreads(
           }
 
           if (after) {
-            result.push(new Message(msg.role, [text(after)], { ...msg.metadata }));
+            result.push(new Message({ role: msg.role, parts: [text(after)], metadata: { ...msg.metadata } }));
           }
 
           expanded = true;

@@ -72,12 +72,13 @@ export const generateGo = async (
   const contextContent = emitGoContext({ header: "Prompty Context", packageName });
   await emitGoFile(context, 'context.go', contextContent, emitTarget["output-dir"]);
 
-  // Emit each base type and its children as a single file
+  // Emit each base type and its children as a single file (Go stays flat — no subfolders)
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
     if (!n.base) {
       const fileDecl = lowerFile(n, registry, polymorphicTypeNames);
-      const fileContent = emitGoFileContent(fileDecl.types, packageName, visitor, polymorphicTypeNames);
+      // Go stays flat: pass group as a header comment only, no subfolder emission
+      const fileContent = emitGoFileContent(fileDecl.types, packageName, visitor, polymorphicTypeNames, fileDecl.enums, n.group || "");
       const fileName = toSnakeCase(n.typeName.name) + '.go';
       await emitGoFile(context, fileName, fileContent, emitTarget["output-dir"]);
     }

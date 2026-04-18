@@ -24,7 +24,7 @@ use crate::renderers::prepare_render_inputs;
 use crate::structured::{create_structured_result, to_structured_value, unwrap_structured};
 use crate::tracing::{Tracer, sanitize_value};
 use crate::types::{
-    ContentPart, Message, PromptyStream, Role, StreamChunk, TextPart, ToolCall,
+    ContentPart, ContentPartKind, Message, PromptyStream, Role, StreamChunk, ToolCall,
     consume_stream_chunks,
 };
 
@@ -177,7 +177,7 @@ fn serialize_agent(agent: &Prompty) -> Value {
             "metadata": metadata,
             "model": {
                 "id": agent.model.id,
-                "apiType": agent.model.api_type.as_deref().unwrap_or("chat"),
+                "apiType": agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat"),
                 "provider": agent.model.provider.as_deref().unwrap_or(""),
             },
             "inputs": inputs,
@@ -839,7 +839,7 @@ impl TurnOptionsBuilder {
 fn replace_summary_message(messages: &mut [Message], summary: &str) {
     for msg in messages.iter_mut() {
         if msg.role == Role::User && msg.text_content().starts_with("[Context summary:") {
-            *msg = Message::text(Role::User, format!("[Context summary: {summary}]"));
+            *msg = Message::with_text(Role::User, format!("[Context summary: {summary}]"));
             return;
         }
     }
@@ -1592,15 +1592,18 @@ fn expand_threads(
         let mut expanded = false;
 
         for part in &msg.parts {
-            if let ContentPart::Text(text_part) = part {
+            if let ContentPartKind::TextPart {
+                value: ref text_value,
+            } = part.kind
+            {
                 for (nonce, name) in &nonce_to_name {
-                    if text_part.value.contains(*nonce) {
-                        let idx = text_part.value.find(*nonce).unwrap();
-                        let before = text_part.value[..idx].trim();
-                        let after = text_part.value[idx + nonce.len()..].trim();
+                    if text_value.contains(*nonce) {
+                        let idx = text_value.find(*nonce).unwrap();
+                        let before = text_value[..idx].trim();
+                        let after = text_value[idx + nonce.len()..].trim();
 
                         if !before.is_empty() {
-                            result.push(Message::text(msg.role, before));
+                            result.push(Message::with_text(msg.role, before));
                         }
 
                         // Insert thread messages from inputs
@@ -1615,7 +1618,7 @@ fn expand_threads(
                         }
 
                         if !after.is_empty() {
-                            result.push(Message::text(msg.role, after));
+                            result.push(Message::with_text(msg.role, after));
                         }
 
                         expanded = true;
@@ -1644,10 +1647,8 @@ fn dict_to_message(value: &serde_json::Value) -> Option<Message> {
     let content = obj.get("content").and_then(|v| v.as_str()).unwrap_or("");
     Some(Message {
         role,
-        parts: vec![ContentPart::Text(TextPart {
-            value: content.to_string(),
-        })],
-        metadata: serde_json::Map::new(),
+        parts: vec![ContentPart::text(content)],
+        ..Default::default()
     })
 }
 
@@ -1752,7 +1753,7 @@ mod tests {
 
     #[test]
     fn test_expand_threads_no_nonces() {
-        let msgs = vec![Message::text(Role::System, "Hello")];
+        let msgs = vec![Message::with_text(Role::System, "Hello")];
         let nonces = HashMap::new();
         let inputs = serde_json::json!({});
         let result = expand_threads(&msgs, &nonces, &inputs);
@@ -1763,8 +1764,8 @@ mod tests {
     fn test_expand_threads_with_conversation() {
         let nonce = "__PROMPTY_THREAD_abcd1234_conversation__";
         let msgs = vec![
-            Message::text(Role::System, "You are helpful."),
-            Message::text(Role::User, &format!("Before\n{nonce}\nAfter")),
+            Message::with_text(Role::System, "You are helpful."),
+            Message::with_text(Role::User, &format!("Before\n{nonce}\nAfter")),
         ];
         let mut nonces = HashMap::new();
         nonces.insert("conversation".to_string(), nonce.to_string());
@@ -2476,7 +2477,7 @@ mod tests {
         registry::register_processor(key, MockProcessor);
 
         let agent = make_simple_agent(key);
-        let messages = vec![Message::text(Role::User, "Hello")];
+        let messages = vec![Message::with_text(Role::User, "Hello")];
         let result = run(&agent, &messages).await.unwrap();
         assert_eq!(result, "The weather in Seattle is 72°F.");
     }

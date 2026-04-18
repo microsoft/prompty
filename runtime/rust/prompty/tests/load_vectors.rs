@@ -321,7 +321,7 @@ fn validate_model(model: &prompty::model::model::Model, expected: &Value, vec_na
     }
     if let Some(api_type) = expected.get("apiType").and_then(Value::as_str) {
         assert_eq!(
-            model.api_type.as_deref(),
+            model.api_type.as_ref().map(|t| t.as_str()),
             Some(api_type),
             "[{vec_name}] model.apiType"
         );
@@ -425,7 +425,7 @@ fn validate_tool(tool: &prompty::model::tool::Tool, expected: &Value, vec_name: 
                 assert_eq!(path, p, "[{vec_name}] tool[{idx}].path");
             }
             if let Some(m) = expected.get("mode").and_then(Value::as_str) {
-                assert_eq!(mode, m, "[{vec_name}] tool[{idx}].mode");
+                assert_eq!(mode.as_str(), m, "[{vec_name}] tool[{idx}].mode");
             }
         }
         prompty::model::tool::ToolKind::Custom { .. } => {

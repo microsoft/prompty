@@ -5,14 +5,29 @@ import { GeneratorOptions, filterNodes } from "../../emitter.js";
 import { TypeRegistry } from "../../ir/expansion.js";
 import { TypeScriptExprVisitor } from "./visitor.js";
 import { emitTypeScriptFile as emitTypeScriptFileDecl } from "./emitter.js";
-import { emitTypeScriptContext, emitTypeScriptIndex, emitEslintConfig } from "./scaffolding.js";
+import { emitTypeScriptContext, emitTypeScriptIndex, emitTypeScriptGroupIndex, emitEslintConfig } from "./scaffolding.js";
 import { emitTypeScriptTest } from "./test-emitter.js";
 import { lowerFile, collectPolymorphicTypeNames } from "../../ir/lower.js";
 import { buildBaseTestContext, typescriptTestOptions } from "../../testing/test-context.js";
 import { toKebabCase } from "../../ir/utilities.js";
 import { resolve, dirname } from "path";
 import { execFileSync } from "child_process";
-import { existsSync } from "fs";
+import { existsSync, readdirSync, statSync, unlinkSync } from "fs";
+
+/**
+ * Remove stale flat type files from `relDir` that now live in group subdirectories.
+ */
+function cleanupFlatTypeFiles(relDir: string | undefined, isTypeFile: (name: string) => boolean): void {
+  if (!relDir) return;
+  const absDir = resolve(process.cwd(), relDir);
+  if (!existsSync(absDir)) return;
+  for (const name of readdirSync(absDir)) {
+    const absPath = resolve(absDir, name);
+    if (statSync(absPath).isFile() && isTypeFile(name)) {
+      try { unlinkSync(absPath); } catch { /* ignore — file may be locked */ }
+    }
+  }
+}
 
 /**
  * Generate TypeScript code from TypeSpec models.
@@ -34,6 +49,14 @@ export const generateTypeScript = async (
   const originalNamespace = node.typeName.namespace;
   const tsNamespace = emitTarget.namespace ?? originalNamespace.replace(/\.Core$/, "");
 
+  // Remove stale flat type files from root output dir (they now live in group subdirs)
+  cleanupFlatTypeFiles(emitTarget["output-dir"], name =>
+    name.endsWith(".ts") && name !== "context.ts" && name !== "index.ts" && name !== "eslint.config.js"
+  );
+  cleanupFlatTypeFiles(emitTarget["test-dir"], name =>
+    name.endsWith(".ts") && name !== "context.test.ts"
+  );
+
   // Emit context classes (LoadContext, SaveContext)
   const contextCode = emitTypeScriptContext();
   await emitTypeScriptFile(context, "context.ts", contextCode, emitTarget["output-dir"]);
@@ -46,6 +69,16 @@ export const generateTypeScript = async (
     }
   }
 
+  // Group root nodes by their semantic group folder
+  const groupMap = new Map<string, TypeNode[]>();
+  for (const n of nodes) {
+    if (!n.base) {
+      const g = n.group || "";
+      if (!groupMap.has(g)) groupMap.set(g, []);
+      groupMap.get(g)!.push(n);
+    }
+  }
+
   // Emit each base type file (includes children in the same file)
   for (const n of nodes) {
     // Skip child types - they're rendered with their parent
@@ -53,9 +86,18 @@ export const generateTypeScript = async (
       continue;
     }
 
+    const group = n.group || "";
     const fileDecl = lowerFile(n, registry, polymorphicTypeNames);
-    const code = emitTypeScriptFileDecl(fileDecl, visitor, tsNamespace);
-    await emitTypeScriptFile(context, `${toKebabCase(n.typeName.name)}.ts`, code, emitTarget["output-dir"]);
+    const code = emitTypeScriptFileDecl(fileDecl, visitor, tsNamespace, group);
+    const outDir = group ? `${emitTarget["output-dir"]}/${group}` : emitTarget["output-dir"];
+    await emitTypeScriptFile(context, `${toKebabCase(n.typeName.name)}.ts`, code, outDir);
+  }
+
+  // Emit group index.ts files
+  for (const [group, groupNodes] of groupMap) {
+    if (!group) continue;
+    const groupIndexCode = emitTypeScriptGroupIndex(group, groupNodes);
+    await emitTypeScriptFile(context, "index.ts", groupIndexCode, `${emitTarget["output-dir"]}/${group}`);
   }
 
   // Emit test files for all types (skip protocols — they have no data to test)
@@ -63,17 +105,18 @@ export const generateTypeScript = async (
     const importPath = emitTarget["import-path"] || "../src/index";
     for (const n of nodes) {
       if (n.isProtocol) continue;
+      const testDir = n.group ? `${emitTarget["test-dir"]}/${n.group}` : emitTarget["test-dir"];
       const testContext = buildTestContext(n);
       const testCode = emitTypeScriptTest({
         ...testContext,
         importPath,
         namespace: tsNamespace,
       });
-      await emitTypeScriptFile(context, `${toKebabCase(n.typeName.name)}.test.ts`, testCode, emitTarget["test-dir"]);
+      await emitTypeScriptFile(context, `${toKebabCase(n.typeName.name)}.test.ts`, testCode, testDir);
     }
   }
 
-  // Emit index.ts file
+  // Emit root index.ts file — re-exports from group sub-indexes
   const indexContext = buildIndexContext(nodes);
   const indexCode = emitTypeScriptIndex(indexContext.baseTypes, indexContext.types);
   await emitTypeScriptFile(context, "index.ts", indexCode, emitTarget["output-dir"]);

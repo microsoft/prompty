@@ -28,15 +28,15 @@ public static class WireFormat
 
         return msg.Role switch
         {
-            Roles.System => new SystemChatMessage(msg.Text),
-            Roles.Developer => new DeveloperChatMessage(msg.Text),
-            Roles.User => content switch
+            Role.System => new SystemChatMessage(msg.Text),
+            Role.Developer => new DeveloperChatMessage(msg.Text),
+            Role.User => content switch
             {
                 string text => new UserChatMessage(text),
                 _ => new UserChatMessage(BuildContentParts(msg.Parts)),
             },
-            Roles.Assistant => BuildAssistantMessage(msg),
-            Roles.Tool => new ToolChatMessage(
+            Role.Assistant => BuildAssistantMessage(msg),
+            Role.Tool => new ToolChatMessage(
                 msg.Metadata?.TryGetValue("tool_call_id", out var id) == true ? id?.ToString() ?? "" : "",
                 msg.Text),
             _ => new UserChatMessage(msg.Text),
@@ -192,7 +192,7 @@ public static class WireFormat
         var instructionParts = new List<string>();
         foreach (var msg in messages)
         {
-            if (msg.Role is Roles.System or Roles.Developer)
+            if (msg.Role is Role.System or Role.Developer)
             {
                 var text = msg.Text;
                 if (!string.IsNullOrEmpty(text))
@@ -205,7 +205,7 @@ public static class WireFormat
         // Convert non-system/non-developer messages to input items
         foreach (var msg in messages)
         {
-            if (msg.Role is Roles.System or Roles.Developer)
+            if (msg.Role is Role.System or Role.Developer)
                 continue;
 
             var item = MessageToResponsesInput(msg);
@@ -257,7 +257,7 @@ public static class WireFormat
             return fcItem;
 
         // Tool result → function_call_output
-        if (msg.Role == Roles.Tool && msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var tcId))
+        if (msg.Role == Role.Tool && msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var tcId))
         {
             return ResponseItem.CreateFunctionCallOutputItem(
                 tcId?.ToString() ?? "",
@@ -265,11 +265,11 @@ public static class WireFormat
         }
 
         // User messages
-        if (msg.Role is Roles.User)
+        if (msg.Role is Role.User)
             return ResponseItem.CreateUserMessageItem(msg.Text);
 
         // Assistant messages
-        if (msg.Role is Roles.Assistant)
+        if (msg.Role is Role.Assistant)
             return ResponseItem.CreateAssistantMessageItem(msg.Text);
 
         // Default: treat as user

@@ -700,8 +700,8 @@ public class SpecVectorAgentTests : IDisposable
         {
             var msgs = new List<Message>
             {
-                new() { Role = Roles.System, Parts = [new TextPart { Value = "You are a helpful assistant." }] },
-                new() { Role = Roles.User, Parts = [new TextPart { Value = "test" }] },
+                new() { Role = Role.System, Parts = [new TextPart { Value = "You are a helpful assistant." }] },
+                new() { Role = Role.User, Parts = [new TextPart { Value = "test" }] },
             };
             return Task.FromResult(msgs);
         }
@@ -722,10 +722,10 @@ public class SpecVectorAgentTests : IDisposable
         {
             var messages = new List<Message>
             {
-                new() { Role = Roles.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+                new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
             };
             for (var i = 0; i < toolCalls.Count; i++)
-                messages.Add(new() { Role = Roles.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+                messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
             return messages;
         }
     }
