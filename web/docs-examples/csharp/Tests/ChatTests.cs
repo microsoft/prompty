@@ -59,11 +59,11 @@ public class ChatTests : IDisposable
         Assert.True(messages.Count >= 2, "Should have at least a system and user message");
 
         // Verify system message
-        var systemMsg = messages.First(m => m.Role == Roles.System);
+        var systemMsg = messages.First(m => m.Role == Role.System);
         Assert.Contains("helpful assistant", systemMsg.Text);
 
         // Verify user message
-        var userMsg = messages.First(m => m.Role == Roles.User);
+        var userMsg = messages.First(m => m.Role == Role.User);
         Assert.Contains("What is Prompty?", userMsg.Text);
     }
 
@@ -78,7 +78,7 @@ public class ChatTests : IDisposable
         // Pass no inputs — should use defaults from the prompty file
         var messages = await Pipeline.PrepareAsync(agent);
 
-        var userMsg = messages.First(m => m.Role == Roles.User);
+        var userMsg = messages.First(m => m.Role == Role.User);
         // The default question in chat-basic.prompty is "What is Prompty?"
         Assert.Contains("What is Prompty?", userMsg.Text);
     }
@@ -136,7 +136,7 @@ public class ChatTests : IDisposable
         Assert.Contains("system:", rendered);
 
         // Step 3: Parse
-        var messages = await Pipeline.ParseAsync(agent, rendered);
+        var messages = await Pipeline.ParseAsync(agent, rendered, null);
         Assert.True(messages.Count >= 2);
     }
 

@@ -46,7 +46,7 @@ public static class ChatPipeline
         var rendered = await Pipeline.RenderAsync(agent, validatedInputs);
 
         // Parse rendered text into messages
-        var messages = await Pipeline.ParseAsync(agent, rendered);
+        var messages = await Pipeline.ParseAsync(agent, rendered, null);
 
         return messages;
     }

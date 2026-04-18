@@ -87,6 +87,26 @@ from .tools import (
     ToolContext,
     ToolDispatchResult,
 )
+from .wire import (
+    AnthropicImageBlock,
+    AnthropicImageSource,
+    AnthropicMessagesRequest,
+    AnthropicMessagesResponse,
+    AnthropicTextBlock,
+    AnthropicToolDefinition,
+    AnthropicToolResultBlock,
+    AnthropicToolUseBlock,
+    AnthropicUsage,
+    AnthropicWireMessage,
+)
+from .streaming import (
+    StreamOptions,
+)
+from .tracing import (
+    TraceFile,
+    TraceSpan,
+    TraceTime,
+)
 
 __all__ = [
     "LoadContext",
@@ -156,4 +176,18 @@ __all__ = [
     "ThinkingChunk",
     "ToolChunk",
     "ErrorChunk",
+    "AnthropicImageBlock",
+    "AnthropicImageSource",
+    "AnthropicMessagesRequest",
+    "AnthropicMessagesResponse",
+    "AnthropicTextBlock",
+    "AnthropicToolDefinition",
+    "AnthropicToolResultBlock",
+    "AnthropicToolUseBlock",
+    "AnthropicUsage",
+    "AnthropicWireMessage",
+    "StreamOptions",
+    "TraceFile",
+    "TraceSpan",
+    "TraceTime",
 ]
