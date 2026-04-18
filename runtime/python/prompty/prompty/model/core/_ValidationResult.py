@@ -16,7 +16,7 @@ class ValidationResult:
     """The result of validating inputs against an agent's inputSchema.
     Returned by `validate_inputs` (§12.2) to indicate whether all
     required inputs are present and satisfy their constraints.
-    
+
     Attributes
     ----------
     valid : bool
@@ -43,7 +43,7 @@ class ValidationResult:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ValidationResult: {data}")
 
@@ -57,8 +57,6 @@ class ValidationResult:
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_errors(data: dict | list, context: LoadContext | None) -> list[ValidationError]:
@@ -95,7 +93,6 @@ class ValidationResult:
         if context is not None:
             obj = context.process_object(obj)
 
-
         result: dict[str, Any] = {}
 
         if obj.valid is not None:
@@ -131,5 +128,3 @@ class ValidationResult:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

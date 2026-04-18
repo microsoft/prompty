@@ -15,7 +15,7 @@ class AnthropicToolDefinition:
     """A tool definition in Anthropic's format. Unlike OpenAI which wraps
     tools in `{type: "function", function: {...}}`, Anthropic uses a
     flat structure with `input_schema` (§7.5).
-    
+
     Attributes
     ----------
     name : str
@@ -45,7 +45,7 @@ class AnthropicToolDefinition:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicToolDefinition: {data}")
 
@@ -62,8 +62,6 @@ class AnthropicToolDefinition:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnthropicToolDefinition instance to a dictionary.
         Args:
@@ -75,7 +73,6 @@ class AnthropicToolDefinition:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -114,5 +111,3 @@ class AnthropicToolDefinition:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

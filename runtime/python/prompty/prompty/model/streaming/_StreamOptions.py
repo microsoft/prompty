@@ -14,7 +14,7 @@ from .._context import LoadContext, SaveContext
 class StreamOptions:
     """Options controlling streaming behavior for LLM API calls.
     Passed alongside the model options when streaming is enabled.
-    
+
     Attributes
     ----------
     include_usage : Optional[bool]
@@ -38,7 +38,7 @@ class StreamOptions:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for StreamOptions: {data}")
 
@@ -51,8 +51,6 @@ class StreamOptions:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the StreamOptions instance to a dictionary.
         Args:
@@ -64,7 +62,6 @@ class StreamOptions:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -99,5 +96,3 @@ class StreamOptions:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

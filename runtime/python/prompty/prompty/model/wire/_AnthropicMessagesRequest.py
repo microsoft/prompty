@@ -15,7 +15,7 @@ from ._AnthropicWireMessage import AnthropicWireMessage
 @dataclass
 class AnthropicMessagesRequest:
     """The full request body for the Anthropic Messages API (§7.5).
-    
+
     Attributes
     ----------
     model : str
@@ -63,7 +63,7 @@ class AnthropicMessagesRequest:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicMessagesRequest: {data}")
 
@@ -92,8 +92,6 @@ class AnthropicMessagesRequest:
             instance = context.process_output(instance)
         return instance
 
-
-
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[AnthropicWireMessage]:
         if isinstance(data, dict):
@@ -110,7 +108,9 @@ class AnthropicMessagesRequest:
         return [AnthropicWireMessage.load(item, context) for item in data]
 
     @staticmethod
-    def save_messages(items: list[AnthropicWireMessage], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_messages(
+        items: list[AnthropicWireMessage], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -133,7 +133,9 @@ class AnthropicMessagesRequest:
         return [AnthropicToolDefinition.load(item, context) for item in data]
 
     @staticmethod
-    def save_tools(items: list[AnthropicToolDefinition], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tools(
+        items: list[AnthropicToolDefinition], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -147,7 +149,7 @@ class AnthropicMessagesRequest:
             name = item_data.pop("name", None)
             if name:
                 # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, '_shorthand_property'):
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
                     shorthand_prop = item._shorthand_property
                     if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                         result[name] = item_data[shorthand_prop]
@@ -171,7 +173,6 @@ class AnthropicMessagesRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -222,5 +223,3 @@ class AnthropicMessagesRequest:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

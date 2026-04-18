@@ -14,7 +14,7 @@ from .._context import LoadContext, SaveContext
 class AnthropicToolUseBlock:
     """A tool use content block returned in an assistant message when
     the model wants to invoke a tool.
-    
+
     Attributes
     ----------
     type : str
@@ -47,7 +47,7 @@ class AnthropicToolUseBlock:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicToolUseBlock: {data}")
 
@@ -66,8 +66,6 @@ class AnthropicToolUseBlock:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnthropicToolUseBlock instance to a dictionary.
         Args:
@@ -79,7 +77,6 @@ class AnthropicToolUseBlock:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -120,5 +117,3 @@ class AnthropicToolUseBlock:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

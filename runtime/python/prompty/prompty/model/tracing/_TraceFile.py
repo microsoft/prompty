@@ -14,7 +14,7 @@ from ._TraceSpan import TraceSpan
 @dataclass
 class TraceFile:
     """The top-level .tracy file structure written by the file backend (§3.6.1).
-    
+
     Attributes
     ----------
     runtime : str
@@ -44,7 +44,7 @@ class TraceFile:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TraceFile: {data}")
 
@@ -61,8 +61,6 @@ class TraceFile:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TraceFile instance to a dictionary.
         Args:
@@ -74,7 +72,6 @@ class TraceFile:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -113,5 +110,3 @@ class TraceFile:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

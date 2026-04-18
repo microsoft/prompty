@@ -6,7 +6,7 @@ from prompty.model import AnthropicToolUseBlock
 
 
 def test_load_json_anthropictooluseblock():
-    json_data = r'''
+    json_data = r"""
     {
       "id": "toolu_01A09q90qw90lq917835lq9",
       "name": "get_weather",
@@ -14,30 +14,32 @@ def test_load_json_anthropictooluseblock():
         "city": "Paris"
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = AnthropicToolUseBlock.load(data)
     assert instance is not None
     assert instance.id == "toolu_01A09q90qw90lq917835lq9"
     assert instance.name == "get_weather"
 
+
 def test_load_yaml_anthropictooluseblock():
-    yaml_data = r'''
+    yaml_data = r"""
     id: toolu_01A09q90qw90lq917835lq9
     name: get_weather
     input:
       city: Paris
     
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicToolUseBlock.load(data)
     assert instance is not None
     assert instance.id == "toolu_01A09q90qw90lq917835lq9"
     assert instance.name == "get_weather"
 
+
 def test_roundtrip_json_anthropictooluseblock():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "toolu_01A09q90qw90lq917835lq9",
       "name": "get_weather",
@@ -45,7 +47,7 @@ def test_roundtrip_json_anthropictooluseblock():
         "city": "Paris"
       }
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = AnthropicToolUseBlock.load(original_data)
     saved_data = instance.save()
@@ -54,9 +56,10 @@ def test_roundtrip_json_anthropictooluseblock():
     assert reloaded.id == "toolu_01A09q90qw90lq917835lq9"
     assert reloaded.name == "get_weather"
 
+
 def test_to_json_anthropictooluseblock():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "toolu_01A09q90qw90lq917835lq9",
       "name": "get_weather",
@@ -64,7 +67,7 @@ def test_to_json_anthropictooluseblock():
         "city": "Paris"
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = AnthropicToolUseBlock.load(data)
     json_output = instance.to_json()
@@ -72,9 +75,10 @@ def test_to_json_anthropictooluseblock():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_anthropictooluseblock():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "toolu_01A09q90qw90lq917835lq9",
       "name": "get_weather",
@@ -82,11 +86,10 @@ def test_to_yaml_anthropictooluseblock():
         "city": "Paris"
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = AnthropicToolUseBlock.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-

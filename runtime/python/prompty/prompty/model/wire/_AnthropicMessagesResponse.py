@@ -14,7 +14,7 @@ from ._AnthropicUsage import AnthropicUsage
 @dataclass
 class AnthropicMessagesResponse:
     """The response body from the Anthropic Messages API.
-    
+
     Attributes
     ----------
     id : str
@@ -56,7 +56,7 @@ class AnthropicMessagesResponse:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicMessagesResponse: {data}")
 
@@ -81,8 +81,6 @@ class AnthropicMessagesResponse:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnthropicMessagesResponse instance to a dictionary.
         Args:
@@ -94,7 +92,6 @@ class AnthropicMessagesResponse:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -141,5 +138,3 @@ class AnthropicMessagesResponse:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

@@ -17,7 +17,7 @@ class TraceSpan:
     """A single trace span capturing one pipeline stage or function invocation.
     Spans nest via the `__frames` field to form a tree representing the
     full execution (§3.6.1).
-    
+
     Attributes
     ----------
     name : str
@@ -65,7 +65,7 @@ class TraceSpan:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TraceSpan: {data}")
 
@@ -94,8 +94,6 @@ class TraceSpan:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TraceSpan instance to a dictionary.
         Args:
@@ -107,7 +105,6 @@ class TraceSpan:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -158,5 +155,3 @@ class TraceSpan:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

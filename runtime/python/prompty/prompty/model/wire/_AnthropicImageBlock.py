@@ -15,7 +15,7 @@ from ._AnthropicImageSource import AnthropicImageSource
 class AnthropicImageBlock:
     """An image content block using base64-encoded data.
     Anthropic requires images as base64 with an explicit media type.
-    
+
     Attributes
     ----------
     type : str
@@ -42,7 +42,7 @@ class AnthropicImageBlock:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicImageBlock: {data}")
 
@@ -57,8 +57,6 @@ class AnthropicImageBlock:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnthropicImageBlock instance to a dictionary.
         Args:
@@ -70,7 +68,6 @@ class AnthropicImageBlock:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -107,5 +104,3 @@ class AnthropicImageBlock:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

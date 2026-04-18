@@ -13,7 +13,7 @@ from .._context import LoadContext, SaveContext
 @dataclass
 class TraceTime:
     """Timing information for a trace span.
-    
+
     Attributes
     ----------
     start : str
@@ -43,7 +43,7 @@ class TraceTime:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TraceTime: {data}")
 
@@ -60,8 +60,6 @@ class TraceTime:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TraceTime instance to a dictionary.
         Args:
@@ -73,7 +71,6 @@ class TraceTime:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -112,5 +109,3 @@ class TraceTime:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

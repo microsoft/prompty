@@ -14,7 +14,7 @@ from .._context import LoadContext, SaveContext
 class FileNotFoundError:
     """Raised when a referenced file cannot be found. This applies to both
     .prompty files and ${file:path} references in frontmatter.
-    
+
     Attributes
     ----------
     message : str
@@ -41,7 +41,7 @@ class FileNotFoundError:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FileNotFoundError: {data}")
 
@@ -56,8 +56,6 @@ class FileNotFoundError:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FileNotFoundError instance to a dictionary.
         Args:
@@ -69,7 +67,6 @@ class FileNotFoundError:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -106,5 +103,3 @@ class FileNotFoundError:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

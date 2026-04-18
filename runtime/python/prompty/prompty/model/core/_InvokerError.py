@@ -15,7 +15,7 @@ class InvokerError:
     """Raised when no invoker implementation is registered for a given component
     and key. For example, if no renderer is registered for the key "jinja2",
     an InvokerError is raised.
-    
+
     Attributes
     ----------
     message : str
@@ -45,7 +45,7 @@ class InvokerError:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for InvokerError: {data}")
 
@@ -62,8 +62,6 @@ class InvokerError:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the InvokerError instance to a dictionary.
         Args:
@@ -75,7 +73,6 @@ class InvokerError:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -114,5 +111,3 @@ class InvokerError:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

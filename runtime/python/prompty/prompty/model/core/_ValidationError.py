@@ -14,7 +14,7 @@ from .._context import LoadContext, SaveContext
 class ValidationError:
     """Raised when input validation fails. Each ValidationError describes a
     single property that did not satisfy its constraint.
-    
+
     Attributes
     ----------
     message : str
@@ -44,7 +44,7 @@ class ValidationError:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ValidationError: {data}")
 
@@ -61,8 +61,6 @@ class ValidationError:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ValidationError instance to a dictionary.
         Args:
@@ -74,7 +72,6 @@ class ValidationError:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -113,5 +110,3 @@ class ValidationError:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-

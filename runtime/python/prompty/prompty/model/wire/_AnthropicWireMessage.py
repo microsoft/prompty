@@ -15,7 +15,7 @@ class AnthropicWireMessage:
     """A single message in the Anthropic Messages API wire format.
     Anthropic always uses the array-of-blocks form for content,
     even when there is only one text block (§7.5).
-    
+
     Attributes
     ----------
     role : str
@@ -42,7 +42,7 @@ class AnthropicWireMessage:
 
         if context is not None:
             data = context.process_input(data)
-        
+
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicWireMessage: {data}")
 
@@ -57,8 +57,6 @@ class AnthropicWireMessage:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnthropicWireMessage instance to a dictionary.
         Args:
@@ -70,7 +68,6 @@ class AnthropicWireMessage:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -107,5 +104,3 @@ class AnthropicWireMessage:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
