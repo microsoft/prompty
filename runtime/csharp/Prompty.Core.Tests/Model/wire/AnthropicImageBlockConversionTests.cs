@@ -1,0 +1,10 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class AnthropicImageBlockConversionTests
+{
+}

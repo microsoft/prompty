@@ -1,0 +1,53 @@
+---
+title: "ValidationResult"
+description: "Documentation for the ValidationResult type."
+slug: "reference/validationresult"
+---
+
+The result of validating inputs against an agent's inputSchema.
+Returned by `validate_inputs` (§12.2) to indicate whether all
+required inputs are present and satisfy their constraints.
+
+## Class Diagram
+
+```mermaid
+---
+title: ValidationResult
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class ValidationResult {
+        +boolean valid
+        +ValidationError[] errors
+    }
+    class ValidationError {
+        +string message
+        +string property
+        +string constraint
+    }
+    ValidationResult *-- ValidationError
+```
+
+## Yaml Example
+
+```yaml
+valid: true
+errors: []
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| valid | boolean | Whether all inputs passed validation |
+| errors | [ValidationError[]](../validationerror/) | List of validation errors (empty when valid is true) |
+
+## Composed Types
+
+The following types are composed within `ValidationResult`:
+
+- [ValidationError](../validationerror/)

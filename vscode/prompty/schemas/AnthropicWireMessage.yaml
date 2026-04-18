@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicWireMessage.yaml
+type: object
+properties:
+  role:
+    type: string
+    description: The message role ('user' or 'assistant')
+  content:
+    type: array
+    items: {}
+    description: Array of typed content blocks (AnthropicTextBlock | AnthropicImageBlock | AnthropicToolUseBlock | AnthropicToolResultBlock)
+required:
+  - role
+  - content
+description: |-
+  A single message in the Anthropic Messages API wire format.
+  Anthropic always uses the array-of-blocks form for content,
+  even when there is only one text block (§7.5).

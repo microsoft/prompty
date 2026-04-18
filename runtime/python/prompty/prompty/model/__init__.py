@@ -32,8 +32,12 @@ from .conversation import (
 )
 from .core import (
     ArrayProperty,
+    FileNotFoundError,
+    InvokerError,
     ObjectProperty,
     Property,
+    ValidationError,
+    ValidationResult,
 )
 from .events import (
     CompactionCompletePayload,
@@ -66,6 +70,9 @@ from .pipeline import (
     Renderer,
     TurnOptions,
 )
+from .streaming import (
+    StreamOptions,
+)
 from .template import (
     FormatConfig,
     ParserConfig,
@@ -83,6 +90,23 @@ from .tools import (
     ToolContext,
     ToolDispatchResult,
 )
+from .tracing import (
+    TraceFile,
+    TraceSpan,
+    TraceTime,
+)
+from .wire import (
+    AnthropicImageBlock,
+    AnthropicImageSource,
+    AnthropicMessagesRequest,
+    AnthropicMessagesResponse,
+    AnthropicTextBlock,
+    AnthropicToolDefinition,
+    AnthropicToolResultBlock,
+    AnthropicToolUseBlock,
+    AnthropicUsage,
+    AnthropicWireMessage,
+)
 
 __all__ = [
     "LoadContext",
@@ -90,6 +114,10 @@ __all__ = [
     "Property",
     "ObjectProperty",
     "ArrayProperty",
+    "FileNotFoundError",
+    "InvokerError",
+    "ValidationError",
+    "ValidationResult",
     "Connection",
     "ReferenceConnection",
     "RemoteConnection",
@@ -148,4 +176,18 @@ __all__ = [
     "ThinkingChunk",
     "ToolChunk",
     "ErrorChunk",
+    "AnthropicImageBlock",
+    "AnthropicImageSource",
+    "AnthropicMessagesRequest",
+    "AnthropicMessagesResponse",
+    "AnthropicTextBlock",
+    "AnthropicToolDefinition",
+    "AnthropicToolResultBlock",
+    "AnthropicToolUseBlock",
+    "AnthropicUsage",
+    "AnthropicWireMessage",
+    "StreamOptions",
+    "TraceFile",
+    "TraceSpan",
+    "TraceTime",
 ]

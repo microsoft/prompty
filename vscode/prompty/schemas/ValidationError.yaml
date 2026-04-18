@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ValidationError.yaml
+type: object
+properties:
+  message:
+    type: string
+    description: Human-readable error message
+  property:
+    type: string
+    description: The name of the property that failed validation
+  constraint:
+    type: string
+    description: The constraint that was violated (e.g., 'required', 'type')
+required:
+  - message
+  - property
+  - constraint
+description: |-
+  Raised when input validation fails. Each ValidationError describes a
+  single property that did not satisfy its constraint.

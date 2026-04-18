@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicImageSource.yaml
+type: object
+properties:
+  type:
+    type: string
+    const: base64
+    description: The encoding type (always 'base64' for inline images)
+  media_type:
+    type: string
+    description: The MIME type of the image (e.g., 'image/png', 'image/jpeg')
+  data:
+    type: string
+    description: The base64-encoded image data
+required:
+  - type
+  - media_type
+  - data
+description: Source descriptor for an Anthropic base64 image.

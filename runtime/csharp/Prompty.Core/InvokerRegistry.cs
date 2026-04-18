@@ -7,16 +7,16 @@ namespace Prompty.Core;
 /// <summary>
 /// Thrown when a required invoker (renderer, parser, executor, or processor) is not registered.
 /// </summary>
-public class InvokerError : InvalidOperationException
+public class InvokerNotFoundException : InvalidOperationException
 {
     public string Group { get; }
-    public string Key { get; }
+    public string InvokerKey { get; }
 
-    public InvokerError(string group, string key)
+    public InvokerNotFoundException(string group, string key)
         : base($"No {group} registered for '{key}'. Register one via InvokerRegistry.Register{GetFriendlyGroup(group)}().")
     {
         Group = group;
-        Key = key;
+        InvokerKey = key;
     }
 
     private static string GetFriendlyGroup(string group) => group switch
@@ -57,16 +57,16 @@ public static class InvokerRegistry
     // --- Lookup ---
 
     public static IRenderer GetRenderer(string key)
-        => _renderers.TryGetValue(key, out var r) ? r : throw new InvokerError("renderer", key);
+        => _renderers.TryGetValue(key, out var r) ? r : throw new InvokerNotFoundException("renderer", key);
 
     public static IParser GetParser(string key)
-        => _parsers.TryGetValue(key, out var p) ? p : throw new InvokerError("parser", key);
+        => _parsers.TryGetValue(key, out var p) ? p : throw new InvokerNotFoundException("parser", key);
 
     public static IExecutor GetExecutor(string key)
-        => _executors.TryGetValue(key, out var e) ? e : throw new InvokerError("executor", key);
+        => _executors.TryGetValue(key, out var e) ? e : throw new InvokerNotFoundException("executor", key);
 
     public static IProcessor GetProcessor(string key)
-        => _processors.TryGetValue(key, out var p) ? p : throw new InvokerError("processor", key);
+        => _processors.TryGetValue(key, out var p) ? p : throw new InvokerNotFoundException("processor", key);
 
     // --- Query ---
 

@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TraceFile.yaml
+type: object
+properties:
+  runtime:
+    type: string
+    description: Language/runtime name (e.g., 'python', 'csharp', 'javascript')
+  version:
+    type: string
+    description: Prompty library version
+  trace:
+    $ref: TraceSpan.yaml
+    description: The root trace span
+required:
+  - runtime
+  - version
+  - trace
+description: The top-level .tracy file structure written by the file backend (§3.6.1).

@@ -1,0 +1,46 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicMessagesRequest.yaml
+type: object
+properties:
+  model:
+    type: string
+    description: The model identifier
+  messages:
+    type: array
+    items:
+      $ref: AnthropicWireMessage.yaml
+    description: The non-system messages to send
+  max_tokens:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Maximum number of tokens to generate (required by Anthropic)
+  system:
+    type: string
+    description: System prompt text (extracted from system-role messages)
+  temperature:
+    type: number
+    description: Sampling temperature
+  top_p:
+    type: number
+    description: Top-P sampling value
+  top_k:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Top-K sampling value
+  stop_sequences:
+    type: array
+    items:
+      type: string
+    description: Stop sequences to end generation
+  tools:
+    type: array
+    items:
+      $ref: AnthropicToolDefinition.yaml
+    description: Tool definitions available to the model
+required:
+  - model
+  - messages
+  - max_tokens
+description: The full request body for the Anthropic Messages API (§7.5).

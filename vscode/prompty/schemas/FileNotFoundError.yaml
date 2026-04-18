@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FileNotFoundError.yaml
+type: object
+properties:
+  message:
+    type: string
+    description: Human-readable error message
+  path:
+    type: string
+    description: The file path that could not be resolved
+required:
+  - message
+  - path
+description: |-
+  Raised when a referenced file cannot be found. This applies to both
+  .prompty files and ${file:path} references in frontmatter.

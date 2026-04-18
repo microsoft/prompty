@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TraceTime.yaml
+type: object
+properties:
+  start:
+    type: string
+    description: ISO 8601 UTC timestamp when the span started
+  end:
+    type: string
+    description: ISO 8601 UTC timestamp when the span ended
+  duration:
+    type: number
+    description: Duration of the span in milliseconds
+required:
+  - start
+  - end
+  - duration
+description: Timing information for a trace span.

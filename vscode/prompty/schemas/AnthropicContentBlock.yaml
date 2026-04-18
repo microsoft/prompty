@@ -1,0 +1,8 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicContentBlock.yaml
+anyOf:
+  - $ref: AnthropicTextBlock.yaml
+  - $ref: AnthropicImageBlock.yaml
+  - $ref: AnthropicToolUseBlock.yaml
+  - $ref: AnthropicToolResultBlock.yaml
+description: Union of all Anthropic content block types.

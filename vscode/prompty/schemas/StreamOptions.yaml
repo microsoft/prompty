@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StreamOptions.yaml
+type: object
+properties:
+  includeUsage:
+    type: boolean
+    description: When true, the final streaming chunk includes token usage statistics
+description: |-
+  Options controlling streaming behavior for LLM API calls.
+  Passed alongside the model options when streaming is enabled.

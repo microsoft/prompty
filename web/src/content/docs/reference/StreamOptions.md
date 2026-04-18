@@ -1,0 +1,37 @@
+---
+title: "StreamOptions"
+description: "Documentation for the StreamOptions type."
+slug: "reference/streamoptions"
+---
+
+Options controlling streaming behavior for LLM API calls.
+Passed alongside the model options when streaming is enabled.
+
+## Class Diagram
+
+```mermaid
+---
+title: StreamOptions
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class StreamOptions {
+        +boolean includeUsage
+    }
+```
+
+## Yaml Example
+
+```yaml
+includeUsage: true
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| includeUsage | boolean | When true, the final streaming chunk includes token usage statistics |

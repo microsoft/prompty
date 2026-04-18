@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TraceValue.yaml
+anyOf:
+  - type: string
+    description: A string trace value
+  - type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: An integer trace value
+  - type: number
+    description: A floating-point trace value
+  - type: boolean
+    description: A boolean trace value
+  - type: "null"
+    description: A null trace value
+  - type: array
+    items: {}
+    description: An array of trace values (recursive)
+  - $ref: RecordUnknown.yaml
+    description: A record/map of trace values (recursive)
+description: |-
+  A recursive union of JSON-safe primitive types used for trace values.
+  All values emitted to tracing backends are serialized to TraceValue
+  via the `to_dict` algorithm (§3.3).
+
+  Note: The recursive nature (arrays and records of TraceValue) is
+  expressed as `unknown` to avoid infinite recursion in code generators.
+  Implementations should treat array/record variants as containing
+  nested TraceValue instances.

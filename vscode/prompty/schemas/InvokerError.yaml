@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: InvokerError.yaml
+type: object
+properties:
+  message:
+    type: string
+    description: Human-readable error message
+  component:
+    type: string
+    description: The pipeline component type that was being looked up (e.g., 'renderer', 'parser', 'executor', 'processor')
+  key:
+    type: string
+    description: The registration key that was not found
+required:
+  - message
+  - component
+  - key
+description: |-
+  Raised when no invoker implementation is registered for a given component
+  and key. For example, if no renderer is registered for the key "jinja2",
+  an InvokerError is raised.

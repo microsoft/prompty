@@ -166,30 +166,30 @@ public class InvokerRegistryTests : IDisposable
     [Fact]
     public void GetRenderer_ThrowsInvokerError_WhenMissing()
     {
-        var ex = Assert.Throws<InvokerError>(() => InvokerRegistry.GetRenderer("nope"));
+        var ex = Assert.Throws<InvokerNotFoundException>(() => InvokerRegistry.GetRenderer("nope"));
         Assert.Equal("renderer", ex.Group);
-        Assert.Equal("nope", ex.Key);
+        Assert.Equal("nope", ex.InvokerKey);
         Assert.Contains("Register", ex.Message);
     }
 
     [Fact]
     public void GetParser_ThrowsInvokerError_WhenMissing()
     {
-        var ex = Assert.Throws<InvokerError>(() => InvokerRegistry.GetParser("nope"));
+        var ex = Assert.Throws<InvokerNotFoundException>(() => InvokerRegistry.GetParser("nope"));
         Assert.Equal("parser", ex.Group);
     }
 
     [Fact]
     public void GetExecutor_ThrowsInvokerError_WhenMissing()
     {
-        var ex = Assert.Throws<InvokerError>(() => InvokerRegistry.GetExecutor("nope"));
+        var ex = Assert.Throws<InvokerNotFoundException>(() => InvokerRegistry.GetExecutor("nope"));
         Assert.Equal("executor", ex.Group);
     }
 
     [Fact]
     public void GetProcessor_ThrowsInvokerError_WhenMissing()
     {
-        var ex = Assert.Throws<InvokerError>(() => InvokerRegistry.GetProcessor("nope"));
+        var ex = Assert.Throws<InvokerNotFoundException>(() => InvokerRegistry.GetProcessor("nope"));
         Assert.Equal("processor", ex.Group);
     }
 

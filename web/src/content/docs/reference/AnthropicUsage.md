@@ -1,0 +1,39 @@
+---
+title: "AnthropicUsage"
+description: "Documentation for the AnthropicUsage type."
+slug: "reference/anthropicusage"
+---
+
+Usage statistics returned in an Anthropic Messages API response.
+
+## Class Diagram
+
+```mermaid
+---
+title: AnthropicUsage
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class AnthropicUsage {
+        +int32 input_tokens
+        +int32 output_tokens
+    }
+```
+
+## Yaml Example
+
+```yaml
+input_tokens: 150
+output_tokens: 42
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| input_tokens | int32 | Number of input tokens consumed |
+| output_tokens | int32 | Number of output tokens generated |

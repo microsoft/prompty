@@ -1,0 +1,19 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicToolResultBlock.yaml
+type: object
+properties:
+  type:
+    type: string
+    const: tool_result
+    description: The content block type
+  tool_use_id:
+    type: string
+    description: The tool_use id this result corresponds to
+  content:
+    type: string
+    description: The tool's output content
+required:
+  - type
+  - tool_use_id
+  - content
+description: A tool result content block sent back to the API with the tool's output.

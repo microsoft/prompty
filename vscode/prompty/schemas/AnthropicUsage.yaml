@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AnthropicUsage.yaml
+type: object
+properties:
+  input_tokens:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of input tokens consumed
+  output_tokens:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of output tokens generated
+required:
+  - input_tokens
+  - output_tokens
+description: Usage statistics returned in an Anthropic Messages API response.

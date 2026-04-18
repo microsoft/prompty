@@ -1,0 +1,59 @@
+---
+title: "TraceFile"
+description: "Documentation for the TraceFile type."
+slug: "reference/tracefile"
+---
+
+The top-level .tracy file structure written by the file backend (§3.6.1).
+
+## Class Diagram
+
+```mermaid
+---
+title: TraceFile
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class TraceFile {
+        +string runtime
+        +string version
+        +TraceSpan trace
+    }
+    class TraceSpan {
+        +string name
+        +TraceTime __time
+        +string signature
+        +dictionary inputs
+        +unknown output
+        +string error
+        +TokenUsage __usage
+        +dictionary attributes
+        +unknown[] __frames
+    }
+    TraceFile *-- TraceSpan
+```
+
+## Yaml Example
+
+```yaml
+runtime: python
+version: 2.0.0
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| runtime | string | Language/runtime name (e.g., 'python', 'csharp', 'javascript') |
+| version | string | Prompty library version |
+| trace | [TraceSpan](../tracespan/) | The root trace span |
+
+## Composed Types
+
+The following types are composed within `TraceFile`:
+
+- [TraceSpan](../tracespan/)

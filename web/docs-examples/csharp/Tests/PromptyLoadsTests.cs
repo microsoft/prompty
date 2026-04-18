@@ -9,6 +9,7 @@ namespace DocsExamples.Tests;
 /// Parametric tests that load every .prompty file from the shared prompts directory
 /// and validate they load without error.
 /// </summary>
+[Collection("DocsExamples")]
 public class PromptyLoadsTests
 {
     /// <summary>

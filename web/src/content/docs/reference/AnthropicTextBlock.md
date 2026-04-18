@@ -1,0 +1,38 @@
+---
+title: "AnthropicTextBlock"
+description: "Documentation for the AnthropicTextBlock type."
+slug: "reference/anthropictextblock"
+---
+
+A text content block in Anthropic's array-of-blocks message format.
+
+## Class Diagram
+
+```mermaid
+---
+title: AnthropicTextBlock
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class AnthropicTextBlock {
+        +string type
+        +string text
+    }
+```
+
+## Yaml Example
+
+```yaml
+text: Hello, how can I help?
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| type | string | The content block type |
+| text | string | The text content |
