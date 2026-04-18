@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import AnthropicMessagesResponse
+
 
 def test_load_json_anthropicmessagesresponse():
     json_data = r'''

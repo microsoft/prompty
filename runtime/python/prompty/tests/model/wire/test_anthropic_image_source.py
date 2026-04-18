@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import AnthropicImageSource
+
 
 def test_load_json_anthropicimagesource():
     json_data = r'''

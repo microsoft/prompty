@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import StreamOptions
+
 
 def test_load_json_streamoptions():
     json_data = r'''

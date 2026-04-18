@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import ValidationError
+
 
 def test_load_json_validationerror():
     json_data = r'''

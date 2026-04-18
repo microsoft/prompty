@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import AnthropicToolResultBlock
+
 
 def test_load_json_anthropictoolresultblock():
     json_data = r'''

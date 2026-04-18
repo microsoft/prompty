@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import TraceFile
+
 
 def test_load_json_tracefile():
     json_data = r'''

@@ -1,7 +1,9 @@
 import json
+
 import yaml
 
 from prompty.model import InvokerError
+
 
 def test_load_json_invokererror():
     json_data = r'''
