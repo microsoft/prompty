@@ -11,10 +11,12 @@
 //! ```
 
 pub mod executor;
+pub mod models;
 pub mod processor;
 pub mod wire;
 
 pub use executor::OpenAIExecutor;
+pub use models::{list_models, list_models_async};
 pub use processor::{OpenAIProcessor, extract_tool_calls, process_response};
 pub use wire::{
     build_chat_args, build_embedding_args, build_image_args, build_responses_args,

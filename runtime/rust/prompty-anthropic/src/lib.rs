@@ -19,10 +19,12 @@
 //! ```
 
 pub mod executor;
+pub mod models;
 pub mod processor;
 pub mod wire;
 
 pub use executor::AnthropicExecutor;
+pub use models::{list_models, list_models_async};
 pub use processor::{AnthropicProcessor, process_response};
 
 /// Register the Anthropic executor and processor in the global registry.
