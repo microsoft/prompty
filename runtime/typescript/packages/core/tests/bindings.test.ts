@@ -10,10 +10,9 @@ import {
 } from "../src/core/registry.js";
 import { Message, text } from "../src/core/types.js";
 import { Prompty } from "@prompty/core";
-import { Tool } from "../src/model/index.js";
-import { Binding } from "../src/model/binding.js";
-import { Property } from "../src/model/property.js";
+import { Tool, Binding, Property } from "../src/model/index.js";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
+
 
 // ---------------------------------------------------------------------------
 // resolveBindings — exported for direct testing
