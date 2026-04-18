@@ -70,6 +70,9 @@ from .pipeline import (
     Renderer,
     TurnOptions,
 )
+from .streaming import (
+    StreamOptions,
+)
 from .template import (
     FormatConfig,
     ParserConfig,
@@ -87,6 +90,11 @@ from .tools import (
     ToolContext,
     ToolDispatchResult,
 )
+from .tracing import (
+    TraceFile,
+    TraceSpan,
+    TraceTime,
+)
 from .wire import (
     AnthropicImageBlock,
     AnthropicImageSource,
@@ -98,14 +106,6 @@ from .wire import (
     AnthropicToolUseBlock,
     AnthropicUsage,
     AnthropicWireMessage,
-)
-from .streaming import (
-    StreamOptions,
-)
-from .tracing import (
-    TraceFile,
-    TraceSpan,
-    TraceTime,
 )
 
 __all__ = [

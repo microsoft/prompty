@@ -11,6 +11,7 @@ namespace DocsExamples.Tests;
 /// Tests for the ChatBasic example, verifying the pipeline works correctly
 /// with mocked executor and processor.
 /// </summary>
+[Collection("DocsExamples")]
 public class ChatTests : IDisposable
 {
     /// <summary>
