@@ -2,7 +2,7 @@
 
 using Prompty.Core;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.Anthropic.Tests;
 
 /// <summary>
 /// Shared helpers for creating test agents and messages.

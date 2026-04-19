@@ -3,7 +3,7 @@
 using Prompty.Core;
 using Prompty.Foundry;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.Foundry.Tests;
 
 /// <summary>
 /// Tests for Foundry executor and processor behavior.

@@ -4,7 +4,7 @@ using System.Text.Json;
 using Prompty.Anthropic;
 using Prompty.Core;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.Anthropic.Tests;
 
 /// <summary>
 /// Tests for the Anthropic processor which works with JsonElement responses.

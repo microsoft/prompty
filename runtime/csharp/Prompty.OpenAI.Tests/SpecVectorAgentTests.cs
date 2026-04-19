@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using Prompty.Core;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.OpenAI.Tests;
 
 /// <summary>
 /// Spec vector tests for the agent stage — loads canonical vectors from

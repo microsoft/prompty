@@ -2,7 +2,7 @@
 
 using Prompty.Core;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.Foundry.Tests;
 
 /// <summary>
 /// Tests for Foundry executor connection validation.

@@ -2,7 +2,7 @@
 
 using Prompty.Core;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.Anthropic.Tests;
 
 /// <summary>
 /// Tests for Anthropic executor connection validation and message formatting.

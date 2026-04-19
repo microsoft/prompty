@@ -3,7 +3,7 @@
 using Prompty.Core;
 using Prompty.OpenAI;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.OpenAI.Tests;
 
 /// <summary>
 /// Tests for OpenAI executor and processor behavior.
