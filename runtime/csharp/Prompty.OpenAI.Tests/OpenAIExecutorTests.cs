@@ -2,7 +2,7 @@
 
 using Prompty.Core;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.OpenAI.Tests;
 
 /// <summary>
 /// Tests for OpenAI executor connection validation and API type dispatch.

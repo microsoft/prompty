@@ -3,7 +3,7 @@
 using Prompty.Core;
 using Prompty.Core.Tracing;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.OpenAI.Tests;
 
 /// <summary>
 /// Tests for PromptyStream accumulation and tracing integration,

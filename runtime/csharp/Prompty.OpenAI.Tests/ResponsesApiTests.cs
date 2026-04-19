@@ -7,7 +7,7 @@ using OpenAI.Responses;
 using Prompty.Core;
 using Prompty.OpenAI;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.OpenAI.Tests;
 
 /// <summary>
 /// Tests for Responses API wire format, message conversion, tool conversion,

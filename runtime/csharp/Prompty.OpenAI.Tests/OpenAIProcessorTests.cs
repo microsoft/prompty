@@ -5,7 +5,7 @@ using System.Text.Json;
 using OpenAI.Chat;
 using Prompty.Core;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.OpenAI.Tests;
 
 /// <summary>
 /// Tests for OpenAI processor response extraction.

@@ -10,7 +10,7 @@ using Prompty.Core;
 using Prompty.OpenAI;
 using Prompty.Anthropic;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.OpenAI.Tests;
 
 /// <summary>
 /// Spec vector tests for the wire stage — loads canonical vectors from

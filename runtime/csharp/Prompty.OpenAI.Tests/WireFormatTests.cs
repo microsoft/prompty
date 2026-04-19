@@ -5,7 +5,7 @@ using OpenAI.Chat;
 using Prompty.Core;
 using Prompty.OpenAI;
 
-namespace Prompty.Providers.Tests;
+namespace Prompty.OpenAI.Tests;
 
 public class WireFormatTests
 {
