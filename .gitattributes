@@ -1,0 +1,64 @@
+# Normalize all text files to LF in the repository.
+# This eliminates CRLF drift on Windows (core.autocrlf=true) so that
+# `npm run generate` never produces spurious line-ending diffs.
+
+# Default: auto-detect text files and normalize to LF on checkout.
+* text=auto eol=lf
+
+# --- Source code ---
+*.py    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.rs    text eol=lf
+*.go    text eol=lf
+*.cs    text eol=lf
+*.tsp   text eol=lf
+*.astro text eol=lf
+*.css   text eol=lf
+*.html  text eol=lf
+
+# --- Config / data ---
+*.json      text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+*.toml      text eol=lf
+*.md        text eol=lf
+*.mdx       text eol=lf
+*.txt       text eol=lf
+*.prompty   text eol=lf
+*.cfg       text eol=lf
+*.conf      text eol=lf
+*.mod       text eol=lf
+*.sum       text eol=lf
+
+# --- Project files ---
+*.csproj    text eol=lf
+*.sln       text eol=lf
+*.ps1       text eol=lf
+*.bat       text eol=lf
+
+# --- Dotfiles (no extension — treat as text) ---
+.gitignore      text eol=lf
+.gitattributes  text eol=lf
+.dockerignore   text eol=lf
+.vscodeignore   text eol=lf
+.babelrc        text eol=lf
+.example        text eol=lf
+Dockerfile      text eol=lf
+
+# --- Truly binary files --- keep as-is
+*.png   binary
+*.exe   binary
+*.svg   text eol=lf
+
+# --- Lock files: text but don't diff ---
+*.lock          text eol=lf -diff
+package-lock.json text eol=lf -diff
+Cargo.lock      text eol=lf -diff
+
+# --- Generated marker (no content) ---
+*.typed         text eol=lf
+*.tsbuildinfo   text eol=lf
+*.tracy         text eol=lf
