@@ -50,7 +50,7 @@ dev = [
   "pytest",
   "pytest-cov",
   "pytest-asyncio",
-  "python-dotenv>=1.0.1",
+  "python-dotenv>=1.2.2",
   "ruff",
   "types-PyYAML",
   "types-aiofiles",
