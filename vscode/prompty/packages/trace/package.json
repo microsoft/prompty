@@ -16,7 +16,7 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "styled-components": "^6.1.19",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.0",
     "zustand": "^5.0.6"
   },
   "devDependencies": {
