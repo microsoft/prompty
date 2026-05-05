@@ -1,6 +1,6 @@
 [package]
 name = "prompty-openai"
-version = "2.0.0-alpha.11"
+version = "2.0.0-alpha.12"
 edition = "2024"
 rust-version = "1.85"
 description = "OpenAI provider for Prompty"
@@ -12,11 +12,11 @@ keywords = ["llm", "prompt", "openai", "ai"]
 categories = ["development-tools"]
 
 [dependencies]
-prompty = { version = "2.0.0-alpha.11", path = "../prompty" }
+prompty = { version = "2.0.0-alpha.12", path = "../prompty" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 async-trait = "0.1"
-tokio = { version = "1", features = ["sync"] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
 reqwest = { version = "0.12", features = ["json", "stream"] }
 futures = "0.3"
 bytes = "1"

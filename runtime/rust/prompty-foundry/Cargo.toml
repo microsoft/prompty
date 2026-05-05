@@ -1,6 +1,6 @@
 [package]
 name = "prompty-foundry"
-version = "2.0.0-alpha.11"
+version = "2.0.0-alpha.12"
 edition = "2024"
 rust-version = "1.85"
 description = "Azure OpenAI / Foundry provider for Prompty"
@@ -12,8 +12,8 @@ keywords = ["llm", "prompt", "azure", "openai", "foundry"]
 categories = ["development-tools"]
 
 [dependencies]
-prompty = { version = "2.0.0-alpha.11", path = "../prompty" }
-prompty-openai = { version = "2.0.0-alpha.11", path = "../prompty-openai" }
+prompty = { version = "2.0.0-alpha.12", path = "../prompty" }
+prompty-openai = { version = "2.0.0-alpha.12", path = "../prompty-openai" }
 async-trait = "0.1"
 azure_identity = { version = "0.23", optional = true }
 azure_core = { version = "0.23", optional = true }
