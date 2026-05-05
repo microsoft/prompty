@@ -17,6 +17,23 @@ via OIDC (no secrets needed).
 Run these **exact** steps locally before pushing tags. They mirror CI.
 If these pass locally, CI will pass. **Do not skip this.**
 
+### Repo hygiene pre-flight
+
+Enable the local hook once per clone so staged files are normalized through
+`.gitattributes` and whitespace errors are blocked before commit:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Before releasing, confirm the repository has no whitespace errors or tracked
+CRLF files:
+
+```bash
+git diff --check
+git ls-files --eol | grep 'w/crlf'  # should print nothing
+```
+
 ### TypeScript pre-flight
 
 ```bash

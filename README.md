@@ -65,6 +65,23 @@ console.log(result);
 
 **VS Code** — open the `.prompty` file and press **F5**.
 
+## Contributor hygiene
+
+Prompty normalizes text files to LF line endings via `.gitattributes`. Enable the
+repo hook once per clone so staged files are normalized before each commit and
+whitespace errors are blocked locally:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Before opening a PR, you can run the same core hygiene checks directly:
+
+```bash
+git diff --check
+git ls-files --eol | grep 'w/crlf'
+```
+
 ## VS Code Extension
 
 > **v2 extension coming soon** — the next release brings a new connections sidebar, live preview, chat mode, and redesigned trace viewer. Stay tuned on the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).

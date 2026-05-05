@@ -1,0 +1,38 @@
+name: Repo Hygiene
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  line-endings-and-whitespace:
+    name: line endings and whitespace
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Check tracked files use LF
+        shell: bash
+        run: |
+          if git ls-files --eol | awk '$2 == "w/crlf" { print; bad = 1 } END { exit bad }'; then
+            echo "All tracked files are checked out with LF line endings."
+          else
+            echo "::error::Tracked files with CRLF line endings found. Run: git add --renormalize ."
+            exit 1
+          fi
+
+      - name: Check whitespace errors
+        shell: bash
+        run: |
+          if git rev-parse --verify HEAD^ >/dev/null 2>&1; then
+            git diff --check HEAD^..HEAD
+          else
+            git diff --check
+          fi
