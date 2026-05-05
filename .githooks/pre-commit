@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+tmp_file=$(mktemp)
+trap 'rm -f "$tmp_file"' EXIT
+
+git diff --cached --name-only --diff-filter=ACMR -z > "$tmp_file"
+
+if [ -s "$tmp_file" ]; then
+    # Re-stage text files through Git so .gitattributes eol=lf is applied
+    # before the commit is created.
+    xargs -0 git add --renormalize -- < "$tmp_file"
+fi
+
+git diff --cached --check
