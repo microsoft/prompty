@@ -83,7 +83,7 @@ file class MockExecutor : IExecutor
         {
             Role = Role.Assistant,
             Parts = [new TextPart { Value = textContent ?? "" }],
-            Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls }
+            Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls }
         });
         // one tool-result message per call
         for (int i = 0; i < toolCalls.Count; i++)
@@ -92,7 +92,7 @@ file class MockExecutor : IExecutor
             {
                 Role = Role.Tool,
                 Parts = [new TextPart { Value = toolResults[i] }],
-                Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
+                Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id }
             });
         }
         return msgs;

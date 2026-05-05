@@ -538,7 +538,7 @@ public class PipelineTests : IDisposable
             {
                 Role = Role.System,
                 Parts = [new TextPart { Value = "Prefix __PROMPTY_THREAD_abcd1234_conv__" }],
-                Metadata = new Dictionary<string, object?> { ["source"] = "test" },
+                Metadata = new Dictionary<string, object> { ["source"] = "test" },
             },
         };
 
