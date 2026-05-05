@@ -88,4 +88,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: ./runtime/python/prompty/dist
-          skip-existing: true
