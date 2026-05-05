@@ -11,6 +11,9 @@ Not all providers return all fields — implementations SHOULD populate as
 many fields as the provider's API supports and MAY enrich sparse results
 from a built-in lookup table of known models.
 
+For examples across OpenAI, Foundry/Azure OpenAI, Anthropic, and direct
+OpenAI-compatible endpoints, see [Discover Available Models](/how-to/model-discovery/).
+
 ## Class Diagram
 
 ```mermaid

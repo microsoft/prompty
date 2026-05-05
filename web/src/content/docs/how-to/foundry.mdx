@@ -22,10 +22,10 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
   <TabItem label="Python">
     ```bash
     # API key auth
-    pip install prompty[jinja2,foundry]
+    uv pip install "prompty[jinja2,foundry]"
 
     # Entra ID auth (adds azure-identity)
-    pip install prompty[jinja2,foundry] azure-identity
+    uv pip install "prompty[jinja2,foundry]" azure-identity
     ```
   </TabItem>
   <TabItem label="TypeScript">
@@ -49,8 +49,14 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 <Aside type="tip" title="Migrating from Azure OpenAI?">
   If your `.prompty` files use `provider: azure`, they still work — it's a
   deprecated alias for `provider: foundry`. Update when convenient.
-  Similarly, `pip install prompty[azure]` still works as an alias for
+  Similarly, `prompty[azure]` still works as an alias for
   `prompty[foundry]`.
+</Aside>
+
+<Aside type="tip" title="Deployment discovery">
+  Foundry and Azure OpenAI usually execute deployments. Use the
+  [model discovery guide](/how-to/model-discovery/) to list available deployment
+  ids before setting `model.id`.
 </Aside>
 
 ---

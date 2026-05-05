@@ -34,7 +34,7 @@ and available providers.
 - Modular package architecture (`@prompty/core` + provider packages)
 - Native async/await throughout
 - Provider registration via side-effect imports
-- Install: `npm install @prompty/core@alpha @prompty/openai@alpha`
+- Install: `npm install @prompty/core @prompty/openai`
 
 ### C#
 
@@ -50,3 +50,15 @@ and available providers.
 - Trait-based plugin system (`Executor`, `Processor`, `Renderer`, `Parser`)
 - Full agent loop with events, cancellation, guardrails, and steering
 - Install: `cargo add prompty prompty-openai`
+
+## Provider Packages
+
+| Provider | Python | TypeScript | C# | Rust |
+|---|---|---|---|---|
+| OpenAI | `prompty[openai]` | `@prompty/openai` | `Prompty.OpenAI` | `prompty-openai` |
+| Microsoft Foundry | `prompty[foundry]` | `@prompty/foundry` | `Prompty.Foundry` | `prompty-foundry` |
+| Anthropic | `prompty[anthropic]` | `@prompty/anthropic` | `Prompty.Anthropic` | `prompty-anthropic` |
+
+Provider feature coverage is not identical in every runtime. For model/deployment
+discovery support, see [Discover Available Models](/how-to/model-discovery/).
+For endpoint-backed verification, see [Run Live Provider Tests](/how-to/live-integrations/).

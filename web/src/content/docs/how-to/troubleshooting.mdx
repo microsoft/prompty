@@ -17,16 +17,16 @@ Errors are grouped by category — jump to the section that matches your symptom
 
 | Error | Cause | Fix |
 |---|---|---|
-| `ModuleNotFoundError: No module named 'openai'` | Missing optional dependency (Python) | `pip install prompty[openai]` |
-| `ModuleNotFoundError: No module named 'jinja2'` | Missing renderer dependency (Python) | `pip install prompty[jinja2]` |
-| `ModuleNotFoundError: No module named 'chevron'` | Missing Mustache renderer (Python) | `pip install prompty[mustache]` |
-| `ModuleNotFoundError: No module named 'azure.identity'` | Missing Azure dependency (Python) | `pip install prompty[azure]` |
+| `ModuleNotFoundError: No module named 'openai'` | Missing optional dependency (Python) | `uv pip install "prompty[openai]"` |
+| `ModuleNotFoundError: No module named 'jinja2'` | Missing renderer dependency (Python) | `uv pip install "prompty[jinja2]"` |
+| `ModuleNotFoundError: No module named 'chevron'` | Missing Mustache renderer (Python) | `uv pip install "prompty[mustache]"` |
+| `ModuleNotFoundError: No module named 'azure.identity'` | Missing Foundry/Azure dependency (Python) | `uv pip install "prompty[foundry]"` |
 | `Cannot find module '@prompty/openai'` | Missing npm package (TypeScript) | `npm install @prompty/openai` |
 | `Could not load file or assembly 'Prompty.OpenAI'` | Missing NuGet package (C#) | `dotnet add package Prompty.OpenAI` |
 | `Could not load file or assembly 'Prompty.Foundry'` | Missing NuGet package (C#) | `dotnet add package Prompty.Foundry` |
 
 <Aside type="tip">
-**Python:** Install everything at once with `pip install prompty[all]`.\
+**Python:** Install everything at once with `uv pip install "prompty[all]"`.\
 **TypeScript:** `npm install @prompty/core @prompty/openai`.\
 **C#:** `dotnet add package Prompty.OpenAI` (includes core as a transitive dependency).
 </Aside>
@@ -126,12 +126,12 @@ exists at that relative location.
   <TabItem label="Python">
     ```
     InvokerError: No renderer found for 'jinja2'.
-    Install the required extra: uv pip install prompty[jinja2]
+    Install the required extra: uv pip install "prompty[jinja2]"
     ```
 
     ```
     InvokerError: No executor found for 'openai'.
-    Install the required extra: uv pip install prompty[openai]
+    Install the required extra: uv pip install "prompty[openai]"
     ```
 
     **Fix:** Install the corresponding extra. After installing, if you're in a notebook

@@ -19,7 +19,7 @@ For contributing to the Prompty documentation:
     - Use Node.js 18+ for best compatibility.
 
 2. Making Changes
-    - Documentation files are located in the `docs` directory.
+    - User-facing documentation files are located in `web/src/content/docs`.
     - Follow the existing folder structure and naming conventions.
     - Use `.mdx` extension for all documentation files.
 
@@ -31,6 +31,12 @@ For contributing to the Prompty documentation:
 4. Building Documentation
     - Test a production build with `npm run build` followed by `npm run start`.
     - Check for any build errors or warnings before submitting your PR.
+
+5. Provider and runtime changes
+    - Update provider guides when adding or changing OpenAI, Foundry, Anthropic, or custom provider behavior.
+    - Update [Discover Available Models](/how-to/model-discovery/) when model-listing support changes.
+    - Update [Run Live Provider Tests](/how-to/live-integrations/) when integration-test environment variables or skip behavior changes.
+    - Cross-link new APIs from generated reference pages when users need narrative examples.
 
 ---
 [Want to Contribute To the Project?](/contributing/)

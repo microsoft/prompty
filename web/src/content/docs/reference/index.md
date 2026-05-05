@@ -1,13 +1,14 @@
 ---
-title: "AgentSchema"
-description: "Overview of declarative agent types in AgentSchema."
+title: "Prompty Schema"
+description: "Overview of generated Prompty schema types."
 slug: "reference"
 sidebar:
   order: 1
 ---
 
-The following diagram illustrates the classes and their relationships for declarative agents.
-The root [object](agentdefinition/) represents the main entry point for the system.
+The following diagram illustrates the generated Prompty schema types and their
+relationships. The schema is defined in the in-repository TypeSpec model under
+`schema/` and emitted into each runtime.
 
 ```mermaid
 ---

@@ -36,18 +36,22 @@ renders, parses, and executes these files.
   <TabItem label="Python">
     ```bash
     # Core + Jinja2 renderer + OpenAI provider
-    pip install prompty[jinja2,openai]
+    uv pip install "prompty[jinja2,openai]"
 
     # With Microsoft Foundry support
-    pip install prompty[jinja2,foundry]
+    uv pip install "prompty[jinja2,foundry]"
+
+    # With Anthropic support
+    uv pip install "prompty[jinja2,anthropic]"
 
     # Everything
-    pip install prompty[all]
+    uv pip install "prompty[all]"
     ```
 
     <Aside type="note">
-      Prompty v2 requires **Python ≥ 3.11**. We recommend using
-      [uv](https://docs.astral.sh/uv/) for environment management.
+      Prompty v2 requires **Python ≥ 3.11**. Use
+      [uv](https://docs.astral.sh/uv/) for local environments and package
+      management when working from source.
     </Aside>
   </TabItem>
   <TabItem label="TypeScript">
@@ -78,6 +82,17 @@ renders, parses, and executes these files.
     ```
   </TabItem>
 </Tabs>
+
+## Choose a Provider
+
+| Provider | Python extra | TypeScript package | C# package | Rust crate | Notes |
+|---|---|---|---|---|---|
+| OpenAI | `prompty[openai]` | `@prompty/openai` | `Prompty.OpenAI` | `prompty-openai` | Direct OpenAI and OpenAI-compatible endpoints. |
+| Microsoft Foundry | `prompty[foundry]` | `@prompty/foundry` | `Prompty.Foundry` | `prompty-foundry` | Foundry/Azure OpenAI deployments; `azure` remains a deprecated alias. |
+| Anthropic | `prompty[anthropic]` | `@prompty/anthropic` | `Prompty.Anthropic` | `prompty-anthropic` | Claude via Anthropic Messages API. |
+
+If you are not sure which `model.id` or deployment to use, see
+[Discover Available Models](/how-to/model-discovery/).
 
 ## Write Your First `.prompty` File
 

@@ -1,0 +1,105 @@
+---
+title: Run Live Provider Tests
+description: >
+  Exercise Prompty against real OpenAI, Foundry/Azure OpenAI, Anthropic, and direct OpenAI endpoints.
+sidebar:
+  order: 12
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Prompty’s unit tests mock provider SDKs. Live integration tests use real endpoints
+to catch wire-format and authentication issues that mocks can miss, such as unsupported
+empty `stop` arrays, deployment/model differences, and SDK response-shape differences.
+
+<Aside type="caution">
+  Live tests call paid services. Use test resources, set conservative model options,
+  and never commit `.env` files.
+</Aside>
+
+## Environment variables
+
+Create a local `.env` file for the runtime you are testing.
+
+| Variable | Used by | Notes |
+|---|---|---|
+| `OPENAI_API_KEY` | OpenAI-compatible proxy tests | Optional `OPENAI_BASE_URL` may point at a proxy endpoint. |
+| `DIRECT_OPENAI_API_KEY` | Direct OpenAI tests | Uses `https://api.openai.com/v1`. |
+| `ANTHROPIC_API_KEY` | Anthropic tests | Used by Anthropic provider tests. |
+| `AZURE_OPENAI_ENDPOINT` | Foundry/Azure OpenAI tests | Azure OpenAI endpoint or compatible Foundry endpoint. |
+| `AZURE_OPENAI_API_KEY` | Foundry/Azure OpenAI tests | API key auth. |
+| `AZURE_OPENAI_CHAT_DEPLOYMENT` | Chat/agent tests | Deployment id, not base model name. |
+| `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` | Embedding tests | Deployment id for embedding model. |
+
+Entra ID tests also require a local Azure identity that can access the target resource.
+If the token tenant does not match the resource tenant, tests should skip rather than
+report a runtime failure.
+
+## Commands
+
+<Tabs>
+  <TabItem label="Python">
+
+    ```bash
+    cd runtime/python/prompty
+    uv run pytest tests/integration/ -v -o "addopts="
+    ```
+
+    Integration tests are excluded from the normal unit-test run and skip automatically
+    when required environment variables are missing.
+
+  </TabItem>
+  <TabItem label="TypeScript">
+
+    ```bash
+    cd runtime/typescript
+    npm run build
+    npm run test --workspaces
+    ```
+
+    Provider tests import the built packages from `dist`, so build before relying on
+    integration behavior.
+
+  </TabItem>
+  <TabItem label="Rust">
+
+    ```bash
+    cd runtime/rust
+    cargo test --workspace -- --ignored --test-threads=1
+    ```
+
+    Rust live tests are ignored by default. Use one test thread when tests mutate
+    environment variables.
+
+  </TabItem>
+  <TabItem label="C#">
+
+    ```bash
+    cd runtime/csharp
+    dotnet test prompty.sln --filter "Category=Integration"
+    ```
+
+    C# integration tests use `SkippableFact` for missing credentials or tenant-specific
+    auth conditions.
+
+  </TabItem>
+</Tabs>
+
+## What live tests cover
+
+- Chat completions and provider-specific wire options
+- Streaming wrappers and trace accumulation
+- Structured output and response-format mapping
+- Embeddings and image generation where supported
+- Tool-calling agent loops
+- Provider model listing/discovery
+- API-key auth and, where configured, Entra ID auth
+
+## Interpreting skips
+
+A skip usually means the local machine is missing a provider key, deployment name,
+or tenant-compatible identity. A failure means the runtime likely sent an invalid
+request, parsed a response incorrectly, or used an endpoint with incompatible options.
+
+Run the smallest provider-specific test first when debugging, then rerun the full
+integration suite once fixed.

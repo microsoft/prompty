@@ -178,10 +178,14 @@ Responses are JSON-parsed and validated when an output schema is defined.
 
 ### Provider Support
 
-- **OpenAI** — direct API key
-- **Azure OpenAI / Foundry** — API key, Entra ID, managed identity
-- **Anthropic** — via provider registry
+- **OpenAI** — direct API key and OpenAI-compatible endpoints
+- **Microsoft Foundry / Azure OpenAI** — API key, Entra ID, managed identity, and deployment-based model ids
+- **Anthropic** — Claude via provider registry
 - Extensible: implement executor/processor protocols and register
+
+Model discovery is now available in selected runtimes. See
+[Discover Available Models](/how-to/model-discovery/) for the current support
+matrix and provider-specific examples.
 
 ### Pipeline Architecture
 

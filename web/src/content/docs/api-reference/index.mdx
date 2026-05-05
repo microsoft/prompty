@@ -9,6 +9,15 @@ sidebar:
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
+## Provider Model Discovery
+
+Prompty provider packages can expose model-listing helpers that return
+[`ModelInfo`](/reference/modelinfo/) records. Use them to choose a `model.id`
+or deployment before writing a `.prompty` file.
+
+See [Discover Available Models](/how-to/model-discovery/) for provider- and
+runtime-specific examples.
+
 ## Pipeline Functions
 
 ### `load(path) → Prompty`

@@ -14,7 +14,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 <Tabs>
   <TabItem label="Python">
     ```bash
-    pip install prompty[jinja2,anthropic]
+    uv pip install "prompty[jinja2,anthropic]"
     ```
   </TabItem>
   <TabItem label="TypeScript">
@@ -36,6 +36,12 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 </Tabs>
 
 You also need an [Anthropic API key](https://console.anthropic.com/settings/keys).
+
+<Aside type="note" title="Model discovery support">
+  Rust exposes Anthropic model listing today. Python, TypeScript, and C# can run
+  Anthropic prompts but do not yet expose an Anthropic model-listing helper; choose
+  model ids from Anthropic's published model catalog.
+</Aside>
 
 ---
 

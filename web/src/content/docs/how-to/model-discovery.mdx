@@ -1,0 +1,170 @@
+---
+title: Discover Available Models
+description: >
+  List provider models and deployments before choosing model.id for a .prompty file.
+sidebar:
+  order: 6
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Model discovery helps you answer “what can this connection use?” before you hard-code
+`model.id` in a `.prompty` file. Providers return `ModelInfo` records with the model
+or deployment id and, when available, context-window and modality metadata.
+
+<Aside type="note">
+  Model listing is provider- and runtime-specific. Some providers expose a public
+  model catalog; others expose Azure OpenAI deployments or require using the
+  provider portal.
+</Aside>
+
+## Support matrix
+
+| Runtime | OpenAI | Foundry / Azure OpenAI | Anthropic |
+|---|---|---|---|
+| Python | `list_models()` / `list_models_async()` | `list_models()` / `list_models_async()` | Not yet exposed |
+| TypeScript | `listModels()` | `listAzureModels()` | Not yet exposed |
+| C# | `OpenAIModels.ListModelsAsync()` | `FoundryModels.ListModelsAsync()` | Not yet exposed |
+| Rust | `list_models()` / `list_models_async()` | Not yet exposed | `list_models()` / `list_models_async()` |
+
+## Python
+
+<Tabs>
+  <TabItem label="OpenAI">
+
+    ```python
+    from prompty.model import ApiKeyConnection
+    from prompty.providers.openai.models import list_models
+
+    connection = ApiKeyConnection.load({
+        "kind": "key",
+        "apiKey": "${env:OPENAI_API_KEY}",
+    })
+
+    for model in list_models(connection):
+        print(model.id, model.context_window)
+    ```
+
+    To target a direct OpenAI-compatible endpoint, set `endpoint` on the same
+    `ApiKeyConnection`.
+
+  </TabItem>
+  <TabItem label="Foundry">
+
+    ```python
+    from prompty.model import ApiKeyConnection
+    from prompty.providers.foundry.models import list_models
+
+    connection = ApiKeyConnection.load({
+        "kind": "key",
+        "endpoint": "${env:AZURE_OPENAI_ENDPOINT}",
+        "apiKey": "${env:AZURE_OPENAI_API_KEY}",
+    })
+
+    for deployment in list_models(connection):
+        print(deployment.id, deployment.context_window)
+    ```
+
+    For Foundry/Azure OpenAI, `model.id` in your `.prompty` file is the
+    deployment id returned by the endpoint, not necessarily the base model name.
+
+  </TabItem>
+</Tabs>
+
+## TypeScript
+
+<Tabs>
+  <TabItem label="OpenAI">
+
+    ```typescript
+    import { ApiKeyConnection } from "@prompty/core";
+    import { listModels } from "@prompty/openai";
+
+    const models = await listModels(new ApiKeyConnection({
+      kind: "key",
+      apiKey: process.env.OPENAI_API_KEY,
+    }));
+
+    for (const model of models) {
+      console.log(model.id, model.contextWindow);
+    }
+    ```
+
+  </TabItem>
+  <TabItem label="Foundry">
+
+    ```typescript
+    import { ApiKeyConnection } from "@prompty/core";
+    import { listAzureModels } from "@prompty/foundry";
+
+    const models = await listAzureModels(new ApiKeyConnection({
+      kind: "key",
+      endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+    }));
+
+    for (const model of models) {
+      console.log(model.id, model.contextWindow);
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+## C#
+
+```csharp
+using Prompty.Core;
+using Prompty.OpenAI;
+
+var connection = new ApiKeyConnection
+{
+    ApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY"),
+};
+
+var models = await OpenAIModels.ListModelsAsync(connection);
+foreach (var model in models)
+{
+    Console.WriteLine($"{model.Id} {model.ContextWindow}");
+}
+```
+
+For Foundry/Azure OpenAI, use `Prompty.Foundry.FoundryModels.ListModelsAsync()`
+with an `ApiKeyConnection` that includes `Endpoint` and `ApiKey`.
+
+## Rust
+
+```rust
+use serde_json::json;
+
+let models = prompty_openai::list_models_async(&json!({
+    "kind": "key",
+    "apiKey": std::env::var("OPENAI_API_KEY")?,
+})).await?;
+
+for model in models {
+    println!("{} {:?}", model.id, model.context_window);
+}
+```
+
+Anthropic model listing is available through `prompty_anthropic::list_models_async()`.
+
+## Using the result
+
+Once you identify the model or deployment id, put it in frontmatter:
+
+```yaml
+---
+name: discovered-model
+model:
+  id: gpt-4o-mini
+  provider: openai
+  connection:
+    kind: key
+    apiKey: ${env:OPENAI_API_KEY}
+---
+system:
+You are a helpful assistant.
+```
+
+If the provider returns deployment ids, use the deployment id exactly as returned.

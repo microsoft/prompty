@@ -1,8 +1,8 @@
 ---
 title: Use with OpenAI
 description: >
-  Connect Prompty to the OpenAI API — complete .prompty file, Python and
-  TypeScript code, and tips for switching models.
+  Connect Prompty to the OpenAI API or an OpenAI-compatible endpoint — complete
+  .prompty file, Python and TypeScript code, and tips for switching models.
 sidebar:
   order: 3
 ---
@@ -14,7 +14,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 <Tabs>
   <TabItem label="Python">
     ```bash
-    pip install prompty[jinja2,openai]
+    uv pip install "prompty[jinja2,openai]"
     ```
   </TabItem>
   <TabItem label="TypeScript">
@@ -36,6 +36,11 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 </Tabs>
 
 You also need an [OpenAI API key](https://platform.openai.com/api-keys).
+
+<Aside type="tip" title="Choosing a model">
+  Use the [model discovery guide](/how-to/model-discovery/) to list models from
+  OpenAI or an OpenAI-compatible endpoint before setting `model.id`.
+</Aside>
 
 ---
 
@@ -68,6 +73,9 @@ You are a helpful assistant. Answer concisely.
 user:
 {{question}}
 ```
+
+To target a direct OpenAI-compatible endpoint or proxy, keep `provider: openai`
+and add `endpoint` under `connection`.
 
 <Aside type="note">
   `${env:OPENAI_API_KEY}` is resolved at load time from your environment or

@@ -87,9 +87,11 @@ model:
 ### Notes
 
 - **SDKs:** Python — `openai` package · TypeScript — `openai` npm package · C# — `OpenAI` NuGet package
+- OpenAI-compatible endpoints can be used by setting `connection.endpoint`
 - Supports streaming via `PromptyStream` / `AsyncPromptyStream` (Python), async iterables (TypeScript), and `IAsyncEnumerable` (C#)
 - Structured output is supported via `outputs` → `response_format`
 - [Agent mode](../agent-mode/) is available via `turn()` — it uses `apiType: chat` with an automatic tool-calling loop
+- Model listing is available in Python, TypeScript, C#, and Rust; see [Discover Available Models](/how-to/model-discovery/)
 
 ---
 
@@ -183,6 +185,7 @@ model:
 - Supports the same features as the OpenAI provider (streaming, structured output,
   agent mode)
 - Model deployments are managed through the [Azure AI Foundry portal](https://ai.azure.com/)
+- Deployment listing is available in Python, TypeScript, and C#; see [Discover Available Models](/how-to/model-discovery/)
 
 ---
 
@@ -218,6 +221,8 @@ model:
 - The `endpoint` defaults to `https://api.anthropic.com` and can typically be
   omitted
 - Tool calling is supported through Anthropic's native tool use API
+- Anthropic model listing is currently exposed in Rust; other runtimes should use
+  Anthropic's published model catalog
 
 ---
 
@@ -233,6 +238,7 @@ model:
 | Streaming | ✅ | ✅ | ✅ |
 | Structured output | ✅ | ✅ | ✅ |
 | Entra ID auth | ❌ | ✅ | ❌ |
+| Model listing | ✅ | ✅ | Rust only |
 
 ---
 

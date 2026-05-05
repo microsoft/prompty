@@ -31,7 +31,7 @@ v2 recommends `uv` for Python environment management:
 pip install prompty
 
 # v2
-uv pip install prompty[jinja2,openai]
+uv pip install "prompty[jinja2,openai]"
 ```
 
 ### Extras Are Required
@@ -41,9 +41,9 @@ you need:
 
 | Runtime | Install Command |
 |---------|----------------|
-| **Python** | `uv pip install prompty[jinja2,openai]` |
+| **Python** | `uv pip install "prompty[jinja2,openai]"` |
 | **TypeScript** | `npm install @prompty/core @prompty/openai` |
-| **C#** | `dotnet add package Prompty.OpenAI` |
+| **C#** | `dotnet add package Prompty.OpenAI --prerelease` |
 | **Rust** | `cargo add prompty prompty-openai` |
 
 **Python extras:**
@@ -53,7 +53,9 @@ you need:
 | `jinja2` | Jinja2 renderer |
 | `mustache` | Mustache renderer |
 | `openai` | OpenAI provider |
-| `azure` | Azure OpenAI + identity (deprecated alias for `foundry`) |
+| `foundry` | Microsoft Foundry / Azure OpenAI provider |
+| `azure` | Deprecated alias for `foundry` |
+| `anthropic` | Anthropic provider |
 | `otel` | OpenTelemetry tracing |
 | `all` | Everything above |
 

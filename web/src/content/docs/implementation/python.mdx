@@ -18,7 +18,7 @@ uv venv
 source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 
 # Install with the extras you need
-uv pip install prompty[jinja2,openai]
+uv pip install "prompty[jinja2,openai]"
 ```
 
 ### Available Extras
@@ -30,13 +30,13 @@ uv pip install prompty[jinja2,openai]
 | `openai` | `openai` | OpenAI provider |
 | `azure` | `openai`, `azure-identity` | Azure OpenAI provider (deprecated alias for `foundry`) |
 | `anthropic` | `anthropic` | Anthropic provider |
-| `foundry` | `azure-ai-foundry`, `azure-identity` | Microsoft Foundry provider |
+| `foundry` | `openai`, `azure-identity` | Microsoft Foundry / Azure OpenAI provider |
 | `otel` | `opentelemetry-api` | OpenTelemetry tracing |
 | `all` | All of the above | Everything |
 
 ```bash
 # Install everything
-uv pip install prompty[all]
+uv pip install "prompty[all]"
 ```
 
 ## Quick Start
@@ -153,7 +153,7 @@ def my_pipeline(query: str) -> str:
 | OpenAI | `openai` | `openai` | `prompty[openai]` |
 | Azure OpenAI (deprecated) | `azure` | `openai` + `azure-identity` | `prompty[azure]` |
 | Anthropic | `anthropic` | `anthropic` | `prompty[anthropic]` |
-| Microsoft Foundry | `foundry` | `azure-ai-foundry` + `azure-identity` | `prompty[foundry]` |
+| Microsoft Foundry | `foundry` | `openai` + `azure-identity` | `prompty[foundry]` |
 
 Providers are discovered via Python entry points — the plugin architecture makes it
 easy to add new providers. Third-party providers can register themselves in their
@@ -176,4 +176,6 @@ FOUNDRY_ENDPOINT=https://your-project.services.ai.azure.com
 
 - [API Reference](/api-reference/) — complete function signatures
 - [How-To Guides](/how-to/openai/) — practical recipes
+- [Discover Available Models](/how-to/model-discovery/) — model and deployment listing
+- [Run Live Provider Tests](/how-to/live-integrations/) — real endpoint validation
 - [Core Concepts](/core-concepts/) — architecture deep-dives
