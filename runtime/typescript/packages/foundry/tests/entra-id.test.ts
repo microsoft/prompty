@@ -50,6 +50,24 @@ const AZURE_ENDPOINT = process.env.AZURE_OPENAI_ENDPOINT;
 const AZURE_CHAT_DEPLOYMENT = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT;
 const hasEntraId = !!(AZURE_ENDPOINT && AZURE_CHAT_DEPLOYMENT);
 
+function isSkippableEntraIdError(message: string): boolean {
+  return (
+    message.includes("authentication") ||
+    message.includes("credential") ||
+    message.includes("CredentialUnavailableError") ||
+    message.includes("Token tenant") ||
+    message.includes("resource tenant") ||
+    message.includes("401") ||
+    message.includes("403")
+  );
+}
+
+function warnSkippedEntraId(message: string): void {
+  console.warn(
+    `Skipping: Entra ID authorization failed — ensure the active credential tenant matches the Azure OpenAI resource tenant and has 'Cognitive Services OpenAI User'. (${message})`,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Helper — build an agent that uses FoundryConnection (Entra ID, no API key)
 // ---------------------------------------------------------------------------
@@ -142,16 +160,8 @@ describe.skipIf(!hasEntraId)("Foundry Entra ID Integration", () => {
       expect((result as string).length).toBeGreaterThan(0);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes("authentication") || msg.includes("credential") || msg.includes("CredentialUnavailableError")) {
-        console.warn(
-          `Skipping: Entra ID credentials not available — run \`az login\` first. (${msg})`,
-        );
-        return;
-      }
-      if (msg.includes("401") || msg.includes("403")) {
-        console.warn(
-          `Skipping: Entra ID authorization failed — ensure 'Cognitive Services OpenAI User' role. (${msg})`,
-        );
+      if (isSkippableEntraIdError(msg)) {
+        warnSkippedEntraId(msg);
         return;
       }
       throw e;
@@ -173,16 +183,8 @@ describe.skipIf(!hasEntraId)("Foundry Entra ID Integration", () => {
       expect(chunks.join("").length).toBeGreaterThan(0);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes("authentication") || msg.includes("credential") || msg.includes("CredentialUnavailableError")) {
-        console.warn(
-          `Skipping: Entra ID credentials not available — run \`az login\` first. (${msg})`,
-        );
-        return;
-      }
-      if (msg.includes("401") || msg.includes("403")) {
-        console.warn(
-          `Skipping: Entra ID authorization failed — ensure 'Cognitive Services OpenAI User' role. (${msg})`,
-        );
+      if (isSkippableEntraIdError(msg)) {
+        warnSkippedEntraId(msg);
         return;
       }
       throw e;

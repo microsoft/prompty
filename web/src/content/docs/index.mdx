@@ -37,7 +37,6 @@ import NumberGrid from '~/components/number-grid.astro';
 import Number from '~/components/number.astro';
 import AboutPrompty from '~/components/about-prompty.astro';
 import { CardGrid, LinkCard } from '@astrojs/starlight/components';
-import { ContributorList } from "starlight-contributor-list";
 
 <InfoGrid>
   <Info reversed={false} title="One file, complete prompt" image="/images/prompty-file.png">
@@ -119,6 +118,5 @@ import { ContributorList } from "starlight-contributor-list";
 </CardGrid>
 
 <AboutPrompty title="Sponsored by:">
-  Thanks to all of our amazing contributors:
-  <ContributorList githubRepo="microsoft/prompty"/>
+  Thanks to all of our amazing [contributors](https://github.com/microsoft/prompty/graphs/contributors).
 </AboutPrompty>

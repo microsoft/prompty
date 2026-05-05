@@ -10,17 +10,19 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.34.4",
-    "astro": "^5.16.1",
-    "astro-mermaid": "^1.0.4",
+    "@astrojs/starlight": "^0.38.4",
+    "@mermaid-js/layout-elk": "^0.2.0",
+    "astro": "^6.2.2",
+    "astro-mermaid": "^2.0.1",
     "mermaid": "^11.8.1",
     "sass": "^1.89.1",
     "sharp": "^0.32.5",
-    "starlight-auto-sidebar": "^0.1.2",
-    "starlight-contributor-list": "^0.3.0"
+    "starlight-auto-sidebar": "^0.3.0"
+  },
+  "overrides": {
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "starlight-links-validator": "^0.17.1",
-    "vite-plugin-devtools-json": "^0.2.0"
+    "starlight-links-validator": "^0.24.0"
   }
 }

@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import starlight from "@astrojs/starlight";
-import devtoolsJson from "vite-plugin-devtools-json";
 import starlightAutoSidebar from "starlight-auto-sidebar";
 import starlightLinksValidator from "starlight-links-validator";
 import mermaid from "astro-mermaid";
