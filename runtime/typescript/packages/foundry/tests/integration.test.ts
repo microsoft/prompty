@@ -15,9 +15,11 @@ import {
   registerExecutor,
   registerProcessor,
   Prompty,
+  ReferenceConnection,
 } from "@prompty/core";
 import { FoundryExecutor } from "../src/executor.js";
 import { FoundryProcessor } from "../src/processor.js";
+import { listAzureModels } from "../src/azure-models.js";
 
 // ---------------------------------------------------------------------------
 // Env loading (zero-dep — reads workspace-root .env)
@@ -117,6 +119,13 @@ describe.skipIf(!hasFoundry)("Foundry Integration", () => {
     const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
+  });
+
+  // --- Model listing ---
+  it("lists models", { timeout: 30_000 }, async () => {
+    const models = await listAzureModels(new ReferenceConnection({ name: "test-foundry" }));
+    expect(models.length).toBeGreaterThan(0);
+    expect(models[0].id).toBeTruthy();
   });
 
   // --- Streaming ---

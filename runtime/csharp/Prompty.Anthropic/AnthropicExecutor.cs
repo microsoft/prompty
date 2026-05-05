@@ -338,7 +338,7 @@ public class AnthropicExecutor : IExecutor
             Parts = !string.IsNullOrEmpty(textContent)
                 ? [new TextPart { Value = textContent }]
                 : [],
-            Metadata = new Dictionary<string, object?> { ["content"] = rawContent },
+            Metadata = new Dictionary<string, object> { ["content"] = rawContent },
         });
 
         // --- Single user message with batched tool_result blocks ---
@@ -357,7 +357,7 @@ public class AnthropicExecutor : IExecutor
         {
             Role = Role.User,
             Parts = toolResults.Select(r => (ContentPart)new TextPart { Value = r }).ToList(),
-            Metadata = new Dictionary<string, object?> { ["tool_results"] = toolResultBlocks },
+            Metadata = new Dictionary<string, object> { ["tool_results"] = toolResultBlocks },
         });
 
         return messages;

@@ -138,9 +138,9 @@ public abstract partial class Connection
         result["kind"] = obj.Kind;
 
 
-        if (obj.AuthenticationMode is not null)
+        if (obj.AuthenticationMode.HasValue)
         {
-            result["authenticationMode"] = obj.AuthenticationMode.ToString().ToLowerInvariant();
+            result["authenticationMode"] = obj.AuthenticationMode.Value.ToString().ToLowerInvariant();
         }
 
 

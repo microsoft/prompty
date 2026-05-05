@@ -185,7 +185,7 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result = opts.toWire("anthropic");
+  const result = modelOptionsToWire(opts as unknown as Record<string, unknown>);
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {
@@ -194,6 +194,33 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
         result[k] = v;
       }
     }
+  }
+
+  return result;
+}
+
+function modelOptionsToWire(
+  opts: Record<string, unknown> & { toWire?: (provider: string) => Record<string, unknown> },
+): Record<string, unknown> {
+  const result = typeof opts.toWire === "function" ? opts.toWire("anthropic") : {};
+
+  const mappings: Record<string, string> = {
+    maxOutputTokens: "max_tokens",
+    temperature: "temperature",
+    topK: "top_k",
+    topP: "top_p",
+    stopSequences: "stop_sequences",
+  };
+
+  for (const [key, target] of Object.entries(mappings)) {
+    const value = opts[key];
+    if (value === undefined || value === null) continue;
+    if (key === "stopSequences" && Array.isArray(value) && value.length === 0) continue;
+    result[target] = value;
+  }
+
+  if (Array.isArray(opts.stopSequences) && opts.stopSequences.length === 0) {
+    delete result.stop_sequences;
   }
 
   return result;

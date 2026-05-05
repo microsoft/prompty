@@ -97,7 +97,7 @@ internal static class TestHelpers
         {
             Role = Role.Assistant,
             Parts = [new TextPart { Value = text }],
-            Metadata = new Dictionary<string, object?>
+            Metadata = new Dictionary<string, object>
             {
                 ["tool_calls"] = toolCalls,
             },
@@ -113,7 +113,7 @@ internal static class TestHelpers
         {
             Role = Role.Tool,
             Parts = [new TextPart { Value = content }],
-            Metadata = new Dictionary<string, object?>
+            Metadata = new Dictionary<string, object>
             {
                 ["tool_call_id"] = toolCallId,
             },

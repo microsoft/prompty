@@ -193,7 +193,7 @@ public class OpenAIExecutor : IExecutor
                 {
                     Role = Role.Assistant,
                     Parts = [],
-                    Metadata = new Dictionary<string, object?> { ["responses_function_call"] = (ResponseItem)fc },
+                    Metadata = new Dictionary<string, object> { ["responses_function_call"] = (ResponseItem)fc },
                 });
             }
 
@@ -204,7 +204,7 @@ public class OpenAIExecutor : IExecutor
                 {
                     Role = Role.Tool,
                     Parts = [new TextPart { Value = toolResults[i] }],
-                    Metadata = new Dictionary<string, object?>
+                    Metadata = new Dictionary<string, object>
                     {
                         ["tool_call_id"] = toolCalls[i].Id,
                         ["name"] = toolCalls[i].Name,
@@ -224,7 +224,7 @@ public class OpenAIExecutor : IExecutor
         {
             Role = Role.Assistant,
             Parts = assistantParts,
-            Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls.ToList() },
+            Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls.ToList() },
         });
 
         // --- One tool message per result ---
@@ -234,7 +234,7 @@ public class OpenAIExecutor : IExecutor
             {
                 Role = Role.Tool,
                 Parts = [new TextPart { Value = toolResults[i] }],
-                Metadata = new Dictionary<string, object?>
+                Metadata = new Dictionary<string, object>
                 {
                     ["tool_call_id"] = toolCalls[i].Id,
                     ["name"] = toolCalls[i].Name,

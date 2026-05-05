@@ -16,7 +16,8 @@ public interface IExecutor
     /// <summary>
     /// Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support.
     /// </summary>
-    Task<object> ExecuteStreamAsync(Prompty agent, List<Message> messages) => Task.FromResult<object>(default);
+    Task<object> ExecuteStreamAsync(Prompty agent, List<Message> messages) =>
+        Task.FromException<object>(new NotSupportedException("Streaming is not supported by this executor."));
     /// <summary>
     /// Format tool call results into messages for the next iteration
     /// </summary>

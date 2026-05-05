@@ -275,6 +275,8 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
 
     mo = agent.model.options
     opts = mo.to_wire("openai")
+    if not mo.stop_sequences:
+        opts.pop("stop", None)
 
     # Pass through additional properties
     if mo.additional_properties:
@@ -297,6 +299,8 @@ def _build_responses_options(agent: Prompty) -> dict[str, Any]:
 
     mo = agent.model.options
     opts = mo.to_wire("responses")
+    if not mo.stop_sequences:
+        opts.pop("stop", None)
 
     # Pass through additional properties
     if mo.additional_properties:
@@ -530,8 +534,8 @@ class _BaseExecutor:
         }
         # Only pass through additional properties — standard chat options
         # (temperature, top_p, etc.) are not valid for the embeddings API.
-        if agent.model.options and agent.model.options.additionalProperties:
-            for k, v in agent.model.options.additionalProperties.items():
+        if agent.model.options and agent.model.options.additional_properties:
+            for k, v in agent.model.options.additional_properties.items():
                 args[k] = v
         return args
 
@@ -544,8 +548,8 @@ class _BaseExecutor:
         }
         # Only pass through additional properties — standard chat options
         # (temperature, top_p, etc.) are not valid for the images API.
-        if agent.model.options and agent.model.options.additionalProperties:
-            for k, v in agent.model.options.additionalProperties.items():
+        if agent.model.options and agent.model.options.additional_properties:
+            for k, v in agent.model.options.additional_properties.items():
                 args[k] = v
         return args
 

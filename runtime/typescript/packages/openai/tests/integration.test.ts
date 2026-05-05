@@ -15,9 +15,11 @@ import {
   registerExecutor,
   registerProcessor,
   Prompty,
+  ApiKeyConnection,
 } from "@prompty/core";
 import { OpenAIExecutor } from "../src/executor.js";
 import { OpenAIProcessor } from "../src/processor.js";
+import { listModels } from "../src/models.js";
 
 // ---------------------------------------------------------------------------
 // Env loading (zero-dep — reads workspace-root .env)
@@ -135,6 +137,17 @@ describe.skipIf(!hasOpenAI)("OpenAI Integration", () => {
     const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
+  });
+
+  // --- Model listing ---
+  it("lists models", { timeout: 30_000 }, async () => {
+    const connection = new ApiKeyConnection({
+      apiKey: OPENAI_API_KEY,
+      ...(process.env.OPENAI_BASE_URL ? { endpoint: process.env.OPENAI_BASE_URL } : {}),
+    });
+    const models = await listModels(connection);
+    expect(models.length).toBeGreaterThan(0);
+    expect(models[0].id).toBeTruthy();
   });
 
   // --- Streaming ---
@@ -342,6 +355,16 @@ describe.skipIf(!hasDirectOpenAI)("Direct OpenAI Integration", () => {
     const result = await invoke(agent, { question: "Say hello in exactly 3 words." });
     expect(typeof result).toBe("string");
     expect((result as string).length).toBeGreaterThan(0);
+  });
+
+  // --- Model listing ---
+  it("lists models", { timeout: 30_000 }, async () => {
+    const models = await listModels(new ApiKeyConnection({
+      apiKey: DIRECT_OPENAI_API_KEY,
+      endpoint: "https://api.openai.com/v1",
+    }));
+    expect(models.length).toBeGreaterThan(0);
+    expect(models[0].id).toBeTruthy();
   });
 
   // --- Streaming ---

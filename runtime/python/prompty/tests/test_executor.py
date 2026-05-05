@@ -127,6 +127,14 @@ class TestBuildOptions:
         opts = _build_options(agent)
         assert opts["temperature"] == 0.7
         assert opts["max_completion_tokens"] == 100
+        assert "stop" not in opts
+
+    def test_stop_sequences_only_when_present(self):
+        agent = _make_agent()
+        assert agent.model.options is not None
+        agent.model.options.stop_sequences = ["END"]
+        opts = _build_options(agent)
+        assert opts["stop"] == ["END"]
 
     def test_no_options(self):
         agent = _make_agent()

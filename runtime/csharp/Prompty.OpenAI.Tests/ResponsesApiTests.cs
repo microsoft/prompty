@@ -167,7 +167,7 @@ public class ResponsesApiTests
         {
             Role = Role.Assistant,
             Parts = [new TextPart { Value = "" }],
-            Metadata = new Dictionary<string, object?>
+            Metadata = new Dictionary<string, object>
             {
                 ["responses_function_call"] = storedItem,
             },

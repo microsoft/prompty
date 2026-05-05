@@ -86,6 +86,24 @@ fn build_anthropic_chat_agent(question: &str, options: Value) -> Prompty {
 
 #[tokio::test]
 #[ignore]
+async fn test_anthropic_list_models() {
+    setup();
+    skip_if_no_env!("ANTHROPIC_API_KEY");
+
+    let models = prompty_anthropic::list_models_async(&json!({ "kind": "key" }))
+        .await
+        .expect("Anthropic model listing should succeed");
+
+    assert!(
+        !models.is_empty(),
+        "model listing should return at least one model"
+    );
+    assert!(!models[0].id.is_empty(), "first model should have an id");
+    eprintln!("Anthropic listed {} models", models.len());
+}
+
+#[tokio::test]
+#[ignore]
 async fn test_anthropic_chat_completion() {
     setup();
     skip_if_no_env!("ANTHROPIC_API_KEY");

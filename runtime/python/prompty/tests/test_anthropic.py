@@ -196,6 +196,11 @@ class TestBuildOptions:
         opts = _build_options(agent)
         assert opts == {}
 
+    def test_empty_stop_sequences_not_sent(self):
+        agent = _make_agent(options={"temperature": 0.5})
+        opts = _build_options(agent)
+        assert "stop_sequences" not in opts
+
 
 class TestToolsToWire:
     def test_function_tool(self):

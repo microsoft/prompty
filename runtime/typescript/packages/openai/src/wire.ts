@@ -207,7 +207,7 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result = opts.toWire("openai");
+  const result = modelOptionsToWire(opts as unknown as Record<string, unknown>, "openai");
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {
@@ -216,6 +216,39 @@ function buildOptions(agent: Prompty): Record<string, unknown> {
         result[k] = v;
       }
     }
+  }
+
+  return result;
+}
+
+function modelOptionsToWire(
+  opts: Record<string, unknown> & { toWire?: (provider: string) => Record<string, unknown> },
+  provider: "openai" | "responses",
+): Record<string, unknown> {
+  const result = typeof opts.toWire === "function" ? opts.toWire(provider) : {};
+
+  const mappings: Record<string, Partial<Record<typeof provider, string>>> = {
+    frequencyPenalty: { openai: "frequency_penalty" },
+    maxOutputTokens: { openai: "max_completion_tokens", responses: "max_output_tokens" },
+    presencePenalty: { openai: "presence_penalty" },
+    seed: { openai: "seed" },
+    temperature: { openai: "temperature", responses: "temperature" },
+    topK: { openai: "top_k" },
+    topP: { openai: "top_p", responses: "top_p" },
+    stopSequences: { openai: "stop" },
+    allowMultipleToolCalls: { openai: "parallel_tool_calls" },
+  };
+
+  for (const [key, mapping] of Object.entries(mappings)) {
+    const target = mapping[provider];
+    const value = opts[key];
+    if (!target || value === undefined || value === null) continue;
+    if (key === "stopSequences" && Array.isArray(value) && value.length === 0) continue;
+    result[target] = value;
+  }
+
+  if (Array.isArray(opts.stopSequences) && opts.stopSequences.length === 0) {
+    delete result.stop;
   }
 
   return result;
@@ -488,7 +521,7 @@ function buildResponsesOptions(agent: Prompty): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result = opts.toWire("responses");
+  const result = modelOptionsToWire(opts as unknown as Record<string, unknown>, "responses");
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {

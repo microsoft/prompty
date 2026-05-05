@@ -91,6 +91,7 @@ class TestEntraId:
 def _skip_on_auth_error(exc: Exception) -> None:
     """Skip the test with a helpful message if the error is auth-related."""
     exc_type = type(exc).__name__
+    exc_text = str(exc).lower()
 
     # azure.identity.CredentialUnavailableError or AuthenticationError
     if "Credential" in exc_type or "Authentication" in exc_type:
@@ -110,3 +111,6 @@ def _skip_on_auth_error(exc: Exception) -> None:
             f"Azure Entra ID authorization failed (HTTP {status}) — ensure your identity has "
             f"'Cognitive Services OpenAI User' role on the resource. ({exc})"
         )
+
+    if status == 400 and "tenant" in exc_text and "does not match" in exc_text:
+        pytest.skip("Azure Entra ID tenant mismatch — log in with an identity from the Azure OpenAI resource tenant.")

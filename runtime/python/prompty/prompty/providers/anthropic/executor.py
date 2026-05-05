@@ -131,6 +131,8 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
         return {}
 
     result = opts.to_wire("anthropic")
+    if not opts.stop_sequences:
+        result.pop("stop_sequences", None)
 
     # Pass through additionalProperties
     if opts.additional_properties:
@@ -348,8 +350,8 @@ class AnthropicExecutor:
         args = _build_chat_args(agent, data)
         is_streaming = args.pop("stream", False) or (
             agent.model.options
-            and agent.model.options.additionalProperties
-            and agent.model.options.additionalProperties.get("stream", False)
+            and agent.model.options.additional_properties
+            and agent.model.options.additional_properties.get("stream", False)
         )
 
         if is_streaming:
@@ -363,8 +365,8 @@ class AnthropicExecutor:
         args = _build_chat_args(agent, data)
         is_streaming = args.pop("stream", False) or (
             agent.model.options
-            and agent.model.options.additionalProperties
-            and agent.model.options.additionalProperties.get("stream", False)
+            and agent.model.options.additional_properties
+            and agent.model.options.additional_properties.get("stream", False)
         )
 
         if is_streaming:

@@ -101,6 +101,14 @@ def _map_model(m: Any) -> ModelInfo:
     )
 
 
+def _model_items(response: Any) -> list[Any]:
+    """Return model objects from OpenAI SDK list responses."""
+    data = getattr(response, "data", None)
+    if data is not None:
+        return list(data)
+    return list(response)
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -129,7 +137,7 @@ def list_models(connection: Connection) -> list[ModelInfo]:
         client = OpenAI(**_build_client_kwargs(connection))
 
     response = client.models.list()
-    return [_enrich(m.id, _map_model(m)) for m in response]
+    return [_enrich(m.id, _map_model(m)) for m in _model_items(response)]
 
 
 async def list_models_async(connection: Connection) -> list[ModelInfo]:
@@ -155,4 +163,4 @@ async def list_models_async(connection: Connection) -> list[ModelInfo]:
         client = AsyncOpenAI(**_build_client_kwargs(connection))
 
     response = await client.models.list()
-    return [_enrich(m.id, _map_model(m)) for m in response]
+    return [_enrich(m.id, _map_model(m)) for m in _model_items(response)]
