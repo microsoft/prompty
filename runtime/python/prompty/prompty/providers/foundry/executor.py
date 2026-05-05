@@ -15,6 +15,7 @@ Registered as ``foundry`` in ``prompty.executors``.
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 from ..._version import VERSION
 from ...core.connections import get_connection
@@ -29,7 +30,23 @@ from ..openai.executor import _BaseExecutor
 
 __all__ = ["FoundryExecutor"]
 
-_COGNITIVE_SERVICES_SCOPE = "https://cognitiveservices.azure.com/.default"
+_FOUNDRY_TOKEN_SCOPE = "https://ai.azure.com/.default"
+_FOUNDRY_SERVICES_HOST_SUFFIX = ".services.ai.azure.com"
+_AZURE_OPENAI_HOST_SUFFIX = ".openai.azure.com"
+
+
+def _to_openai_base_url(endpoint: str) -> str:
+    """Convert a Foundry project endpoint to an OpenAI/v1 base URL."""
+    parts = urlsplit(endpoint)
+    hostname = parts.hostname or ""
+    if hostname.endswith(_FOUNDRY_SERVICES_HOST_SUFFIX):
+        hostname = f"{hostname[: -len(_FOUNDRY_SERVICES_HOST_SUFFIX)]}{_AZURE_OPENAI_HOST_SUFFIX}"
+
+    netloc = hostname
+    if parts.port is not None:
+        netloc = f"{netloc}:{parts.port}"
+
+    return urlunsplit((parts.scheme, netloc, "/openai/v1", "", ""))
 
 
 class FoundryExecutor(_BaseExecutor):
@@ -178,24 +195,21 @@ class FoundryExecutor(_BaseExecutor):
     def _build_client_from_entra(self, conn: FoundryConnection, agent: Prompty) -> Any:
         """Build a sync AzureOpenAI client using Entra ID (DefaultAzureCredential)."""
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-        from openai import AzureOpenAI
+        from openai import OpenAI
 
         credential = DefaultAzureCredential()
-        token_provider = get_bearer_token_provider(credential, _COGNITIVE_SERVICES_SCOPE)
+        token_provider = get_bearer_token_provider(credential, _FOUNDRY_TOKEN_SCOPE)
 
         kwargs: dict[str, Any] = {
-            "azure_ad_token_provider": token_provider,
-            "api_version": "2024-12-01-preview",
+            "api_key": token_provider,
         }
         if conn.endpoint:
-            kwargs["azure_endpoint"] = conn.endpoint
-        if agent.model.id:
-            kwargs["azure_deployment"] = agent.model.id
+            kwargs["base_url"] = _to_openai_base_url(conn.endpoint)
 
-        with Tracer.start("AzureOpenAI(EntraID)") as t:
+        with Tracer.start("OpenAI(FoundryEntraID)") as t:
             t("type", "LLM")
-            t("signature", "AzureOpenAI.ctor(EntraID)")
-            client = AzureOpenAI(
+            t("signature", "OpenAI.ctor(FoundryEntraID)")
+            client = OpenAI(
                 default_headers={
                     "User-Agent": f"prompty/{VERSION}",
                     "x-ms-useragent": f"prompty/{VERSION}",
@@ -207,24 +221,21 @@ class FoundryExecutor(_BaseExecutor):
     def _build_async_client_from_entra(self, conn: FoundryConnection, agent: Prompty) -> Any:
         """Build an async AsyncAzureOpenAI client using Entra ID (DefaultAzureCredential)."""
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-        from openai import AsyncAzureOpenAI
+        from openai import AsyncOpenAI
 
         credential = DefaultAzureCredential()
-        token_provider = get_bearer_token_provider(credential, _COGNITIVE_SERVICES_SCOPE)
+        token_provider = get_bearer_token_provider(credential, _FOUNDRY_TOKEN_SCOPE)
 
         kwargs: dict[str, Any] = {
-            "azure_ad_token_provider": token_provider,
-            "api_version": "2024-12-01-preview",
+            "api_key": token_provider,
         }
         if conn.endpoint:
-            kwargs["azure_endpoint"] = conn.endpoint
-        if agent.model.id:
-            kwargs["azure_deployment"] = agent.model.id
+            kwargs["base_url"] = _to_openai_base_url(conn.endpoint)
 
-        with Tracer.start("AsyncAzureOpenAI(EntraID)") as t:
+        with Tracer.start("AsyncOpenAI(FoundryEntraID)") as t:
             t("type", "LLM")
-            t("signature", "AsyncAzureOpenAI.ctor(EntraID)")
-            client = AsyncAzureOpenAI(
+            t("signature", "AsyncOpenAI.ctor(FoundryEntraID)")
+            client = AsyncOpenAI(
                 default_headers={
                     "User-Agent": f"prompty/{VERSION}",
                     "x-ms-useragent": f"prompty/{VERSION}",

@@ -1,4 +1,4 @@
-import {
+import type {
 	IConnectionProvider,
 	ConnectionProviderType,
 	ConnectionProfile,
@@ -7,6 +7,15 @@ import {
 	FoundryConnectionProfile,
 	ModelInfo,
 } from "../types";
+import { ReferenceConnection, registerConnection } from "@prompty/core";
+import { listAzureModels } from "@prompty/foundry";
+
+type AzureModelLister = typeof listAzureModels;
+type RuntimeConnectionRegistrar = typeof registerConnection;
+interface FoundryDeploymentDiscoveryClient {
+	projectEndpoint: string;
+	getToken: () => Promise<string>;
+}
 
 /** Foundry project deployments API response */
 interface FoundryDeployment {
@@ -20,11 +29,26 @@ interface FoundryDeploymentsResponse {
 	value: FoundryDeployment[];
 }
 
+function toOpenAIBaseURL(projectEndpoint: string): string {
+	const url = new URL(projectEndpoint);
+	const servicesSuffix = ".services.ai.azure.com";
+	let hostname = url.hostname;
+	if (hostname.endsWith(servicesSuffix)) {
+		hostname = `${hostname.slice(0, -servicesSuffix.length)}.openai.azure.com`;
+	}
+	return `${url.protocol}//${hostname}${url.port ? `:${url.port}` : ""}/openai/v1`;
+}
+
 export class FoundryConnectionProvider implements IConnectionProvider {
 	readonly id = "foundry";
 	readonly label = "Microsoft Foundry";
 	readonly iconId = "azure";
 	readonly providerTypes: ConnectionProviderType[] = ["foundry"];
+
+	constructor(
+		private readonly listRuntimeAzureModels: AzureModelLister = listAzureModels,
+		private readonly registerRuntimeConnection: RuntimeConnectionRegistrar = registerConnection
+	) {}
 
 	getConfigurationFields(): ConnectionField[] {
 		return [
@@ -65,7 +89,7 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 	 * Get a bearer token via DefaultAzureCredential.
 	 * Returns both the token and which credential source succeeded for diagnostics.
 	 */
-	private async getBearerToken(tenantId?: string): Promise<{ token: string; source: string }> {
+	protected async getBearerToken(tenantId?: string): Promise<{ token: string; source: string }> {
 		const { DefaultAzureCredential } = await import("@azure/identity");
 		const credentialOptions = tenantId ? { tenantId } : undefined;
 		const credential = new DefaultAzureCredential(credentialOptions);
@@ -157,80 +181,77 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 	async listModels(profile: ConnectionProfile): Promise<ModelInfo[]> {
 		const p = profile as FoundryConnectionProfile;
 		const endpoint = p.endpoint.replace(/\/$/, "");
-		const url = `${endpoint}/deployments?api-version=v1`;
 
 		console.log(`[Foundry] Listing models for "${p.name}" — ${endpoint}/deployments`);
 
-		let source: string;
-		let token: string;
-		try {
-			const result = await this.getBearerToken(p.tenantId);
-			token = result.token;
-			source = result.source;
-			console.log(`[Foundry] Authenticated via ${source}`);
-		} catch (err: unknown) {
-			const msg = err instanceof Error ? err.message : String(err);
-			console.error(`[Foundry] Auth failed for "${p.name}": ${msg}`);
-			throw err;
-		}
-
-		const response = await fetch(url, {
-			headers: {
-				Authorization: `Bearer ${token}`,
-				"Content-Type": "application/json",
+		const connectionName = `vscode-foundry-models-${p.id}`;
+		const discoveryClient: FoundryDeploymentDiscoveryClient = {
+			projectEndpoint: endpoint,
+			getToken: async () => {
+				try {
+					const result = await this.getBearerToken(p.tenantId);
+					return result.token;
+				} catch (error: unknown) {
+					const message = error instanceof Error ? error.message : String(error);
+					console.error(`[Foundry] Auth failed for "${p.name}": ${message}`);
+					throw new Error(`Failed to authenticate for Foundry model discovery for "${p.name}": ${message}`);
+				}
 			},
-		});
+		};
+		this.registerRuntimeConnection(connectionName, discoveryClient);
 
-		if (!response.ok) {
-			const body = await response.text();
-			const detail = `${response.status} ${response.statusText} — ${body.slice(0, 300)}`;
-			console.error(`[Foundry] Model list failed for "${p.name}" (${source}): ${detail}`);
+		try {
+			const models = (await this.listRuntimeAzureModels(new ReferenceConnection({ name: connectionName }))).map((model) => ({
+				id: model.id,
+				modelName: model.displayName,
+				ownedBy: model.ownedBy,
+				capabilities: {
+					...(model.contextWindow !== undefined ? { contextWindow: String(model.contextWindow) } : {}),
+					...(model.inputModalities && model.inputModalities.length > 0 ? { inputModalities: model.inputModalities.join(", ") } : {}),
+					...(model.outputModalities && model.outputModalities.length > 0 ? { outputModalities: model.outputModalities.join(", ") } : {}),
+				},
+			}));
 
-			// Detect tenant mismatch and give a clear hint
-			if (body.includes("tenant") && body.includes("does not match")) {
-				throw new Error(
-					`Tenant mismatch for "${p.name}": your credential is in a different tenant than the Foundry resource. ` +
-					`Edit the connection and set the Tenant ID field, or run: az login --tenant <correct-tenant-id>`
-				);
-			}
-
-			throw new Error(`Failed to list models (${source}): ${detail}`);
+			console.log(`[Foundry] Found ${models.length} models for "${p.name}": ${models.map(m => m.id).join(", ")}`);
+			return models;
+		} catch (error: unknown) {
+			const message = error instanceof Error ? error.message : String(error);
+			console.error(`[Foundry] Model listing failed for "${p.name}": ${message}`);
+			throw new Error(`Failed to list Foundry models for "${p.name}": ${message}`);
 		}
-
-		const data = (await response.json()) as FoundryDeploymentsResponse;
-		const models = (data.value ?? []).map((d) => ({
-			id: d.name,
-			modelName: d.properties?.model?.name,
-		}));
-
-		console.log(`[Foundry] Found ${models.length} models for "${p.name}": ${models.map(m => m.id).join(", ")}`);
-		return models;
 	}
 
 	async createClient(profile: ConnectionProfile): Promise<unknown> {
 		const p = profile as FoundryConnectionProfile;
 
-		const { DefaultAzureCredential, getBearerTokenProvider } = await import("@azure/identity");
+		const baseURL = toOpenAIBaseURL(p.endpoint);
+		const { OpenAI } = await import("openai");
+		const savedBaseUrl = process.env.OPENAI_BASE_URL;
+		const savedAzureApiKey = process.env.AZURE_OPENAI_API_KEY;
+		delete process.env.OPENAI_BASE_URL;
+		delete process.env.AZURE_OPENAI_API_KEY;
+		let client: unknown;
+		try {
+			client = new OpenAI({
+				baseURL,
+				apiKey: "unused",
+				fetch: async (url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]): ReturnType<typeof fetch> => {
+					const result = await this.getBearerToken(p.tenantId);
+					const headers = new Headers(init?.headers);
+					headers.set("Authorization", `Bearer ${result.token}`);
+					return fetch(url, { ...init, headers });
+				},
+			});
+		} finally {
+			if (savedBaseUrl !== undefined) {
+				process.env.OPENAI_BASE_URL = savedBaseUrl;
+			}
+			if (savedAzureApiKey !== undefined) {
+				process.env.AZURE_OPENAI_API_KEY = savedAzureApiKey;
+			}
+		}
 
-		const credentialOptions = p.tenantId ? { tenantId: p.tenantId } : undefined;
-		const credential = new DefaultAzureCredential(credentialOptions);
-
-		// Extract the resource base endpoint from the project endpoint
-		// e.g. "https://foo.services.ai.azure.com/api/projects/bar" → "https://foo.services.ai.azure.com"
-		const url = new URL(p.endpoint);
-		const resourceEndpoint = `${url.protocol}//${url.host}`;
-
-		const scope = "https://cognitiveservices.azure.com/.default";
-		const azureADTokenProvider = getBearerTokenProvider(credential, scope);
-
-		const { AzureOpenAI } = await import("openai");
-		const client = new AzureOpenAI({
-			endpoint: resourceEndpoint,
-			azureADTokenProvider,
-			apiVersion: "2025-04-01-preview",
-		});
-
-		console.log(`[Foundry] Client for "${p.name}": endpoint=${resourceEndpoint}, apiVersion=2025-04-01-preview`);
+		console.log(`[Foundry] Client for "${p.name}": baseURL=${baseURL}`);
 
 		return client;
 	}

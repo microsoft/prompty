@@ -1,18 +1,19 @@
 /**
  * Foundry executor — extends OpenAI executor with Azure AI Foundry client resolution.
  *
- * For Chat Completions: builds an AzureOpenAI client from the Foundry resource
- * endpoint (derived from the project endpoint) with DefaultAzureCredential.
+ * For Chat Completions: builds an OpenAI/v1 client from the Foundry project
+ * endpoint with DefaultAzureCredential.
  *
  * The Foundry project endpoint is:
  *   https://<resource>.services.ai.azure.com/api/projects/<project>
- * The AzureOpenAI endpoint (for Chat Completions) is:
- *   https://<resource>.services.ai.azure.com
+ * The OpenAI/v1 endpoint (for inference) is:
+ *   https://<resource>.openai.azure.com/openai/v1
  *
  * @module
  */
 
-import type OpenAI from "openai";
+import OpenAI from "openai";
+import { DefaultAzureCredential } from "@azure/identity";
 import type { Prompty, Message } from "@prompty/core";
 import { FoundryConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
 import { getConnection, traceSpan, sanitizeValue } from "@prompty/core";
@@ -20,13 +21,23 @@ import { OpenAIExecutor } from "@prompty/openai";
 import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "@prompty/openai";
 
 /**
- * Extract the resource base endpoint from a Foundry project endpoint.
- * e.g. "https://foo.services.ai.azure.com/api/projects/bar" → "https://foo.services.ai.azure.com"
+ * Convert a Foundry project endpoint into the OpenAI/v1 base URL.
+ * e.g. "https://foo.services.ai.azure.com/api/projects/bar" → "https://foo.openai.azure.com/openai/v1"
  */
-function getResourceEndpoint(projectEndpoint: string): string {
+function getOpenAIBaseURL(projectEndpoint: string): string {
   const url = new URL(projectEndpoint);
-  return `${url.protocol}//${url.host}`;
+  const servicesSuffix = ".services.ai.azure.com";
+  let hostname = url.hostname;
+
+  if (hostname.endsWith(servicesSuffix)) {
+    hostname = `${hostname.slice(0, -servicesSuffix.length)}.openai.azure.com`;
+  }
+
+  const resourceEndpoint = `${url.protocol}//${hostname}${url.port ? `:${url.port}` : ""}`;
+  return `${resourceEndpoint}/openai/v1`;
 }
+
+const FOUNDRY_TOKEN_SCOPE = "https://ai.azure.com/.default";
 
 export class FoundryExecutor extends OpenAIExecutor {
   override async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
@@ -45,9 +56,8 @@ export class FoundryExecutor extends OpenAIExecutor {
           ctorEmit("inputs", { source: "reference", name: conn.name });
         } else if (conn instanceof FoundryConnection) {
           ctorEmit("inputs", sanitizeValue("ctor", {
-            endpoint: conn.endpoint ? getResourceEndpoint(conn.endpoint) : undefined,
+            baseURL: conn.endpoint ? getOpenAIBaseURL(conn.endpoint) : undefined,
             deployment: agent.model?.id,
-            apiVersion: "2025-04-01-preview",
             auth: "DefaultAzureCredential",
           }));
         }
@@ -138,27 +148,29 @@ export class FoundryExecutor extends OpenAIExecutor {
       return getConnection(conn.name) as OpenAI;
     }
 
-    // Build an AzureOpenAI client from the FoundryConnection endpoint
+    // Build an OpenAI/v1 client from the FoundryConnection project endpoint.
     if (conn instanceof FoundryConnection) {
       if (!conn.endpoint) {
         throw new Error(
           "FoundryConnection requires a non-empty 'endpoint'. " +
-          "Set model.connection.endpoint to your Azure OpenAI resource URL.",
+          "Set model.connection.endpoint to your Foundry project endpoint.",
         );
       }
-      const { AzureOpenAI } = require("openai");
-      const { DefaultAzureCredential, getBearerTokenProvider } = require("@azure/identity");
-
       const credential = new DefaultAzureCredential();
-      const scope = "https://cognitiveservices.azure.com/.default";
-      const azureADTokenProvider = getBearerTokenProvider(credential, scope);
-      const resourceEndpoint = getResourceEndpoint(conn.endpoint);
+      const baseURL = getOpenAIBaseURL(conn.endpoint);
 
-      return new AzureOpenAI({
-        endpoint: resourceEndpoint,
-        azureADTokenProvider,
-        deployment: agent.model?.id,
-        apiVersion: "2025-04-01-preview",
+      return new OpenAI({
+        baseURL,
+        apiKey: "unused",
+        fetch: async (url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]): ReturnType<typeof fetch> => {
+          const token = await credential.getToken(FOUNDRY_TOKEN_SCOPE);
+          if (!token?.token) {
+            throw new Error("DefaultAzureCredential did not return an access token.");
+          }
+          const headers = new Headers(init?.headers);
+          headers.set("Authorization", `Bearer ${token.token}`);
+          return fetch(url, { ...init, headers });
+        },
       }) as OpenAI;
     }
 

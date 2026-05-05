@@ -1,5 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
-import { ModelInfo, ApiKeyConnection, AnonymousConnection } from "@prompty/core";
+import {
+  ModelInfo,
+  ApiKeyConnection,
+  AnonymousConnection,
+  ReferenceConnection,
+  registerConnection,
+  clearConnections,
+} from "@prompty/core";
 
 // Mock the openai module before importing the function under test
 vi.mock("openai", () => {
@@ -61,5 +68,72 @@ describe("listAzureModels", () => {
   it("throws for unsupported connection kind", async () => {
     const badConn = new AnonymousConnection();
     await expect(listAzureModels(badConn)).rejects.toThrow(/not supported/);
+  });
+
+  it("lists deployments from a registered Foundry project reference", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        value: [
+          {
+            name: "chat-prod",
+            properties: {
+              model: { name: "gpt-4o", publisher: "Microsoft" },
+              capabilities: {
+                maxContextLength: 128000,
+                inputModalities: ["text", "image"],
+                outputModalities: "text, json",
+              },
+            },
+          },
+          { name: "embed-prod", properties: { model: { name: "text-embedding-3-small" } } },
+        ],
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    registerConnection("foundry-project", {
+      projectEndpoint: "https://example.services.ai.azure.com/api/projects/demo/",
+      getToken: async () => "test-token",
+    });
+
+    const models = await listAzureModels(new ReferenceConnection({ name: "foundry-project" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://example.services.ai.azure.com/api/projects/demo/deployments?api-version=v1",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer test-token" }),
+      }),
+    );
+    expect(models).toHaveLength(2);
+    expect(models[0]).toBeInstanceOf(ModelInfo);
+    expect(models[0].id).toBe("chat-prod");
+    expect(models[0].displayName).toBe("gpt-4o");
+    expect(models[0].ownedBy).toBe("Microsoft");
+    expect(models[0].contextWindow).toBe(128000);
+    expect(models[0].inputModalities).toEqual(["text", "image"]);
+    expect(models[0].outputModalities).toEqual(["text", "json"]);
+    expect(models[0].additionalProperties?.name).toBe("chat-prod");
+
+    vi.unstubAllGlobals();
+    clearConnections();
+  });
+
+  it("surfaces Foundry deployment listing failures with response details", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      statusText: "Forbidden",
+      text: vi.fn().mockResolvedValue("tenant does not match"),
+    }));
+    registerConnection("foundry-project", {
+      projectEndpoint: "https://example.services.ai.azure.com/api/projects/demo",
+      getToken: async () => "test-token",
+    });
+
+    await expect(listAzureModels(new ReferenceConnection({ name: "foundry-project" })))
+      .rejects.toThrow(/403 Forbidden .*tenant does not match/);
+
+    vi.unstubAllGlobals();
+    clearConnections();
   });
 });

@@ -2,7 +2,7 @@
 
 using System.ClientModel;
 using System.ClientModel.Primitives;
-using Azure.AI.OpenAI;
+using Azure.Core;
 using Azure.Identity;
 using OpenAI;
 using Prompty.Core;
@@ -13,14 +13,16 @@ namespace Prompty.Foundry;
 /// Executes LLM calls against Azure OpenAI / Microsoft Foundry endpoints.
 /// <para>
 /// For API key auth: uses the base OpenAI SDK with pipeline policies for Azure auth and API versioning.
-/// For Entra ID auth: uses <see cref="AzureOpenAIClient"/> which natively handles bearer token auth
-/// via <see cref="DefaultAzureCredential"/>.
+/// For Foundry Entra ID auth: uses the OpenAI/v1 endpoint with <see cref="DefaultAzureCredential"/>.
 /// </para>
 /// Registered under keys "foundry" and "azure" (deprecated alias).
 /// </summary>
 public class FoundryExecutor : OpenAI.OpenAIExecutor
 {
     private const string DefaultApiVersion = "2024-12-01-preview";
+    private const string FoundryTokenScope = "https://ai.azure.com/.default";
+    private const string FoundryServicesHostSuffix = ".services.ai.azure.com";
+    private const string AzureOpenAIHostSuffix = ".openai.azure.com";
 
     protected override OpenAIClient CreateClient(Core.Prompty agent)
     {
@@ -70,9 +72,8 @@ public class FoundryExecutor : OpenAI.OpenAIExecutor
             return CreateApiKeyClient(endpoint, agent.Model!.Id!, apiKey);
         }
 
-        // Entra ID auth — AzureOpenAIClient natively handles DefaultAzureCredential,
-        // deployment-based URL routing, and API version query parameter.
-        return CreateEntraIdClient(endpoint);
+        // Entra ID auth for Foundry deployments uses the GA OpenAI/v1 endpoint.
+        return CreateFoundryOpenAIClient(ToOpenAIBaseUrl(endpoint), new DefaultAzureCredential());
     }
 
     private static OpenAIClient CreateApiKeyClient(string endpoint, string model, string apiKey)
@@ -99,20 +100,31 @@ public class FoundryExecutor : OpenAI.OpenAIExecutor
         return new OpenAIClient(new ApiKeyCredential("azure-api-key"), clientOptions);
     }
 
-    private static AzureOpenAIClient CreateEntraIdClient(string endpoint)
+    private static OpenAIClient CreateFoundryOpenAIClient(string baseUrl, TokenCredential credential)
     {
-        var options = new AzureOpenAIClientOptions();
+        var options = new OpenAIClientOptions
+        {
+            Endpoint = new Uri(baseUrl),
+        };
 
-        // Patch: Azure.AI.OpenAI may swap max_completion_tokens → max_tokens.
-        // This policy ensures the correct parameter name reaches the API.
         options.AddPolicy(
             new MaxTokensPatchPolicy(),
             PipelinePosition.BeforeTransport);
 
-        return new AzureOpenAIClient(
-            new Uri(endpoint.TrimEnd('/')),
-            new DefaultAzureCredential(),
-            options);
+        options.AddPolicy(
+            new BearerTokenAuthPolicy(credential, FoundryTokenScope),
+            PipelinePosition.BeforeTransport);
+
+        return new OpenAIClient(new ApiKeyCredential("unused"), options);
+    }
+
+    private static string ToOpenAIBaseUrl(string endpoint)
+    {
+        var uri = new Uri(endpoint);
+        var host = uri.Host.EndsWith(FoundryServicesHostSuffix, StringComparison.OrdinalIgnoreCase)
+            ? uri.Host[..^FoundryServicesHostSuffix.Length] + AzureOpenAIHostSuffix
+            : uri.Host;
+        var authority = uri.IsDefaultPort ? host : $"{host}:{uri.Port}";
+        return $"{uri.Scheme}://{authority}/openai/v1";
     }
 }
-

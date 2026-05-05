@@ -434,6 +434,30 @@ class TestFoundryExecutor:
         assert kwargs["azure_endpoint"] == "https://myendpoint.openai.azure.com"
         assert "api_version" in kwargs
 
+    def test_resolve_client_with_foundry_project_endpoint_uses_openai_v1_base_url(self):
+        executor = FoundryExecutor()
+        agent = _make_foundry_agent(
+            model={
+                "id": "gpt-4",
+                "provider": "foundry",
+                "apiType": "chat",
+                "connection": {
+                    "kind": "foundry",
+                    "endpoint": "https://myendpoint.services.ai.azure.com/api/projects/dev-models",
+                },
+            }
+        )
+        with (
+            patch("azure.identity.DefaultAzureCredential"),
+            patch("azure.identity.get_bearer_token_provider", return_value=lambda: "token"),
+            patch("openai.OpenAI") as MockClient,
+        ):
+            executor._resolve_client(agent)
+
+        kwargs = MockClient.call_args.kwargs
+        assert kwargs["base_url"] == "https://myendpoint.openai.azure.com/openai/v1"
+        assert "api_key" in kwargs
+
     def test_resolve_client_no_api_key_raises(self):
         executor = FoundryExecutor()
         agent = _make_foundry_agent(

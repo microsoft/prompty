@@ -103,7 +103,7 @@ export class PreviewPanel implements Disposable {
 				messages = await prepare(agent, sampleInputs);
 			} catch {
 				// If prepare fails (missing renderer, etc.), show raw instructions
-				messages = [new Message('system', [textPart(agent.instructions ?? '(no instructions)')])];
+				messages = [new Message({ role: "system", parts: [textPart(agent.instructions ?? "(no instructions)")] })];
 			}
 
 			this.panel.webview.html = this.getHtml(agent, messages, sampleInputs);

@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from prompty.model import ApiKeyConnection, ModelInfo
+from prompty import clear_connections, register_connection
+from prompty.model import ApiKeyConnection, ModelInfo, ReferenceConnection
 from prompty.providers.foundry.models import (
     _map_model as foundry_map_model,
 )
@@ -243,6 +244,51 @@ class TestFoundryListModels:
         conn = ApiKeyConnection.load({"kind": "key", "apiKey": "az-key", "endpoint": "https://test.openai.azure.com/"})
         result = foundry_list_models(conn)
         assert result == []
+
+    @patch("urllib.request.urlopen")
+    def test_list_models_foundry_reference_returns_deployments_with_capabilities(self, mock_urlopen: MagicMock) -> None:
+        response = MagicMock()
+        response.__enter__.return_value.read.return_value = b"""
+        {
+          "value": [
+            {
+              "name": "chat-prod",
+              "properties": {
+                "model": {"name": "gpt-4o", "publisher": "Microsoft"},
+                "capabilities": {
+                  "maxContextLength": 128000,
+                  "inputModalities": ["text", "image"],
+                  "outputModalities": "text, json"
+                }
+              }
+            }
+          ]
+        }
+        """
+        mock_urlopen.return_value = response
+        register_connection(
+            "foundry-project",
+            client={
+                "project_endpoint": "https://example.services.ai.azure.com/api/projects/demo/",
+                "get_token": lambda: "test-token",
+            },
+        )
+
+        result = foundry_list_models(ReferenceConnection(name="foundry-project"))
+
+        request = mock_urlopen.call_args.args[0]
+        assert request.full_url == "https://example.services.ai.azure.com/api/projects/demo/deployments?api-version=v1"
+        assert request.headers["Authorization"] == "Bearer test-token"
+        assert len(result) == 1
+        assert result[0].id == "chat-prod"
+        assert result[0].display_name == "gpt-4o"
+        assert result[0].owned_by == "Microsoft"
+        assert result[0].context_window == 128_000
+        assert result[0].input_modalities == ["text", "image"]
+        assert result[0].output_modalities == ["text", "json"]
+        assert result[0].additional_properties is not None
+        assert result[0].additional_properties["name"] == "chat-prod"
+        clear_connections()
 
 
 class TestFoundryListModelsAsync:

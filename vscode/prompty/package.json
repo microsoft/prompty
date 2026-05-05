@@ -351,6 +351,7 @@
     "vscode:prepublish": "npm run compile && npm run build && npm run bundle:core",
     "bundle:core": "esbuild packages/core/out/extension.js --bundle --outfile=packages/core/out/extension.bundle.js --external:vscode --format=cjs --platform=node --minify-syntax --minify-whitespace --keep-names --sourcemap",
     "compile": "tsc -b",
+    "test:unit": "npm run compile && mocha --ui tdd \"packages/core/out/test/unit/**/*.test.js\"",
     "watch": "tsc -b -w",
     "lint": "eslint",
     "postinstall": "cd packages/core && npm install && cd ../server && npm install && cd ../..",

@@ -193,14 +193,20 @@ async fn build_azure_request(
         }
     };
 
-    let api_version = get_api_version(agent);
-    let url = format!(
-        "{}/openai/deployments/{}/{}?api-version={}",
-        endpoint.trim_end_matches('/'),
-        deployment,
-        path,
-        api_version,
-    );
+    let conn = resolve_connection(agent)?;
+    let kind = conn.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+    let url = if kind == "foundry" {
+        format!("{}/{}", endpoint.trim_end_matches('/'), path)
+    } else {
+        let api_version = get_api_version(agent);
+        format!(
+            "{}/openai/deployments/{}/{}?api-version={}",
+            endpoint.trim_end_matches('/'),
+            deployment,
+            path,
+            api_version,
+        )
+    };
 
     let auth_header = get_auth_header(agent).await?;
 
@@ -236,16 +242,34 @@ fn get_endpoint(agent: &Prompty) -> Result<String, InvokerError> {
     ))
 }
 
-/// Strip Foundry project path to get the resource endpoint.
+/// Convert a Foundry project endpoint to the OpenAI/v1 base URL.
 ///
 /// Foundry endpoints look like `https://resource.services.ai.azure.com/api/projects/project-name`
-/// but the OpenAI API needs just `https://resource.services.ai.azure.com`.
+/// but the OpenAI/v1 API needs `https://resource.openai.azure.com/openai/v1`.
 fn strip_project_path(endpoint: &str) -> String {
-    if let Some(idx) = endpoint.find("/api/projects") {
-        endpoint[..idx].to_string()
-    } else {
-        endpoint.to_string()
-    }
+    let base = endpoint
+        .find("/api/projects")
+        .map(|idx| &endpoint[..idx])
+        .unwrap_or(endpoint)
+        .trim_end_matches('/');
+
+    let Some((scheme, rest)) = base.split_once("://") else {
+        return base.to_string();
+    };
+    let authority = rest.split_once('/').map(|(host, _)| host).unwrap_or(rest);
+    let (host, port) = match authority.rsplit_once(':') {
+        Some((host, port)) if port.chars().all(|c| c.is_ascii_digit()) => {
+            (host.to_string(), format!(":{port}"))
+        }
+        _ => (authority.to_string(), String::new()),
+    };
+
+    let host = host
+        .strip_suffix(".services.ai.azure.com")
+        .map(|resource| format!("{resource}.openai.azure.com"))
+        .unwrap_or(host);
+
+    format!("{scheme}://{host}{port}/openai/v1")
 }
 
 /// Extract the deployment name from the agent's model configuration.
@@ -301,20 +325,28 @@ async fn get_auth_header(agent: &Prompty) -> Result<(&'static str, String), Invo
         .and_then(|k| k.as_str())
     {
         if !key.is_empty() {
-            return Ok(("api-key", key.to_string()));
+            return if kind == "foundry" {
+                Ok(("Authorization", format!("Bearer {key}")))
+            } else {
+                Ok(("api-key", key.to_string()))
+            };
         }
     }
 
-    // Fall back to environment variable (works for both key and foundry connections)
+    if kind == "foundry" {
+        if let Ok(key) = std::env::var("AZURE_INFERENCE_CREDENTIAL") {
+            if !key.is_empty() {
+                return Ok(("Authorization", format!("Bearer {key}")));
+            }
+        }
+        return get_entra_token().await;
+    }
+
+    // Fall back to environment variable for Azure OpenAI API-key connections.
     if let Ok(key) = std::env::var("AZURE_OPENAI_API_KEY") {
         if !key.is_empty() {
             return Ok(("api-key", key));
         }
-    }
-
-    // Foundry connection without API key — use Entra ID / DefaultAzureCredential
-    if kind == "foundry" {
-        return get_entra_token().await;
     }
 
     Err(InvokerError::Execute(
@@ -324,9 +356,9 @@ async fn get_auth_header(agent: &Prompty) -> Result<(&'static str, String), Invo
     ))
 }
 
-/// Azure Cognitive Services scope for Entra ID tokens.
+/// Foundry scope for Entra ID tokens.
 #[cfg(feature = "entra_id")]
-const AZURE_COGNITIVE_SCOPE: &str = "https://cognitiveservices.azure.com/.default";
+const FOUNDRY_TOKEN_SCOPE: &str = "https://ai.azure.com/.default";
 
 /// Get a bearer token via DefaultAzureCredential (requires `entra_id` feature).
 #[cfg(feature = "entra_id")]
@@ -338,7 +370,7 @@ async fn get_entra_token() -> Result<(&'static str, String), InvokerError> {
         InvokerError::Execute(format!("Failed to create DefaultAzureCredential: {e}").into())
     })?;
     let token = credential
-        .get_token(&[AZURE_COGNITIVE_SCOPE])
+        .get_token(&[FOUNDRY_TOKEN_SCOPE])
         .await
         .map_err(|e| {
             InvokerError::Execute(format!("Failed to acquire Entra ID token: {e}").into())
@@ -510,9 +542,9 @@ mod tests {
     #[serial]
     async fn test_build_url_foundry_connection() {
         // Foundry connections typically use Entra ID, but for testing we
-        // supply an API key via env var since Entra ID may not be enabled
+        // supply a Foundry inference credential via env var since Entra ID may not be enabled
         // SAFETY: tests run single-threaded (--test-threads=1) so env var mutation is safe
-        unsafe { std::env::set_var("AZURE_OPENAI_API_KEY", "test-foundry-key") };
+        unsafe { std::env::set_var("AZURE_INFERENCE_CREDENTIAL", "test-foundry-key") };
         let agent = make_agent(json!({
             "id": "gpt-4o",
             "connection": {
@@ -522,11 +554,9 @@ mod tests {
             }
         }));
         let (url, _) = build_azure_request(&agent, "chat").await.unwrap();
-        // Foundry endpoint should strip the project path
-        assert!(url.starts_with(
-            "https://myresource.services.ai.azure.com/openai/deployments/gpt-4o/chat/completions"
-        ));
-        unsafe { std::env::remove_var("AZURE_OPENAI_API_KEY") };
+        // Foundry endpoint should convert the project endpoint to the OpenAI/v1 endpoint
+        assert!(url.starts_with("https://myresource.openai.azure.com/openai/v1/chat/completions"));
+        unsafe { std::env::remove_var("AZURE_INFERENCE_CREDENTIAL") };
     }
 
     #[tokio::test]
@@ -580,11 +610,15 @@ mod tests {
     fn test_strip_project_path() {
         assert_eq!(
             strip_project_path("https://myresource.services.ai.azure.com/api/projects/my-project"),
-            "https://myresource.services.ai.azure.com"
+            "https://myresource.openai.azure.com/openai/v1"
         );
         assert_eq!(
             strip_project_path("https://myresource.openai.azure.com"),
-            "https://myresource.openai.azure.com"
+            "https://myresource.openai.azure.com/openai/v1"
+        );
+        assert_eq!(
+            strip_project_path("https://myresource.openai.azure.com/openai/v1"),
+            "https://myresource.openai.azure.com/openai/v1"
         );
     }
 

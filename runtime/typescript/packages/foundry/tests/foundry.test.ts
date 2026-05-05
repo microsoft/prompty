@@ -208,25 +208,32 @@ describe("AzureProcessor", () => {
 // ---------------------------------------------------------------------------
 
 describe("endpoint extraction", () => {
-  it("strips path from project endpoint in trace", async () => {
-    // We can't test getResourceEndpoint directly (it's not exported),
+  it("converts project endpoint to OpenAI/v1 base URL", async () => {
+    // We can't test getOpenAIBaseURL directly (it's not exported),
     // but we can verify it works via the FoundryConnection path.
     // This test just verifies the URL parsing logic is sound.
     const url = new URL("https://my-resource.services.ai.azure.com/api/projects/my-project");
-    const resourceEndpoint = `${url.protocol}//${url.host}`;
-    expect(resourceEndpoint).toBe("https://my-resource.services.ai.azure.com");
+    const baseURL = `${url.protocol}//${url.hostname.replace(".services.ai.azure.com", ".openai.azure.com")}/openai/v1`;
+    expect(baseURL).toBe("https://my-resource.openai.azure.com/openai/v1");
   });
 
-  it("handles endpoints without path", () => {
+  it("converts services host endpoints without path", () => {
     const url = new URL("https://my-resource.services.ai.azure.com");
-    const resourceEndpoint = `${url.protocol}//${url.host}`;
-    expect(resourceEndpoint).toBe("https://my-resource.services.ai.azure.com");
+    const baseURL = `${url.protocol}//${url.hostname.replace(".services.ai.azure.com", ".openai.azure.com")}/openai/v1`;
+    expect(baseURL).toBe("https://my-resource.openai.azure.com/openai/v1");
   });
 
-  it("handles endpoints with port", () => {
+  it("preserves explicit ports", () => {
     const url = new URL("https://my-resource.services.ai.azure.com:8443/api/projects/bar");
-    const resourceEndpoint = `${url.protocol}//${url.host}`;
-    expect(resourceEndpoint).toBe("https://my-resource.services.ai.azure.com:8443");
+    const hostname = url.hostname.replace(".services.ai.azure.com", ".openai.azure.com");
+    const baseURL = `${url.protocol}//${hostname}${url.port ? `:${url.port}` : ""}/openai/v1`;
+    expect(baseURL).toBe("https://my-resource.openai.azure.com:8443/openai/v1");
+  });
+
+  it("converts Azure OpenAI endpoints to OpenAI/v1 base URL", () => {
+    const url = new URL("https://my-resource.openai.azure.com/openai/v1");
+    const baseURL = `${url.protocol}//${url.hostname}${url.port ? `:${url.port}` : ""}/openai/v1`;
+    expect(baseURL).toBe("https://my-resource.openai.azure.com/openai/v1");
   });
 });
 

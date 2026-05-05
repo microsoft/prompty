@@ -4,6 +4,7 @@ using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.Core;
 
 namespace Prompty.Foundry;
 
@@ -56,6 +57,36 @@ internal sealed class AzureApiKeyAuthPolicy(string apiKey) : PipelinePolicy
     {
         message.Request.Headers.Remove("Authorization");
         message.Request.Headers.Set("api-key", apiKey);
+    }
+}
+
+/// <summary>
+/// Replaces the OpenAI SDK's default Authorization header with an Entra ID bearer token.
+/// </summary>
+internal sealed class BearerTokenAuthPolicy(TokenCredential credential, string scope) : PipelinePolicy
+{
+    public override void Process(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+    {
+        SetBearerToken(message);
+        ProcessNext(message, pipeline, currentIndex);
+    }
+
+    public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
+    {
+        await SetBearerTokenAsync(message);
+        await ProcessNextAsync(message, pipeline, currentIndex);
+    }
+
+    private void SetBearerToken(PipelineMessage message)
+    {
+        var token = credential.GetToken(new TokenRequestContext([scope]), default);
+        message.Request.Headers.Set("Authorization", $"Bearer {token.Token}");
+    }
+
+    private async ValueTask SetBearerTokenAsync(PipelineMessage message)
+    {
+        var token = await credential.GetTokenAsync(new TokenRequestContext([scope]), default);
+        message.Request.Headers.Set("Authorization", $"Bearer {token.Token}");
     }
 }
 

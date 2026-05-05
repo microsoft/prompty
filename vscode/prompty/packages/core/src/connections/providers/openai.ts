@@ -1,4 +1,4 @@
-import {
+import type {
 	IConnectionProvider,
 	ConnectionProviderType,
 	ConnectionProfile,
@@ -7,12 +7,18 @@ import {
 	ConnectionTestResult,
 	ModelInfo,
 } from "../types";
+import { ApiKeyConnection } from "@prompty/core";
+import { listModels as listOpenAIModels } from "@prompty/openai";
+
+type OpenAIModelLister = typeof listOpenAIModels;
 
 export class OpenAIConnectionProvider implements IConnectionProvider {
 	readonly id = "openai";
 	readonly label = "OpenAI";
 	readonly iconId = "sparkle";
 	readonly providerTypes: ConnectionProviderType[] = ["openai"];
+
+	constructor(private readonly listRuntimeModels: OpenAIModelLister = listOpenAIModels) {}
 
 	getConfigurationFields(): ConnectionField[] {
 		return [
@@ -102,21 +108,24 @@ export class OpenAIConnectionProvider implements IConnectionProvider {
 		if (!secret) {return undefined;}
 
 		try {
-			const { default: OpenAI } = await import("openai");
-			const client = new OpenAI({
-				apiKey: secret,
-				baseURL: p.endpoint,
-			});
-
-			const response = await client.models.list();
-			const models: ModelInfo[] = [];
-			for await (const model of response) {
-				models.push({
+			const models = await this.listRuntimeModels(
+				new ApiKeyConnection({
+					apiKey: secret,
+					endpoint: p.endpoint,
+				})
+			);
+			return models
+				.map((model) => ({
 					id: model.id,
-					ownedBy: model.owned_by,
-				});
-			}
-			return models.sort((a, b) => a.id.localeCompare(b.id));
+					modelName: model.displayName,
+					ownedBy: model.ownedBy,
+					capabilities: {
+						...(model.contextWindow !== undefined ? { contextWindow: String(model.contextWindow) } : {}),
+						...(model.inputModalities && model.inputModalities.length > 0 ? { inputModalities: model.inputModalities.join(", ") } : {}),
+						...(model.outputModalities && model.outputModalities.length > 0 ? { outputModalities: model.outputModalities.join(", ") } : {}),
+					},
+				}))
+				.sort((a, b) => a.id.localeCompare(b.id));
 		} catch {
 			return undefined;
 		}
