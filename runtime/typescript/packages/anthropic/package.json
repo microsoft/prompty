@@ -1,6 +1,6 @@
 {
   "name": "@prompty/anthropic",
-  "version": "2.0.0-alpha.11",
+  "version": "2.0.0-beta.1",
   "description": "Anthropic provider for Prompty — executor and processor for Anthropic Messages API",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -46,7 +46,7 @@
     "node": ">=18.0.0"
   },
   "peerDependencies": {
-    "@prompty/core": "^2.0.0-alpha.11",
+    "@prompty/core": "^2.0.0-beta.1",
     "@anthropic-ai/sdk": ">=0.39.0"
   },
   "peerDependenciesMeta": {
@@ -55,7 +55,7 @@
     }
   },
   "devDependencies": {
-    "@prompty/core": "^2.0.0-alpha.11",
+    "@prompty/core": "^2.0.0-beta.1",
     "@anthropic-ai/sdk": "^0.39.0",
     "@types/node": "^20.11.0",
     "dotenv": "^16.4.0",
