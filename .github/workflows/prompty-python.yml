@@ -39,12 +39,12 @@ jobs:
           echo "VERSION=$TAG_VERSION" >> "$GITHUB_ENV"
 
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v8
 
       - name: Install dependencies
         working-directory: ./runtime/python/prompty
