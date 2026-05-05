@@ -171,16 +171,16 @@ async fn test_list_models() {
     setup();
     skip_if_no_env!("OPENAI_API_KEY");
 
-    let models = prompty_openai::list_models_async(&json!({ "kind": "key" }))
-        .await
-        .expect("model listing should succeed");
+    let models = match prompty_openai::list_models_async(&json!({ "kind": "key" })).await {
+        Ok(models) => models,
+        Err(_) => panic!("model listing should succeed"),
+    };
 
     assert!(
         !models.is_empty(),
         "model listing should return at least one model"
     );
     assert!(!models[0].id.is_empty(), "first model should have an id");
-    eprintln!("OpenAI listed {} models", models.len());
 }
 
 #[tokio::test]

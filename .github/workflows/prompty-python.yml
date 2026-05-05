@@ -6,6 +6,9 @@ on:
       - 'python/2.*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     uses: ./.github/workflows/prompty-python-check.yml

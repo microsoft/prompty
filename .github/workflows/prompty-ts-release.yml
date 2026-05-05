@@ -4,6 +4,9 @@ on:
     tags:
       - 'typescript/*'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     uses: ./.github/workflows/prompty-ts-check.yml

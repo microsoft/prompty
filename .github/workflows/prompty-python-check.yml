@@ -10,6 +10,9 @@ env:
   AZURE_OPENAI_ENDPOINT: https://fake
   AZURE_OPENAI_KEY: 12342323433
 
+permissions:
+  contents: read
+
 jobs:
   prompty-v2-tests:
     name: test python v2 on ${{ matrix.os }} / py${{ matrix.python-version }}

@@ -90,16 +90,16 @@ async fn test_anthropic_list_models() {
     setup();
     skip_if_no_env!("ANTHROPIC_API_KEY");
 
-    let models = prompty_anthropic::list_models_async(&json!({ "kind": "key" }))
-        .await
-        .expect("Anthropic model listing should succeed");
+    let models = match prompty_anthropic::list_models_async(&json!({ "kind": "key" })).await {
+        Ok(models) => models,
+        Err(_) => panic!("Anthropic model listing should succeed"),
+    };
 
     assert!(
         !models.is_empty(),
         "model listing should return at least one model"
     );
     assert!(!models[0].id.is_empty(), "first model should have an id");
-    eprintln!("Anthropic listed {} models", models.len());
 }
 
 #[tokio::test]

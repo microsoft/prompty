@@ -6,6 +6,9 @@ on:
       - 'csharp/*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   prompty-tests:
     uses: ./.github/workflows/prompty-csharp-check.yml
