@@ -283,14 +283,49 @@ public class ToolDispatchTests : IDisposable
                 {
                     Name = "bound_tool",
                     Kind = "custom_kind",
-                    Bindings = [new Binding { Name = "location", Input = "Seattle" }],
+                    Bindings = [new Binding { Name = "location", Input = "home_location" }],
                 },
             ],
         };
 
         var call = new ToolCall { Id = "c1", Name = "bound_tool", Arguments = """{}""" };
-        var result = await ToolDispatch.DispatchAsync(agent, call);
+        var parentInputs = new Dictionary<string, object?> { ["home_location"] = "Seattle" };
+        var result = await ToolDispatch.DispatchAsync(agent, call, parentInputs: parentInputs);
         Assert.Equal("location=Seattle", result);
+    }
+
+    [Fact]
+    public async Task Dispatch_AppliesBindingsBeforeNameRegistry()
+    {
+        string? receivedArgs = null;
+        ToolDispatch.RegisterTool("get_weather", args =>
+        {
+            receivedArgs = args;
+            return Task.FromResult("called");
+        });
+
+        var agent = new Core.Prompty
+        {
+            Tools =
+            [
+                new FunctionTool
+                {
+                    Name = "get_weather",
+                    Kind = "function",
+                    Bindings = [new Binding { Name = "unit", Input = "preferred_unit" }],
+                },
+            ],
+        };
+
+        var call = new ToolCall { Id = "c1", Name = "get_weather", Arguments = """{"city":"Paris"}""" };
+        var parentInputs = new Dictionary<string, object?> { ["preferred_unit"] = "celsius" };
+
+        var result = await ToolDispatch.DispatchAsync(agent, call, parentInputs: parentInputs);
+
+        Assert.Equal("called", result);
+        Assert.NotNull(receivedArgs);
+        Assert.Contains("\"city\":\"Paris\"", receivedArgs);
+        Assert.Contains("\"unit\":\"celsius\"", receivedArgs);
     }
 
     // -----------------------------------------------------------------------

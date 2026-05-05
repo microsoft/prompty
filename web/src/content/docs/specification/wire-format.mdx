@@ -25,10 +25,10 @@ function message_to_wire(message) → dict:
     merge metadata keys into wire
 
   // Content: single TextPart → string; otherwise → array of content parts
-  if message.content has exactly 1 element AND that element is a TextPart:
-    wire.content = message.content[0].value        // plain string
+  if message.parts has exactly 1 element AND that element is a TextPart:
+    wire.content = message.parts[0].value        // plain string
   else:
-    wire.content = [part_to_wire(part) for part in message.content]
+    wire.content = [part_to_wire(part) for part in message.parts]
 
   return wire
 ```
@@ -254,7 +254,7 @@ When `agent.outputs` is non-empty, the executor MUST convert it to an
 OpenAI `response_format` parameter:
 
 ```
-function output_schema_to_wire(outputs: list[Property]) → dict | null:
+function output_schema_to_wire(outputs: Properties) → dict | null:
   if outputs is empty:
     return null
 
@@ -322,7 +322,7 @@ function build_embedding_args(agent, messages) → dict:
   // Extract text content from all messages
   texts = []
   for msg in messages:
-    for part in msg.content:
+    for part in msg.parts:
       if part.kind == "text":
         texts.append(part.value)
 
@@ -350,7 +350,7 @@ function build_image_args(agent, messages) → dict:
   prompt = ""
   for msg in reversed(messages):
     if msg.role == "user":
-      for part in msg.content:
+      for part in msg.parts:
         if part.kind == "text":
           prompt = part.value
           break
@@ -389,15 +389,15 @@ function build_responses_args(agent, messages) → dict:
       input_items.append({
         type: "function_call_output",
         call_id: msg.metadata.get("tool_call_id"),
-        output: msg.content[0].value if msg.content else ""
+        output: msg.parts[0].value if msg.parts else ""
       })
       continue
 
     // Normal message
-    if len(msg.content) == 1 and msg.content[0].kind == "text":
-      item.content = msg.content[0].value
+    if len(msg.parts) == 1 and msg.parts[0].kind == "text":
+      item.content = msg.parts[0].value
     else:
-      item.content = [part_to_wire(part) for part in msg.content]
+      item.content = [part_to_wire(part) for part in msg.parts]
 
     input_items.append(item)
 
@@ -489,7 +489,7 @@ function anthropic_tool(tool) → dict:
 function anthropic_message(msg) → dict:
   // Anthropic always uses an array of typed content blocks
   blocks = []
-  for part in msg.content:
+  for part in msg.parts:
     match part.kind:
       "text"  → blocks.append({ type: "text", text: part.value })
       "image" → blocks.append({

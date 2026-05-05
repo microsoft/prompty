@@ -1,0 +1,236 @@
+---
+title: Tool Calling
+description: Reference for tool registration, kind handlers, dispatch order, and bindings.
+sidebar:
+  order: 4
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Prompty separates tool definitions from tool implementations. Tool definitions
+live in `.prompty` frontmatter under `tools`. Tool implementations are supplied
+at runtime through per-call tool maps, global name registrations, or kind
+handlers.
+
+## Dispatch order
+
+When the model requests a tool call, runtimes resolve it in this order:
+
+1. Per-call tools passed to `turn`.
+2. Name registry entries registered with `registerTool` / `register_tool` / `ToolDispatch.RegisterTool`.
+3. Kind handlers registered with `registerToolHandler` / `register_tool_handler` / `ToolDispatch.RegisterToolHandler`.
+4. Wildcard kind handler (`"*"`) when supported.
+5. Error if no implementation can handle the call.
+
+Name registrations are for a specific tool name. Kind handlers are for a whole
+tool family such as `function`, `prompty`, `mcp`, `openapi`, or a custom kind.
+
+## Name registry
+
+Use the name registry when one callable should handle one named tool globally.
+Per-call tools still take priority.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    def get_weather(location: str) -> str:
+        return f"Sunny in {location}"
+
+    prompty.register_tool("get_weather", get_weather)
+    handler = prompty.get_tool("get_weather")
+    prompty.clear_tools()
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { clearTools, getTool, registerTool } from "@prompty/core";
+
+    registerTool("get_weather", (args: { location: string }) => {
+      return `Sunny in ${args.location}`;
+    });
+
+    const handler = getTool("get_weather");
+    clearTools();
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    ToolDispatch.RegisterTool(
+        "get_weather",
+        args => Task.FromResult("Sunny"));
+
+    var handler = ToolDispatch.GetTool("get_weather");
+    ToolDispatch.ClearTools();
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+
+    prompty::register_tool("get_weather", |args| {
+        Box::pin(async move {
+            let loc = args["location"].as_str().unwrap_or("unknown");
+            Ok(format!("Sunny in {loc}"))
+        })
+    });
+
+    let registered = prompty::has_tool("get_weather");
+    prompty::clear_tools();
+    ```
+  </TabItem>
+</Tabs>
+
+## Kind handler registry
+
+Use kind handlers when a provider or extension owns a category of tools. Built-in
+handlers are registered for common kinds such as `function`, `prompty`, `mcp`,
+and `openapi`; runtimes can also register custom handlers.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    import prompty
+
+    class MyToolHandler:
+        def execute_tool(self, tool, args, agent, parent_inputs):
+            return "handled"
+
+        async def execute_tool_async(self, tool, args, agent, parent_inputs):
+            return "handled"
+
+    prompty.register_tool_handler("my_kind", MyToolHandler())
+    handler = prompty.get_tool_handler("my_kind")
+    prompty.clear_tool_handlers()
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import {
+      clearToolHandlers,
+      getToolHandler,
+      registerToolHandler,
+      type ToolHandler,
+    } from "@prompty/core";
+
+    const handler: ToolHandler = {
+      async executeTool(tool, args, agent, parentInputs) {
+        return "handled";
+      },
+    };
+
+    registerToolHandler("my_kind", handler);
+    const registered = getToolHandler("my_kind");
+    clearToolHandlers();
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    ToolDispatch.RegisterToolHandler(
+        "my_kind",
+        (agent, tool, args) => Task.FromResult("handled"));
+
+    var handler = ToolDispatch.GetToolHandler("my_kind");
+    ToolDispatch.ClearToolHandlers();
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use async_trait::async_trait;
+    use prompty::{Prompty, ToolHandlerError, ToolHandlerTrait};
+
+    struct MyToolHandler;
+
+    #[async_trait]
+    impl ToolHandlerTrait for MyToolHandler {
+        async fn execute_tool(
+            &self,
+            tool_def: &serde_json::Value,
+            args: serde_json::Value,
+            agent: &Prompty,
+            parent_inputs: Option<&serde_json::Value>,
+        ) -> Result<String, ToolHandlerError> {
+            Ok("handled".to_string())
+        }
+    }
+
+    prompty::register_tool_handler("my_kind", MyToolHandler);
+    let registered = prompty::has_tool_handler("my_kind");
+    prompty::clear_tool_handlers();
+    ```
+  </TabItem>
+</Tabs>
+
+## Per-call tools
+
+For one-off agent turns, pass callables directly to `turn`. This is the highest
+priority and avoids global state.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    result = prompty.turn(
+        "agent.prompty",
+        inputs={"question": "Weather?"},
+        tools={"get_weather": get_weather},
+    )
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const result = await turn(
+      "agent.prompty",
+      { question: "Weather?" },
+      { get_weather: getWeather },
+    );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var result = await Pipeline.TurnAsync(
+        "agent.prompty",
+        inputs,
+        tools: new() { ["get_weather"] = args => Task.FromResult("Sunny") });
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let result = prompty::turn_from_path(
+        "agent.prompty",
+        Some(&inputs),
+        Some(options),
+    ).await?;
+    ```
+  </TabItem>
+</Tabs>
+
+## Bindings
+
+Tool bindings inject values from parent prompt inputs into tool arguments at
+execution time. Bound parameters should not be exposed as model-controllable
+schema parameters.
+
+```yaml
+inputs:
+  - name: tenantId
+    kind: string
+
+tools:
+  - kind: function
+    name: search_orders
+    bindings:
+      - name: tenantId
+        input: tenantId
+```
+
+If the model calls `search_orders`, the runtime merges `tenantId` from the
+prompt inputs into the tool arguments before executing the implementation.
+
+For tool data shapes, see [Tool](/reference/tool/), [FunctionTool](/reference/functiontool/),
+[PromptyTool](/reference/promptytool/), [McpTool](/reference/mcptool/), and
+[OpenApiTool](/reference/openapitool/).

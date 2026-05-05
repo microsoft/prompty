@@ -10,6 +10,19 @@ import { getCombinations, scalarValue, toSnakeCase } from "../ir/utilities.js";
 import { toPascalCase } from "../ir/visitor.js";
 import * as YAML from "yaml";
 
+const RUST_KEYWORDS = new Set([
+  "as", "break", "const", "continue", "crate", "else", "enum", "extern",
+  "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod",
+  "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct",
+  "super", "trait", "true", "type", "unsafe", "use", "where", "while",
+  "async", "await", "dyn",
+]);
+
+function rustFieldName(name: string): string {
+  const snake = toSnakeCase(name);
+  return RUST_KEYWORDS.has(snake) ? `r#${snake}` : snake;
+}
+
 /**
  * Options for building test context - language-specific transformations.
  */
@@ -337,8 +350,7 @@ export const typescriptTestOptions: TestContextOptions = {
  */
 export const rustTestOptions: TestContextOptions = {
   renderKey: (key: string) => {
-    // Convert camelCase to snake_case for Rust
-    return key.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
+    return rustFieldName(key);
   },
   renderBoolean: (val: boolean) => val ? "true" : "false",
   escapeString: (str: string) => str

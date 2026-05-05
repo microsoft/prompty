@@ -24,8 +24,10 @@ config:
 classDiagram
     class ToolResult {
         +ContentPart[] parts
+        +text() string [async-capable]
     }
     class ContentPart {
+      <<abstract>>
         +string kind
     }
     ToolResult *-- ContentPart
@@ -47,11 +49,11 @@ parts:
 
 ## Helper Methods
 
-The following helper methods are declared via `@method` and must be implemented by every runtime. Idiomatic language shape (e.g. zero-param accessor may be a property) is chosen per-language by the emitter.
+The following helper methods are declared via `@method` and must be implemented by every runtime. The schema declares the logical protocol contract; each runtime maps async-capable methods to idiomatic sync/async shapes for that language.
 
-| Name | Signature | Description |
-| ---- | --------- | ----------- |
-| `text` | `text() -> string` | Concatenate all TextPart values joined by newline |
+| Name | Signature | Runtime shape | Description |
+| ---- | --------- | ------------- | ----------- |
+| `text` | `text() -> string` | async-capable | Concatenate all TextPart values joined by newline |
 
 ## Factory Methods
 

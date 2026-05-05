@@ -823,11 +823,6 @@ async fn test_cancellation_between_tools() {
 
 #[tokio::test]
 async fn test_bindings_injected() {
-    // Tool bindings are not yet implemented in the Rust runtime.
-    // This test verifies the vector loads and the basic loop works,
-    // but does NOT verify binding injection.
-    eprintln!("SKIP: bindings_injected — tool bindings not yet implemented in Rust runtime");
-
     let vector = find_vector("bindings_injected");
     let key = mock_key("bindings_injected");
     let responses = collect_responses(&vector);
@@ -845,7 +840,16 @@ async fn test_bindings_injected() {
     }
     agent.instructions = Some(instruction_lines.join("\n\n"));
 
-    let tools = build_tool_handlers(&vector);
+    let captured_args: Arc<Mutex<Option<Value>>> = Arc::new(Mutex::new(None));
+    let captured_args_for_tool = Arc::clone(&captured_args);
+    let mut tools = HashMap::new();
+    tools.insert(
+        "get_weather".to_string(),
+        ToolHandler::Sync(Box::new(move |args: Value| {
+            *captured_args_for_tool.lock().unwrap() = Some(args);
+            Ok("22Â°C sunny".to_string())
+        })),
+    );
     let opts = TurnOptions {
         tools,
         ..Default::default()
@@ -853,10 +857,16 @@ async fn test_bindings_injected() {
 
     prompty::pipeline::register_defaults();
 
-    // The loop itself should still work even without binding injection
-    let result = turn(&agent, None, Some(opts)).await.unwrap();
+    let parent_inputs = vector["input"]["parent_inputs"].clone();
+    let result = turn(&agent, Some(&parent_inputs), Some(opts))
+        .await
+        .unwrap();
     let expected = vector["expected"]["result"].as_str().unwrap();
     assert_eq!(result.as_str().unwrap(), expected);
+
+    let expected_args = &vector["sequence"][0]["expected_execution_args"]["get_weather"];
+    let actual_args = captured_args.lock().unwrap().clone().unwrap();
+    assert_eq!(&actual_args, expected_args);
 }
 
 // ===================================================================

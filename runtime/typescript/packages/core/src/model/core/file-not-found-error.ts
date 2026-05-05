@@ -16,7 +16,10 @@ export class FileNotFoundError {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): FileNotFoundError {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FileNotFoundError {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -84,4 +87,3 @@ export class FileNotFoundError {
 
   //#endregion
 }
-

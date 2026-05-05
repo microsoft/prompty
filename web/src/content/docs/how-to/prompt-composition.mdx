@@ -21,7 +21,6 @@ tools:
   - name: summarize
     kind: prompty
     path: ./summarize.prompty
-    mode: single
 ```
 
 The LLM sees this as a regular function call — it doesn't know it's backed by
@@ -86,7 +85,6 @@ tools:
     kind: prompty
     description: Summarize a piece of text
     path: ./summarize.prompty
-    mode: single
     parameters:
       - name: text
         kind: string
@@ -95,7 +93,6 @@ tools:
     kind: prompty
     description: Classify text into a category
     path: ./classify.prompty
-    mode: single
     parameters:
       - name: text
         kind: string
@@ -185,7 +182,7 @@ When the agent loop encounters a tool call for a `kind: prompty` tool, the
 
 1. **Resolve path** — `path` is resolved relative to the parent `.prompty` file's directory
 2. **Load** — the child `.prompty` is loaded via `load()`
-3. **Execute** — in `single` mode: `prepare()` + `run()`. In `agentic` mode: `turn()` (the child runs its own agent loop)
+3. **Execute** — the child prompt runs as a single prompt invocation
 4. **Return** — the result string is sent back to the parent LLM as the tool response
 
 ```mermaid
@@ -201,9 +198,10 @@ sequenceDiagram
     LLM->>Runtime: final response
 ```
 
-<Aside type="tip">
-  Set `mode: agentic` when the child prompt itself has tools and needs its own
-  agent loop. Use `mode: single` (the default) for straightforward prompts.
+<Aside type="caution">
+  PromptyTool intentionally does **not** start a nested agent loop. If the child
+  prompt needs cancellation, compaction, steering, or its own tool loop, call it
+  from application code with `turn()` instead of nesting it behind PromptyTool.
 </Aside>
 
 ---

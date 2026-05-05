@@ -1,0 +1,120 @@
+---
+title: Structured Output
+description: Reference for outputs, StructuredResult, cast helpers, and typed invocation.
+sidebar:
+  order: 7
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Define `outputs` in a prompt when the model should return data matching a known
+shape.
+
+```yaml
+outputs:
+  - name: city
+    kind: string
+  - name: temp
+    kind: integer
+```
+
+## `StructuredResult`
+
+When `outputs` is defined, processors can return a `StructuredResult`: a
+dictionary/object-shaped value that also keeps the raw JSON string for efficient
+typed casting.
+
+## `cast(result, target)`
+
+Deserialize a processed structured result to an application type.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from dataclasses import dataclass
+    from prompty import cast
+
+    @dataclass
+    class Weather:
+        city: str
+        temperature: int
+
+    weather = cast(result, Weather)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { cast } from "@prompty/core";
+    import { z } from "zod";
+
+    const Weather = z.object({ city: z.string(), temperature: z.number() });
+    const weather = cast<z.infer<typeof Weather>>(result, Weather.parse);
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    record Weather(string City, int Temperature);
+
+    var weather = ((StructuredResult)result).Cast<Weather>();
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use serde::Deserialize;
+
+    #[derive(Deserialize)]
+    struct Weather {
+        city: String,
+        temperature: i32,
+    }
+
+    let weather: Weather = prompty::cast(&result)?;
+    ```
+  </TabItem>
+</Tabs>
+
+## Typed invocation
+
+Some runtimes provide generic invocation helpers that run the prompt and cast the
+final result in one step.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    weather = invoke(
+        "weather.prompty",
+        inputs={"city": "Seattle"},
+        target_type=Weather,
+    )
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    const weather = await invoke(
+      "weather.prompty",
+      { city: "Seattle" },
+      { validator: Weather.parse },
+    );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var weather = await Pipeline.InvokeAsync<Weather>(
+        "weather.prompty",
+        new() { ["city"] = "Seattle" });
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    let weather: Weather = prompty::invoke_from_path_typed(
+        "weather.prompty",
+        Some(&json!({ "city": "Seattle" })),
+    ).await?;
+    ```
+  </TabItem>
+</Tabs>
+
+For output schema data shapes, see [Property](/reference/property/) and
+[Prompty](/reference/prompty/).

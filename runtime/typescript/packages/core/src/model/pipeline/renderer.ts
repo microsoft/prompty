@@ -6,6 +6,9 @@ import { Prompty } from "../agent/prompty";
 /** Renders a template string with input values to produce the final prompt text. */
 export interface Renderer {
   /** Render the template string with input values */
-  render(agent: Prompty, template: string, inputs: Record<string, unknown>): Promise<string>;
+  render(
+    agent: Prompty,
+    template: string,
+    inputs: Record<string, unknown>,
+  ): Promise<string>;
 }
-

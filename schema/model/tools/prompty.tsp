@@ -3,13 +3,13 @@ import "./tool.tsp";
 
 namespace Prompty;
 
-alias promptyToolMode = "single" | "agentic";
+alias promptyToolMode = "single";
 
 /**
  * A tool that references another .prompty file to be invoked as a tool.
  *
- * In `single` mode, the child prompty is executed with a single LLM call.
- * In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+ * The child prompty is executed as a single prompt invocation. Nested agent
+ * loops are intentionally not started from PromptyTool.
  */
 model PromptyTool extends Tool {
   @doc("The kind identifier for prompty tools")
@@ -20,7 +20,7 @@ model PromptyTool extends Tool {
   @sample(#{ path: "./summarize.prompty" })
   path: string;
 
-  @doc("Execution mode: 'single' for one LLM call, 'agentic' for full agent loop")
+  @doc("Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool.")
   @sample(#{ mode: "single" })
   mode: promptyToolMode = "single";
 }

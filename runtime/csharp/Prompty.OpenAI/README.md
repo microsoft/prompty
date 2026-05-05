@@ -93,19 +93,18 @@ model:
 
 ## Structured Output
 
-Define `outputSchema` in your `.prompty` frontmatter and the executor
+Define `outputs` in your `.prompty` frontmatter and the executor
 automatically converts it to OpenAI's `response_format` parameter:
 
 ```yaml
-outputSchema:
-  properties:
-    - name: answer
-      kind: string
-    - name: confidence
-      kind: float
+outputs:
+  answer:
+    kind: string
+  confidence:
+    kind: float
 ```
 
-## Agent Mode (Tool Calling)
+## Agent Turns (Tool Calling)
 
 ```csharp
 var tools = new Dictionary<string, Func<string, Task<string>>>

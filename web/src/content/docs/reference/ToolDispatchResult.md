@@ -27,6 +27,7 @@ classDiagram
     }
     class ToolResult {
         +ContentPart[] parts
+        +text() string [async-capable]
     }
     ToolDispatchResult *-- ToolResult
 ```

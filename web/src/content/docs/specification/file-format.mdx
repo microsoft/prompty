@@ -242,7 +242,7 @@ Tools are defined as a list under the `tools` frontmatter property. Each tool ha
 | Kind       | Type           | Additional Fields                                      |
 | ---------- | -------------- | ------------------------------------------------------ |
 | `function` | `FunctionTool` | `parameters` (`list[Property]`), `strict` (boolean)    |
-| `prompty`  | `PromptyTool`  | `path` (string), `mode` (`single` or `agentic`)        |
+| `prompty`  | `PromptyTool`  | `path` (string)                                        |
 | `mcp`      | `McpTool`      | `connection`, `serverName`, `approvalMode`, `allowedTools` |
 | `openapi`  | `OpenApiTool`  | `connection`, `specification` (path or URL)             |
 | `*`        | `CustomTool`   | `connection`, `options` — wildcard catch-all            |
@@ -252,9 +252,10 @@ be loaded as a `CustomTool` (the wildcard `*` catch-all).
 
 ### §2.9.1 Tool Bindings
 
-Bindings are static parameter values that are injected when a tool is executed but
-MUST NOT appear in the tool definition sent to the LLM. This allows prompts to bind
-context (user IDs, session tokens, API keys) without exposing them in the tool schema.
+Bindings map tool parameters to parent prompt inputs. Bound parameters are
+injected when a tool is executed but MUST NOT appear in the tool definition sent
+to the LLM. This allows prompts to pass context (user IDs, session tokens, API
+keys) without exposing those parameters in the tool schema.
 
 ```yaml
 tools:
@@ -269,7 +270,8 @@ tools:
         kind: integer
         default: 10
     bindings:
-      user_id: ${env:CURRENT_USER_ID}
+      user_id:
+        input: current_user_id
 ```
 
 **Binding behavior**:
@@ -289,22 +291,18 @@ tools:
   - name: summarize
     kind: prompty
     path: ./summarize.prompty
-    mode: single
     description: Summarize a block of text
 ```
 
-| Field  | Type     | Default    | Description                                        |
-| ------ | -------- | ---------- | -------------------------------------------------- |
-| `path` | `string` | —          | Relative path to the `.prompty` file               |
-| `mode` | `string` | `"single"` | `single`: one-shot call. `agentic`: full agent loop |
+| Field  | Type     | Default    | Description                          |
+| ------ | -------- | ---------- | ------------------------------------ |
+| `path` | `string` | —          | Relative path to the `.prompty` file |
 
 When the LLM invokes this tool:
 
 1. Load the referenced `.prompty` file via `load(path)`.
-2. If `mode` is `"single"`: call `invoke(path, arguments)` — one pass, no tool loop.
-3. If `mode` is `"agentic"`: call `turn(path, arguments)` — full agent loop
-   with any tools defined in the referenced prompty.
-4. Return the result as the tool's output.
+2. Call `invoke(path, arguments)` — one pass, no nested tool loop.
+3. Return the result as the tool's output.
 
 ## §2.10 Role Markers
 

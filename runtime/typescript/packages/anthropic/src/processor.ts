@@ -5,7 +5,7 @@
  * - Text content from `content[]` blocks
  * - Tool use blocks → ToolCall objects
  * - Streaming responses (content_block_delta events)
- * - Structured output (JSON parse when outputSchema present)
+ * - Structured output (JSON parse when outputs are present)
  *
  * @module
  */

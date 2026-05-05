@@ -196,7 +196,7 @@ async fn test_entra_id_chat_completion_streaming() {
     eprintln!("Entra ID streaming result: {text}");
 }
 
-/// Structured output via `outputSchema` using Entra ID auth.
+/// Structured output via `outputs` using Entra ID auth.
 #[tokio::test]
 #[ignore]
 async fn test_entra_id_structured_output() {

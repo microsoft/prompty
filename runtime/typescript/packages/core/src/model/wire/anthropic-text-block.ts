@@ -16,7 +16,10 @@ export class AnthropicTextBlock {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicTextBlock {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicTextBlock {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -84,4 +87,3 @@ export class AnthropicTextBlock {
 
   //#endregion
 }
-

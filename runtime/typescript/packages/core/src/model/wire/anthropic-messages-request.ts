@@ -44,7 +44,10 @@ export class AnthropicMessagesRequest {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicMessagesRequest {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicMessagesRequest {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -55,7 +58,10 @@ export class AnthropicMessagesRequest {
       instance.model = String(data["model"]);
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = AnthropicMessagesRequest.loadMessages(data["messages"] as unknown[], context);
+      instance.messages = AnthropicMessagesRequest.loadMessages(
+        data["messages"] as unknown[],
+        context,
+      );
     }
     if (data["max_tokens"] !== undefined && data["max_tokens"] !== null) {
       instance.max_tokens = Number(data["max_tokens"]);
@@ -72,11 +78,19 @@ export class AnthropicMessagesRequest {
     if (data["top_k"] !== undefined && data["top_k"] !== null) {
       instance.top_k = Number(data["top_k"]);
     }
-    if (data["stop_sequences"] !== undefined && data["stop_sequences"] !== null) {
-      instance.stop_sequences = (data["stop_sequences"] as unknown[]).map(v => String(v));
+    if (
+      data["stop_sequences"] !== undefined &&
+      data["stop_sequences"] !== null
+    ) {
+      instance.stop_sequences = (data["stop_sequences"] as unknown[]).map((v) =>
+        String(v),
+      );
     }
     if (data["tools"] !== undefined && data["tools"] !== null) {
-      instance.tools = AnthropicMessagesRequest.loadTools(data["tools"] as unknown[], context);
+      instance.tools = AnthropicMessagesRequest.loadTools(
+        data["tools"] as unknown[],
+        context,
+      );
     }
 
     if (context) {
@@ -85,7 +99,10 @@ export class AnthropicMessagesRequest {
     return instance;
   }
 
-  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): AnthropicWireMessage[] {
+  static loadMessages(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): AnthropicWireMessage[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -93,24 +110,32 @@ export class AnthropicMessagesRequest {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, "role": v });
+          result.push({ name: k, role: v });
         }
       }
       data = result;
     }
-    return data.map(item => AnthropicWireMessage.load(item as Record<string, unknown>, context));
+    return data.map((item) =>
+      AnthropicWireMessage.load(item as Record<string, unknown>, context),
+    );
   }
 
-  static saveMessages(items: AnthropicWireMessage[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(
+    items: AnthropicWireMessage[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadTools(data: Record<string, unknown>[] | unknown[], context?: LoadContext): AnthropicToolDefinition[] {
+  static loadTools(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): AnthropicToolDefinition[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -118,21 +143,26 @@ export class AnthropicMessagesRequest {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, "description": v });
+          result.push({ name: k, description: v });
         }
       }
       data = result;
     }
-    return data.map(item => AnthropicToolDefinition.load(item as Record<string, unknown>, context));
+    return data.map((item) =>
+      AnthropicToolDefinition.load(item as Record<string, unknown>, context),
+    );
   }
 
-  static saveTools(items: AnthropicToolDefinition[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveTools(
+    items: AnthropicToolDefinition[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     if (context.collectionFormat === "array") {
-      return items.map(item => item.save(context));
+      return items.map((item) => item.save(context));
     }
 
     // Object format: use name as key
@@ -143,8 +173,14 @@ export class AnthropicMessagesRequest {
       delete itemData["name"];
       if (name) {
         // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof AnthropicToolDefinition).shorthandProperty;
-        if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+        const shorthand = (item.constructor as typeof AnthropicToolDefinition)
+          .shorthandProperty;
+        if (
+          context.useShorthand &&
+          shorthand &&
+          Object.keys(itemData).length === 1 &&
+          shorthand in itemData
+        ) {
           result[name] = itemData[shorthand];
           continue;
         }
@@ -176,7 +212,10 @@ export class AnthropicMessagesRequest {
       result["model"] = obj.model;
     }
     if (obj.messages !== undefined && obj.messages !== null) {
-      result["messages"] = AnthropicMessagesRequest.saveMessages(obj.messages, context);
+      result["messages"] = AnthropicMessagesRequest.saveMessages(
+        obj.messages,
+        context,
+      );
     }
     if (obj.max_tokens !== undefined && obj.max_tokens !== null) {
       result["max_tokens"] = obj.max_tokens;
@@ -216,17 +255,28 @@ export class AnthropicMessagesRequest {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): AnthropicMessagesRequest {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): AnthropicMessagesRequest {
     const data = JSON.parse(json);
-    return AnthropicMessagesRequest.load(data as Record<string, unknown>, context);
+    return AnthropicMessagesRequest.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): AnthropicMessagesRequest {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): AnthropicMessagesRequest {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return AnthropicMessagesRequest.load(data as Record<string, unknown>, context);
+    return AnthropicMessagesRequest.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion
 }
-

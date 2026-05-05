@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Prompty.Core;
@@ -169,10 +170,12 @@ public static class ToolDispatch
     /// <param name="agent">The parent agent (for tool definitions and context).</param>
     /// <param name="call">The tool call from the LLM.</param>
     /// <param name="userTools">Per-call tool overrides (highest priority).</param>
+    /// <param name="parentInputs">Original turn inputs used to resolve tool bindings.</param>
     public static async Task<string> DispatchAsync(
         Prompty agent,
         ToolCall call,
-        Dictionary<string, Func<string, Task<string>>>? userTools = null)
+        Dictionary<string, Func<string, Task<string>>>? userTools = null,
+        Dictionary<string, object?>? parentInputs = null)
     {
         var arguments = ParseArguments(call.Arguments);
 
@@ -182,17 +185,11 @@ public static class ToolDispatch
             return $"Error: Invalid JSON in tool arguments for '{call.Name}': {arguments["_error"]}";
         }
 
-        // Apply bindings from the tool definition
+        // Apply bindings from parent turn inputs before dispatching to any handler.
         var toolDef = FindToolDefinition(agent, call.Name);
-        if (toolDef?.Bindings is not null)
+        if (ResolveBindings(toolDef, arguments, parentInputs))
         {
-            foreach (var binding in toolDef.Bindings)
-            {
-                if (!string.IsNullOrEmpty(binding.Name) && !string.IsNullOrEmpty(binding.Input))
-                {
-                    arguments[binding.Name] = binding.Input;
-                }
-            }
+            call.Arguments = JsonSerializer.Serialize(arguments);
         }
 
         // 1. Per-call user tools
@@ -244,6 +241,30 @@ public static class ToolDispatch
         if (agent.Tools is null) return null;
         return agent.Tools.FirstOrDefault(t =>
             string.Equals(t.Name, toolName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool ResolveBindings(
+        Tool? toolDef,
+        Dictionary<string, object?> arguments,
+        Dictionary<string, object?>? parentInputs)
+    {
+        if (toolDef?.Bindings is null || parentInputs is null)
+            return false;
+
+        var changed = false;
+        foreach (var binding in toolDef.Bindings)
+        {
+            if (string.IsNullOrEmpty(binding.Name) || string.IsNullOrEmpty(binding.Input))
+                continue;
+
+            if (parentInputs.TryGetValue(binding.Input, out var value))
+            {
+                arguments[binding.Name] = value;
+                changed = true;
+            }
+        }
+
+        return changed;
     }
 
     /// <summary>

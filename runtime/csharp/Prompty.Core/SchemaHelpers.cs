@@ -13,7 +13,9 @@ public static class SchemaHelpers
     /// Used for tool parameters and structured output schemas.
     /// </summary>
     public static Dictionary<string, object?> PropertiesToJsonSchema(
-        IList<Property>? properties, bool strict = false)
+        IList<Property>? properties,
+        bool strict = false,
+        ISet<string>? excludedPropertyNames = null)
     {
         var result = new Dictionary<string, object?> { ["type"] = "object" };
 
@@ -26,6 +28,7 @@ public static class SchemaHelpers
         foreach (var prop in properties)
         {
             if (string.IsNullOrEmpty(prop.Name)) continue;
+            if (excludedPropertyNames?.Contains(prop.Name) == true) continue;
 
             props[prop.Name] = PropertyToJsonSchema(prop);
 

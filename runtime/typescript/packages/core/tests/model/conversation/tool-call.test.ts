@@ -23,7 +23,7 @@ describe("ToolCall", () => {
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("call_abc123");
       expect(instance.name).toEqual("get_weather");
-      expect(instance.arguments).toEqual("{\"city\": \"Paris\"}");
+      expect(instance.arguments).toEqual('{"city": "Paris"}');
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -44,7 +44,7 @@ describe("ToolCall", () => {
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("call_abc123");
       expect(instance.name).toEqual("get_weather");
-      expect(instance.arguments).toEqual("{\"city\": \"Paris\"}");
+      expect(instance.arguments).toEqual('{"city": "Paris"}');
     });
 
     it("should round-trip YAML - example 1", () => {

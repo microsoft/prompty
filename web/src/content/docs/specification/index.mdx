@@ -11,7 +11,10 @@ This specification is intended for **implementers building Prompty runtimes** in
 **Version**: 0.1.0-draft · **Status**: Draft
 
 :::note
-The type system (data model) is defined separately in TypeSpec (`schema/`). This specification covers what implementations **do** with those types.
+The type system (data model) is defined in TypeSpec under `schema/` and emitted
+into the runtime libraries and [Schema Reference](/reference/). This
+specification is the source of truth for runtime behavior; it covers what
+implementations **do** with those generated types.
 :::
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
@@ -32,6 +35,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 | 10 | Streaming | [§10 Streaming](/specification/streaming/) |
 | 11 | Registries & Plugin Discovery | [§11 Registries & Plugin Discovery](/specification/registries/) |
 | 12 | Cross-Cutting Concerns | [§12 Cross-Cutting Concerns](/specification/cross-cutting/) |
+| 13 | Agent Loop Extensions | [§13 Agent Loop Extensions](/specification/agent-extensions/) |
 
 ## Public API Surface
 

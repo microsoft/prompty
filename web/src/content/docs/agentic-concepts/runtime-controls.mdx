@@ -1,0 +1,156 @@
+---
+title: Runtime Controls
+description: >
+  Understand the order in which Prompty applies cancellation, steering, context
+  trimming, guardrails, model calls, and tool dispatch during each agent loop
+  iteration.
+sidebar:
+  order: 3
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Runtime controls are options passed to `turn()` / `TurnAsync()`. They are not
+`.prompty` frontmatter fields. This keeps the prompt portable while letting the
+host application decide policy, budgets, cancellation, observability, and live
+steering.
+
+The prompt is prepared before these per-iteration controls run. Steering,
+compaction, and tool result messages mutate the in-memory message array for the
+current turn; they do not re-render the original template.
+
+## Execution order
+
+During each loop iteration Prompty applies controls in this order:
+
+1. Check cancellation.
+2. Drain steering messages.
+3. Trim messages to the context budget.
+4. Apply compaction if messages were trimmed and a compaction strategy exists.
+5. Run input guardrails.
+6. Check cancellation again before the LLM call.
+7. Call the LLM, with retry policy.
+8. Run output guardrails on model text.
+9. Run tool guardrails for each requested tool call.
+10. Execute tools, serially or in parallel.
+11. Append provider-formatted tool result messages.
+
+## Control pages
+
+- [Events & Cancellation](/agentic-concepts/events-cancellation/) covers
+  observability callbacks, token/status updates, and cooperative stop behavior.
+- [Context & Compaction](/agentic-concepts/context-compaction/) covers trimming
+  the message array and replacing dropped turns with summaries.
+- [Guardrails](/agentic-concepts/guardrails/) covers input, output, and tool
+  policy hooks.
+- [Steering](/agentic-concepts/steering/) covers injecting guidance between loop
+  iterations.
+- [Tool Execution](/agentic-concepts/tool-execution/) covers serial vs. parallel
+  tool dispatch, tool failures, max iterations, and LLM retries.
+
+## Example: combine controls
+
+<Tabs>
+<TabItem label="Python">
+
+```python
+from prompty import turn
+from prompty.core import CancellationToken, Guardrails
+
+token = CancellationToken()
+
+result = turn(
+    agent,
+    inputs={"question": question},
+    tools=tools,
+    on_event=lambda event_type, data: print(event_type, data),
+    cancel=token,
+    context_budget=50_000,
+    compaction=lambda dropped: summarize_locally(dropped),
+    guardrails=Guardrails(
+        input=lambda messages: check_input(messages),
+        output=lambda message: check_output(message),
+        tool=lambda name, args: check_tool(name, args),
+    ),
+    steering=steering,
+    parallel_tool_calls=True,
+    max_llm_retries=3,
+)
+```
+
+</TabItem>
+<TabItem label="TypeScript">
+
+```ts
+import { Guardrails, turn } from "@prompty/core";
+
+const result = await turn(agent, { question }, {
+  tools,
+  onEvent: (eventType, data) => console.log(eventType, data),
+  signal: abortController.signal,
+  contextBudget: 50_000,
+  compaction: async (dropped) => summarizeLocally(dropped),
+  guardrails: new Guardrails({
+    input: (messages) => checkInput(messages),
+    output: (message) => checkOutput(message),
+    tool: (name, args) => checkTool(name, args),
+  }),
+  steering,
+  parallelToolCalls: true,
+  maxLlmRetries: 3,
+});
+```
+
+</TabItem>
+<TabItem label="C#">
+
+```csharp
+var result = await Pipeline.TurnAsync(
+    agent,
+    inputs,
+    tools: tools,
+    onEvent: (eventType, data) => Console.WriteLine(eventType),
+    cancellationToken: cancellationToken,
+    contextBudget: 50_000,
+    compaction: CompactionStrategy.FromFunction(SummarizeLocallyAsync),
+    guardrails: new Guardrails(
+        input: CheckInput,
+        output: CheckOutput,
+        tool: CheckTool),
+    steering: steering,
+    parallelToolCalls: true,
+    maxLlmRetries: 3
+);
+```
+
+</TabItem>
+<TabItem label="Rust">
+
+```rust
+use prompty::{Compaction, TurnOptions};
+
+let options = TurnOptions {
+    context_budget: Some(50_000),
+    compaction: Some(Compaction::Function(compaction_fn)),
+    guardrails: Some(guardrails),
+    steering: Some(steering),
+    parallel_tool_calls: true,
+    max_llm_retries: 3,
+    ..Default::default()
+};
+
+let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
+```
+
+</TabItem>
+</Tabs>
+
+## Choosing controls
+
+Start small:
+
+1. Use events first so you can observe the loop.
+2. Add cancellation if the turn can take more than a few seconds.
+3. Add context budget and compaction when conversations can grow.
+4. Add guardrails when host policy needs to enforce allow/deny/rewrite behavior.
+5. Add steering only when a user or operator needs to intervene mid-turn.

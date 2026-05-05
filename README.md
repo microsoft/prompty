@@ -47,7 +47,7 @@ pip install "prompty[jinja2,openai]"
 ```python
 import prompty
 
-result = prompty.execute("greeting.prompty", inputs={"name": "Jane"})
+result = prompty.invoke("greeting.prompty", inputs={"name": "Jane"})
 print(result)
 ```
 
@@ -56,10 +56,10 @@ print(result)
 npm install @prompty/core @prompty/openai
 ```
 ```typescript
-import { execute } from "@prompty/core";
+import { invoke } from "@prompty/core";
 import "@prompty/openai";
 
-const result = await execute("greeting.prompty", { name: "Jane" });
+const result = await invoke("greeting.prompty", { name: "Jane" });
 console.log(result);
 ```
 
@@ -84,7 +84,7 @@ git ls-files --eol | grep 'w/crlf'
 
 ## VS Code Extension
 
-> **v2 extension coming soon** — the next release brings a new connections sidebar, live preview, chat mode, and redesigned trace viewer. Stay tuned on the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
+The v2 extension includes a connections sidebar, live preview, chat mode, and a redesigned trace viewer.
 
 ### Create
 
@@ -131,7 +131,7 @@ pip install "prompty[jinja2,anthropic]" # Anthropic
 import prompty
 
 # Full pipeline: load → render → parse → execute → process
-result = prompty.execute("my-prompt.prompty", inputs={...})
+result = prompty.invoke("my-prompt.prompty", inputs={...})
 
 # Step-by-step
 agent = prompty.load("my-prompt.prompty")
@@ -139,7 +139,7 @@ messages = prompty.prepare(agent, inputs={...})
 result = prompty.run(agent, messages)
 
 # Async
-result = await prompty.execute_async("my-prompt.prompty", inputs={...})
+result = await prompty.invoke_async("my-prompt.prompty", inputs={...})
 ```
 
 See [runtime/python/prompty/README.md](runtime/python/prompty/README.md) for full API docs.
@@ -153,11 +153,11 @@ npm install @prompty/core @prompty/anthropic # Anthropic
 ```
 
 ```typescript
-import { load, prepare, run, execute } from "@prompty/core";
+import { load, prepare, run, invoke } from "@prompty/core";
 import "@prompty/openai"; // registers the provider
 
 // Full pipeline
-const result = await execute("my-prompt.prompty", { name: "Jane" });
+const result = await invoke("my-prompt.prompty", { name: "Jane" });
 
 // Step-by-step
 const agent = await load("my-prompt.prompty");

@@ -97,7 +97,8 @@ public static class WireFormat
         {
             if (tool is Core.FunctionTool ft)
             {
-                var parameters = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters, ft.Strict == true);
+                var boundNames = BoundParameterNames(ft);
+                var parameters = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters, ft.Strict == true, boundNames);
                 var chatTool = ChatTool.CreateFunctionTool(
                     ft.Name ?? "",
                     ft.Description,
@@ -111,7 +112,7 @@ public static class WireFormat
     }
 
     /// <summary>
-    /// Convert outputSchema to OpenAI response_format.
+    /// Convert outputs to OpenAI response_format.
     /// </summary>
     public static ChatResponseFormat? OutputSchemaToWire(Core.Prompty agent)
     {
@@ -290,7 +291,8 @@ public static class WireFormat
         {
             if (tool is Core.FunctionTool ft)
             {
-                var parameters = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters, ft.Strict == true);
+                var boundNames = BoundParameterNames(ft);
+                var parameters = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters, ft.Strict == true, boundNames);
                 var responseTool = ResponseTool.CreateFunctionTool(
                     ft.Name ?? "",
                     BinaryData.FromString(JsonSerializer.Serialize(parameters)),
@@ -301,5 +303,16 @@ public static class WireFormat
         }
 
         return tools.Count > 0 ? tools : null;
+    }
+
+    private static ISet<string>? BoundParameterNames(Core.Tool tool)
+    {
+        if (tool.Bindings is null || tool.Bindings.Count == 0)
+            return null;
+
+        return tool.Bindings
+            .Where(binding => !string.IsNullOrEmpty(binding.Name))
+            .Select(binding => binding.Name!)
+            .ToHashSet(StringComparer.Ordinal);
     }
 }

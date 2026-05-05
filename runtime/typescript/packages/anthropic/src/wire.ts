@@ -158,7 +158,7 @@ export function buildChatArgs(
   }
 
   // Structured output
-  const outputConfig = outputSchemaToWire(agent);
+  const outputConfig = outputsToWire(agent);
   if (outputConfig) {
     args.output_config = outputConfig;
   }
@@ -170,7 +170,7 @@ export function buildChatArgs(
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Map AgentSchema kind strings to JSON Schema type strings. */
+/** Map Prompty kind strings to JSON Schema type strings. */
 const KIND_TO_JSON_TYPE: Record<string, string> = {
   string: "string",
   integer: "integer",
@@ -322,11 +322,11 @@ export function toolsToWire(agent: Prompty): Record<string, unknown>[] {
 }
 
 /**
- * Convert outputSchema to Anthropic structured output config.
+ * Convert outputs to Anthropic structured output config.
  *
  * Anthropic uses: output_config: { format: { type: "json_schema", schema: {...} } }
  */
-export function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {
+export function outputsToWire(agent: Prompty): Record<string, unknown> | null {
   const outputs = agent.outputs;
   if (!outputs || outputs.length === 0) return null;
 

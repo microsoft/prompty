@@ -235,7 +235,7 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]]:
 
 
 def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
-    """Convert outputSchema to Anthropic output_config.format.
+    """Convert outputs to Anthropic output_config.format.
 
     Anthropic format: ``output_config: { format: { type: "json_schema", schema: {...} } }``
     """

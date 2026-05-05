@@ -8,7 +8,7 @@ using Prompty.Anthropic;
 namespace Prompty.Providers.Tests.Integration;
 
 /// <summary>
-/// Integration tests — structured output (outputSchema → response_format) against real endpoints.
+/// Integration tests — structured output (outputs → response_format) against real endpoints.
 /// </summary>
 [Trait("Category", "Integration")]
 public class StructuredOutputTests : IntegrationTestBase

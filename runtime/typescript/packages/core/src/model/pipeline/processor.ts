@@ -10,4 +10,3 @@ export interface Processor {
   /** Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support. */
   processStream?(stream: unknown): Promise<unknown>;
 }
-

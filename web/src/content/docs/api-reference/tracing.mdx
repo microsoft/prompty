@@ -1,0 +1,73 @@
+---
+title: Tracing
+description: Reference for tracer registration and tracing custom operations.
+sidebar:
+  order: 8
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Tracing records runtime steps such as rendering, parsing, provider calls, stream
+iteration, and custom application operations.
+
+## Register tracers
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from prompty import PromptyTracer, Tracer, trace
+
+    Tracer.add("json", PromptyTracer("./traces").tracer)
+
+    @trace
+    def my_function():
+        ...
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { Tracer, consoleTracer, trace } from "@prompty/core";
+
+    Tracer.add("console", consoleTracer);
+
+    const myFunction = trace(async () => {
+      // ...
+    }, "myFunction");
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core.Tracing;
+
+    Tracer.Add("console", name => new ConsoleTracer(name));
+
+    var result = await Trace.TraceAsync("my-operation", async emitter =>
+    {
+        emitter.Add("input", data);
+        return await DoWork();
+    });
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{Tracer, PromptyTracer, console_tracer, trace_async};
+
+    Tracer::register("console", console_tracer);
+
+    let pt = PromptyTracer::new("./traces");
+    Tracer::register("file", pt.tracer());
+
+    let result = trace_async("my-operation", async {
+        // ...
+    }).await;
+    ```
+  </TabItem>
+</Tabs>
+
+## Trace data shapes
+
+| Type | Description |
+| --- | --- |
+| [TraceFile](/reference/tracefile/) | Serialized trace file |
+| [TraceSpan](/reference/tracespan/) | One operation span |
+| [TraceTime](/reference/tracetime/) | Start, end, and duration metadata |

@@ -1,0 +1,77 @@
+---
+title: Streaming
+description: Reference for streaming options and processed stream chunks.
+sidebar:
+  order: 6
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Streaming is enabled through provider options and runtime-specific stream APIs.
+Callers usually request a raw streaming provider response, then pass it through
+`process` to get clean chunks.
+
+## Basic streaming flow
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    agent = prompty.load("chat.prompty")
+    messages = prompty.prepare(agent, inputs={"q": "Hi"})
+    agent.model.options.additionalProperties = {"stream": True}
+
+    response = prompty.run(agent, messages, raw=True)
+    for chunk in prompty.process(agent, response):
+        print(chunk, end="", flush=True)
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    agent.model.options.additionalProperties = { stream: true };
+    const response = await run(agent, messages, { raw: true });
+
+    for await (const chunk of processResponse(agent, response)) {
+      process.stdout.write(chunk);
+    }
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    agent.Model.Options.AdditionalProperties["stream"] = true;
+
+    var response = await Pipeline.RunAsync(agent, messages, raw: true);
+    if (response is PromptyStream stream)
+    {
+        await foreach (var chunk in stream)
+        {
+            Console.Write(chunk);
+        }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use futures::StreamExt;
+    use serde_json::json;
+
+    let agent = prompty::load("chat.prompty")?;
+    let messages = prompty::prepare(&agent, Some(&json!({}))).await?;
+
+    let mut stream = prompty::run_stream(&agent, &messages).await?;
+    while let Some(chunk) = stream.next().await {
+        print!("{chunk}");
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Stream result shapes
+
+| Type | Description |
+| --- | --- |
+| `PromptyStream` | Sync stream wrapper with tracing support |
+| `AsyncPromptyStream` | Async stream wrapper with tracing support |
+| `StreamChunk` | Schema-level chunk union for text, thinking, tool, and error chunks |
+
+For schema details, see [StreamChunk](/reference/streamchunk/) and
+[StreamOptions](/reference/streamoptions/).

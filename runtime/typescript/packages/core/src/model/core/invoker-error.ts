@@ -18,7 +18,10 @@ export class InvokerError {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): InvokerError {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): InvokerError {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -92,4 +95,3 @@ export class InvokerError {
 
   //#endregion
 }
-

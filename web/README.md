@@ -14,9 +14,13 @@ Prompty is designed to accelerate the developer inner loop of prompt engineering
 This documentation covers:
 
 - **Getting Started**: Core concepts, setup instructions, and your first Prompty
-- **Tutorials**: Step-by-step guides for using Prompty with popular frameworks like LangChain and Semantic Kernel
-- **Specification**: Technical specifications and format details
-- **Guides**: In-depth guides for advanced usage and best practices
+- **Tutorials**: Step-by-step guides for common Prompty workflows
+- **Core Concepts**: Format, pipeline, provider, and runtime concepts
+- **Agentic Concepts**: Agent loop, controls, events, compaction, guardrails, steering, and tools
+- **Implementation**: Runtime-specific implementation notes and the schema emitter
+- **How-To Guides**: Practical recipes for advanced usage and best practices
+- **Reference**: Generated schema reference and API reference
+- **Specification**: Runtime behavior requirements and format details
 - **Contributing**: How to contribute to the Prompty project
 
 Visit the live documentation at **[prompty.ai](https://prompty.ai/)**
@@ -36,7 +40,10 @@ This is an Astro + Starlight documentation site with the following structure:
 │   │       ├── getting-started/
 │   │       ├── tutorials/
 │   │       ├── specification/
-│   │       ├── guides/
+│   │       ├── how-to/
+│   │       ├── implementation/
+│   │       ├── api-reference/
+│   │       ├── reference/
 │   │       └── contributing/
 │   └── styles/              # Custom CSS styles
 ├── astro.config.mjs         # Astro configuration

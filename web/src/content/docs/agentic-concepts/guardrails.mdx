@@ -1,0 +1,189 @@
+---
+title: Guardrails
+description: >
+  Apply runtime policy to agent inputs, outputs, and tool calls with allow,
+  deny, and rewrite hooks.
+sidebar:
+  order: 4
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Guardrails are host-enforced policy hooks. They run inside the agent loop, outside
+the model prompt, so they are appropriate for behavior that must be enforced by
+your application rather than merely requested in instructions.
+
+## Where guardrails run
+
+| Hook | Runs | Can do |
+|---|---|---|
+| Input | After steering and context trimming, before the LLM call | allow, deny, rewrite messages |
+| Output | After model text, before returning or continuing | allow, deny, rewrite output |
+| Tool | Before each requested tool executes | allow, deny, rewrite arguments |
+
+In an agent turn, guardrails can run repeatedly:
+
+```text
+prepare/thread expansion
+→ steering
+→ context trimming/compaction
+→ input guardrail
+→ LLM call
+→ process response
+→ tool guardrail(s)
+→ tool result messages
+→ repeat
+→ final output guardrail
+```
+
+Input and output denials fail the turn. In current runtimes, a denied tool call
+is not executed. The runtime appends a synthetic tool-result message, for example
+`Tool denied by guardrail: ...`, so the model can recover or choose another path.
+
+Rewrite payload shape depends on the hook. Input rewrites replace the message
+array, tool rewrites replace the parsed argument object, and output rewrites
+replace the value returned to the caller. Some runtimes expose these shapes as
+plain objects, while C# uses `List<Message>` for input rewrites and
+`Dictionary<string, object?>` for tool rewrites.
+
+## Common uses
+
+- redact secrets before a model call;
+- block requests that violate app policy;
+- constrain high-impact tools;
+- rewrite risky tool arguments;
+- validate final output before returning it to users.
+
+<Aside type="caution">
+  Guardrails are not a replacement for authorization. Always enforce permissions
+  inside the tool implementation too, especially for tools that write data,
+  call external systems, or access tenant resources.
+</Aside>
+
+## Choosing the right enforcement layer
+
+| Use | When |
+|---|---|
+| Prompt instructions | Behavior is advisory and can be model-mediated |
+| Guardrails | Policy must be enforced by the host application at runtime |
+| Tool authorization | Access control, tenant/resource permissions, writes, and side effects |
+
+## Minimal examples
+
+Guardrails are runtime options passed to `turn()` / `TurnAsync()`. Do not declare
+them in `.prompty` frontmatter.
+
+<Tabs>
+<TabItem label="Python">
+
+```python
+from prompty import turn
+from prompty.core import GuardrailResult, Guardrails
+
+def check_tool(name: str, args: dict) -> GuardrailResult:
+    if name == "delete_file":
+        return GuardrailResult(allowed=False, reason="File deletion is disabled")
+    return GuardrailResult(allowed=True)
+
+result = turn(
+    agent,
+    inputs={"question": question},
+    tools=tools,
+    guardrails=Guardrails(tool=check_tool),
+)
+```
+
+</TabItem>
+<TabItem label="TypeScript">
+
+```ts
+import { Guardrails, turn } from "@prompty/core";
+
+const guardrails = new Guardrails({
+  tool: (name, args) => {
+    if (name === "delete_file") {
+      return { allowed: false, reason: "File deletion is disabled" };
+    }
+    return { allowed: true };
+  },
+});
+
+const result = await turn(agent, { question }, { tools, guardrails });
+```
+
+</TabItem>
+<TabItem label="C#">
+
+```csharp
+var guardrails = new Guardrails(
+    tool: (name, args) =>
+        name == "delete_file"
+            ? GuardrailResult.Deny("File deletion is disabled")
+            : GuardrailResult.Allow()
+);
+
+var result = await Pipeline.TurnAsync(
+    agent,
+    inputs,
+    tools: tools,
+    guardrails: guardrails
+);
+```
+
+</TabItem>
+<TabItem label="Rust">
+
+```rust
+use prompty::{GuardrailResult, Guardrails, TurnOptions};
+
+let guardrails = Guardrails {
+    tool: Some(Box::new(|name, _args, _agent| {
+        let denied = name == "delete_file";
+        Box::pin(async move {
+            if denied {
+                GuardrailResult::deny("File deletion is disabled")
+            } else {
+                GuardrailResult::allow()
+            }
+        })
+    })),
+    ..Default::default()
+};
+
+let options = TurnOptions {
+    guardrails: Some(guardrails),
+    ..Default::default()
+};
+
+let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
+```
+
+</TabItem>
+</Tabs>
+
+## Rewrite vs. deny
+
+Prefer rewrite when the request can be made safe without changing user intent:
+
+- remove a secret from an input message;
+- clamp a tool argument to an allowed range;
+- normalize an output shape.
+
+Prefer deny when continuing would be misleading or unsafe:
+
+- user asks for an operation they are not allowed to perform;
+- a tool call would mutate protected state;
+- output violates a hard policy.
+
+Rewrite values must match the hook:
+
+- input rewrite: a replacement message list;
+- output rewrite: replacement assistant content or final result;
+- tool rewrite: a replacement argument object/dictionary, not a different tool name.
+
+## Relationship to `.prompty`
+
+Guardrails are not declared in `.prompty` frontmatter. The prompt can describe
+desired behavior, but the host application passes guardrails at runtime. This
+lets the same prompt run under different policies in development, test, and
+production.

@@ -72,7 +72,7 @@ Say hello to {{name}}.
 import prompty
 
 # One-shot: load + prepare + run
-result = prompty.execute(
+result = prompty.invoke(
     "greeting.prompty", inputs={"name": "Jane"}
 )
 print(result)
@@ -88,7 +88,7 @@ result = prompty.run(agent, messages)
 ### 3. Async
 
 ```python
-result = await prompty.execute_async(
+result = await prompty.invoke_async(
     "greeting.prompty", inputs={"name": "Jane"}
 )
 ```
@@ -105,20 +105,20 @@ result = await prompty.execute_async(
 | `prepare(agent, inputs)` | Render + parse + threads → `list[Message]` |
 | `run(agent, msgs)` | Executor + process → clean result |
 | `process(agent, resp)` | Extract content → clean result |
-| `execute(prompt, inputs)` | Full pipeline: load + prepare + run |
-| `execute_agent(prompt, ...)` | Full pipeline with tool-call loop |
+| `invoke(prompt, inputs)` | Full pipeline: load + prepare + run |
+| `turn(prompt, ...)` | Full pipeline with tool-call loop |
 | `validate_inputs(...)` | Check required inputs present |
 
 All functions have `_async` variants (e.g.,
-`execute_async`, `run_async`, `execute_agent_async`).
+`invoke_async`, `run_async`, `turn_async`).
 
-### Agent Mode (Tool Calling)
+### Agent Turns (Tool Calling)
 
 ```python
 def get_weather(location: str) -> str:
     return f"72°F and sunny in {location}"
 
-result = prompty.execute_agent(
+result = prompty.turn(
     "my-agent.prompty",
     inputs={"question": "Weather in Seattle?"},
     tools={"get_weather": get_weather},
@@ -170,7 +170,7 @@ client = AzureOpenAI(
 prompty.register_connection("my-foundry", client=client)
 
 # Now run — executor resolves the client by name
-result = prompty.execute(
+result = prompty.invoke(
     "my-prompt.prompty", inputs={...}
 )
 ```
@@ -229,7 +229,7 @@ Tracer.add(
 )
 
 # All pipeline functions automatically emit traces
-result = prompty.execute(
+result = prompty.invoke(
     "my-prompt.prompty", inputs={...}
 )
 
@@ -320,8 +320,8 @@ migrated with deprecation warnings. Key changes:
 - `model.configuration` → `model.connection`
 - `model.parameters` → `model.options`
 - `inputs` (dict format) → `inputs` (list of Property)
-- `inputSchema` → `inputs`
-- `outputSchema` → `outputs`
+- older input schema fields → `inputs`
+- older output schema fields → `outputs`
 - `template: jinja2` → structured `template`
   with `format` and `parser`
 

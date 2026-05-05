@@ -515,7 +515,7 @@ internal static class Utils
     /// </summary>
     /// <param name="dict">The dictionary to search.</param>
     /// <param name="key">The key of the nested dictionary.</param>
-    /// <returns>Dictionary<string, object> if found; otherwise, an empty dictionary.</returns>
+    /// <returns>Dictionary&lt;string, object&gt; if found; otherwise, an empty dictionary.</returns>
     public static IDictionary<string, object> GetDictionaryOrDefault(this IDictionary<string, object> dict, string key)
     {
         if (dict.TryGetValue(key, out var value) && value is IDictionary<string, object> nestedDict)

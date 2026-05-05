@@ -40,7 +40,7 @@ five tool kinds — plus a wildcard catch-all.
 flowchart TD
     Tool["Tool (base)\nname · kind · description · bindings"]
     Tool --> FunctionTool["FunctionTool\nkind: function\nparameters · strict\n→ local function call"]
-    Tool --> PromptyTool["PromptyTool\nkind: prompty\npath · mode\n→ child .prompty execution"]
+    Tool --> PromptyTool["PromptyTool\nkind: prompty\npath\n→ child .prompty execution"]
     Tool --> McpTool["McpTool\nkind: mcp\nserverName · connection\napprovalMode · allowedTools"]
     Tool --> OpenApiTool["OpenApiTool\nkind: openapi\nconnection · specification\n→ REST API call"]
     Tool --> CustomTool["CustomTool\nkind: * (wildcard)\nconnection · options\n→ provider-specific"]
@@ -119,7 +119,6 @@ tools:
     kind: prompty
     description: Summarize a piece of text
     path: ./summarize.prompty
-    mode: single
     parameters:
       - name: text
         kind: string
@@ -132,7 +131,6 @@ tools:
 | Field | Description |
 |-------|-------------|
 | `path` | Relative path to the child `.prompty` file (resolved from the parent's location) |
-| `mode` | `single` (default) — one LLM call via `prepare` + `run`. `agentic` — full agent loop via `turn` |
 | `parameters` | Optional parameter schema. If omitted, the child's `inputs` are used automatically |
 | `bindings` | Map parent inputs → child parameters (the bound parameters are stripped from the wire schema) |
 
@@ -410,7 +408,7 @@ response.
 </Tabs>
 
 <Aside type="tip">
-  `turn` / `turn` / `TurnAsync` runs the full agent loop —
+  `turn` / `turnAsync` / `TurnAsync` runs the full agent loop —
   it calls the LLM, executes any returned tool calls, appends the results, and
   loops until the model returns a final response. Use `invoke` for
   single-turn calls where you handle tool responses yourself.

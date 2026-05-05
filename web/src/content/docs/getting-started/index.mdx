@@ -19,16 +19,30 @@ combines structured YAML frontmatter (model config, inputs, tools) with
 a markdown body that becomes the prompt instructions. The runtime loads,
 renders, parses, and executes these files.
 
-```text
-┌─────────────────────────────┐
-│  .prompty file              │
-│  ┌───────────────────────┐  │
-│  │ --- (YAML frontmatter)│  │  → model, inputs, tools, template config
-│  │ ---                   │  │
-│  │ Markdown body         │  │  → prompt instructions with template syntax
-│  └───────────────────────┘  │
-└─────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph file["greeting.prompty"]
+        frontmatter["YAML frontmatter<br/><br/>name<br/>model + connection<br/>inputs / outputs<br/>tools<br/>template config"]
+        body["Markdown body<br/><br/>role markers<br/>instructions<br/>template variables"]
+    end
+
+    frontmatter --> loaded["typed Prompty object"]
+    body --> instructions["agent instructions"]
+    instructions --> render["render<br/>{{ userName }}"]
+    render --> parse["parse<br/>system / user / assistant messages"]
+    loaded --> execute["execute<br/>provider + model config"]
+    parse --> execute
+    execute --> result["processed result"]
+
+    classDef filePart fill:#eff6ff,stroke:#2563eb,color:#1e3a8a
+    classDef runtime fill:#f0fdf4,stroke:#16a34a,color:#14532d
+    class frontmatter,body filePart
+    class loaded,instructions,render,parse,execute,result runtime
 ```
+
+The frontmatter is configuration. The body is the prompt. Prompty combines both:
+frontmatter becomes a typed runtime object, and the markdown body becomes
+rendered instructions that are parsed into chat messages.
 
 ## Installation
 

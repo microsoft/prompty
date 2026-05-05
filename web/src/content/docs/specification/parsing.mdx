@@ -88,7 +88,7 @@ function parse(agent, rendered):
            content_text ← trim_blank_lines(content_text)
            message ← Message(
              role: current_role,
-             content: [TextPart(kind: "text", value: content_text)],
+              parts: [TextPart(kind: "text", value: content_text)],
              metadata: current_attrs if non-empty else null
            )
            messages.append(message)
@@ -104,7 +104,7 @@ function parse(agent, rendered):
        content_text ← trim_blank_lines(content_text)
        message ← Message(
          role: current_role,
-         content: [TextPart(kind: "text", value: content_text)],
+          parts: [TextPart(kind: "text", value: content_text)],
          metadata: current_attrs if non-empty else null
        )
        messages.append(message)
@@ -114,12 +114,12 @@ function parse(agent, rendered):
        content_text ← trim_blank_lines(content_text)
        messages.append(Message(
          role: "system",
-         content: [TextPart(kind: "text", value: content_text)]
+          parts: [TextPart(kind: "text", value: content_text)]
        ))
   5. // Expand thread nonces
      expanded ← []
      FOR EACH message in messages:
-       text_value ← message.content[0].value  // TextPart
+        text_value ← message.parts[0].value  // TextPart
        IF text_value contains a thread nonce (matching __PROMPTY_THREAD_<hex>_<name>__):
          // Split content around the nonce
          // Text before nonce → message with current role (if non-empty)
@@ -131,10 +131,10 @@ function parse(agent, rendered):
            before_text ← text before nonce (trimmed)
            after_text ← text after nonce (trimmed)
            IF before_text is not empty:
-             expanded.append(Message(role: message.role, content: [TextPart(value: before_text)]))
+              expanded.append(Message(role: message.role, parts: [TextPart(value: before_text)]))
            expanded.extend(thread_messages)
            IF after_text is not empty:
-             expanded.append(Message(role: message.role, content: [TextPart(value: after_text)]))
+              expanded.append(Message(role: message.role, parts: [TextPart(value: after_text)]))
          ELSE:
            // Not a valid thread — keep the nonce as literal text
            expanded.append(message)
@@ -149,7 +149,7 @@ function parse(agent, rendered):
 ```
 Message:
   role:     string           // "system" | "user" | "assistant"
-  content:  ContentPart[]    // List of content parts
+  parts:    ContentPart[]    // List of content parts
   metadata: dict | null      // Optional attributes from role markers
 
 ContentPart = TextPart | ImagePart | AudioPart | FilePart
@@ -187,7 +187,7 @@ via `kind: image` input properties, which follow the nonce replacement path.
 
 **Empty messages**: If a role marker is followed by another role marker with no content
 between them (or only blank lines), the resulting message MUST have
-`content: [TextPart(kind: "text", value: "")]`. Empty messages MUST NOT be silently
+`parts: [TextPart(kind: "text", value: "")]`. Empty messages MUST NOT be silently
 discarded.
 
 ## §6.7 Thread Expansion

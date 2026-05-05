@@ -14,7 +14,10 @@ export abstract class ContentPart {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ContentPart {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ContentPart {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -32,7 +35,10 @@ export abstract class ContentPart {
     return instance;
   }
 
-  private static loadKind(data: Record<string, unknown>, context?: LoadContext): ContentPart {
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ContentPart {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue).toLowerCase();
@@ -46,7 +52,9 @@ export abstract class ContentPart {
         case "audio":
           return AudioPart.load(data, context);
         default:
-          throw new Error(`Unknown ContentPart discriminator value: ${discriminator}`);
+          throw new Error(
+            `Unknown ContentPart discriminator value: ${discriminator}`,
+          );
       }
     }
     throw new Error("Missing ContentPart discriminator property: 'kind'");
@@ -457,4 +465,3 @@ export class AudioPart extends ContentPart {
 
   //#endregion
 }
-

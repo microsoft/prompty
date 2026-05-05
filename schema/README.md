@@ -8,13 +8,13 @@ This directory contains the TypeSpec model definitions and code generation tooli
 schema/
 ├── model/           # TypeSpec models (SOURCE OF TRUTH)
 │   ├── main.tsp     # Entry point
-│   ├── agent.tsp    # Prompty type (the root)
-│   ├── model.tsp    # Model, ModelOptions
-│   ├── connection.tsp
-│   ├── properties.tsp
-│   ├── template.tsp
-│   ├── tools.tsp
-│   └── tools/       # Tool subtypes (MCP, OpenAPI)
+│   ├── agent/       # Prompty root type and agentic runtime controls
+│   ├── model/       # Model and ModelOptions
+│   ├── connection/  # Connection subtypes
+│   ├── core/        # Shared core/runtime types
+│   ├── template/    # Template, renderer, and parser config
+│   ├── tools/       # Tool subtypes and tool dispatch types
+│   └── wire/        # Provider wire helper types
 ├── emitter/         # Code generation tooling (TypeSpec emitter)
 ├── tspconfig.yaml   # Generation targets
 └── package.json     # Dependencies
@@ -46,7 +46,8 @@ This generates code into:
 - `runtime/csharp/Prompty.Core/Model/` — C#
 - `runtime/go/prompty/model/` — Go
 - `runtime/rust/prompty/src/model/` — Rust
-- `docs/model/` — Markdown documentation
+- `web/src/content/docs/reference/` — generated Markdown schema reference
+- `vscode/prompty/schemas/` — generated JSON Schema
 
 ## Generated Code
 
@@ -64,6 +65,12 @@ Generated files have a header:
 3. Verify runtime tests pass
 4. Commit both the `.tsp` changes and generated output
 
-## Origin
+## Emitter
 
-This emitter was originally part of [AgentSchema](https://github.com/microsoft/AgentSchema). The TypeSpec models have been trimmed to the Prompty subset (no Workflow, ContainerAgent, or AgentManifest types).
+The emitter in `schema/emitter/` is Prompty's code generator. It reads the
+TypeSpec model graph, lowers it into a shared intermediate representation, and
+emits runtime model code, tests, JSON Schema, and Markdown reference docs.
+
+The generated outputs should be deterministic: if the TypeSpec files and emitter
+source do not change, running `npm run build` should not produce meaningful
+runtime or documentation changes.

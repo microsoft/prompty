@@ -26,44 +26,163 @@ function emitIndexMarkdown(
   childTypes: { source: string; target: string }[],
   compositionTypes: { source: string; target: string }[],
 ): string {
+  const typeMap = new Map(types.map((type) => [type.typeName.name, type]));
+  const renderMethodSignature = (method: TypeNode["methods"][number]): string => {
+    const params = Object.entries(method.params)
+      .map(([name, type]) => `${name}: ${type}`)
+      .join(", ");
+    const mode = method.sync ? "sync" : "async-capable";
+    return `+${method.name}(${params}) ${method.returns} [${mode}]`;
+  };
+  const renderClass = (typeName: string): string => {
+    const type = typeMap.get(typeName);
+    if (!type) {
+      return `\n    class ${typeName}`;
+    }
+
+    let result = `\n    class ${type.typeName.name} {`;
+    if (type.isAbstract) {
+      result += `\n      <<abstract>>`;
+    }
+    if (type.isProtocol) {
+      result += `\n      <<protocol>>`;
+    }
+    for (const prop of type.properties) {
+      result += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
+    }
+    for (const method of type.methods) {
+      result += `\n        ${renderMethodSignature(method)}`;
+    }
+    result += `\n    }`;
+    return result;
+  };
+  const renderDiagram = (title: string, typeNames: string[]): string => {
+    const included = new Set(typeNames);
+    let diagram = `\n## ${title}\n\n\`\`\`mermaid\nclassDiagram`;
+    for (const typeName of typeNames) {
+      diagram += renderClass(typeName);
+    }
+    for (const child of childTypes) {
+      if (included.has(child.source) && included.has(child.target)) {
+        diagram += `\n    ${child.source} <|-- ${child.target}`;
+      }
+    }
+    for (const comp of compositionTypes) {
+      if (included.has(comp.source) && included.has(comp.target)) {
+        diagram += `\n    ${comp.source} *-- ${comp.target}`;
+      }
+    }
+    diagram += `\n\`\`\`\n`;
+    return diagram;
+  };
+
+  const sections: [string, string[]][] = [
+    [
+      "Prompt File Core",
+      [rootObject, "Model", "Template", "FormatConfig", "ParserConfig", "Property", "Tool"],
+    ],
+    [
+      "Properties and Schemas",
+      ["Property", "ObjectProperty", "ArrayProperty"],
+    ],
+    [
+      "Models and Connections",
+      [
+        "Model",
+        "ModelOptions",
+        "Connection",
+        "ApiKeyConnection",
+        "ReferenceConnection",
+        "RemoteConnection",
+        "AnonymousConnection",
+        "OAuthConnection",
+        "FoundryConnection",
+      ],
+    ],
+    [
+      "Tools",
+      [
+        "Tool",
+        "Binding",
+        "FunctionTool",
+        "PromptyTool",
+        "McpTool",
+        "McpApprovalMode",
+        "OpenApiTool",
+        "CustomTool",
+        "Connection",
+        "Property",
+      ],
+    ],
+    [
+      "Messages, Tool Calls, and Streaming",
+      [
+        "Message",
+        "ContentPart",
+        "TextPart",
+        "ImagePart",
+        "FilePart",
+        "AudioPart",
+        "ToolCall",
+        "ToolResult",
+        "ToolDispatchResult",
+        "StreamChunk",
+        "TextChunk",
+        "ThinkingChunk",
+        "ToolChunk",
+        "ErrorChunk",
+      ],
+    ],
+    [
+      "Agentic Runtime Controls",
+      ["TurnOptions", "CompactionConfig", "GuardrailResult"],
+    ],
+    [
+      "Token and Status Events",
+      ["TokenEventPayload", "ThinkingEventPayload", "StatusEventPayload", "ErrorEventPayload"],
+    ],
+    [
+      "Tool and Message Events",
+      ["ToolCallStartPayload", "ToolResultPayload", "MessagesUpdatedPayload", "ToolResult", "Message"],
+    ],
+    [
+      "Turn Completion and Compaction Events",
+      ["DoneEventPayload", "CompactionCompletePayload", "CompactionFailedPayload", "Message"],
+    ],
+  ];
+
   let out = `---
-title: "AgentSchema"
-description: "Overview of declarative agent types in AgentSchema."
-slug: "reference/index"
+title: "Prompty Schema"
+description: "Overview of generated Prompty schema types."
+slug: "reference"
 sidebar:
   order: 1
 ---
 
-The following diagram illustrates the classes and their relationships for declarative agents.
-The root [object](${rootObject.toLowerCase()}/) represents the main entry point for the system.
+This reference is generated from the in-repository TypeSpec model under
+\`schema/model/\`. It documents the Prompty data model: the fields accepted in
+\`.prompty\` frontmatter, runtime configuration objects, tool definitions,
+message shapes, protocol contracts, events, and provider wire helper types.
 
-\`\`\`mermaid
----
-title: ${rootObject} and Related Types
-config:
-  look: handDrawn
-  theme: colorful
-  class:
-    hideEmptyMembersBox: true
----
-classDiagram`;
-  for (const type of types) {
-    out += `\n    class ${type.typeName.name} {`;
-    if (type.isAbstract) {
-      out += `\n      <<abstract>>`;
-    }
-    for (const prop of type.properties) {
-      out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
-    }
-    out += `\n    }`;
+Use this page for a map of the schema. Use each type page for field details,
+examples, child types, helper methods, and alternate constructions. For public
+functions, see the [API Reference](/api-reference/). Runtime behavior for these
+types is specified in the [Prompty Specification](/specification/).
+
+## Source of Truth
+
+- Type shapes are defined in \`schema/model/**/*.tsp\`.
+- Generated runtime models are checked in under each runtime's \`model\`
+  directory.
+- Generated Markdown reference pages are checked in here under
+  \`web/src/content/docs/reference/\`.
+- If a generated page looks stale, update the TypeSpec or emitter and run
+  \`cd schema && npm run build\` rather than editing generated reference pages
+  by hand.
+`;
+  for (const [title, typeNames] of sections) {
+    out += renderDiagram(title, typeNames.filter((typeName) => typeMap.has(typeName)));
   }
-  for (const child of childTypes) {
-    out += `\n    ${child.source} <|-- ${child.target}`;
-  }
-  for (const comp of compositionTypes) {
-    out += `\n    ${comp.source} *-- ${comp.target}`;
-  }
-  out += `\n\`\`\`\n`;
   return out;
 }
 
@@ -75,6 +194,31 @@ function emitFileMarkdown(
   alternateCtors: { title: string; description: string; scalar: string; simple: string; expanded: string }[],
   parent: TypeNode | undefined,
 ): string {
+  const renderMethodSignature = (method: TypeNode["methods"][number]): string => {
+    const params = Object.entries(method.params)
+      .map(([name, type]) => `${name}: ${type}`)
+      .join(", ");
+    const mode = method.sync ? "sync" : "async-capable";
+    return `+${method.name}(${params}) ${method.returns} [${mode}]`;
+  };
+  const renderDiagramClass = (type: TypeNode): string => {
+    let result = `\n    class ${type.typeName.name} {`;
+    if (type.isAbstract) {
+      result += `\n      <<abstract>>`;
+    }
+    if (type.isProtocol) {
+      result += `\n      <<protocol>>`;
+    }
+    for (const prop of type.properties) {
+      result += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
+    }
+    for (const method of type.methods) {
+      result += `\n        ${renderMethodSignature(method)}`;
+    }
+    result += `\n    }`;
+    return result;
+  };
+
   let out = `---
 title: "${node.typeName.name}"
 description: "Documentation for the ${node.typeName.name} type."
@@ -97,38 +241,19 @@ config:
 classDiagram`;
 
   if (parent) {
-    out += `\n    class ${parent.typeName.name} {`;
-    for (const prop of parent.properties) {
-      out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
-    }
-    out += `\n    }`;
+    out += renderDiagramClass(parent);
     out += `\n    ${parent.typeName.name} <|-- ${node.typeName.name}`;
   }
 
-  out += `\n    class ${node.typeName.name} {`;
-  if (node.isAbstract) {
-    out += `\n      <<abstract>>`;
-  }
-  for (const prop of node.properties) {
-    out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
-  }
-  out += `\n    }`;
+  out += renderDiagramClass(node);
 
   for (const type of node.childTypes) {
-    out += `\n    class ${type.typeName.name} {`;
-    for (const prop of type.properties) {
-      out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
-    }
-    out += `\n    }`;
+    out += renderDiagramClass(type);
     out += `\n    ${node.typeName.name} <|-- ${type.typeName.name}`;
   }
 
   for (const type of compositionTypes) {
-    out += `\n    class ${type.typeName.name} {`;
-    for (const prop of type.properties) {
-      out += `\n        +${prop.typeName.name}${prop.isCollection ? "[]" : ""} ${prop.name}`;
-    }
-    out += `\n    }`;
+    out += renderDiagramClass(type);
     out += `\n    ${node.typeName.name} *-- ${type.typeName.name}`;
   }
 
@@ -150,17 +275,15 @@ classDiagram`;
   }
 
   if (node.methods.length > 0) {
-    out += `\n\n## Helper Methods\n\nThe following helper methods are declared via \`@method\` and must be implemented by every runtime. Idiomatic language shape (e.g. zero-param accessor may be a property) is chosen per-language by the emitter.\n\n| Name | Signature | Description |\n| ---- | --------- | ----------- |`;
+    out += `\n\n## Helper Methods\n\nThe following helper methods are declared via \`@method\` and must be implemented by every runtime. The schema declares the logical protocol contract; each runtime maps async-capable methods to idiomatic sync/async shapes for that language.\n\n| Name | Signature | Runtime shape | Description |\n| ---- | --------- | ------------- | ----------- |`;
     for (const method of node.methods) {
       const paramList = Object.entries(method.params)
         .map(([n, t]) => `${n}: ${t}`)
         .join(", ");
       const sig = `${method.name}(${paramList}) -> ${method.returns}`;
-      const flags: string[] = [];
-      if (method.optional) flags.push("optional");
-      if (method.sync) flags.push("sync");
-      const suffix = flags.length > 0 ? ` _(${flags.join(", ")})_` : "";
-      out += `\n| \`${method.name}\` | \`${sig}\`${suffix} | ${method.description.trim()} |`;
+      const shape = method.sync ? "sync" : "async-capable";
+      const optional = method.optional ? " _(optional default)_": "";
+      out += `\n| \`${method.name}\` | \`${sig}\` | ${shape}${optional} | ${method.description.trim()} |`;
     }
   }
 

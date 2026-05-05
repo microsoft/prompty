@@ -226,12 +226,12 @@ public class AnthropicExecutor : IExecutor
         {
             if (tool is Core.FunctionTool ft)
             {
-                var inputSchema = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters);
+                var parameterSchema = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters);
                 tools.Add(new()
                 {
                     ["name"] = ft.Name ?? "",
                     ["description"] = ft.Description,
-                    ["input_schema"] = inputSchema,
+                    ["input_schema"] = parameterSchema,
                 });
             }
         }
@@ -277,7 +277,7 @@ public class AnthropicExecutor : IExecutor
     }
 
     /// <summary>
-    /// Convert outputSchema to Anthropic output_config format.
+    /// Convert outputs to Anthropic output_config format.
     /// Anthropic format: { format: { type: "json_schema", schema: { ... } } }
     /// </summary>
     internal static Dictionary<string, object?>? OutputSchemaToWire(Core.Prompty agent)

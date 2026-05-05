@@ -6,19 +6,74 @@ sidebar:
   order: 1
 ---
 
-The following diagram illustrates the generated Prompty schema types and their
-relationships. The schema is defined in the in-repository TypeSpec model under
-`schema/` and emitted into each runtime.
+This reference is generated from the in-repository TypeSpec model under
+`schema/model/`. It documents the Prompty data model: the fields accepted in
+`.prompty` frontmatter, runtime configuration objects, tool definitions,
+message shapes, protocol contracts, events, and provider wire helper types.
+
+Use this page for a map of the schema. Use each type page for field details,
+examples, child types, helper methods, and alternate constructions. For public
+functions, see the [API Reference](/api-reference/). Runtime behavior for these
+types is specified in the [Prompty Specification](/specification/).
+
+## Source of Truth
+
+- Type shapes are defined in `schema/model/**/*.tsp`.
+- Generated runtime models are checked in under each runtime's `model`
+  directory.
+- Generated Markdown reference pages are checked in here under
+  `web/src/content/docs/reference/`.
+- If a generated page looks stale, update the TypeSpec or emitter and run
+  `cd schema && npm run build` rather than editing generated reference pages
+  by hand.
+
+## Prompt File Core
 
 ```mermaid
----
-title: AgentDefinition and Related Types
-config:
-  look: handDrawn
-  theme: colorful
-  class:
-    hideEmptyMembersBox: true
----
+classDiagram
+    class Model {
+        +string id
+        +string provider
+        +string apiType
+        +Connection connection
+        +ModelOptions options
+    }
+    class Template {
+        +FormatConfig format
+        +ParserConfig parser
+    }
+    class FormatConfig {
+        +string kind
+        +boolean strict
+        +dictionary options
+    }
+    class ParserConfig {
+        +string kind
+        +dictionary options
+    }
+    class Property {
+        +string name
+        +string kind
+        +string description
+        +boolean required
+        +unknown default
+        +unknown example
+        +unknown[] enumValues
+    }
+    class Tool {
+      <<abstract>>
+        +string name
+        +string kind
+        +string description
+        +Binding[] bindings
+    }
+    Template *-- FormatConfig
+    Template *-- ParserConfig
+```
+
+## Properties and Schemas
+
+```mermaid
 classDiagram
     class Property {
         +string name
@@ -37,11 +92,45 @@ classDiagram
         +string kind
         +Property items
     }
+    Property <|-- ArrayProperty
+    Property <|-- ObjectProperty
+    ObjectProperty *-- Property
+    ArrayProperty *-- Property
+```
+
+## Models and Connections
+
+```mermaid
+classDiagram
+    class Model {
+        +string id
+        +string provider
+        +string apiType
+        +Connection connection
+        +ModelOptions options
+    }
+    class ModelOptions {
+        +float32 frequencyPenalty
+        +int32 maxOutputTokens
+        +float32 presencePenalty
+        +int32 seed
+        +float32 temperature
+        +int32 topK
+        +float32 topP
+        +string[] stopSequences
+        +boolean allowMultipleToolCalls
+        +dictionary additionalProperties
+    }
     class Connection {
       <<abstract>>
         +string kind
         +string authenticationMode
         +string usageDescription
+    }
+    class ApiKeyConnection {
+        +string kind
+        +string endpoint
+        +string apiKey
     }
     class ReferenceConnection {
         +string kind
@@ -52,11 +141,6 @@ classDiagram
         +string kind
         +string name
         +string endpoint
-    }
-    class ApiKeyConnection {
-        +string kind
-        +string endpoint
-        +string apiKey
     }
     class AnonymousConnection {
         +string kind
@@ -76,29 +160,20 @@ classDiagram
         +string name
         +string connectionType
     }
-    class ModelOptions {
-        +float32 frequencyPenalty
-        +int32 maxOutputTokens
-        +float32 presencePenalty
-        +int32 seed
-        +float32 temperature
-        +int32 topK
-        +float32 topP
-        +string[] stopSequences
-        +boolean allowMultipleToolCalls
-        +dictionary additionalProperties
-    }
-    class Model {
-        +string id
-        +string provider
-        +string apiType
-        +Connection connection
-        +ModelOptions options
-    }
-    class Binding {
-        +string name
-        +string input
-    }
+    Connection <|-- ReferenceConnection
+    Connection <|-- RemoteConnection
+    Connection <|-- ApiKeyConnection
+    Connection <|-- AnonymousConnection
+    Connection <|-- OAuthConnection
+    Connection <|-- FoundryConnection
+    Model *-- Connection
+    Model *-- ModelOptions
+```
+
+## Tools
+
+```mermaid
+classDiagram
     class Tool {
       <<abstract>>
         +string name
@@ -106,20 +181,19 @@ classDiagram
         +string description
         +Binding[] bindings
     }
+    class Binding {
+        +string name
+        +string input
+    }
     class FunctionTool {
         +string kind
         +Property[] parameters
         +boolean strict
     }
-    class CustomTool {
+    class PromptyTool {
         +string kind
-        +Connection connection
-        +dictionary options
-    }
-    class McpApprovalMode {
-        +string kind
-        +string[] alwaysRequireApprovalTools
-        +string[] neverRequireApprovalTools
+        +string path
+        +string mode
     }
     class McpTool {
         +string kind
@@ -129,40 +203,59 @@ classDiagram
         +McpApprovalMode approvalMode
         +string[] allowedTools
     }
+    class McpApprovalMode {
+        +string kind
+        +string[] alwaysRequireApprovalTools
+        +string[] neverRequireApprovalTools
+    }
     class OpenApiTool {
         +string kind
         +Connection connection
         +string specification
     }
-    class PromptyTool {
+    class CustomTool {
         +string kind
-        +string path
-        +string mode
-    }
-    class FormatConfig {
-        +string kind
-        +boolean strict
+        +Connection connection
         +dictionary options
     }
-    class ParserConfig {
+    class Connection {
+      <<abstract>>
         +string kind
-        +dictionary options
+        +string authenticationMode
+        +string usageDescription
     }
-    class Template {
-        +FormatConfig format
-        +ParserConfig parser
-    }
-    class Prompty {
+    class Property {
         +string name
-        +string displayName
+        +string kind
         +string description
+        +boolean required
+        +unknown default
+        +unknown example
+        +unknown[] enumValues
+    }
+    Tool <|-- FunctionTool
+    Tool <|-- CustomTool
+    Tool <|-- McpTool
+    Tool <|-- OpenApiTool
+    Tool <|-- PromptyTool
+    Tool *-- Binding
+    FunctionTool *-- Property
+    CustomTool *-- Connection
+    McpTool *-- Connection
+    McpTool *-- McpApprovalMode
+    OpenApiTool *-- Connection
+```
+
+## Messages, Tool Calls, and Streaming
+
+```mermaid
+classDiagram
+    class Message {
+        +string role
+        +ContentPart[] parts
         +dictionary metadata
-        +Property[] inputs
-        +Property[] outputs
-        +Model model
-        +Tool[] tools
-        +Template template
-        +string instructions
+        +toTextContent() unknown [async-capable]
+        +text() string [async-capable]
     }
     class ContentPart {
       <<abstract>>
@@ -188,106 +281,19 @@ classDiagram
         +string source
         +string mediaType
     }
-    class Message {
-        +string role
-        +ContentPart[] parts
-        +dictionary metadata
-    }
-    class ToolContext {
-        +Message[] messages
-        +dictionary metadata
-    }
-    class ToolResult {
-        +ContentPart[] parts
-    }
-    class ToolDispatchResult {
-        +string toolCallId
-        +string name
-        +ToolResult result
-    }
     class ToolCall {
         +string id
         +string name
         +string arguments
     }
-    class GuardrailResult {
-        +boolean allowed
-        +string reason
-        +unknown rewrite
+    class ToolResult {
+        +ContentPart[] parts
+        +text() string [async-capable]
     }
-    class ThreadMarker {
-        +string name
-        +string kind
-    }
-    class TokenUsage {
-        +int32 promptTokens
-        +int32 completionTokens
-        +int32 totalTokens
-    }
-    class ModelInfo {
-        +string id
-        +string displayName
-        +string ownedBy
-        +int32 contextWindow
-        +string[] inputModalities
-        +string[] outputModalities
-        +dictionary additionalProperties
-    }
-    class CompactionConfig {
-        +string strategy
-        +int32 budget
-        +dictionary options
-    }
-    class TurnOptions {
-        +int32 maxIterations
-        +int32 maxLlmRetries
-        +int32 contextBudget
-        +boolean parallelToolCalls
-        +boolean raw
-        +int32 turn
-        +CompactionConfig compaction
-    }
-    class Renderer {
-    }
-    class Parser {
-    }
-    class Executor {
-    }
-    class Processor {
-    }
-    class TokenEventPayload {
-        +string token
-    }
-    class ThinkingEventPayload {
-        +string token
-    }
-    class ToolCallStartPayload {
-        +string name
-        +string arguments
-    }
-    class ToolResultPayload {
+    class ToolDispatchResult {
+        +string toolCallId
         +string name
         +ToolResult result
-    }
-    class StatusEventPayload {
-        +string message
-    }
-    class MessagesUpdatedPayload {
-        +Message[] messages
-    }
-    class DoneEventPayload {
-        +string response
-        +Message[] messages
-    }
-    class ErrorEventPayload {
-        +string message
-    }
-    class CompactionCompletePayload {
-        +int32 removed
-        +int32 remaining
-    }
-    class CompactionFailedPayload {
-        +string message
     }
     class StreamChunk {
       <<abstract>>
@@ -309,19 +315,6 @@ classDiagram
         +string kind
         +string message
     }
-    Property <|-- ArrayProperty
-    Property <|-- ObjectProperty
-    Connection <|-- ReferenceConnection
-    Connection <|-- RemoteConnection
-    Connection <|-- ApiKeyConnection
-    Connection <|-- AnonymousConnection
-    Connection <|-- OAuthConnection
-    Connection <|-- FoundryConnection
-    Tool <|-- FunctionTool
-    Tool <|-- CustomTool
-    Tool <|-- McpTool
-    Tool <|-- OpenApiTool
-    Tool <|-- PromptyTool
     ContentPart <|-- TextPart
     ContentPart <|-- ImagePart
     ContentPart <|-- FilePart
@@ -330,30 +323,107 @@ classDiagram
     StreamChunk <|-- ThinkingChunk
     StreamChunk <|-- ToolChunk
     StreamChunk <|-- ErrorChunk
-    ObjectProperty *-- Property
-    ArrayProperty *-- Property
-    Model *-- Connection
-    Model *-- ModelOptions
-    Tool *-- Binding
-    FunctionTool *-- Property
-    CustomTool *-- Connection
-    McpTool *-- Connection
-    McpTool *-- McpApprovalMode
-    OpenApiTool *-- Connection
-    Template *-- FormatConfig
-    Template *-- ParserConfig
-    Prompty *-- Property
-    Prompty *-- Property
-    Prompty *-- Model
-    Prompty *-- Tool
-    Prompty *-- Template
     Message *-- ContentPart
-    ToolContext *-- Message
     ToolResult *-- ContentPart
     ToolDispatchResult *-- ToolResult
+    ToolChunk *-- ToolCall
+```
+
+## Agentic Runtime Controls
+
+```mermaid
+classDiagram
+    class TurnOptions {
+        +int32 maxIterations
+        +int32 maxLlmRetries
+        +int32 contextBudget
+        +boolean parallelToolCalls
+        +boolean raw
+        +int32 turn
+        +CompactionConfig compaction
+    }
+    class CompactionConfig {
+        +string strategy
+        +int32 budget
+        +dictionary options
+    }
+    class GuardrailResult {
+        +boolean allowed
+        +string reason
+        +unknown rewrite
+    }
     TurnOptions *-- CompactionConfig
+```
+
+## Token and Status Events
+
+```mermaid
+classDiagram
+    class TokenEventPayload {
+        +string token
+    }
+    class ThinkingEventPayload {
+        +string token
+    }
+    class StatusEventPayload {
+        +string message
+    }
+    class ErrorEventPayload {
+        +string message
+    }
+```
+
+## Tool and Message Events
+
+```mermaid
+classDiagram
+    class ToolCallStartPayload {
+        +string name
+        +string arguments
+    }
+    class ToolResultPayload {
+        +string name
+        +ToolResult result
+    }
+    class MessagesUpdatedPayload {
+        +Message[] messages
+    }
+    class ToolResult {
+        +ContentPart[] parts
+        +text() string [async-capable]
+    }
+    class Message {
+        +string role
+        +ContentPart[] parts
+        +dictionary metadata
+        +toTextContent() unknown [async-capable]
+        +text() string [async-capable]
+    }
     ToolResultPayload *-- ToolResult
     MessagesUpdatedPayload *-- Message
+```
+
+## Turn Completion and Compaction Events
+
+```mermaid
+classDiagram
+    class DoneEventPayload {
+        +string response
+        +Message[] messages
+    }
+    class CompactionCompletePayload {
+        +int32 removed
+        +int32 remaining
+    }
+    class CompactionFailedPayload {
+        +string message
+    }
+    class Message {
+        +string role
+        +ContentPart[] parts
+        +dictionary metadata
+        +toTextContent() unknown [async-capable]
+        +text() string [async-capable]
+    }
     DoneEventPayload *-- Message
-    ToolChunk *-- ToolCall
 ```

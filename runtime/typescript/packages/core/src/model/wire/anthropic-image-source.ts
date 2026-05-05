@@ -18,7 +18,10 @@ export class AnthropicImageSource {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicImageSource {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicImageSource {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -92,4 +95,3 @@ export class AnthropicImageSource {
 
   //#endregion
 }
-

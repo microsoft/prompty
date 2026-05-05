@@ -9,9 +9,9 @@ namespace Prompty.Core;
 /// <summary>
 /// A tool that references another .prompty file to be invoked as a tool.
 /// 
-/// In `single` mode, the child prompty is executed with a single LLM call.
+/// The child prompty is executed as a single prompt invocation. Nested agent
 /// 
-/// In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+/// loops are intentionally not started from PromptyTool.
 /// </summary>
 public partial class PromptyTool : Tool
 {
@@ -40,9 +40,9 @@ public partial class PromptyTool : Tool
     public string Path { get; set; } = string.Empty;
 
     /// <summary>
-    /// Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
+    /// Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool.
     /// </summary>
-    public PromptyToolMode Mode { get; set; } = PromptyToolMode.Single;
+    public string Mode { get; set; } = "single";
 
 
 
@@ -78,7 +78,7 @@ public partial class PromptyTool : Tool
 
         if (data.TryGetValue("mode", out var modeValue) && modeValue is not null)
         {
-            instance.Mode = Enum.Parse<PromptyToolMode>(modeValue?.ToString()!, true);
+            instance.Mode = modeValue?.ToString()!;
         }
 
         if (context is not null)
@@ -117,7 +117,7 @@ public partial class PromptyTool : Tool
         result["path"] = obj.Path;
 
 
-        result["mode"] = obj.Mode.ToString().ToLowerInvariant();
+        result["mode"] = obj.Mode;
 
 
         return result;

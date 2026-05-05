@@ -1,0 +1,146 @@
+---
+title: Events & Cancellation
+description: >
+  Observe agent loop progress and stop long-running turns cooperatively.
+sidebar:
+  order: 7
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Events observe a running turn. Cancellation stops it cooperatively. Together they
+are the host application's basic control plane for agent UIs.
+
+## Events
+
+Events report what the loop is doing without changing the prompt or model
+messages. Use them for progress UI, logs, telemetry, and debugging.
+
+Common events include:
+
+| Event | Meaning | Typical payload |
+|---|---|---|
+| `thinking` | The model is thinking or reasoning, where surfaced by the runtime | text chunk |
+| `status` | Informational progress such as retry or steering updates | message |
+| `token` | Streaming token or text chunk, when supported | token text |
+| `tool_call_start` | A tool is about to execute | tool name, arguments |
+| `tool_result` | A tool returned a result or error string | tool name, result |
+| `messages_updated` | The in-memory message array changed | messages or update metadata |
+| `compaction_start` / `compaction_complete` / `compaction_failed` | Context compaction lifecycle | dropped count, summary length, or failure reason |
+| `done` | The turn completed normally | response, messages |
+| `error` | A guardrail denied or another loop error occurred | message or reason |
+| `cancelled` | Cancellation was observed | iteration or cancellation metadata |
+
+Event names are runtime-shaped. TypeScript and Python callbacks receive
+snake_case event strings and data dictionaries. C# callbacks receive
+`AgentEventType` enum values such as `ToolCallStart` and `MessagesUpdated`. Rust
+callbacks receive a single `AgentEvent` enum value.
+
+Event callbacks should be fast. They should not block the loop or perform heavy
+UI work inline; enqueue work to your UI/event system instead.
+
+Do not use events to enforce policy or mutate the loop. Use guardrails for
+policy, cancellation for stop buttons, and steering for model-visible guidance on
+a future iteration.
+
+## Cancellation
+
+Cancellation is cooperative. The loop checks for cancellation:
+
+- at the top of each iteration;
+- before the LLM call;
+- during retry backoff where supported.
+
+Cancellation does not forcibly kill a tool or provider call that is already
+inside code the runtime cannot interrupt. It prevents the next safe step from
+continuing.
+
+<Aside type="note">
+  Cancellation does not guarantee that an in-flight provider request or host tool
+  function stops immediately. It prevents the next safe step from continuing.
+</Aside>
+
+## Example shape
+
+<Tabs>
+<TabItem label="Python">
+
+```python
+from prompty.core import CancellationToken
+
+token = CancellationToken()
+
+result = turn(
+    agent,
+    inputs,
+    tools=tools,
+    cancel=token,
+    on_event=lambda event_type, data: print(event_type, data),
+)
+
+# From a stop button, timer, or another thread:
+token.cancel()
+```
+
+</TabItem>
+<TabItem label="TypeScript">
+
+```ts
+const controller = new AbortController();
+
+const result = await turn(agent, inputs, {
+  tools,
+  signal: controller.signal,
+  onEvent: (eventType, data) => console.log(eventType, data),
+});
+
+// From a stop button or timeout:
+controller.abort();
+```
+
+</TabItem>
+<TabItem label="C#">
+
+```csharp
+var cts = new CancellationTokenSource();
+
+var result = await Pipeline.TurnAsync(
+    agent,
+    inputs,
+    tools: tools,
+    cancellationToken: cts.Token,
+    onEvent: (eventType, data) => Console.WriteLine(eventType)
+);
+
+// From a stop button or timeout:
+cts.Cancel();
+```
+
+</TabItem>
+<TabItem label="Rust">
+
+```rust
+let options = TurnOptions {
+    on_event: Some(on_event),
+    cancelled: Some(cancelled),
+    ..Default::default()
+};
+
+let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
+
+// From another task:
+cancelled.store(true, std::sync::atomic::Ordering::SeqCst);
+```
+
+</TabItem>
+</Tabs>
+
+## UI pattern
+
+For chat UIs, wire events to:
+
+1. show status while the model is thinking;
+2. show each tool call and result;
+3. stream tokens when available;
+4. enable a stop button through cancellation;
+5. record the final `messages` array if you want to continue the thread.

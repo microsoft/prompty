@@ -1,6 +1,6 @@
 //! Structured output — `StructuredResult` + `cast::<T>()`.
 //!
-//! Matches TypeScript `core/structured.ts`. When a prompt has an `outputSchema`,
+//! Matches TypeScript `core/structured.ts`. When a prompt has `outputs`,
 //! the processor wraps the parsed result in a `StructuredResult` that carries
 //! both the typed data and the raw JSON string. `cast::<T>()` deserializes
 //! with an optional validator.

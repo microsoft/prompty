@@ -21,6 +21,7 @@ config:
 ---
 classDiagram
     class Connection {
+      <<abstract>>
         +string kind
         +string authenticationMode
         +string usageDescription

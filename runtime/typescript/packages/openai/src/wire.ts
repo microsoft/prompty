@@ -97,7 +97,7 @@ export function buildChatArgs(
   }
 
   // Structured output
-  const responseFormat = outputSchemaToWire(agent);
+  const responseFormat = outputsToWire(agent);
   if (responseFormat) {
     args.response_format = responseFormat;
   }
@@ -192,7 +192,7 @@ export function buildImageArgs(
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Map AgentSchema kind strings to JSON Schema type strings. */
+/** Map Prompty kind strings to JSON Schema type strings. */
 const KIND_TO_JSON_TYPE: Record<string, string> = {
   string: "string",
   integer: "integer",
@@ -403,7 +403,7 @@ function projectPromptyTool(tool: Record<string, unknown>, parent: Prompty): Rec
   return funcDef;
 }
 
-function outputSchemaToWire(agent: Prompty): Record<string, unknown> | null {
+function outputsToWire(agent: Prompty): Record<string, unknown> | null {
   const outputs = agent.outputs;
   if (!outputs || outputs.length === 0) return null;
 
@@ -486,7 +486,7 @@ export function buildResponsesArgs(
   }
 
   // Structured output via text.format
-  const textConfig = outputSchemaToResponsesWire(agent);
+  const textConfig = outputsToResponsesWire(agent);
   if (textConfig) {
     args.text = textConfig;
   }
@@ -590,8 +590,8 @@ function responsesToolsToWire(agent: Prompty): Record<string, unknown>[] {
   return result;
 }
 
-/** Convert outputSchema to Responses API text.format config. */
-function outputSchemaToResponsesWire(agent: Prompty): Record<string, unknown> | null {
+/** Convert outputs to Responses API text.format config. */
+function outputsToResponsesWire(agent: Prompty): Record<string, unknown> | null {
   const outputs = agent.outputs;
   if (!outputs || outputs.length === 0) return null;
 

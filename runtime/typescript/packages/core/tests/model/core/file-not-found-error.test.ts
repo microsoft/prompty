@@ -21,7 +21,9 @@ describe("FileNotFoundError", () => {
       const json = `{\n  "message": "Prompty file not found: ./chat.prompty",\n  "path": "./chat.prompty"\n}`;
       const instance = FileNotFoundError.fromJson(json);
       expect(instance).toBeDefined();
-      expect(instance.message).toEqual("Prompty file not found: ./chat.prompty");
+      expect(instance.message).toEqual(
+        "Prompty file not found: ./chat.prompty",
+      );
       expect(instance.path).toEqual("./chat.prompty");
     });
 
@@ -40,7 +42,9 @@ describe("FileNotFoundError", () => {
       const yaml = `message: "Prompty file not found: ./chat.prompty"\npath: ./chat.prompty\n`;
       const instance = FileNotFoundError.fromYaml(yaml);
       expect(instance).toBeDefined();
-      expect(instance.message).toEqual("Prompty file not found: ./chat.prompty");
+      expect(instance.message).toEqual(
+        "Prompty file not found: ./chat.prompty",
+      );
       expect(instance.path).toEqual("./chat.prompty");
     });
 

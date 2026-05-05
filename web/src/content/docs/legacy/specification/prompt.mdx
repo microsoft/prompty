@@ -178,13 +178,12 @@ The message will look like:
 ```
 
 ## Thread
-Conversation history (threads) are handled via a `kind: thread` input property in `inputSchema`:
+Conversation history (threads) are handled via a `kind: thread` input property in `inputs`:
 
 ```yaml
-inputSchema:
-  properties:
-    - name: conversation
-      kind: thread
+inputs:
+  conversation:
+    kind: thread
 ```
 
 Place `{{conversation}}` in the template where thread messages should be injected. The runtime replaces the variable with nonce markers during rendering, then expands them into actual `Message` objects in the parsed message list.

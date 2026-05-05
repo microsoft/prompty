@@ -270,7 +270,7 @@ internal class RawJsonExecutor : IExecutor
 
 /// <summary>
 /// Processor that converts raw JSON into a StructuredResult (the real OpenAI processor
-/// does this when outputSchema is present). This is the critical path we're testing:
+/// does this when outputs are present). This is the critical path we're testing:
 /// the pipeline must return the StructuredResult, not wrap or stringify it.
 /// </summary>
 internal class StructuredOutputProcessor : IProcessor

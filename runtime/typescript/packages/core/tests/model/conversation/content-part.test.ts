@@ -15,5 +15,4 @@ describe("ContentPart", () => {
       expect(instance).toBeDefined();
     });
   });
-
 });

@@ -16,7 +16,10 @@ export class StreamOptions {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): StreamOptions {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): StreamOptions {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -78,4 +81,3 @@ export class StreamOptions {
 
   //#endregion
 }
-

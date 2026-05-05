@@ -1,0 +1,88 @@
+---
+title: Connection Registry
+description: Reference for named connection registration and reference connections.
+sidebar:
+  order: 5
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+The connection registry lets application code register preconfigured clients or
+connection settings by name. A `.prompty` file can then use
+`connection.kind: reference` without embedding secrets in the file.
+
+## Register and look up a connection
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    from openai import AzureOpenAI
+    import prompty
+
+    client = AzureOpenAI(
+        azure_endpoint=os.environ["AZURE_ENDPOINT"],
+        api_key=os.environ["AZURE_API_KEY"],
+    )
+
+    prompty.register_connection("my-foundry", client=client)
+    client = prompty.get_connection("my-foundry")
+    prompty.clear_connections()
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { registerConnection, getConnection, clearConnections } from "@prompty/core";
+    import AzureOpenAI from "openai";
+
+    const client = new AzureOpenAI({
+      endpoint: process.env.AZURE_ENDPOINT,
+      apiKey: process.env.AZURE_API_KEY,
+    });
+
+    registerConnection("my-foundry", client);
+    const conn = getConnection("my-foundry");
+    clearConnections();
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    ConnectionRegistry.Register("my-foundry", client);
+    var conn = ConnectionRegistry.Get("my-foundry");
+    ConnectionRegistry.Clear();
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty;
+    use serde_json::json;
+
+    prompty::register_connection("my-foundry", json!({
+        "kind": "key",
+        "endpoint": std::env::var("AZURE_ENDPOINT")?,
+        "apiKey": std::env::var("AZURE_API_KEY")?,
+    }));
+
+    let conn = prompty::get_connection("my-foundry");
+    prompty::clear_connections();
+    ```
+  </TabItem>
+</Tabs>
+
+## Reference from `.prompty`
+
+```yaml
+model:
+  id: gpt-4o
+  provider: foundry
+  connection:
+    kind: reference
+    name: my-foundry
+```
+
+Use references for environment-specific values, authenticated SDK clients, and
+test fixtures. Use explicit `key`, `remote`, `anonymous`, `foundry`, or `oauth`
+connections when the configuration should live directly in the prompt.
+
+For connection data shapes, see [Connection](/reference/connection/).

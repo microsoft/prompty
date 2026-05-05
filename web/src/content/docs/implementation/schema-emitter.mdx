@@ -1,0 +1,79 @@
+---
+title: Schema Emitter
+description: How Prompty's TypeSpec emitter generates runtime models, tests, JSON Schema, and reference docs.
+slug: "implementation/schema-emitter"
+sidebar:
+  order: 20
+---
+
+The schema emitter is the dev-time code generator that turns the
+TypeSpec model in `schema/model/` into checked-in runtime and documentation
+artifacts.
+
+Prompty's TypeSpec files are the source of truth for type shapes. The emitter
+is responsible for keeping every runtime aligned with those shapes.
+
+## What the emitter generates
+
+Running `cd schema && npm run build` generates:
+
+| Output | Location |
+| --- | --- |
+| TypeScript model code and tests | `runtime/typescript/packages/core/src/model/`, `runtime/typescript/packages/core/tests/model/` |
+| Python model code and tests | `runtime/python/prompty/prompty/model/`, `runtime/python/prompty/tests/model/` |
+| C# model code and tests | `runtime/csharp/Prompty.Core/Model/`, `runtime/csharp/Prompty.Core.Tests/Model/` |
+| Go model code and tests | `runtime/go/prompty/model/` |
+| Rust model code and tests | `runtime/rust/prompty/src/model/`, `runtime/rust/prompty/tests/model/` |
+| VS Code JSON Schema | `vscode/prompty/schemas/` |
+| Markdown schema reference | `web/src/content/docs/reference/` |
+
+Generated files are committed to the repository. Users of Prompty do not need
+TypeSpec or the emitter installed.
+
+## How generation works
+
+The emitter has four main stages:
+
+1. **Read TypeSpec** — TypeSpec compiles `schema/model/main.tsp` and loads the
+   Prompty model graph.
+2. **Collect metadata** — Prompty decorators capture samples, factories,
+   helper methods, shorthand coercions, known wire names, defaults, protocol
+   markers, and other generation hints.
+3. **Lower to IR** — the emitter converts TypeSpec models into a language-neutral
+   intermediate representation that describes types, fields, polymorphism,
+   factories, methods, wire mappings, and examples.
+4. **Emit per target** — language emitters convert the IR into idiomatic model
+   code, tests, scaffolding, and documentation for each target.
+
+The generated output should be deterministic. If neither the TypeSpec files nor
+the emitter source changed, `npm run build` should not produce meaningful diffs.
+
+## Directory map
+
+| Path | Purpose |
+| --- | --- |
+| `schema/model/` | Prompty TypeSpec source files |
+| `schema/tspconfig.yaml` | Generation targets and output paths |
+| `schema/emitter/src/decorators.ts` | Prompty TypeSpec decorators |
+| `schema/emitter/src/ir/` | Shared intermediate representation and lowering |
+| `schema/emitter/src/languages/` | Per-language emitters |
+| `schema/emitter/src/testing/` | Shared test-context generation |
+
+## Common workflow
+
+```bash
+cd schema
+npm install
+npm run build
+```
+
+Use `npm run build` when you change TypeSpec or emitter code. It builds the
+emitter, formats TypeSpec, regenerates all targets, and formats generated Rust.
+
+## Editing rules
+
+- Edit `schema/model/**/*.tsp` for schema changes.
+- Edit `schema/emitter/src/**` for generation behavior changes.
+- Do not hand-edit generated reference pages or generated runtime model files
+  unless you are debugging; the next generation run will overwrite them.
+- Commit TypeSpec/emitter changes together with the generated output.

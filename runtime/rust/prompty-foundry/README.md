@@ -11,7 +11,7 @@ use prompty::{load, turn, register_defaults};
 register_defaults();
 prompty_foundry::register();
 
-let agent = load("chat.prompty").await?;
+let agent = load("chat.prompty")?;
 let result = turn(&agent, Some(&inputs), None).await?;
 ```
 

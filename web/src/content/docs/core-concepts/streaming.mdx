@@ -2,7 +2,7 @@
 title: Streaming
 description: >
   How to stream LLM responses chunk-by-chunk using PromptyStream, with
-  tracing integration, processor handling, and agent-mode compatibility.
+  tracing integration, processor handling, and agent-loop compatibility.
 sidebar:
   order: 6
 ---
@@ -283,7 +283,7 @@ The same applies to `AsyncPromptyStream` for async iteration.
 
 ---
 
-## Streaming + Agent Mode
+## Streaming + Agent Loop
 
 When using `turn()`, the runtime runs a tool-calling loop:
 call the LLM, execute any requested tools, append results, repeat.

@@ -58,7 +58,7 @@ public class OpenAIProcessor : IProcessor
         // Extract text content
         var text = completion.Content?.FirstOrDefault()?.Text ?? "";
 
-        // If structured output (outputSchema defined), try to parse as JSON
+        // If structured output (outputs defined), try to parse as JSON
         if (agent.Outputs is not null && agent.Outputs.Count > 0 && !string.IsNullOrEmpty(text))
         {
             try
@@ -121,7 +121,7 @@ public class OpenAIProcessor : IProcessor
 
         var text = string.Join("", textParts);
 
-        // If structured output (outputSchema defined), try to parse as JSON
+        // If structured output (outputs defined), try to parse as JSON
         if (agent.Outputs is not null && agent.Outputs.Count > 0 && !string.IsNullOrEmpty(text))
         {
             try

@@ -20,7 +20,10 @@ export class AnthropicToolUseBlock {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicToolUseBlock {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicToolUseBlock {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -100,4 +103,3 @@ export class AnthropicToolUseBlock {
 
   //#endregion
 }
-

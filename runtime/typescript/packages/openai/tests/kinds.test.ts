@@ -242,7 +242,7 @@ describe("buildChatArgs prompty tools", () => {
 // ===========================================================================
 
 describe("buildChatArgs structured output", () => {
-  it("generates response_format from outputSchema", () => {
+  it("generates response_format from outputs", () => {
     const agent = makeAgent({
       name: "my-research-agent",
       outputs: [

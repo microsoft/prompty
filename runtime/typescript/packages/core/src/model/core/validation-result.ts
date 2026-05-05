@@ -17,7 +17,10 @@ export class ValidationResult {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ValidationResult {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ValidationResult {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -28,7 +31,10 @@ export class ValidationResult {
       instance.valid = Boolean(data["valid"]);
     }
     if (data["errors"] !== undefined && data["errors"] !== null) {
-      instance.errors = ValidationResult.loadErrors(data["errors"] as unknown[], context);
+      instance.errors = ValidationResult.loadErrors(
+        data["errors"] as unknown[],
+        context,
+      );
     }
 
     if (context) {
@@ -37,7 +43,10 @@ export class ValidationResult {
     return instance;
   }
 
-  static loadErrors(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ValidationError[] {
+  static loadErrors(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ValidationError[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -45,21 +54,26 @@ export class ValidationResult {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, "message": v });
+          result.push({ name: k, message: v });
         }
       }
       data = result;
     }
-    return data.map(item => ValidationError.load(item as Record<string, unknown>, context));
+    return data.map((item) =>
+      ValidationError.load(item as Record<string, unknown>, context),
+    );
   }
 
-  static saveErrors(items: ValidationError[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveErrors(
+    items: ValidationError[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -110,4 +124,3 @@ export class ValidationResult {
 
   //#endregion
 }
-

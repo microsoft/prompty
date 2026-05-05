@@ -1,0 +1,135 @@
+---
+title: Context & Compaction
+description: >
+  Keep long-running agent turns within a context budget and preserve dropped
+  history with summaries.
+sidebar:
+  order: 5
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Agent turns can grow as the model calls tools and Prompty appends results. Within
+a single `turn()` call, a context budget lets the runtime trim the in-memory
+message array before each model call in the agent loop.
+
+## Context budget
+
+When the estimated message size exceeds the budget, Prompty tries to trim older
+non-system messages. If at least one message is dropped, it:
+
+1. keeps leading system messages;
+2. keeps the newest conversation/tool messages;
+3. drops older non-system messages;
+4. inserts a summary message for the dropped messages.
+
+The budget is character-based in the current runtimes. Treat it as a practical
+guardrail, not a tokenizer-perfect substitute for provider-specific limits.
+Non-text parts and tool metadata are estimated, so leave headroom below provider
+context limits.
+
+## Default summary
+
+Without custom compaction, Prompty generates a simple summary from dropped
+messages and inserts it near the front of the conversation. This preserves a
+trace of what happened while freeing context for recent work.
+
+## Custom compaction
+
+Custom compaction replaces the default summary. It can be:
+
+- a function that receives dropped messages and returns a summary; or
+- a `.prompty` summarizer prompt that receives formatted dropped messages.
+
+Compaction only runs when trimming drops at least one message. If compaction
+returns an empty summary or fails, Prompty keeps the built-in summary.
+
+<Tabs>
+<TabItem label="Python">
+
+```python
+result = turn(
+    agent,
+    inputs={"question": question},
+    tools=tools,
+    context_budget=50_000,
+    compaction=lambda dropped: summarize_dropped_messages(dropped),
+)
+```
+
+</TabItem>
+<TabItem label="TypeScript">
+
+```ts
+const result = await turn(agent, { question }, {
+  tools,
+  contextBudget: 50_000,
+  compaction: async (dropped) => summarizeDroppedMessages(dropped),
+});
+```
+
+</TabItem>
+<TabItem label="C#">
+
+```csharp
+var result = await Pipeline.TurnAsync(
+    agent,
+    inputs,
+    tools: tools,
+    contextBudget: 50_000,
+    compaction: CompactionStrategy.FromFunction(SummarizeDroppedMessagesAsync)
+);
+```
+
+</TabItem>
+<TabItem label="Rust">
+
+```rust
+use prompty::Compaction;
+
+let options = TurnOptions {
+    context_budget: Some(50_000),
+    compaction: Some(Compaction::Function(compaction_fn)),
+    ..Default::default()
+};
+
+let result = prompty::turn(&agent, Some(&inputs), Some(options)).await?;
+```
+
+</TabItem>
+</Tabs>
+
+## Compaction prompt pattern
+
+A compaction prompt should summarize operationally useful state, not every token.
+Good summaries include:
+
+- user goals and constraints;
+- decisions already made;
+- tool calls that changed state;
+- unresolved questions;
+- identifiers needed later.
+
+Avoid summarizing transient tool output that will not matter later.
+Preserve tool calls and results that changed external state. Summarize or omit
+read-only diagnostic output unless it affects later decisions.
+
+## Difference from conversation history
+
+Context trimming happens inside one `turn()` call. Conversation history across
+external user turns is still the host application's responsibility, usually via a
+`kind: thread` input. When the next external turn starts, Prompty prepares the
+prompt again and expands that thread input.
+
+On the next external user turn, load prior messages from your store and pass them
+as the `conversation` / `kind: thread` input. Prompty does not automatically
+remember previous `turn()` calls.
+
+Do not use compaction as a persistence layer. Use compaction mainly for long tool
+loops or large intermediate tool results within one turn.
+
+<Aside type="note">
+  A future prepared-session API may reduce repeated prepare work across external
+  turns, but current runtimes treat each external `turn()` call as the boundary
+  for rendering and parsing.
+</Aside>

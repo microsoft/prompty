@@ -23,8 +23,11 @@ classDiagram
         +string role
         +ContentPart[] parts
         +dictionary metadata
+        +toTextContent() unknown [async-capable]
+        +text() string [async-capable]
     }
     class ContentPart {
+      <<abstract>>
         +string kind
     }
     Message *-- ContentPart
@@ -51,12 +54,12 @@ metadata:
 
 ## Helper Methods
 
-The following helper methods are declared via `@method` and must be implemented by every runtime. Idiomatic language shape (e.g. zero-param accessor may be a property) is chosen per-language by the emitter.
+The following helper methods are declared via `@method` and must be implemented by every runtime. The schema declares the logical protocol contract; each runtime maps async-capable methods to idiomatic sync/async shapes for that language.
 
-| Name | Signature | Description |
-| ---- | --------- | ----------- |
-| `toTextContent` | `toTextContent() -> unknown` | Return plain string if all parts are text, else a list of content part dicts for wire serialization |
-| `text` | `text() -> string` | Concatenate all TextPart values joined by newline |
+| Name | Signature | Runtime shape | Description |
+| ---- | --------- | ------------- | ----------- |
+| `toTextContent` | `toTextContent() -> unknown` | async-capable | Return plain string if all parts are text, else a list of content part dicts for wire serialization |
+| `text` | `text() -> string` | async-capable | Concatenate all TextPart values joined by newline |
 
 ## Factory Methods
 

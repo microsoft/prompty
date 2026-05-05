@@ -105,11 +105,14 @@ export const generateTypeScript = async (
     const importPath = emitTarget["import-path"] || "../src/index";
     for (const n of nodes) {
       if (n.isProtocol) continue;
-      const testDir = n.group ? `${emitTarget["test-dir"]}/${n.group}` : emitTarget["test-dir"];
+      const group = n.group || "";
+      const testDir = group ? `${emitTarget["test-dir"]}/${group}` : emitTarget["test-dir"];
+      const groupDepth = group ? group.split("/").filter(Boolean).length : 0;
+      const testImportPath = groupDepth > 0 ? `${"../".repeat(groupDepth)}${importPath}` : importPath;
       const testContext = buildTestContext(n);
       const testCode = emitTypeScriptTest({
         ...testContext,
-        importPath,
+        importPath: testImportPath,
         namespace: tsNamespace,
       });
       await emitTypeScriptFile(context, `${toKebabCase(n.typeName.name)}.test.ts`, testCode, testDir);
@@ -152,18 +155,22 @@ function formatTypeScriptFiles(outputDir: string, testDir?: string): void {
   }
 
   const dirs = [outputDir, ...(testDir ? [testDir] : [])];
+  const prettierBin = findNodeModuleFile(projectRoot, ["prettier", "bin", "prettier.cjs"]);
 
   for (const dir of dirs) {
     const globPattern = `${dir}/**/*.ts`;
-    // Run prettier — use execFileSync to avoid shell injection from paths
-    try {
-      execFileSync("npx", ["prettier", "--write", globPattern], {
-        cwd: projectRoot,
-        stdio: "pipe",
-        encoding: "utf-8",
-      });
-    } catch (error) {
-      console.warn(`Warning: prettier formatting failed for ${dir}. You may need to install prettier.`);
+    if (prettierBin) {
+      try {
+        execFileSync(process.execPath, [prettierBin, "--write", globPattern], {
+          cwd: projectRoot,
+          stdio: "pipe",
+          encoding: "utf-8",
+        });
+      } catch (error) {
+        console.warn(`Warning: prettier formatting failed for ${dir}.`);
+      }
+    } else {
+      console.warn(`Warning: prettier not found for ${dir}. Run npm install in the TypeScript workspace.`);
     }
 
     // Run eslint fix
@@ -177,6 +184,21 @@ function formatTypeScriptFiles(outputDir: string, testDir?: string): void {
       // ESLint errors are common, don't warn about them
     }
   }
+}
+
+function findNodeModuleFile(startDir: string, segments: string[]): string | undefined {
+  let currentDir = resolve(startDir);
+  const root = resolve("/");
+
+  while (currentDir !== root && currentDir !== dirname(currentDir)) {
+    const candidate = resolve(currentDir, "node_modules", ...segments);
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    currentDir = dirname(currentDir);
+  }
+
+  return undefined;
 }
 
 /**

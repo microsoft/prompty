@@ -175,8 +175,7 @@ class FunctionToolHandler:
         """Error — function tool callable was not provided."""
         name = getattr(tool, "name", "unknown")
         raise ValueError(
-            f"Function tool '{name}' declared but no callable provided. "
-            f"Pass it via tools={{'{name}': fn}} in execute_agent()."
+            f"Function tool '{name}' declared but no callable provided. Pass it via tools={{'{name}': fn}} in turn()."
         )
 
     async def execute_tool_async(
@@ -189,8 +188,7 @@ class FunctionToolHandler:
         """Error — function tool callable was not provided."""
         name = getattr(tool, "name", "unknown")
         raise ValueError(
-            f"Function tool '{name}' declared but no callable provided. "
-            f"Pass it via tools={{'{name}': fn}} in execute_agent()."
+            f"Function tool '{name}' declared but no callable provided. Pass it via tools={{'{name}': fn}} in turn()."
         )
 
 

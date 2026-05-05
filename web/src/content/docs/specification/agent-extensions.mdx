@@ -12,20 +12,23 @@ production-ready: events, cancellation, context window management, guardrails,
 steering, and parallel tool execution.
 
 These extensions integrate with the existing §9.2 algorithm — specifically,
-they wrap and extend the tool dispatch loop and the `FormatToolMessages`
+they wrap and extend the tool dispatch loop and the `formatToolMessages`
 hook (§9.4). Tool guardrail denials produce synthetic results that flow
-through `FormatToolMessages` like any other tool result.
+through `formatToolMessages` like any other tool result.
 
 All extensions are **opt-in** — a conforming implementation MUST support the
-base loop and MAY implement any combination of these extensions.
+base loop and MAY implement any combination of these extensions. Requirements
+inside an extension section apply to implementations that choose to support
+that extension.
 
 ---
 
 ## §13.1 Agent Events
 
-The agent loop MUST support an optional event callback that receives
-structured events during execution. This enables real-time UIs, logging,
-and coordination without coupling the loop to any particular output mechanism.
+An implementation that supports agent events MUST accept an optional event
+callback that receives structured events during execution. This enables
+real-time UIs, logging, and coordination without coupling the loop to any
+particular output mechanism.
 
 ### Event Types
 
@@ -40,6 +43,9 @@ and coordination without coupling the loop to any particular output mechanism.
 | `done`              | `{ response: string, messages: Message[] }`      | Final response produced                   |
 | `error`             | `{ message: string }`                            | Non-fatal error (e.g., tool panic)        |
 | `cancelled`         | `{}`                                             | Loop was cancelled via cancellation token |
+| `compaction_start`  | `{}`                                             | Context compaction is about to start      |
+| `compaction_complete` | `{ removed: number, remaining: number }`       | Context compaction completed              |
+| `compaction_failed` | `{ message: string }`                            | Context compaction failed                 |
 
 ### API
 
@@ -68,8 +74,8 @@ function turn(path_or_agent, inputs, tools=null,
 
 ## §13.2 Cancellation
 
-The agent loop MUST support cooperative cancellation via a token checked at
-well-defined points during execution.
+An implementation that supports cancellation MUST use cooperative cancellation
+via a token checked at well-defined points during execution.
 
 ### CancellationToken
 
@@ -123,8 +129,8 @@ Where no native mechanism exists, a simple thread-safe boolean flag suffices.
 ## §13.3 Context Window Management
 
 Long-running agent loops accumulate messages that may exceed the model's
-context window. Implementations MUST support automatic context trimming
-when a budget is specified.
+context window. An implementation that supports context window management MUST
+support automatic context trimming when a budget is specified.
 
 ### Algorithm
 
@@ -149,7 +155,7 @@ function trim_to_context_window(messages, budget_chars) → Message[]:
 
   7. Insert summary as user message immediately after system_messages:
      summary_msg = Message(role: "user",
-       content: [TextPart(value: "[Context summary: " + summary + "]")])
+       parts: [TextPart(value: "[Context summary: " + summary + "]")])
 
   8. return system_messages + [summary_msg] + rest
 ```
@@ -161,7 +167,7 @@ function estimate_chars(messages) → int:
   total = 0
   for msg in messages:
     total += len(msg.role) + 4  // role + delimiters
-    for part in msg.content:
+    for part in msg.parts:
       if part is TextPart:
         total += len(part.value)
       else:
@@ -286,8 +292,8 @@ loop:
 
   // 5. Format tool messages via executor (§9.4)
   //    Denied tools produce synthetic results that flow through
-  //    FormatToolMessages like any other tool result.
-  tool_messages = executor.FormatToolMessages(
+  //    formatToolMessages like any other tool result.
+  tool_messages = executor.formatToolMessages(
     response, tool_calls, tool_results, text_content
   )
   append tool_messages to messages
@@ -346,7 +352,7 @@ loop:
     pending = steering.drain()
     for msg_text in pending:
       user_msg = Message(role: "user",
-        content: [TextPart(value: msg_text)])
+        parts: [TextPart(value: msg_text)])
       append user_msg to messages
     if len(pending) > 0:
       emit event("messages_updated", {messages})
@@ -454,7 +460,7 @@ function turn(
   8. If tool calls:
      a. Check tool guardrails (per tool)
      b. Execute tools (parallel or sequential), applying bindings (§9.6)
-     c. Format tool messages via executor.FormatToolMessages (§9.4)
+     c. Format tool messages via executor.formatToolMessages (§9.4)
 ```
 
 ---

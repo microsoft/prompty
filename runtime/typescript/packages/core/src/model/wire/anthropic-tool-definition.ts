@@ -20,7 +20,10 @@ export class AnthropicToolDefinition {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicToolDefinition {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicToolDefinition {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -81,17 +84,28 @@ export class AnthropicToolDefinition {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): AnthropicToolDefinition {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): AnthropicToolDefinition {
     const data = JSON.parse(json);
-    return AnthropicToolDefinition.load(data as Record<string, unknown>, context);
+    return AnthropicToolDefinition.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): AnthropicToolDefinition {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): AnthropicToolDefinition {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return AnthropicToolDefinition.load(data as Record<string, unknown>, context);
+    return AnthropicToolDefinition.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion
 }
-

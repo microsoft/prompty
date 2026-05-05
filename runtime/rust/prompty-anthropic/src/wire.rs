@@ -57,7 +57,7 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
         }
     }
 
-    // Structured output (outputSchema → output_config)
+    // Structured output (outputs → output_config)
     if let Some(output_config) = output_schema_to_wire(agent) {
         body.insert("output_config".into(), output_config);
     }
@@ -243,7 +243,7 @@ fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
 }
 
 // ---------------------------------------------------------------------------
-// Structured output (outputSchema → output_config)
+// Structured output (outputs → output_config)
 // ---------------------------------------------------------------------------
 
 /// Convert `agent.outputs` to Anthropic's `output_config` format.

@@ -101,7 +101,7 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
     """Convert agent tools to OpenAI function tool format.
 
     Supports ``kind: function`` (direct schema) and ``kind: prompty``
-    (loads child .prompty to extract its inputSchema as parameters).
+    (loads child .prompty to extract its inputs as parameters).
     """
     if not agent.tools:
         return None

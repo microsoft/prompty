@@ -17,5 +17,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3"
   }
 }

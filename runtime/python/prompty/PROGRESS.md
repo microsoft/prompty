@@ -26,7 +26,7 @@ Loads `.prompty` files → typed `Prompty` objects.
 | File | Lines | Purpose |
 |------|-------|---------|
 | `prompty/loader.py` | 163 | `load()` / `load_async()` — parse frontmatter, migrate legacy, resolve `${env:}` / `${file:}`, call `Prompty.load()` |
-| `prompty/migration.py` | 236 | `_migrate_legacy()` — converts v1 property names → v2 AgentSchema names with deprecation warnings |
+| `prompty/migration.py` | 236 | `_migrate_legacy()` — converts v1 property names → v2 Prompty names with deprecation warnings |
 | `prompty/utils.py` | 67 | `parse()` — regex frontmatter/body split; `load_prompty()` / `load_prompty_async()` — file I/O |
 | `prompty/tracer.py` | 639 | `Tracer` class, `@trace` decorator (sync+async), `PromptyTracer` (JSON file backend), `console_tracer` |
 | `prompty/otel.py` | ~100 | OpenTelemetry integration (optional) |
@@ -36,11 +36,11 @@ Loads `.prompty` files → typed `Prompty` objects.
 
 ### Key decisions
 
-- Generated model types in `prompty.model`, no external `agentschema` dependency
+- Generated model types in `prompty.model`; Prompty owns its schema and runtime model layer
 - No `kind` needed — `Prompty` is flat (no abstract dispatch)
 - Markdown body → `instructions`
 - Thread position is determined by template variable placement (not `![thread]` syntax)
-- Thread-kind inputs are declared in `inputSchema` with `kind: thread`
+- Thread-kind inputs are declared in `inputs` with `kind: thread`
 - `${env:VAR}` and `${file:path}` resolved via `LoadContext(pre_process=fn)`
 - Legacy v1 format loads with deprecation warnings
 - `uv` exclusively for Python environment management
@@ -195,7 +195,7 @@ azure = "prompty.processor:AzureProcessor"
 
 ### `renderers.py` details
 
-- `_prepare_render_inputs(agent, inputs)` — detects `kind: "thread"` inputs from `agent.inputSchema`, replaces values with nonce markers (`__PROMPTY_THREAD_{nonce}_{name}__`), returns `(render_inputs, thread_nonces)`
+- `_prepare_render_inputs(agent, inputs)` — detects `kind: "thread"` values from `agent.inputs`, replaces values with nonce markers (`__PROMPTY_THREAD_{nonce}_{name}__`), returns `(render_inputs, thread_nonces)`
 - `Jinja2Renderer` — renders via `ImmutableSandboxedEnvironment`, stashes `_last_thread_nonces` for `prepare()` to read
 - `MustacheRenderer` — renders via `chevron.render`, same nonce stashing
 - `THREAD_NONCE_PREFIX = "__PROMPTY_THREAD_"` — exported for downstream detection
@@ -232,7 +232,7 @@ azure = "prompty.processor:AzureProcessor"
 
 Thread position is determined by template variable placement, not `![thread]` syntax:
 
-1. **Renderer**: `_prepare_render_inputs()` detects `kind: "thread"` inputs from `inputSchema`, substitutes nonce markers for thread values, renders template normally
+1. **Renderer**: `_prepare_render_inputs()` detects `kind: "thread"` inputs from `inputs`, substitutes nonce markers for thread values, renders template normally
 2. **Parser**: Treats nonce markers as plain text — no special handling
 3. **`prepare()`**: Reads `_last_thread_nonces` from renderer, calls `_inject_thread_markers()` to scan parsed messages for nonce strings and insert `ThreadMarker` objects at those positions
 4. **`_expand_thread_markers()`**: Replaces `ThreadMarker` with actual conversation messages from inputs

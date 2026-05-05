@@ -117,7 +117,7 @@ function turn(path_or_agent, inputs, tools=null) → result:
       // Delegate message formatting to the executor (§9.4)
       executor = get_executor(agent.model.provider)
       text_content = extract_text_content(response)
-      tool_messages = executor.FormatToolMessages(
+      tool_messages = executor.formatToolMessages(
         response, tool_calls, tool_results, text_content
       )
       append tool_messages to messages
@@ -129,9 +129,9 @@ function turn(path_or_agent, inputs, tools=null) → result:
     return result
 ```
 
-## §9.3 Streaming in Agent Mode
+## §9.3 Streaming in the Agent Loop
 
-When streaming is enabled during agent mode, implementations SHOULD forward
+When streaming is enabled during an agent loop, implementations SHOULD forward
 content chunks to the caller where possible rather than buffering the entire
 response. The key constraint: tool call arguments arrive incrementally and
 MUST be fully accumulated before tool execution.
@@ -267,13 +267,8 @@ function execute_prompty_tool(tool, args, parent_inputs) → result:
   // Merge: LLM-provided args + bindings from parent inputs
   merged = apply_bindings(tool, args, parent_inputs)
 
-  match tool.mode:
-    "single":
-      // One LLM call — no agent loop
-      return run(child_agent, merged)
-    "agentic":
-      // Full agent loop — child may call tools too
-      return turn(child_agent, merged)
+  // One child prompt invocation — no nested agent loop.
+  return invoke(child_agent, merged)
 ```
 
 Child `PromptyTool` execution MUST inherit the parent's tracer registry,

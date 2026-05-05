@@ -25,10 +25,10 @@ npm install @prompty/anthropic
 
 ```typescript
 import "@prompty/openai"; // registers the OpenAI provider
-import { load, run } from "@prompty/core";
+import { invoke } from "@prompty/core";
 
 // Load and run a .prompty file
-const result = await run("./my-prompt.prompty", {
+const result = await invoke("./my-prompt.prompty", {
   question: "What is the capital of France?",
 });
 console.log(result);
@@ -38,7 +38,7 @@ console.log(result);
 
 ```typescript
 import "@prompty/openai";
-import { load, prepare, execute, process } from "@prompty/core";
+import { load, prepare, run, process } from "@prompty/core";
 
 // 1. Load — parse .prompty file into a typed Prompty object
 const agent = await load("./chat.prompty");
@@ -46,8 +46,8 @@ const agent = await load("./chat.prompty");
 // 2. Prepare — render template + parse into messages
 const messages = await prepare(agent, { name: "Alice" });
 
-// 3. Execute — call the LLM
-const response = await execute(agent, messages);
+// 3. Run raw — call the LLM
+const response = await run(agent, messages, { raw: true });
 
 // 4. Process — extract the result
 const result = await process(agent, response);
@@ -94,13 +94,14 @@ console.log("Trace:", tracer.lastTracePath);
 |--------|-------------|
 | `load` | Parse a `.prompty` file → `Prompty` object |
 | `prepare` | Render template + parse → `Message[]` |
-| `execute` | Call the LLM provider |
+| `run` | Call the LLM provider and process the response |
+| `invoke` | One-shot: load → prepare → run |
 | `process` | Extract result from LLM response |
-| `run` | All-in-one: load → prepare → execute → process |
-| `executeAgent` | Agent loop with tool calling |
+| `turn` | Agent loop with tool calling |
 | `Tracer` / `PromptyTracer` | Observability and tracing |
 | `registerExecutor` / `registerProcessor` | Register custom providers |
 | `registerConnection` | Register named connections |
+| `registerTool` / `registerToolHandler` | Register tool callables and kind handlers |
 | `Message`, `ContentPart`, `PromptyStream` | Core types |
 
 ## License

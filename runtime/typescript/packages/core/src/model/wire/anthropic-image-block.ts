@@ -19,7 +19,10 @@ export class AnthropicImageBlock {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicImageBlock {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicImageBlock {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -30,7 +33,10 @@ export class AnthropicImageBlock {
       instance.type = String(data["type"]);
     }
     if (data["source"] !== undefined && data["source"] !== null) {
-      instance.source = AnthropicImageSource.load(data["source"] as Record<string, unknown>, context);
+      instance.source = AnthropicImageSource.load(
+        data["source"] as Record<string, unknown>,
+        context,
+      );
     }
 
     if (context) {
@@ -87,4 +93,3 @@ export class AnthropicImageBlock {
 
   //#endregion
 }
-

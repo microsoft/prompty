@@ -19,15 +19,19 @@ config:
 ---
 classDiagram
     class Executor {
+      <<protocol>>
+        +execute(agent: Prompty, messages: Message[]) unknown [async-capable]
+        +executeStream(agent: Prompty, messages: Message[]) unknown [async-capable]
+        +formatToolMessages(rawResponse: unknown, toolCalls: ToolCall[], toolResults: string[], textContent: string?) Message[] [sync]
     }
 ```
 
 ## Helper Methods
 
-The following helper methods are declared via `@method` and must be implemented by every runtime. Idiomatic language shape (e.g. zero-param accessor may be a property) is chosen per-language by the emitter.
+The following helper methods are declared via `@method` and must be implemented by every runtime. The schema declares the logical protocol contract; each runtime maps async-capable methods to idiomatic sync/async shapes for that language.
 
-| Name | Signature | Description |
-| ---- | --------- | ----------- |
-| `execute` | `execute(agent: Prompty, messages: Message[]) -> unknown` | Call an LLM provider with messages and return the raw response |
-| `executeStream` | `executeStream(agent: Prompty, messages: Message[]) -> unknown` _(optional)_ | Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. |
-| `formatToolMessages` | `formatToolMessages(rawResponse: unknown, toolCalls: ToolCall[], toolResults: string[], textContent: string?) -> Message[]` _(sync)_ | Format tool call results into messages for the next iteration |
+| Name | Signature | Runtime shape | Description |
+| ---- | --------- | ------------- | ----------- |
+| `execute` | `execute(agent: Prompty, messages: Message[]) -> unknown` | async-capable | Call an LLM provider with messages and return the raw response |
+| `executeStream` | `executeStream(agent: Prompty, messages: Message[]) -> unknown` | async-capable _(optional default)_ | Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. |
+| `formatToolMessages` | `formatToolMessages(rawResponse: unknown, toolCalls: ToolCall[], toolResults: string[], textContent: string?) -> Message[]` | sync | Format tool call results into messages for the next iteration |

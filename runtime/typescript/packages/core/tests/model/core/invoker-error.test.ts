@@ -21,7 +21,9 @@ describe("InvokerError", () => {
       const json = `{\n  "message": "No renderer registered for key: jinja2",\n  "component": "renderer",\n  "key": "jinja2"\n}`;
       const instance = InvokerError.fromJson(json);
       expect(instance).toBeDefined();
-      expect(instance.message).toEqual("No renderer registered for key: jinja2");
+      expect(instance.message).toEqual(
+        "No renderer registered for key: jinja2",
+      );
       expect(instance.component).toEqual("renderer");
       expect(instance.key).toEqual("jinja2");
     });
@@ -42,7 +44,9 @@ describe("InvokerError", () => {
       const yaml = `message: "No renderer registered for key: jinja2"\ncomponent: renderer\nkey: jinja2\n`;
       const instance = InvokerError.fromYaml(yaml);
       expect(instance).toBeDefined();
-      expect(instance.message).toEqual("No renderer registered for key: jinja2");
+      expect(instance.message).toEqual(
+        "No renderer registered for key: jinja2",
+      );
       expect(instance.component).toEqual("renderer");
       expect(instance.key).toEqual("jinja2");
     });

@@ -150,7 +150,7 @@ async function* streamGenerator(
  * Extracts:
  * - Text content from `output_text` or output message items
  * - Function tool calls from `function_call` output items
- * - JSON-parsed content when outputSchema is present
+ * - JSON-parsed content when outputs is present
  */
 function processResponsesApi(
   agent: Prompty,

@@ -20,7 +20,7 @@ import {
 } from "@prompty/core";
 import { AnthropicExecutor } from "../src/executor.js";
 import { AnthropicProcessor, processResponse } from "../src/processor.js";
-import { buildChatArgs, messageToWire, toolsToWire, outputSchemaToWire } from "../src/wire.js";
+import { buildChatArgs, messageToWire, toolsToWire, outputsToWire } from "../src/wire.js";
 import { registerExecutor, registerProcessor } from "@prompty/core";
 import { Message } from "@prompty/core";
 import type { TextPart } from "@prompty/core";
@@ -210,7 +210,7 @@ describe("wire format", () => {
     expect(tools[0].name).toBe("fn_tool");
   });
 
-  it("converts outputSchema to Anthropic output_config format", () => {
+  it("converts outputs to Anthropic output_config format", () => {
     const mockAgent = {
       name: "test-agent",
       outputs: [
@@ -218,7 +218,7 @@ describe("wire format", () => {
         { name: "score", kind: "float", description: "Score" },
       ],
     };
-    const config = outputSchemaToWire(mockAgent as any);
+    const config = outputsToWire(mockAgent as any);
 
     expect(config).toEqual({
       format: {
@@ -236,9 +236,9 @@ describe("wire format", () => {
     });
   });
 
-  it("returns null for empty outputSchema", () => {
-    expect(outputSchemaToWire({ outputs: [] } as any)).toBeNull();
-    expect(outputSchemaToWire({ outputs: undefined } as any)).toBeNull();
+  it("returns null for empty outputs", () => {
+    expect(outputsToWire({ outputs: [] } as any)).toBeNull();
+    expect(outputsToWire({ outputs: undefined } as any)).toBeNull();
   });
 
   it("converts tool result messages", () => {
@@ -325,7 +325,7 @@ describe("processor", () => {
     expect(result[0].name).toBe("search");
   });
 
-  it("JSON-parses text when outputSchema present", () => {
+  it("JSON-parses text when outputs present", () => {
     const agent = { outputs: [{ name: "title", kind: "string" }] };
     const response = {
       role: "assistant",
@@ -336,7 +336,7 @@ describe("processor", () => {
     expect(result).toEqual({ title: "Test" });
   });
 
-  it("returns raw text if JSON parse fails with outputSchema", () => {
+  it("returns raw text if JSON parse fails with outputs", () => {
     const agent = { outputs: [{ name: "x", kind: "string" }] };
     const response = {
       role: "assistant",

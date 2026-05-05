@@ -152,9 +152,6 @@ public class SpecVectorWireTests
             if (name == "options_additional_properties")
                 continue; // AdditionalProperties passthrough not implemented in BuildOptions
 
-            if (name == "tools_bindings_stripped")
-                continue; // Bindings stripping not implemented in ToolsToWire/SchemaHelpers
-
             yield return [name, input, vec.GetProperty("expected").GetProperty("request_body")];
         }
     }

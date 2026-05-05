@@ -38,10 +38,9 @@ model:
     kind: key
     endpoint: https://api.openai.com/v1
     apiKey: ${env:OPENAI_API_KEY}
-inputSchema:
-  properties:
-    - name: question
-      kind: string
+inputs:
+  question:
+    kind: string
 ---
 system:
 You are a helpful assistant.
@@ -83,7 +82,7 @@ Console.WriteLine(result);
 
 - **`.prompty` file format** — YAML frontmatter + Jinja2/Mustache template body
 - **Pipeline architecture** — Render → Parse → Execute → Process
-- **Structured output** — `outputSchema` converts to `response_format` automatically
+- **Structured output** — `outputs` converts to `response_format` automatically
 - **Streaming** — `PromptyStream` (`IAsyncEnumerable<object>`) with tracing
 - **Agent mode** — Automatic tool-call loop with configurable max iterations
 - **Tracing** — Pluggable backends: console, `.tracy` files, OpenTelemetry
@@ -120,7 +119,7 @@ var messages = await Pipeline.PrepareAsync(agent, inputs);  // render + parse
 var result   = await Pipeline.RunAsync(agent, messages);     // execute + process
 ```
 
-### Agent Mode (Tool Calling)
+### Agent Turns (Tool Calling)
 
 ```csharp
 var tools = new Dictionary<string, Func<string, Task<string>>>

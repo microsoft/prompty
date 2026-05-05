@@ -19,7 +19,10 @@ export class ToolContext {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ToolContext {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ToolContext {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -27,7 +30,10 @@ export class ToolContext {
     const instance = new ToolContext();
 
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = ToolContext.loadMessages(data["messages"] as unknown[], context);
+      instance.messages = ToolContext.loadMessages(
+        data["messages"] as unknown[],
+        context,
+      );
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
@@ -39,7 +45,10 @@ export class ToolContext {
     return instance;
   }
 
-  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+  static loadMessages(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Message[] {
     if (!Array.isArray(data)) {
       // Convert dict/object format to array format
       const result: Record<string, unknown>[] = [];
@@ -47,21 +56,26 @@ export class ToolContext {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, "role": v });
+          result.push({ name: k, role: v });
         }
       }
       data = result;
     }
-    return data.map(item => Message.load(item as Record<string, unknown>, context));
+    return data.map((item) =>
+      Message.load(item as Record<string, unknown>, context),
+    );
   }
 
-  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(
+    items: Message[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -112,4 +126,3 @@ export class ToolContext {
 
   //#endregion
 }
-

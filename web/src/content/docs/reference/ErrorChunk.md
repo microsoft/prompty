@@ -19,6 +19,7 @@ config:
 ---
 classDiagram
     class StreamChunk {
+      <<abstract>>
         +string kind
     }
     StreamChunk <|-- ErrorChunk

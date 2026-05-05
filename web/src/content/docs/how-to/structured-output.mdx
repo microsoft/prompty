@@ -136,7 +136,7 @@ valid JSON with exactly those fields.
             Some(&json!({ "city": "Seattle" })),
         ).await?;
 
-        // result is a parsed serde_json::Value matching the outputSchema
+        // result is a parsed serde_json::Value matching outputs
         println!("{}", result["city"]);         // "Seattle"
         println!("{}", result["temperature"]);  // 62
         println!("{}", result["conditions"]);   // "Partly cloudy"

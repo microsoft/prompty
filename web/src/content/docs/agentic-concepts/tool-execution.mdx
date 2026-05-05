@@ -1,0 +1,91 @@
+---
+title: Tool Execution
+description: >
+  Understand how Prompty dispatches tool calls, handles tool failures, supports
+  parallel execution, and retries model calls.
+sidebar:
+  order: 8
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Tool execution is the part of the loop where Prompty turns a model-requested
+tool call into a host function call and then formats the result back into model
+messages.
+
+## Dispatch flow
+
+1. The model returns one or more tool calls.
+2. Prompty extracts the tool name and JSON arguments.
+3. Tool guardrails can allow, deny, or rewrite the arguments.
+4. Prompty finds the matching runtime handler.
+5. The handler returns a string or structured result.
+6. The provider executor formats assistant/tool messages.
+7. Prompty appends those messages and calls the model again.
+
+The provider executor owns the exact assistant/tool message wire format. OpenAI,
+Anthropic, Foundry, and future providers can format tool-call and tool-result
+messages differently while exposing the same Prompty loop model.
+
+## Tool failures
+
+Tool failures are often converted into synthetic tool-result text instead of
+crashing the loop. This gives the model a chance to recover, ask for different
+arguments, or return a useful explanation.
+
+Examples of recoverable tool-result content:
+
+- invalid JSON arguments;
+- missing required tool handler;
+- exception thrown by a tool;
+- denial from a tool guardrail.
+
+These failures are often surfaced as tool-result errors, but not all loop
+failures are recoverable. Cancellation, max-iteration failures, exhausted LLM
+retries, and some unrecoverable dispatch failures still stop the turn.
+
+## Parallel tool calls
+
+Some providers can return multiple tool calls in one model response. Prompty can
+execute those calls serially or in parallel. Parallel execution only applies when
+a single model response contains multiple tool calls and the parallel option is
+enabled; the default is serial execution.
+
+Use parallel execution when:
+
+- tools are independent;
+- tools do not mutate shared state;
+- result ordering does not affect side effects;
+- the host can tolerate concurrent load.
+
+Keep serial execution when tools write data, depend on one another, or touch
+shared resources.
+
+<Aside type="caution">
+  Parallel execution changes timing, not semantics. Your tools must still enforce
+  authorization, idempotency, and concurrency safety.
+</Aside>
+
+## Max iterations
+
+`maxIterations` / `max_iterations` protects the agent loop from a model that
+keeps requesting tools. It does not limit a single model call. When the limit is
+exceeded, Prompty fails the turn with an error that recommends increasing the
+limit or checking your tools. The default is 10 in the current runtimes.
+
+If you hit the limit often, inspect the tool messages and prompt instructions.
+Common causes are:
+
+- the model never receives a useful tool result;
+- a tool handler returns ambiguous errors;
+- tool schemas do not describe successful completion clearly;
+- the prompt asks the model to keep checking until a condition changes.
+
+## LLM retries
+
+`maxLlmRetries` / `max_llm_retries` handles transient LLM/executor failures
+inside the loop. Retries use bounded backoff, default to 3 in the current
+runtimes, and are separate from tool failure handling.
+
+Retries apply to the LLM call, not to your tool functions. If a tool needs retry
+logic, implement that inside the tool or in the service it calls.

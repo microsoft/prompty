@@ -148,48 +148,49 @@ additional configuration:
 
 ### §11.3.1 Protocol Interfaces
 
-Every component MUST conform to its protocol. Implementations MUST provide
-at least the async variants; sync variants SHOULD also be provided.
+Every component MUST conform to its protocol. The schema defines one logical
+contract for each protocol method; runtimes map those methods to idiomatic
+sync and async shapes as described in [§12.1](/specification/cross-cutting/).
 
-**RendererProtocol:**
-
-```
-RendererProtocol:
-  render(agent: PromptAgent, inputs: dict) → string
-  render_async(agent: PromptAgent, inputs: dict) → string
-```
-
-Receives the agent and user inputs. Returns the rendered template string
-with all variables substituted.
-
-**ParserProtocol:**
+**Renderer:**
 
 ```
-ParserProtocol:
-  parse(agent: PromptAgent, rendered: string) → Message[]
-  parse_async(agent: PromptAgent, rendered: string) → Message[]
+Renderer:
+  render(agent: PromptAgent, template: string, inputs: Record<unknown>) → string
+```
+
+Receives the agent, template text, and user inputs. Returns the rendered
+template string with all variables substituted.
+
+**Parser:**
+
+```
+Parser:
+  preRender(template: string) → unknown?  // optional sync hook
+  parse(agent: PromptAgent, rendered: string, context: Record<unknown>?) → Message[]
 ```
 
 Receives the agent and the rendered string. Returns an ordered list of
 `Message` objects.
 
-**ExecutorProtocol:**
+**Executor:**
 
 ```
-ExecutorProtocol:
+Executor:
   execute(agent: PromptAgent, messages: Message[]) → raw_response
-  execute_async(agent: PromptAgent, messages: Message[]) → raw_response
+  executeStream(agent: PromptAgent, messages: Message[]) → raw_stream  // optional
+  formatToolMessages(rawResponse, toolCalls, toolResults, textContent?) → Message[]  // sync
 ```
 
 Receives the agent and parsed messages. Calls the LLM provider API.
 Returns the raw SDK response object.
 
-**ProcessorProtocol:**
+**Processor:**
 
 ```
-ProcessorProtocol:
-  process(agent: PromptAgent, response: any) → result
-  process_async(agent: PromptAgent, response: any) → result
+Processor:
+  process(agent: PromptAgent, response: unknown) → result
+  processStream(stream: unknown) → stream_result  // optional
 ```
 
 Receives the agent and raw response. Extracts and returns the final result

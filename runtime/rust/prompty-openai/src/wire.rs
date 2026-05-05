@@ -382,7 +382,7 @@ fn kind_to_json_type(kind: &str) -> String {
 }
 
 // ---------------------------------------------------------------------------
-// Structured output (outputSchema → response_format)
+// Structured output (outputs → response_format)
 // ---------------------------------------------------------------------------
 
 fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {

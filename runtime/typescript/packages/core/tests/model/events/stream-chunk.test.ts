@@ -15,5 +15,4 @@ describe("StreamChunk", () => {
       expect(instance).toBeDefined();
     });
   });
-
 });

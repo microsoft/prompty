@@ -19,6 +19,7 @@ config:
 ---
 classDiagram
     class ContentPart {
+      <<abstract>>
         +string kind
     }
     ContentPart <|-- ImagePart

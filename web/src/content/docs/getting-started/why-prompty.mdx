@@ -77,9 +77,9 @@ OpenAI, Azure, or any provider. Process the response into your desired format.
 
 ### One file, any language
 
-The same `.prompty` file works across **Python**, **TypeScript**, and **C#**
-runtimes. Your prompt engineers write once; your application teams consume in
-whatever language their service uses.
+The same `.prompty` file works across **Python**, **TypeScript**, **C#**, and
+**Rust** runtimes. Your prompt engineers write once; your application teams
+consume in whatever language their service uses.
 
 ## How Prompty Compares
 
@@ -87,7 +87,7 @@ whatever language their service uses.
 | ------------------ | -------------------- | --------------------------- | ------------------------------------ |
 | **Prompt format**  | Strings in code      | Templates in code           | Dedicated `.prompty` file            |
 | **Model config**   | Constructor args     | Chain config                | YAML frontmatter                     |
-| **Portability**    | Single language      | Single language             | Python, TypeScript, C#               |
+| **Portability**    | Single language      | Single language             | Python, TypeScript, C#, Rust         |
 | **Testability**    | Mock entire client   | Mock chain                  | Mock at any pipeline stage           |
 | **Version control**| Diff code changes    | Diff code changes           | Diff prompt files directly           |
 | **IDE support**    | Code editor          | Code editor                 | VS Code extension with live preview  |
@@ -103,16 +103,20 @@ whatever language their service uses.
 **Prompty is a good fit when:**
 
 - ✅ You want prompts treated as **first-class assets** — versioned, reviewed, and tested independently
-- ✅ Your team works across **Python, TypeScript, and C#** and needs a shared format
+- ✅ Your team works across **Python, TypeScript, C#**, and **Rust** and needs a shared format
 - ✅ You want to **test prompts in isolation** without mocking entire LLM clients
 - ✅ You need **built-in tracing and observability** across the prompt lifecycle
 - ✅ You want a **standard your team can adopt** without committing to a full framework
 
 **Consider alternatives when:**
 
-- ❌ You need a **full orchestration framework** with chains, memory, and retrieval
-  built in — use LangChain or Semantic Kernel (but Prompty can still be your prompt
-  layer inside them)
+- ❌ You want a **complete application framework** that owns routing, persistence,
+  vector-store ingestion, hosted workflows, UI, and deployment conventions end to
+  end. Prompty focuses on portable prompt assets and the runtime loop around
+  them; use a larger framework when you want that whole application stack.
+- ❌ You need a framework-specific abstraction more than a portable prompt file.
+  Prompty can still be the prompt layer inside LangChain, Semantic Kernel, or
+  your own orchestrator.
 
 ## Key Design Principles
 

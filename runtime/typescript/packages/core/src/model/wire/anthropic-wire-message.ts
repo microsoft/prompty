@@ -16,7 +16,10 @@ export class AnthropicWireMessage {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicWireMessage {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicWireMessage {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -84,4 +87,3 @@ export class AnthropicWireMessage {
 
   //#endregion
 }
-

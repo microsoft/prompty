@@ -18,7 +18,10 @@ export class ParserConfig {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ParserConfig {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ParserConfig {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -96,4 +99,3 @@ export class ParserConfig {
 
   //#endregion
 }
-

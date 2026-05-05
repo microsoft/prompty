@@ -7,7 +7,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// The result of validating inputs against an agent's inputSchema.
+/// The result of validating inputs against a Prompty's inputs.
 /// 
 /// Returned by `validate_inputs` (§12.2) to indicate whether all
 /// 

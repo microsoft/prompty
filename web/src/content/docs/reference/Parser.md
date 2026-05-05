@@ -19,14 +19,17 @@ config:
 ---
 classDiagram
     class Parser {
+      <<protocol>>
+        +preRender(template: string) unknown? [sync]
+        +parse(agent: Prompty, rendered: string, context: Record<unknown>?) Message[] [async-capable]
     }
 ```
 
 ## Helper Methods
 
-The following helper methods are declared via `@method` and must be implemented by every runtime. Idiomatic language shape (e.g. zero-param accessor may be a property) is chosen per-language by the emitter.
+The following helper methods are declared via `@method` and must be implemented by every runtime. The schema declares the logical protocol contract; each runtime maps async-capable methods to idiomatic sync/async shapes for that language.
 
-| Name | Signature | Description |
-| ---- | --------- | ----------- |
-| `preRender` | `preRender(template: string) -> unknown?` _(optional, sync)_ | Pre-process a template before rendering, returning modified template and context |
-| `parse` | `parse(agent: Prompty, rendered: string, context: Record<unknown>?) -> Message[]` | Parse rendered text into a structured message array |
+| Name | Signature | Runtime shape | Description |
+| ---- | --------- | ------------- | ----------- |
+| `preRender` | `preRender(template: string) -> unknown?` | sync _(optional default)_ | Pre-process a template before rendering, returning modified template and context |
+| `parse` | `parse(agent: Prompty, rendered: string, context: Record<unknown>?) -> Message[]` | async-capable | Parse rendered text into a structured message array |

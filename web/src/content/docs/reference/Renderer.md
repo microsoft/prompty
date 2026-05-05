@@ -19,13 +19,15 @@ config:
 ---
 classDiagram
     class Renderer {
+      <<protocol>>
+        +render(agent: Prompty, template: string, inputs: Record<unknown>) string [async-capable]
     }
 ```
 
 ## Helper Methods
 
-The following helper methods are declared via `@method` and must be implemented by every runtime. Idiomatic language shape (e.g. zero-param accessor may be a property) is chosen per-language by the emitter.
+The following helper methods are declared via `@method` and must be implemented by every runtime. The schema declares the logical protocol contract; each runtime maps async-capable methods to idiomatic sync/async shapes for that language.
 
-| Name | Signature | Description |
-| ---- | --------- | ----------- |
-| `render` | `render(agent: Prompty, template: string, inputs: Record<unknown>) -> string` | Render the template string with input values |
+| Name | Signature | Runtime shape | Description |
+| ---- | --------- | ------------- | ----------- |
+| `render` | `render(agent: Prompty, template: string, inputs: Record<unknown>) -> string` | async-capable | Render the template string with input values |

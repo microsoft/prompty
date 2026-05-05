@@ -1,0 +1,142 @@
+---
+title: Publishing Rubric
+description: Repeatable checklist for preparing and publishing Prompty runtime packages and the VS Code extension.
+sidebar:
+  order: 3
+---
+
+Use this rubric before publishing any Prompty runtime package or the VS Code
+extension. It is intentionally ordered so generated artifacts, runtime packages,
+and the extension stay aligned.
+
+## 1. Establish the release scope
+
+Confirm which artifacts need a new build:
+
+| Artifact | Release script or package command |
+| --- | --- |
+| Python package | `cd runtime/python/prompty && uv run python scripts/release.py --dry-run` |
+| TypeScript packages | `cd runtime/typescript && npm run release -- --dry-run` |
+| C# packages | `cd runtime/csharp && uv run python scripts/release.py --dry-run` |
+| Rust crates | `cd runtime/rust && uv run python scripts/release.py --dry-run` |
+| VS Code extension | `cd vscode/prompty && npm run package-pre` or `npm run package` |
+
+If schema, bindings, tool dispatch, or shared model types changed, expect to
+release every runtime that consumes generated model code.
+
+## 2. Regenerate from TypeSpec
+
+Generated model code and reference docs must come from the schema emitter.
+
+```bash
+cd schema
+npm install
+npm run build
+```
+
+After regeneration:
+
+1. Review generated diffs for expected TypeSpec/emitter changes only.
+2. Confirm stale generated files were removed by emitters, not by hand.
+3. Confirm generated docs and runtime model files agree on renamed/removed fields.
+
+## 3. Validate each runtime
+
+Run the runtime checks before building packages.
+
+| Runtime | Validation |
+| --- | --- |
+| Python | `cd runtime/python/prompty && uv run ruff check . && uv run ruff format --check . && uv run pytest tests/ -q` |
+| TypeScript | `cd runtime/typescript && npm install && npm run build && npm run test` |
+| C# | `cd runtime/csharp && dotnet build && dotnet test` |
+| Rust | `cd runtime/rust && cargo build && cargo test -- --test-threads=1` |
+| Docs | `cd web && npm install && npm run build` |
+
+For live provider or end-to-end validation, use the documented integration test
+commands and ensure API keys are loaded from local environment files, not checked
+into the repository.
+
+## 4. Check tool bindings and agent behavior
+
+Bindings are easy to loosen accidentally because they cross schema, provider
+wire conversion, and runtime tool dispatch.
+
+Before publishing, verify:
+
+1. Bound parameters are removed from tool schemas sent to models.
+2. Bound values are injected from parent prompt inputs at tool execution time.
+3. Per-call tools override global name registrations.
+4. Global name registrations override kind handlers.
+5. Kind handlers handle declared tool kinds and wildcard custom kinds as expected.
+6. Agent turn limits, cancellation, compaction, and error-shaped tool results still behave consistently.
+
+Prefer targeted tests for the changed runtimes plus at least one end-to-end tool
+calling prompt through the provider package being published.
+
+## 5. Build package artifacts locally
+
+Create local artifacts before tagging a release.
+
+| Artifact | Local build command |
+| --- | --- |
+| Python | `cd runtime/python/prompty && uv build` |
+| TypeScript | `cd runtime/typescript && npm run build` |
+| C# | `cd runtime/csharp && dotnet pack --configuration Release` |
+| Rust | `cd runtime/rust && cargo package --allow-dirty --no-verify` for final local inspection, then rerun without `--allow-dirty` before release |
+| VS Code | `cd vscode/prompty && npm run package-pre` for prerelease or `npm run package` for stable |
+
+Do not publish from a dirty tree unless the command is explicitly a local
+inspection command and the dirty state is understood.
+
+## 6. Relink the VS Code extension
+
+When TypeScript packages are rebuilt or republished, update the VS Code extension
+to consume the new `@prompty/*` versions.
+
+1. Update `vscode/prompty/package.json` dependencies for `@prompty/core`,
+   `@prompty/openai`, `@prompty/foundry`, and `@prompty/anthropic`.
+2. Update `vscode/prompty/packages/server/package.json` if the language server
+   depends on the core package.
+3. Run `cd vscode/prompty && npm install`.
+4. Run `npm run build`, then `npm run package-pre` or `npm run package`.
+5. Smoke test the packaged `.vsix` with a prompt that exercises preview, run,
+   connections, traces, and tool calling if those surfaces changed.
+
+## 7. Publish in dependency order
+
+Publish lower-level packages before packages that consume them.
+
+1. Schema/runtime changes merged to `main`.
+2. TypeScript packages, if the VS Code extension depends on new `@prompty/*` builds.
+3. Python, C#, and Rust runtime packages as applicable.
+4. VS Code extension after its dependency versions point at published packages.
+5. Documentation site after package/version references are final.
+
+The runtime release scripts create version commits and tags that trigger CI
+publishing:
+
+```bash
+cd runtime/typescript
+npm run release -- --version <version>
+
+cd ../python/prompty
+uv run python scripts/release.py --version <version>
+
+cd ../../csharp
+uv run python scripts/release.py --version <version>
+
+cd ../rust
+uv run python scripts/release.py --version <version>
+```
+
+Use prerelease versions/tags until the full stack has been validated together.
+
+## 8. Final publication checks
+
+After CI publishes:
+
+1. Confirm package pages show the expected versions on npm, PyPI, NuGet, crates.io, and the VS Code Marketplace.
+2. Install each package into a clean sample project.
+3. Run a minimal `.prompty` prompt with each provider/runtime being released.
+4. Verify docs links, badges, install commands, and package versions.
+5. Open an issue or follow-up PR for any runtime that intentionally lags a feature.

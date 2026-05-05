@@ -6,15 +6,13 @@
 
 from abc import ABC
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Literal
+from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
 from ..connection._Connection import Connection
 from ..core._Property import Property
 from ._Binding import Binding
 from ._McpApprovalMode import McpApprovalMode
-
-promptyToolMode = Literal["single", "agentic"]
 
 
 @dataclass
@@ -636,8 +634,8 @@ class OpenApiTool(Tool):
 class PromptyTool(Tool):
     """A tool that references another .prompty file to be invoked as a tool.
 
-    In `single` mode, the child prompty is executed with a single LLM call.
-    In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+    The child prompty is executed as a single prompt invocation. Nested agent
+    loops are intentionally not started from PromptyTool.
 
     Attributes
     ----------
@@ -646,14 +644,14 @@ class PromptyTool(Tool):
     path : str
         Path to the child .prompty file, relative to the parent
     mode : str
-        Execution mode: 'single' for one LLM call, 'agentic' for full agent loop
+        Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool.
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="prompty")
     path: str = field(default="")
-    mode: promptyToolMode = field(default="single")
+    mode: str = field(default="single")
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "PromptyTool":

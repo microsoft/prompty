@@ -11,7 +11,7 @@ use prompty::{load, prepare, run, turn, register_defaults};
 register_defaults();
 
 // Load a .prompty file into a typed agent
-let agent = load("path/to/prompt.prompty").await?;
+let agent = load("path/to/prompt.prompty")?;
 
 // Render template + parse role markers → Vec<Message>
 let messages = prepare(&agent, Some(&inputs)).await?;
@@ -32,7 +32,7 @@ The runtime provides 5 public functions:
 | `load()` | Parse a `.prompty` file → typed `Prompty` agent |
 | `prepare()` | Render template + parse role markers → `Vec<Message>` |
 | `run()` | Execute LLM call + process response (takes messages) |
-| `invoke_agent()` | One-shot: load → prepare → execute → process |
+| `invoke_from_path()` | One-shot: load → prepare → execute → process |
 | `turn()` | Conversation round with optional tool-calling agent loop |
 
 ## Providers

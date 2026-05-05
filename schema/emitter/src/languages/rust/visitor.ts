@@ -6,6 +6,19 @@ import { Expr, FieldAssignment, Construct, VariantConstruct, ArrayLiteral, Field
 import { ExprVisitor, assertNever } from "../../ir/visitor.js";
 import { toSnakeCase } from "../../ir/utilities.js";
 
+const RUST_KEYWORDS = new Set([
+  "as", "break", "const", "continue", "crate", "else", "enum", "extern",
+  "false", "fn", "for", "if", "impl", "in", "let", "loop", "match", "mod",
+  "move", "mut", "pub", "ref", "return", "self", "Self", "static", "struct",
+  "super", "trait", "true", "type", "unsafe", "use", "where", "while",
+  "async", "await", "dyn",
+]);
+
+function rustFieldName(name: string): string {
+  const snake = toSnakeCase(name);
+  return RUST_KEYWORDS.has(snake) ? `r#${snake}` : snake;
+}
+
 export class RustExprVisitor implements ExprVisitor {
   registry?: TypeRegistry;
 
@@ -161,6 +174,6 @@ export class RustExprVisitor implements ExprVisitor {
   }
 
   private visitFieldRead(expr: FieldRead): string {
-    return `${toSnakeCase(expr.objectName)}.${toSnakeCase(expr.fieldName)}`;
+    return `${toSnakeCase(expr.objectName)}.${rustFieldName(expr.fieldName)}`;
   }
 }

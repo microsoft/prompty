@@ -6,8 +6,8 @@ slug: "reference/promptytool"
 
 A tool that references another .prompty file to be invoked as a tool.
 
-In `single` mode, the child prompty is executed with a single LLM call.
-In `agentic` mode, the child prompty runs a full agent loop with its own tools.
+The child prompty is executed as a single prompt invocation. Nested agent
+loops are intentionally not started from PromptyTool.
 
 ## Class Diagram
 
@@ -22,6 +22,7 @@ config:
 ---
 classDiagram
     class Tool {
+      <<abstract>>
         +string name
         +string kind
         +string description
@@ -49,4 +50,4 @@ mode: single
 | ---- | ---- | ----------- |
 | kind | string | The kind identifier for prompty tools |
 | path | string | Path to the child .prompty file, relative to the parent |
-| mode | string | Execution mode: 'single' for one LLM call, 'agentic' for full agent loop |
+| mode | string | Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool. |

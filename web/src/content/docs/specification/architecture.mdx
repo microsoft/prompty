@@ -23,6 +23,11 @@ and their subtypes) is defined in TypeSpec (`schema/`) and generated into each t
 language. This specification does **not** redefine those types. It defines the **runtime
 behavior**: what implementations do with those types at each pipeline stage.
 
+The TypeSpec model is the authoritative schema source. Earlier narrative
+specification text is retained here only when it describes behavior; type
+members, discriminators, inheritance, and property names should be checked
+against `schema/` or the generated [Schema Reference](/reference/).
+
 When this specification refers to a type name (e.g., `PromptAgent`, `Message`,
 `FunctionTool`), it refers to the generated type from the TypeSpec schema or the
 runtime-defined type described in this specification.
@@ -96,8 +101,8 @@ The five pipeline stages compose into higher-level operations:
 | `turn`         | prepare + execute + process (+ agent loop) | With automatic tool-call handling |
 
 :::note[Naming Note]
-The pipeline stage that calls the LLM is called **execute** (the
-`ExecutorProtocol`). The top-level convenience functions that run the entire pipeline
+The pipeline stage that calls the LLM is called **execute** (the `Executor`
+protocol). The top-level convenience functions that run the entire pipeline
 end-to-end are called **invoke** / **turn** to avoid ambiguity.
 :::
 

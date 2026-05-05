@@ -70,7 +70,7 @@ Any model available through the Anthropic Messages API:
 | Chat completions | ✅ |
 | Streaming (SSE) | ✅ |
 | Tool calling | ✅ |
-| Agent mode (tool loop) | ✅ |
+| Agent turns (tool loop) | ✅ |
 | Structured output | ✅ |
 | Image inputs (base64) | ✅ |
 | System prompts | ✅ (extracted per Anthropic convention) |
@@ -87,7 +87,7 @@ model:
     apiKey: ${env:ANTHROPIC_API_KEY}
 ```
 
-## Agent Mode (Tool Calling)
+## Agent Turns (Tool Calling)
 
 Anthropic's tool calling follows the same pattern as other providers:
 

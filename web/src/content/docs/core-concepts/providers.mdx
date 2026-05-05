@@ -90,7 +90,7 @@ model:
 - OpenAI-compatible endpoints can be used by setting `connection.endpoint`
 - Supports streaming via `PromptyStream` / `AsyncPromptyStream` (Python), async iterables (TypeScript), and `IAsyncEnumerable` (C#)
 - Structured output is supported via `outputs` → `response_format`
-- [Agent mode](../agent-mode/) is available via `turn()` — it uses `apiType: chat` with an automatic tool-calling loop
+- [Agentic turns](/agentic-concepts/agent-loop/) are available via `turn()` — they use `apiType: chat` with an automatic tool-calling loop
 - Model listing is available in Python, TypeScript, C#, and Rust; see [Discover Available Models](/how-to/model-discovery/)
 
 ---

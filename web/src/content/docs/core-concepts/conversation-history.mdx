@@ -382,9 +382,9 @@ implement features like message editing, branching, and context management.
 
 ---
 
-## Thread Inputs with Agent Mode
+## Thread Inputs with the Agent Loop
 
-When running the [agent loop](/core-concepts/agent-mode/) (via `turn()` /
+When running the [agent loop](/agentic-concepts/agent-loop/) (via `turn()` /
 `TurnAsync()`), thread inputs work the same way — they provide the initial
 conversation context. The `.prompty` file still uses `apiType: chat`; agent
 behavior is activated by your calling code. The agent loop then appends tool
@@ -505,6 +505,6 @@ tool calls within the current turn.
 ## Next Steps
 
 - [**Tutorial: Build a Chat Assistant**](/tutorials/chat-assistant/) — hands-on walkthrough building a multi-turn chatbot
-- [**Agent Mode**](/core-concepts/agent-mode/) — combine threads with automatic tool calling
+- [**Agentic Concepts**](/agentic-concepts/) — combine threads with automatic tool calling and runtime controls
 - [**Pipeline Architecture**](/core-concepts/pipeline/) — understand how threads fit into the four-stage pipeline
 - [**Streaming**](/core-concepts/streaming/) — stream responses while using conversation history

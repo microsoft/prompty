@@ -79,7 +79,7 @@ Anthropic supports structured output via `outputs` in the `.prompty` frontmatter
 | `messageToWire` | Convert `Message` → Anthropic wire format |
 | `buildChatArgs` | Build messages API arguments |
 | `toolsToWire` | Convert tools → Anthropic tool format |
-| `outputSchemaToWire` | Convert output schema → Anthropic tool format |
+| `outputsToWire` | Convert `outputs` → Anthropic tool format |
 
 ## License
 

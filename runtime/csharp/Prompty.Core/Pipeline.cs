@@ -399,7 +399,7 @@ public static class Pipeline
                                     toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
                                     {
                                         toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-                                        return await ToolDispatch.DispatchAsync(agent, call, tools);
+                                        return await ToolDispatch.DispatchAsync(agent, call, tools, inputs);
                                     });
                                 }
                                 catch (Exception ex) when (ex is not OperationCanceledException)
@@ -460,7 +460,7 @@ public static class Pipeline
                                 toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
                                 {
                                     toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-                                    return await ToolDispatch.DispatchAsync(agent, call, tools);
+                                    return await ToolDispatch.DispatchAsync(agent, call, tools, inputs);
                                 });
                             }
                             catch (Exception ex) when (ex is not OperationCanceledException)

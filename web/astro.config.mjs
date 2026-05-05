@@ -87,6 +87,10 @@ export default defineConfig({
           autogenerate: { directory: "core-concepts" },
         },
         {
+          label: "Agentic Concepts",
+          autogenerate: { directory: "agentic-concepts" },
+        },
+        {
           label: "Implementation",
           autogenerate: { directory: "implementation" },
         },

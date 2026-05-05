@@ -16,7 +16,10 @@ export class CompactionCompletePayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): CompactionCompletePayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): CompactionCompletePayload {
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -71,17 +74,28 @@ export class CompactionCompletePayload {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): CompactionCompletePayload {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): CompactionCompletePayload {
     const data = JSON.parse(json);
-    return CompactionCompletePayload.load(data as Record<string, unknown>, context);
+    return CompactionCompletePayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): CompactionCompletePayload {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): CompactionCompletePayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return CompactionCompletePayload.load(data as Record<string, unknown>, context);
+    return CompactionCompletePayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion
 }
-

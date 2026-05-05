@@ -76,7 +76,7 @@ function render(agent, inputs):
        // Default: "jinja2" → Jinja2-compatible engine
        //          "mustache" → Mustache engine
        // Unknown key → RAISE InvokerError
-  4. rendered ← renderer.render(agent.instructions, prepared_inputs)
+  4. rendered ← renderer.render(agent, agent.instructions, prepared_inputs)
   5. Store nonce_map in per-request thread-safe storage
        // The parser (§6) needs this to expand thread nonces
   6. RETURN rendered
@@ -120,8 +120,8 @@ the invoker discovery mechanism ([§11 Registries & Plugin Discovery](/specifica
 
 ```
 interface Renderer:
-  render(template: string, inputs: dict) → string
-  render_async(template: string, inputs: dict) → string
+  render(agent: PromptAgent, template: string, inputs: dict) → string
+  render_async(agent: PromptAgent, template: string, inputs: dict) → string
 ```
 
 ## §5.7 Error Conditions

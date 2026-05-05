@@ -1,0 +1,118 @@
+---
+title: Agent Turns
+description: Reference for turn APIs, tool dispatch, loop limits, and agent-mode errors.
+sidebar:
+  order: 3
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Use `turn` when a prompt can call tools and the runtime should continue the
+conversation until the model returns a final answer.
+
+## `turn(pathOrAgent, inputs, tools, options)`
+
+`turn` prepares the prompt, calls the model, dispatches requested tool calls,
+formats tool results, and repeats until completion or a loop limit is reached.
+
+<Tabs>
+  <TabItem label="Python">
+    ```python
+    def get_weather(location: str) -> str:
+        return f"Sunny in {location}"
+
+    result = prompty.turn(
+        "agent.prompty",
+        inputs={"question": "Weather in Seattle?"},
+        tools={"get_weather": get_weather},
+        max_iterations=10,
+    )
+    ```
+  </TabItem>
+  <TabItem label="TypeScript">
+    ```typescript
+    import { turn } from "@prompty/core";
+
+    function getWeather(location: string): string {
+      return `Sunny in ${location}`;
+    }
+
+    const result = await turn(
+      "agent.prompty",
+      { question: "Weather in Seattle?" },
+      { get_weather: getWeather },
+    );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    using Prompty.Core;
+
+    var tools = new Dictionary<string, Func<string, Task<string>>>
+    {
+        ["get_weather"] = args => Task.FromResult("Sunny")
+    };
+
+    var result = await Pipeline.TurnAsync(
+        "agent.prompty",
+        new() { ["question"] = "Weather in Seattle?" },
+        tools: tools,
+        maxIterations: 10
+    );
+    ```
+  </TabItem>
+  <TabItem label="Rust">
+    ```rust
+    use prompty::{self, TurnOptions};
+    use serde_json::json;
+
+    prompty::register_tool("get_weather", |args| {
+        Box::pin(async move {
+            let loc = args["location"].as_str().unwrap_or("unknown");
+            Ok(json!(format!("Sunny in {loc}")))
+        })
+    });
+
+    let result = prompty::turn_from_path(
+        "agent.prompty",
+        Some(&json!({ "question": "Weather in Seattle?" })),
+        Some(TurnOptions { max_iterations: Some(10), ..Default::default() }),
+    ).await?;
+    ```
+  </TabItem>
+</Tabs>
+
+## Parameters
+
+| Parameter | Description |
+| --- | --- |
+| `prompt` | Path to a `.prompty` file or loaded `Prompty` object |
+| `inputs` | Template input dictionary |
+| `tools` | Tool implementations keyed by tool name |
+| `max_iterations` | Loop limit; implementations should fail rather than loop forever |
+| `raw` | Return raw provider responses when supported |
+
+## Tool dispatch behavior
+
+Tools are matched by name. Tool arguments are decoded from provider tool-call
+payloads, merged with any Prompty tool bindings, and passed to the registered
+function.
+
+Tool bindings are not sent to the model as model-controllable parameters. They
+are injected by the runtime when the tool is executed.
+
+For the registry APIs, kind handlers, and dispatch precedence, see
+[Tool Calling](/api-reference/tool-calling/).
+
+## Error handling
+
+| Condition | Expected behavior |
+| --- | --- |
+| Bad JSON tool arguments | Surface the error to the model so it can retry |
+| Tool throws | Return an error-shaped tool result to the model |
+| Missing tool implementation | Return an error-shaped tool result or raise according to runtime policy |
+| Loop limit exceeded | Raise an error |
+| Cancellation requested | Stop the loop and return or raise according to the runtime cancellation API |
+
+See [Agentic Concepts](/agentic-concepts/) for the behavioral model behind
+agent loops, cancellation, compaction, guardrails, and steering.
