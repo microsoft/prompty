@@ -44,3 +44,7 @@ jobs:
       - name: Build
         working-directory: ./vscode/prompty
         run: npm run build
+
+      - name: Smoke package VSIX
+        working-directory: ./vscode/prompty
+        run: npm run package-pre -- --out prompty-smoke.vsix

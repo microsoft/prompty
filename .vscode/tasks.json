@@ -4,7 +4,7 @@
     {
       "label": "build-extension",
       "type": "shell",
-      "command": "npm run compile",
+      "command": "npm run vscode:prepublish",
       "options": {
         "cwd": "${workspaceFolder}/vscode/prompty"
       },

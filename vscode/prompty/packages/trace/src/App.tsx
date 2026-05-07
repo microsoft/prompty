@@ -70,7 +70,7 @@ const Content = styled.div`
   overflow: hidden;
 `;
 
-const CollapserDiv = styled.div<{ $collapsed?: boolean }>`
+const CollapserDiv = styled.button<{ $collapsed?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,6 +80,9 @@ const CollapserDiv = styled.div<{ $collapsed?: boolean }>`
   height: 24px;
   border-radius: 4px;
   color: var(--vscode-descriptionForeground);
+  background: none;
+  border: 0;
+  padding: 0;
   bottom: 6px;
   left: ${(p) => (p.$collapsed ? "50%" : "auto")};
   right: ${(p) => (p.$collapsed ? "auto" : "6px")};
@@ -88,6 +91,11 @@ const CollapserDiv = styled.div<{ $collapsed?: boolean }>`
   &:hover {
     color: var(--vscode-foreground);
     background: var(--vscode-list-hoverBackground);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
   }
 `;
 
@@ -253,7 +261,7 @@ function App() {
       <GlobalStyle />
       <Frame onMouseUp={handleMouseUp} onMouseMove={handleResize}>
         <Sidebar ref={sidebarRef} size={width} onClick={activateSidebar}>
-          <Tree ref={treeRef} size={treeWidth}>
+          <Tree ref={treeRef} size={treeWidth} role="tree" aria-label="Trace tree">
             {!collapsed && traceStore?.trace && traceStore?.trace.trace && (
               <TraceTree
                 trace={traceStore?.trace.trace}
@@ -263,8 +271,13 @@ function App() {
               />
             )}
           </Tree>
-          <CollapserDiv $collapsed={collapsed} onClick={() => setCollapsed(!collapsed)}>
-            <Collapser collapsed={collapsed} setCollapsed={setCollapsed} />
+          <CollapserDiv
+            $collapsed={collapsed}
+            onClick={() => setCollapsed(!collapsed)}
+            aria-label={collapsed ? "Expand trace sidebar" : "Collapse trace sidebar"}
+            aria-expanded={!collapsed}
+          >
+            <Collapser collapsed={collapsed} />
           </CollapserDiv>
         </Sidebar>
         {!collapsed && (

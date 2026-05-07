@@ -65,13 +65,21 @@ const Title = styled.div`
   color: var(--vscode-descriptionForeground);
 `;
 
-const Close = styled.div`
+const Close = styled.button`
   cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
   &:hover {
     color: var(--vscode-focusBorder);
+  }
+  &:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: 2px;
   }
 `;
 
@@ -89,8 +97,8 @@ const Modal = ({ title, children, index, count }: Props) => {
       <Header>
         <Title>{title}</Title>
         <Grow />
-        <Close onClick={() => popModal()}>
-          <VscClose />
+        <Close onClick={() => popModal()} aria-label={`Close ${title}`}>
+          <VscClose aria-hidden="true" />
         </Close>
       </Header>
       <Item>{children}</Item>
@@ -98,7 +106,7 @@ const Modal = ({ title, children, index, count }: Props) => {
   );
 };
 
-const CloseAll = styled.div`
+const CloseAll = styled.button`
   cursor: pointer;
   user-select: none;
   position: absolute;
@@ -117,6 +125,10 @@ const CloseAll = styled.div`
     color: var(--vscode-focusBorder);
     border: 1px solid var(--vscode-focusBorder);
   }
+  &:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: 2px;
+  }
 `;
 
 const ModalCollection = () => {
@@ -128,8 +140,9 @@ const ModalCollection = () => {
       <CloseAll
         onClick={() => modalStore?.closeAll()}
         hidden={modalStore?.modals && modalStore?.modals.length < 2}
+        aria-label="Close all dialogs"
       >
-        <VscCloseAll size={20} />
+        <VscCloseAll size={20} aria-hidden="true" />
       </CloseAll>
       {modalStore?.modals.map((modal, index) => (
         <Modal

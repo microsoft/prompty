@@ -24,8 +24,28 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "build:server",
+			"type": "npm",
+			"script": "build:server",
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "build:trace",
+			"type": "npm",
+			"script": "build:trace",
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": []
+		},
+		{
 			"label": "compile+bundle",
-			"dependsOn": ["npm: compile", "bundle:core"],
+			"dependsOn": ["npm: compile", "build:trace", "build:server", "bundle:core"],
 			"dependsOrder": "sequence",
 			"group": "build",
 			"problemMatcher": []

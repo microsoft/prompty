@@ -13,6 +13,8 @@ import {
 	DiagnosticSeverity,
 	CompletionItem,
 	CompletionItemKind,
+	CodeAction,
+	CodeActionKind,
 	InsertTextFormat,
 } from 'vscode-languageserver/node';
 
@@ -45,6 +47,9 @@ interface ModelEntry {
 	id: string;
 	displayName?: string;
 	provider: string;
+	connectionName?: string;
+	connectionId?: string;
+	capabilities?: Record<string, string>;
 }
 let availableModels: ModelEntry[] = [];
 
@@ -356,6 +361,7 @@ connection.onInitialize((params: InitializeParams) => {
 				resolveProvider: true,
 				triggerCharacters: ["{", ":"],
 			},
+			codeActionProvider: true,
 		},
 	};
 	return result;
@@ -464,18 +470,49 @@ connection.onCompletion(async (textDocumentPosition) => {
 			}
 		}
 
+		// Inject reference connection completions when cursor is at connection.name value
+		if (availableConnections.length > 0) {
+			const connectionNameContext = getReferenceConnectionNameContext(document, metadata, line);
+			if (connectionNameContext) {
+				const { provider, replaceRange } = connectionNameContext;
+				const connectionItems: CompletionItem[] = availableConnections
+					.filter(c => isProviderCompatible(provider, c.providerType))
+					.map((c, i) => ({
+						label: c.name,
+						kind: CompletionItemKind.Reference,
+						detail: `${c.providerType}${c.isDefault ? ' · default' : ''}`,
+						documentation: `Reference connection '${c.name}' (${c.id})`,
+						textEdit: {
+							range: replaceRange,
+							newText: ` ${c.name}`,
+						},
+						sortText: `0_${String(i).padStart(3, '0')}`,
+					}));
+				if (completion && completion.items) {
+					completion.items.push(...connectionItems);
+				} else {
+					return { isIncomplete: false, items: connectionItems };
+				}
+			}
+		}
+
 		// Inject model ID completions when cursor is at model.id value
 		if (availableModels.length > 0) {
 			const modelIdContext = getModelIdContext(document, metadata, line, character);
 			if (modelIdContext) {
-				const { provider, replaceRange } = modelIdContext;
-				const modelItems: CompletionItem[] = availableModels
-					.filter(m => !provider || m.provider === provider)
+				const { provider, connectionName, replaceRange } = modelIdContext;
+				let matchingModels = connectionName
+					? availableModels.filter(m => m.connectionName === connectionName)
+					: [];
+				if (matchingModels.length === 0) {
+					matchingModels = availableModels.filter(m => isProviderCompatible(provider, m.provider));
+				}
+				const modelItems: CompletionItem[] = matchingModels
 					.map((m, i) => ({
 						label: m.id,
 						kind: CompletionItemKind.Value,
-						detail: m.displayName ?? m.provider,
-						documentation: `Model from ${m.provider} connection`,
+						detail: `${m.connectionName ?? m.provider}${m.displayName ? ` · ${m.displayName}` : ''}`,
+						documentation: modelDocumentation(m),
 						textEdit: {
 							range: replaceRange,
 							newText: ` ${m.id}`,
@@ -665,7 +702,7 @@ function getPromptySnippets(): CompletionItem[] {
 			].join('\n'),
 			detail: 'Full model configuration with connection and options',
 			documentation: 'Inserts a complete model block with provider, connection, and inference options.',
-			sortText: '0_model_full',
+			sortText: '9_model_full',
 		},
 		{
 			label: 'model (shorthand)',
@@ -677,7 +714,19 @@ function getPromptySnippets(): CompletionItem[] {
 			sortText: '0_model_short',
 		},
 		{
-			label: 'inputs',
+			label: 'inputs (shorthand)',
+			kind: CompletionItemKind.Snippet,
+			insertTextFormat: InsertTextFormat.Snippet,
+			insertText: [
+				'inputs:',
+				'  ${1:input_name}: ${2:sample value}',
+			].join('\n'),
+			detail: 'Minimal input sample shorthand',
+			documentation: 'Smallest input form. Scalar values are inferred as sample/example input properties.',
+			sortText: '0_inputs_short',
+		},
+		{
+			label: 'inputs (full)',
 			kind: CompletionItemKind.Snippet,
 			insertTextFormat: InsertTextFormat.Snippet,
 			insertText: [
@@ -689,7 +738,7 @@ function getPromptySnippets(): CompletionItem[] {
 			].join('\n'),
 			detail: 'Input parameters',
 			documentation: 'Defines typed input parameters with defaults for template rendering.',
-			sortText: '0_inputs',
+			sortText: '9_inputs_full',
 		},
 		{
 			label: 'template (shorthand)',
@@ -718,7 +767,7 @@ function getPromptySnippets(): CompletionItem[] {
 			].join('\n'),
 			detail: 'Full template configuration with options',
 			documentation: 'Configures the template rendering engine and body parser with full object syntax.',
-			sortText: '0_template_full',
+			sortText: '9_template_full',
 		},
 		{
 			label: 'tools (function)',
@@ -786,6 +835,115 @@ function yamlValueRange(
 	};
 }
 
+function modelDocumentation(model: ModelEntry): string {
+	const parts = [`Model from ${model.connectionName ?? model.provider}`];
+	if (model.capabilities) {
+		for (const [key, value] of Object.entries(model.capabilities)) {
+			parts.push(`${key}: ${value}`);
+		}
+	}
+	return parts.join('\n\n');
+}
+
+function isProviderCompatible(expectedProvider: string | undefined, actualProvider: string): boolean {
+	return !expectedProvider
+		|| actualProvider === expectedProvider
+		|| ((expectedProvider === 'azure' || expectedProvider === 'foundry') && (actualProvider === 'azure' || actualProvider === 'foundry'));
+}
+
+function getReferenceConnectionNameFromContent(metadata: DocumentMetadata): string | undefined {
+	const model = metadata.frontMatterContent?.model;
+	if (!model || typeof model !== 'object') {return undefined;}
+	const connectionValue = (model as Record<string, unknown>).connection;
+	if (!connectionValue || typeof connectionValue !== 'object') {return undefined;}
+	const connectionRecord = connectionValue as Record<string, unknown>;
+	if (connectionRecord.kind !== 'reference') {return undefined;}
+	const name = connectionRecord.name;
+	return typeof name === 'string' && name ? name : undefined;
+}
+
+function getModelProviderFromContent(metadata: DocumentMetadata): string | undefined {
+	const model = metadata.frontMatterContent?.model;
+	if (!model || typeof model !== 'object') {return undefined;}
+	const provider = (model as Record<string, unknown>).provider;
+	return typeof provider === 'string' ? provider : undefined;
+}
+
+function getReferenceConnectionNameContext(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+): { provider: string | undefined; replaceRange: { start: { line: number; character: number }; end: { line: number; character: number } } } | null {
+	if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {return null;}
+	if (line <= metadata.frontMatterStart || line >= metadata.frontMatterEnd) {return null;}
+
+	const lineText = document.getText({
+		start: { line, character: 0 },
+		end: { line: line + 1, character: 0 },
+	}).trimEnd();
+
+	const nameMatch = lineText.match(/^(\s+)name:/);
+	if (!nameMatch) {return null;}
+	const indent = nameMatch[1];
+
+	if (getEnclosingMappingKey(document, metadata, line, indent) !== 'connection') {
+		return null;
+	}
+
+	if (!hasSiblingKeyValue(document, metadata, line, indent, 'kind', 'reference')) {return null;}
+	const colonPos = lineText.indexOf(':', indent.length);
+	return {
+		provider: getModelProviderFromContent(metadata),
+		replaceRange: yamlValueRange(lineText, line, colonPos),
+	};
+}
+
+function getEnclosingMappingKey(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+	childIndent: string,
+): string | undefined {
+	for (let l = line - 1; l > (metadata.frontMatterStart ?? 0); l--) {
+		const candidate = getLineText(document, l);
+		if (!candidate.trim()) {continue;}
+		const keyMatch = candidate.match(/^(\s*)([\w-]+):/);
+		if (!keyMatch) {continue;}
+		if (keyMatch[1].length < childIndent.length) {
+			return keyMatch[2];
+		}
+	}
+	return undefined;
+}
+
+function hasSiblingKeyValue(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+	indent: string,
+	key: string,
+	value?: string,
+): boolean {
+	const matcher = value === undefined
+		? new RegExp(`^${indent}${key}:`)
+		: new RegExp(`^${indent}${key}:\\s*${value}\\s*$`);
+	const scanRange = [
+		{ from: line - 1, to: metadata.frontMatterStart ?? 0, step: -1 },
+		{ from: line + 1, to: metadata.frontMatterEnd ?? line, step: 1 },
+	];
+	for (const { from, to, step } of scanRange) {
+		for (let l = from; step < 0 ? l > to : l < to; l += step) {
+			const candidate = getLineText(document, l);
+			if (!candidate.trim()) {continue;}
+			if (!candidate.startsWith(indent)) {break;}
+			if (matcher.test(candidate)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 /**
  * Detects if the cursor is on a `model.id` value line in frontmatter.
  * Returns the current provider (if found) and a text edit range for the value.
@@ -795,7 +953,7 @@ function getModelIdContext(
 	metadata: DocumentMetadata,
 	line: number,
 	_character: number,
-): { provider: string | undefined; replaceRange: { start: { line: number; character: number }; end: { line: number; character: number } } } | null {
+): { provider: string | undefined; connectionName: string | undefined; replaceRange: { start: { line: number; character: number }; end: { line: number; character: number } } } | null {
 	const lineText = document.getText({
 		start: { line, character: 0 },
 		end: { line: line + 1, character: 0 },
@@ -814,7 +972,7 @@ function getModelIdContext(
 	const replaceRange = yamlValueRange(lineText, line, colonPos);
 
 	if (shorthandMatch) {
-		return { provider: undefined, replaceRange };
+		return { provider: undefined, connectionName: undefined, replaceRange };
 	}
 
 	// Walk upward/downward to find provider: at the same indent level
@@ -840,7 +998,11 @@ function getModelIdContext(
 		}
 	}
 
-	return { provider, replaceRange };
+	return {
+		provider,
+		connectionName: getReferenceConnectionNameFromContent(metadata),
+		replaceRange,
+	};
 }
 
 /**
@@ -872,6 +1034,257 @@ function getProviderContext(
 connection.onCompletionResolve((item) => {
 	return item;
 });
+
+connection.onCodeAction((params): CodeAction[] => {
+	try {
+		const document = documents.get(params.textDocument.uri);
+		if (!document) {
+			return [];
+		}
+		const metadata = documentMetadata.get(document);
+		if (metadata.frontMatterStart === undefined || metadata.frontMatterEnd === undefined) {
+			return [];
+		}
+		if (params.range.start.line <= metadata.frontMatterStart || params.range.start.line >= metadata.frontMatterEnd) {
+			return [];
+		}
+		return getFrontMatterCodeActions(document, metadata, params.range.start.line);
+	} catch (error) {
+		logger.error(`Error during code action: ${error}`);
+		return [];
+	}
+});
+
+function getFrontMatterCodeActions(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+): CodeAction[] {
+	return [
+		...getReferenceConnectionCodeActions(document, metadata, line),
+		...getTemplateCodeActions(document, metadata, line),
+		...getModelCodeActions(document, line),
+	];
+}
+
+function getLineText(document: TextDocument, line: number): string {
+	return document.getText({
+		start: { line, character: 0 },
+		end: { line: line + 1, character: 0 },
+	}).replace(/\r?\n$/, '');
+}
+
+function documentEol(document: TextDocument): string {
+	const text = document.getText({
+		start: { line: 0, character: 0 },
+		end: { line: Math.min(document.lineCount, 50), character: 0 },
+	});
+	return text.includes('\r\n') ? '\r\n' : '\n';
+}
+
+function joinLines(document: TextDocument, lines: string[]): string {
+	return lines.join(documentEol(document));
+}
+
+function replaceLineAction(document: TextDocument, line: number, title: string, newText: string): CodeAction {
+	const current = getLineText(document, line);
+	return {
+		title,
+		kind: CodeActionKind.QuickFix,
+		edit: {
+			changes: {
+				[document.uri]: [{
+					range: {
+						start: { line, character: 0 },
+						end: { line, character: current.length },
+					},
+					newText,
+				}],
+			},
+		},
+	};
+}
+
+function insertAfterLineAction(document: TextDocument, line: number, title: string, newText: string): CodeAction {
+	const current = getLineText(document, line);
+	return {
+		title,
+		kind: CodeActionKind.QuickFix,
+		edit: {
+			changes: {
+				[document.uri]: [{
+					range: {
+						start: { line, character: current.length },
+						end: { line, character: current.length },
+					},
+					newText,
+				}],
+			},
+		},
+	};
+}
+
+function getReferenceConnectionCodeActions(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+): CodeAction[] {
+	const kindLine = findReferenceConnectionKindLine(document, metadata, line);
+	if (kindLine === undefined) {return [];}
+	const lineText = getLineText(document, kindLine);
+	const kindMatch = lineText.match(/^(\s+)kind:\s*reference\s*$/);
+	if (!kindMatch) {return [];}
+	const indent = kindMatch[1];
+
+	if (hasSiblingKey(document, metadata, kindLine, indent, 'name')) {
+		return [];
+	}
+
+	const provider = getModelProviderFromContent(metadata);
+	const matchingConnections = availableConnections.filter(c => isProviderCompatible(provider, c.providerType));
+	const names = matchingConnections.length > 0
+		? matchingConnections.map(c => c.name)
+		: [''];
+
+	return names.map(name => insertAfterLineAction(
+		document,
+		kindLine,
+		name === '' ? 'Add missing connection name' : `Use reference connection '${name}'`,
+		`${documentEol(document)}${indent}name: ${name}`,
+	));
+}
+
+function findReferenceConnectionKindLine(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+): number | undefined {
+	const start = metadata.frontMatterStart ?? 0;
+	const end = metadata.frontMatterEnd ?? line;
+	const currentLine = getLineText(document, line);
+	if (/^\s+kind:\s*reference\s*$/.test(currentLine)) {
+		return line;
+	}
+
+	const connectionMatch = currentLine.match(/^(\s*)connection:\s*$/);
+	if (connectionMatch) {
+		const childIndent = `${connectionMatch[1]}  `;
+		for (let l = line + 1; l < end; l++) {
+			const candidate = getLineText(document, l);
+			if (!candidate.trim()) {continue;}
+			if (!candidate.startsWith(childIndent)) {break;}
+			if (candidate.match(new RegExp(`^${childIndent}kind:\\s*reference\\s*$`))) {
+				return l;
+			}
+		}
+	}
+
+	const nameMatch = currentLine.match(/^(\s+)name:/);
+	if (nameMatch) {
+		const indent = nameMatch[1];
+		if (getEnclosingMappingKey(document, metadata, line, indent) !== 'connection') {
+			return undefined;
+		}
+		const scanRange = [
+			{ from: line - 1, to: start, step: -1 },
+			{ from: line + 1, to: end, step: 1 },
+		];
+		for (const { from, to, step } of scanRange) {
+			for (let l = from; step < 0 ? l > to : l < to; l += step) {
+				const candidate = getLineText(document, l);
+				if (!candidate.trim()) {continue;}
+				if (!candidate.startsWith(indent)) {break;}
+				if (candidate.match(new RegExp(`^${indent}kind:\\s*reference\\s*$`))) {
+					return l;
+				}
+			}
+		}
+	}
+
+	return undefined;
+}
+
+function hasSiblingKey(
+	document: TextDocument,
+	metadata: DocumentMetadata,
+	line: number,
+	indent: string,
+	key: string,
+): boolean {
+	const scanRange = [
+		{ from: line - 1, to: metadata.frontMatterStart ?? 0, step: -1 },
+		{ from: line + 1, to: metadata.frontMatterEnd ?? line, step: 1 },
+	];
+	for (const { from, to, step } of scanRange) {
+		for (let l = from; step < 0 ? l > to : l < to; l += step) {
+			const candidate = getLineText(document, l);
+			if (!candidate.trim()) {continue;}
+			if (!candidate.startsWith(indent)) {break;}
+			if (candidate.match(new RegExp(`^${indent}${key}:`))) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function getTemplateCodeActions(document: TextDocument, metadata: DocumentMetadata, line: number): CodeAction[] {
+	const lineText = getLineText(document, line);
+	const rootMatch = lineText.match(/^template:\s*(\S+)\s*$/);
+	if (rootMatch) {
+		const format = rootMatch[1];
+		return [replaceLineAction(document, line, 'Convert template to shorthand block', joinLines(document, [
+			'template:',
+			`  format: ${format}`,
+			'  parser: prompty',
+		]))];
+	}
+
+	if (lineText.match(/^template:\s*$/)) {
+		const eol = documentEol(document);
+		return [insertAfterLineAction(document, line, 'Add template shorthand', [
+			`${eol}  format: jinja2`,
+			'  parser: prompty',
+		].join(eol))];
+	}
+
+	const formatMatch = lineText.match(/^(\s+)format:\s*(\S+)\s*$/);
+	if (!formatMatch) {return [];}
+	const indent = formatMatch[1];
+	const format = formatMatch[2];
+	if (getEnclosingMappingKey(document, metadata, line, indent) !== 'template') {
+		return [];
+	}
+	if (hasSiblingKey(document, metadata, line, indent, 'parser')) {
+		return [];
+	}
+	return [replaceLineAction(document, line, 'Add template parser shorthand', joinLines(document, [
+		`${indent}format: ${format}`,
+		`${indent}parser: prompty`,
+	]))];
+}
+
+function getModelCodeActions(document: TextDocument, line: number): CodeAction[] {
+	const lineText = getLineText(document, line);
+	const shorthandMatch = lineText.match(/^model:\s*(\S+)\s*$/);
+	if (!shorthandMatch) {return [];}
+	const modelId = shorthandMatch[1];
+	const defaultConnection = availableConnections.find(c => c.isDefault) ?? availableConnections[0];
+	if (!defaultConnection) {
+		return [replaceLineAction(document, line, 'Add explicit model id', joinLines(document, [
+			'model:',
+			`  id: ${modelId}`,
+		]))];
+	}
+	return [replaceLineAction(document, line, 'Add reference connection to model', joinLines(document, [
+		'model:',
+		`  id: ${modelId}`,
+		`  provider: ${defaultConnection.providerType}`,
+		'  connection:',
+		'    kind: reference',
+		`    name: ${defaultConnection.name}`,
+	]))];
+}
 
 connection.onHover(async (textDocumentPosition) => {
 	try {

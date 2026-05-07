@@ -37,8 +37,8 @@ const AzureModelIcon = ({ size }: Props) => {
             gradientUnits="userSpaceOnUse"
             gradientTransform="rotate(45 -27.56025626 63.06856808) scale(50.182 68.298)"
           >
-            <stop stopColor="#83B9F9" />
-            <stop offset="1" stopColor="#0078D4" />
+            <stop stopColor="var(--vscode-charts-blue)" />
+            <stop offset="1" stopColor="var(--vscode-textLink-foreground)" />
           </radialGradient>
         </defs>
       </svg>

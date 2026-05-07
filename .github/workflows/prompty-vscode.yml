@@ -32,6 +32,12 @@ jobs:
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "Using version: $VERSION"
 
+      - name: Set VSIX timestamp
+        run: |
+          VSIX_TIMESTAMP=$(date -u +"%Y%m%d.%H%M%S")
+          echo "VSIX_TIMESTAMP=$VSIX_TIMESTAMP" >> "$GITHUB_ENV"
+          echo "VSIX filename timestamp: $VSIX_TIMESTAMP"
+
       - name: Install dependencies
         working-directory: ./vscode/prompty
         run: npm ci
@@ -50,9 +56,9 @@ jobs:
 
       - name: Build VSIX
         working-directory: ./vscode/prompty
-        run: npm run package-pre -- $VERSION
+        run: npm run package-pre -- "$VERSION" --no-update-package-json --out "prompty-${VSIX_TIMESTAMP}.vsix"
 
       - uses: actions/upload-artifact@v7
         with:
-          name: prompty-vsix
-          path: ./vscode/prompty/*.vsix
+          name: prompty-vsix-${{ env.VSIX_TIMESTAMP }}
+          path: ./vscode/prompty/prompty-${{ env.VSIX_TIMESTAMP }}.vsix

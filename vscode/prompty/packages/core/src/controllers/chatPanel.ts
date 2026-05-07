@@ -15,6 +15,11 @@ import { ConnectionProviderRegistry } from '../connections/registry';
 
 /** Render markdown to HTML for the chat webview. Detects image URLs and embeds them. */
 function renderMarkdown(content: string): string {
+	const formattedJson = tryFormatJsonString(content);
+	if (formattedJson) {
+		return renderJsonBlock(formattedJson);
+	}
+
 	// If the content looks like an image URL (from apiType: image), embed it
 	const imageUrlPattern = /^https?:\/\/\S+\.(png|jpg|jpeg|gif|webp|svg)(\?\S*)?$/i;
 	const lines = content.split('\n');
@@ -29,9 +34,80 @@ function renderMarkdown(content: string): string {
 	return marked.parse(transformed, { async: false }) as string;
 }
 
+function escapeHtml(content: string): string {
+	return content
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;');
+}
+
 /** Check if a value is an async iterable (i.e. a streaming response). */
 function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
 	return value != null && typeof value === 'object' && Symbol.asyncIterator in value;
+}
+
+function hasStructuredOutputs(agent: PromptAgent): boolean {
+	if (agent.outputs?.length) {return true;}
+	const record = agent as unknown as Record<string, unknown>;
+	const outputSchema = record.outputSchema;
+	if (!outputSchema || typeof outputSchema !== 'object') {return false;}
+	return Object.keys(outputSchema).length > 0;
+}
+
+function tryFormatJsonString(value: string): string | undefined {
+	const trimmed = value.trim();
+	if (!trimmed || (!trimmed.startsWith('{') && !trimmed.startsWith('['))) {
+		return undefined;
+	}
+	try {
+		return JSON.stringify(JSON.parse(trimmed), null, 2);
+	} catch {
+		return undefined;
+	}
+}
+
+function colorizeJson(json: string): string {
+	return escapeHtml(json).replace(
+		/("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"\s*:)|("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false)\b|\bnull\b/g,
+		(match, key, stringValue, numberValue, booleanValue) => {
+			if (key) {return `<span class="json-key">${key}</span>`;}
+			if (stringValue) {return `<span class="json-string">${stringValue}</span>`;}
+			if (numberValue) {return `<span class="json-number">${numberValue}</span>`;}
+			if (booleanValue) {return `<span class="json-boolean">${booleanValue}</span>`;}
+			return `<span class="json-null">${match}</span>`;
+		}
+	);
+}
+
+function renderJsonBlock(json: string): string {
+	return `<pre class="json-block"><code class="language-json">${colorizeJson(json)}</code></pre>`;
+}
+
+function formatAssistantResult(result: unknown, structured: boolean): { text: string; html: string } {
+	const text = typeof result === 'string'
+		? structured ? tryFormatJsonString(result) ?? result : result
+		: JSON.stringify(result, null, 2);
+	const html = renderMarkdown(text);
+	return { text, html };
+}
+
+function toChatMessages(value: unknown): ChatMessage[] {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+	const messages: ChatMessage[] = [];
+	for (const item of value) {
+		if (!item || typeof item !== 'object') {continue;}
+		const record = item as Record<string, unknown>;
+		const role = record.role;
+		if (role !== 'system' && role !== 'user' && role !== 'assistant' && role !== 'tool') {continue;}
+		const content = record.content;
+		messages.push({
+			role,
+			content: typeof content === 'string' ? content : JSON.stringify(content ?? '', null, 2),
+		});
+	}
+	return messages;
 }
 
 /**
@@ -61,8 +137,10 @@ export class ChatPanel {
 	private disposed = false;
 	private promptyTracer: PromptyTracer;
 	private hasTools: boolean;
+	private structuredOutputs: boolean;
 	private sessionSpan: ReturnType<typeof Tracer.start> | undefined;
 	private turnCount = 0;
+	private sentInitialConversation = false;
 
 	public static async open(
 		context: ExtensionContext,
@@ -74,11 +152,9 @@ export class ChatPanel {
 		connectionRegistry?: ConnectionProviderRegistry,
 		bridgeConnections?: () => Promise<void>,
 	): Promise<ChatPanel> {
-		// Reuse existing panel for same file
 		const existing = ChatPanel.panels.get(filePath);
 		if (existing && !existing.disposed) {
-			existing.panel.reveal();
-			return existing;
+			existing.dispose();
 		}
 
 		const fileName = path.basename(filePath, '.prompty');
@@ -108,6 +184,8 @@ export class ChatPanel {
 		this.threadInputName = threadInputName;
 		this.sampleInputs = { ...sampleInputs };
 		this.hasTools = (agent.tools?.length ?? 0) > 0;
+		this.structuredOutputs = hasStructuredOutputs(agent);
+		this.conversation = toChatMessages(this.sampleInputs[this.threadInputName]);
 
 		// Enable streaming for the chat panel — better UX for interactive use.
 		// Only applies to non-agent mode (turn() consumes streams internally).
@@ -162,19 +240,24 @@ export class ChatPanel {
 		});
 
 		this.panel.onDidDispose(() => {
-			this.disposed = true;
-			// Close session span if still open
-			if (this.sessionSpan) {
-				this.sessionSpan('result', {
-					turns: this.turnCount,
-					conversation: this.conversation.map(m => ({ role: m.role, content: m.content })),
-				});
-				this.sessionSpan.end();
-				this.sessionSpan = undefined;
-			}
-			Tracer.remove('prompty-chat');
-			ChatPanel.panels.delete(this.filePath);
+			this.dispose();
 		});
+	}
+
+	private dispose(): void {
+		if (this.disposed) {return;}
+		this.disposed = true;
+		if (this.sessionSpan) {
+			this.sessionSpan('result', {
+				turns: this.turnCount,
+				conversation: this.conversation.map(m => ({ role: m.role, content: m.content })),
+			});
+			this.sessionSpan.end();
+			this.sessionSpan = undefined;
+		}
+		Tracer.remove('prompty-chat');
+		ChatPanel.panels.delete(this.filePath);
+		this.panel.dispose();
 	}
 
 	/**
@@ -190,6 +273,17 @@ export class ChatPanel {
 				content: systemContent.trim().slice(0, 200) + (systemContent.length > 200 ? '…' : ''),
 				collapsed: true,
 			});
+		}
+		if (!this.sentInitialConversation) {
+			for (const message of this.conversation) {
+				this.postMessage({
+					command: 'addMessage',
+					role: message.role,
+					content: message.role === 'assistant' ? renderMarkdown(message.content) : message.content,
+					isHtml: message.role === 'assistant',
+				});
+			}
+			this.sentInitialConversation = true;
 		}
 		this.postMessage({ command: 'setReady' });
 	}
@@ -236,14 +330,13 @@ export class ChatPanel {
 				// Streaming path: debounced chunk delivery
 				await this.handleStreamingResponse(result);
 			} else {
-				const assistantContent = typeof result === 'string'
-					? result
-					: JSON.stringify(result, null, 2);
+				const formatted = formatAssistantResult(result, this.structuredOutputs);
+				const assistantContent = formatted.text;
 				this.conversation.push({ role: 'assistant', content: assistantContent });
 				this.postMessage({
 					command: 'addMessage',
 					role: 'assistant',
-					content: renderMarkdown(assistantContent),
+					content: formatted.html,
 					isHtml: true,
 				});
 			}
@@ -273,9 +366,12 @@ export class ChatPanel {
 		const flush = () => {
 			flushTimer = undefined;
 			needsFlush = false;
+			const html = this.structuredOutputs
+				? formatAssistantResult(accumulated, true).html
+				: renderMarkdown(accumulated);
 			this.postMessage({
 				command: 'streamChunk',
-				html: renderMarkdown(accumulated),
+				html,
 			});
 		};
 
@@ -296,15 +392,21 @@ export class ChatPanel {
 			clearTimeout(flushTimer);
 		}
 		if (needsFlush || accumulated) {
+			const finalMarkdown = this.structuredOutputs
+				? formatAssistantResult(accumulated, true).html
+				: accumulated;
 			this.postMessage({
 				command: 'streamChunk',
-				html: renderMarkdown(accumulated),
+				html: this.structuredOutputs ? finalMarkdown : renderMarkdown(finalMarkdown),
 			});
 		}
 
 		// Finalize the stream
 		this.postMessage({ command: 'streamEnd' });
-		this.conversation.push({ role: 'assistant', content: accumulated });
+		this.conversation.push({
+			role: 'assistant',
+			content: this.structuredOutputs ? formatAssistantResult(accumulated, true).text : accumulated,
+		});
 	}
 
 	/**
@@ -403,24 +505,28 @@ export class ChatPanel {
 		:root {
 			--bg: var(--vscode-editor-background);
 			--fg: var(--vscode-editor-foreground);
-			--input-bg: #3c3c3c;
+			--input-bg: var(--vscode-input-background);
 			--input-fg: var(--vscode-input-foreground);
-			--input-border: var(--vscode-input-border, #3c3c3c);
-			--button-bg: #0e639c;
-			--button-fg: #ffffff;
-			--button-hover: #1177bb;
+			--input-border: var(--vscode-input-border, var(--vscode-panel-border));
+			--button-bg: var(--vscode-button-background);
+			--button-fg: var(--vscode-button-foreground);
+			--button-hover: var(--vscode-button-hoverBackground);
 			--badge-bg: var(--vscode-badge-background);
 			--badge-fg: var(--vscode-badge-foreground);
-			--border: #2d2d2d;
-			--card-bg: #252526;
-			--error-fg: var(--vscode-errorForeground, #f44);
+			--border: var(--vscode-panel-border);
+			--card-bg: var(--vscode-editorWidget-background);
+			--error-fg: var(--vscode-errorForeground);
 			--muted: var(--vscode-descriptionForeground);
-			--blue: #569cd6;
-			--green: #4ec9b0;
-			--orange: #ce9178;
-			--purple: #c586c0;
-			--yellow: #dcdcaa;
-			--user-bg: #264f78;
+			--blue: var(--vscode-charts-blue);
+			--green: var(--vscode-charts-green);
+			--orange: var(--vscode-charts-orange);
+			--purple: var(--vscode-charts-purple);
+			--yellow: var(--vscode-charts-yellow);
+			--user-bg: var(--vscode-inputOption-activeBackground);
+			--user-fg: var(--vscode-inputOption-activeForeground);
+			--subtle-blue-bg: color-mix(in srgb, var(--vscode-charts-blue) 14%, transparent);
+			--subtle-green-bg: color-mix(in srgb, var(--vscode-charts-green) 14%, transparent);
+			--inline-code-bg: var(--vscode-textCodeBlock-background);
 			--code-font: 'Cascadia Code', 'Fira Code', var(--vscode-editor-font-family), monospace;
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0; }
@@ -434,7 +540,7 @@ export class ChatPanel {
 		}
 		.header-icon {
 			width: 26px; height: 26px; border-radius: 4px;
-			background: rgba(86,156,214,0.12); color: var(--blue);
+			background: var(--subtle-blue-bg); color: var(--blue);
 			display: flex; align-items: center; justify-content: center;
 			font-weight: 700; font-size: 13px; font-family: var(--code-font);
 			flex-shrink: 0;
@@ -468,7 +574,7 @@ export class ChatPanel {
 
 		.msg-content {
 			padding: 8px 12px; border-radius: 6px;
-			word-break: break-word; line-height: 1.5;
+			word-break: break-word; overflow-wrap: anywhere; line-height: 1.5;
 		}
 		.msg.system .msg-content {
 			background: transparent; color: var(--muted); font-style: italic;
@@ -476,7 +582,7 @@ export class ChatPanel {
 			white-space: pre-wrap;
 		}
 		.msg.user .msg-content {
-			background: var(--user-bg); color: #fff;
+			background: var(--user-bg); color: var(--user-fg);
 			align-self: flex-end; border-radius: 12px 12px 2px 12px; max-width: 80%;
 			white-space: pre-wrap;
 		}
@@ -493,16 +599,22 @@ export class ChatPanel {
 		.msg-content p:last-child { margin-bottom: 0; }
 		.msg-content code {
 			font-family: var(--code-font); font-size: 0.9em;
-			background: rgba(255,255,255,0.06); padding: 1px 4px;
+			background: var(--inline-code-bg); padding: 1px 4px;
 			border-radius: 3px;
 		}
 		.msg-content pre {
 			margin: 0.5em 0; padding: 8px 10px; border-radius: 4px;
-			background: var(--bg); overflow-x: auto; line-height: 1.4;
+			background: var(--bg); overflow-x: hidden; line-height: 1.4;
+			white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere;
 		}
 		.msg-content pre code {
-			background: none; padding: 0; font-size: 12px;
+			background: none; padding: 0; font-size: 12px; white-space: inherit;
 		}
+		.json-key { color: var(--vscode-textLink-foreground); }
+		.json-string { color: var(--vscode-terminal-ansiGreen); }
+		.json-number { color: var(--vscode-terminal-ansiYellow); }
+		.json-boolean { color: var(--vscode-terminal-ansiMagenta); }
+		.json-null { color: var(--vscode-descriptionForeground); }
 		.msg-content ul, .msg-content ol {
 			margin: 0.4em 0; padding-left: 1.5em;
 		}
@@ -526,7 +638,7 @@ export class ChatPanel {
 		.msg-content th, .msg-content td {
 			border: 1px solid var(--border); padding: 4px 8px;
 		}
-		.msg-content th { background: rgba(255,255,255,0.04); font-weight: 600; }
+		.msg-content th { background: var(--vscode-editorWidget-background); font-weight: 600; }
 		.msg-content hr { border: none; border-top: 1px solid var(--border); margin: 0.6em 0; }
 		.msg-content img {
 			max-width: 100%; border-radius: 6px; margin: 0.4em 0;
@@ -549,7 +661,7 @@ export class ChatPanel {
 		}
 		.tool-call-header .tool-badge {
 			width: 18px; height: 18px; border-radius: 3px;
-			background: rgba(78,201,176,0.12); color: var(--green);
+			background: var(--subtle-green-bg); color: var(--green);
 			display: inline-flex; align-items: center; justify-content: center;
 			font-size: 11px; font-family: var(--code-font); flex-shrink: 0;
 		}
@@ -614,10 +726,12 @@ export class ChatPanel {
 		.collapsed .msg-toggle { cursor: pointer; }
 		.collapsed .msg-toggle::after { content: ' ▸ click to expand'; font-weight: normal; font-style: italic; }
 		.msg-toggle {
+			background: none; border: 0; padding: 0;
 			font-size: 10px; font-weight: 600; text-transform: uppercase;
 			letter-spacing: 0.05em; color: var(--purple); margin-bottom: 3px; cursor: pointer;
 		}
 		.msg-toggle::after { content: ' ▾'; font-weight: normal; }
+		.msg-toggle:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 2px; }
 
 		/* Chat ended state */
 		#input-area.ended { display: none; }
@@ -641,8 +755,8 @@ export class ChatPanel {
 	</div>
 	<div id="input-area">
 		<textarea id="user-input" placeholder="Type a message…" rows="4"></textarea>
-		<button id="send-btn" title="Send (Enter)">▶</button>
-		<button id="end-btn" title="End chat and save trace">■</button>
+		<button id="send-btn" title="Send (Enter)" aria-label="Send message">▶</button>
+		<button id="end-btn" title="End chat and save trace" aria-label="End chat and save trace">■</button>
 	</div>
 	<div id="ended-bar">Chat ended — trace saved.</div>
 
@@ -693,11 +807,14 @@ export class ChatPanel {
 			if (opts.collapsed) div.className += ' collapsed';
 
 			if (opts.collapsed) {
-				const toggle = document.createElement('div');
+				const toggle = document.createElement('button');
 				toggle.className = 'msg-toggle';
 				toggle.textContent = role;
+				toggle.type = 'button';
+				toggle.setAttribute('aria-expanded', 'false');
 				toggle.addEventListener('click', () => {
 					div.classList.toggle('collapsed');
+					toggle.setAttribute('aria-expanded', div.classList.contains('collapsed') ? 'false' : 'true');
 				});
 				div.appendChild(toggle);
 			} else {
@@ -714,6 +831,7 @@ export class ChatPanel {
 			} else {
 				contentEl.textContent = content;
 			}
+			colorizeJsonBlocks(contentEl);
 			div.appendChild(contentEl);
 
 			messagesEl.insertBefore(div, loadingEl);
@@ -743,6 +861,7 @@ export class ChatPanel {
 		function streamChunk(html) {
 			if (!streamContentEl) return;
 			streamContentEl.innerHTML = html;
+			colorizeJsonBlocks(streamContentEl);
 			// Debounce scroll with rAF to avoid layout thrashing
 			if (!scrollRafId) {
 				scrollRafId = requestAnimationFrame(() => {
@@ -779,7 +898,7 @@ export class ChatPanel {
 				+ '<div class="tool-call-args">' + escapeHtml(args) + '</div>'
 				+ '<div class="tool-call-input">'
 				+ '<input type="text" placeholder="Mock response…" />'
-				+ '<button title="Submit (Enter)">↵</button>'
+				+ '<button title="Submit (Enter)" aria-label="Submit tool response">↵</button>'
 				+ '</div>';
 
 			const input = div.querySelector('input');
@@ -839,6 +958,42 @@ export class ChatPanel {
 
 		function escapeHtml(str) {
 			return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		}
+
+		function tryPrettyJson(text) {
+			const trimmed = text.trim();
+			if (!trimmed || (!trimmed.startsWith('{') && !trimmed.startsWith('['))) return null;
+			try {
+				return JSON.stringify(JSON.parse(trimmed), null, 2);
+			} catch {
+				return null;
+			}
+		}
+
+		function colorizeJsonText(json) {
+			return escapeHtml(json).replace(
+				/("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"\\s*:)|("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")|(-?\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?)|\\b(true|false)\\b|\\bnull\\b/g,
+				(match, key, stringValue, numberValue, booleanValue) => {
+					if (key) return '<span class="json-key">' + key + '</span>';
+					if (stringValue) return '<span class="json-string">' + stringValue + '</span>';
+					if (numberValue) return '<span class="json-number">' + numberValue + '</span>';
+					if (booleanValue) return '<span class="json-boolean">' + booleanValue + '</span>';
+					return '<span class="json-null">' + match + '</span>';
+				}
+			);
+		}
+
+		function colorizeJsonBlocks(root) {
+			const blocks = [];
+			if (root.matches && root.matches('pre code, pre')) blocks.push(root);
+			blocks.push(...root.querySelectorAll('pre code, pre'));
+			for (const block of blocks) {
+				if (block.classList.contains('json-tokenized')) continue;
+				const pretty = tryPrettyJson(block.textContent || '');
+				if (!pretty) continue;
+				block.classList.add('json-tokenized', 'language-json');
+				block.innerHTML = colorizeJsonText(pretty);
+			}
 		}
 
 		window.addEventListener('message', (e) => {

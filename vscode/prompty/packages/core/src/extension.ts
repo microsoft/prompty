@@ -230,29 +230,41 @@ async function sendModelsToServer(
 	if (!client) {return;}
 
 	const profiles = await store.getProfiles();
-	const allModels: { id: string; displayName?: string; provider: string }[] = [];
+	const allModels: {
+		id: string;
+		displayName?: string;
+		provider: string;
+		connectionName: string;
+		connectionId: string;
+		capabilities?: Record<string, string>;
+	}[] = [];
 
-	// Use the default connection per provider, or the first one found
-	const seenProviders = new Set<string>();
 	for (const profile of profiles) {
 		const providerType = profile.providerType;
-		if (seenProviders.has(providerType)) {continue;}
-
 		const provider = registry.getProviderForType(providerType);
-		if (!provider?.listModels) {continue;}
 
 		try {
 			const secret = await store.getSecret(profile.id);
-			const models = await provider.listModels(profile, secret);
+			const models = await provider?.listModels?.(profile, secret);
 			if (models) {
 				for (const m of models) {
 					allModels.push({
 						id: m.id,
 						displayName: m.modelName ?? m.ownedBy,
 						provider: providerType,
+						connectionName: profile.name,
+						connectionId: profile.id,
+						capabilities: m.capabilities,
 					});
 				}
-				seenProviders.add(providerType);
+			} else if ('model' in profile && typeof profile.model === 'string' && profile.model) {
+				allModels.push({
+					id: profile.model,
+					displayName: `${profile.name} default`,
+					provider: providerType,
+					connectionName: profile.name,
+					connectionId: profile.id,
+				});
 			}
 		} catch {
 			// Skip provider on error

@@ -37,14 +37,21 @@ const Title = styled.div`
   letter-spacing: 0.05em;
 `;
 
-const Expand = styled.div`
+const Expand = styled.button`
   cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
   color: var(--vscode-descriptionForeground);
+  background: none;
+  border: 0;
+  padding: 0;
   &:hover {
     color: var(--vscode-textLink-foreground);
+  }
+  &:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: 2px;
   }
 `;
 
@@ -57,7 +64,7 @@ interface Props {
 const Group = ({ title, item, fill }: Props) => {
   const pushModal = useModalStore((state) => state.pushModal);
 
-  const handleExpand: MouseEventHandler<HTMLDivElement> = () => {
+  const handleExpand: MouseEventHandler<HTMLButtonElement> = () => {
     pushModal({
       title: title.toLowerCase(),
       children: (
@@ -77,8 +84,8 @@ const Group = ({ title, item, fill }: Props) => {
       <Header>
         <Title>{title}</Title>
         <Grow />
-        <Expand onClick={handleExpand}>
-          <BiExpandAlt />
+        <Expand onClick={handleExpand} aria-label={`Expand ${title.toLowerCase()}`}>
+          <BiExpandAlt aria-hidden="true" />
         </Expand>
       </Header>
       <Item>

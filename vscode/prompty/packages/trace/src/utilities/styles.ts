@@ -4,7 +4,7 @@ import { createGlobalStyle } from "styled-components";
 export const GlobalStyle = createGlobalStyle`
   :root {
     --code-font: 'Cascadia Code', 'Fira Code', monospace;
-    --trace-border: var(--vscode-tree-indentGuidesStroke, rgba(255,255,255,0.35));
+    --trace-border: var(--vscode-tree-indentGuidesStroke, var(--vscode-panel-border));
   }
 
   ::-webkit-scrollbar {

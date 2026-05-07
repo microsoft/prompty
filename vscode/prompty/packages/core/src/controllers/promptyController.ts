@@ -7,9 +7,80 @@ import '@prompty/foundry';
 import '@prompty/anthropic';
 import * as path from 'path';
 import * as fs from 'fs';
+import { load as loadYaml } from 'js-yaml';
 import { ConnectionStore } from '../connections/store';
 import { ConnectionProviderRegistry } from '../connections/registry';
 import { ChatPanel } from './chatPanel';
+
+function hasStructuredOutputs(agent: PromptAgent | undefined): boolean {
+	if (!agent) {return false;}
+	if (agent.outputs?.length) {return true;}
+	const record = agent as unknown as Record<string, unknown>;
+	const outputSchema = record.outputSchema;
+	if (!outputSchema || typeof outputSchema !== 'object') {return false;}
+	return Object.keys(outputSchema).length > 0;
+}
+
+function tryFormatJsonString(value: string): string | undefined {
+	const trimmed = value.trim();
+	if (!trimmed || (!trimmed.startsWith('{') && !trimmed.startsWith('['))) {
+		return undefined;
+	}
+	try {
+		return JSON.stringify(JSON.parse(trimmed), null, 2);
+	} catch {
+		return undefined;
+	}
+}
+
+function formatRunResult(result: unknown, structured: boolean): string {
+	if (typeof result === 'string') {
+		return structured ? tryFormatJsonString(result) ?? result : result;
+	}
+	if (typeof result === 'object' && result !== null) {
+		return JSON.stringify(result, null, 2);
+	}
+	return String(result);
+}
+
+function getInputSeedValue(prop: Record<string, unknown>): unknown {
+	if (prop.example !== undefined) {return prop.example;}
+	if (prop.default !== undefined) {return prop.default;}
+	return prop.sample;
+}
+
+function readFrontmatter(filePath: string): Record<string, unknown> | undefined {
+	const raw = fs.readFileSync(filePath, 'utf-8');
+	const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+	if (!match) {return undefined;}
+	const parsed = loadYaml(match[1]);
+	return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+		? parsed as Record<string, unknown>
+		: undefined;
+}
+
+function extractRawInputSeed(frontmatter: Record<string, unknown> | undefined, inputName: string): unknown {
+	const inputs = frontmatter?.inputs;
+	if (!inputs) {return undefined;}
+
+	if (Array.isArray(inputs)) {
+		const input = inputs.find(item => {
+			return item && typeof item === 'object' && (item as Record<string, unknown>).name === inputName;
+		});
+		if (!input || typeof input !== 'object') {return undefined;}
+		return getInputSeedValue(input as Record<string, unknown>);
+	}
+
+	if (typeof inputs === 'object') {
+		const input = (inputs as Record<string, unknown>)[inputName];
+		if (input && typeof input === 'object' && !Array.isArray(input)) {
+			return getInputSeedValue(input as Record<string, unknown>);
+		}
+		return input;
+	}
+
+	return undefined;
+}
 
 export class PromptyController implements Disposable {
 	private outputChannel = window.createOutputChannel('Prompty · Run');
@@ -46,6 +117,7 @@ export class PromptyController implements Disposable {
 			// Load agent first so we can apply sidebar connections
 			agent = load(filePath);
 			await this.applyDefaultConnection(agent);
+			const frontmatter = readFrontmatter(filePath);
 
 			// Build sample inputs from example values on inputSchema properties.
 			// This is extension-only behavior — the core runtime does NOT treat
@@ -54,10 +126,10 @@ export class PromptyController implements Disposable {
 			if (agent.inputs) {
 				for (const prop of agent.inputs) {
 					if (!prop.name) {continue;}
-					if (prop.example !== undefined) {
-						sampleInputs[prop.name] = prop.example;
-					} else if (prop.default !== undefined) {
-						sampleInputs[prop.name] = prop.default;
+					const seedValue = getInputSeedValue(prop as unknown as Record<string, unknown>);
+					const rawSeedValue = extractRawInputSeed(frontmatter, prop.name);
+					if (seedValue !== undefined || rawSeedValue !== undefined) {
+						sampleInputs[prop.name] = seedValue ?? rawSeedValue;
 					}
 				}
 			}
@@ -127,10 +199,10 @@ export class PromptyController implements Disposable {
 				} else {
 					this.outputChannel.appendLine(JSON.stringify(result, null, 2));
 				}
-			} else if (typeof result === 'object' && result !== null && !Array.isArray(result) && agent.outputs?.length) {
+			} else if (hasStructuredOutputs(agent)) {
 				// Structured output (outputSchema defined): pretty-print JSON
 				this.outputChannel.appendLine('📋 Structured output:');
-				this.outputChannel.appendLine(JSON.stringify(result, null, 2));
+				this.outputChannel.appendLine(formatRunResult(result, true));
 			} else if (typeof result === 'string') {
 				this.outputChannel.appendLine(result);
 			} else {

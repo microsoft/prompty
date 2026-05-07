@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { TraceItem, useCurrentStore, useCollapseStore } from "../store";
 import { VscChevronDown, VscChevronRight } from "react-icons/vsc";
-import { MouseEventHandler } from "react";
+import { KeyboardEventHandler, MouseEventHandler } from "react";
 import { formatDuration, formatTokens, totalTokens } from "../utilities/format";
 import NodeIcon from "./nodeIcon";
 
@@ -21,8 +21,8 @@ const TreeItem = styled.div<{ $hidden?: boolean }>`
 
 /* ── Tree guide lines ── */
 
-const guideColor = "var(--vscode-tree-indentGuidesStroke, rgba(255,255,255,0.35))";
-const activeGuideColor = "var(--vscode-tree-inactiveIndentGuidesStroke, rgba(255,255,255,0.6))";
+const guideColor = "var(--vscode-tree-indentGuidesStroke, var(--vscode-panel-border))";
+const activeGuideColor = "var(--vscode-tree-inactiveIndentGuidesStroke, var(--vscode-list-focusOutline))";
 
 const GuideSlot = styled.div.attrs({ className: 'guide' })`
   width: 16px;
@@ -126,14 +126,21 @@ const TreeRow = styled.div<{ $selected?: boolean }>`
   cursor: pointer;
   user-select: none;
   border-left: 3px solid ${(props) => (props.$selected ? "var(--vscode-textLink-foreground)" : "transparent")};
-  background: ${(props) => (props.$selected ? "var(--vscode-editor-background)" : "transparent")};
+  background: ${(props) => (props.$selected ? "var(--vscode-list-activeSelectionBackground)" : "transparent")};
+  color: ${(props) => (props.$selected ? "var(--vscode-list-activeSelectionForeground)" : "var(--vscode-foreground)")};
+  outline: none;
 
   &:hover {
-    background: ${(props) => (props.$selected ? "var(--vscode-editor-background)" : "var(--vscode-list-hoverBackground)")};
+    background: ${(props) => (props.$selected ? "var(--vscode-list-activeSelectionBackground)" : "var(--vscode-list-hoverBackground)")};
 
     .guide::before { background: ${activeGuideColor}; border-color: ${activeGuideColor}; }
     .guide::after  { background: ${activeGuideColor}; }
     .guide-elbow::before { background: none; border-color: ${activeGuideColor}; }
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
   }
 `;
 
@@ -147,7 +154,7 @@ const NameBlock = styled.div`
 const NameLabel = styled.div`
   font-size: 12px;
   font-weight: 600;
-  color: var(--vscode-foreground);
+  color: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -188,7 +195,7 @@ const DurationPill = styled.div`
   flex-shrink: 0;
 `;
 
-const ChevronSlot = styled.div<{ $clickable?: boolean }>`
+const ChevronSlot = styled.button<{ $clickable?: boolean }>`
   width: 16px;
   height: 16px;
   display: flex;
@@ -197,9 +204,17 @@ const ChevronSlot = styled.div<{ $clickable?: boolean }>`
   flex-shrink: 0;
   color: var(--vscode-descriptionForeground);
   cursor: ${(props) => (props.$clickable ? "pointer" : "default")};
+  background: none;
+  border: 0;
+  padding: 0;
 
   &:hover {
     color: ${(props) => (props.$clickable ? "var(--vscode-foreground)" : "inherit")};
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
   }
 `;
 
@@ -223,15 +238,41 @@ const TraceTree = ({ trace, level, hidden, ancestorLines = [], setTraceItem }: P
     setTraceItem(trace);
   };
 
+  const handleRowKeyDown: KeyboardEventHandler<HTMLDivElement> = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setTraceItem(trace);
+    } else if (e.key === "ArrowRight" && hasChildren && isCollapsed && trace.id) {
+      e.preventDefault();
+      toggle(trace.id);
+    } else if (e.key === "ArrowLeft" && hasChildren && !isCollapsed && trace.id) {
+      e.preventDefault();
+      toggle(trace.id);
+    }
+  };
+
   const isSelected = trace.id === currentTraceItem?.id;
   const iconSize = level === 0 ? 22 : 18;
 
   return (
     <TreeItem $hidden={hidden}>
-      <TreeRow $selected={isSelected} onClick={handleRowClick}>
+      <TreeRow
+        $selected={isSelected}
+        onClick={handleRowClick}
+        onKeyDown={handleRowKeyDown}
+        role="treeitem"
+        tabIndex={0}
+        aria-expanded={hasChildren ? show : undefined}
+        aria-selected={isSelected}
+      >
         {renderGuides(ancestorLines, !hasChildren)}
         {hasChildren ? (
-          <ChevronSlot $clickable onClick={toggleVisibility}>
+          <ChevronSlot
+            $clickable
+            onClick={toggleVisibility}
+            aria-label={show ? `Collapse ${trace.name}` : `Expand ${trace.name}`}
+            aria-expanded={show}
+          >
             {show ? <VscChevronDown size={14} /> : <VscChevronRight size={14} />}
           </ChevronSlot>
         ) : (
