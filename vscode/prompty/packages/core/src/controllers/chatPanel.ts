@@ -141,6 +141,7 @@ export class ChatPanel {
 	private sessionSpan: ReturnType<typeof Tracer.start> | undefined;
 	private turnCount = 0;
 	private sentInitialConversation = false;
+	private ranInitialAssistantTurn = false;
 
 	public static async open(
 		context: ExtensionContext,
@@ -225,7 +226,7 @@ export class ChatPanel {
 			switch (msg.command) {
 				case 'ready':
 					// Send system prompt context on load
-					this.sendSystemContext();
+					await this.sendSystemContext();
 					break;
 				case 'sendMessage':
 					await this.handleUserMessage(msg.text);
@@ -263,7 +264,7 @@ export class ChatPanel {
 	/**
 	 * Show the system prompt so the user sees the conversation context.
 	 */
-	private sendSystemContext(): void {
+	private async sendSystemContext(): Promise<void> {
 		// Do a dry render to show the system message
 		const systemContent = this.agent.instructions ?? '';
 		if (systemContent) {
@@ -286,6 +287,11 @@ export class ChatPanel {
 			this.sentInitialConversation = true;
 		}
 		this.postMessage({ command: 'setReady' });
+		const lastMessage = this.conversation[this.conversation.length - 1];
+		if (!this.ranInitialAssistantTurn && lastMessage?.role === 'user') {
+			this.ranInitialAssistantTurn = true;
+			await this.runAssistantTurn();
+		}
 	}
 
 	/**
@@ -295,10 +301,18 @@ export class ChatPanel {
 	private async handleUserMessage(text: string): Promise<void> {
 		// Show user message in chat (user messages rendered as plain text for safety)
 		this.postMessage({ command: 'addMessage', role: 'user', content: text });
-		this.postMessage({ command: 'setLoading', loading: true });
 
 		// Add user message to conversation thread
 		this.conversation.push({ role: 'user', content: text });
+
+		await this.runAssistantTurn();
+	}
+
+	/**
+	 * Run one assistant turn using the current conversation thread.
+	 */
+	private async runAssistantTurn(): Promise<void> {
+		this.postMessage({ command: 'setLoading', loading: true });
 		this.turnCount++;
 
 		try {
