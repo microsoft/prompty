@@ -21,6 +21,11 @@ function hasStructuredOutputs(agent: PromptAgent | undefined): boolean {
 	return Object.keys(outputSchema).length > 0;
 }
 
+/** Check if a value is an async iterable (i.e. a streaming response). */
+function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
+	return value != null && typeof value === 'object' && Symbol.asyncIterator in value;
+}
+
 function tryFormatJsonString(value: string): string | undefined {
 	const trimmed = value.trim();
 	if (!trimmed || (!trimmed.startsWith('{') && !trimmed.startsWith('['))) {
@@ -156,12 +161,26 @@ export class PromptyController implements Disposable {
 			// Wrap the full pipeline in a top-level span (matches Python's CLI wrapper)
 			const promptName = path.basename(filePath, '.prompty');
 			const startTime = Date.now();
+			let streamed = false;
 			const result = await traceSpan(promptName, async (emit) => {
 				emit('type', 'vscode');
 				emit('signature', 'prompty.vscode.invoke');
 				emit('inputs', { prompt_path: filePath, inputs: sampleInputs });
 
 				const executionResult = await invoke(agent, sampleInputs);
+				if (isAsyncIterable(executionResult)) {
+					streamed = true;
+					this.outputChannel.appendLine('');
+					let accumulated = '';
+					for await (const chunk of executionResult) {
+						const text = typeof chunk === 'string' ? chunk : JSON.stringify(chunk, null, 2) ?? String(chunk);
+						accumulated += text;
+						this.outputChannel.append(text);
+					}
+					emit('result', accumulated);
+					return accumulated;
+				}
+
 				emit('result', executionResult);
 				return executionResult;
 			});
@@ -172,7 +191,9 @@ export class PromptyController implements Disposable {
 
 			// Show result
 			const apiType = agent.model?.apiType ?? 'chat';
-			this.outputChannel.appendLine('');
+			if (!streamed) {
+				this.outputChannel.appendLine('');
+			}
 
 			if (apiType === 'image') {
 				// Image results: show URLs and hint that images were generated
@@ -199,6 +220,8 @@ export class PromptyController implements Disposable {
 				} else {
 					this.outputChannel.appendLine(JSON.stringify(result, null, 2));
 				}
+			} else if (streamed) {
+				// Streaming output was already written chunk-by-chunk above.
 			} else if (hasStructuredOutputs(agent)) {
 				// Structured output (outputSchema defined): pretty-print JSON
 				this.outputChannel.appendLine('📋 Structured output:');
