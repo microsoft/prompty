@@ -79,7 +79,12 @@ export function defaultSaveContext(
 
 function buildAgent(raw: string, filePath: string, options: LoadOptions): Prompty {
   // 1. Split frontmatter + body
-  const { data, content } = matter(raw);
+  const { data, content } = matter(raw, {
+    engines: {
+      js: { parse: rejectExecutableFrontmatter },
+      javascript: { parse: rejectExecutableFrontmatter },
+    },
+  });
 
   // If there's a body (instructions), merge it in
   const frontmatter: Record<string, unknown> = data ?? {};
@@ -100,6 +105,10 @@ function buildAgent(raw: string, filePath: string, options: LoadOptions): Prompt
   agent.metadata["__source_path"] = filePath;
 
   return agent;
+}
+
+function rejectExecutableFrontmatter(): never {
+  throw new Error("JavaScript frontmatter is not supported in .prompty files");
 }
 
 // ---------------------------------------------------------------------------

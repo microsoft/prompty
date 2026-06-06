@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { load } from "../src/core/loader.js";
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -35,6 +35,20 @@ describe("Loader", () => {
 
   it("throws for nonexistent file", () => {
     expect(() => load(resolve(FIXTURES, "nonexistent.prompty"))).toThrow();
+  });
+
+  it("rejects JavaScript frontmatter without evaluating it", () => {
+    const root = mkdtempSync(join(tmpdir(), "prompty-loader-"));
+    const marker = join(root, "executed.txt");
+    const prompt = join(root, "bad.prompty");
+    writeFileSync(
+      prompt,
+      `---js\nrequire("node:fs").writeFileSync(${JSON.stringify(marker)}, "executed")\n---\nHello\n`,
+      "utf-8",
+    );
+
+    expect(() => load(prompt)).toThrow(/JavaScript frontmatter is not supported/);
+    expect(existsSync(marker)).toBe(false);
   });
 
   it("rejects file references that traverse outside the prompt directory", () => {

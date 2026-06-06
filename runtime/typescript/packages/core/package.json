@@ -1,6 +1,6 @@
 {
   "name": "@prompty/core",
-  "version": "2.0.0-beta.2",
+  "version": "2.0.0-beta.3",
   "description": "Prompty core runtime — load, render, parse, and trace .prompty files",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -60,8 +60,8 @@
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.0",
-    "@prompty/anthropic": "^2.0.0-beta.2",
-    "@prompty/openai": "^2.0.0-beta.2",
+    "@prompty/anthropic": "^2.0.0-beta.3",
+    "@prompty/openai": "^2.0.0-beta.3",
     "@types/mustache": "^4.2.5",
     "@types/node": "^20.11.0",
     "@types/nunjucks": "^3.2.6",
