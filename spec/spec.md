@@ -515,6 +515,13 @@ Loads file content relative to the `.prompty` file's directory.
 - If the file has a `.yaml` or `.yml` extension, it MUST be parsed as YAML.
 - All other extensions MUST be read as raw text.
 - If the file does not exist, implementations MUST raise a `FileNotFoundError`.
+- Implementations MUST resolve the target to its canonical path before reading.
+- By default, implementations MUST reject absolute paths, `..` traversal, and symlink
+  escapes that resolve outside the containing `.prompty` file's directory tree.
+- Host applications MAY provide additional explicit allowed file roots through runtime
+  load options. A file reference MAY resolve outside the prompt directory only when the
+  canonical target is contained by one of those host-provided roots.
+- `.prompty` frontmatter MUST NOT be able to grant itself additional allowed file roots.
 
 **Resolution scope**: References are resolved in ALL string values throughout the
 frontmatter dict tree, not just at the top level. Implementations MUST walk the entire

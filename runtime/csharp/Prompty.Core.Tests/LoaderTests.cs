@@ -250,6 +250,104 @@ public class LoaderTests
         Assert.Equal("shared-key-12345", apiKey.ApiKey);
     }
 
+    [Fact]
+    public void Load_FileRef_TraversalOutsidePromptDir_Throws()
+    {
+        var root = Directory.CreateTempSubdirectory("prompty-loader-");
+        try
+        {
+            var promptDir = Directory.CreateDirectory(Path.Combine(root.FullName, "prompts"));
+            File.WriteAllText(Path.Combine(root.FullName, "secret.txt"), "secret");
+            var prompt = Path.Combine(promptDir.FullName, "bad.prompty");
+            File.WriteAllText(prompt, "---\nname: bad\ndescription: \"${file:../secret.txt}\"\n---\nHello\n");
+
+            var ex = Assert.Throws<InvalidOperationException>(() => PromptyLoader.Load(prompt));
+            Assert.Contains("outside allowed roots", ex.Message);
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_FileRef_AbsolutePathOutsidePromptDir_Throws()
+    {
+        var root = Directory.CreateTempSubdirectory("prompty-loader-");
+        try
+        {
+            var promptDir = Directory.CreateDirectory(Path.Combine(root.FullName, "prompts"));
+            var secret = Path.Combine(root.FullName, "secret.txt");
+            File.WriteAllText(secret, "secret");
+            var prompt = Path.Combine(promptDir.FullName, "bad.prompty");
+            File.WriteAllText(
+                prompt,
+                $"---\nname: bad\ndescription: \"${{file:{secret.Replace("\\", "/")}}}\"\n---\nHello\n");
+
+            var ex = Assert.Throws<InvalidOperationException>(() => PromptyLoader.Load(prompt));
+            Assert.Contains("outside allowed roots", ex.Message);
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_FileRef_AllowedRootPermitsSharedFile()
+    {
+        var root = Directory.CreateTempSubdirectory("prompty-loader-");
+        try
+        {
+            var promptDir = Directory.CreateDirectory(Path.Combine(root.FullName, "prompts"));
+            var sharedDir = Directory.CreateDirectory(Path.Combine(root.FullName, "shared"));
+            File.WriteAllText(Path.Combine(sharedDir.FullName, "description.txt"), "shared description");
+            var prompt = Path.Combine(promptDir.FullName, "shared.prompty");
+            File.WriteAllText(prompt, "---\nname: shared\ndescription: \"${file:../shared/description.txt}\"\n---\nHello\n");
+
+            var agent = PromptyLoader.Load(
+                prompt,
+                new PromptyLoadOptions { AllowedFileRoots = [sharedDir.FullName] });
+
+            Assert.Equal("shared description", agent.Description);
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_FileRef_SymlinkEscape_Throws()
+    {
+        var root = Directory.CreateTempSubdirectory("prompty-loader-");
+        try
+        {
+            var promptDir = Directory.CreateDirectory(Path.Combine(root.FullName, "prompts"));
+            var secret = Path.Combine(root.FullName, "secret.txt");
+            File.WriteAllText(secret, "secret");
+            var link = Path.Combine(promptDir.FullName, "secret-link.txt");
+            try
+            {
+                File.CreateSymbolicLink(link, secret);
+            }
+            catch
+            {
+                return;
+            }
+
+            var prompt = Path.Combine(promptDir.FullName, "bad.prompty");
+            File.WriteAllText(prompt, "---\nname: bad\ndescription: \"${file:secret-link.txt}\"\n---\nHello\n");
+
+            var ex = Assert.Throws<InvalidOperationException>(() => PromptyLoader.Load(prompt));
+            Assert.Contains("outside allowed roots", ex.Message);
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
     // --- Tools ---
 
     [Fact]

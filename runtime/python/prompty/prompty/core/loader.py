@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -26,13 +26,17 @@ __all__ = ["load", "load_async", "default_save_context"]
 # ---------------------------------------------------------------------------
 
 
-def load(path: str | Path) -> Prompty:
+def load(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = None) -> Prompty:
     """Load a ``.prompty`` file and return a typed ``Prompty``.
 
     Parameters
     ----------
     path:
         File system path to a ``.prompty`` file.
+    allowed_file_roots:
+        Additional directories that ``${file:...}`` references may read from.
+        The prompt file's directory is always allowed. References that resolve
+        outside all allowed roots after canonicalization are rejected.
 
     Returns
     -------
@@ -47,17 +51,17 @@ def load(path: str | Path) -> Prompty:
     data = load_prompty(path)
 
     # 2–7 shared pipeline
-    return _build_agent(data, path)
+    return _build_agent(data, path, allowed_file_roots=allowed_file_roots)
 
 
-async def load_async(path: str | Path) -> Prompty:
+async def load_async(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = None) -> Prompty:
     """Async variant of :func:`load`."""
     path = Path(path).resolve()
     if not path.exists():
         raise FileNotFoundError(f"Prompty file not found: {path}")
 
     data = await load_prompty_async(path)
-    return _build_agent(data, path)
+    return _build_agent(data, path, allowed_file_roots=allowed_file_roots)
 
 
 def default_save_context(**kwargs: Any) -> SaveContext:
@@ -86,7 +90,12 @@ def default_save_context(**kwargs: Any) -> SaveContext:
 # ---------------------------------------------------------------------------
 
 
-def _build_agent(data: dict[str, Any] | str, path: Path) -> Prompty:
+def _build_agent(
+    data: dict[str, Any] | str,
+    path: Path,
+    *,
+    allowed_file_roots: Sequence[str | Path] | None = None,
+) -> Prompty:
     """Shared pipeline that transforms raw frontmatter dict into a Prompty."""
 
     # Handle body-only files (no frontmatter — parse returns a string)
@@ -96,7 +105,7 @@ def _build_agent(data: dict[str, Any] | str, path: Path) -> Prompty:
         data = {}
 
     # 2. Load via Prompty.load() with pre_process for ${protocol:value} expansion
-    ctx = LoadContext(pre_process=_pre_process(path))
+    ctx = LoadContext(pre_process=_pre_process(path, allowed_file_roots=allowed_file_roots))
     agent = Prompty.load(data, ctx)
 
     # Store source path for PromptyTool resolution (relative path lookups)
@@ -112,7 +121,11 @@ def _build_agent(data: dict[str, Any] | str, path: Path) -> Prompty:
 # ---------------------------------------------------------------------------
 
 
-def _pre_process(agent_file: Path) -> Callable[[Any], Any]:
+def _pre_process(
+    agent_file: Path,
+    *,
+    allowed_file_roots: Sequence[str | Path] | None = None,
+) -> Callable[[Any], Any]:
     """Return a ``pre_process`` callback that resolves ``${protocol:value}``
     references in every dict the loader visits.
 
@@ -121,6 +134,9 @@ def _pre_process(agent_file: Path) -> Callable[[Any], Any]:
     * ``${env:VAR_NAME}`` — environment variable (required)
     * ``${env:VAR_NAME:default}`` — environment variable with default
     * ``${file:relative/path}`` — load file content (JSON / YAML / text)
+
+    File references are limited to the prompt directory by default. Callers may
+    provide additional allowed roots via ``allowed_file_roots``.
     """
 
     def process(data: Any) -> Any:
@@ -152,16 +168,39 @@ def _pre_process(agent_file: Path) -> Callable[[Any], Any]:
                     data[key] = env_val
 
             elif protocol == "file":
-                relative_path = (agent_file.parent / val).resolve()
-                if not relative_path.exists():
+                file_path = _resolve_file_reference(agent_file, val, allowed_file_roots)
+                if not file_path.exists():
                     raise FileNotFoundError(
-                        f"Referenced file '{val}' not found for key '{key}' (resolved to {relative_path})"
+                        f"Referenced file '{val}' not found for key '{key}' (resolved to {file_path})"
                     )
-                data[key] = _load_file_content(relative_path)
+                data[key] = _load_file_content(file_path)
 
         return data
 
     return process
+
+
+def _resolve_file_reference(
+    agent_file: Path,
+    reference: str,
+    allowed_file_roots: Sequence[str | Path] | None,
+) -> Path:
+    """Resolve and validate a ``${file:...}`` reference."""
+    prompt_root = agent_file.parent.resolve()
+    allowed_roots = [prompt_root, *(Path(root).resolve() for root in allowed_file_roots or ())]
+
+    candidate = Path(reference)
+    if not candidate.is_absolute():
+        candidate = prompt_root / candidate
+
+    resolved = candidate.resolve()
+    if not any(resolved == root or resolved.is_relative_to(root) for root in allowed_roots):
+        roots = ", ".join(str(root) for root in allowed_roots)
+        raise ValueError(
+            f"File reference '{reference}' resolves outside allowed roots for '{agent_file}'. Allowed roots: {roots}"
+        )
+
+    return resolved
 
 
 def _load_file_content(path: Path) -> Any:

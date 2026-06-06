@@ -418,6 +418,14 @@ connection: ${file:shared/azure-connection.json}
   inject empty values.
 </Aside>
 
+<Aside type="caution" title="File reference scope">
+  `${file:...}` references are scoped to the containing `.prompty` file's
+  directory tree by default. Runtimes reject absolute paths, `..` traversal,
+  and symlink escapes that resolve outside that tree. Host applications can
+  explicitly pass additional allowed roots through load options; a prompt file
+  cannot grant itself broader filesystem access.
+</Aside>
+
 ## Shorthand Syntax Reference
 
 Prompty supports compact shorthands across several properties. Every shorthand

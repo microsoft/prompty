@@ -12,17 +12,18 @@ public static class PromptyLoader
     /// Load a .prompty file and return a fully typed Prompty instance.
     /// </summary>
     /// <param name="path">Path to the .prompty file (absolute or relative to cwd).</param>
+    /// <param name="options">Optional load behavior, including additional allowed file roots.</param>
     /// <returns>A loaded Prompty instance with instructions from the markdown body.</returns>
     /// <exception cref="FileNotFoundException">If the file does not exist.</exception>
     /// <exception cref="InvalidOperationException">If frontmatter is invalid or env vars are missing.</exception>
-    public static Prompty Load(string path)
+    public static Prompty Load(string path, PromptyLoadOptions? options = null)
     {
         var fullPath = Path.GetFullPath(path);
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"Prompty file not found: '{fullPath}'", fullPath);
 
         var contents = File.ReadAllText(fullPath);
-        return Build(contents, fullPath);
+        return Build(contents, fullPath, options);
     }
 
     /// <summary>
@@ -33,18 +34,33 @@ public static class PromptyLoader
     /// <returns>A loaded Prompty instance with instructions from the markdown body.</returns>
     public static async Task<Prompty> LoadAsync(string path, CancellationToken cancellationToken = default)
     {
+        return await LoadAsync(path, options: null, cancellationToken);
+    }
+
+    /// <summary>
+    /// Asynchronously load a .prompty file with explicit load options.
+    /// </summary>
+    /// <param name="path">Path to the .prompty file (absolute or relative to cwd).</param>
+    /// <param name="options">Optional load behavior, including additional allowed file roots.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <returns>A loaded Prompty instance with instructions from the markdown body.</returns>
+    public static async Task<Prompty> LoadAsync(
+        string path,
+        PromptyLoadOptions? options,
+        CancellationToken cancellationToken = default)
+    {
         var fullPath = Path.GetFullPath(path);
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"Prompty file not found: '{fullPath}'", fullPath);
 
         var contents = await File.ReadAllTextAsync(fullPath, cancellationToken);
-        return Build(contents, fullPath);
+        return Build(contents, fullPath, options);
     }
 
     /// <summary>
     /// Core loading logic shared by sync and async paths.
     /// </summary>
-    private static Prompty Build(string contents, string fullPath)
+    private static Prompty Build(string contents, string fullPath, PromptyLoadOptions? options)
     {
         // 1. Split frontmatter + body
         var data = FrontmatterParser.Parse(contents);
@@ -52,7 +68,7 @@ public static class PromptyLoader
         // 2. Load via typed model with ${env:}/${file:} resolution
         var ctx = new LoadContext
         {
-            PreProcess = ReferenceResolver.CreatePreProcess(fullPath),
+            PreProcess = ReferenceResolver.CreatePreProcess(fullPath, options?.AllowedFileRoots),
         };
 
         var agent = Prompty.Load(data, ctx);

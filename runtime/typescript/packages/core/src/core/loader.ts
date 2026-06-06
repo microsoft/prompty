@@ -8,11 +8,19 @@
  * @module
  */
 
-import { readFileSync } from "node:fs";
-import { resolve, dirname, extname } from "node:path";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { dirname, extname, isAbsolute, relative, resolve } from "node:path";
 import matter from "gray-matter";
 import { LoadContext, SaveContext } from "../model/context.js";
 import { Prompty } from "../model/agent/prompty.js";
+
+export interface LoadOptions {
+  /**
+   * Additional directories that `${file:...}` references may read from.
+   * The prompt file's directory is always allowed.
+   */
+  allowedFileRoots?: string[];
+}
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -22,12 +30,13 @@ import { Prompty } from "../model/agent/prompty.js";
  * Load a `.prompty` file and return a typed `Prompty`.
  *
  * @param path - File system path to a `.prompty` file.
+ * @param options - Optional load behavior, including additional allowed file roots.
  * @returns Fully typed Prompty definition.
  */
-export function load(path: string): Prompty {
+export function load(path: string, options: LoadOptions = {}): Prompty {
   const resolved = resolve(path);
   const raw = readFileSync(resolved, "utf-8");
-  return buildAgent(raw, resolved);
+  return buildAgent(raw, resolved, options);
 }
 
 /**
@@ -68,7 +77,7 @@ export function defaultSaveContext(
 // Internal pipeline
 // ---------------------------------------------------------------------------
 
-function buildAgent(raw: string, filePath: string): Prompty {
+function buildAgent(raw: string, filePath: string, options: LoadOptions): Prompty {
   // 1. Split frontmatter + body
   const { data, content } = matter(raw);
 
@@ -80,7 +89,7 @@ function buildAgent(raw: string, filePath: string): Prompty {
 
   // 2. Load via Prompty.load() with preProcess for ${protocol:value} expansion
   const ctx = new LoadContext({
-    preProcess: makePreProcess(filePath) as (data: Record<string, unknown>) => Record<string, unknown>,
+    preProcess: makePreProcess(filePath, options) as (data: Record<string, unknown>) => Record<string, unknown>,
   });
   const agent = Prompty.load(frontmatter, ctx);
 
@@ -105,9 +114,16 @@ function buildAgent(raw: string, filePath: string): Prompty {
  * - `${env:VAR_NAME}` — environment variable (required)
  * - `${env:VAR_NAME:default}` — environment variable with default
  * - `${file:relative/path}` — load file content (JSON/YAML/text)
+ *
+ * File references are limited to the prompt directory by default. Callers may
+ * provide additional allowed roots via `allowedFileRoots`.
  */
-function makePreProcess(agentFile: string): (data: unknown) => unknown {
-  const agentDir = dirname(agentFile);
+function makePreProcess(agentFile: string, options: LoadOptions): (data: unknown) => unknown {
+  const agentDir = realpathSync(dirname(agentFile));
+  const allowedRoots = [
+    agentDir,
+    ...(options.allowedFileRoots ?? []).map((root) => canonicalizeExistingPath(resolve(root))),
+  ];
 
   return (data: unknown): unknown => {
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
@@ -144,13 +160,44 @@ function makePreProcess(agentFile: string): (data: unknown) => unknown {
           );
         }
       } else if (protocol === "file") {
-        const filePath = resolve(agentDir, val);
+        const filePath = resolveFileReference(agentDir, val, allowedRoots, key);
         record[key] = loadFileContent(filePath);
       }
     }
 
     return record;
   };
+}
+
+function resolveFileReference(agentDir: string, reference: string, allowedRoots: string[], key: string): string {
+  const candidate = isAbsolute(reference) ? resolve(reference) : resolve(agentDir, reference);
+  if (!isWithinAnyRoot(candidate, allowedRoots)) {
+    throw new Error(
+      `File reference '${reference}' resolves outside allowed roots for key '${key}'. Allowed roots: ${allowedRoots.join(", ")}`,
+    );
+  }
+  if (!existsSync(candidate)) {
+    throw new Error(`Referenced file '${reference}' not found for key '${key}' (resolved to ${candidate})`);
+  }
+
+  const resolved = realpathSync(candidate);
+  if (!isWithinAnyRoot(resolved, allowedRoots)) {
+    throw new Error(
+      `File reference '${reference}' resolves outside allowed roots for key '${key}'. Allowed roots: ${allowedRoots.join(", ")}`,
+    );
+  }
+  return resolved;
+}
+
+function isWithinAnyRoot(path: string, roots: string[]): boolean {
+  return roots.some((root) => {
+    const rel = relative(root, path);
+    return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+  });
+}
+
+function canonicalizeExistingPath(path: string): string {
+  return existsSync(path) ? realpathSync(path) : resolve(path);
 }
 
 function loadFileContent(path: string): unknown {

@@ -1,6 +1,6 @@
 {
   "name": "@prompty/openai",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "OpenAI provider for Prompty — executor and processor for OpenAI APIs",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -45,17 +45,17 @@
     "node": ">=18.0.0"
   },
   "peerDependencies": {
-    "@prompty/core": "^2.0.0-beta.1"
+    "@prompty/core": "^2.0.0-beta.2"
   },
   "dependencies": {
     "openai": "^4.80.0"
   },
   "devDependencies": {
-    "@prompty/core": "^2.0.0-beta.1",
+    "@prompty/core": "^2.0.0-beta.2",
     "@types/node": "^20.11.0",
     "dotenv": "^16.4.0",
     "tsup": "^8.4.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.0.0"
+    "vitest": "^4.1.8"
   }
 }

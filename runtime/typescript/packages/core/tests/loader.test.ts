@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { load } from "../src/core/loader.js";
-import { resolve } from "node:path";
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 const FIXTURES = resolve(import.meta.dirname, "fixtures");
 
@@ -33,6 +35,66 @@ describe("Loader", () => {
 
   it("throws for nonexistent file", () => {
     expect(() => load(resolve(FIXTURES, "nonexistent.prompty"))).toThrow();
+  });
+
+  it("rejects file references that traverse outside the prompt directory", () => {
+    const root = mkdtempSync(join(tmpdir(), "prompty-loader-"));
+    const promptDir = join(root, "prompts");
+    writeFileSync(join(root, "secret.txt"), "secret", "utf-8");
+    writeFileSync(join(root, "marker"), "", "utf-8");
+    mkdirSync(promptDir);
+    const prompt = join(promptDir, "bad.prompty");
+    writeFileSync(prompt, '---\nname: bad\ndescription: "${file:../secret.txt}"\n---\nHello\n', "utf-8");
+
+    expect(() => load(prompt)).toThrow(/outside allowed roots/);
+  });
+
+  it("rejects absolute file references outside the prompt directory", () => {
+    const root = mkdtempSync(join(tmpdir(), "prompty-loader-"));
+    const promptDir = join(root, "prompts");
+    mkdirSync(promptDir);
+    const secret = join(root, "secret.txt");
+    writeFileSync(secret, "secret", "utf-8");
+    const prompt = join(promptDir, "bad.prompty");
+    writeFileSync(
+      prompt,
+      `---\nname: bad\ndescription: "\${file:${secret.replaceAll("\\", "/")}}"\n---\nHello\n`,
+      "utf-8",
+    );
+
+    expect(() => load(prompt)).toThrow(/outside allowed roots/);
+  });
+
+  it("allows file references outside the prompt directory when allowedFileRoots contains them", () => {
+    const root = mkdtempSync(join(tmpdir(), "prompty-loader-"));
+    const promptDir = join(root, "prompts");
+    const sharedDir = join(root, "shared");
+    mkdirSync(promptDir);
+    mkdirSync(sharedDir);
+    writeFileSync(join(sharedDir, "description.txt"), "shared description", "utf-8");
+    const prompt = join(promptDir, "shared.prompty");
+    writeFileSync(prompt, '---\nname: shared\ndescription: "${file:../shared/description.txt}"\n---\nHello\n', "utf-8");
+
+    const agent = load(prompt, { allowedFileRoots: [sharedDir] });
+
+    expect(agent.description).toBe("shared description");
+  });
+
+  it("rejects symlink escapes from the prompt directory", () => {
+    const root = mkdtempSync(join(tmpdir(), "prompty-loader-"));
+    const promptDir = join(root, "prompts");
+    mkdirSync(promptDir);
+    const secret = join(root, "secret.txt");
+    writeFileSync(secret, "secret", "utf-8");
+    try {
+      symlinkSync(secret, join(promptDir, "secret-link.txt"));
+    } catch {
+      return;
+    }
+    const prompt = join(promptDir, "bad.prompty");
+    writeFileSync(prompt, '---\nname: bad\ndescription: "${file:secret-link.txt}"\n---\nHello\n', "utf-8");
+
+    expect(() => load(prompt)).toThrow(/outside allowed roots/);
   });
 
   it("loads chat prompty with inputs", () => {

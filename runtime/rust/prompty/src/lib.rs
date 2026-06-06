@@ -63,7 +63,10 @@ pub use guardrails::{
     ToolGuardrail,
 };
 pub use interfaces::{ExecuteError, Executor, InvokerError, Parser, Processor, Renderer};
-pub use loader::{LoadError, load, load_async, load_from_string};
+pub use loader::{
+    LoadError, LoadOptions, load, load_async, load_async_with_options, load_from_string,
+    load_from_string_with_options, load_with_options,
+};
 pub use model::Prompty;
 pub use pipeline::{
     AgentEvent, AsyncToolFn, Compaction, CompactionFn, EventCallback, ToolFn, ToolHandler,

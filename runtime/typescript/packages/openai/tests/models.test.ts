@@ -3,8 +3,8 @@ import { ModelInfo, ApiKeyConnection, AnonymousConnection } from "@prompty/core"
 
 // Mock the openai module before importing the function under test
 vi.mock("openai", () => {
-  const MockOpenAI = vi.fn().mockImplementation(() => ({
-    models: {
+  class MockOpenAI {
+    models = {
       list: vi.fn().mockResolvedValue({
         data: [
           { id: "gpt-4o", owned_by: "openai", object: "model", created: 1700000000 },
@@ -15,8 +15,8 @@ vi.mock("openai", () => {
           { id: "ft:gpt-4o:my-org:custom:abc123", owned_by: "user-org", object: "model", created: 1700000004 },
         ],
       }),
-    },
-  }));
+    };
+  }
   return { default: MockOpenAI };
 });
 

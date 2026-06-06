@@ -17,13 +17,20 @@ public static class ReferenceResolver
     /// References are resolved relative to the .prompty file's parent directory.
     /// </summary>
     /// <param name="promptyFilePath">Absolute path to the .prompty file (for resolving relative ${file:} refs).</param>
+    /// <param name="allowedFileRoots">Additional directories that ${file:} references may read from.</param>
     /// <returns>A callback suitable for LoadContext.PreProcess.</returns>
-    public static Func<Dictionary<string, object?>, Dictionary<string, object?>> CreatePreProcess(string promptyFilePath)
+    public static Func<Dictionary<string, object?>, Dictionary<string, object?>> CreatePreProcess(
+        string promptyFilePath,
+        IEnumerable<string>? allowedFileRoots = null)
     {
-        var parentDir = Path.GetDirectoryName(Path.GetFullPath(promptyFilePath))
+        var parentDir = Path.GetDirectoryName(GetCanonicalPath(promptyFilePath))
             ?? throw new ArgumentException($"Cannot determine parent directory of '{promptyFilePath}'");
+        var allowedRoots = new[] { parentDir }
+            .Concat(allowedFileRoots ?? [])
+            .Select(GetCanonicalPath)
+            .ToArray();
 
-        return data => ResolveReferences(data, parentDir);
+        return data => ResolveReferences(data, parentDir, allowedRoots);
     }
 
     /// <summary>
@@ -31,7 +38,10 @@ public static class ReferenceResolver
     /// Only processes top-level string values in the given dictionary (recursive walking is
     /// handled by LoadContext calling PreProcess on each nested dict).
     /// </summary>
-    internal static Dictionary<string, object?> ResolveReferences(Dictionary<string, object?> data, string parentDir)
+    internal static Dictionary<string, object?> ResolveReferences(
+        Dictionary<string, object?> data,
+        string parentDir,
+        IReadOnlyCollection<string> allowedRoots)
     {
         foreach (var key in data.Keys.ToList())
         {
@@ -55,7 +65,7 @@ public static class ReferenceResolver
                     data[key] = ResolveEnvVar(remainder, key);
                     break;
                 case "file":
-                    data[key] = ResolveFileRef(remainder, parentDir, key);
+                    data[key] = ResolveFileRef(remainder, parentDir, allowedRoots, key);
                     break;
                     // Unknown protocol: leave unchanged per spec §4
             }
@@ -100,12 +110,25 @@ public static class ReferenceResolver
     /// Resolves ${file:relative/path}. Loads content based on file extension:
     /// .json → parsed as JSON object, .yaml/.yml → parsed as YAML object, else → raw text.
     /// </summary>
-    private static object ResolveFileRef(string relativePath, string parentDir, string key)
+    private static object ResolveFileRef(
+        string relativePath,
+        string parentDir,
+        IReadOnlyCollection<string> allowedRoots,
+        string key)
     {
-        var fullPath = Path.GetFullPath(Path.Combine(parentDir, relativePath));
+        var fullPath = Path.IsPathRooted(relativePath)
+            ? Path.GetFullPath(relativePath)
+            : Path.GetFullPath(Path.Combine(parentDir, relativePath));
         if (!File.Exists(fullPath))
             throw new FileNotFoundException(
                 $"Referenced file '{relativePath}' not found (resolved to '{fullPath}', key: '{key}').");
+
+        fullPath = GetCanonicalPath(fullPath);
+        if (!allowedRoots.Any(root => IsWithinRoot(fullPath, root)))
+        {
+            throw new InvalidOperationException(
+                $"File reference '{relativePath}' resolves outside allowed roots (resolved to '{fullPath}', key: '{key}').");
+        }
 
         var content = File.ReadAllText(fullPath);
         var ext = Path.GetExtension(fullPath).ToLowerInvariant();
@@ -135,5 +158,31 @@ public static class ReferenceResolver
     {
         var result = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(content);
         return result ?? new Dictionary<string, object?>();
+    }
+
+    private static bool IsWithinRoot(string path, string root)
+    {
+        var relative = Path.GetRelativePath(root, path);
+        return relative == "."
+            || (!relative.StartsWith("..", StringComparison.Ordinal)
+                && !Path.IsPathRooted(relative));
+    }
+
+    private static string GetCanonicalPath(string path)
+    {
+        var fullPath = Path.GetFullPath(path);
+        if (File.Exists(fullPath))
+        {
+            var file = new FileInfo(fullPath);
+            var target = file.ResolveLinkTarget(returnFinalTarget: true);
+            return Path.GetFullPath(target?.FullName ?? file.FullName);
+        }
+        if (Directory.Exists(fullPath))
+        {
+            var directory = new DirectoryInfo(fullPath);
+            var target = directory.ResolveLinkTarget(returnFinalTarget: true);
+            return Path.GetFullPath(target?.FullName ?? directory.FullName);
+        }
+        return fullPath;
     }
 }

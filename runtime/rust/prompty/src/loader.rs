@@ -15,6 +15,14 @@ mod resolve;
 
 pub use error::LoadError;
 
+/// Options for loading `.prompty` files.
+#[derive(Clone, Debug, Default)]
+pub struct LoadOptions {
+    /// Additional directories that `${file:...}` references may read from.
+    /// The prompt file's directory is always allowed.
+    pub allowed_file_roots: Vec<PathBuf>,
+}
+
 /// Load a `.prompty` file and return a typed `Prompty`.
 ///
 /// Per the spec, the runtime MUST NOT auto-load `.env` files.
@@ -25,6 +33,18 @@ pub use error::LoadError;
 /// Returns `LoadError` if the file cannot be read, the frontmatter is
 /// malformed, or `${env:VAR}` / `${file:path}` references cannot be resolved.
 pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
+    load_with_options(path, LoadOptions::default())
+}
+
+/// Load a `.prompty` file with explicit load options.
+///
+/// By default, `${file:...}` references are limited to the prompt file's
+/// directory tree. Use `LoadOptions::allowed_file_roots` to opt into
+/// additional directories.
+pub fn load_with_options(
+    path: impl AsRef<Path>,
+    options: LoadOptions,
+) -> Result<Prompty, LoadError> {
     let resolved = path
         .as_ref()
         .canonicalize()
@@ -43,7 +63,7 @@ pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
     // Normalize line endings (Windows \r\n → \n)
     let raw = raw.replace("\r\n", "\n");
 
-    match build_agent(&raw, &resolved) {
+    match build_agent(&raw, &resolved, &options) {
         Ok(agent) => {
             span.emit("result", &serde_json::json!({ "name": agent.name }));
             span.end();
@@ -67,6 +87,14 @@ pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
 /// Returns `LoadError` if the file cannot be read, the frontmatter is
 /// malformed, or `${env:VAR}` / `${file:path}` references cannot be resolved.
 pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
+    load_async_with_options(path, LoadOptions::default()).await
+}
+
+/// Asynchronously load a `.prompty` file with explicit load options.
+pub async fn load_async_with_options(
+    path: impl AsRef<Path>,
+    options: LoadOptions,
+) -> Result<Prompty, LoadError> {
     let path_buf = path.as_ref().to_path_buf();
     let resolved = tokio::fs::canonicalize(&path_buf)
         .await
@@ -88,7 +116,7 @@ pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
 
     // build_agent may do blocking FS for ${file:} resolution — offload to blocking pool
     let resolved_clone = resolved.clone();
-    let result = tokio::task::spawn_blocking(move || build_agent(&raw, &resolved_clone))
+    let result = tokio::task::spawn_blocking(move || build_agent(&raw, &resolved_clone, &options))
         .await
         .map_err(|e| LoadError::Other(format!("spawn_blocking panicked: {e}")))?;
 
@@ -111,14 +139,23 @@ pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
 ///
 /// Useful when the `.prompty` content comes from a string rather than a file.
 pub fn load_from_string(raw: &str, base_path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
-    build_agent(raw, base_path.as_ref())
+    load_from_string_with_options(raw, base_path, LoadOptions::default())
+}
+
+/// Load from raw `.prompty` content with explicit load options.
+pub fn load_from_string_with_options(
+    raw: &str,
+    base_path: impl AsRef<Path>,
+    options: LoadOptions,
+) -> Result<Prompty, LoadError> {
+    build_agent(raw, base_path.as_ref(), &options)
 }
 
 // ---------------------------------------------------------------------------
 // Internal pipeline
 // ---------------------------------------------------------------------------
 
-fn build_agent(raw: &str, file_path: &Path) -> Result<Prompty, LoadError> {
+fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Prompty, LoadError> {
     // 1. Split frontmatter + body
     let (mut data, body) = frontmatter::split(raw)?;
 
@@ -140,12 +177,12 @@ fn build_agent(raw: &str, file_path: &Path) -> Result<Prompty, LoadError> {
 
     // 4. Build LoadContext with ${env:} / ${file:} resolution as pre_process
     let agent_dir = file_path.parent().unwrap_or(Path::new(".")).to_path_buf();
-    let ctx = make_load_context(agent_dir);
+    let ctx = make_load_context(agent_dir.clone(), options.allowed_file_roots.clone());
 
     // 5. Resolve references on the top-level data before loading
     //    (pre_process handles nested dicts as the model recurses)
     let mut value = serde_json::Value::Object(data);
-    resolve::resolve_references(&mut value, file_path.parent().unwrap_or(Path::new(".")))?;
+    resolve::resolve_references(&mut value, &agent_dir, &options.allowed_file_roots)?;
 
     // 6. Load via emitter-generated typed constructor with context
     let agent = Prompty::load_from_value(&value, &ctx);
@@ -162,14 +199,16 @@ fn build_agent(raw: &str, file_path: &Path) -> Result<Prompty, LoadError> {
 }
 
 /// Build a `LoadContext` with `pre_process` wired to resolve `${env:}` / `${file:}`.
-fn make_load_context(agent_dir: PathBuf) -> LoadContext {
+fn make_load_context(agent_dir: PathBuf, allowed_file_roots: Vec<PathBuf>) -> LoadContext {
     LoadContext {
         pre_process: Some(Box::new(move |mut value| {
             // Walk all string values in this dict and resolve ${protocol:value} refs
             if let Some(obj) = value.as_object_mut() {
                 for val in obj.values_mut() {
                     if let Some(s) = val.as_str() {
-                        if let Some(resolved) = resolve::resolve_single_ref(s, &agent_dir) {
+                        if let Some(resolved) =
+                            resolve::resolve_single_ref(s, &agent_dir, &allowed_file_roots)
+                        {
                             *val = resolved;
                         }
                     }

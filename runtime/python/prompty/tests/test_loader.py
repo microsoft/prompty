@@ -343,6 +343,67 @@ class TestReferenceResolution:
         finally:
             os.unlink(tmp_path)
 
+    def test_load_file_traversal_outside_prompt_dir_raises(self, tmp_path: Path):
+        """${file:../...} references outside the prompt directory are rejected by default."""
+        prompt_dir = tmp_path / "prompts"
+        prompt_dir.mkdir()
+        (tmp_path / "secret.txt").write_text("secret", encoding="utf-8")
+        prompt = prompt_dir / "bad.prompty"
+        prompt.write_text('---\nname: bad\ndescription: "${file:../secret.txt}"\n---\nHello\n', encoding="utf-8")
+
+        with pytest.raises(ValueError, match="outside allowed roots"):
+            load(prompt)
+
+    def test_load_file_absolute_path_outside_prompt_dir_raises(self, tmp_path: Path):
+        """Absolute ${file:...} references outside the prompt directory are rejected by default."""
+        prompt_dir = tmp_path / "prompts"
+        prompt_dir.mkdir()
+        secret = tmp_path / "secret.txt"
+        secret.write_text("secret", encoding="utf-8")
+        prompt = prompt_dir / "bad.prompty"
+        prompt.write_text(
+            f'---\nname: bad\ndescription: "${{file:{secret.as_posix()}}}"\n---\nHello\n',
+            encoding="utf-8",
+        )
+
+        with pytest.raises(ValueError, match="outside allowed roots"):
+            load(prompt)
+
+    def test_load_file_allowed_root_permits_shared_file(self, tmp_path: Path):
+        """allowed_file_roots opts into shared files outside the prompt directory."""
+        prompt_dir = tmp_path / "prompts"
+        shared_dir = tmp_path / "shared"
+        prompt_dir.mkdir()
+        shared_dir.mkdir()
+        (shared_dir / "description.txt").write_text("shared description", encoding="utf-8")
+        prompt = prompt_dir / "shared.prompty"
+        prompt.write_text(
+            '---\nname: shared\ndescription: "${file:../shared/description.txt}"\n---\nHello\n',
+            encoding="utf-8",
+        )
+
+        agent = load(prompt, allowed_file_roots=[shared_dir])
+
+        assert agent.description == "shared description"
+
+    def test_load_file_symlink_escape_raises(self, tmp_path: Path):
+        """Symlinks inside the prompt directory cannot escape allowed roots."""
+        prompt_dir = tmp_path / "prompts"
+        prompt_dir.mkdir()
+        secret = tmp_path / "secret.txt"
+        secret.write_text("secret", encoding="utf-8")
+        link = prompt_dir / "secret-link.txt"
+        try:
+            link.symlink_to(secret)
+        except OSError as exc:
+            pytest.skip(f"symlinks are not available: {exc}")
+
+        prompt = prompt_dir / "bad.prompty"
+        prompt.write_text('---\nname: bad\ndescription: "${file:secret-link.txt}"\n---\nHello\n', encoding="utf-8")
+
+        with pytest.raises(ValueError, match="outside allowed roots"):
+            load(prompt)
+
 
 # ---------------------------------------------------------------------------
 # Shared config via ${file:} references

@@ -57,6 +57,7 @@ export {
 
   // Loader
   load,
+  type LoadOptions,
 
   // Pipeline functions
   validateInputs,

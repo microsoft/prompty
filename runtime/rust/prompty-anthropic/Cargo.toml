@@ -1,6 +1,6 @@
 [package]
 name = "prompty-anthropic"
-version = "2.0.0-beta.1"
+version = "2.0.0-beta.2"
 edition = "2024"
 rust-version = "1.85"
 description = "Anthropic provider for Prompty — Claude Messages API executor and processor"
@@ -12,7 +12,7 @@ keywords = ["llm", "prompt", "anthropic", "claude", "ai"]
 categories = ["development-tools"]
 
 [dependencies]
-prompty = { version = "2.0.0-beta.1", path = "../prompty" }
+prompty = { version = "2.0.0-beta.2", path = "../prompty" }
 async-trait = "0.1"
 bytes = "1"
 futures = "0.3"

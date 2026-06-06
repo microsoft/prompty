@@ -302,7 +302,9 @@ input value.
 |--------|---------|
 | `${env:VAR}` | Env variable (required) |
 | `${env:VAR:default}` | Env variable with fallback |
-| `${file:path.json}` | Load file content |
+| `${file:path.json}` | Load file content from the prompt directory tree |
+
+`${file:...}` references are scoped to the containing `.prompty` file's directory by default. Pass `allowed_file_roots` to `load()` / `load_async()` only when the host application explicitly trusts additional shared directories.
 
 ### Connection Kinds
 

@@ -10,8 +10,8 @@ import {
 
 // Mock the openai module before importing the function under test
 vi.mock("openai", () => {
-  const MockAzureOpenAI = vi.fn().mockImplementation(() => ({
-    models: {
+  class MockAzureOpenAI {
+    models = {
       list: vi.fn().mockResolvedValue({
         data: [
           { id: "gpt-4o", owned_by: "azure", object: "model", created: 1700000000, maxContextLength: 128000 },
@@ -19,8 +19,8 @@ vi.mock("openai", () => {
           { id: "text-embedding-ada-002", owned_by: "azure", object: "model", created: 1500000000, maxContextLength: 8191 },
         ],
       }),
-    },
-  }));
+    };
+  }
   return { AzureOpenAI: MockAzureOpenAI, default: MockAzureOpenAI };
 });
 

@@ -1,6 +1,6 @@
 [package]
 name = "prompty"
-version = "2.0.0-beta.1"
+version = "2.0.0-beta.2"
 edition = "2024"
 rust-version = "1.85"
 description = "Prompty is an asset class and format for LLM prompts"

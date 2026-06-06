@@ -254,7 +254,7 @@ public class SpecVectorTests
 
                     var ctx = new LoadContext
                     {
-                        PreProcess = d => ReferenceResolver.ResolveReferences(d, "."),
+                        PreProcess = d => ReferenceResolver.ResolveReferences(d, ".", [Path.GetFullPath(".")]),
                     };
 
                     var agent = Prompty.Load(data, ctx);

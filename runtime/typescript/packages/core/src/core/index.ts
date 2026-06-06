@@ -2,7 +2,7 @@ export * from "./types.js";
 export * from "./interfaces.js";
 export * from "./registry.js";
 export * from "./connections.js";
-export { load, defaultSaveContext } from "./loader.js";
+export { load, defaultSaveContext, type LoadOptions } from "./loader.js";
 export {
   validateInputs,
   render,

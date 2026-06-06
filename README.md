@@ -221,7 +221,9 @@ Jinja2 (`{{variable}}`, `{% if %}`, `{% for %}`) or Mustache (`{{variable}}`, `{
 |--------|---------|
 | `${env:VAR}` | Environment variable (required) |
 | `${env:VAR:default}` | With fallback value |
-| `${file:path.json}` | Load file content |
+| `${file:path.json}` | Load file content from the prompt directory tree |
+
+`${file:...}` references are scoped to the containing `.prompty` file's directory by default. Host applications can opt into additional allowed roots through runtime load options; prompts cannot grant themselves broader filesystem access.
 
 ### Legacy format
 
