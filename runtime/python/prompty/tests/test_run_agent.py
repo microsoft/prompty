@@ -140,9 +140,7 @@ class TestExecuteTool:
 class TestExecuteToolAsync:
     def test_success_sync_fn(self):
         tools = {"fn": lambda city: f"Rainy in {city}"}
-        result = asyncio.get_event_loop().run_until_complete(
-            dispatch_tool_async("fn", '{"city": "London"}', tools, None, {})
-        )
+        result = asyncio.run(dispatch_tool_async("fn", '{"city": "London"}', tools, None, {}))
         assert result == "Rainy in London"
 
     def test_success_async_fn(self):
@@ -150,14 +148,12 @@ class TestExecuteToolAsync:
             return f"Cloudy in {city}"
 
         tools = {"fn": async_fn}
-        result = asyncio.get_event_loop().run_until_complete(
-            dispatch_tool_async("fn", '{"city": "Paris"}', tools, None, {})
-        )
+        result = asyncio.run(dispatch_tool_async("fn", '{"city": "Paris"}', tools, None, {}))
         assert result == "Cloudy in Paris"
 
     def test_bad_json(self):
         tools = {"fn": lambda: None}
-        result = asyncio.get_event_loop().run_until_complete(dispatch_tool_async("fn", "{bad}", tools, None, {}))
+        result = asyncio.run(dispatch_tool_async("fn", "{bad}", tools, None, {}))
         assert "Invalid JSON" in result
 
 

@@ -284,7 +284,7 @@ class TestDispatchToolAsync:
         async def async_fn(**kw):
             return f"result_{kw.get('x')}"
 
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             dispatch_tool_async(
                 "afn",
                 json.dumps({"x": 42}),
@@ -296,7 +296,7 @@ class TestDispatchToolAsync:
         assert result == "result_42"
 
     def test_sync_fn_works_in_async_dispatch(self):
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             dispatch_tool_async(
                 "fn",
                 json.dumps({"a": 1}),
@@ -312,7 +312,7 @@ class TestDispatchToolAsync:
             return "from_async_registry"
 
         register_tool("areg", async_fn)
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             dispatch_tool_async(
                 "areg",
                 json.dumps({}),
@@ -434,15 +434,15 @@ class TestPlaceholderHandlers:
 
     def test_mcp_async(self):
         with pytest.raises(NotImplementedError, match="MCP"):
-            asyncio.get_event_loop().run_until_complete(McpToolHandler().execute_tool_async(None, {}, None, {}))
+            asyncio.run(McpToolHandler().execute_tool_async(None, {}, None, {}))
 
     def test_openapi_async(self):
         with pytest.raises(NotImplementedError, match="OpenAPI"):
-            asyncio.get_event_loop().run_until_complete(OpenApiToolHandler().execute_tool_async(None, {}, None, {}))
+            asyncio.run(OpenApiToolHandler().execute_tool_async(None, {}, None, {}))
 
     def test_custom_async(self):
         with pytest.raises(NotImplementedError, match="Custom"):
-            asyncio.get_event_loop().run_until_complete(CustomToolHandler().execute_tool_async(None, {}, None, {}))
+            asyncio.run(CustomToolHandler().execute_tool_async(None, {}, None, {}))
 
 
 # ===========================================================================
