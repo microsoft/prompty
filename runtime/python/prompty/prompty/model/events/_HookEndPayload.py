@@ -5,10 +5,12 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from .._context import LoadContext, SaveContext
 from ._RedactionMetadata import RedactionMetadata
+
+HookEndScope = Literal["turn", "session"]
 
 
 @dataclass
@@ -21,6 +23,8 @@ class HookEndPayload:
         Stable hook invocation identifier
     hook_type : str
         Host-defined hook type
+    scope : Optional[str]
+        Whether the hook is scoped to a turn or the outer session
     success : bool
         Whether the hook completed successfully
     output : Optional[dict[str, Any]]
@@ -37,6 +41,7 @@ class HookEndPayload:
 
     hook_invocation_id: str = field(default="")
     hook_type: str = field(default="")
+    scope: HookEndScope | None = None
     success: bool = field(default=False)
     output: dict[str, Any] | None = None
     duration_ms: float | None = None
@@ -67,6 +72,8 @@ class HookEndPayload:
             instance.hook_invocation_id = data["hookInvocationId"]
         if data is not None and "hookType" in data:
             instance.hook_type = data["hookType"]
+        if data is not None and "scope" in data:
+            instance.scope = data["scope"]
         if data is not None and "success" in data:
             instance.success = data["success"]
         if data is not None and "output" in data:
@@ -99,6 +106,8 @@ class HookEndPayload:
             result["hookInvocationId"] = obj.hook_invocation_id
         if obj.hook_type is not None:
             result["hookType"] = obj.hook_type
+        if obj.scope is not None:
+            result["scope"] = obj.scope
         if obj.success is not None:
             result["success"] = obj.success
         if obj.output is not None:

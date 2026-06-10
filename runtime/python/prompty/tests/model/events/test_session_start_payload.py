@@ -9,7 +9,7 @@ def test_load_json_sessionstartpayload():
     json_data = r"""
     {
       "sessionId": "sess_abc123",
-      "version": 1,
+      "schemaVersion": "1",
       "producer": "prompty-agent",
       "runtime": "typescript",
       "promptyVersion": "2.0.0",
@@ -22,7 +22,7 @@ def test_load_json_sessionstartpayload():
     instance = SessionStartPayload.load(data)
     assert instance is not None
     assert instance.session_id == "sess_abc123"
-    assert instance.version == 1
+    assert instance.schema_version == "1"
     assert instance.producer == "prompty-agent"
     assert instance.runtime == "typescript"
     assert instance.prompty_version == "2.0.0"
@@ -34,7 +34,7 @@ def test_load_json_sessionstartpayload():
 def test_load_yaml_sessionstartpayload():
     yaml_data = r"""
     sessionId: sess_abc123
-    version: 1
+    schemaVersion: "1"
     producer: prompty-agent
     runtime: typescript
     promptyVersion: 2.0.0
@@ -47,7 +47,7 @@ def test_load_yaml_sessionstartpayload():
     instance = SessionStartPayload.load(data)
     assert instance is not None
     assert instance.session_id == "sess_abc123"
-    assert instance.version == 1
+    assert instance.schema_version == "1"
     assert instance.producer == "prompty-agent"
     assert instance.runtime == "typescript"
     assert instance.prompty_version == "2.0.0"
@@ -61,7 +61,7 @@ def test_roundtrip_json_sessionstartpayload():
     json_data = r"""
     {
       "sessionId": "sess_abc123",
-      "version": 1,
+      "schemaVersion": "1",
       "producer": "prompty-agent",
       "runtime": "typescript",
       "promptyVersion": "2.0.0",
@@ -76,7 +76,7 @@ def test_roundtrip_json_sessionstartpayload():
     reloaded = SessionStartPayload.load(saved_data)
     assert reloaded is not None
     assert reloaded.session_id == "sess_abc123"
-    assert reloaded.version == 1
+    assert reloaded.schema_version == "1"
     assert reloaded.producer == "prompty-agent"
     assert reloaded.runtime == "typescript"
     assert reloaded.prompty_version == "2.0.0"
@@ -90,7 +90,7 @@ def test_to_json_sessionstartpayload():
     json_data = r"""
     {
       "sessionId": "sess_abc123",
-      "version": 1,
+      "schemaVersion": "1",
       "producer": "prompty-agent",
       "runtime": "typescript",
       "promptyVersion": "2.0.0",
@@ -112,7 +112,7 @@ def test_to_yaml_sessionstartpayload():
     json_data = r"""
     {
       "sessionId": "sess_abc123",
-      "version": 1,
+      "schemaVersion": "1",
       "producer": "prompty-agent",
       "runtime": "typescript",
       "promptyVersion": "2.0.0",

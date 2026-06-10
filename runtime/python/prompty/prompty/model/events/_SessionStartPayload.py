@@ -19,7 +19,7 @@ class SessionStartPayload:
     ----------
     session_id : str
         Stable session identifier
-    version : Optional[int]
+    schema_version : Optional[str]
         Session event schema version
     producer : Optional[str]
         Producer that started the session
@@ -40,7 +40,7 @@ class SessionStartPayload:
     _shorthand_property: ClassVar[str | None] = None
 
     session_id: str = field(default="")
-    version: int | None = None
+    schema_version: str | None = None
     producer: str | None = None
     runtime: str | None = None
     prompty_version: str | None = None
@@ -71,8 +71,8 @@ class SessionStartPayload:
 
         if data is not None and "sessionId" in data:
             instance.session_id = data["sessionId"]
-        if data is not None and "version" in data:
-            instance.version = data["version"]
+        if data is not None and "schemaVersion" in data:
+            instance.schema_version = data["schemaVersion"]
         if data is not None and "producer" in data:
             instance.producer = data["producer"]
         if data is not None and "runtime" in data:
@@ -107,8 +107,8 @@ class SessionStartPayload:
 
         if obj.session_id is not None:
             result["sessionId"] = obj.session_id
-        if obj.version is not None:
-            result["version"] = obj.version
+        if obj.schema_version is not None:
+            result["schemaVersion"] = obj.schema_version
         if obj.producer is not None:
             result["producer"] = obj.producer
         if obj.runtime is not None:

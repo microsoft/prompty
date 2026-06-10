@@ -5,11 +5,9 @@ properties:
   sessionId:
     type: string
     description: Stable session identifier
-  version:
-    type: integer
-    minimum: -2147483648
-    maximum: 2147483647
-    default: 1
+  schemaVersion:
+    type: string
+    default: "1"
     description: Session event schema version
   producer:
     type: string

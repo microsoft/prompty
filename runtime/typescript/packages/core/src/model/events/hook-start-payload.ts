@@ -4,17 +4,23 @@
 import { LoadContext, SaveContext } from "../context";
 import { RedactionMetadata } from "./redaction-metadata";
 
+export type HookStartScope = "turn" | "session";
+
 export class HookStartPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
   hookInvocationId: string = "";
   hookType: string = "";
+  scope?: HookStartScope | undefined;
   input?: Record<string, unknown> | undefined;
   redaction?: RedactionMetadata | undefined;
 
   constructor(init?: Partial<HookStartPayload>) {
     this.hookInvocationId = init?.hookInvocationId ?? "";
     this.hookType = init?.hookType ?? "";
+    if (init?.scope !== undefined) {
+      this.scope = init.scope;
+    }
     if (init?.input !== undefined) {
       this.input = init.input;
     }
@@ -43,6 +49,9 @@ export class HookStartPayload {
     }
     if (data["hookType"] !== undefined && data["hookType"] !== null) {
       instance.hookType = String(data["hookType"]);
+    }
+    if (data["scope"] !== undefined && data["scope"] !== null) {
+      instance.scope = String(data["scope"]) as HookStartScope;
     }
     if (data["input"] !== undefined && data["input"] !== null) {
       instance.input = data["input"] as Record<string, unknown>;
@@ -77,6 +86,9 @@ export class HookStartPayload {
     }
     if (obj.hookType !== undefined && obj.hookType !== null) {
       result["hookType"] = obj.hookType;
+    }
+    if (obj.scope !== undefined && obj.scope !== null) {
+      result["scope"] = obj.scope;
     }
     if (obj.input !== undefined && obj.input !== null) {
       result["input"] = obj.input;

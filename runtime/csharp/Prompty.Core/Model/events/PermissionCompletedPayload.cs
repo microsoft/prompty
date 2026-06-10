@@ -55,6 +55,11 @@ public partial class PermissionCompletedPayload
     /// </summary>
     public IDictionary<string, object>? Result { get; set; }
 
+    /// <summary>
+    /// Redaction state for sensitive decision fields
+    /// </summary>
+    public RedactionMetadata? Redaction { get; set; }
+
 
 
     #region Load Methods
@@ -105,6 +110,11 @@ public partial class PermissionCompletedPayload
         if (data.TryGetValue("result", out var resultValue) && resultValue is not null)
         {
             instance.Result = resultValue.GetDictionary()!;
+        }
+
+        if (data.TryGetValue("redaction", out var redactionValue) && redactionValue is not null)
+        {
+            instance.Redaction = RedactionMetadata.Load(redactionValue.GetDictionary(RedactionMetadata.ShorthandProperty), context);
         }
 
         if (context is not null)
@@ -163,6 +173,12 @@ public partial class PermissionCompletedPayload
         if (obj.Result is not null)
         {
             result["result"] = obj.Result;
+        }
+
+
+        if (obj.Redaction is not null)
+        {
+            result["redaction"] = obj.Redaction?.Save(context);
         }
 
 

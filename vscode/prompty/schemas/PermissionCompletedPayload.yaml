@@ -20,6 +20,9 @@ properties:
   result:
     $ref: RecordUnknown.yaml
     description: Host-specific decision result, such as a durable approval token or denial details
+  redaction:
+    $ref: RedactionMetadata.yaml
+    description: Redaction state for sensitive decision fields
 required:
   - permission
   - approved

@@ -6,6 +6,44 @@ use super::super::context::{LoadContext, SaveContext};
 
 use super::redaction_metadata::RedactionMetadata;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HookStartScope {
+    Turn,
+    Session,
+}
+
+impl Default for HookStartScope {
+    fn default() -> Self {
+        Self::Turn
+    }
+}
+
+impl std::fmt::Display for HookStartScope {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Turn => write!(f, "turn"),
+            Self::Session => write!(f, "session"),
+        }
+    }
+}
+
+impl HookStartScope {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "turn" => Some(Self::Turn),
+            "session" => Some(Self::Session),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Turn => "turn",
+            Self::Session => "session",
+        }
+    }
+}
+
 /// Payload for "hook_start" events — a host lifecycle hook is beginning.
 #[derive(Debug, Clone, Default)]
 pub struct HookStartPayload {
@@ -13,6 +51,8 @@ pub struct HookStartPayload {
     pub hook_invocation_id: String,
     /// Host-defined hook type
     pub hook_type: String,
+    /// Whether the hook is scoped to a turn or the outer session
+    pub scope: Option<HookStartScope>,
     /// Hook input after host-side sanitization
     pub input: serde_json::Value,
     /// Redaction state for sensitive hook input fields
@@ -45,6 +85,7 @@ impl HookStartPayload {
         Self {
             hook_invocation_id: value.get("hookInvocationId").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             hook_type: value.get("hookType").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+            scope: value.get("scope").and_then(|v| v.as_str()).and_then(|s| HookStartScope::from_str_opt(s)),
             input: value.get("input").cloned().unwrap_or(serde_json::Value::Null),
             redaction: value.get("redaction").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| RedactionMetadata::load_from_value(v, ctx)),
         }
@@ -61,6 +102,9 @@ impl HookStartPayload {
         }
         if !self.hook_type.is_empty() {
             result.insert("hookType".to_string(), serde_json::Value::String(self.hook_type.clone()));
+        }
+        if let Some(ref val) = self.scope {
+            result.insert("scope".to_string(), serde_json::Value::String(val.to_string()));
         }
         if !self.input.is_null() {
             result.insert("input".to_string(), self.input.clone());

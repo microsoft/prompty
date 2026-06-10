@@ -21,6 +21,7 @@ classDiagram
     class HookStartPayload {
         +string hookInvocationId
         +string hookType
+        +string scope
         +dictionary input
         +RedactionMetadata redaction
     }
@@ -45,6 +46,7 @@ hookType: preToolUse
 | ---- | ---- | ----------- |
 | hookInvocationId | string | Stable hook invocation identifier |
 | hookType | string | Host-defined hook type |
+| scope | string | Whether the hook is scoped to a turn or the outer session |
 | input | dictionary | Hook input after host-side sanitization |
 | redaction | [RedactionMetadata](../redactionmetadata/) | Redaction state for sensitive hook input fields |
 

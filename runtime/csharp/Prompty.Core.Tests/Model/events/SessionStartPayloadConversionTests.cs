@@ -12,7 +12,7 @@ public class SessionStartPayloadConversionTests
     {
         string yamlData = """
 sessionId: sess_abc123
-version: 1
+schemaVersion: "1"
 producer: prompty-agent
 runtime: typescript
 promptyVersion: 2.0.0
@@ -26,7 +26,7 @@ reasoningEffort: medium
 
         Assert.NotNull(instance);
         Assert.Equal("sess_abc123", instance.SessionId);
-        Assert.Equal(1, instance.Version);
+        Assert.Equal("1", instance.SchemaVersion);
         Assert.Equal("prompty-agent", instance.Producer);
         Assert.Equal("typescript", instance.Runtime);
         Assert.Equal("2.0.0", instance.PromptyVersion);
@@ -41,7 +41,7 @@ reasoningEffort: medium
         string jsonData = """
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
@@ -54,7 +54,7 @@ reasoningEffort: medium
         var instance = SessionStartPayload.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("sess_abc123", instance.SessionId);
-        Assert.Equal(1, instance.Version);
+        Assert.Equal("1", instance.SchemaVersion);
         Assert.Equal("prompty-agent", instance.Producer);
         Assert.Equal("typescript", instance.Runtime);
         Assert.Equal("2.0.0", instance.PromptyVersion);
@@ -70,7 +70,7 @@ reasoningEffort: medium
         string jsonData = """
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
@@ -89,7 +89,7 @@ reasoningEffort: medium
         var reloaded = SessionStartPayload.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("sess_abc123", reloaded.SessionId);
-        Assert.Equal(1, reloaded.Version);
+        Assert.Equal("1", reloaded.SchemaVersion);
         Assert.Equal("prompty-agent", reloaded.Producer);
         Assert.Equal("typescript", reloaded.Runtime);
         Assert.Equal("2.0.0", reloaded.PromptyVersion);
@@ -104,7 +104,7 @@ reasoningEffort: medium
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
 sessionId: sess_abc123
-version: 1
+schemaVersion: "1"
 producer: prompty-agent
 runtime: typescript
 promptyVersion: 2.0.0
@@ -123,7 +123,7 @@ reasoningEffort: medium
         var reloaded = SessionStartPayload.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("sess_abc123", reloaded.SessionId);
-        Assert.Equal(1, reloaded.Version);
+        Assert.Equal("1", reloaded.SchemaVersion);
         Assert.Equal("prompty-agent", reloaded.Producer);
         Assert.Equal("typescript", reloaded.Runtime);
         Assert.Equal("2.0.0", reloaded.PromptyVersion);
@@ -138,7 +138,7 @@ reasoningEffort: medium
         string jsonData = """
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
@@ -161,7 +161,7 @@ reasoningEffort: medium
     {
         string yamlData = """
 sessionId: sess_abc123
-version: 1
+schemaVersion: "1"
 producer: prompty-agent
 runtime: typescript
 promptyVersion: 2.0.0

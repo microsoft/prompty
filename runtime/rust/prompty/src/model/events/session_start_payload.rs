@@ -12,7 +12,7 @@ pub struct SessionStartPayload {
     /// Stable session identifier
     pub session_id: String,
     /// Session event schema version
-    pub version: Option<i32>,
+    pub schema_version: Option<String>,
     /// Producer that started the session
     pub producer: Option<String>,
     /// Runtime that produced the session
@@ -54,7 +54,7 @@ impl SessionStartPayload {
         let value = ctx.process_input(value.clone());
         Self {
             session_id: value.get("sessionId").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
-            version: value.get("version").and_then(|v| v.as_i64()).map(|v| v as i32),
+            schema_version: value.get("schemaVersion").and_then(|v| v.as_str()).map(|s| s.to_string()),
             producer: value.get("producer").and_then(|v| v.as_str()).map(|s| s.to_string()),
             runtime: value.get("runtime").and_then(|v| v.as_str()).map(|s| s.to_string()),
             prompty_version: value.get("promptyVersion").and_then(|v| v.as_str()).map(|s| s.to_string()),
@@ -74,8 +74,8 @@ impl SessionStartPayload {
         if !self.session_id.is_empty() {
             result.insert("sessionId".to_string(), serde_json::Value::String(self.session_id.clone()));
         }
-        if let Some(val) = self.version {
-            result.insert("version".to_string(), serde_json::Value::Number(serde_json::Number::from(val)));
+        if let Some(ref val) = self.schema_version {
+            result.insert("schemaVersion".to_string(), serde_json::Value::String(val.clone()));
         }
         if let Some(ref val) = self.producer {
             result.insert("producer".to_string(), serde_json::Value::String(val.clone()));

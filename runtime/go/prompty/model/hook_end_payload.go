@@ -9,11 +9,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// HookEndScope represents the allowed values for HookEndScope.
+type HookEndScope string
+
+const (
+	HookEndScopeTurn    HookEndScope = "turn"
+	HookEndScopeSession HookEndScope = "session"
+)
+
 // HookEndPayload represents Payload for "hook_end" events — a host lifecycle hook finished.
 
 type HookEndPayload struct {
 	HookInvocationId string                 `json:"hookInvocationId" yaml:"hookInvocationId"`
 	HookType         string                 `json:"hookType" yaml:"hookType"`
+	Scope            *HookEndScope          `json:"scope,omitempty" yaml:"scope,omitempty"`
 	Success          bool                   `json:"success" yaml:"success"`
 	Output           map[string]interface{} `json:"output,omitempty" yaml:"output,omitempty"`
 	DurationMs       *float64               `json:"durationMs,omitempty" yaml:"durationMs,omitempty"`
@@ -32,6 +41,10 @@ func LoadHookEndPayload(data interface{}, ctx *LoadContext) (HookEndPayload, err
 		}
 		if val, ok := m["hookType"]; ok && val != nil {
 			result.HookType = string(val.(string))
+		}
+		if val, ok := m["scope"]; ok && val != nil {
+			v := HookEndScope(val.(string))
+			result.Scope = &v
 		}
 		if val, ok := m["success"]; ok && val != nil {
 			result.Success = val.(bool)
@@ -77,6 +90,9 @@ func (obj *HookEndPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["hookInvocationId"] = obj.HookInvocationId
 	result["hookType"] = obj.HookType
+	if obj.Scope != nil {
+		result["scope"] = string(*obj.Scope)
+	}
 	result["success"] = obj.Success
 	if obj.Output != nil {
 		result["output"] = obj.Output

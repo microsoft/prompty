@@ -36,6 +36,11 @@ public partial class HookEndPayload
     public string HookType { get; set; } = string.Empty;
 
     /// <summary>
+    /// Whether the hook is scoped to a turn or the outer session
+    /// </summary>
+    public HookEndScope? Scope { get; set; }
+
+    /// <summary>
     /// Whether the hook completed successfully
     /// </summary>
     public bool Success { get; set; } = false;
@@ -90,6 +95,11 @@ public partial class HookEndPayload
         if (data.TryGetValue("hookType", out var hookTypeValue) && hookTypeValue is not null)
         {
             instance.HookType = hookTypeValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("scope", out var scopeValue) && scopeValue is not null)
+        {
+            instance.Scope = Enum.Parse<HookEndScope>(scopeValue?.ToString()!, true);
         }
 
         if (data.TryGetValue("success", out var successValue) && successValue is not null)
@@ -150,6 +160,12 @@ public partial class HookEndPayload
 
 
         result["hookType"] = obj.HookType;
+
+
+        if (obj.Scope is not null)
+        {
+            result["scope"] = obj.Scope.Value.ToString().ToLowerInvariant();
+        }
 
 
         result["success"] = obj.Success;

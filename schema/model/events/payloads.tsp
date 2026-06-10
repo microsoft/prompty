@@ -42,6 +42,19 @@ alias TurnEventType =
 alias TurnStatus = "success" | "error" | "cancelled";
 
 /**
+ * Scope where a host lifecycle hook is starting.
+ */
+alias HookStartScope = "turn" | "session";
+
+/**
+ * Scope where a host lifecycle hook finished.
+ *
+ * This intentionally mirrors HookStartScope but remains distinct because some
+ * language generators emit enum aliases in each model file.
+ */
+alias HookEndScope = "turn" | "session";
+
+/**
  * A canonical event envelope emitted by the turn harness. The payload is kept
  * JSON-shaped so runtimes can load all events even when newer payload types are
  * added; event-specific typed payload models below define the canonical shapes.
@@ -239,6 +252,9 @@ model PermissionCompletedPayload {
 
   @doc("Host-specific decision result, such as a durable approval token or denial details")
   result?: Record<unknown>;
+
+  @doc("Redaction state for sensitive decision fields")
+  redaction?: RedactionMetadata;
 }
 
 /**
@@ -511,6 +527,9 @@ model HookStartPayload {
   @sample(#{ hookType: "preToolUse" })
   hookType: string;
 
+  @doc("Whether the hook is scoped to a turn or the outer session")
+  scope?: HookStartScope;
+
   @doc("Hook input after host-side sanitization")
   input?: Record<unknown>;
 
@@ -529,6 +548,9 @@ model HookEndPayload {
   @doc("Host-defined hook type")
   @sample(#{ hookType: "preToolUse" })
   hookType: string;
+
+  @doc("Whether the hook is scoped to a turn or the outer session")
+  scope?: HookEndScope;
 
   @doc("Whether the hook completed successfully")
   @sample(#{ success: true })

@@ -13,7 +13,7 @@ import (
 
 type SessionStartPayload struct {
 	SessionId       string          `json:"sessionId" yaml:"sessionId"`
-	Version         *int32          `json:"version,omitempty" yaml:"version,omitempty"`
+	SchemaVersion   *string         `json:"schemaVersion,omitempty" yaml:"schemaVersion,omitempty"`
 	Producer        *string         `json:"producer,omitempty" yaml:"producer,omitempty"`
 	Runtime         *string         `json:"runtime,omitempty" yaml:"runtime,omitempty"`
 	PromptyVersion  *string         `json:"promptyVersion,omitempty" yaml:"promptyVersion,omitempty"`
@@ -32,19 +32,9 @@ func LoadSessionStartPayload(data interface{}, ctx *LoadContext) (SessionStartPa
 		if val, ok := m["sessionId"]; ok && val != nil {
 			result.SessionId = string(val.(string))
 		}
-		if val, ok := m["version"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip
-			var v int32
-			switch n := val.(type) {
-			case int:
-				v = int32(n)
-			case int32:
-				v = int32(n)
-			case int64:
-				v = int32(n)
-			case float64:
-				v = int32(n)
-			}
-			result.Version = &v
+		if val, ok := m["schemaVersion"]; ok && val != nil {
+			v := string(val.(string))
+			result.SchemaVersion = &v
 		}
 		if val, ok := m["producer"]; ok && val != nil {
 			v := string(val.(string))
@@ -85,8 +75,8 @@ func LoadSessionStartPayload(data interface{}, ctx *LoadContext) (SessionStartPa
 func (obj *SessionStartPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["sessionId"] = obj.SessionId
-	if obj.Version != nil {
-		result["version"] = *obj.Version
+	if obj.SchemaVersion != nil {
+		result["schemaVersion"] = *obj.SchemaVersion
 	}
 	if obj.Producer != nil {
 		result["producer"] = *obj.Producer

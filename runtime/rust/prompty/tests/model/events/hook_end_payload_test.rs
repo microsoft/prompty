@@ -3,6 +3,7 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, clippy::all)]
 
 use prompty::model::HookEndPayload;
+use prompty::model::HookEndScope;
 use prompty::model::context::{LoadContext, SaveContext};
 
 #[test]

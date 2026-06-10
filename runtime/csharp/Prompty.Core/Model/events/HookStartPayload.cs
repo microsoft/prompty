@@ -36,6 +36,11 @@ public partial class HookStartPayload
     public string HookType { get; set; } = string.Empty;
 
     /// <summary>
+    /// Whether the hook is scoped to a turn or the outer session
+    /// </summary>
+    public HookStartScope? Scope { get; set; }
+
+    /// <summary>
     /// Hook input after host-side sanitization
     /// </summary>
     public IDictionary<string, object>? Input { get; set; }
@@ -75,6 +80,11 @@ public partial class HookStartPayload
         if (data.TryGetValue("hookType", out var hookTypeValue) && hookTypeValue is not null)
         {
             instance.HookType = hookTypeValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("scope", out var scopeValue) && scopeValue is not null)
+        {
+            instance.Scope = Enum.Parse<HookStartScope>(scopeValue?.ToString()!, true);
         }
 
         if (data.TryGetValue("input", out var inputValue) && inputValue is not null)
@@ -120,6 +130,12 @@ public partial class HookStartPayload
 
 
         result["hookType"] = obj.HookType;
+
+
+        if (obj.Scope is not null)
+        {
+            result["scope"] = obj.Scope.Value.ToString().ToLowerInvariant();
+        }
 
 
         if (obj.Input is not null)

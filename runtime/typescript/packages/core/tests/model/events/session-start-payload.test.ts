@@ -18,11 +18,11 @@ describe("SessionStartPayload", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "sessionId": "sess_abc123",\n  "version": 1,\n  "producer": "prompty-agent",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "startTime": "2026-06-09T20:00:00Z",\n  "selectedModel": "gpt-4o-mini",\n  "reasoningEffort": "medium"\n}`;
+      const json = `{\n  "sessionId": "sess_abc123",\n  "schemaVersion": "1",\n  "producer": "prompty-agent",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "startTime": "2026-06-09T20:00:00Z",\n  "selectedModel": "gpt-4o-mini",\n  "reasoningEffort": "medium"\n}`;
       const instance = SessionStartPayload.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.sessionId).toEqual("sess_abc123");
-      expect(instance.version).toEqual(1);
+      expect(instance.schemaVersion).toEqual("1");
       expect(instance.producer).toEqual("prompty-agent");
       expect(instance.runtime).toEqual("typescript");
       expect(instance.promptyVersion).toEqual("2.0.0");
@@ -32,12 +32,12 @@ describe("SessionStartPayload", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "sessionId": "sess_abc123",\n  "version": 1,\n  "producer": "prompty-agent",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "startTime": "2026-06-09T20:00:00Z",\n  "selectedModel": "gpt-4o-mini",\n  "reasoningEffort": "medium"\n}`;
+      const json = `{\n  "sessionId": "sess_abc123",\n  "schemaVersion": "1",\n  "producer": "prompty-agent",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "startTime": "2026-06-09T20:00:00Z",\n  "selectedModel": "gpt-4o-mini",\n  "reasoningEffort": "medium"\n}`;
       const instance = SessionStartPayload.fromJson(json);
       const output = instance.toJson();
       const reloaded = SessionStartPayload.fromJson(output);
       expect(reloaded.sessionId).toEqual(instance.sessionId);
-      expect(reloaded.version).toEqual(instance.version);
+      expect(reloaded.schemaVersion).toEqual(instance.schemaVersion);
       expect(reloaded.producer).toEqual(instance.producer);
       expect(reloaded.runtime).toEqual(instance.runtime);
       expect(reloaded.promptyVersion).toEqual(instance.promptyVersion);
@@ -49,11 +49,11 @@ describe("SessionStartPayload", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `sessionId: sess_abc123\nversion: 1\nproducer: prompty-agent\nruntime: typescript\npromptyVersion: 2.0.0\nstartTime: "2026-06-09T20:00:00Z"\nselectedModel: gpt-4o-mini\nreasoningEffort: medium\n`;
+      const yaml = `sessionId: sess_abc123\nschemaVersion: "1"\nproducer: prompty-agent\nruntime: typescript\npromptyVersion: 2.0.0\nstartTime: "2026-06-09T20:00:00Z"\nselectedModel: gpt-4o-mini\nreasoningEffort: medium\n`;
       const instance = SessionStartPayload.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.sessionId).toEqual("sess_abc123");
-      expect(instance.version).toEqual(1);
+      expect(instance.schemaVersion).toEqual("1");
       expect(instance.producer).toEqual("prompty-agent");
       expect(instance.runtime).toEqual("typescript");
       expect(instance.promptyVersion).toEqual("2.0.0");
@@ -63,12 +63,12 @@ describe("SessionStartPayload", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `sessionId: sess_abc123\nversion: 1\nproducer: prompty-agent\nruntime: typescript\npromptyVersion: 2.0.0\nstartTime: "2026-06-09T20:00:00Z"\nselectedModel: gpt-4o-mini\nreasoningEffort: medium\n`;
+      const yaml = `sessionId: sess_abc123\nschemaVersion: "1"\nproducer: prompty-agent\nruntime: typescript\npromptyVersion: 2.0.0\nstartTime: "2026-06-09T20:00:00Z"\nselectedModel: gpt-4o-mini\nreasoningEffort: medium\n`;
       const instance = SessionStartPayload.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = SessionStartPayload.fromYaml(output);
       expect(reloaded.sessionId).toEqual(instance.sessionId);
-      expect(reloaded.version).toEqual(instance.version);
+      expect(reloaded.schemaVersion).toEqual(instance.schemaVersion);
       expect(reloaded.producer).toEqual(instance.producer);
       expect(reloaded.runtime).toEqual(instance.runtime);
       expect(reloaded.promptyVersion).toEqual(instance.promptyVersion);

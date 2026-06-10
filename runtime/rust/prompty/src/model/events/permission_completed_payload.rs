@@ -4,6 +4,8 @@
 
 use super::super::context::{LoadContext, SaveContext};
 
+use super::redaction_metadata::RedactionMetadata;
+
 /// Payload for permission completion events — an approval decision was made.
 #[derive(Debug, Clone, Default)]
 pub struct PermissionCompletedPayload {
@@ -19,6 +21,8 @@ pub struct PermissionCompletedPayload {
     pub reason: Option<String>,
     /// Host-specific decision result, such as a durable approval token or denial details
     pub result: serde_json::Value,
+    /// Redaction state for sensitive decision fields
+    pub redaction: Option<RedactionMetadata>,
 }
 
 impl PermissionCompletedPayload {
@@ -51,6 +55,7 @@ impl PermissionCompletedPayload {
             approved: value.get("approved").and_then(|v| v.as_bool()).unwrap_or(false),
             reason: value.get("reason").and_then(|v| v.as_str()).map(|s| s.to_string()),
             result: value.get("result").cloned().unwrap_or(serde_json::Value::Null),
+            redaction: value.get("redaction").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| RedactionMetadata::load_from_value(v, ctx)),
         }
     }
 
@@ -75,6 +80,12 @@ impl PermissionCompletedPayload {
         }
         if !self.result.is_null() {
             result.insert("result".to_string(), self.result.clone());
+        }
+        if let Some(ref val) = self.redaction {
+            let nested = val.to_value(ctx);
+            if !nested.is_null() {
+                result.insert("redaction".to_string(), nested);
+            }
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }

@@ -8,6 +8,13 @@ properties:
   hookType:
     type: string
     description: Host-defined hook type
+  scope:
+    anyOf:
+      - type: string
+        const: turn
+      - type: string
+        const: session
+    description: Whether the hook is scoped to a turn or the outer session
   input:
     $ref: RecordUnknown.yaml
     description: Hook input after host-side sanitization

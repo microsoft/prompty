@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
+from ._RedactionMetadata import RedactionMetadata
 
 
 @dataclass
@@ -28,6 +29,8 @@ class PermissionCompletedPayload:
         Decision reason, if available
     result : Optional[dict[str, Any]]
         Host-specific decision result, such as a durable approval token or denial details
+    redaction : Optional[RedactionMetadata]
+        Redaction state for sensitive decision fields
     """
 
     _shorthand_property: ClassVar[str | None] = None
@@ -38,6 +41,7 @@ class PermissionCompletedPayload:
     approved: bool = field(default=False)
     reason: str | None = None
     result: dict[str, Any] | None = None
+    redaction: RedactionMetadata | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "PermissionCompletedPayload":
@@ -71,6 +75,8 @@ class PermissionCompletedPayload:
             instance.reason = data["reason"]
         if data is not None and "result" in data:
             instance.result = data["result"]
+        if data is not None and "redaction" in data:
+            instance.redaction = RedactionMetadata.load(data["redaction"], context)
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -101,6 +107,8 @@ class PermissionCompletedPayload:
             result["reason"] = obj.reason
         if obj.result is not None:
             result["result"] = obj.result
+        if obj.redaction is not None:
+            result["redaction"] = obj.redaction.save(context)
 
         if context is not None:
             result = context.process_dict(result)

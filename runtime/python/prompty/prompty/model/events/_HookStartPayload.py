@@ -5,10 +5,12 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from .._context import LoadContext, SaveContext
 from ._RedactionMetadata import RedactionMetadata
+
+HookStartScope = Literal["turn", "session"]
 
 
 @dataclass
@@ -21,6 +23,8 @@ class HookStartPayload:
         Stable hook invocation identifier
     hook_type : str
         Host-defined hook type
+    scope : Optional[str]
+        Whether the hook is scoped to a turn or the outer session
     input : Optional[dict[str, Any]]
         Hook input after host-side sanitization
     redaction : Optional[RedactionMetadata]
@@ -31,6 +35,7 @@ class HookStartPayload:
 
     hook_invocation_id: str = field(default="")
     hook_type: str = field(default="")
+    scope: HookStartScope | None = None
     input: dict[str, Any] | None = None
     redaction: RedactionMetadata | None = None
 
@@ -58,6 +63,8 @@ class HookStartPayload:
             instance.hook_invocation_id = data["hookInvocationId"]
         if data is not None and "hookType" in data:
             instance.hook_type = data["hookType"]
+        if data is not None and "scope" in data:
+            instance.scope = data["scope"]
         if data is not None and "input" in data:
             instance.input = data["input"]
         if data is not None and "redaction" in data:
@@ -84,6 +91,8 @@ class HookStartPayload:
             result["hookInvocationId"] = obj.hook_invocation_id
         if obj.hook_type is not None:
             result["hookType"] = obj.hook_type
+        if obj.scope is not None:
+            result["scope"] = obj.scope
         if obj.input is not None:
             result["input"] = obj.input
         if obj.redaction is not None:

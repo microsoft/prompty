@@ -6,6 +6,44 @@ use super::super::context::{LoadContext, SaveContext};
 
 use super::redaction_metadata::RedactionMetadata;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HookEndScope {
+    Turn,
+    Session,
+}
+
+impl Default for HookEndScope {
+    fn default() -> Self {
+        Self::Turn
+    }
+}
+
+impl std::fmt::Display for HookEndScope {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Turn => write!(f, "turn"),
+            Self::Session => write!(f, "session"),
+        }
+    }
+}
+
+impl HookEndScope {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "turn" => Some(Self::Turn),
+            "session" => Some(Self::Session),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Turn => "turn",
+            Self::Session => "session",
+        }
+    }
+}
+
 /// Payload for "hook_end" events — a host lifecycle hook finished.
 #[derive(Debug, Clone, Default)]
 pub struct HookEndPayload {
@@ -13,6 +51,8 @@ pub struct HookEndPayload {
     pub hook_invocation_id: String,
     /// Host-defined hook type
     pub hook_type: String,
+    /// Whether the hook is scoped to a turn or the outer session
+    pub scope: Option<HookEndScope>,
     /// Whether the hook completed successfully
     pub success: bool,
     /// Hook output after host-side sanitization
@@ -51,6 +91,7 @@ impl HookEndPayload {
         Self {
             hook_invocation_id: value.get("hookInvocationId").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             hook_type: value.get("hookType").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
+            scope: value.get("scope").and_then(|v| v.as_str()).and_then(|s| HookEndScope::from_str_opt(s)),
             success: value.get("success").and_then(|v| v.as_bool()).unwrap_or(false),
             output: value.get("output").cloned().unwrap_or(serde_json::Value::Null),
             duration_ms: value.get("durationMs").and_then(|v| v.as_f64()),
@@ -70,6 +111,9 @@ impl HookEndPayload {
         }
         if !self.hook_type.is_empty() {
             result.insert("hookType".to_string(), serde_json::Value::String(self.hook_type.clone()));
+        }
+        if let Some(ref val) = self.scope {
+            result.insert("scope".to_string(), serde_json::Value::String(val.to_string()));
         }
         result.insert("success".to_string(), serde_json::Value::Bool(self.success));
         if !self.output.is_null() {

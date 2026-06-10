@@ -16,7 +16,7 @@ func TestSessionStartPayloadLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
@@ -38,8 +38,8 @@ func TestSessionStartPayloadLoadJSON(t *testing.T) {
 	if instance.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
 	}
-	if instance.Version == nil || *instance.Version != 1 {
-		t.Errorf(`Expected Version to be 1, got %v`, instance.Version)
+	if instance.SchemaVersion == nil || *instance.SchemaVersion != "1" {
+		t.Errorf(`Expected SchemaVersion to be "1", got %v`, instance.SchemaVersion)
 	}
 	if instance.Producer == nil || *instance.Producer != "prompty-agent" {
 		t.Errorf(`Expected Producer to be "prompty-agent", got %v`, instance.Producer)
@@ -65,7 +65,7 @@ func TestSessionStartPayloadLoadJSON(t *testing.T) {
 func TestSessionStartPayloadLoadYAML(t *testing.T) {
 	yamlData := `
 sessionId: sess_abc123
-version: 1
+schemaVersion: "1"
 producer: prompty-agent
 runtime: typescript
 promptyVersion: 2.0.0
@@ -87,8 +87,8 @@ reasoningEffort: medium
 	if instance.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
 	}
-	if instance.Version == nil || *instance.Version != 1 {
-		t.Errorf(`Expected Version to be 1, got %v`, instance.Version)
+	if instance.SchemaVersion == nil || *instance.SchemaVersion != "1" {
+		t.Errorf(`Expected SchemaVersion to be "1", got %v`, instance.SchemaVersion)
 	}
 	if instance.Producer == nil || *instance.Producer != "prompty-agent" {
 		t.Errorf(`Expected Producer to be "prompty-agent", got %v`, instance.Producer)
@@ -115,7 +115,7 @@ func TestSessionStartPayloadRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
@@ -144,8 +144,8 @@ func TestSessionStartPayloadRoundtrip(t *testing.T) {
 	if reloaded.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
 	}
-	if reloaded.Version == nil || *reloaded.Version != 1 {
-		t.Errorf(`Expected Version to be 1, got %v`, reloaded.Version)
+	if reloaded.SchemaVersion == nil || *reloaded.SchemaVersion != "1" {
+		t.Errorf(`Expected SchemaVersion to be "1", got %v`, reloaded.SchemaVersion)
 	}
 	if reloaded.Producer == nil || *reloaded.Producer != "prompty-agent" {
 		t.Errorf(`Expected Producer to be "prompty-agent", got %v`, reloaded.Producer)
@@ -172,7 +172,7 @@ func TestSessionStartPayloadToJSON(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
@@ -207,7 +207,7 @@ func TestSessionStartPayloadToYAML(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",

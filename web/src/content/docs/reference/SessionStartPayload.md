@@ -20,7 +20,7 @@ config:
 classDiagram
     class SessionStartPayload {
         +string sessionId
-        +int32 version
+        +string schemaVersion
         +string producer
         +string runtime
         +string promptyVersion
@@ -41,7 +41,7 @@ classDiagram
 
 ```yaml
 sessionId: sess_abc123
-version: 1
+schemaVersion: "1"
 producer: prompty-agent
 runtime: typescript
 promptyVersion: 2.0.0
@@ -55,7 +55,7 @@ reasoningEffort: medium
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | sessionId | string | Stable session identifier |
-| version | int32 | Session event schema version |
+| schemaVersion | string | Session event schema version |
 | producer | string | Producer that started the session |
 | runtime | string | Runtime that produced the session |
 | promptyVersion | string | Prompty library version |

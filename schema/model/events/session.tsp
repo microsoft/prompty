@@ -58,8 +58,8 @@ model SessionStartPayload {
   sessionId: string;
 
   @doc("Session event schema version")
-  @sample(#{ version: 1 })
-  version?: int32 = 1;
+  @sample(#{ schemaVersion: "1" })
+  schemaVersion?: string = "1";
 
   @doc("Producer that started the session")
   @sample(#{ producer: "prompty-agent" })

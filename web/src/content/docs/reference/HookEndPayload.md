@@ -21,6 +21,7 @@ classDiagram
     class HookEndPayload {
         +string hookInvocationId
         +string hookType
+        +string scope
         +boolean success
         +dictionary output
         +float64 durationMs
@@ -51,6 +52,7 @@ error: hook failed
 | ---- | ---- | ----------- |
 | hookInvocationId | string | Stable hook invocation identifier |
 | hookType | string | Host-defined hook type |
+| scope | string | Whether the hook is scoped to a turn or the outer session |
 | success | boolean | Whether the hook completed successfully |
 | output | dictionary | Hook output after host-side sanitization |
 | durationMs | float64 | Hook execution duration in milliseconds |

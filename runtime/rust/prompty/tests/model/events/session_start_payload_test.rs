@@ -10,7 +10,7 @@ fn test_session_start_payload_load_json() {
     let json = r####"
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
@@ -24,8 +24,8 @@ fn test_session_start_payload_load_json() {
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.session_id, "sess_abc123");
-    assert!(instance.version.is_some(), "Expected version to be Some");
-    assert_eq!(instance.version.as_ref().unwrap(), &1);
+    assert!(instance.schema_version.is_some(), "Expected schema_version to be Some");
+    assert_eq!(instance.schema_version.as_ref().unwrap(), &"1");
     assert!(instance.producer.is_some(), "Expected producer to be Some");
     assert_eq!(instance.producer.as_ref().unwrap(), &"prompty-agent");
     assert!(instance.runtime.is_some(), "Expected runtime to be Some");
@@ -44,7 +44,7 @@ fn test_session_start_payload_load_json() {
 fn test_session_start_payload_load_yaml() {
     let yaml = r####"
 sessionId: sess_abc123
-version: 1
+schemaVersion: "1"
 producer: prompty-agent
 runtime: typescript
 promptyVersion: 2.0.0
@@ -58,7 +58,7 @@ reasoningEffort: medium
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.session_id, "sess_abc123");
-    assert!(instance.version.is_some(), "Expected version to be Some");
+    assert!(instance.schema_version.is_some(), "Expected schema_version to be Some");
     assert!(instance.producer.is_some(), "Expected producer to be Some");
     assert!(instance.runtime.is_some(), "Expected runtime to be Some");
     assert!(instance.prompty_version.is_some(), "Expected prompty_version to be Some");
@@ -72,7 +72,7 @@ fn test_session_start_payload_roundtrip() {
     let json = r####"
 {
   "sessionId": "sess_abc123",
-  "version": 1,
+  "schemaVersion": "1",
   "producer": "prompty-agent",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",

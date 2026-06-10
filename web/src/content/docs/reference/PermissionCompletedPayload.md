@@ -25,7 +25,14 @@ classDiagram
         +boolean approved
         +string reason
         +dictionary result
+        +RedactionMetadata redaction
     }
+    class RedactionMetadata {
+        +boolean sanitized
+        +RedactedField[] fields
+        +string policy
+    }
+    PermissionCompletedPayload *-- RedactionMetadata
 ```
 
 ## Yaml Example
@@ -48,3 +55,10 @@ reason: user_approved
 | approved | boolean | Whether the requested permission was approved |
 | reason | string | Decision reason, if available |
 | result | dictionary | Host-specific decision result, such as a durable approval token or denial details |
+| redaction | [RedactionMetadata](../redactionmetadata/) | Redaction state for sensitive decision fields |
+
+## Composed Types
+
+The following types are composed within `PermissionCompletedPayload`:
+
+- [RedactionMetadata](../redactionmetadata/)

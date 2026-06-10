@@ -18,6 +18,7 @@ type PermissionCompletedPayload struct {
 	Approved   bool                   `json:"approved" yaml:"approved"`
 	Reason     *string                `json:"reason,omitempty" yaml:"reason,omitempty"`
 	Result     map[string]interface{} `json:"result,omitempty" yaml:"result,omitempty"`
+	Redaction  *RedactionMetadata     `json:"redaction,omitempty" yaml:"redaction,omitempty"`
 }
 
 // LoadPermissionCompletedPayload creates a PermissionCompletedPayload from a map[string]interface{}
@@ -49,6 +50,12 @@ func LoadPermissionCompletedPayload(data interface{}, ctx *LoadContext) (Permiss
 				result.Result = m
 			}
 		}
+		if val, ok := m["redaction"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, _ := LoadRedactionMetadata(m, ctx)
+				result.Redaction = &loaded
+			}
+		}
 	}
 
 	return result, nil
@@ -70,6 +77,9 @@ func (obj *PermissionCompletedPayload) Save(ctx *SaveContext) map[string]interfa
 	}
 	if obj.Result != nil {
 		result["result"] = obj.Result
+	}
+	if obj.Redaction != nil {
+		result["redaction"] = obj.Redaction.Save(ctx)
 	}
 
 	return result

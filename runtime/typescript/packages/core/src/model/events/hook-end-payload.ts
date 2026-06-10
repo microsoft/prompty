@@ -4,11 +4,14 @@
 import { LoadContext, SaveContext } from "../context";
 import { RedactionMetadata } from "./redaction-metadata";
 
+export type HookEndScope = "turn" | "session";
+
 export class HookEndPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
   hookInvocationId: string = "";
   hookType: string = "";
+  scope?: HookEndScope | undefined;
   success: boolean = false;
   output?: Record<string, unknown> | undefined;
   durationMs?: number | undefined;
@@ -18,6 +21,9 @@ export class HookEndPayload {
   constructor(init?: Partial<HookEndPayload>) {
     this.hookInvocationId = init?.hookInvocationId ?? "";
     this.hookType = init?.hookType ?? "";
+    if (init?.scope !== undefined) {
+      this.scope = init.scope;
+    }
     this.success = init?.success ?? false;
     if (init?.output !== undefined) {
       this.output = init.output;
@@ -53,6 +59,9 @@ export class HookEndPayload {
     }
     if (data["hookType"] !== undefined && data["hookType"] !== null) {
       instance.hookType = String(data["hookType"]);
+    }
+    if (data["scope"] !== undefined && data["scope"] !== null) {
+      instance.scope = String(data["scope"]) as HookEndScope;
     }
     if (data["success"] !== undefined && data["success"] !== null) {
       instance.success = Boolean(data["success"]);
@@ -96,6 +105,9 @@ export class HookEndPayload {
     }
     if (obj.hookType !== undefined && obj.hookType !== null) {
       result["hookType"] = obj.hookType;
+    }
+    if (obj.scope !== undefined && obj.scope !== null) {
+      result["scope"] = obj.scope;
     }
     if (obj.success !== undefined && obj.success !== null) {
       result["success"] = obj.success;

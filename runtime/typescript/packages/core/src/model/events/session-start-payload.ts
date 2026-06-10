@@ -8,7 +8,7 @@ export class SessionStartPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
   sessionId: string = "";
-  version?: number | undefined;
+  schemaVersion?: string | undefined;
   producer?: string | undefined;
   runtime?: string | undefined;
   promptyVersion?: string | undefined;
@@ -19,8 +19,8 @@ export class SessionStartPayload {
 
   constructor(init?: Partial<SessionStartPayload>) {
     this.sessionId = init?.sessionId ?? "";
-    if (init?.version !== undefined) {
-      this.version = init.version;
+    if (init?.schemaVersion !== undefined) {
+      this.schemaVersion = init.schemaVersion;
     }
     if (init?.producer !== undefined) {
       this.producer = init.producer;
@@ -60,8 +60,8 @@ export class SessionStartPayload {
     if (data["sessionId"] !== undefined && data["sessionId"] !== null) {
       instance.sessionId = String(data["sessionId"]);
     }
-    if (data["version"] !== undefined && data["version"] !== null) {
-      instance.version = Number(data["version"]);
+    if (data["schemaVersion"] !== undefined && data["schemaVersion"] !== null) {
+      instance.schemaVersion = String(data["schemaVersion"]);
     }
     if (data["producer"] !== undefined && data["producer"] !== null) {
       instance.producer = String(data["producer"]);
@@ -115,8 +115,8 @@ export class SessionStartPayload {
     if (obj.sessionId !== undefined && obj.sessionId !== null) {
       result["sessionId"] = obj.sessionId;
     }
-    if (obj.version !== undefined && obj.version !== null) {
-      result["version"] = obj.version;
+    if (obj.schemaVersion !== undefined && obj.schemaVersion !== null) {
+      result["schemaVersion"] = obj.schemaVersion;
     }
     if (obj.producer !== undefined && obj.producer !== null) {
       result["producer"] = obj.producer;

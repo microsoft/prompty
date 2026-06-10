@@ -9,11 +9,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// HookStartScope represents the allowed values for HookStartScope.
+type HookStartScope string
+
+const (
+	HookStartScopeTurn    HookStartScope = "turn"
+	HookStartScopeSession HookStartScope = "session"
+)
+
 // HookStartPayload represents Payload for "hook_start" events — a host lifecycle hook is beginning.
 
 type HookStartPayload struct {
 	HookInvocationId string                 `json:"hookInvocationId" yaml:"hookInvocationId"`
 	HookType         string                 `json:"hookType" yaml:"hookType"`
+	Scope            *HookStartScope        `json:"scope,omitempty" yaml:"scope,omitempty"`
 	Input            map[string]interface{} `json:"input,omitempty" yaml:"input,omitempty"`
 	Redaction        *RedactionMetadata     `json:"redaction,omitempty" yaml:"redaction,omitempty"`
 }
@@ -29,6 +38,10 @@ func LoadHookStartPayload(data interface{}, ctx *LoadContext) (HookStartPayload,
 		}
 		if val, ok := m["hookType"]; ok && val != nil {
 			result.HookType = string(val.(string))
+		}
+		if val, ok := m["scope"]; ok && val != nil {
+			v := HookStartScope(val.(string))
+			result.Scope = &v
 		}
 		if val, ok := m["input"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -51,6 +64,9 @@ func (obj *HookStartPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["hookInvocationId"] = obj.HookInvocationId
 	result["hookType"] = obj.HookType
+	if obj.Scope != nil {
+		result["scope"] = string(*obj.Scope)
+	}
 	if obj.Input != nil {
 		result["input"] = obj.Input
 	}

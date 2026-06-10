@@ -33,7 +33,7 @@ public partial class SessionStartPayload
     /// <summary>
     /// Session event schema version
     /// </summary>
-    public int? Version { get; set; }
+    public string? SchemaVersion { get; set; }
 
     /// <summary>
     /// Producer that started the session
@@ -97,9 +97,9 @@ public partial class SessionStartPayload
             instance.SessionId = sessionIdValue?.ToString()!;
         }
 
-        if (data.TryGetValue("version", out var versionValue) && versionValue is not null)
+        if (data.TryGetValue("schemaVersion", out var schemaVersionValue) && schemaVersionValue is not null)
         {
-            instance.Version = Convert.ToInt32(versionValue);
+            instance.SchemaVersion = schemaVersionValue?.ToString()!;
         }
 
         if (data.TryGetValue("producer", out var producerValue) && producerValue is not null)
@@ -169,9 +169,9 @@ public partial class SessionStartPayload
         result["sessionId"] = obj.SessionId;
 
 
-        if (obj.Version is not null)
+        if (obj.SchemaVersion is not null)
         {
-            result["version"] = obj.Version;
+            result["schemaVersion"] = obj.SchemaVersion;
         }
 
 
