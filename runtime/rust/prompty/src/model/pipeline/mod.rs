@@ -19,3 +19,18 @@ pub use executor::*;
 
 pub mod processor;
 pub use processor::*;
+
+pub mod event_sink;
+pub use event_sink::*;
+
+pub mod trace_writer;
+pub use trace_writer::*;
+
+pub mod permission_resolver;
+pub use permission_resolver::*;
+
+pub mod checkpoint_store;
+pub use checkpoint_store::*;
+
+pub mod host_tool_executor;
+pub use host_tool_executor::*;

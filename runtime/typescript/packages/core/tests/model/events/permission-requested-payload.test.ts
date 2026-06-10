@@ -18,39 +18,51 @@ describe("PermissionRequestedPayload", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "permission": "tool.execute",\n  "target": "shell"\n}`;
+      const json = `{\n  "requestId": "perm_abc123",\n  "toolCallId": "call_abc123",\n  "permission": "tool.execute",\n  "target": "shell",\n  "promptRequest": "Allow shell to run tests?"\n}`;
       const instance = PermissionRequestedPayload.fromJson(json);
       expect(instance).toBeDefined();
+      expect(instance.requestId).toEqual("perm_abc123");
+      expect(instance.toolCallId).toEqual("call_abc123");
       expect(instance.permission).toEqual("tool.execute");
       expect(instance.target).toEqual("shell");
+      expect(instance.promptRequest).toEqual("Allow shell to run tests?");
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "permission": "tool.execute",\n  "target": "shell"\n}`;
+      const json = `{\n  "requestId": "perm_abc123",\n  "toolCallId": "call_abc123",\n  "permission": "tool.execute",\n  "target": "shell",\n  "promptRequest": "Allow shell to run tests?"\n}`;
       const instance = PermissionRequestedPayload.fromJson(json);
       const output = instance.toJson();
       const reloaded = PermissionRequestedPayload.fromJson(output);
+      expect(reloaded.requestId).toEqual(instance.requestId);
+      expect(reloaded.toolCallId).toEqual(instance.toolCallId);
       expect(reloaded.permission).toEqual(instance.permission);
       expect(reloaded.target).toEqual(instance.target);
+      expect(reloaded.promptRequest).toEqual(instance.promptRequest);
     });
   });
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `permission: tool.execute\ntarget: shell\n`;
+      const yaml = `requestId: perm_abc123\ntoolCallId: call_abc123\npermission: tool.execute\ntarget: shell\npromptRequest: Allow shell to run tests?\n`;
       const instance = PermissionRequestedPayload.fromYaml(yaml);
       expect(instance).toBeDefined();
+      expect(instance.requestId).toEqual("perm_abc123");
+      expect(instance.toolCallId).toEqual("call_abc123");
       expect(instance.permission).toEqual("tool.execute");
       expect(instance.target).toEqual("shell");
+      expect(instance.promptRequest).toEqual("Allow shell to run tests?");
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `permission: tool.execute\ntarget: shell\n`;
+      const yaml = `requestId: perm_abc123\ntoolCallId: call_abc123\npermission: tool.execute\ntarget: shell\npromptRequest: Allow shell to run tests?\n`;
       const instance = PermissionRequestedPayload.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = PermissionRequestedPayload.fromYaml(output);
+      expect(reloaded.requestId).toEqual(instance.requestId);
+      expect(reloaded.toolCallId).toEqual(instance.toolCallId);
       expect(reloaded.permission).toEqual(instance.permission);
       expect(reloaded.target).toEqual(instance.target);
+      expect(reloaded.promptRequest).toEqual(instance.promptRequest);
     });
   });
 

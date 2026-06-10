@@ -15,6 +15,8 @@ import (
 func TestPermissionCompletedPayloadLoadJSON(t *testing.T) {
 	jsonData := `
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"
@@ -30,6 +32,12 @@ func TestPermissionCompletedPayloadLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load PermissionCompletedPayload: %v", err)
 	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
 	if instance.Permission != "tool.execute" {
 		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
 	}
@@ -44,6 +52,8 @@ func TestPermissionCompletedPayloadLoadJSON(t *testing.T) {
 // TestPermissionCompletedPayloadLoadYAML tests loading PermissionCompletedPayload from YAML
 func TestPermissionCompletedPayloadLoadYAML(t *testing.T) {
 	yamlData := `
+requestId: perm_abc123
+toolCallId: call_abc123
 permission: tool.execute
 approved: true
 reason: user_approved
@@ -58,6 +68,12 @@ reason: user_approved
 	instance, err := prompty.LoadPermissionCompletedPayload(data, ctx)
 	if err != nil {
 		t.Fatalf("Failed to load PermissionCompletedPayload: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
 	}
 	if instance.Permission != "tool.execute" {
 		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
@@ -74,6 +90,8 @@ reason: user_approved
 func TestPermissionCompletedPayloadRoundtrip(t *testing.T) {
 	jsonData := `
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"
@@ -96,6 +114,12 @@ func TestPermissionCompletedPayloadRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload PermissionCompletedPayload: %v", err)
 	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
 	if reloaded.Permission != "tool.execute" {
 		t.Errorf(`Expected Permission to be "tool.execute", got %v`, reloaded.Permission)
 	}
@@ -111,6 +135,8 @@ func TestPermissionCompletedPayloadRoundtrip(t *testing.T) {
 func TestPermissionCompletedPayloadToJSON(t *testing.T) {
 	jsonData := `
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"
@@ -141,6 +167,8 @@ func TestPermissionCompletedPayloadToJSON(t *testing.T) {
 func TestPermissionCompletedPayloadToYAML(t *testing.T) {
 	jsonData := `
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"

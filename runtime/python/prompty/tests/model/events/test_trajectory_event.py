@@ -1,0 +1,121 @@
+import json
+
+import yaml
+
+from prompty.model import TrajectoryEvent
+
+
+def test_load_json_trajectoryevent():
+    json_data = r"""
+    {
+      "id": "traj_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "toolCallId": "call_abc123",
+      "turnIndex": 4,
+      "eventType": "command",
+      "createdAt": "2026-06-09T20:00:00Z"
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = TrajectoryEvent.load(data)
+    assert instance is not None
+    assert instance.id == "traj_abc123"
+    assert instance.session_id == "sess_abc123"
+    assert instance.turn_id == "turn_001"
+    assert instance.tool_call_id == "call_abc123"
+    assert instance.turn_index == 4
+    assert instance.event_type == "command"
+    assert instance.created_at == "2026-06-09T20:00:00Z"
+
+
+def test_load_yaml_trajectoryevent():
+    yaml_data = r"""
+    id: traj_abc123
+    sessionId: sess_abc123
+    turnId: turn_001
+    toolCallId: call_abc123
+    turnIndex: 4
+    eventType: command
+    createdAt: "2026-06-09T20:00:00Z"
+
+    """
+    data = yaml.load(yaml_data, Loader=yaml.FullLoader)
+    instance = TrajectoryEvent.load(data)
+    assert instance is not None
+    assert instance.id == "traj_abc123"
+    assert instance.session_id == "sess_abc123"
+    assert instance.turn_id == "turn_001"
+    assert instance.tool_call_id == "call_abc123"
+    assert instance.turn_index == 4
+    assert instance.event_type == "command"
+    assert instance.created_at == "2026-06-09T20:00:00Z"
+
+
+def test_roundtrip_json_trajectoryevent():
+    """Test that load -> save -> load produces equivalent data."""
+    json_data = r"""
+    {
+      "id": "traj_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "toolCallId": "call_abc123",
+      "turnIndex": 4,
+      "eventType": "command",
+      "createdAt": "2026-06-09T20:00:00Z"
+    }
+    """
+    original_data = json.loads(json_data, strict=False)
+    instance = TrajectoryEvent.load(original_data)
+    saved_data = instance.save()
+    reloaded = TrajectoryEvent.load(saved_data)
+    assert reloaded is not None
+    assert reloaded.id == "traj_abc123"
+    assert reloaded.session_id == "sess_abc123"
+    assert reloaded.turn_id == "turn_001"
+    assert reloaded.tool_call_id == "call_abc123"
+    assert reloaded.turn_index == 4
+    assert reloaded.event_type == "command"
+    assert reloaded.created_at == "2026-06-09T20:00:00Z"
+
+
+def test_to_json_trajectoryevent():
+    """Test that to_json produces valid JSON."""
+    json_data = r"""
+    {
+      "id": "traj_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "toolCallId": "call_abc123",
+      "turnIndex": 4,
+      "eventType": "command",
+      "createdAt": "2026-06-09T20:00:00Z"
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = TrajectoryEvent.load(data)
+    json_output = instance.to_json()
+    assert json_output is not None
+    parsed = json.loads(json_output)
+    assert isinstance(parsed, dict)
+
+
+def test_to_yaml_trajectoryevent():
+    """Test that to_yaml produces valid YAML."""
+    json_data = r"""
+    {
+      "id": "traj_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "toolCallId": "call_abc123",
+      "turnIndex": 4,
+      "eventType": "command",
+      "createdAt": "2026-06-09T20:00:00Z"
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = TrajectoryEvent.load(data)
+    yaml_output = instance.to_yaml()
+    assert yaml_output is not None
+    parsed = yaml.safe_load(yaml_output)
+    assert isinstance(parsed, dict)

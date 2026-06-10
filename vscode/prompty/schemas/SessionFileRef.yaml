@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SessionFileRef.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable session identifier
+  path:
+    type: string
+    description: File path, relative to the harness workspace when possible
+  toolName:
+    type: string
+    description: Tool that first observed the file, when known
+  turnIndex:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based turn index where the file was first observed
+  firstSeenAt:
+    type: string
+    description: ISO 8601 UTC timestamp when the file was first observed
+required:
+  - path
+description: A file observed or touched by a harness session.

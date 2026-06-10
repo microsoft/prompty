@@ -1,0 +1,30 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: HookEndPayload.yaml
+type: object
+properties:
+  hookInvocationId:
+    type: string
+    description: Stable hook invocation identifier
+  hookType:
+    type: string
+    description: Host-defined hook type
+  success:
+    type: boolean
+    description: Whether the hook completed successfully
+  output:
+    $ref: RecordUnknown.yaml
+    description: Hook output after host-side sanitization
+  durationMs:
+    type: number
+    description: Hook execution duration in milliseconds
+  error:
+    type: string
+    description: Human-readable error when success is false
+  redaction:
+    $ref: RedactionMetadata.yaml
+    description: Redaction state for sensitive hook output fields
+required:
+  - hookInvocationId
+  - hookType
+  - success
+description: Payload for "hook_end" events — a host lifecycle hook finished.

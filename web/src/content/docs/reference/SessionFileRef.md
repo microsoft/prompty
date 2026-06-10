@@ -1,0 +1,48 @@
+---
+title: "SessionFileRef"
+description: "Documentation for the SessionFileRef type."
+slug: "reference/sessionfileref"
+---
+
+A file observed or touched by a harness session.
+
+## Class Diagram
+
+```mermaid
+---
+title: SessionFileRef
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class SessionFileRef {
+        +string sessionId
+        +string path
+        +string toolName
+        +int32 turnIndex
+        +string firstSeenAt
+    }
+```
+
+## Yaml Example
+
+```yaml
+sessionId: sess_abc123
+path: src/index.ts
+toolName: view
+turnIndex: 2
+firstSeenAt: 2026-06-09T20:00:00Z
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| sessionId | string | Stable session identifier |
+| path | string | File path, relative to the harness workspace when possible |
+| toolName | string | Tool that first observed the file, when known |
+| turnIndex | int32 | Zero-based turn index where the file was first observed |
+| firstSeenAt | string | ISO 8601 UTC timestamp when the file was first observed |

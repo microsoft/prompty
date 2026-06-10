@@ -26,6 +26,16 @@ public partial class PermissionRequestedPayload
 #pragma warning restore CS8618
 
     /// <summary>
+    /// Stable permission request identifier
+    /// </summary>
+    public string? RequestId { get; set; }
+
+    /// <summary>
+    /// Associated tool call identifier, when the permission gates a tool call
+    /// </summary>
+    public string? ToolCallId { get; set; }
+
+    /// <summary>
     /// Permission/action name being requested
     /// </summary>
     public string Permission { get; set; } = string.Empty;
@@ -39,6 +49,21 @@ public partial class PermissionRequestedPayload
     /// Additional host-specific permission details
     /// </summary>
     public IDictionary<string, object>? Details { get; set; }
+
+    /// <summary>
+    /// Human-readable prompt or rationale that can be shown to an approval UI
+    /// </summary>
+    public string? PromptRequest { get; set; }
+
+    /// <summary>
+    /// Policy metadata used to evaluate or explain the permission request
+    /// </summary>
+    public IDictionary<string, object>? Policy { get; set; }
+
+    /// <summary>
+    /// Redaction state for sensitive request fields
+    /// </summary>
+    public RedactionMetadata? Redaction { get; set; }
 
 
 
@@ -62,6 +87,16 @@ public partial class PermissionRequestedPayload
         var instance = new PermissionRequestedPayload();
 
 
+        if (data.TryGetValue("requestId", out var requestIdValue) && requestIdValue is not null)
+        {
+            instance.RequestId = requestIdValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("toolCallId", out var toolCallIdValue) && toolCallIdValue is not null)
+        {
+            instance.ToolCallId = toolCallIdValue?.ToString()!;
+        }
+
         if (data.TryGetValue("permission", out var permissionValue) && permissionValue is not null)
         {
             instance.Permission = permissionValue?.ToString()!;
@@ -75,6 +110,21 @@ public partial class PermissionRequestedPayload
         if (data.TryGetValue("details", out var detailsValue) && detailsValue is not null)
         {
             instance.Details = detailsValue.GetDictionary()!;
+        }
+
+        if (data.TryGetValue("promptRequest", out var promptRequestValue) && promptRequestValue is not null)
+        {
+            instance.PromptRequest = promptRequestValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("policy", out var policyValue) && policyValue is not null)
+        {
+            instance.Policy = policyValue.GetDictionary()!;
+        }
+
+        if (data.TryGetValue("redaction", out var redactionValue) && redactionValue is not null)
+        {
+            instance.Redaction = RedactionMetadata.Load(redactionValue.GetDictionary(RedactionMetadata.ShorthandProperty), context);
         }
 
         if (context is not null)
@@ -106,6 +156,18 @@ public partial class PermissionRequestedPayload
         var result = new Dictionary<string, object?>();
 
 
+        if (obj.RequestId is not null)
+        {
+            result["requestId"] = obj.RequestId;
+        }
+
+
+        if (obj.ToolCallId is not null)
+        {
+            result["toolCallId"] = obj.ToolCallId;
+        }
+
+
         result["permission"] = obj.Permission;
 
 
@@ -118,6 +180,24 @@ public partial class PermissionRequestedPayload
         if (obj.Details is not null)
         {
             result["details"] = obj.Details;
+        }
+
+
+        if (obj.PromptRequest is not null)
+        {
+            result["promptRequest"] = obj.PromptRequest;
+        }
+
+
+        if (obj.Policy is not null)
+        {
+            result["policy"] = obj.Policy;
+        }
+
+
+        if (obj.Redaction is not null)
+        {
+            result["redaction"] = obj.Redaction?.Save(context);
         }
 
 

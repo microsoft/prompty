@@ -12,9 +12,12 @@ import (
 // PermissionCompletedPayload represents Payload for permission completion events — an approval decision was made.
 
 type PermissionCompletedPayload struct {
-	Permission string  `json:"permission" yaml:"permission"`
-	Approved   bool    `json:"approved" yaml:"approved"`
-	Reason     *string `json:"reason,omitempty" yaml:"reason,omitempty"`
+	RequestId  *string                `json:"requestId,omitempty" yaml:"requestId,omitempty"`
+	ToolCallId *string                `json:"toolCallId,omitempty" yaml:"toolCallId,omitempty"`
+	Permission string                 `json:"permission" yaml:"permission"`
+	Approved   bool                   `json:"approved" yaml:"approved"`
+	Reason     *string                `json:"reason,omitempty" yaml:"reason,omitempty"`
+	Result     map[string]interface{} `json:"result,omitempty" yaml:"result,omitempty"`
 }
 
 // LoadPermissionCompletedPayload creates a PermissionCompletedPayload from a map[string]interface{}
@@ -23,6 +26,14 @@ func LoadPermissionCompletedPayload(data interface{}, ctx *LoadContext) (Permiss
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["requestId"]; ok && val != nil {
+			v := string(val.(string))
+			result.RequestId = &v
+		}
+		if val, ok := m["toolCallId"]; ok && val != nil {
+			v := string(val.(string))
+			result.ToolCallId = &v
+		}
 		if val, ok := m["permission"]; ok && val != nil {
 			result.Permission = string(val.(string))
 		}
@@ -33,6 +44,11 @@ func LoadPermissionCompletedPayload(data interface{}, ctx *LoadContext) (Permiss
 			v := string(val.(string))
 			result.Reason = &v
 		}
+		if val, ok := m["result"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				result.Result = m
+			}
+		}
 	}
 
 	return result, nil
@@ -41,10 +57,19 @@ func LoadPermissionCompletedPayload(data interface{}, ctx *LoadContext) (Permiss
 // Save serializes PermissionCompletedPayload to map[string]interface{}
 func (obj *PermissionCompletedPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	if obj.RequestId != nil {
+		result["requestId"] = *obj.RequestId
+	}
+	if obj.ToolCallId != nil {
+		result["toolCallId"] = *obj.ToolCallId
+	}
 	result["permission"] = obj.Permission
 	result["approved"] = obj.Approved
 	if obj.Reason != nil {
 		result["reason"] = *obj.Reason
+	}
+	if obj.Result != nil {
+		result["result"] = obj.Result
 	}
 
 	return result

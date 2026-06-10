@@ -1,0 +1,81 @@
+import json
+
+import yaml
+
+from prompty.model import HarnessContext
+
+
+def test_load_json_harnesscontext():
+    json_data = r"""
+    {
+      "cwd": "/workspace/project",
+      "gitRoot": "/workspace/project"
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = HarnessContext.load(data)
+    assert instance is not None
+    assert instance.cwd == "/workspace/project"
+    assert instance.git_root == "/workspace/project"
+
+
+def test_load_yaml_harnesscontext():
+    yaml_data = r"""
+    cwd: /workspace/project
+    gitRoot: /workspace/project
+
+    """
+    data = yaml.load(yaml_data, Loader=yaml.FullLoader)
+    instance = HarnessContext.load(data)
+    assert instance is not None
+    assert instance.cwd == "/workspace/project"
+    assert instance.git_root == "/workspace/project"
+
+
+def test_roundtrip_json_harnesscontext():
+    """Test that load -> save -> load produces equivalent data."""
+    json_data = r"""
+    {
+      "cwd": "/workspace/project",
+      "gitRoot": "/workspace/project"
+    }
+    """
+    original_data = json.loads(json_data, strict=False)
+    instance = HarnessContext.load(original_data)
+    saved_data = instance.save()
+    reloaded = HarnessContext.load(saved_data)
+    assert reloaded is not None
+    assert reloaded.cwd == "/workspace/project"
+    assert reloaded.git_root == "/workspace/project"
+
+
+def test_to_json_harnesscontext():
+    """Test that to_json produces valid JSON."""
+    json_data = r"""
+    {
+      "cwd": "/workspace/project",
+      "gitRoot": "/workspace/project"
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = HarnessContext.load(data)
+    json_output = instance.to_json()
+    assert json_output is not None
+    parsed = json.loads(json_output)
+    assert isinstance(parsed, dict)
+
+
+def test_to_yaml_harnesscontext():
+    """Test that to_yaml produces valid YAML."""
+    json_data = r"""
+    {
+      "cwd": "/workspace/project",
+      "gitRoot": "/workspace/project"
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = HarnessContext.load(data)
+    yaml_output = instance.to_yaml()
+    assert yaml_output is not None
+    parsed = yaml.safe_load(yaml_output)
+    assert isinstance(parsed, dict)

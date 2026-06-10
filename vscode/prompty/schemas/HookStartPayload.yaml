@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: HookStartPayload.yaml
+type: object
+properties:
+  hookInvocationId:
+    type: string
+    description: Stable hook invocation identifier
+  hookType:
+    type: string
+    description: Host-defined hook type
+  input:
+    $ref: RecordUnknown.yaml
+    description: Hook input after host-side sanitization
+  redaction:
+    $ref: RedactionMetadata.yaml
+    description: Redaction state for sensitive hook input fields
+required:
+  - hookInvocationId
+  - hookType
+description: Payload for "hook_start" events — a host lifecycle hook is beginning.

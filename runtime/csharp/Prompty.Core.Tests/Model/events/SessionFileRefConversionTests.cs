@@ -1,0 +1,152 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class SessionFileRefConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+sessionId: sess_abc123
+path: src/index.ts
+toolName: view
+turnIndex: 2
+firstSeenAt: "2026-06-09T20:00:00Z"
+
+""";
+
+        var instance = SessionFileRef.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("sess_abc123", instance.SessionId);
+        Assert.Equal("src/index.ts", instance.Path);
+        Assert.Equal("view", instance.ToolName);
+        Assert.Equal(2, instance.TurnIndex);
+        Assert.Equal("2026-06-09T20:00:00Z", instance.FirstSeenAt);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "sessionId": "sess_abc123",
+  "path": "src/index.ts",
+  "toolName": "view",
+  "turnIndex": 2,
+  "firstSeenAt": "2026-06-09T20:00:00Z"
+}
+""";
+
+        var instance = SessionFileRef.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("sess_abc123", instance.SessionId);
+        Assert.Equal("src/index.ts", instance.Path);
+        Assert.Equal("view", instance.ToolName);
+        Assert.Equal(2, instance.TurnIndex);
+        Assert.Equal("2026-06-09T20:00:00Z", instance.FirstSeenAt);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "sessionId": "sess_abc123",
+  "path": "src/index.ts",
+  "toolName": "view",
+  "turnIndex": 2,
+  "firstSeenAt": "2026-06-09T20:00:00Z"
+}
+""";
+
+        var original = SessionFileRef.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = SessionFileRef.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("sess_abc123", reloaded.SessionId);
+        Assert.Equal("src/index.ts", reloaded.Path);
+        Assert.Equal("view", reloaded.ToolName);
+        Assert.Equal(2, reloaded.TurnIndex);
+        Assert.Equal("2026-06-09T20:00:00Z", reloaded.FirstSeenAt);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+sessionId: sess_abc123
+path: src/index.ts
+toolName: view
+turnIndex: 2
+firstSeenAt: "2026-06-09T20:00:00Z"
+
+""";
+
+        var original = SessionFileRef.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = SessionFileRef.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("sess_abc123", reloaded.SessionId);
+        Assert.Equal("src/index.ts", reloaded.Path);
+        Assert.Equal("view", reloaded.ToolName);
+        Assert.Equal(2, reloaded.TurnIndex);
+        Assert.Equal("2026-06-09T20:00:00Z", reloaded.FirstSeenAt);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "sessionId": "sess_abc123",
+  "path": "src/index.ts",
+  "toolName": "view",
+  "turnIndex": 2,
+  "firstSeenAt": "2026-06-09T20:00:00Z"
+}
+""";
+
+        var instance = SessionFileRef.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+sessionId: sess_abc123
+path: src/index.ts
+toolName: view
+turnIndex: 2
+firstSeenAt: "2026-06-09T20:00:00Z"
+
+""";
+
+        var instance = SessionFileRef.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

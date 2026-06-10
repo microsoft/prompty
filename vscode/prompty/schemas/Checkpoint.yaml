@@ -1,0 +1,42 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Checkpoint.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: Stable checkpoint identifier
+  sessionId:
+    type: string
+    description: Stable session identifier
+  turnId:
+    type: string
+    description: Associated turn identifier, when the checkpoint was created inside a turn
+  checkpointNumber:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Monotonic checkpoint number within the session
+  title:
+    type: string
+    description: Short checkpoint title
+  overview:
+    type: string
+    description: Short human-readable overview
+  state:
+    $ref: RecordUnknown.yaml
+    description: Portable checkpoint state needed to resume or hand off the session
+  summary:
+    type: string
+    description: Optional host-authored summary or handoff note
+  metadata:
+    $ref: RecordUnknown.yaml
+    description: Host-defined checkpoint metadata
+  createdAt:
+    type: string
+    description: ISO 8601 UTC timestamp when the checkpoint was created
+  redaction:
+    $ref: RedactionMetadata.yaml
+    description: Redaction state for sensitive checkpoint fields
+required:
+  - title
+description: A persisted handoff point for a harness session.

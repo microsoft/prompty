@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
+from ._RedactionMetadata import RedactionMetadata
 
 
 @dataclass
@@ -16,19 +17,34 @@ class PermissionRequestedPayload:
 
     Attributes
     ----------
+    request_id : Optional[str]
+        Stable permission request identifier
+    tool_call_id : Optional[str]
+        Associated tool call identifier, when the permission gates a tool call
     permission : str
         Permission/action name being requested
     target : Optional[str]
         Resource or tool the permission applies to
     details : Optional[dict[str, Any]]
         Additional host-specific permission details
+    prompt_request : Optional[str]
+        Human-readable prompt or rationale that can be shown to an approval UI
+    policy : Optional[dict[str, Any]]
+        Policy metadata used to evaluate or explain the permission request
+    redaction : Optional[RedactionMetadata]
+        Redaction state for sensitive request fields
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
+    request_id: str | None = None
+    tool_call_id: str | None = None
     permission: str = field(default="")
     target: str | None = None
     details: dict[str, Any] | None = None
+    prompt_request: str | None = None
+    policy: dict[str, Any] | None = None
+    redaction: RedactionMetadata | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "PermissionRequestedPayload":
@@ -50,12 +66,22 @@ class PermissionRequestedPayload:
         # create new instance
         instance = PermissionRequestedPayload()
 
+        if data is not None and "requestId" in data:
+            instance.request_id = data["requestId"]
+        if data is not None and "toolCallId" in data:
+            instance.tool_call_id = data["toolCallId"]
         if data is not None and "permission" in data:
             instance.permission = data["permission"]
         if data is not None and "target" in data:
             instance.target = data["target"]
         if data is not None and "details" in data:
             instance.details = data["details"]
+        if data is not None and "promptRequest" in data:
+            instance.prompt_request = data["promptRequest"]
+        if data is not None and "policy" in data:
+            instance.policy = data["policy"]
+        if data is not None and "redaction" in data:
+            instance.redaction = RedactionMetadata.load(data["redaction"], context)
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -74,12 +100,22 @@ class PermissionRequestedPayload:
 
         result: dict[str, Any] = {}
 
+        if obj.request_id is not None:
+            result["requestId"] = obj.request_id
+        if obj.tool_call_id is not None:
+            result["toolCallId"] = obj.tool_call_id
         if obj.permission is not None:
             result["permission"] = obj.permission
         if obj.target is not None:
             result["target"] = obj.target
         if obj.details is not None:
             result["details"] = obj.details
+        if obj.prompt_request is not None:
+            result["promptRequest"] = obj.prompt_request
+        if obj.policy is not None:
+            result["policy"] = obj.policy
+        if obj.redaction is not None:
+            result["redaction"] = obj.redaction.save(context)
 
         if context is not None:
             result = context.process_dict(result)

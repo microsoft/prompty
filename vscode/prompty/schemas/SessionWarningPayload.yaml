@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SessionWarningPayload.yaml
+type: object
+properties:
+  warningType:
+    type: string
+    description: Stable machine-readable warning category
+  message:
+    type: string
+    description: Human-readable warning message
+  details:
+    $ref: RecordUnknown.yaml
+    description: Additional host-specific warning details
+required:
+  - warningType
+  - message
+description: Payload for "session_warning" events.

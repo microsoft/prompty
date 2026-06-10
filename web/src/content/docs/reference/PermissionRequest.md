@@ -1,0 +1,53 @@
+---
+title: "PermissionRequest"
+description: "Documentation for the PermissionRequest type."
+slug: "reference/permissionrequest"
+---
+
+Request passed to a permission resolver. This is the live protocol shape; the
+event payloads above can include trace-only metadata such as redaction state.
+
+## Class Diagram
+
+```mermaid
+---
+title: PermissionRequest
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class PermissionRequest {
+        +string requestId
+        +string toolCallId
+        +string permission
+        +string target
+        +dictionary details
+        +string promptRequest
+        +dictionary policy
+    }
+```
+
+## Yaml Example
+
+```yaml
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+target: shell
+promptRequest: Allow shell to run tests?
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | string | Stable permission request identifier |
+| toolCallId | string | Associated tool call identifier, when the permission gates a tool call |
+| permission | string | Permission/action name being requested |
+| target | string | Resource or tool the permission applies to |
+| details | dictionary | Additional host-specific permission details |
+| promptRequest | string | Human-readable prompt or rationale that can be shown to an approval UI |
+| policy | dictionary | Policy metadata used to evaluate or explain the permission request |

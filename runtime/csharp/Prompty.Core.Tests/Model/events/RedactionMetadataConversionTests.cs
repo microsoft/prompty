@@ -1,0 +1,122 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class RedactionMetadataConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+sanitized: true
+policy: default-v1
+
+""";
+
+        var instance = RedactionMetadata.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.True(instance.Sanitized);
+        Assert.Equal("default-v1", instance.Policy);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "sanitized": true,
+  "policy": "default-v1"
+}
+""";
+
+        var instance = RedactionMetadata.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.True(instance.Sanitized);
+        Assert.Equal("default-v1", instance.Policy);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "sanitized": true,
+  "policy": "default-v1"
+}
+""";
+
+        var original = RedactionMetadata.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = RedactionMetadata.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.True(reloaded.Sanitized);
+        Assert.Equal("default-v1", reloaded.Policy);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+sanitized: true
+policy: default-v1
+
+""";
+
+        var original = RedactionMetadata.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = RedactionMetadata.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.True(reloaded.Sanitized);
+        Assert.Equal("default-v1", reloaded.Policy);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "sanitized": true,
+  "policy": "default-v1"
+}
+""";
+
+        var instance = RedactionMetadata.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+sanitized: true
+policy: default-v1
+
+""";
+
+        var instance = RedactionMetadata.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

@@ -40,12 +40,22 @@ export { TurnEndPayload } from "./events/turn-end-payload";
 export { LlmStartPayload } from "./events/llm-start-payload";
 export { LlmCompletePayload } from "./events/llm-complete-payload";
 export { RetryPayload } from "./events/retry-payload";
+export { RedactedField } from "./events/redacted-field";
+export { RedactionMetadata } from "./events/redaction-metadata";
 export { PermissionRequestedPayload } from "./events/permission-requested-payload";
 export { PermissionCompletedPayload } from "./events/permission-completed-payload";
+export { PermissionRequest } from "./events/permission-request";
+export { PermissionDecision } from "./events/permission-decision";
 export { TokenEventPayload } from "./events/token-event-payload";
 export { ThinkingEventPayload } from "./events/thinking-event-payload";
 export { ToolCallStartPayload } from "./events/tool-call-start-payload";
 export { ToolCallCompletePayload } from "./events/tool-call-complete-payload";
+export { ToolExecutionStartPayload } from "./events/tool-execution-start-payload";
+export { ToolExecutionCompletePayload } from "./events/tool-execution-complete-payload";
+export { HostToolRequest } from "./events/host-tool-request";
+export { HostToolResult } from "./events/host-tool-result";
+export { HookStartPayload } from "./events/hook-start-payload";
+export { HookEndPayload } from "./events/hook-end-payload";
 export { ToolResultPayload } from "./events/tool-result-payload";
 export { StatusEventPayload } from "./events/status-event-payload";
 export { MessagesUpdatedPayload } from "./events/messages-updated-payload";
@@ -56,6 +66,17 @@ export { CompactionCompletePayload } from "./events/compaction-complete-payload"
 export { CompactionFailedPayload } from "./events/compaction-failed-payload";
 export { TurnSummary } from "./events/turn-summary";
 export { TurnTrace } from "./events/turn-trace";
+export { HarnessContext } from "./events/harness-context";
+export { SessionStartPayload } from "./events/session-start-payload";
+export { SessionEndPayload } from "./events/session-end-payload";
+export { SessionWarningPayload } from "./events/session-warning-payload";
+export { SessionEvent } from "./events/session-event";
+export { Checkpoint } from "./events/checkpoint";
+export { TrajectoryEvent } from "./events/trajectory-event";
+export { SessionFileRef } from "./events/session-file-ref";
+export { SessionRef } from "./events/session-ref";
+export { SessionSummary } from "./events/session-summary";
+export { SessionTrace } from "./events/session-trace";
 export {
   StreamChunk,
   TextChunk,
@@ -75,6 +96,11 @@ export type { Renderer } from "./pipeline/renderer";
 export type { Parser } from "./pipeline/parser";
 export type { Executor } from "./pipeline/executor";
 export type { Processor } from "./pipeline/processor";
+export type { EventSink } from "./pipeline/event-sink";
+export type { TraceWriter } from "./pipeline/trace-writer";
+export type { PermissionResolver } from "./pipeline/permission-resolver";
+export type { CheckpointStore } from "./pipeline/checkpoint-store";
+export type { HostToolExecutor } from "./pipeline/host-tool-executor";
 
 export { StreamOptions } from "./streaming/stream-options";
 

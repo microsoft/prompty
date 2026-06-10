@@ -24,10 +24,12 @@ import "./pipeline/renderer.tsp";
 import "./pipeline/parser.tsp";
 import "./pipeline/executor.tsp";
 import "./pipeline/processor.tsp";
+import "./pipeline/harness.tsp";
 
 // Events
 import "./events/payloads.tsp";
 import "./events/stream-chunks.tsp";
+import "./events/session.tsp";
 
 // Streaming
 import "./streaming/stream.tsp";

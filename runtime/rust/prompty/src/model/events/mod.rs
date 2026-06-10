@@ -20,11 +20,23 @@ pub use llm_complete_payload::*;
 pub mod retry_payload;
 pub use retry_payload::*;
 
+pub mod redacted_field;
+pub use redacted_field::*;
+
+pub mod redaction_metadata;
+pub use redaction_metadata::*;
+
 pub mod permission_requested_payload;
 pub use permission_requested_payload::*;
 
 pub mod permission_completed_payload;
 pub use permission_completed_payload::*;
+
+pub mod permission_request;
+pub use permission_request::*;
+
+pub mod permission_decision;
+pub use permission_decision::*;
 
 pub mod token_event_payload;
 pub use token_event_payload::*;
@@ -37,6 +49,24 @@ pub use tool_call_start_payload::*;
 
 pub mod tool_call_complete_payload;
 pub use tool_call_complete_payload::*;
+
+pub mod tool_execution_start_payload;
+pub use tool_execution_start_payload::*;
+
+pub mod tool_execution_complete_payload;
+pub use tool_execution_complete_payload::*;
+
+pub mod host_tool_request;
+pub use host_tool_request::*;
+
+pub mod host_tool_result;
+pub use host_tool_result::*;
+
+pub mod hook_start_payload;
+pub use hook_start_payload::*;
+
+pub mod hook_end_payload;
+pub use hook_end_payload::*;
 
 pub mod tool_result_payload;
 pub use tool_result_payload::*;
@@ -67,6 +97,39 @@ pub use turn_summary::*;
 
 pub mod turn_trace;
 pub use turn_trace::*;
+
+pub mod harness_context;
+pub use harness_context::*;
+
+pub mod session_start_payload;
+pub use session_start_payload::*;
+
+pub mod session_end_payload;
+pub use session_end_payload::*;
+
+pub mod session_warning_payload;
+pub use session_warning_payload::*;
+
+pub mod session_event;
+pub use session_event::*;
+
+pub mod checkpoint;
+pub use checkpoint::*;
+
+pub mod trajectory_event;
+pub use trajectory_event::*;
+
+pub mod session_file_ref;
+pub use session_file_ref::*;
+
+pub mod session_ref;
+pub use session_ref::*;
+
+pub mod session_summary;
+pub use session_summary::*;
+
+pub mod session_trace;
+pub use session_trace::*;
 
 pub mod stream_chunk;
 pub use stream_chunk::*;

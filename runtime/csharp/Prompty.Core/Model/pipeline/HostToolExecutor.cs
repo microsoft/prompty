@@ -1,0 +1,16 @@
+// Copyright (c) Microsoft. All rights reserved.
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+/// <summary>
+/// Executes host tools after policy and permission checks.
+/// </summary>
+public interface IHostToolExecutor
+{
+    /// <summary>
+    /// Execute a concrete host tool request and return its completion payload
+    /// </summary>
+    Task<HostToolResult> ExecuteAsync(HostToolRequest request);
+}

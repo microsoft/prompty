@@ -1,0 +1,245 @@
+// Copyright (c) Microsoft. All rights reserved.
+using System.Text.Json;
+using YamlDotNet.Serialization;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+/// <summary>
+/// Payload for "hook_end" events — a host lifecycle hook finished.
+/// </summary>
+public partial class HookEndPayload
+{
+    /// <summary>
+    /// The shorthand property name for this type, if any.
+    /// </summary>
+    public static string? ShorthandProperty => null;
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="HookEndPayload"/>.
+    /// </summary>
+#pragma warning disable CS8618
+    public HookEndPayload()
+    {
+    }
+#pragma warning restore CS8618
+
+    /// <summary>
+    /// Stable hook invocation identifier
+    /// </summary>
+    public string HookInvocationId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Host-defined hook type
+    /// </summary>
+    public string HookType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Whether the hook completed successfully
+    /// </summary>
+    public bool Success { get; set; } = false;
+
+    /// <summary>
+    /// Hook output after host-side sanitization
+    /// </summary>
+    public IDictionary<string, object>? Output { get; set; }
+
+    /// <summary>
+    /// Hook execution duration in milliseconds
+    /// </summary>
+    public double? DurationMs { get; set; }
+
+    /// <summary>
+    /// Human-readable error when success is false
+    /// </summary>
+    public string? Error { get; set; }
+
+    /// <summary>
+    /// Redaction state for sensitive hook output fields
+    /// </summary>
+    public RedactionMetadata? Redaction { get; set; }
+
+
+
+    #region Load Methods
+
+    /// <summary>
+    /// Load a HookEndPayload instance from a dictionary.
+    /// </summary>
+    /// <param name="data">The dictionary containing the data.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded HookEndPayload instance.</returns>
+    public static HookEndPayload Load(Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        if (context is not null)
+        {
+            data = context.ProcessInput(data);
+        }
+
+
+        // Create new instance
+        var instance = new HookEndPayload();
+
+
+        if (data.TryGetValue("hookInvocationId", out var hookInvocationIdValue) && hookInvocationIdValue is not null)
+        {
+            instance.HookInvocationId = hookInvocationIdValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("hookType", out var hookTypeValue) && hookTypeValue is not null)
+        {
+            instance.HookType = hookTypeValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("success", out var successValue) && successValue is not null)
+        {
+            instance.Success = Convert.ToBoolean(successValue);
+        }
+
+        if (data.TryGetValue("output", out var outputValue) && outputValue is not null)
+        {
+            instance.Output = outputValue.GetDictionary()!;
+        }
+
+        if (data.TryGetValue("durationMs", out var durationMsValue) && durationMsValue is not null)
+        {
+            instance.DurationMs = Convert.ToDouble(durationMsValue);
+        }
+
+        if (data.TryGetValue("error", out var errorValue) && errorValue is not null)
+        {
+            instance.Error = errorValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("redaction", out var redactionValue) && redactionValue is not null)
+        {
+            instance.Redaction = RedactionMetadata.Load(redactionValue.GetDictionary(RedactionMetadata.ShorthandProperty), context);
+        }
+
+        if (context is not null)
+        {
+            instance = context.ProcessOutput(instance);
+        }
+        return instance;
+    }
+
+
+    #endregion
+
+    #region Save Methods
+
+    /// <summary>
+    /// Save the HookEndPayload instance to a dictionary.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The dictionary representation of this instance.</returns>
+    public Dictionary<string, object?> Save(SaveContext? context = null)
+    {
+        var obj = this;
+        if (context is not null)
+        {
+            obj = context.ProcessObject(obj);
+        }
+
+
+        var result = new Dictionary<string, object?>();
+
+
+        result["hookInvocationId"] = obj.HookInvocationId;
+
+
+        result["hookType"] = obj.HookType;
+
+
+        result["success"] = obj.Success;
+
+
+        if (obj.Output is not null)
+        {
+            result["output"] = obj.Output;
+        }
+
+
+        if (obj.DurationMs is not null)
+        {
+            result["durationMs"] = obj.DurationMs;
+        }
+
+
+        if (obj.Error is not null)
+        {
+            result["error"] = obj.Error;
+        }
+
+
+        if (obj.Redaction is not null)
+        {
+            result["redaction"] = obj.Redaction?.Save(context);
+        }
+
+
+        if (context is not null)
+        {
+            result = context.ProcessDict(result);
+        }
+
+        return result;
+    }
+
+
+    /// <summary>
+    /// Convert the HookEndPayload instance to a YAML string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The YAML string representation of this instance.</returns>
+    public string ToYaml(SaveContext? context = null)
+    {
+        context ??= new SaveContext();
+        return context.ToYaml(Save(context));
+    }
+
+    /// <summary>
+    /// Convert the HookEndPayload instance to a JSON string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <param name="indent">Whether to indent the output. Defaults to true.</param>
+    /// <returns>The JSON string representation of this instance.</returns>
+    public string ToJson(SaveContext? context = null, bool indent = true)
+    {
+        context ??= new SaveContext();
+        return context.ToJson(Save(context), indent);
+    }
+
+    /// <summary>
+    /// Load a HookEndPayload instance from a JSON string.
+    /// </summary>
+    /// <param name="json">The JSON string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded HookEndPayload instance.</returns>
+    public static HookEndPayload FromJson(string json, LoadContext? context = null)
+    {
+        using var doc = JsonDocument.Parse(json);
+        Dictionary<string, object?> dict;
+        dict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonUtils.Options)
+            ?? throw new ArgumentException("Failed to parse JSON as dictionary");
+
+        return Load(dict, context);
+    }
+
+    /// <summary>
+    /// Load a HookEndPayload instance from a YAML string.
+    /// </summary>
+    /// <param name="yaml">The YAML string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded HookEndPayload instance.</returns>
+    public static HookEndPayload FromYaml(string yaml, LoadContext? context = null)
+    {
+        var dict = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml)
+            ?? throw new ArgumentException("Failed to parse YAML as dictionary");
+
+        return Load(dict, context);
+    }
+
+    #endregion
+}

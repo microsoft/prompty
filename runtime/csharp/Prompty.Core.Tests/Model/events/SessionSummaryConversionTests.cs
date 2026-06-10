@@ -1,0 +1,152 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class SessionSummaryConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+sessionId: sess_abc123
+status: success
+turns: 5
+checkpoints: 2
+durationMs: 12500
+
+""";
+
+        var instance = SessionSummary.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("sess_abc123", instance.SessionId);
+        Assert.Equal(SessionSummaryStatus.Success, instance.Status);
+        Assert.Equal(5, instance.Turns);
+        Assert.Equal(2, instance.Checkpoints);
+        Assert.Equal(12500, instance.DurationMs);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "sessionId": "sess_abc123",
+  "status": "success",
+  "turns": 5,
+  "checkpoints": 2,
+  "durationMs": 12500
+}
+""";
+
+        var instance = SessionSummary.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("sess_abc123", instance.SessionId);
+        Assert.Equal(SessionSummaryStatus.Success, instance.Status);
+        Assert.Equal(5, instance.Turns);
+        Assert.Equal(2, instance.Checkpoints);
+        Assert.Equal(12500, instance.DurationMs);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "sessionId": "sess_abc123",
+  "status": "success",
+  "turns": 5,
+  "checkpoints": 2,
+  "durationMs": 12500
+}
+""";
+
+        var original = SessionSummary.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = SessionSummary.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("sess_abc123", reloaded.SessionId);
+        Assert.Equal(SessionSummaryStatus.Success, reloaded.Status);
+        Assert.Equal(5, reloaded.Turns);
+        Assert.Equal(2, reloaded.Checkpoints);
+        Assert.Equal(12500, reloaded.DurationMs);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+sessionId: sess_abc123
+status: success
+turns: 5
+checkpoints: 2
+durationMs: 12500
+
+""";
+
+        var original = SessionSummary.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = SessionSummary.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("sess_abc123", reloaded.SessionId);
+        Assert.Equal(SessionSummaryStatus.Success, reloaded.Status);
+        Assert.Equal(5, reloaded.Turns);
+        Assert.Equal(2, reloaded.Checkpoints);
+        Assert.Equal(12500, reloaded.DurationMs);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "sessionId": "sess_abc123",
+  "status": "success",
+  "turns": 5,
+  "checkpoints": 2,
+  "durationMs": 12500
+}
+""";
+
+        var instance = SessionSummary.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+sessionId: sess_abc123
+status: success
+turns: 5
+checkpoints: 2
+durationMs: 12500
+
+""";
+
+        var instance = SessionSummary.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

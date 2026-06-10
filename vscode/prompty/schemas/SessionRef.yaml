@@ -1,0 +1,25 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SessionRef.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable session identifier
+  refType:
+    type: string
+    description: Reference category
+  refValue:
+    type: string
+    description: Reference value
+  turnIndex:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based turn index where the reference was first observed
+  createdAt:
+    type: string
+    description: ISO 8601 UTC timestamp when the reference was recorded
+required:
+  - refType
+  - refValue
+description: A non-file reference observed by a harness session.

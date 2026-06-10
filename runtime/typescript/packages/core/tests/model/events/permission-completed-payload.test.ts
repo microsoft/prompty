@@ -18,19 +18,23 @@ describe("PermissionCompletedPayload", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "permission": "tool.execute",\n  "approved": true,\n  "reason": "user_approved"\n}`;
+      const json = `{\n  "requestId": "perm_abc123",\n  "toolCallId": "call_abc123",\n  "permission": "tool.execute",\n  "approved": true,\n  "reason": "user_approved"\n}`;
       const instance = PermissionCompletedPayload.fromJson(json);
       expect(instance).toBeDefined();
+      expect(instance.requestId).toEqual("perm_abc123");
+      expect(instance.toolCallId).toEqual("call_abc123");
       expect(instance.permission).toEqual("tool.execute");
       expect(instance.approved).toEqual(true);
       expect(instance.reason).toEqual("user_approved");
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "permission": "tool.execute",\n  "approved": true,\n  "reason": "user_approved"\n}`;
+      const json = `{\n  "requestId": "perm_abc123",\n  "toolCallId": "call_abc123",\n  "permission": "tool.execute",\n  "approved": true,\n  "reason": "user_approved"\n}`;
       const instance = PermissionCompletedPayload.fromJson(json);
       const output = instance.toJson();
       const reloaded = PermissionCompletedPayload.fromJson(output);
+      expect(reloaded.requestId).toEqual(instance.requestId);
+      expect(reloaded.toolCallId).toEqual(instance.toolCallId);
       expect(reloaded.permission).toEqual(instance.permission);
       expect(reloaded.approved).toEqual(instance.approved);
       expect(reloaded.reason).toEqual(instance.reason);
@@ -39,19 +43,23 @@ describe("PermissionCompletedPayload", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `permission: tool.execute\napproved: true\nreason: user_approved\n`;
+      const yaml = `requestId: perm_abc123\ntoolCallId: call_abc123\npermission: tool.execute\napproved: true\nreason: user_approved\n`;
       const instance = PermissionCompletedPayload.fromYaml(yaml);
       expect(instance).toBeDefined();
+      expect(instance.requestId).toEqual("perm_abc123");
+      expect(instance.toolCallId).toEqual("call_abc123");
       expect(instance.permission).toEqual("tool.execute");
       expect(instance.approved).toEqual(true);
       expect(instance.reason).toEqual("user_approved");
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `permission: tool.execute\napproved: true\nreason: user_approved\n`;
+      const yaml = `requestId: perm_abc123\ntoolCallId: call_abc123\npermission: tool.execute\napproved: true\nreason: user_approved\n`;
       const instance = PermissionCompletedPayload.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = PermissionCompletedPayload.fromYaml(output);
+      expect(reloaded.requestId).toEqual(instance.requestId);
+      expect(reloaded.toolCallId).toEqual(instance.toolCallId);
       expect(reloaded.permission).toEqual(instance.permission);
       expect(reloaded.approved).toEqual(instance.approved);
       expect(reloaded.reason).toEqual(instance.reason);

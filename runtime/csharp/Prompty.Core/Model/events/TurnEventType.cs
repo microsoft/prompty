@@ -41,8 +41,20 @@ public enum TurnEventType
     [JsonPropertyName("tool_call_complete")]
     ToolCallComplete,
 
+    [JsonPropertyName("tool_execution_start")]
+    ToolExecutionStart,
+
+    [JsonPropertyName("tool_execution_complete")]
+    ToolExecutionComplete,
+
     [JsonPropertyName("tool_result")]
     ToolResult,
+
+    [JsonPropertyName("hook_start")]
+    HookStart,
+
+    [JsonPropertyName("hook_end")]
+    HookEnd,
 
     [JsonPropertyName("status")]
     Status,

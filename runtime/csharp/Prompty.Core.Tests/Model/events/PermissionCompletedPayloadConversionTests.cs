@@ -11,6 +11,8 @@ public class PermissionCompletedPayloadConversionTests
     public void LoadYamlInput()
     {
         string yamlData = """
+requestId: perm_abc123
+toolCallId: call_abc123
 permission: tool.execute
 approved: true
 reason: user_approved
@@ -20,6 +22,8 @@ reason: user_approved
         var instance = PermissionCompletedPayload.FromYaml(yamlData);
 
         Assert.NotNull(instance);
+        Assert.Equal("perm_abc123", instance.RequestId);
+        Assert.Equal("call_abc123", instance.ToolCallId);
         Assert.Equal("tool.execute", instance.Permission);
         Assert.True(instance.Approved);
         Assert.Equal("user_approved", instance.Reason);
@@ -30,6 +34,8 @@ reason: user_approved
     {
         string jsonData = """
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"
@@ -38,6 +44,8 @@ reason: user_approved
 
         var instance = PermissionCompletedPayload.FromJson(jsonData);
         Assert.NotNull(instance);
+        Assert.Equal("perm_abc123", instance.RequestId);
+        Assert.Equal("call_abc123", instance.ToolCallId);
         Assert.Equal("tool.execute", instance.Permission);
         Assert.True(instance.Approved);
         Assert.Equal("user_approved", instance.Reason);
@@ -49,6 +57,8 @@ reason: user_approved
         // Test that FromJson -> ToJson -> FromJson produces equivalent data
         string jsonData = """
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"
@@ -63,6 +73,8 @@ reason: user_approved
 
         var reloaded = PermissionCompletedPayload.FromJson(json);
         Assert.NotNull(reloaded);
+        Assert.Equal("perm_abc123", reloaded.RequestId);
+        Assert.Equal("call_abc123", reloaded.ToolCallId);
         Assert.Equal("tool.execute", reloaded.Permission);
         Assert.True(reloaded.Approved);
         Assert.Equal("user_approved", reloaded.Reason);
@@ -73,6 +85,8 @@ reason: user_approved
     {
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
+requestId: perm_abc123
+toolCallId: call_abc123
 permission: tool.execute
 approved: true
 reason: user_approved
@@ -87,6 +101,8 @@ reason: user_approved
 
         var reloaded = PermissionCompletedPayload.FromYaml(yaml);
         Assert.NotNull(reloaded);
+        Assert.Equal("perm_abc123", reloaded.RequestId);
+        Assert.Equal("call_abc123", reloaded.ToolCallId);
         Assert.Equal("tool.execute", reloaded.Permission);
         Assert.True(reloaded.Approved);
         Assert.Equal("user_approved", reloaded.Reason);
@@ -97,6 +113,8 @@ reason: user_approved
     {
         string jsonData = """
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"
@@ -115,6 +133,8 @@ reason: user_approved
     public void ToYamlProducesValidYaml()
     {
         string yamlData = """
+requestId: perm_abc123
+toolCallId: call_abc123
 permission: tool.execute
 approved: true
 reason: user_approved

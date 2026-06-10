@@ -7,12 +7,18 @@ use super::super::context::{LoadContext, SaveContext};
 /// Payload for permission completion events — an approval decision was made.
 #[derive(Debug, Clone, Default)]
 pub struct PermissionCompletedPayload {
+    /// Stable permission request identifier
+    pub request_id: Option<String>,
+    /// Associated tool call identifier, when the permission gated a tool call
+    pub tool_call_id: Option<String>,
     /// Permission/action name that was decided
     pub permission: String,
     /// Whether the requested permission was approved
     pub approved: bool,
     /// Decision reason, if available
     pub reason: Option<String>,
+    /// Host-specific decision result, such as a durable approval token or denial details
+    pub result: serde_json::Value,
 }
 
 impl PermissionCompletedPayload {
@@ -39,9 +45,12 @@ impl PermissionCompletedPayload {
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
         Self {
+            request_id: value.get("requestId").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            tool_call_id: value.get("toolCallId").and_then(|v| v.as_str()).map(|s| s.to_string()),
             permission: value.get("permission").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             approved: value.get("approved").and_then(|v| v.as_bool()).unwrap_or(false),
             reason: value.get("reason").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            result: value.get("result").cloned().unwrap_or(serde_json::Value::Null),
         }
     }
 
@@ -51,12 +60,21 @@ impl PermissionCompletedPayload {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
+        if let Some(ref val) = self.request_id {
+            result.insert("requestId".to_string(), serde_json::Value::String(val.clone()));
+        }
+        if let Some(ref val) = self.tool_call_id {
+            result.insert("toolCallId".to_string(), serde_json::Value::String(val.clone()));
+        }
         if !self.permission.is_empty() {
             result.insert("permission".to_string(), serde_json::Value::String(self.permission.clone()));
         }
         result.insert("approved".to_string(), serde_json::Value::Bool(self.approved));
         if let Some(ref val) = self.reason {
             result.insert("reason".to_string(), serde_json::Value::String(val.clone()));
+        }
+        if !self.result.is_null() {
+            result.insert("result".to_string(), self.result.clone());
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }
@@ -70,4 +88,10 @@ impl PermissionCompletedPayload {
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
     }
+    /// Returns typed reference to the map if the field is an object.
+    /// Returns `None` if the field is null or not an object.
+    pub fn as_result_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
+        self.result.as_object()
+    }
+
 }

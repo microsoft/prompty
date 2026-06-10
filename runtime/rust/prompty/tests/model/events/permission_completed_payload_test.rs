@@ -9,6 +9,8 @@ use prompty::model::context::{LoadContext, SaveContext};
 fn test_permission_completed_payload_load_json() {
     let json = r####"
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"
@@ -18,6 +20,10 @@ fn test_permission_completed_payload_load_json() {
     let result = PermissionCompletedPayload::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
+    assert!(instance.request_id.is_some(), "Expected request_id to be Some");
+    assert_eq!(instance.request_id.as_ref().unwrap(), &"perm_abc123");
+    assert!(instance.tool_call_id.is_some(), "Expected tool_call_id to be Some");
+    assert_eq!(instance.tool_call_id.as_ref().unwrap(), &"call_abc123");
     assert_eq!(instance.permission, "tool.execute");
     assert_eq!(instance.approved, true);
     assert!(instance.reason.is_some(), "Expected reason to be Some");
@@ -27,6 +33,8 @@ fn test_permission_completed_payload_load_json() {
 #[test]
 fn test_permission_completed_payload_load_yaml() {
     let yaml = r####"
+requestId: perm_abc123
+toolCallId: call_abc123
 permission: tool.execute
 approved: true
 reason: user_approved
@@ -36,6 +44,8 @@ reason: user_approved
     let result = PermissionCompletedPayload::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
+    assert!(instance.request_id.is_some(), "Expected request_id to be Some");
+    assert!(instance.tool_call_id.is_some(), "Expected tool_call_id to be Some");
     assert_eq!(instance.permission, "tool.execute");
     assert_eq!(instance.approved, true);
     assert!(instance.reason.is_some(), "Expected reason to be Some");
@@ -45,6 +55,8 @@ reason: user_approved
 fn test_permission_completed_payload_roundtrip() {
     let json = r####"
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
   "approved": true,
   "reason": "user_approved"

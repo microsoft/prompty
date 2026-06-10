@@ -1,0 +1,5 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CheckpointStore.yaml
+type: object
+properties: {}
+description: Stores and retrieves resumable session checkpoints.

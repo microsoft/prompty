@@ -26,6 +26,16 @@ public partial class PermissionCompletedPayload
 #pragma warning restore CS8618
 
     /// <summary>
+    /// Stable permission request identifier
+    /// </summary>
+    public string? RequestId { get; set; }
+
+    /// <summary>
+    /// Associated tool call identifier, when the permission gated a tool call
+    /// </summary>
+    public string? ToolCallId { get; set; }
+
+    /// <summary>
     /// Permission/action name that was decided
     /// </summary>
     public string Permission { get; set; } = string.Empty;
@@ -39,6 +49,11 @@ public partial class PermissionCompletedPayload
     /// Decision reason, if available
     /// </summary>
     public string? Reason { get; set; }
+
+    /// <summary>
+    /// Host-specific decision result, such as a durable approval token or denial details
+    /// </summary>
+    public IDictionary<string, object>? Result { get; set; }
 
 
 
@@ -62,6 +77,16 @@ public partial class PermissionCompletedPayload
         var instance = new PermissionCompletedPayload();
 
 
+        if (data.TryGetValue("requestId", out var requestIdValue) && requestIdValue is not null)
+        {
+            instance.RequestId = requestIdValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("toolCallId", out var toolCallIdValue) && toolCallIdValue is not null)
+        {
+            instance.ToolCallId = toolCallIdValue?.ToString()!;
+        }
+
         if (data.TryGetValue("permission", out var permissionValue) && permissionValue is not null)
         {
             instance.Permission = permissionValue?.ToString()!;
@@ -75,6 +100,11 @@ public partial class PermissionCompletedPayload
         if (data.TryGetValue("reason", out var reasonValue) && reasonValue is not null)
         {
             instance.Reason = reasonValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("result", out var resultValue) && resultValue is not null)
+        {
+            instance.Result = resultValue.GetDictionary()!;
         }
 
         if (context is not null)
@@ -106,6 +136,18 @@ public partial class PermissionCompletedPayload
         var result = new Dictionary<string, object?>();
 
 
+        if (obj.RequestId is not null)
+        {
+            result["requestId"] = obj.RequestId;
+        }
+
+
+        if (obj.ToolCallId is not null)
+        {
+            result["toolCallId"] = obj.ToolCallId;
+        }
+
+
         result["permission"] = obj.Permission;
 
 
@@ -115,6 +157,12 @@ public partial class PermissionCompletedPayload
         if (obj.Reason is not null)
         {
             result["reason"] = obj.Reason;
+        }
+
+
+        if (obj.Result is not null)
+        {
+            result["result"] = obj.Result;
         }
 
 

@@ -1,0 +1,216 @@
+// Copyright (c) Microsoft. All rights reserved.
+using System.Text.Json;
+using YamlDotNet.Serialization;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+/// <summary>
+/// A non-file reference observed by a harness session.
+/// </summary>
+public partial class SessionRef
+{
+    /// <summary>
+    /// The shorthand property name for this type, if any.
+    /// </summary>
+    public static string? ShorthandProperty => null;
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="SessionRef"/>.
+    /// </summary>
+#pragma warning disable CS8618
+    public SessionRef()
+    {
+    }
+#pragma warning restore CS8618
+
+    /// <summary>
+    /// Stable session identifier
+    /// </summary>
+    public string? SessionId { get; set; }
+
+    /// <summary>
+    /// Reference category
+    /// </summary>
+    public string RefType { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Reference value
+    /// </summary>
+    public string RefValue { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Zero-based turn index where the reference was first observed
+    /// </summary>
+    public int? TurnIndex { get; set; }
+
+    /// <summary>
+    /// ISO 8601 UTC timestamp when the reference was recorded
+    /// </summary>
+    public string? CreatedAt { get; set; }
+
+
+
+    #region Load Methods
+
+    /// <summary>
+    /// Load a SessionRef instance from a dictionary.
+    /// </summary>
+    /// <param name="data">The dictionary containing the data.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded SessionRef instance.</returns>
+    public static SessionRef Load(Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        if (context is not null)
+        {
+            data = context.ProcessInput(data);
+        }
+
+
+        // Create new instance
+        var instance = new SessionRef();
+
+
+        if (data.TryGetValue("sessionId", out var sessionIdValue) && sessionIdValue is not null)
+        {
+            instance.SessionId = sessionIdValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("refType", out var refTypeValue) && refTypeValue is not null)
+        {
+            instance.RefType = refTypeValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("refValue", out var refValueValue) && refValueValue is not null)
+        {
+            instance.RefValue = refValueValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("turnIndex", out var turnIndexValue) && turnIndexValue is not null)
+        {
+            instance.TurnIndex = Convert.ToInt32(turnIndexValue);
+        }
+
+        if (data.TryGetValue("createdAt", out var createdAtValue) && createdAtValue is not null)
+        {
+            instance.CreatedAt = createdAtValue?.ToString()!;
+        }
+
+        if (context is not null)
+        {
+            instance = context.ProcessOutput(instance);
+        }
+        return instance;
+    }
+
+
+    #endregion
+
+    #region Save Methods
+
+    /// <summary>
+    /// Save the SessionRef instance to a dictionary.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The dictionary representation of this instance.</returns>
+    public Dictionary<string, object?> Save(SaveContext? context = null)
+    {
+        var obj = this;
+        if (context is not null)
+        {
+            obj = context.ProcessObject(obj);
+        }
+
+
+        var result = new Dictionary<string, object?>();
+
+
+        if (obj.SessionId is not null)
+        {
+            result["sessionId"] = obj.SessionId;
+        }
+
+
+        result["refType"] = obj.RefType;
+
+
+        result["refValue"] = obj.RefValue;
+
+
+        if (obj.TurnIndex is not null)
+        {
+            result["turnIndex"] = obj.TurnIndex;
+        }
+
+
+        if (obj.CreatedAt is not null)
+        {
+            result["createdAt"] = obj.CreatedAt;
+        }
+
+
+        if (context is not null)
+        {
+            result = context.ProcessDict(result);
+        }
+
+        return result;
+    }
+
+
+    /// <summary>
+    /// Convert the SessionRef instance to a YAML string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The YAML string representation of this instance.</returns>
+    public string ToYaml(SaveContext? context = null)
+    {
+        context ??= new SaveContext();
+        return context.ToYaml(Save(context));
+    }
+
+    /// <summary>
+    /// Convert the SessionRef instance to a JSON string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <param name="indent">Whether to indent the output. Defaults to true.</param>
+    /// <returns>The JSON string representation of this instance.</returns>
+    public string ToJson(SaveContext? context = null, bool indent = true)
+    {
+        context ??= new SaveContext();
+        return context.ToJson(Save(context), indent);
+    }
+
+    /// <summary>
+    /// Load a SessionRef instance from a JSON string.
+    /// </summary>
+    /// <param name="json">The JSON string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded SessionRef instance.</returns>
+    public static SessionRef FromJson(string json, LoadContext? context = null)
+    {
+        using var doc = JsonDocument.Parse(json);
+        Dictionary<string, object?> dict;
+        dict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonUtils.Options)
+            ?? throw new ArgumentException("Failed to parse JSON as dictionary");
+
+        return Load(dict, context);
+    }
+
+    /// <summary>
+    /// Load a SessionRef instance from a YAML string.
+    /// </summary>
+    /// <param name="yaml">The YAML string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded SessionRef instance.</returns>
+    public static SessionRef FromYaml(string yaml, LoadContext? context = null)
+    {
+        var dict = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml)
+            ?? throw new ArgumentException("Failed to parse YAML as dictionary");
+
+        return Load(dict, context);
+    }
+
+    #endregion
+}

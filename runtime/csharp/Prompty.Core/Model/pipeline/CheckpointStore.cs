@@ -1,0 +1,24 @@
+// Copyright (c) Microsoft. All rights reserved.
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+/// <summary>
+/// Stores and retrieves resumable session checkpoints.
+/// </summary>
+public interface ICheckpointStore
+{
+    /// <summary>
+    /// Persist a session checkpoint and return the stored checkpoint
+    /// </summary>
+    Task<Checkpoint> SaveAsync(Checkpoint checkpoint);
+    /// <summary>
+    /// Load a checkpoint by session and checkpoint identifier
+    /// </summary>
+    Task<Checkpoint?> LoadAsync(string sessionId, string checkpointId);
+    /// <summary>
+    /// List checkpoints for a session
+    /// </summary>
+    Task<List<Checkpoint>> ListCheckpointsAsync(string sessionId);
+}

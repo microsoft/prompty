@@ -16,19 +16,28 @@ class PermissionCompletedPayload:
 
     Attributes
     ----------
+    request_id : Optional[str]
+        Stable permission request identifier
+    tool_call_id : Optional[str]
+        Associated tool call identifier, when the permission gated a tool call
     permission : str
         Permission/action name that was decided
     approved : bool
         Whether the requested permission was approved
     reason : Optional[str]
         Decision reason, if available
+    result : Optional[dict[str, Any]]
+        Host-specific decision result, such as a durable approval token or denial details
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
+    request_id: str | None = None
+    tool_call_id: str | None = None
     permission: str = field(default="")
     approved: bool = field(default=False)
     reason: str | None = None
+    result: dict[str, Any] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "PermissionCompletedPayload":
@@ -50,12 +59,18 @@ class PermissionCompletedPayload:
         # create new instance
         instance = PermissionCompletedPayload()
 
+        if data is not None and "requestId" in data:
+            instance.request_id = data["requestId"]
+        if data is not None and "toolCallId" in data:
+            instance.tool_call_id = data["toolCallId"]
         if data is not None and "permission" in data:
             instance.permission = data["permission"]
         if data is not None and "approved" in data:
             instance.approved = data["approved"]
         if data is not None and "reason" in data:
             instance.reason = data["reason"]
+        if data is not None and "result" in data:
+            instance.result = data["result"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -74,12 +89,18 @@ class PermissionCompletedPayload:
 
         result: dict[str, Any] = {}
 
+        if obj.request_id is not None:
+            result["requestId"] = obj.request_id
+        if obj.tool_call_id is not None:
+            result["toolCallId"] = obj.tool_call_id
         if obj.permission is not None:
             result["permission"] = obj.permission
         if obj.approved is not None:
             result["approved"] = obj.approved
         if obj.reason is not None:
             result["reason"] = obj.reason
+        if obj.result is not None:
+            result["result"] = obj.result
 
         if context is not None:
             result = context.process_dict(result)

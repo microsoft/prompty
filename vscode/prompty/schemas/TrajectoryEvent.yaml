@@ -1,0 +1,36 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TrajectoryEvent.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: Stable trajectory event identifier
+  sessionId:
+    type: string
+    description: Stable session identifier
+  turnId:
+    type: string
+    description: Associated turn identifier, when available
+  toolCallId:
+    type: string
+    description: Associated tool call identifier, when available
+  turnIndex:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based turn index in the session
+  eventType:
+    type: string
+    description: Host-defined trajectory event category
+  data:
+    $ref: RecordUnknown.yaml
+    description: Sanitized event data
+  createdAt:
+    type: string
+    description: ISO 8601 UTC timestamp when the trajectory event was recorded
+  redaction:
+    $ref: RedactionMetadata.yaml
+    description: Redaction state for sensitive trajectory fields
+required:
+  - eventType
+description: A compact, replay-oriented record of one harness-side action or observation.

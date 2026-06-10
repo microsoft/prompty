@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RedactionMetadata.yaml
+type: object
+properties:
+  sanitized:
+    type: boolean
+    default: false
+    description: Whether the payload has been sanitized for persistence or external display
+  fields:
+    type: array
+    items:
+      $ref: RedactedField.yaml
+    description: Field-level redaction details
+  policy:
+    type: string
+    description: Host policy or sanitizer version that produced this metadata
+description: Metadata describing whether and how a payload was sanitized.

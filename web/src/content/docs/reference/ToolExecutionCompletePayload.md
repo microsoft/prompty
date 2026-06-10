@@ -1,0 +1,72 @@
+---
+title: "ToolExecutionCompletePayload"
+description: "Documentation for the ToolExecutionCompletePayload type."
+slug: "reference/toolexecutioncompletepayload"
+---
+
+Payload for "tool_execution_complete" events — a concrete host tool execution finished.
+
+## Class Diagram
+
+```mermaid
+---
+title: ToolExecutionCompletePayload
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class ToolExecutionCompletePayload {
+        +string requestId
+        +string toolCallId
+        +string toolName
+        +boolean success
+        +unknown result
+        +int32 exitCode
+        +float64 durationMs
+        +string errorKind
+        +dictionary telemetry
+        +RedactionMetadata redaction
+    }
+    class RedactionMetadata {
+        +boolean sanitized
+        +RedactedField[] fields
+        +string policy
+    }
+    ToolExecutionCompletePayload *-- RedactionMetadata
+```
+
+## Yaml Example
+
+```yaml
+requestId: exec_abc123
+toolCallId: call_abc123
+toolName: powershell
+success: true
+exitCode: 0
+durationMs: 250
+errorKind: timeout
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| requestId | string | Stable host execution request identifier |
+| toolCallId | string | Associated model tool call identifier, when available |
+| toolName | string | Name of the host tool that executed |
+| success | boolean | Whether the host execution completed successfully |
+| result | unknown | Host-normalized execution result |
+| exitCode | int32 | Process or host exit code, when applicable |
+| durationMs | float64 | Tool execution duration in milliseconds |
+| errorKind | string | Machine-readable error category when success is false |
+| telemetry | dictionary | Host-specific telemetry for the execution |
+| redaction | [RedactionMetadata](../redactionmetadata/) | Redaction state for sensitive result fields |
+
+## Composed Types
+
+The following types are composed within `ToolExecutionCompletePayload`:
+
+- [RedactionMetadata](../redactionmetadata/)

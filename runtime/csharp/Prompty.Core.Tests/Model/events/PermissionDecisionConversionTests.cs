@@ -1,0 +1,152 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class PermissionDecisionConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+approved: true
+reason: user_approved
+
+""";
+
+        var instance = PermissionDecision.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("perm_abc123", instance.RequestId);
+        Assert.Equal("call_abc123", instance.ToolCallId);
+        Assert.Equal("tool.execute", instance.Permission);
+        Assert.True(instance.Approved);
+        Assert.Equal("user_approved", instance.Reason);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
+  "permission": "tool.execute",
+  "approved": true,
+  "reason": "user_approved"
+}
+""";
+
+        var instance = PermissionDecision.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("perm_abc123", instance.RequestId);
+        Assert.Equal("call_abc123", instance.ToolCallId);
+        Assert.Equal("tool.execute", instance.Permission);
+        Assert.True(instance.Approved);
+        Assert.Equal("user_approved", instance.Reason);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
+  "permission": "tool.execute",
+  "approved": true,
+  "reason": "user_approved"
+}
+""";
+
+        var original = PermissionDecision.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = PermissionDecision.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("perm_abc123", reloaded.RequestId);
+        Assert.Equal("call_abc123", reloaded.ToolCallId);
+        Assert.Equal("tool.execute", reloaded.Permission);
+        Assert.True(reloaded.Approved);
+        Assert.Equal("user_approved", reloaded.Reason);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+approved: true
+reason: user_approved
+
+""";
+
+        var original = PermissionDecision.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = PermissionDecision.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("perm_abc123", reloaded.RequestId);
+        Assert.Equal("call_abc123", reloaded.ToolCallId);
+        Assert.Equal("tool.execute", reloaded.Permission);
+        Assert.True(reloaded.Approved);
+        Assert.Equal("user_approved", reloaded.Reason);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
+  "permission": "tool.execute",
+  "approved": true,
+  "reason": "user_approved"
+}
+""";
+
+        var instance = PermissionDecision.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+approved: true
+reason: user_approved
+
+""";
+
+        var instance = PermissionDecision.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

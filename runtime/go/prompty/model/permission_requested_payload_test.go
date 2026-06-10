@@ -15,8 +15,11 @@ import (
 func TestPermissionRequestedPayloadLoadJSON(t *testing.T) {
 	jsonData := `
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
-  "target": "shell"
+  "target": "shell",
+  "promptRequest": "Allow shell to run tests?"
 }
 `
 	var data map[string]interface{}
@@ -29,19 +32,31 @@ func TestPermissionRequestedPayloadLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load PermissionRequestedPayload: %v", err)
 	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
 	if instance.Permission != "tool.execute" {
 		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
 	}
 	if instance.Target == nil || *instance.Target != "shell" {
 		t.Errorf(`Expected Target to be "shell", got %v`, instance.Target)
 	}
+	if instance.PromptRequest == nil || *instance.PromptRequest != "Allow shell to run tests?" {
+		t.Errorf(`Expected PromptRequest to be "Allow shell to run tests?", got %v`, instance.PromptRequest)
+	}
 }
 
 // TestPermissionRequestedPayloadLoadYAML tests loading PermissionRequestedPayload from YAML
 func TestPermissionRequestedPayloadLoadYAML(t *testing.T) {
 	yamlData := `
+requestId: perm_abc123
+toolCallId: call_abc123
 permission: tool.execute
 target: shell
+promptRequest: Allow shell to run tests?
 
 `
 	var data map[string]interface{}
@@ -54,11 +69,20 @@ target: shell
 	if err != nil {
 		t.Fatalf("Failed to load PermissionRequestedPayload: %v", err)
 	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
 	if instance.Permission != "tool.execute" {
 		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
 	}
 	if instance.Target == nil || *instance.Target != "shell" {
 		t.Errorf(`Expected Target to be "shell", got %v`, instance.Target)
+	}
+	if instance.PromptRequest == nil || *instance.PromptRequest != "Allow shell to run tests?" {
+		t.Errorf(`Expected PromptRequest to be "Allow shell to run tests?", got %v`, instance.PromptRequest)
 	}
 }
 
@@ -66,8 +90,11 @@ target: shell
 func TestPermissionRequestedPayloadRoundtrip(t *testing.T) {
 	jsonData := `
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
-  "target": "shell"
+  "target": "shell",
+  "promptRequest": "Allow shell to run tests?"
 }
 `
 	var data map[string]interface{}
@@ -87,11 +114,20 @@ func TestPermissionRequestedPayloadRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload PermissionRequestedPayload: %v", err)
 	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
 	if reloaded.Permission != "tool.execute" {
 		t.Errorf(`Expected Permission to be "tool.execute", got %v`, reloaded.Permission)
 	}
 	if reloaded.Target == nil || *reloaded.Target != "shell" {
 		t.Errorf(`Expected Target to be "shell", got %v`, reloaded.Target)
+	}
+	if reloaded.PromptRequest == nil || *reloaded.PromptRequest != "Allow shell to run tests?" {
+		t.Errorf(`Expected PromptRequest to be "Allow shell to run tests?", got %v`, reloaded.PromptRequest)
 	}
 }
 
@@ -99,8 +135,11 @@ func TestPermissionRequestedPayloadRoundtrip(t *testing.T) {
 func TestPermissionRequestedPayloadToJSON(t *testing.T) {
 	jsonData := `
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
-  "target": "shell"
+  "target": "shell",
+  "promptRequest": "Allow shell to run tests?"
 }
 `
 	var data map[string]interface{}
@@ -128,8 +167,11 @@ func TestPermissionRequestedPayloadToJSON(t *testing.T) {
 func TestPermissionRequestedPayloadToYAML(t *testing.T) {
 	jsonData := `
 {
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
   "permission": "tool.execute",
-  "target": "shell"
+  "target": "shell",
+  "promptRequest": "Allow shell to run tests?"
 }
 `
 	var data map[string]interface{}

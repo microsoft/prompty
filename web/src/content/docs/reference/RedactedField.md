@@ -1,0 +1,42 @@
+---
+title: "RedactedField"
+description: "Documentation for the RedactedField type."
+slug: "reference/redactedfield"
+---
+
+Redaction handling for one JSON-shaped field path.
+
+## Class Diagram
+
+```mermaid
+---
+title: RedactedField
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class RedactedField {
+        +string path
+        +string mode
+        +string reason
+    }
+```
+
+## Yaml Example
+
+```yaml
+path: $.arguments.apiKey
+mode: redacted
+reason: secret
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| path | string | JSONPath-like field path, relative to the containing payload |
+| mode | string | How the field was represented |
+| reason | string | Human-readable reason or policy that caused this handling |

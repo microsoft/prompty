@@ -1,0 +1,257 @@
+// Copyright (c) Microsoft. All rights reserved.
+using System.Text.Json;
+using YamlDotNet.Serialization;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+/// <summary>
+/// Metadata describing whether and how a payload was sanitized.
+/// </summary>
+public partial class RedactionMetadata
+{
+    /// <summary>
+    /// The shorthand property name for this type, if any.
+    /// </summary>
+    public static string? ShorthandProperty => null;
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="RedactionMetadata"/>.
+    /// </summary>
+#pragma warning disable CS8618
+    public RedactionMetadata()
+    {
+    }
+#pragma warning restore CS8618
+
+    /// <summary>
+    /// Whether the payload has been sanitized for persistence or external display
+    /// </summary>
+    public bool? Sanitized { get; set; }
+
+    /// <summary>
+    /// Field-level redaction details
+    /// </summary>
+    public IList<RedactedField>? Fields { get; set; }
+
+    /// <summary>
+    /// Host policy or sanitizer version that produced this metadata
+    /// </summary>
+    public string? Policy { get; set; }
+
+
+
+    #region Load Methods
+
+    /// <summary>
+    /// Load a RedactionMetadata instance from a dictionary.
+    /// </summary>
+    /// <param name="data">The dictionary containing the data.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded RedactionMetadata instance.</returns>
+    public static RedactionMetadata Load(Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        if (context is not null)
+        {
+            data = context.ProcessInput(data);
+        }
+
+
+        // Create new instance
+        var instance = new RedactionMetadata();
+
+
+        if (data.TryGetValue("sanitized", out var sanitizedValue) && sanitizedValue is not null)
+        {
+            instance.Sanitized = Convert.ToBoolean(sanitizedValue);
+        }
+
+        if (data.TryGetValue("fields", out var fieldsValue) && fieldsValue is not null)
+        {
+            instance.Fields = LoadFields(fieldsValue, context);
+        }
+
+        if (data.TryGetValue("policy", out var policyValue) && policyValue is not null)
+        {
+            instance.Policy = policyValue?.ToString()!;
+        }
+
+        if (context is not null)
+        {
+            instance = context.ProcessOutput(instance);
+        }
+        return instance;
+    }
+
+
+    /// <summary>
+    /// Load a list of RedactedField from a dictionary or list.
+    /// </summary>
+    public static IList<RedactedField> LoadFields(object data, LoadContext? context)
+    {
+        var result = new List<RedactedField>();
+
+        if (data is Dictionary<string, object?> dict)
+        {
+            // Convert named dictionary to list
+            foreach (var kvp in dict)
+            {
+                if (kvp.Value is IEnumerable<object>)
+                {
+                    throw new ArgumentException(
+                        $"Invalid 'fields' format: key '{kvp.Key}' has an array value. " +
+                        $"'fields' must be a flat list of objects or a name-keyed dict — " +
+                        "not a nested {" + kvp.Key + ": [...]} structure.");
+                }
+                var itemDict = kvp.Value.GetDictionary();
+                if (itemDict.Count > 0)
+                {
+                    // Value is an object, add name to it
+                    itemDict["name"] = kvp.Key;
+                    result.Add(RedactedField.Load(itemDict, context));
+                }
+                else
+                {
+                    // Value is a scalar, use it as the primary property
+                    var newDict = new Dictionary<string, object?>
+                    {
+                        ["name"] = kvp.Key,
+                        ["path"] = kvp.Value
+                    };
+                    result.Add(RedactedField.Load(newDict, context));
+                }
+            }
+        }
+        else if (data is IEnumerable<object> list)
+        {
+            foreach (var item in list)
+            {
+                var itemDict = item.GetDictionary(RedactedField.ShorthandProperty);
+                if (itemDict.Count > 0)
+                {
+                    result.Add(RedactedField.Load(itemDict, context));
+                }
+            }
+        }
+
+        return result;
+    }
+
+
+    #endregion
+
+    #region Save Methods
+
+    /// <summary>
+    /// Save the RedactionMetadata instance to a dictionary.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The dictionary representation of this instance.</returns>
+    public Dictionary<string, object?> Save(SaveContext? context = null)
+    {
+        var obj = this;
+        if (context is not null)
+        {
+            obj = context.ProcessObject(obj);
+        }
+
+
+        var result = new Dictionary<string, object?>();
+
+
+        if (obj.Sanitized is not null)
+        {
+            result["sanitized"] = obj.Sanitized;
+        }
+
+
+        if (obj.Fields is not null)
+        {
+            result["fields"] = SaveFields(obj.Fields, context);
+        }
+
+
+        if (obj.Policy is not null)
+        {
+            result["policy"] = obj.Policy;
+        }
+
+
+        if (context is not null)
+        {
+            result = context.ProcessDict(result);
+        }
+
+        return result;
+    }
+
+
+    /// <summary>
+    /// Save a list of RedactedField to object or array format.
+    /// </summary>
+    public static object SaveFields(IList<RedactedField> items, SaveContext? context)
+    {
+        context ??= new SaveContext();
+
+        // This collection type does not have a 'name' property, only array format is supported
+        return items.Select(item => item.Save(context)).ToList();
+
+    }
+
+
+    /// <summary>
+    /// Convert the RedactionMetadata instance to a YAML string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The YAML string representation of this instance.</returns>
+    public string ToYaml(SaveContext? context = null)
+    {
+        context ??= new SaveContext();
+        return context.ToYaml(Save(context));
+    }
+
+    /// <summary>
+    /// Convert the RedactionMetadata instance to a JSON string.
+    /// </summary>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <param name="indent">Whether to indent the output. Defaults to true.</param>
+    /// <returns>The JSON string representation of this instance.</returns>
+    public string ToJson(SaveContext? context = null, bool indent = true)
+    {
+        context ??= new SaveContext();
+        return context.ToJson(Save(context), indent);
+    }
+
+    /// <summary>
+    /// Load a RedactionMetadata instance from a JSON string.
+    /// </summary>
+    /// <param name="json">The JSON string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded RedactionMetadata instance.</returns>
+    public static RedactionMetadata FromJson(string json, LoadContext? context = null)
+    {
+        using var doc = JsonDocument.Parse(json);
+        Dictionary<string, object?> dict;
+        dict = JsonSerializer.Deserialize<Dictionary<string, object?>>(json, JsonUtils.Options)
+            ?? throw new ArgumentException("Failed to parse JSON as dictionary");
+
+        return Load(dict, context);
+    }
+
+    /// <summary>
+    /// Load a RedactionMetadata instance from a YAML string.
+    /// </summary>
+    /// <param name="yaml">The YAML string to parse.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded RedactionMetadata instance.</returns>
+    public static RedactionMetadata FromYaml(string yaml, LoadContext? context = null)
+    {
+        var dict = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml)
+            ?? throw new ArgumentException("Failed to parse YAML as dictionary");
+
+        return Load(dict, context);
+    }
+
+    #endregion
+}

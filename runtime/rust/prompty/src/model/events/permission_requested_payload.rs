@@ -4,15 +4,27 @@
 
 use super::super::context::{LoadContext, SaveContext};
 
+use super::redaction_metadata::RedactionMetadata;
+
 /// Payload for permission request events — a host is asked to approve an action.
 #[derive(Debug, Clone, Default)]
 pub struct PermissionRequestedPayload {
+    /// Stable permission request identifier
+    pub request_id: Option<String>,
+    /// Associated tool call identifier, when the permission gates a tool call
+    pub tool_call_id: Option<String>,
     /// Permission/action name being requested
     pub permission: String,
     /// Resource or tool the permission applies to
     pub target: Option<String>,
     /// Additional host-specific permission details
     pub details: serde_json::Value,
+    /// Human-readable prompt or rationale that can be shown to an approval UI
+    pub prompt_request: Option<String>,
+    /// Policy metadata used to evaluate or explain the permission request
+    pub policy: serde_json::Value,
+    /// Redaction state for sensitive request fields
+    pub redaction: Option<RedactionMetadata>,
 }
 
 impl PermissionRequestedPayload {
@@ -39,9 +51,14 @@ impl PermissionRequestedPayload {
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
         Self {
+            request_id: value.get("requestId").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            tool_call_id: value.get("toolCallId").and_then(|v| v.as_str()).map(|s| s.to_string()),
             permission: value.get("permission").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
             target: value.get("target").and_then(|v| v.as_str()).map(|s| s.to_string()),
             details: value.get("details").cloned().unwrap_or(serde_json::Value::Null),
+            prompt_request: value.get("promptRequest").and_then(|v| v.as_str()).map(|s| s.to_string()),
+            policy: value.get("policy").cloned().unwrap_or(serde_json::Value::Null),
+            redaction: value.get("redaction").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| RedactionMetadata::load_from_value(v, ctx)),
         }
     }
 
@@ -51,6 +68,12 @@ impl PermissionRequestedPayload {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
+        if let Some(ref val) = self.request_id {
+            result.insert("requestId".to_string(), serde_json::Value::String(val.clone()));
+        }
+        if let Some(ref val) = self.tool_call_id {
+            result.insert("toolCallId".to_string(), serde_json::Value::String(val.clone()));
+        }
         if !self.permission.is_empty() {
             result.insert("permission".to_string(), serde_json::Value::String(self.permission.clone()));
         }
@@ -59,6 +82,18 @@ impl PermissionRequestedPayload {
         }
         if !self.details.is_null() {
             result.insert("details".to_string(), self.details.clone());
+        }
+        if let Some(ref val) = self.prompt_request {
+            result.insert("promptRequest".to_string(), serde_json::Value::String(val.clone()));
+        }
+        if !self.policy.is_null() {
+            result.insert("policy".to_string(), self.policy.clone());
+        }
+        if let Some(ref val) = self.redaction {
+            let nested = val.to_value(ctx);
+            if !nested.is_null() {
+                result.insert("redaction".to_string(), nested);
+            }
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }
@@ -76,6 +111,12 @@ impl PermissionRequestedPayload {
     /// Returns `None` if the field is null or not an object.
     pub fn as_details_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.details.as_object()
+    }
+
+    /// Returns typed reference to the map if the field is an object.
+    /// Returns `None` if the field is null or not an object.
+    pub fn as_policy_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
+        self.policy.as_object()
     }
 
 }

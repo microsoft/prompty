@@ -12,9 +12,14 @@ import (
 // PermissionRequestedPayload represents Payload for permission request events — a host is asked to approve an action.
 
 type PermissionRequestedPayload struct {
-	Permission string                 `json:"permission" yaml:"permission"`
-	Target     *string                `json:"target,omitempty" yaml:"target,omitempty"`
-	Details    map[string]interface{} `json:"details,omitempty" yaml:"details,omitempty"`
+	RequestId     *string                `json:"requestId,omitempty" yaml:"requestId,omitempty"`
+	ToolCallId    *string                `json:"toolCallId,omitempty" yaml:"toolCallId,omitempty"`
+	Permission    string                 `json:"permission" yaml:"permission"`
+	Target        *string                `json:"target,omitempty" yaml:"target,omitempty"`
+	Details       map[string]interface{} `json:"details,omitempty" yaml:"details,omitempty"`
+	PromptRequest *string                `json:"promptRequest,omitempty" yaml:"promptRequest,omitempty"`
+	Policy        map[string]interface{} `json:"policy,omitempty" yaml:"policy,omitempty"`
+	Redaction     *RedactionMetadata     `json:"redaction,omitempty" yaml:"redaction,omitempty"`
 }
 
 // LoadPermissionRequestedPayload creates a PermissionRequestedPayload from a map[string]interface{}
@@ -23,6 +28,14 @@ func LoadPermissionRequestedPayload(data interface{}, ctx *LoadContext) (Permiss
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["requestId"]; ok && val != nil {
+			v := string(val.(string))
+			result.RequestId = &v
+		}
+		if val, ok := m["toolCallId"]; ok && val != nil {
+			v := string(val.(string))
+			result.ToolCallId = &v
+		}
 		if val, ok := m["permission"]; ok && val != nil {
 			result.Permission = string(val.(string))
 		}
@@ -35,6 +48,21 @@ func LoadPermissionRequestedPayload(data interface{}, ctx *LoadContext) (Permiss
 				result.Details = m
 			}
 		}
+		if val, ok := m["promptRequest"]; ok && val != nil {
+			v := string(val.(string))
+			result.PromptRequest = &v
+		}
+		if val, ok := m["policy"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				result.Policy = m
+			}
+		}
+		if val, ok := m["redaction"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, _ := LoadRedactionMetadata(m, ctx)
+				result.Redaction = &loaded
+			}
+		}
 	}
 
 	return result, nil
@@ -43,12 +71,27 @@ func LoadPermissionRequestedPayload(data interface{}, ctx *LoadContext) (Permiss
 // Save serializes PermissionRequestedPayload to map[string]interface{}
 func (obj *PermissionRequestedPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	if obj.RequestId != nil {
+		result["requestId"] = *obj.RequestId
+	}
+	if obj.ToolCallId != nil {
+		result["toolCallId"] = *obj.ToolCallId
+	}
 	result["permission"] = obj.Permission
 	if obj.Target != nil {
 		result["target"] = *obj.Target
 	}
 	if obj.Details != nil {
 		result["details"] = obj.Details
+	}
+	if obj.PromptRequest != nil {
+		result["promptRequest"] = *obj.PromptRequest
+	}
+	if obj.Policy != nil {
+		result["policy"] = obj.Policy
+	}
+	if obj.Redaction != nil {
+		result["redaction"] = obj.Redaction.Save(ctx)
 	}
 
 	return result

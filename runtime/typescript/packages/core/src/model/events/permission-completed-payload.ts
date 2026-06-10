@@ -6,15 +6,27 @@ import { LoadContext, SaveContext } from "../context";
 export class PermissionCompletedPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
+  requestId?: string | undefined;
+  toolCallId?: string | undefined;
   permission: string = "";
   approved: boolean = false;
   reason?: string | undefined;
+  result?: Record<string, unknown> | undefined;
 
   constructor(init?: Partial<PermissionCompletedPayload>) {
+    if (init?.requestId !== undefined) {
+      this.requestId = init.requestId;
+    }
+    if (init?.toolCallId !== undefined) {
+      this.toolCallId = init.toolCallId;
+    }
     this.permission = init?.permission ?? "";
     this.approved = init?.approved ?? false;
     if (init?.reason !== undefined) {
       this.reason = init.reason;
+    }
+    if (init?.result !== undefined) {
+      this.result = init.result;
     }
   }
 
@@ -30,6 +42,12 @@ export class PermissionCompletedPayload {
 
     const instance = new PermissionCompletedPayload();
 
+    if (data["requestId"] !== undefined && data["requestId"] !== null) {
+      instance.requestId = String(data["requestId"]);
+    }
+    if (data["toolCallId"] !== undefined && data["toolCallId"] !== null) {
+      instance.toolCallId = String(data["toolCallId"]);
+    }
     if (data["permission"] !== undefined && data["permission"] !== null) {
       instance.permission = String(data["permission"]);
     }
@@ -38,6 +56,9 @@ export class PermissionCompletedPayload {
     }
     if (data["reason"] !== undefined && data["reason"] !== null) {
       instance.reason = String(data["reason"]);
+    }
+    if (data["result"] !== undefined && data["result"] !== null) {
+      instance.result = data["result"] as Record<string, unknown>;
     }
 
     if (context) {
@@ -58,6 +79,12 @@ export class PermissionCompletedPayload {
 
     const result: Record<string, unknown> = {};
 
+    if (obj.requestId !== undefined && obj.requestId !== null) {
+      result["requestId"] = obj.requestId;
+    }
+    if (obj.toolCallId !== undefined && obj.toolCallId !== null) {
+      result["toolCallId"] = obj.toolCallId;
+    }
     if (obj.permission !== undefined && obj.permission !== null) {
       result["permission"] = obj.permission;
     }
@@ -66,6 +93,9 @@ export class PermissionCompletedPayload {
     }
     if (obj.reason !== undefined && obj.reason !== null) {
       result["reason"] = obj.reason;
+    }
+    if (obj.result !== undefined && obj.result !== null) {
+      result["result"] = obj.result;
     }
 
     if (context) {

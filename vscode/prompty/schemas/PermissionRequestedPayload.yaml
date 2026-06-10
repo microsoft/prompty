@@ -2,6 +2,12 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: PermissionRequestedPayload.yaml
 type: object
 properties:
+  requestId:
+    type: string
+    description: Stable permission request identifier
+  toolCallId:
+    type: string
+    description: Associated tool call identifier, when the permission gates a tool call
   permission:
     type: string
     description: Permission/action name being requested
@@ -11,6 +17,15 @@ properties:
   details:
     $ref: RecordUnknown.yaml
     description: Additional host-specific permission details
+  promptRequest:
+    type: string
+    description: Human-readable prompt or rationale that can be shown to an approval UI
+  policy:
+    $ref: RecordUnknown.yaml
+    description: Policy metadata used to evaluate or explain the permission request
+  redaction:
+    $ref: RedactionMetadata.yaml
+    description: Redaction state for sensitive request fields
 required:
   - permission
 description: Payload for permission request events — a host is asked to approve an action.
