@@ -23,7 +23,7 @@ def test_load_yaml_filepart():
     yaml_data = r"""
     source: "https://example.com/document.pdf"
     mediaType: application/pdf
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FilePart.load(data)

@@ -1,0 +1,65 @@
+---
+title: "ToolCallCompletePayload"
+description: "Documentation for the ToolCallCompletePayload type."
+slug: "reference/toolcallcompletepayload"
+---
+
+Payload for "tool_call_complete" events — a tool dispatch finished.
+
+## Class Diagram
+
+```mermaid
+---
+title: ToolCallCompletePayload
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class ToolCallCompletePayload {
+        +string id
+        +string name
+        +boolean success
+        +ToolResult result
+        +float64 durationMs
+        +string errorKind
+    }
+    class ToolResult {
+        +ContentPart[] parts
+        +string status
+        +string errorKind
+        +string errorMessage
+        +float64 durationMs
+        +text() string [async-capable]
+    }
+    ToolCallCompletePayload *-- ToolResult
+```
+
+## Yaml Example
+
+```yaml
+id: call_abc123
+name: get_weather
+success: true
+durationMs: 42
+errorKind: timeout
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| id | string | The unique identifier of the tool call |
+| name | string | The name of the tool that completed |
+| success | boolean | Whether the tool dispatch succeeded semantically |
+| result | [ToolResult](../toolresult/) | Normalized tool result |
+| durationMs | float64 | Tool execution duration in milliseconds |
+| errorKind | string | Machine-readable error category when success is false |
+
+## Composed Types
+
+The following types are composed within `ToolCallCompletePayload`:
+
+- [ToolResult](../toolresult/)

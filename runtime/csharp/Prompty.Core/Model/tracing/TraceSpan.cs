@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A single trace span capturing one pipeline stage or function invocation.
-/// 
+///
 /// Spans nest via the `__frames` field to form a tree representing the
-/// 
+///
 /// full execution (§3.6.1).
 /// </summary>
 public partial class TraceSpan

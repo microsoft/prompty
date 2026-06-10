@@ -15,7 +15,9 @@ import (
 func TestErrorEventPayloadLoadJSON(t *testing.T) {
 	jsonData := `
 {
-  "message": "Rate limit exceeded"
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
 }
 `
 	var data map[string]interface{}
@@ -31,12 +33,20 @@ func TestErrorEventPayloadLoadJSON(t *testing.T) {
 	if instance.Message != "Rate limit exceeded" {
 		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, instance.Message)
 	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "rate_limit" {
+		t.Errorf(`Expected ErrorKind to be "rate_limit", got %v`, instance.ErrorKind)
+	}
+	if instance.Phase == nil || *instance.Phase != "llm" {
+		t.Errorf(`Expected Phase to be "llm", got %v`, instance.Phase)
+	}
 }
 
 // TestErrorEventPayloadLoadYAML tests loading ErrorEventPayload from YAML
 func TestErrorEventPayloadLoadYAML(t *testing.T) {
 	yamlData := `
 message: Rate limit exceeded
+errorKind: rate_limit
+phase: llm
 
 `
 	var data map[string]interface{}
@@ -52,13 +62,21 @@ message: Rate limit exceeded
 	if instance.Message != "Rate limit exceeded" {
 		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, instance.Message)
 	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "rate_limit" {
+		t.Errorf(`Expected ErrorKind to be "rate_limit", got %v`, instance.ErrorKind)
+	}
+	if instance.Phase == nil || *instance.Phase != "llm" {
+		t.Errorf(`Expected Phase to be "llm", got %v`, instance.Phase)
+	}
 }
 
 // TestErrorEventPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestErrorEventPayloadRoundtrip(t *testing.T) {
 	jsonData := `
 {
-  "message": "Rate limit exceeded"
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
 }
 `
 	var data map[string]interface{}
@@ -81,13 +99,21 @@ func TestErrorEventPayloadRoundtrip(t *testing.T) {
 	if reloaded.Message != "Rate limit exceeded" {
 		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, reloaded.Message)
 	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "rate_limit" {
+		t.Errorf(`Expected ErrorKind to be "rate_limit", got %v`, reloaded.ErrorKind)
+	}
+	if reloaded.Phase == nil || *reloaded.Phase != "llm" {
+		t.Errorf(`Expected Phase to be "llm", got %v`, reloaded.Phase)
+	}
 }
 
 // TestErrorEventPayloadToJSON tests that ToJSON produces valid JSON
 func TestErrorEventPayloadToJSON(t *testing.T) {
 	jsonData := `
 {
-  "message": "Rate limit exceeded"
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
 }
 `
 	var data map[string]interface{}
@@ -115,7 +141,9 @@ func TestErrorEventPayloadToJSON(t *testing.T) {
 func TestErrorEventPayloadToYAML(t *testing.T) {
 	jsonData := `
 {
-  "message": "Rate limit exceeded"
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
 }
 `
 	var data map[string]interface{}

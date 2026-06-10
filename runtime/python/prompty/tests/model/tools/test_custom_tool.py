@@ -29,7 +29,7 @@ def test_load_yaml_customtool():
     options:
       timeout: 30
       retries: 3
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = CustomTool.load(data)

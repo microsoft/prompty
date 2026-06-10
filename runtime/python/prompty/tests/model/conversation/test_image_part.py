@@ -26,7 +26,7 @@ def test_load_yaml_imagepart():
     source: "https://example.com/image.png"
     detail: auto
     mediaType: image/png
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ImagePart.load(data)

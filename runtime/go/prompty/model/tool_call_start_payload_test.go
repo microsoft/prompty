@@ -15,6 +15,7 @@ import (
 func TestToolCallStartPayloadLoadJSON(t *testing.T) {
 	jsonData := `
 {
+  "id": "call_abc123",
   "name": "get_weather",
   "arguments": "{\"city\": \"Paris\"}"
 }
@@ -29,6 +30,9 @@ func TestToolCallStartPayloadLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolCallStartPayload: %v", err)
 	}
+	if instance.Id == nil || *instance.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, instance.Id)
+	}
 	if instance.Name != "get_weather" {
 		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
 	}
@@ -40,6 +44,7 @@ func TestToolCallStartPayloadLoadJSON(t *testing.T) {
 // TestToolCallStartPayloadLoadYAML tests loading ToolCallStartPayload from YAML
 func TestToolCallStartPayloadLoadYAML(t *testing.T) {
 	yamlData := `
+id: call_abc123
 name: get_weather
 arguments: "{\"city\": \"Paris\"}"
 
@@ -54,6 +59,9 @@ arguments: "{\"city\": \"Paris\"}"
 	if err != nil {
 		t.Fatalf("Failed to load ToolCallStartPayload: %v", err)
 	}
+	if instance.Id == nil || *instance.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, instance.Id)
+	}
 	if instance.Name != "get_weather" {
 		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
 	}
@@ -66,6 +74,7 @@ arguments: "{\"city\": \"Paris\"}"
 func TestToolCallStartPayloadRoundtrip(t *testing.T) {
 	jsonData := `
 {
+  "id": "call_abc123",
   "name": "get_weather",
   "arguments": "{\"city\": \"Paris\"}"
 }
@@ -87,6 +96,9 @@ func TestToolCallStartPayloadRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ToolCallStartPayload: %v", err)
 	}
+	if reloaded.Id == nil || *reloaded.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, reloaded.Id)
+	}
 	if reloaded.Name != "get_weather" {
 		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
 	}
@@ -99,6 +111,7 @@ func TestToolCallStartPayloadRoundtrip(t *testing.T) {
 func TestToolCallStartPayloadToJSON(t *testing.T) {
 	jsonData := `
 {
+  "id": "call_abc123",
   "name": "get_weather",
   "arguments": "{\"city\": \"Paris\"}"
 }
@@ -128,6 +141,7 @@ func TestToolCallStartPayloadToJSON(t *testing.T) {
 func TestToolCallStartPayloadToYAML(t *testing.T) {
 	jsonData := `
 {
+  "id": "call_abc123",
   "name": "get_weather",
   "arguments": "{\"city\": \"Paris\"}"
 }

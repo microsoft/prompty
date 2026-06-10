@@ -12,7 +12,9 @@ import (
 // ErrorEventPayload represents Payload for "error" events — an error occurred during the loop.
 
 type ErrorEventPayload struct {
-	Message string `json:"message" yaml:"message"`
+	Message   string  `json:"message" yaml:"message"`
+	ErrorKind *string `json:"errorKind,omitempty" yaml:"errorKind,omitempty"`
+	Phase     *string `json:"phase,omitempty" yaml:"phase,omitempty"`
 }
 
 // LoadErrorEventPayload creates a ErrorEventPayload from a map[string]interface{}
@@ -24,6 +26,14 @@ func LoadErrorEventPayload(data interface{}, ctx *LoadContext) (ErrorEventPayloa
 		if val, ok := m["message"]; ok && val != nil {
 			result.Message = string(val.(string))
 		}
+		if val, ok := m["errorKind"]; ok && val != nil {
+			v := string(val.(string))
+			result.ErrorKind = &v
+		}
+		if val, ok := m["phase"]; ok && val != nil {
+			v := string(val.(string))
+			result.Phase = &v
+		}
 	}
 
 	return result, nil
@@ -33,6 +43,12 @@ func LoadErrorEventPayload(data interface{}, ctx *LoadContext) (ErrorEventPayloa
 func (obj *ErrorEventPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["message"] = obj.Message
+	if obj.ErrorKind != nil {
+		result["errorKind"] = *obj.ErrorKind
+	}
+	if obj.Phase != nil {
+		result["phase"] = *obj.Phase
+	}
 
 	return result
 }

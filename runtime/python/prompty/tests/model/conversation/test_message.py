@@ -34,7 +34,7 @@ def test_load_yaml_message():
         value: Hello!
     metadata:
       source: user-input
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Message.load(data)

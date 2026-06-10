@@ -12,6 +12,8 @@ public class ErrorEventPayloadConversionTests
     {
         string yamlData = """
 message: Rate limit exceeded
+errorKind: rate_limit
+phase: llm
 
 """;
 
@@ -19,6 +21,8 @@ message: Rate limit exceeded
 
         Assert.NotNull(instance);
         Assert.Equal("Rate limit exceeded", instance.Message);
+        Assert.Equal("rate_limit", instance.ErrorKind);
+        Assert.Equal("llm", instance.Phase);
     }
 
     [Fact]
@@ -26,13 +30,17 @@ message: Rate limit exceeded
     {
         string jsonData = """
 {
-  "message": "Rate limit exceeded"
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
 }
 """;
 
         var instance = ErrorEventPayload.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("Rate limit exceeded", instance.Message);
+        Assert.Equal("rate_limit", instance.ErrorKind);
+        Assert.Equal("llm", instance.Phase);
     }
 
     [Fact]
@@ -41,7 +49,9 @@ message: Rate limit exceeded
         // Test that FromJson -> ToJson -> FromJson produces equivalent data
         string jsonData = """
 {
-  "message": "Rate limit exceeded"
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
 }
 """;
 
@@ -54,6 +64,8 @@ message: Rate limit exceeded
         var reloaded = ErrorEventPayload.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("Rate limit exceeded", reloaded.Message);
+        Assert.Equal("rate_limit", reloaded.ErrorKind);
+        Assert.Equal("llm", reloaded.Phase);
     }
 
     [Fact]
@@ -62,6 +74,8 @@ message: Rate limit exceeded
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
 message: Rate limit exceeded
+errorKind: rate_limit
+phase: llm
 
 """;
 
@@ -74,6 +88,8 @@ message: Rate limit exceeded
         var reloaded = ErrorEventPayload.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("Rate limit exceeded", reloaded.Message);
+        Assert.Equal("rate_limit", reloaded.ErrorKind);
+        Assert.Equal("llm", reloaded.Phase);
     }
 
     [Fact]
@@ -81,7 +97,9 @@ message: Rate limit exceeded
     {
         string jsonData = """
 {
-  "message": "Rate limit exceeded"
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
 }
 """;
 
@@ -98,6 +116,8 @@ message: Rate limit exceeded
     {
         string yamlData = """
 message: Rate limit exceeded
+errorKind: rate_limit
+phase: llm
 
 """;
 

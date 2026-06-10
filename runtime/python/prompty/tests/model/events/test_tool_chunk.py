@@ -26,7 +26,7 @@ def test_load_yaml_toolchunk():
       id: call_abc123
       name: get_weather
       arguments: "{\"city\": \"Paris\"}"
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ToolChunk.load(data)

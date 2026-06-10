@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Connection configuration using OAuth 2.0 client credentials.
-/// 
+///
 /// Useful for tools and services that require OAuth authentication,
-/// 
+///
 /// such as MCP servers, OpenAPI endpoints, or other REST APIs.
 /// </summary>
 public partial class OAuthConnection : Connection

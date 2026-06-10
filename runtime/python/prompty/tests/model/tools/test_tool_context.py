@@ -22,7 +22,7 @@ def test_load_yaml_toolcontext():
     yaml_data = r"""
     metadata:
       userId: user-123
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ToolContext.load(data)

@@ -23,7 +23,7 @@ def test_load_yaml_threadmarker():
     yaml_data = r"""
     name: thread
     kind: thread
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ThreadMarker.load(data)

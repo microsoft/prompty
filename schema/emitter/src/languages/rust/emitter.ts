@@ -62,6 +62,13 @@ function emitDocComment(description: string, indent: string, lines: string[]): v
   lines.push(`${indent}/// ${oneLine}`);
 }
 
+function renderLines(lines: string[]): string {
+  while (lines.length > 0 && lines[lines.length - 1] === "") {
+    lines.pop();
+  }
+  return `${lines.join("\n")}\n`;
+}
+
 /**
  * Convert a string literal value to a PascalCase Rust variant name.
  * e.g., "system" → "System", "tool" → "Tool", "text" → "Text"
@@ -267,7 +274,7 @@ export function emitRustFile(
   if (baseType.isProtocol) {
     emitProtocolTrait(baseType, lines);
     lines.push("");
-    return lines.join("\n");
+    return renderLines(lines);
   }
 
   // Collect base field names for variant field extraction
@@ -293,7 +300,7 @@ export function emitRustFile(
   }
 
   lines.push("");
-  return lines.join("\n");
+  return renderLines(lines);
 }
 
 // ============================================================================

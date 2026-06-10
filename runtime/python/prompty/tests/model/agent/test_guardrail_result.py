@@ -23,7 +23,7 @@ def test_load_yaml_guardrailresult():
     yaml_data = r"""
     allowed: true
     reason: Content is safe
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = GuardrailResult.load(data)

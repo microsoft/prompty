@@ -26,9 +26,9 @@ public partial class DoneEventPayload
 #pragma warning restore CS8618
 
     /// <summary>
-    /// The final text response from the LLM
+    /// The final response from the LLM after processing
     /// </summary>
-    public string Response { get; set; } = string.Empty;
+    public object Response { get; set; } = new object();
 
     /// <summary>
     /// The final conversation state including all messages
@@ -59,7 +59,7 @@ public partial class DoneEventPayload
 
         if (data.TryGetValue("response", out var responseValue) && responseValue is not null)
         {
-            instance.Response = responseValue?.ToString()!;
+            instance.Response = responseValue;
         }
 
         if (data.TryGetValue("messages", out var messagesValue) && messagesValue is not null)

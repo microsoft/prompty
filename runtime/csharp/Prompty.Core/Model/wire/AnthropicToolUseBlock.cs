@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A tool use content block returned in an assistant message when
-/// 
+///
 /// the model wants to invoke a tool.
 /// </summary>
 public partial class AnthropicToolUseBlock

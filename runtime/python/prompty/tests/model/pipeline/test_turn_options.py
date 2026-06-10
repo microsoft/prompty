@@ -40,7 +40,7 @@ def test_load_yaml_turnoptions():
     turn: 1
     compaction:
       strategy: summarize
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TurnOptions.load(data)

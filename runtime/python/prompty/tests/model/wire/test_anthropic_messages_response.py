@@ -26,7 +26,7 @@ def test_load_yaml_anthropicmessagesresponse():
     id: msg_01XFDUDYJgAACzvnptvVoYEL
     model: claude-sonnet-4-20250514
     stop_reason: end_turn
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicMessagesResponse.load(data)

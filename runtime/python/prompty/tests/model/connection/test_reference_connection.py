@@ -26,7 +26,7 @@ def test_load_yaml_referenceconnection():
     kind: reference
     name: my-reference-connection
     target: my-target-resource
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ReferenceConnection.load(data)

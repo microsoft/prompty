@@ -47,7 +47,7 @@ def test_load_yaml_functiontool():
         kind: string
         default: What is the meaning of life?
     strict: true
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FunctionTool.load(data)
@@ -192,7 +192,7 @@ def test_load_yaml_functiontool_1():
         kind: string
         default: What is the meaning of life?
     strict: true
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FunctionTool.load(data)

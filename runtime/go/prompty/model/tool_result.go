@@ -9,6 +9,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ToolResultStatus represents the allowed values for ToolResultStatus.
+type ToolResultStatus string
+
+const (
+	ToolResultStatusSuccess   ToolResultStatus = "success"
+	ToolResultStatusError     ToolResultStatus = "error"
+	ToolResultStatusCancelled ToolResultStatus = "cancelled"
+	ToolResultStatusTimeout   ToolResultStatus = "timeout"
+)
+
 // ToolResult represents The result of a tool execution. Contains a list of content parts, enabling
 // rich tool results (text, images, files, audio) rather than just strings.
 //
@@ -16,7 +26,11 @@ import (
 // containing a single TextPart for backward compatibility.
 
 type ToolResult struct {
-	Parts []interface{} `json:"parts" yaml:"parts"`
+	Parts        []interface{}     `json:"parts" yaml:"parts"`
+	Status       *ToolResultStatus `json:"status,omitempty" yaml:"status,omitempty"`
+	ErrorKind    *string           `json:"errorKind,omitempty" yaml:"errorKind,omitempty"`
+	ErrorMessage *string           `json:"errorMessage,omitempty" yaml:"errorMessage,omitempty"`
+	DurationMs   *float64          `json:"durationMs,omitempty" yaml:"durationMs,omitempty"`
 }
 
 // LoadToolResult creates a ToolResult from a map[string]interface{}
@@ -36,6 +50,34 @@ func LoadToolResult(data interface{}, ctx *LoadContext) (ToolResult, error) {
 					}
 				}
 			}
+		}
+		if val, ok := m["status"]; ok && val != nil {
+			v := ToolResultStatus(val.(string))
+			result.Status = &v
+		}
+		if val, ok := m["errorKind"]; ok && val != nil {
+			v := string(val.(string))
+			result.ErrorKind = &v
+		}
+		if val, ok := m["errorMessage"]; ok && val != nil {
+			v := string(val.(string))
+			result.ErrorMessage = &v
+		}
+		if val, ok := m["durationMs"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip
+			var v float64
+			switch n := val.(type) {
+			case int:
+				v = float64(n)
+			case int32:
+				v = float64(n)
+			case int64:
+				v = float64(n)
+			case float32:
+				v = float64(n)
+			case float64:
+				v = n
+			}
+			result.DurationMs = &v
 		}
 	}
 
@@ -59,6 +101,18 @@ func (obj *ToolResult) Save(ctx *SaveContext) map[string]interface{} {
 			}
 		}
 		result["parts"] = arr
+	}
+	if obj.Status != nil {
+		result["status"] = string(*obj.Status)
+	}
+	if obj.ErrorKind != nil {
+		result["errorKind"] = *obj.ErrorKind
+	}
+	if obj.ErrorMessage != nil {
+		result["errorMessage"] = *obj.ErrorMessage
+	}
+	if obj.DurationMs != nil {
+		result["durationMs"] = *obj.DurationMs
 	}
 
 	return result

@@ -14,12 +14,18 @@ public class ToolResultConversionTests
 parts:
   - kind: text
     value: 72°F and sunny
+errorKind: missing_tool
+errorMessage: Tool 'get_weather' is not registered
+durationMs: 42
 
 """;
 
         var instance = ToolResult.FromYaml(yamlData);
 
         Assert.NotNull(instance);
+        Assert.Equal("missing_tool", instance.ErrorKind);
+        Assert.Equal("Tool 'get_weather' is not registered", instance.ErrorMessage);
+        Assert.Equal(42, instance.DurationMs);
     }
 
     [Fact]
@@ -32,12 +38,18 @@ parts:
       "kind": "text",
       "value": "72°F and sunny"
     }
-  ]
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
 }
 """;
 
         var instance = ToolResult.FromJson(jsonData);
         Assert.NotNull(instance);
+        Assert.Equal("missing_tool", instance.ErrorKind);
+        Assert.Equal("Tool 'get_weather' is not registered", instance.ErrorMessage);
+        Assert.Equal(42, instance.DurationMs);
     }
 
     [Fact]
@@ -51,7 +63,10 @@ parts:
       "kind": "text",
       "value": "72°F and sunny"
     }
-  ]
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
 }
 """;
 
@@ -63,6 +78,9 @@ parts:
 
         var reloaded = ToolResult.FromJson(json);
         Assert.NotNull(reloaded);
+        Assert.Equal("missing_tool", reloaded.ErrorKind);
+        Assert.Equal("Tool 'get_weather' is not registered", reloaded.ErrorMessage);
+        Assert.Equal(42, reloaded.DurationMs);
     }
 
     [Fact]
@@ -73,6 +91,9 @@ parts:
 parts:
   - kind: text
     value: 72°F and sunny
+errorKind: missing_tool
+errorMessage: Tool 'get_weather' is not registered
+durationMs: 42
 
 """;
 
@@ -84,6 +105,9 @@ parts:
 
         var reloaded = ToolResult.FromYaml(yaml);
         Assert.NotNull(reloaded);
+        Assert.Equal("missing_tool", reloaded.ErrorKind);
+        Assert.Equal("Tool 'get_weather' is not registered", reloaded.ErrorMessage);
+        Assert.Equal(42, reloaded.DurationMs);
     }
 
     [Fact]
@@ -96,7 +120,10 @@ parts:
       "kind": "text",
       "value": "72°F and sunny"
     }
-  ]
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
 }
 """;
 
@@ -115,6 +142,9 @@ parts:
 parts:
   - kind: text
     value: 72°F and sunny
+errorKind: missing_tool
+errorMessage: Tool 'get_weather' is not registered
+durationMs: 42
 
 """;
 

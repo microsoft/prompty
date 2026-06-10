@@ -28,7 +28,7 @@ def test_load_yaml_openapitool():
     connection:
       kind: reference
     specification: ./openapi.json
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = OpenApiTool.load(data)

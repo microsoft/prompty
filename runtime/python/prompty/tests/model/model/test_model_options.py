@@ -55,7 +55,7 @@ def test_load_yaml_modeloptions():
     additionalProperties:
       customProperty: value
       anotherProperty: anotherValue
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ModelOptions.load(data)

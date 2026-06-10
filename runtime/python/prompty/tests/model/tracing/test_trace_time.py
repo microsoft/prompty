@@ -26,7 +26,7 @@ def test_load_yaml_tracetime():
     start: "2026-04-04T12:00:00Z"
     end: "2026-04-04T12:00:01Z"
     duration: 1000
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TraceTime.load(data)

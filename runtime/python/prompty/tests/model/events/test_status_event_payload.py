@@ -20,7 +20,7 @@ def test_load_json_statuseventpayload():
 def test_load_yaml_statuseventpayload():
     yaml_data = r"""
     message: Starting iteration 3
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = StatusEventPayload.load(data)

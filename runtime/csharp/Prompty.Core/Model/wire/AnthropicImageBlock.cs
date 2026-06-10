@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// An image content block using base64-encoded data.
-/// 
+///
 /// Anthropic requires images as base64 with an explicit media type.
 /// </summary>
 public partial class AnthropicImageBlock

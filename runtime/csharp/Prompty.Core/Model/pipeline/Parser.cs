@@ -12,7 +12,7 @@ public interface IParser
     /// <summary>
     /// Pre-process a template before rendering, returning modified template and context
     /// </summary>
-    object? PreRender(string template) => default;
+    object? PreRender(string template) => default!;
     /// <summary>
     /// Parse rendered text into a structured message array
     /// </summary>

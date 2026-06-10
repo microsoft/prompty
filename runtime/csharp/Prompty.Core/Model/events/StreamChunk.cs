@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A chunk of data from a streaming LLM response. Stream chunks are
-/// 
+///
 /// discriminated on the `kind` field.
 /// </summary>
 public abstract partial class StreamChunk

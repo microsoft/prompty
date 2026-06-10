@@ -26,7 +26,7 @@ def test_load_yaml_connection():
     kind: reference
     authenticationMode: system
     usageDescription: This will allow the agent to respond to an email on your behalf
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Connection.load(data)

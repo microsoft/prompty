@@ -8,10 +8,14 @@ export class CompactionCompletePayload {
 
   removed: number = 0;
   remaining: number = 0;
+  summaryLength?: number | undefined;
 
   constructor(init?: Partial<CompactionCompletePayload>) {
     this.removed = init?.removed ?? 0;
     this.remaining = init?.remaining ?? 0;
+    if (init?.summaryLength !== undefined) {
+      this.summaryLength = init.summaryLength;
+    }
   }
 
   //#region Load Methods
@@ -31,6 +35,9 @@ export class CompactionCompletePayload {
     }
     if (data["remaining"] !== undefined && data["remaining"] !== null) {
       instance.remaining = Number(data["remaining"]);
+    }
+    if (data["summaryLength"] !== undefined && data["summaryLength"] !== null) {
+      instance.summaryLength = Number(data["summaryLength"]);
     }
 
     if (context) {
@@ -56,6 +63,9 @@ export class CompactionCompletePayload {
     }
     if (obj.remaining !== undefined && obj.remaining !== null) {
       result["remaining"] = obj.remaining;
+    }
+    if (obj.summaryLength !== undefined && obj.summaryLength !== null) {
+      result["summaryLength"] = obj.summaryLength;
     }
 
     if (context) {

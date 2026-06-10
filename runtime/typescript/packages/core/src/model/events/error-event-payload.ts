@@ -7,9 +7,17 @@ export class ErrorEventPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
   message: string = "";
+  errorKind?: string | undefined;
+  phase?: string | undefined;
 
   constructor(init?: Partial<ErrorEventPayload>) {
     this.message = init?.message ?? "";
+    if (init?.errorKind !== undefined) {
+      this.errorKind = init.errorKind;
+    }
+    if (init?.phase !== undefined) {
+      this.phase = init.phase;
+    }
   }
 
   //#region Load Methods
@@ -26,6 +34,12 @@ export class ErrorEventPayload {
 
     if (data["message"] !== undefined && data["message"] !== null) {
       instance.message = String(data["message"]);
+    }
+    if (data["errorKind"] !== undefined && data["errorKind"] !== null) {
+      instance.errorKind = String(data["errorKind"]);
+    }
+    if (data["phase"] !== undefined && data["phase"] !== null) {
+      instance.phase = String(data["phase"]);
     }
 
     if (context) {
@@ -48,6 +62,12 @@ export class ErrorEventPayload {
 
     if (obj.message !== undefined && obj.message !== null) {
       result["message"] = obj.message;
+    }
+    if (obj.errorKind !== undefined && obj.errorKind !== null) {
+      result["errorKind"] = obj.errorKind;
+    }
+    if (obj.phase !== undefined && obj.phase !== null) {
+      result["phase"] = obj.phase;
     }
 
     if (context) {

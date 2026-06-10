@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
+from uuid import uuid4
 
 __all__ = [
     "AgentEvent",
@@ -52,7 +54,19 @@ def emit_event(
     if callback is None:
         return
     try:
-        callback(event_type, data or {})
+        payload = data or {}
+        event_data = dict(payload)
+        event_data.setdefault(
+            "turnEvent",
+            {
+                "id": f"evt_{uuid4().hex}",
+                "type": event_type,
+                "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+                "iteration": payload.get("iteration") if isinstance(payload.get("iteration"), int) else None,
+                "payload": payload,
+            },
+        )
+        callback(event_type, event_data)
     except Exception as exc:  # noqa: BLE001 — spec says log and continue
         import logging
 

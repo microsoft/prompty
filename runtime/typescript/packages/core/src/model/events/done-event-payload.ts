@@ -7,7 +7,7 @@ import { Message } from "../conversation/message";
 export class DoneEventPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
-  response: string = "";
+  response: unknown;
   messages: Message[] = [];
 
   constructor(init?: Partial<DoneEventPayload>) {
@@ -28,7 +28,7 @@ export class DoneEventPayload {
     const instance = new DoneEventPayload();
 
     if (data["response"] !== undefined && data["response"] !== null) {
-      instance.response = String(data["response"]);
+      instance.response = data["response"] as unknown;
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
       instance.messages = DoneEventPayload.loadMessages(

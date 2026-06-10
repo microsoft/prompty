@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Connection configuration for Microsoft Foundry projects.
-/// 
+///
 /// Provides project-scoped access to models, tools, and services
-/// 
+///
 /// via Entra ID (DefaultAzureCredential) authentication.
 /// </summary>
 public partial class FoundryConnection : Connection

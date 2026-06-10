@@ -1,0 +1,36 @@
+---
+title: "CompactionStartPayload"
+description: "Documentation for the CompactionStartPayload type."
+slug: "reference/compactionstartpayload"
+---
+
+Payload for "compaction_start" events — context compaction is beginning.
+
+## Class Diagram
+
+```mermaid
+---
+title: CompactionStartPayload
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class CompactionStartPayload {
+        +int32 droppedCount
+    }
+```
+
+## Yaml Example
+
+```yaml
+droppedCount: 5
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| droppedCount | int32 | Number of messages selected for compaction |

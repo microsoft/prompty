@@ -558,6 +558,33 @@ pub async fn invoke_from_path(
 /// Events emitted during the agent loop in `turn()`.
 #[derive(Debug, Clone)]
 pub enum AgentEvent {
+    /// The turn has started.
+    TurnStart {
+        agent: Option<String>,
+        max_iterations: usize,
+    },
+    /// The turn has ended.
+    TurnEnd {
+        status: String,
+        iterations: usize,
+        response: serde_json::Value,
+    },
+    /// An LLM request is starting.
+    LlmStart {
+        provider: String,
+        model_id: Option<String>,
+        message_count: usize,
+        iteration: usize,
+    },
+    /// An LLM request completed.
+    LlmComplete { iteration: usize },
+    /// A transient operation will be retried.
+    Retry {
+        operation: String,
+        attempt: usize,
+        max_attempts: usize,
+        reason: String,
+    },
     /// A streaming token from the LLM.
     Token(String),
     /// A thinking/reasoning token from the LLM.
@@ -566,6 +593,13 @@ pub enum AgentEvent {
     ToolCallStart { name: String, arguments: String },
     /// A tool call has completed with a result.
     ToolResult { name: String, result: String },
+    /// A tool dispatch has completed with normalized success metadata.
+    ToolCallComplete {
+        name: String,
+        success: bool,
+        result: String,
+        error_kind: Option<String>,
+    },
     /// Status update from the agent loop.
     Status(String),
     /// The message list was updated (e.g., tool results appended).
@@ -716,6 +750,14 @@ impl TurnOptions {
                 eprintln!("[prompty] Event callback panicked: {e:?}");
             }
         }
+    }
+
+    fn emit_failed_turn_end(&self, status: &str, iterations: usize) {
+        self.emit(AgentEvent::TurnEnd {
+            status: status.to_string(),
+            iterations,
+            response: serde_json::Value::Null,
+        });
     }
 
     fn is_cancelled(&self) -> bool {
@@ -915,8 +957,27 @@ pub async fn turn(
         span.emit("description", &json!("Simple turn (no tools)"));
         let empty = serde_json::json!({});
         span.emit("inputs", inputs.unwrap_or(&empty));
+        opts.emit(AgentEvent::TurnStart {
+            agent: Some(agent.name.clone()),
+            max_iterations: opts.max_iterations,
+        });
 
-        let mut messages = prepare(agent, inputs).await?;
+        if opts.is_cancelled() {
+            opts.emit(AgentEvent::Cancelled);
+            opts.emit_failed_turn_end("cancelled", 0);
+            span.emit("error", &json!("Operation cancelled"));
+            span.end();
+            return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
+        }
+
+        let mut messages = match prepare(agent, inputs).await {
+            Ok(messages) => messages,
+            Err(err) => {
+                opts.emit_failed_turn_end("error", 0);
+                span.end();
+                return Err(err);
+            }
+        };
         let provider = resolve_provider(agent);
 
         // Drain steering
@@ -944,6 +1005,7 @@ pub async fn turn(
             let gr = guardrails.check_input(&messages, agent).await;
             if !gr.allowed {
                 let reason = gr.reason.unwrap_or_else(|| "Input denied".into());
+                opts.emit_failed_turn_end("error", 0);
                 span.emit("error", &json!(format!("Input guardrail: {reason}")));
                 span.end();
                 return Err(InvokerError::Execute(
@@ -953,13 +1015,35 @@ pub async fn turn(
         }
 
         // Execute (streaming-aware)
+        if opts.is_cancelled() {
+            opts.emit(AgentEvent::Cancelled);
+            opts.emit_failed_turn_end("cancelled", 0);
+            span.emit("error", &json!("Operation cancelled"));
+            span.end();
+            return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
+        }
         let streaming = is_streaming(agent);
         let processed = if streaming {
+            opts.emit(AgentEvent::LlmStart {
+                provider: provider.clone(),
+                model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
+                message_count: messages.len(),
+                iteration: 0,
+            });
             match registry::invoke_executor_stream(&provider, agent, &messages).await {
                 Ok(sse_stream) => {
+                    opts.emit(AgentEvent::LlmComplete { iteration: 0 });
                     let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
-                    let chunk_stream =
-                        registry::invoke_processor_stream(&provider, Box::pin(prompty_stream))?;
+                    let chunk_stream = match registry::invoke_processor_stream(
+                        &provider,
+                        Box::pin(prompty_stream),
+                    ) {
+                        Ok(stream) => stream,
+                        Err(err) => {
+                            opts.emit_failed_turn_end("error", 0);
+                            return Err(err);
+                        }
+                    };
 
                     use futures::StreamExt;
                     let mut text_parts = Vec::new();
@@ -974,6 +1058,7 @@ pub async fn turn(
                                 opts.emit(AgentEvent::Thinking(t));
                             }
                             StreamChunk::Error(e) => {
+                                opts.emit_failed_turn_end("error", 0);
                                 span.emit("error", &json!(e));
                                 span.end();
                                 return Err(InvokerError::Execute(e.into()));
@@ -986,26 +1071,76 @@ pub async fn turn(
                 Err(_) => {
                     // Fallback to non-streaming
                     let raw_response =
-                        registry::invoke_executor(&provider, agent, &messages).await?;
+                        match registry::invoke_executor(&provider, agent, &messages).await {
+                            Ok(response) => response,
+                            Err(err) => {
+                                opts.emit_failed_turn_end("error", 0);
+                                return Err(err);
+                            }
+                        };
+                    opts.emit(AgentEvent::LlmComplete { iteration: 0 });
                     if opts.raw {
                         span.emit("result", &json!("(raw)"));
                         span.end();
+                        opts.emit(AgentEvent::Done {
+                            response: raw_response.clone(),
+                            messages: messages.clone(),
+                        });
+                        opts.emit(AgentEvent::TurnEnd {
+                            status: "success".to_string(),
+                            iterations: 0,
+                            response: raw_response.clone(),
+                        });
                         return Ok(raw_response);
                     }
 
-                    process(agent, raw_response).await?
+                    match process(agent, raw_response.clone()).await {
+                        Ok(result) => result,
+                        Err(err) => {
+                            opts.emit_failed_turn_end("error", 0);
+                            return Err(err);
+                        }
+                    }
                 }
             }
         } else {
-            let raw_response = registry::invoke_executor(&provider, agent, &messages).await?;
+            opts.emit(AgentEvent::LlmStart {
+                provider: provider.clone(),
+                model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
+                message_count: messages.len(),
+                iteration: 0,
+            });
+            let raw_response = match registry::invoke_executor(&provider, agent, &messages).await {
+                Ok(response) => response,
+                Err(err) => {
+                    opts.emit_failed_turn_end("error", 0);
+                    return Err(err);
+                }
+            };
+            opts.emit(AgentEvent::LlmComplete { iteration: 0 });
 
             if opts.raw {
                 span.emit("result", &json!("(raw)"));
                 span.end();
+                opts.emit(AgentEvent::Done {
+                    response: raw_response.clone(),
+                    messages: messages.clone(),
+                });
+                opts.emit(AgentEvent::TurnEnd {
+                    status: "success".to_string(),
+                    iterations: 0,
+                    response: raw_response.clone(),
+                });
                 return Ok(raw_response);
             }
 
-            process(agent, raw_response).await?
+            match process(agent, raw_response.clone()).await {
+                Ok(result) => result,
+                Err(err) => {
+                    opts.emit_failed_turn_end("error", 0);
+                    return Err(err);
+                }
+            }
         };
 
         // Output guardrail
@@ -1013,6 +1148,7 @@ pub async fn turn(
             let gr = guardrails.check_output(&processed, agent).await;
             if !gr.allowed {
                 let reason = gr.reason.unwrap_or_else(|| "Output denied".into());
+                opts.emit_failed_turn_end("error", 0);
                 span.emit("error", &json!(format!("Output guardrail: {reason}")));
                 span.end();
                 return Err(InvokerError::Execute(
@@ -1022,12 +1158,30 @@ pub async fn turn(
             if let Some(rewrite) = gr.rewrite {
                 span.emit("result", &rewrite);
                 span.end();
+                opts.emit(AgentEvent::Done {
+                    response: rewrite.clone(),
+                    messages: messages.clone(),
+                });
+                opts.emit(AgentEvent::TurnEnd {
+                    status: "success".to_string(),
+                    iterations: 0,
+                    response: rewrite.clone(),
+                });
                 return Ok(rewrite);
             }
         }
 
         span.emit("result", &processed);
         span.end();
+        opts.emit(AgentEvent::Done {
+            response: processed.clone(),
+            messages: messages.clone(),
+        });
+        opts.emit(AgentEvent::TurnEnd {
+            status: "success".to_string(),
+            iterations: 0,
+            response: processed.clone(),
+        });
         return Ok(processed);
     }
 
@@ -1037,23 +1191,36 @@ pub async fn turn(
     span.emit("description", &json!("Agent turn (tool-calling loop)"));
     let empty = serde_json::json!({});
     span.emit("inputs", inputs.unwrap_or(&empty));
+    opts.emit(AgentEvent::TurnStart {
+        agent: Some(agent.name.clone()),
+        max_iterations: opts.max_iterations,
+    });
 
     // Check cancellation at start
     if opts.is_cancelled() {
         opts.emit(AgentEvent::Cancelled);
+        opts.emit_failed_turn_end("cancelled", 0);
         span.emit("error", &json!("Operation cancelled"));
         span.end();
         return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
     }
 
     // Prepare messages
-    let mut messages = prepare(agent, inputs).await?;
+    let mut messages = match prepare(agent, inputs).await {
+        Ok(messages) => messages,
+        Err(err) => {
+            opts.emit_failed_turn_end("error", 0);
+            span.end();
+            return Err(err);
+        }
+    };
     let provider = resolve_provider(agent);
 
     for iteration in 0..opts.max_iterations {
         // Check cancellation before each LLM call
         if opts.is_cancelled() {
             opts.emit(AgentEvent::Cancelled);
+            opts.emit_failed_turn_end("cancelled", iteration);
             span.emit("error", &json!("Operation cancelled"));
             span.end();
             return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
@@ -1102,6 +1269,7 @@ pub async fn turn(
             if !gr.allowed {
                 let reason = gr.reason.unwrap_or_else(|| "Input denied".into());
                 iter_span.end();
+                opts.emit_failed_turn_end("error", iteration);
                 span.emit("error", &json!(format!("Input guardrail: {reason}")));
                 span.end();
                 return Err(InvokerError::Execute(
@@ -1118,17 +1286,28 @@ pub async fn turn(
             if opts.is_cancelled() {
                 iter_span.end();
                 opts.emit(AgentEvent::Cancelled);
+                opts.emit_failed_turn_end("cancelled", iteration);
                 span.emit("error", &json!("Operation cancelled"));
                 span.end();
                 return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
             }
 
+            opts.emit(AgentEvent::LlmStart {
+                provider: provider.clone(),
+                model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
+                message_count: messages.len(),
+                iteration,
+            });
             match execute_llm_attempt(&provider, agent, &messages, streaming, &opts).await {
-                Ok(result) => break result,
+                Ok(result) => {
+                    opts.emit(AgentEvent::LlmComplete { iteration });
+                    break result;
+                }
                 Err(e) => {
                     llm_attempts += 1;
                     if llm_attempts >= opts.max_llm_retries as u32 {
                         iter_span.end();
+                        opts.emit_failed_turn_end("error", iteration);
                         span.emit(
                             "error",
                             &json!(format!(
@@ -1152,6 +1331,12 @@ pub async fn turn(
                         llm_attempts + 1,
                         opts.max_llm_retries
                     )));
+                    opts.emit(AgentEvent::Retry {
+                        operation: "llm".to_string(),
+                        attempt: llm_attempts as usize + 1,
+                        max_attempts: opts.max_llm_retries,
+                        reason: e.clone(),
+                    });
                     // Exponential backoff with jitter, capped at 60s
                     // Formula: min(2^attempts + jitter, 60) per spec §9.10
                     let backoff_secs = {
@@ -1175,6 +1360,7 @@ pub async fn turn(
                                 }
                             } => {
                                 opts.emit(AgentEvent::Cancelled);
+                                opts.emit_failed_turn_end("cancelled", iteration);
                                 span.emit("error", &json!("Operation cancelled during retry backoff"));
                                 span.end();
                                 return Err(InvokerError::Cancelled(
@@ -1198,6 +1384,7 @@ pub async fn turn(
                 if !gr.allowed {
                     let reason = gr.reason.unwrap_or_else(|| "Output denied".into());
                     iter_span.end();
+                    opts.emit_failed_turn_end("error", iteration + 1);
                     span.emit("error", &json!(format!("Output guardrail: {reason}")));
                     span.end();
                     return Err(InvokerError::Execute(
@@ -1210,6 +1397,11 @@ pub async fn turn(
                     opts.emit(AgentEvent::Done {
                         response: rewrite.clone(),
                         messages: messages.clone(),
+                    });
+                    opts.emit(AgentEvent::TurnEnd {
+                        status: "success".to_string(),
+                        iterations: iteration + 1,
+                        response: rewrite.clone(),
                     });
                     span.emit("result", &rewrite);
                     span.emit("iterations", &json!(iteration + 1));
@@ -1224,6 +1416,11 @@ pub async fn turn(
             opts.emit(AgentEvent::Done {
                 response: final_result.clone(),
                 messages: messages.clone(),
+            });
+            opts.emit(AgentEvent::TurnEnd {
+                status: "success".to_string(),
+                iterations: iteration + 1,
+                response: final_result.clone(),
             });
             span.emit("result", &final_result);
             span.emit("iterations", &json!(iteration + 1));
@@ -1249,7 +1446,18 @@ pub async fn turn(
         let tool_results = if opts.parallel_tool_calls {
             dispatch_tools_parallel(&tool_calls, &opts, agent, inputs).await
         } else {
-            dispatch_tools_sequential(&tool_calls, &opts, agent, inputs).await?
+            match dispatch_tools_sequential(&tool_calls, &opts, agent, inputs).await {
+                Ok(results) => results,
+                Err(err) => {
+                    let status = if matches!(err, InvokerError::Cancelled(_)) {
+                        "cancelled"
+                    } else {
+                        "error"
+                    };
+                    opts.emit_failed_turn_end(status, iteration + 1);
+                    return Err(err);
+                }
+            }
         };
 
         tool_span.emit("result", &json!(tool_results));
@@ -1259,13 +1467,19 @@ pub async fn turn(
         let text_content = extract_text_from_processed(&processed);
 
         // Format tool results into messages using provider-specific formatting
-        let tool_messages = registry::invoke_format_tool_messages(
+        let tool_messages = match registry::invoke_format_tool_messages(
             &provider,
             &raw_response,
             &tool_calls,
             &tool_results,
             text_content.as_deref(),
-        )?;
+        ) {
+            Ok(messages) => messages,
+            Err(err) => {
+                opts.emit_failed_turn_end("error", iteration + 1);
+                return Err(err);
+            }
+        };
 
         messages.extend(tool_messages);
         opts.emit(AgentEvent::MessagesUpdated {
@@ -1290,6 +1504,7 @@ pub async fn turn(
                 opts.max_iterations
             );
             opts.emit(AgentEvent::Error(msg.clone()));
+            opts.emit_failed_turn_end("error", iteration + 1);
             span.emit("error", &json!(msg));
             span.end();
             return Err(InvokerError::Execute(msg.into()));
@@ -1302,6 +1517,7 @@ pub async fn turn(
         opts.max_iterations
     );
     opts.emit(AgentEvent::Error(msg.clone()));
+    opts.emit_failed_turn_end("error", opts.max_iterations);
     span.emit("error", &json!(msg));
     span.end();
     Err(InvokerError::Execute(msg.into()))
@@ -1420,6 +1636,12 @@ async fn dispatch_tools_sequential(
                     name: tc.name.clone(),
                     result: format!("Error: Tool guardrail denied: {reason}"),
                 });
+                opts.emit(AgentEvent::ToolCallComplete {
+                    name: tc.name.clone(),
+                    success: false,
+                    result: format!("Error: Tool guardrail denied: {reason}"),
+                    error_kind: Some("guardrail_denied".to_string()),
+                });
                 tool_results.push(format!("Error: Tool guardrail denied: {reason}"));
                 continue;
             }
@@ -1460,6 +1682,14 @@ async fn dispatch_tools_sequential(
         opts.emit(AgentEvent::ToolResult {
             name: tc.name.clone(),
             result: result.clone(),
+        });
+        opts.emit(AgentEvent::ToolCallComplete {
+            name: tc.name.clone(),
+            success: !result.starts_with("Error:"),
+            result: result.clone(),
+            error_kind: result
+                .starts_with("Error:")
+                .then(|| "tool_error".to_string()),
         });
         tool_results.push(result);
     }
@@ -1531,6 +1761,14 @@ async fn dispatch_tools_parallel(
         opts.emit(AgentEvent::ToolResult {
             name: tc.name.clone(),
             result: result.clone(),
+        });
+        opts.emit(AgentEvent::ToolCallComplete {
+            name: tc.name.clone(),
+            success: !result.starts_with("Error:"),
+            result: result.clone(),
+            error_kind: result
+                .starts_with("Error:")
+                .then(|| "tool_error".to_string()),
         });
     }
 
@@ -1972,7 +2210,7 @@ mod tests {
     // and exercise the full turn() function.
 
     use std::sync::Arc;
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
     /// Mock executor that returns tool calls on first call, then a final response.
     struct ToolCallThenDoneExecutor {
@@ -2131,6 +2369,52 @@ mod tests {
             "instructions": "system:\nYou are helpful.\n\nuser:\nHello"
         });
         Prompty::load_from_value(&data, &LoadContext::default())
+    }
+
+    fn capture_events() -> (Arc<std::sync::Mutex<Vec<AgentEvent>>>, EventCallback) {
+        let events = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let events_clone = events.clone();
+        let on_event: EventCallback = Box::new(move |event| {
+            events_clone.lock().unwrap().push(event);
+        });
+        (events, on_event)
+    }
+
+    fn assert_turn_lifecycle(events: &[AgentEvent], expected_status: &str) {
+        let start_indices: Vec<_> = events
+            .iter()
+            .enumerate()
+            .filter_map(|(index, event)| {
+                matches!(event, AgentEvent::TurnStart { .. }).then_some(index)
+            })
+            .collect();
+        let end_indices: Vec<_> = events
+            .iter()
+            .enumerate()
+            .filter_map(|(index, event)| {
+                matches!(event, AgentEvent::TurnEnd { .. }).then_some(index)
+            })
+            .collect();
+
+        assert_eq!(
+            start_indices.len(),
+            1,
+            "expected exactly one TurnStart, got {events:?}"
+        );
+        assert_eq!(
+            end_indices.len(),
+            1,
+            "expected exactly one TurnEnd, got {events:?}"
+        );
+        assert!(
+            start_indices[0] < end_indices[0],
+            "TurnStart should precede TurnEnd, got {events:?}"
+        );
+
+        match &events[end_indices[0]] {
+            AgentEvent::TurnEnd { status, .. } => assert_eq!(status, expected_status),
+            other => panic!("expected TurnEnd, got {other:?}"),
+        }
     }
 
     #[tokio::test]
@@ -2372,15 +2656,208 @@ mod tests {
         let _result = turn(&agent, None, Some(opts)).await.unwrap();
 
         let captured = events.lock().unwrap();
-        // Should see: ToolCallStart → ToolResult → Done
+        // Should see lifecycle events plus ToolCallStart → ToolResult → Done.
         assert!(
             captured.len() >= 3,
             "Expected at least 3 events, got {:?}",
             captured
         );
-        assert!(captured[0].contains("ToolCallStart"));
-        assert!(captured[1].contains("ToolResult"));
-        assert!(captured.last().unwrap().contains("Done"));
+        let tool_start_index = captured
+            .iter()
+            .position(|event| event.contains("ToolCallStart"))
+            .expect("expected ToolCallStart event");
+        let tool_result_index = captured
+            .iter()
+            .position(|event| event.contains("ToolResult"))
+            .expect("expected ToolResult event");
+        assert!(tool_start_index < tool_result_index);
+        let done_index = captured
+            .iter()
+            .position(|event| event.contains("Done"))
+            .expect("expected Done event");
+        let turn_end_index = captured
+            .iter()
+            .position(|event| event.contains("TurnEnd"))
+            .expect("expected TurnEnd event");
+        assert!(done_index < turn_end_index);
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_lifecycle_success_simple_path() {
+        ensure_defaults();
+        let key = "turn_lifecycle_simple_success";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let (events, on_event) = capture_events();
+        let opts = TurnOptions {
+            on_event: Some(on_event),
+            ..Default::default()
+        };
+
+        let result = turn(&agent, None, Some(opts)).await.unwrap();
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert_turn_lifecycle(&events.lock().unwrap(), "success");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_lifecycle_success_tool_loop() {
+        ensure_defaults();
+        let key = "turn_lifecycle_tool_success";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(0)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let mut tools = HashMap::new();
+        tools.insert(
+            "get_weather".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("72°F and sunny".to_string()))),
+        );
+        let (events, on_event) = capture_events();
+        let opts = TurnOptions {
+            tools,
+            on_event: Some(on_event),
+            ..Default::default()
+        };
+
+        let result = turn(&agent, None, Some(opts)).await.unwrap();
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert_turn_lifecycle(&events.lock().unwrap(), "success");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_lifecycle_input_guardrail_error() {
+        ensure_defaults();
+        let key = "turn_lifecycle_guardrail_error";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let (events, on_event) = capture_events();
+        let guardrails = crate::guardrails::Guardrails {
+            input: Some(Box::new(|_, _| {
+                Box::pin(async { crate::guardrails::GuardrailResult::deny("blocked") })
+            })),
+            ..Default::default()
+        };
+        let opts = TurnOptions {
+            on_event: Some(on_event),
+            guardrails: Some(guardrails),
+            ..Default::default()
+        };
+
+        let result = turn(&agent, None, Some(opts)).await;
+        assert!(result.is_err());
+        assert_turn_lifecycle(&events.lock().unwrap(), "error");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_lifecycle_retry_exhausted_error() {
+        ensure_defaults();
+        let key = "turn_lifecycle_retry_error";
+        registry::register_executor(key, AlwaysFailExecutor);
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let mut tools = HashMap::new();
+        tools.insert(
+            "dummy".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("ok".to_string()))),
+        );
+        let (events, on_event) = capture_events();
+        let opts = TurnOptions {
+            tools,
+            on_event: Some(on_event),
+            max_llm_retries: 1,
+            ..Default::default()
+        };
+
+        let result = turn(&agent, None, Some(opts)).await;
+        assert!(result.is_err());
+        assert_turn_lifecycle(&events.lock().unwrap(), "error");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_lifecycle_cancelled_simple_path() {
+        ensure_defaults();
+        let key = "turn_lifecycle_simple_cancelled";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let (events, on_event) = capture_events();
+        let opts = TurnOptions {
+            on_event: Some(on_event),
+            cancelled: Some(Arc::new(AtomicBool::new(true))),
+            ..Default::default()
+        };
+
+        let result = turn(&agent, None, Some(opts)).await;
+        assert!(result.is_err());
+        assert_turn_lifecycle(&events.lock().unwrap(), "cancelled");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_lifecycle_cancelled_during_tool_dispatch() {
+        ensure_defaults();
+        let key = "turn_lifecycle_tool_cancelled";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(0)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+
+        let agent = make_simple_agent(key);
+        let cancel = Arc::new(AtomicBool::new(false));
+        let cancel_in_tool = cancel.clone();
+        let mut tools = HashMap::new();
+        tools.insert(
+            "get_weather".to_string(),
+            ToolHandler::Sync(Box::new(move |_| {
+                cancel_in_tool.store(true, Ordering::Relaxed);
+                Ok("72°F and sunny".to_string())
+            })),
+        );
+        let (events, on_event) = capture_events();
+        let opts = TurnOptions {
+            tools,
+            on_event: Some(on_event),
+            cancelled: Some(cancel),
+            ..Default::default()
+        };
+
+        let result = turn(&agent, None, Some(opts)).await;
+        assert!(result.is_err());
+        assert_turn_lifecycle(&events.lock().unwrap(), "cancelled");
     }
 
     #[tokio::test]

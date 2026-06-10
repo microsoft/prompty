@@ -23,7 +23,7 @@ def test_load_yaml_binding():
     yaml_data = r"""
     name: my-tool
     input: input-variable
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Binding.load(data)

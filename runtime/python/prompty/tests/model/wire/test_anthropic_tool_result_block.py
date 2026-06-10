@@ -23,7 +23,7 @@ def test_load_yaml_anthropictoolresultblock():
     yaml_data = r"""
     tool_use_id: toolu_01A09q90qw90lq917835lq9
     content: 72°F and sunny in Paris
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicToolResultBlock.load(data)

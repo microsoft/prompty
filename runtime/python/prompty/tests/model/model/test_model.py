@@ -44,7 +44,7 @@ def test_load_yaml_model():
       type: chat
       temperature: 0.7
       maxOutputTokens: 1000
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Model.load(data)

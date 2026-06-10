@@ -19,6 +19,7 @@ config:
 ---
 classDiagram
     class ToolCallStartPayload {
+        +string id
         +string name
         +string arguments
     }
@@ -27,6 +28,7 @@ classDiagram
 ## Yaml Example
 
 ```yaml
+id: call_abc123
 name: get_weather
 arguments: '{"city": "Paris"}'
 ```
@@ -35,5 +37,6 @@ arguments: '{"city": "Paris"}'
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
+| id | string | The unique identifier of the tool call |
 | name | string | The name of the tool being called |
 | arguments | string | The serialized JSON arguments for the tool call |

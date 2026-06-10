@@ -1,0 +1,41 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnSummary.yaml
+type: object
+properties:
+  turnId:
+    type: string
+    description: Stable identifier for the outer turn
+  status:
+    type: string
+    description: "Final turn status: 'success', 'error', or 'cancelled'"
+  iterations:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of agent-loop iterations
+  llmCalls:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of LLM calls made during the turn
+  toolCalls:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of tool calls dispatched during the turn
+  retries:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of retry events during the turn
+  usage:
+    $ref: TokenUsage.yaml
+    description: Aggregated token usage for the turn
+  durationMs:
+    type: number
+    description: Total elapsed turn duration in milliseconds
+required:
+  - turnId
+  - status
+  - iterations
+description: Summary statistics for a completed turn trace.

@@ -20,7 +20,7 @@ def test_load_json_anthropictextblock():
 def test_load_yaml_anthropictextblock():
     yaml_data = r"""
     text: Hello, how can I help?
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicTextBlock.load(data)

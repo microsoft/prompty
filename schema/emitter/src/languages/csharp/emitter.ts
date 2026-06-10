@@ -158,7 +158,7 @@ export function emitCSharpEnum(enumDef: EnumDef, namespace: string): string {
   lines.push("{");
 
   for (const value of enumDef.values) {
-    const memberName = value.charAt(0).toUpperCase() + value.slice(1);
+    const memberName = toPascalCase(value);
     // Add EnumMember attribute if the wire value doesn't match the member name exactly
     lines.push(`    [JsonPropertyName("${value}")]`);
     lines.push(`    ${memberName},`);
@@ -226,14 +226,14 @@ function emitCSharpInterface(type: TypeDecl, namespace: string, lines: string[])
       // Synchronous method
       if (method.optional) {
         // Return type already includes nullability — provide default body
-        lines.push(`        ${ret} ${toPascalCase(method.name)}(${params}) => default;`);
+        lines.push(`        ${ret} ${toPascalCase(method.name)}(${params}) => default!;`);
       } else {
         lines.push(`        ${ret} ${toPascalCase(method.name)}(${params});`);
       }
     } else {
       // Async method
       if (method.optional) {
-        lines.push(`        Task<${ret}> ${toPascalCase(method.name)}Async(${params}) => Task.FromResult<${ret}>(default);`);
+        lines.push(`        Task<${ret}> ${toPascalCase(method.name)}Async(${params}) => Task.FromResult<${ret}>(default!);`);
       } else {
         lines.push(`        Task<${ret}> ${toPascalCase(method.name)}Async(${params});`);
       }
@@ -273,7 +273,7 @@ function emitXmlDocComment(description: string, indent: string, lines: string[])
     lines.push(`${indent}/// ${descLines[i]}`);
     // Add empty /// line between paragraphs (if multiple lines and not the last)
     if (descLines.length > 1 && i < descLines.length - 1) {
-      lines.push(`${indent}/// `);
+      lines.push(`${indent}///`);
     }
   }
   lines.push(`${indent}/// </summary>`);
@@ -873,7 +873,8 @@ function emitSaveAssignment(assign: SaveAssignment, lines: string[]): void {
 function getSaveExpression(assign: SaveAssignment, propName: string): string {
   // Named enum — serialize as string (skip open enums — they're already string)
   if (assign.enumName && !assign.isOpenEnum) {
-    return `result["${assign.targetName}"] = obj.${propName}.ToString().ToLowerInvariant();`;
+    const valueExpr = assign.isOptional ? `obj.${propName}.Value` : `obj.${propName}`;
+    return `result["${assign.targetName}"] = ${valueExpr}.ToString().ToLowerInvariant();`;
   }
   const cat = assign.category;
   switch (cat.kind) {

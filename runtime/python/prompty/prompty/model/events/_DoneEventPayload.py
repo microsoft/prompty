@@ -17,15 +17,15 @@ class DoneEventPayload:
 
     Attributes
     ----------
-    response : str
-        The final text response from the LLM
+    response : Any
+        The final response from the LLM after processing
     messages : list[Message]
         The final conversation state including all messages
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
-    response: str = field(default="")
+    response: Any = field(default=None)
     messages: list[Message] = field(default_factory=list)
 
     @staticmethod

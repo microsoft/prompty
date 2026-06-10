@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Model for defining the structure and behavior of AI agents.
-/// 
+///
 /// This model includes properties for specifying the model's provider, connection details, and various options.
-/// 
+///
 /// It allows for flexible configuration of AI models to suit different use cases and requirements.
 /// </summary>
 public partial class Model

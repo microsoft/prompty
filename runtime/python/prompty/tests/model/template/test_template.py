@@ -27,7 +27,7 @@ def test_load_yaml_template():
       kind: mustache
     parser:
       kind: mustache
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Template.load(data)

@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A message in a conversation. Messages have a role and a list of content parts
-/// 
+///
 /// representing the different modalities of the message content.
 /// </summary>
 public partial class Message : IMessageHelpers

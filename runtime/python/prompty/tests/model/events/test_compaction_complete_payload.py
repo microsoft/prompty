@@ -9,7 +9,8 @@ def test_load_json_compactioncompletepayload():
     json_data = r"""
     {
       "removed": 5,
-      "remaining": 3
+      "remaining": 3,
+      "summaryLength": 1200
     }
     """
     data = json.loads(json_data, strict=False)
@@ -17,19 +18,22 @@ def test_load_json_compactioncompletepayload():
     assert instance is not None
     assert instance.removed == 5
     assert instance.remaining == 3
+    assert instance.summary_length == 1200
 
 
 def test_load_yaml_compactioncompletepayload():
     yaml_data = r"""
     removed: 5
     remaining: 3
-    
+    summaryLength: 1200
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = CompactionCompletePayload.load(data)
     assert instance is not None
     assert instance.removed == 5
     assert instance.remaining == 3
+    assert instance.summary_length == 1200
 
 
 def test_roundtrip_json_compactioncompletepayload():
@@ -37,7 +41,8 @@ def test_roundtrip_json_compactioncompletepayload():
     json_data = r"""
     {
       "removed": 5,
-      "remaining": 3
+      "remaining": 3,
+      "summaryLength": 1200
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -47,6 +52,7 @@ def test_roundtrip_json_compactioncompletepayload():
     assert reloaded is not None
     assert reloaded.removed == 5
     assert reloaded.remaining == 3
+    assert reloaded.summary_length == 1200
 
 
 def test_to_json_compactioncompletepayload():
@@ -54,7 +60,8 @@ def test_to_json_compactioncompletepayload():
     json_data = r"""
     {
       "removed": 5,
-      "remaining": 3
+      "remaining": 3,
+      "summaryLength": 1200
     }
     """
     data = json.loads(json_data, strict=False)
@@ -70,7 +77,8 @@ def test_to_yaml_compactioncompletepayload():
     json_data = r"""
     {
       "removed": 5,
-      "remaining": 3
+      "remaining": 3,
+      "summaryLength": 1200
     }
     """
     data = json.loads(json_data, strict=False)

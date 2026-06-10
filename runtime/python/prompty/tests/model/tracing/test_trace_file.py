@@ -23,7 +23,7 @@ def test_load_yaml_tracefile():
     yaml_data = r"""
     runtime: python
     version: 2.0.0
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TraceFile.load(data)

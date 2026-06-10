@@ -20,7 +20,7 @@ def test_load_json_compactionfailedpayload():
 def test_load_yaml_compactionfailedpayload():
     yaml_data = r"""
     message: Summarization prompt exceeded context window
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = CompactionFailedPayload.load(data)

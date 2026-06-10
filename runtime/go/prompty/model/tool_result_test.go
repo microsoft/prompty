@@ -20,7 +20,10 @@ func TestToolResultLoadJSON(t *testing.T) {
       "kind": "text",
       "value": "72°F and sunny"
     }
-  ]
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
 }
 `
 	var data map[string]interface{}
@@ -33,7 +36,15 @@ func TestToolResultLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load ToolResult: %v", err)
 	}
-	_ = instance // No scalar properties to validate
+	if instance.ErrorKind == nil || *instance.ErrorKind != "missing_tool" {
+		t.Errorf(`Expected ErrorKind to be "missing_tool", got %v`, instance.ErrorKind)
+	}
+	if instance.ErrorMessage == nil || *instance.ErrorMessage != "Tool 'get_weather' is not registered" {
+		t.Errorf(`Expected ErrorMessage to be "Tool 'get_weather' is not registered", got %v`, instance.ErrorMessage)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, instance.DurationMs)
+	}
 }
 
 // TestToolResultLoadYAML tests loading ToolResult from YAML
@@ -42,6 +53,9 @@ func TestToolResultLoadYAML(t *testing.T) {
 parts:
   - kind: text
     value: 72°F and sunny
+errorKind: missing_tool
+errorMessage: Tool 'get_weather' is not registered
+durationMs: 42
 
 `
 	var data map[string]interface{}
@@ -54,7 +68,15 @@ parts:
 	if err != nil {
 		t.Fatalf("Failed to load ToolResult: %v", err)
 	}
-	_ = instance // No scalar properties to validate
+	if instance.ErrorKind == nil || *instance.ErrorKind != "missing_tool" {
+		t.Errorf(`Expected ErrorKind to be "missing_tool", got %v`, instance.ErrorKind)
+	}
+	if instance.ErrorMessage == nil || *instance.ErrorMessage != "Tool 'get_weather' is not registered" {
+		t.Errorf(`Expected ErrorMessage to be "Tool 'get_weather' is not registered", got %v`, instance.ErrorMessage)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, instance.DurationMs)
+	}
 }
 
 // TestToolResultRoundtrip tests load -> save -> load produces equivalent data
@@ -66,7 +88,10 @@ func TestToolResultRoundtrip(t *testing.T) {
       "kind": "text",
       "value": "72°F and sunny"
     }
-  ]
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
 }
 `
 	var data map[string]interface{}
@@ -86,7 +111,15 @@ func TestToolResultRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload ToolResult: %v", err)
 	}
-	_ = reloaded // No scalar properties to validate
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "missing_tool" {
+		t.Errorf(`Expected ErrorKind to be "missing_tool", got %v`, reloaded.ErrorKind)
+	}
+	if reloaded.ErrorMessage == nil || *reloaded.ErrorMessage != "Tool 'get_weather' is not registered" {
+		t.Errorf(`Expected ErrorMessage to be "Tool 'get_weather' is not registered", got %v`, reloaded.ErrorMessage)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, reloaded.DurationMs)
+	}
 }
 
 // TestToolResultToJSON tests that ToJSON produces valid JSON
@@ -98,7 +131,10 @@ func TestToolResultToJSON(t *testing.T) {
       "kind": "text",
       "value": "72°F and sunny"
     }
-  ]
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
 }
 `
 	var data map[string]interface{}
@@ -131,7 +167,10 @@ func TestToolResultToYAML(t *testing.T) {
       "kind": "text",
       "value": "72°F and sunny"
     }
-  ]
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
 }
 `
 	var data map[string]interface{}

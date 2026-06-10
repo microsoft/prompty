@@ -29,7 +29,7 @@ def test_load_yaml_foundryconnection():
     endpoint: "https://myresource.services.ai.azure.com/api/projects/myproject"
     name: my-openai-connection
     connectionType: model
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FoundryConnection.load(data)

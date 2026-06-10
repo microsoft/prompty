@@ -22,7 +22,7 @@ def test_load_yaml_validationresult():
     yaml_data = r"""
     valid: true
     errors: []
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ValidationResult.load(data)

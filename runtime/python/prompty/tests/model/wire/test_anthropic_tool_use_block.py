@@ -28,7 +28,7 @@ def test_load_yaml_anthropictooluseblock():
     name: get_weather
     input:
       city: Paris
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicToolUseBlock.load(data)

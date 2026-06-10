@@ -13,12 +13,18 @@ def test_load_json_toolresult():
           "kind": "text",
           "value": "72°F and sunny"
         }
-      ]
+      ],
+      "errorKind": "missing_tool",
+      "errorMessage": "Tool 'get_weather' is not registered",
+      "durationMs": 42
     }
     """
     data = json.loads(json_data, strict=False)
     instance = ToolResult.load(data)
     assert instance is not None
+    assert instance.error_kind == "missing_tool"
+    assert instance.error_message == "Tool 'get_weather' is not registered"
+    assert instance.duration_ms == 42
 
 
 def test_load_yaml_toolresult():
@@ -26,11 +32,17 @@ def test_load_yaml_toolresult():
     parts:
       - kind: text
         value: 72°F and sunny
-    
+    errorKind: missing_tool
+    errorMessage: Tool 'get_weather' is not registered
+    durationMs: 42
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ToolResult.load(data)
     assert instance is not None
+    assert instance.error_kind == "missing_tool"
+    assert instance.error_message == "Tool 'get_weather' is not registered"
+    assert instance.duration_ms == 42
 
 
 def test_roundtrip_json_toolresult():
@@ -42,7 +54,10 @@ def test_roundtrip_json_toolresult():
           "kind": "text",
           "value": "72°F and sunny"
         }
-      ]
+      ],
+      "errorKind": "missing_tool",
+      "errorMessage": "Tool 'get_weather' is not registered",
+      "durationMs": 42
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -50,6 +65,9 @@ def test_roundtrip_json_toolresult():
     saved_data = instance.save()
     reloaded = ToolResult.load(saved_data)
     assert reloaded is not None
+    assert reloaded.error_kind == "missing_tool"
+    assert reloaded.error_message == "Tool 'get_weather' is not registered"
+    assert reloaded.duration_ms == 42
 
 
 def test_to_json_toolresult():
@@ -61,7 +79,10 @@ def test_to_json_toolresult():
           "kind": "text",
           "value": "72°F and sunny"
         }
-      ]
+      ],
+      "errorKind": "missing_tool",
+      "errorMessage": "Tool 'get_weather' is not registered",
+      "durationMs": 42
     }
     """
     data = json.loads(json_data, strict=False)
@@ -81,7 +102,10 @@ def test_to_yaml_toolresult():
           "kind": "text",
           "value": "72°F and sunny"
         }
-      ]
+      ],
+      "errorKind": "missing_tool",
+      "errorMessage": "Tool 'get_weather' is not registered",
+      "durationMs": 42
     }
     """
     data = json.loads(json_data, strict=False)

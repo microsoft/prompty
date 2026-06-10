@@ -46,7 +46,7 @@ def test_load_yaml_modelinfo():
       - text
     additionalProperties:
       supportsStreaming: true
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ModelInfo.load(data)

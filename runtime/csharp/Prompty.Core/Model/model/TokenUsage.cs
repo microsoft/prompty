@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Tracks token consumption for a single LLM call. Provider-specific field
-/// 
+///
 /// names (e.g., OpenAI's `prompt_tokens` vs Anthropic's `input_tokens`)
-/// 
+///
 /// are mapped via `knownAs` augments in the wire directory.
 /// </summary>
 public partial class TokenUsage

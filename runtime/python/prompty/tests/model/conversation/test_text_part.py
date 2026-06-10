@@ -20,7 +20,7 @@ def test_load_json_textpart():
 def test_load_yaml_textpart():
     yaml_data = r"""
     value: Hello, world!
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TextPart.load(data)

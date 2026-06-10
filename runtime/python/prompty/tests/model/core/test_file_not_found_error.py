@@ -23,7 +23,7 @@ def test_load_yaml_filenotfounderror():
     yaml_data = r"""
     message: "Prompty file not found: ./chat.prompty"
     path: ./chat.prompty
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FileNotFoundError.load(data)

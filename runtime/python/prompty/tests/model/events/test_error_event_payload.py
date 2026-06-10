@@ -8,31 +8,41 @@ from prompty.model import ErrorEventPayload
 def test_load_json_erroreventpayload():
     json_data = r"""
     {
-      "message": "Rate limit exceeded"
+      "message": "Rate limit exceeded",
+      "errorKind": "rate_limit",
+      "phase": "llm"
     }
     """
     data = json.loads(json_data, strict=False)
     instance = ErrorEventPayload.load(data)
     assert instance is not None
     assert instance.message == "Rate limit exceeded"
+    assert instance.error_kind == "rate_limit"
+    assert instance.phase == "llm"
 
 
 def test_load_yaml_erroreventpayload():
     yaml_data = r"""
     message: Rate limit exceeded
-    
+    errorKind: rate_limit
+    phase: llm
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ErrorEventPayload.load(data)
     assert instance is not None
     assert instance.message == "Rate limit exceeded"
+    assert instance.error_kind == "rate_limit"
+    assert instance.phase == "llm"
 
 
 def test_roundtrip_json_erroreventpayload():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
-      "message": "Rate limit exceeded"
+      "message": "Rate limit exceeded",
+      "errorKind": "rate_limit",
+      "phase": "llm"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -41,13 +51,17 @@ def test_roundtrip_json_erroreventpayload():
     reloaded = ErrorEventPayload.load(saved_data)
     assert reloaded is not None
     assert reloaded.message == "Rate limit exceeded"
+    assert reloaded.error_kind == "rate_limit"
+    assert reloaded.phase == "llm"
 
 
 def test_to_json_erroreventpayload():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
-      "message": "Rate limit exceeded"
+      "message": "Rate limit exceeded",
+      "errorKind": "rate_limit",
+      "phase": "llm"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -62,7 +76,9 @@ def test_to_yaml_erroreventpayload():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
-      "message": "Rate limit exceeded"
+      "message": "Rate limit exceeded",
+      "errorKind": "rate_limit",
+      "phase": "llm"
     }
     """
     data = json.loads(json_data, strict=False)

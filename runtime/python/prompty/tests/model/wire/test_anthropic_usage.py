@@ -23,7 +23,7 @@ def test_load_yaml_anthropicusage():
     yaml_data = r"""
     input_tokens: 150
     output_tokens: 42
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicUsage.load(data)

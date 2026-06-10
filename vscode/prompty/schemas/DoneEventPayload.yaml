@@ -3,8 +3,7 @@ $id: DoneEventPayload.yaml
 type: object
 properties:
   response:
-    type: string
-    description: The final text response from the LLM
+    description: The final response from the LLM after processing
   messages:
     type: array
     items:

@@ -6,10 +6,14 @@ import { LoadContext, SaveContext } from "../context";
 export class ToolCallStartPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
+  id?: string | undefined;
   name: string = "";
   arguments: string = "";
 
   constructor(init?: Partial<ToolCallStartPayload>) {
+    if (init?.id !== undefined) {
+      this.id = init.id;
+    }
     this.name = init?.name ?? "";
     this.arguments = init?.arguments ?? "";
   }
@@ -26,6 +30,9 @@ export class ToolCallStartPayload {
 
     const instance = new ToolCallStartPayload();
 
+    if (data["id"] !== undefined && data["id"] !== null) {
+      instance.id = String(data["id"]);
+    }
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
@@ -51,6 +58,9 @@ export class ToolCallStartPayload {
 
     const result: Record<string, unknown> = {};
 
+    if (obj.id !== undefined && obj.id !== null) {
+      result["id"] = obj.id;
+    }
     if (obj.name !== undefined && obj.name !== null) {
       result["name"] = obj.name;
     }

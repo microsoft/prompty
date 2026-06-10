@@ -8,11 +8,11 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Positional marker for conversation history insertion during template rendering.
-/// 
+///
 /// During `prepare()`, nonce strings in rendered text are replaced with
-/// 
+///
 /// ThreadMarker objects. The pipeline then replaces them with actual
-/// 
+///
 /// conversation messages from the inputs.
 /// </summary>
 public partial class ThreadMarker

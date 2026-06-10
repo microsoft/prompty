@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ToolCallCompletePayload.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: The unique identifier of the tool call
+  name:
+    type: string
+    description: The name of the tool that completed
+  success:
+    type: boolean
+    description: Whether the tool dispatch succeeded semantically
+  result:
+    $ref: ToolResult.yaml
+    description: Normalized tool result
+  durationMs:
+    type: number
+    description: Tool execution duration in milliseconds
+  errorKind:
+    type: string
+    description: Machine-readable error category when success is false
+required:
+  - name
+  - success
+description: Payload for "tool_call_complete" events — a tool dispatch finished.

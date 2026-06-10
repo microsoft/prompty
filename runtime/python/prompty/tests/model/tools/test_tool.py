@@ -31,7 +31,7 @@ def test_load_yaml_tool():
     description: A description of the tool
     bindings:
       input: value
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Tool.load(data)

@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: LlmCompletePayload.yaml
+type: object
+properties:
+  requestId:
+    type: string
+    description: Provider request identifier, when supplied by the SDK/API
+  serviceRequestId:
+    type: string
+    description: Service request identifier, when supplied by the SDK/API
+  usage:
+    $ref: TokenUsage.yaml
+    description: Token usage reported by the provider
+  durationMs:
+    type: number
+    description: LLM call duration in milliseconds
+description: Payload for "llm_complete" events — an LLM request completed.

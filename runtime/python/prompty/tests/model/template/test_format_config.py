@@ -28,7 +28,7 @@ def test_load_yaml_formatconfig():
     strict: true
     options:
       key: value
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FormatConfig.load(data)

@@ -26,7 +26,7 @@ def test_load_yaml_apikeyconnection():
     kind: key
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
     apiKey: your-api-key
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ApiKeyConnection.load(data)

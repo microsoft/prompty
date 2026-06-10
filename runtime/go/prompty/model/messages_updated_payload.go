@@ -12,7 +12,10 @@ import (
 // MessagesUpdatedPayload represents Payload for "messages_updated" events — the conversation state has changed.
 
 type MessagesUpdatedPayload struct {
-	Messages []Message `json:"messages" yaml:"messages"`
+	Messages []Message `json:"messages,omitempty" yaml:"messages,omitempty"`
+	Reason   *string   `json:"reason,omitempty" yaml:"reason,omitempty"`
+	Appended []Message `json:"appended,omitempty" yaml:"appended,omitempty"`
+	Removed  *int32    `json:"removed,omitempty" yaml:"removed,omitempty"`
 }
 
 // LoadMessagesUpdatedPayload creates a MessagesUpdatedPayload from a map[string]interface{}
@@ -32,6 +35,35 @@ func LoadMessagesUpdatedPayload(data interface{}, ctx *LoadContext) (MessagesUpd
 				}
 			}
 		}
+		if val, ok := m["reason"]; ok && val != nil {
+			v := string(val.(string))
+			result.Reason = &v
+		}
+		if val, ok := m["appended"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.Appended = make([]Message, len(arr))
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := LoadMessage(item, ctx)
+						result.Appended[i] = loaded
+					}
+				}
+			}
+		}
+		if val, ok := m["removed"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip
+			var v int32
+			switch n := val.(type) {
+			case int:
+				v = int32(n)
+			case int32:
+				v = int32(n)
+			case int64:
+				v = int32(n)
+			case float64:
+				v = int32(n)
+			}
+			result.Removed = &v
+		}
 	}
 
 	return result, nil
@@ -46,6 +78,19 @@ func (obj *MessagesUpdatedPayload) Save(ctx *SaveContext) map[string]interface{}
 			arr[i] = item.Save(ctx)
 		}
 		result["messages"] = arr
+	}
+	if obj.Reason != nil {
+		result["reason"] = *obj.Reason
+	}
+	if obj.Appended != nil {
+		arr := make([]interface{}, len(obj.Appended))
+		for i, item := range obj.Appended {
+			arr[i] = item.Save(ctx)
+		}
+		result["appended"] = arr
+	}
+	if obj.Removed != nil {
+		result["removed"] = *obj.Removed
 	}
 
 	return result

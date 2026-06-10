@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A single message in the Anthropic Messages API wire format.
-/// 
+///
 /// Anthropic always uses the array-of-blocks form for content,
-/// 
+///
 /// even when there is only one text block (§7.5).
 /// </summary>
 public partial class AnthropicWireMessage

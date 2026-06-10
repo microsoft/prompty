@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// The result of a guardrail evaluation. Guardrails are safety checks that
-/// 
+///
 /// run at specific phases of the agent loop and can allow, deny, or rewrite
-/// 
+///
 /// content.
 /// </summary>
 public partial class GuardrailResult

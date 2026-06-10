@@ -12,8 +12,9 @@ import (
 // CompactionCompletePayload represents Payload for "compaction_complete" events — context compaction finished.
 
 type CompactionCompletePayload struct {
-	Removed   int32 `json:"removed" yaml:"removed"`
-	Remaining int32 `json:"remaining" yaml:"remaining"`
+	Removed       int32  `json:"removed" yaml:"removed"`
+	Remaining     int32  `json:"remaining" yaml:"remaining"`
+	SummaryLength *int32 `json:"summaryLength,omitempty" yaml:"summaryLength,omitempty"`
 }
 
 // LoadCompactionCompletePayload creates a CompactionCompletePayload from a map[string]interface{}
@@ -50,6 +51,20 @@ func LoadCompactionCompletePayload(data interface{}, ctx *LoadContext) (Compacti
 			}
 			result.Remaining = v
 		}
+		if val, ok := m["summaryLength"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip
+			var v int32
+			switch n := val.(type) {
+			case int:
+				v = int32(n)
+			case int32:
+				v = int32(n)
+			case int64:
+				v = int32(n)
+			case float64:
+				v = int32(n)
+			}
+			result.SummaryLength = &v
+		}
 	}
 
 	return result, nil
@@ -60,6 +75,9 @@ func (obj *CompactionCompletePayload) Save(ctx *SaveContext) map[string]interfac
 	result := make(map[string]interface{})
 	result["removed"] = obj.Removed
 	result["remaining"] = obj.Remaining
+	if obj.SummaryLength != nil {
+		result["summaryLength"] = *obj.SummaryLength
+	}
 
 	return result
 }

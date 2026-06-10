@@ -18,11 +18,17 @@ class ErrorEventPayload:
     ----------
     message : str
         Human-readable error description
+    error_kind : Optional[str]
+        Stable machine-readable error category
+    phase : Optional[str]
+        Operation or phase where the error occurred
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     message: str = field(default="")
+    error_kind: str | None = None
+    phase: str | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ErrorEventPayload":
@@ -46,6 +52,10 @@ class ErrorEventPayload:
 
         if data is not None and "message" in data:
             instance.message = data["message"]
+        if data is not None and "errorKind" in data:
+            instance.error_kind = data["errorKind"]
+        if data is not None and "phase" in data:
+            instance.phase = data["phase"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -66,6 +76,10 @@ class ErrorEventPayload:
 
         if obj.message is not None:
             result["message"] = obj.message
+        if obj.error_kind is not None:
+            result["errorKind"] = obj.error_kind
+        if obj.phase is not None:
+            result["phase"] = obj.phase
 
         if context is not None:
             result = context.process_dict(result)

@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnStartPayload.yaml
+type: object
+properties:
+  agent:
+    type: string
+    description: Name of the loaded prompt/agent, when available
+  inputs:
+    $ref: RecordUnknown.yaml
+    description: Input values supplied to the turn after host-side sanitization
+  maxIterations:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Configured maximum tool-call iterations
+description: Payload for "turn_start" events — a turn is beginning.

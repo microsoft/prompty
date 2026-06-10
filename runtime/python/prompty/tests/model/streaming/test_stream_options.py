@@ -20,7 +20,7 @@ def test_load_json_streamoptions():
 def test_load_yaml_streamoptions():
     yaml_data = r"""
     includeUsage: true
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = StreamOptions.load(data)

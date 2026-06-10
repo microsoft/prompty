@@ -1,0 +1,41 @@
+---
+title: "TurnStartPayload"
+description: "Documentation for the TurnStartPayload type."
+slug: "reference/turnstartpayload"
+---
+
+Payload for "turn_start" events — a turn is beginning.
+
+## Class Diagram
+
+```mermaid
+---
+title: TurnStartPayload
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class TurnStartPayload {
+        +string agent
+        +dictionary inputs
+        +int32 maxIterations
+    }
+```
+
+## Yaml Example
+
+```yaml
+agent: weather-agent
+maxIterations: 10
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| agent | string | Name of the loaded prompt/agent, when available |
+| inputs | dictionary | Input values supplied to the turn after host-side sanitization |
+| maxIterations | int32 | Configured maximum tool-call iterations |

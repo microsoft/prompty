@@ -26,7 +26,7 @@ def test_load_yaml_tokenusage():
     promptTokens: 150
     completionTokens: 42
     totalTokens: 192
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TokenUsage.load(data)

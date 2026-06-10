@@ -23,7 +23,7 @@ def test_load_yaml_anthropicimagesource():
     yaml_data = r"""
     media_type: image/png
     data: iVBORw0KGgo...
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicImageSource.load(data)

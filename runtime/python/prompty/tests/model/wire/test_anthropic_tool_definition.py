@@ -23,7 +23,7 @@ def test_load_yaml_anthropictooldefinition():
     yaml_data = r"""
     name: get_weather
     description: Get the current weather for a city
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicToolDefinition.load(data)

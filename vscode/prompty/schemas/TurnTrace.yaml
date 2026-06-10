@@ -1,0 +1,26 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnTrace.yaml
+type: object
+properties:
+  version:
+    type: string
+    default: "1"
+    description: Trace schema version
+  runtime:
+    type: string
+    description: Runtime name that produced the trace
+  promptyVersion:
+    type: string
+    description: Prompty library version that produced the trace
+  events:
+    type: array
+    items:
+      $ref: TurnEvent.yaml
+    description: Recorded turn events in emission order
+  summary:
+    $ref: TurnSummary.yaml
+    description: Optional summary computed from the event stream
+required:
+  - version
+  - events
+description: Portable JSONL/replay container for a recorded turn harness run.

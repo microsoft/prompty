@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Raised when a referenced file cannot be found. This applies to both
-/// 
+///
 /// .prompty files and ${file:path} references in frontmatter.
 /// </summary>
 public partial class FileNotFoundError

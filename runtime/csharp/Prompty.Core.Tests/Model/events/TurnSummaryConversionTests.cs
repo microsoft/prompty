@@ -1,0 +1,172 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class TurnSummaryConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+turnId: turn_001
+status: success
+iterations: 2
+llmCalls: 3
+toolCalls: 2
+retries: 1
+durationMs: 2500
+
+""";
+
+        var instance = TurnSummary.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal("turn_001", instance.TurnId);
+        Assert.Equal("success", instance.Status);
+        Assert.Equal(2, instance.Iterations);
+        Assert.Equal(3, instance.LlmCalls);
+        Assert.Equal(2, instance.ToolCalls);
+        Assert.Equal(1, instance.Retries);
+        Assert.Equal(2500, instance.DurationMs);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "turnId": "turn_001",
+  "status": "success",
+  "iterations": 2,
+  "llmCalls": 3,
+  "toolCalls": 2,
+  "retries": 1,
+  "durationMs": 2500
+}
+""";
+
+        var instance = TurnSummary.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal("turn_001", instance.TurnId);
+        Assert.Equal("success", instance.Status);
+        Assert.Equal(2, instance.Iterations);
+        Assert.Equal(3, instance.LlmCalls);
+        Assert.Equal(2, instance.ToolCalls);
+        Assert.Equal(1, instance.Retries);
+        Assert.Equal(2500, instance.DurationMs);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "turnId": "turn_001",
+  "status": "success",
+  "iterations": 2,
+  "llmCalls": 3,
+  "toolCalls": 2,
+  "retries": 1,
+  "durationMs": 2500
+}
+""";
+
+        var original = TurnSummary.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = TurnSummary.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal("turn_001", reloaded.TurnId);
+        Assert.Equal("success", reloaded.Status);
+        Assert.Equal(2, reloaded.Iterations);
+        Assert.Equal(3, reloaded.LlmCalls);
+        Assert.Equal(2, reloaded.ToolCalls);
+        Assert.Equal(1, reloaded.Retries);
+        Assert.Equal(2500, reloaded.DurationMs);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+turnId: turn_001
+status: success
+iterations: 2
+llmCalls: 3
+toolCalls: 2
+retries: 1
+durationMs: 2500
+
+""";
+
+        var original = TurnSummary.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = TurnSummary.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal("turn_001", reloaded.TurnId);
+        Assert.Equal("success", reloaded.Status);
+        Assert.Equal(2, reloaded.Iterations);
+        Assert.Equal(3, reloaded.LlmCalls);
+        Assert.Equal(2, reloaded.ToolCalls);
+        Assert.Equal(1, reloaded.Retries);
+        Assert.Equal(2500, reloaded.DurationMs);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "turnId": "turn_001",
+  "status": "success",
+  "iterations": 2,
+  "llmCalls": 3,
+  "toolCalls": 2,
+  "retries": 1,
+  "durationMs": 2500
+}
+""";
+
+        var instance = TurnSummary.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+turnId: turn_001
+status: success
+iterations: 2
+llmCalls: 3
+toolCalls: 2
+retries: 1
+durationMs: 2500
+
+""";
+
+        var instance = TurnSummary.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

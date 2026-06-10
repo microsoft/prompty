@@ -28,7 +28,22 @@ public partial class MessagesUpdatedPayload
     /// <summary>
     /// The current full message list after the update
     /// </summary>
-    public IList<Message> Messages { get; set; } = [];
+    public IList<Message>? Messages { get; set; }
+
+    /// <summary>
+    /// Why the message list changed
+    /// </summary>
+    public string? Reason { get; set; }
+
+    /// <summary>
+    /// Messages appended by this update, when available
+    /// </summary>
+    public IList<Message>? Appended { get; set; }
+
+    /// <summary>
+    /// Number of messages removed by this update, when available
+    /// </summary>
+    public int? Removed { get; set; }
 
 
 
@@ -55,6 +70,21 @@ public partial class MessagesUpdatedPayload
         if (data.TryGetValue("messages", out var messagesValue) && messagesValue is not null)
         {
             instance.Messages = LoadMessages(messagesValue, context);
+        }
+
+        if (data.TryGetValue("reason", out var reasonValue) && reasonValue is not null)
+        {
+            instance.Reason = reasonValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("appended", out var appendedValue) && appendedValue is not null)
+        {
+            instance.Appended = LoadAppended(appendedValue, context);
+        }
+
+        if (data.TryGetValue("removed", out var removedValue) && removedValue is not null)
+        {
+            instance.Removed = Convert.ToInt32(removedValue);
         }
 
         if (context is not null)
@@ -119,6 +149,60 @@ public partial class MessagesUpdatedPayload
     }
 
 
+    /// <summary>
+    /// Load a list of Message from a dictionary or list.
+    /// </summary>
+    public static IList<Message> LoadAppended(object data, LoadContext? context)
+    {
+        var result = new List<Message>();
+
+        if (data is Dictionary<string, object?> dict)
+        {
+            // Convert named dictionary to list
+            foreach (var kvp in dict)
+            {
+                if (kvp.Value is IEnumerable<object>)
+                {
+                    throw new ArgumentException(
+                        $"Invalid 'appended' format: key '{kvp.Key}' has an array value. " +
+                        $"'appended' must be a flat list of objects or a name-keyed dict — " +
+                        "not a nested {" + kvp.Key + ": [...]} structure.");
+                }
+                var itemDict = kvp.Value.GetDictionary();
+                if (itemDict.Count > 0)
+                {
+                    // Value is an object, add name to it
+                    itemDict["name"] = kvp.Key;
+                    result.Add(Message.Load(itemDict, context));
+                }
+                else
+                {
+                    // Value is a scalar, use it as the primary property
+                    var newDict = new Dictionary<string, object?>
+                    {
+                        ["name"] = kvp.Key,
+                        ["role"] = kvp.Value
+                    };
+                    result.Add(Message.Load(newDict, context));
+                }
+            }
+        }
+        else if (data is IEnumerable<object> list)
+        {
+            foreach (var item in list)
+            {
+                var itemDict = item.GetDictionary(Message.ShorthandProperty);
+                if (itemDict.Count > 0)
+                {
+                    result.Add(Message.Load(itemDict, context));
+                }
+            }
+        }
+
+        return result;
+    }
+
+
     #endregion
 
     #region Save Methods
@@ -140,7 +224,28 @@ public partial class MessagesUpdatedPayload
         var result = new Dictionary<string, object?>();
 
 
-        result["messages"] = SaveMessages(obj.Messages, context);
+        if (obj.Messages is not null)
+        {
+            result["messages"] = SaveMessages(obj.Messages, context);
+        }
+
+
+        if (obj.Reason is not null)
+        {
+            result["reason"] = obj.Reason;
+        }
+
+
+        if (obj.Appended is not null)
+        {
+            result["appended"] = SaveAppended(obj.Appended, context);
+        }
+
+
+        if (obj.Removed is not null)
+        {
+            result["removed"] = obj.Removed;
+        }
 
 
         if (context is not null)
@@ -156,6 +261,19 @@ public partial class MessagesUpdatedPayload
     /// Save a list of Message to object or array format.
     /// </summary>
     public static object SaveMessages(IList<Message> items, SaveContext? context)
+    {
+        context ??= new SaveContext();
+
+        // This collection type does not have a 'name' property, only array format is supported
+        return items.Select(item => item.Save(context)).ToList();
+
+    }
+
+
+    /// <summary>
+    /// Save a list of Message to object or array format.
+    /// </summary>
+    public static object SaveAppended(IList<Message> items, SaveContext? context)
     {
         context ??= new SaveContext();
 

@@ -288,6 +288,10 @@ classDiagram
     }
     class ToolResult {
         +ContentPart[] parts
+        +string status
+        +string errorKind
+        +string errorMessage
+        +float64 durationMs
         +text() string [async-capable]
     }
     class ToolDispatchResult {
@@ -370,6 +374,8 @@ classDiagram
     }
     class ErrorEventPayload {
         +string message
+        +string errorKind
+        +string phase
     }
 ```
 
@@ -378,6 +384,7 @@ classDiagram
 ```mermaid
 classDiagram
     class ToolCallStartPayload {
+        +string id
         +string name
         +string arguments
     }
@@ -387,9 +394,16 @@ classDiagram
     }
     class MessagesUpdatedPayload {
         +Message[] messages
+        +string reason
+        +Message[] appended
+        +int32 removed
     }
     class ToolResult {
         +ContentPart[] parts
+        +string status
+        +string errorKind
+        +string errorMessage
+        +float64 durationMs
         +text() string [async-capable]
     }
     class Message {
@@ -401,6 +415,7 @@ classDiagram
     }
     ToolResultPayload *-- ToolResult
     MessagesUpdatedPayload *-- Message
+    MessagesUpdatedPayload *-- Message
 ```
 
 ## Turn Completion and Compaction Events
@@ -408,12 +423,13 @@ classDiagram
 ```mermaid
 classDiagram
     class DoneEventPayload {
-        +string response
+        +unknown response
         +Message[] messages
     }
     class CompactionCompletePayload {
         +int32 removed
         +int32 remaining
+        +int32 summaryLength
     }
     class CompactionFailedPayload {
         +string message

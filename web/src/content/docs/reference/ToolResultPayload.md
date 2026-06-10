@@ -24,6 +24,10 @@ classDiagram
     }
     class ToolResult {
         +ContentPart[] parts
+        +string status
+        +string errorKind
+        +string errorMessage
+        +float64 durationMs
         +text() string [async-capable]
     }
     ToolResultPayload *-- ToolResult

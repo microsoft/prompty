@@ -26,6 +26,11 @@ public partial class ToolCallStartPayload
 #pragma warning restore CS8618
 
     /// <summary>
+    /// The unique identifier of the tool call
+    /// </summary>
+    public string? Id { get; set; }
+
+    /// <summary>
     /// The name of the tool being called
     /// </summary>
     public string Name { get; set; } = string.Empty;
@@ -56,6 +61,11 @@ public partial class ToolCallStartPayload
         // Create new instance
         var instance = new ToolCallStartPayload();
 
+
+        if (data.TryGetValue("id", out var idValue) && idValue is not null)
+        {
+            instance.Id = idValue?.ToString()!;
+        }
 
         if (data.TryGetValue("name", out var nameValue) && nameValue is not null)
         {
@@ -94,6 +104,12 @@ public partial class ToolCallStartPayload
 
 
         var result = new Dictionary<string, object?>();
+
+
+        if (obj.Id is not null)
+        {
+            result["id"] = obj.Id;
+        }
 
 
         result["name"] = obj.Name;

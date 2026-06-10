@@ -43,7 +43,7 @@ def test_load_yaml_mcptool():
     allowedTools:
       - operation1
       - operation2
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = McpTool.load(data)

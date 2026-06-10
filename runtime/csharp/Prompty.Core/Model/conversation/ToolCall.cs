@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A tool call requested by the LLM. Contains the function name and serialized
-/// 
+///
 /// arguments that should be dispatched to the appropriate tool handler.
 /// </summary>
 public partial class ToolCall

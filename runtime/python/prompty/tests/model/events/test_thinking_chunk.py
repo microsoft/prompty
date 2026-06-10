@@ -20,7 +20,7 @@ def test_load_json_thinkingchunk():
 def test_load_yaml_thinkingchunk():
     yaml_data = r"""
     value: Let me consider...
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ThinkingChunk.load(data)

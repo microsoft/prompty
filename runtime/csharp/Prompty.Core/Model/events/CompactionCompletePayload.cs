@@ -35,6 +35,11 @@ public partial class CompactionCompletePayload
     /// </summary>
     public int Remaining { get; set; }
 
+    /// <summary>
+    /// Length of the generated summary, when a summarization strategy is used
+    /// </summary>
+    public int? SummaryLength { get; set; }
+
 
 
     #region Load Methods
@@ -65,6 +70,11 @@ public partial class CompactionCompletePayload
         if (data.TryGetValue("remaining", out var remainingValue) && remainingValue is not null)
         {
             instance.Remaining = Convert.ToInt32(remainingValue);
+        }
+
+        if (data.TryGetValue("summaryLength", out var summaryLengthValue) && summaryLengthValue is not null)
+        {
+            instance.SummaryLength = Convert.ToInt32(summaryLengthValue);
         }
 
         if (context is not null)
@@ -100,6 +110,12 @@ public partial class CompactionCompletePayload
 
 
         result["remaining"] = obj.Remaining;
+
+
+        if (obj.SummaryLength is not null)
+        {
+            result["summaryLength"] = obj.SummaryLength;
+        }
 
 
         if (context is not null)

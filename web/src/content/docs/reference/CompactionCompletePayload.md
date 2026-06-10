@@ -21,6 +21,7 @@ classDiagram
     class CompactionCompletePayload {
         +int32 removed
         +int32 remaining
+        +int32 summaryLength
     }
 ```
 
@@ -29,6 +30,7 @@ classDiagram
 ```yaml
 removed: 5
 remaining: 3
+summaryLength: 1200
 ```
 
 ## Properties
@@ -37,3 +39,4 @@ remaining: 3
 | ---- | ---- | ----------- |
 | removed | int32 | Number of messages removed during compaction |
 | remaining | int32 | Number of messages remaining after compaction |
+| summaryLength | int32 | Length of the generated summary, when a summarization strategy is used |

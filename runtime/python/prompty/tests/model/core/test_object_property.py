@@ -30,7 +30,7 @@ def test_load_yaml_objectproperty():
         kind: string
       property2:
         kind: number
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ObjectProperty.load(data)

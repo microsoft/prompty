@@ -11,6 +11,7 @@ public class ToolCallStartPayloadConversionTests
     public void LoadYamlInput()
     {
         string yamlData = """
+id: call_abc123
 name: get_weather
 arguments: "{\"city\": \"Paris\"}"
 
@@ -19,6 +20,7 @@ arguments: "{\"city\": \"Paris\"}"
         var instance = ToolCallStartPayload.FromYaml(yamlData);
 
         Assert.NotNull(instance);
+        Assert.Equal("call_abc123", instance.Id);
         Assert.Equal("get_weather", instance.Name);
         Assert.Equal(@"{""city"": ""Paris""}".Replace("\r\n", "\n"), instance.Arguments);
     }
@@ -28,6 +30,7 @@ arguments: "{\"city\": \"Paris\"}"
     {
         string jsonData = """
 {
+  "id": "call_abc123",
   "name": "get_weather",
   "arguments": "{\"city\": \"Paris\"}"
 }
@@ -35,6 +38,7 @@ arguments: "{\"city\": \"Paris\"}"
 
         var instance = ToolCallStartPayload.FromJson(jsonData);
         Assert.NotNull(instance);
+        Assert.Equal("call_abc123", instance.Id);
         Assert.Equal("get_weather", instance.Name);
         Assert.Equal(@"{""city"": ""Paris""}".Replace("\r\n", "\n"), instance.Arguments);
     }
@@ -45,6 +49,7 @@ arguments: "{\"city\": \"Paris\"}"
         // Test that FromJson -> ToJson -> FromJson produces equivalent data
         string jsonData = """
 {
+  "id": "call_abc123",
   "name": "get_weather",
   "arguments": "{\"city\": \"Paris\"}"
 }
@@ -58,6 +63,7 @@ arguments: "{\"city\": \"Paris\"}"
 
         var reloaded = ToolCallStartPayload.FromJson(json);
         Assert.NotNull(reloaded);
+        Assert.Equal("call_abc123", reloaded.Id);
         Assert.Equal("get_weather", reloaded.Name);
         Assert.Equal(@"{""city"": ""Paris""}".Replace("\r\n", "\n"), reloaded.Arguments);
     }
@@ -67,6 +73,7 @@ arguments: "{\"city\": \"Paris\"}"
     {
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
+id: call_abc123
 name: get_weather
 arguments: "{\"city\": \"Paris\"}"
 
@@ -80,6 +87,7 @@ arguments: "{\"city\": \"Paris\"}"
 
         var reloaded = ToolCallStartPayload.FromYaml(yaml);
         Assert.NotNull(reloaded);
+        Assert.Equal("call_abc123", reloaded.Id);
         Assert.Equal("get_weather", reloaded.Name);
         Assert.Equal(@"{""city"": ""Paris""}".Replace("\r\n", "\n"), reloaded.Arguments);
     }
@@ -89,6 +97,7 @@ arguments: "{\"city\": \"Paris\"}"
     {
         string jsonData = """
 {
+  "id": "call_abc123",
   "name": "get_weather",
   "arguments": "{\"city\": \"Paris\"}"
 }
@@ -106,6 +115,7 @@ arguments: "{\"city\": \"Paris\"}"
     public void ToYamlProducesValidYaml()
     {
         string yamlData = """
+id: call_abc123
 name: get_weather
 arguments: "{\"city\": \"Paris\"}"
 

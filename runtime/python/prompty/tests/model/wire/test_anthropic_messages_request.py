@@ -40,7 +40,7 @@ def test_load_yaml_anthropicmessagesrequest():
     top_k: 40
     stop_sequences:
       - "\n\nHuman:"
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicMessagesRequest.load(data)

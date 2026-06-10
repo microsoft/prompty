@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnEndPayload.yaml
+type: object
+properties:
+  iterations:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of tool-call iterations performed
+  status:
+    anyOf:
+      - type: string
+        const: success
+      - type: string
+        const: error
+      - type: string
+        const: cancelled
+    description: Final semantic status of the turn
+  response:
+    description: Final response after processing, if available
+  durationMs:
+    type: number
+    description: Total elapsed turn duration in milliseconds
+description: Payload for "turn_end" events — a turn has completed.

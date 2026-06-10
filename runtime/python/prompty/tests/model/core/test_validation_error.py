@@ -26,7 +26,7 @@ def test_load_yaml_validationerror():
     message: "Missing required input: firstName"
     property: firstName
     constraint: required
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ValidationError.load(data)

@@ -12,8 +12,9 @@ import (
 // ToolCallStartPayload represents Payload for "tool_call_start" events — the LLM has requested a tool call.
 
 type ToolCallStartPayload struct {
-	Name      string `json:"name" yaml:"name"`
-	Arguments string `json:"arguments" yaml:"arguments"`
+	Id        *string `json:"id,omitempty" yaml:"id,omitempty"`
+	Name      string  `json:"name" yaml:"name"`
+	Arguments string  `json:"arguments" yaml:"arguments"`
 }
 
 // LoadToolCallStartPayload creates a ToolCallStartPayload from a map[string]interface{}
@@ -22,6 +23,10 @@ func LoadToolCallStartPayload(data interface{}, ctx *LoadContext) (ToolCallStart
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["id"]; ok && val != nil {
+			v := string(val.(string))
+			result.Id = &v
+		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
 		}
@@ -36,6 +41,9 @@ func LoadToolCallStartPayload(data interface{}, ctx *LoadContext) (ToolCallStart
 // Save serializes ToolCallStartPayload to map[string]interface{}
 func (obj *ToolCallStartPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	if obj.Id != nil {
+		result["id"] = *obj.Id
+	}
 	result["name"] = obj.Name
 	result["arguments"] = obj.Arguments
 

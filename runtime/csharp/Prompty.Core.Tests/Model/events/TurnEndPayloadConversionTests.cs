@@ -1,0 +1,122 @@
+using Xunit;
+
+#pragma warning disable IDE0130
+namespace Prompty.Core;
+#pragma warning restore IDE0130
+
+
+public class TurnEndPayloadConversionTests
+{
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+iterations: 2
+durationMs: 1500
+
+""";
+
+        var instance = TurnEndPayload.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal(2, instance.Iterations);
+        Assert.Equal(1500, instance.DurationMs);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "iterations": 2,
+  "durationMs": 1500
+}
+""";
+
+        var instance = TurnEndPayload.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal(2, instance.Iterations);
+        Assert.Equal(1500, instance.DurationMs);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "iterations": 2,
+  "durationMs": 1500
+}
+""";
+
+        var original = TurnEndPayload.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = TurnEndPayload.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal(2, reloaded.Iterations);
+        Assert.Equal(1500, reloaded.DurationMs);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+iterations: 2
+durationMs: 1500
+
+""";
+
+        var original = TurnEndPayload.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = TurnEndPayload.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal(2, reloaded.Iterations);
+        Assert.Equal(1500, reloaded.DurationMs);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "iterations": 2,
+  "durationMs": 1500
+}
+""";
+
+        var instance = TurnEndPayload.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+iterations: 2
+durationMs: 1500
+
+""";
+
+        var instance = TurnEndPayload.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
+}

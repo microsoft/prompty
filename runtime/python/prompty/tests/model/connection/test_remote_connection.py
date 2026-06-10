@@ -26,7 +26,7 @@ def test_load_yaml_remoteconnection():
     kind: remote
     name: my-reference-connection
     endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = RemoteConnection.load(data)

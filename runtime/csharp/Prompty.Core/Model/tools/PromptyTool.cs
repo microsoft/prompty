@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A tool that references another .prompty file to be invoked as a tool.
-/// 
+///
 /// The child prompty is executed as a single prompt invocation. Nested agent
-/// 
+///
 /// loops are intentionally not started from PromptyTool.
 /// </summary>
 public partial class PromptyTool : Tool

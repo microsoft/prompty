@@ -37,7 +37,7 @@ def test_load_yaml_oauthconnection():
     tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
     scopes:
       - "https://cognitiveservices.azure.com/.default"
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = OAuthConnection.load(data)

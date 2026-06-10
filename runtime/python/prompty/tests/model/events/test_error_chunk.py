@@ -20,7 +20,7 @@ def test_load_json_errorchunk():
 def test_load_yaml_errorchunk():
     yaml_data = r"""
     message: Rate limit exceeded
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ErrorChunk.load(data)

@@ -5,10 +5,12 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Protocol, runtime_checkable
+from typing import Any, ClassVar, Literal, Protocol, runtime_checkable
 
 from .._context import LoadContext, SaveContext
 from ._ContentPart import ContentPart, TextPart
+
+ToolResultStatus = Literal["success", "error", "cancelled", "timeout"]
 
 
 @dataclass
@@ -23,11 +25,23 @@ class ToolResult:
     ----------
     parts : list[ContentPart]
         The content parts of the tool result
+    status : Optional[str]
+        Semantic execution status for the tool result
+    error_kind : Optional[str]
+        Stable machine-readable error category when status is not success
+    error_message : Optional[str]
+        Human-readable error message when status is not success
+    duration_ms : Optional[float]
+        Tool execution duration in milliseconds
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     parts: list[ContentPart] = field(default_factory=list)
+    status: ToolResultStatus | None = None
+    error_kind: str | None = None
+    error_message: str | None = None
+    duration_ms: float | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ToolResult":
@@ -51,6 +65,14 @@ class ToolResult:
 
         if data is not None and "parts" in data:
             instance.parts = ToolResult.load_parts(data["parts"], context)
+        if data is not None and "status" in data:
+            instance.status = data["status"]
+        if data is not None and "errorKind" in data:
+            instance.error_kind = data["errorKind"]
+        if data is not None and "errorMessage" in data:
+            instance.error_message = data["errorMessage"]
+        if data is not None and "durationMs" in data:
+            instance.duration_ms = data["durationMs"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -94,6 +116,14 @@ class ToolResult:
 
         if obj.parts is not None:
             result["parts"] = ToolResult.save_parts(obj.parts, context)
+        if obj.status is not None:
+            result["status"] = obj.status
+        if obj.error_kind is not None:
+            result["errorKind"] = obj.error_kind
+        if obj.error_message is not None:
+            result["errorMessage"] = obj.error_message
+        if obj.duration_ms is not None:
+            result["durationMs"] = obj.duration_ms
 
         if context is not None:
             result = context.process_dict(result)

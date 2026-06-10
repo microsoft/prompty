@@ -20,7 +20,7 @@ def test_load_json_tokeneventpayload():
 def test_load_yaml_tokeneventpayload():
     yaml_data = r"""
     token: Hello
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TokenEventPayload.load(data)

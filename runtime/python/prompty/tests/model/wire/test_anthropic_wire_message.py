@@ -20,7 +20,7 @@ def test_load_json_anthropicwiremessage():
 def test_load_yaml_anthropicwiremessage():
     yaml_data = r"""
     role: user
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicWireMessage.load(data)

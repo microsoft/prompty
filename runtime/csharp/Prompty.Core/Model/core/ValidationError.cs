@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Raised when input validation fails. Each ValidationError describes a
-/// 
+///
 /// single property that did not satisfy its constraint.
 /// </summary>
 public partial class ValidationError

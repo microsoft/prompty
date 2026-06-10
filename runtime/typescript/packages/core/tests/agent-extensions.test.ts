@@ -25,7 +25,19 @@ describe("emitEvent", () => {
     const data = { iteration: 1 };
     emitEvent(cb, "status", data);
     expect(cb).toHaveBeenCalledOnce();
-    expect(cb).toHaveBeenCalledWith("status", data);
+    expect(cb).toHaveBeenCalledWith(
+      "status",
+      expect.objectContaining({
+        iteration: 1,
+        turnEvent: expect.objectContaining({
+          id: expect.any(String),
+          type: "status",
+          timestamp: expect.any(String),
+          iteration: 1,
+          payload: data,
+        }),
+      }),
+    );
   });
 
   it("silently swallows exceptions from callback", () => {

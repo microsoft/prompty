@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Connection configuration for AI agents.
-/// 
+///
 /// `provider`, `kind`, and `endpoint` are required properties here,
-/// 
+///
 /// but this section can accept additional via options.
 /// </summary>
 public abstract partial class Connection
@@ -140,7 +140,7 @@ public abstract partial class Connection
 
         if (obj.AuthenticationMode is not null)
         {
-            result["authenticationMode"] = obj.AuthenticationMode.ToString().ToLowerInvariant();
+            result["authenticationMode"] = obj.AuthenticationMode.Value.ToString().ToLowerInvariant();
         }
 
 

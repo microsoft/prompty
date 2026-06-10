@@ -28,7 +28,7 @@ def test_load_yaml_compactionconfig():
     budget: 50000
     options:
       preserveSystemMessages: true
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = CompactionConfig.load(data)

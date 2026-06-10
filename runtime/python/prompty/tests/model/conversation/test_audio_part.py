@@ -23,7 +23,7 @@ def test_load_yaml_audiopart():
     yaml_data = r"""
     source: "https://example.com/audio.wav"
     mediaType: audio/wav
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AudioPart.load(data)

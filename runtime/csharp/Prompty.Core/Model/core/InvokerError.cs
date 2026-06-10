@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Raised when no invoker implementation is registered for a given component
-/// 
+///
 /// and key. For example, if no renderer is registered for the key "jinja2",
-/// 
+///
 /// an InvokerError is raised.
 /// </summary>
 public partial class InvokerError

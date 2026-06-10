@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Options controlling streaming behavior for LLM API calls.
-/// 
+///
 /// Passed alongside the model options when streaming is enabled.
 /// </summary>
 public partial class StreamOptions

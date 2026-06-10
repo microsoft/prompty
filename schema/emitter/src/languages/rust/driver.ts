@@ -1,6 +1,6 @@
 import { EmitContext, emitFile, resolvePath } from "@typespec/compiler";
 import { execFileSync } from "child_process";
-import { existsSync, readdirSync, statSync, unlinkSync } from "fs";
+import { existsSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import { EmitTarget, PromptyEmitterOptions } from "../../lib.js";
 import {
@@ -212,9 +212,26 @@ function formatRustFiles(outputDir: string): void {
         stdio: 'pipe',
         encoding: 'utf-8'
       });
+      normalizeRustFileEndings(resolve(outputDir, '..'));
     } catch (error) {
       console.warn(`Warning: cargo fmt failed. You may need to install Rust.`);
     }
+  }
+}
+
+function normalizeRustFileEndings(dir: string): void {
+  for (const entry of readdirSync(dir)) {
+    const fullPath = resolve(dir, entry);
+    const stat = statSync(fullPath);
+    if (stat.isDirectory()) {
+      normalizeRustFileEndings(fullPath);
+      continue;
+    }
+    if (!entry.endsWith(".rs")) {
+      continue;
+    }
+    const content = readFileSync(fullPath, "utf-8");
+    writeFileSync(fullPath, `${content.trimEnd()}\n`, "utf-8");
   }
 }
 
@@ -238,7 +255,7 @@ async function emitRustFile(
   const filePath = resolvePath(outputDir, filename);
   await emitFile(context.program, {
     path: filePath,
-    content,
+    content: `${content.trimEnd()}\n`,
   });
 }
 
@@ -435,7 +452,7 @@ function emitRustLib(rootModules: string[], groups: string[] = []): string {
   for (const group of groups) {
     out += `\npub mod ${group};\npub use ${group}::*;\n`;
   }
-  return out;
+  return `${out.trimEnd()}\n`;
 }
 
 /**

@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PermissionRequestedPayload.yaml
+type: object
+properties:
+  permission:
+    type: string
+    description: Permission/action name being requested
+  target:
+    type: string
+    description: Resource or tool the permission applies to
+  details:
+    $ref: RecordUnknown.yaml
+    description: Additional host-specific permission details
+required:
+  - permission
+description: Payload for permission request events — a host is asked to approve an action.

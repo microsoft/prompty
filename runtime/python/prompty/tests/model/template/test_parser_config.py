@@ -25,7 +25,7 @@ def test_load_yaml_parserconfig():
     kind: prompty
     options:
       key: value
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ParserConfig.load(data)

@@ -18,18 +18,20 @@ describe("ToolCallStartPayload", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "name": "get_weather",\n  "arguments": "{\\"city\\": \\"Paris\\"}"\n}`;
+      const json = `{\n  "id": "call_abc123",\n  "name": "get_weather",\n  "arguments": "{\\"city\\": \\"Paris\\"}"\n}`;
       const instance = ToolCallStartPayload.fromJson(json);
       expect(instance).toBeDefined();
+      expect(instance.id).toEqual("call_abc123");
       expect(instance.name).toEqual("get_weather");
       expect(instance.arguments).toEqual('{"city": "Paris"}');
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "name": "get_weather",\n  "arguments": "{\\"city\\": \\"Paris\\"}"\n}`;
+      const json = `{\n  "id": "call_abc123",\n  "name": "get_weather",\n  "arguments": "{\\"city\\": \\"Paris\\"}"\n}`;
       const instance = ToolCallStartPayload.fromJson(json);
       const output = instance.toJson();
       const reloaded = ToolCallStartPayload.fromJson(output);
+      expect(reloaded.id).toEqual(instance.id);
       expect(reloaded.name).toEqual(instance.name);
       expect(reloaded.arguments).toEqual(instance.arguments);
     });
@@ -37,18 +39,20 @@ describe("ToolCallStartPayload", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `name: get_weather\narguments: "{\\"city\\": \\"Paris\\"}"\n`;
+      const yaml = `id: call_abc123\nname: get_weather\narguments: "{\\"city\\": \\"Paris\\"}"\n`;
       const instance = ToolCallStartPayload.fromYaml(yaml);
       expect(instance).toBeDefined();
+      expect(instance.id).toEqual("call_abc123");
       expect(instance.name).toEqual("get_weather");
       expect(instance.arguments).toEqual('{"city": "Paris"}');
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `name: get_weather\narguments: "{\\"city\\": \\"Paris\\"}"\n`;
+      const yaml = `id: call_abc123\nname: get_weather\narguments: "{\\"city\\": \\"Paris\\"}"\n`;
       const instance = ToolCallStartPayload.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ToolCallStartPayload.fromYaml(output);
+      expect(reloaded.id).toEqual(instance.id);
       expect(reloaded.name).toEqual(instance.name);
       expect(reloaded.arguments).toEqual(instance.arguments);
     });

@@ -26,7 +26,7 @@ def test_load_yaml_invokererror():
     message: "No renderer registered for key: jinja2"
     component: renderer
     key: jinja2
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = InvokerError.load(data)

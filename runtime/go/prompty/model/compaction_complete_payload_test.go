@@ -16,7 +16,8 @@ func TestCompactionCompletePayloadLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "removed": 5,
-  "remaining": 3
+  "remaining": 3,
+  "summaryLength": 1200
 }
 `
 	var data map[string]interface{}
@@ -35,6 +36,9 @@ func TestCompactionCompletePayloadLoadJSON(t *testing.T) {
 	if instance.Remaining != 3 {
 		t.Errorf(`Expected Remaining to be 3, got %v`, instance.Remaining)
 	}
+	if instance.SummaryLength == nil || *instance.SummaryLength != 1200 {
+		t.Errorf(`Expected SummaryLength to be 1200, got %v`, instance.SummaryLength)
+	}
 }
 
 // TestCompactionCompletePayloadLoadYAML tests loading CompactionCompletePayload from YAML
@@ -42,6 +46,7 @@ func TestCompactionCompletePayloadLoadYAML(t *testing.T) {
 	yamlData := `
 removed: 5
 remaining: 3
+summaryLength: 1200
 
 `
 	var data map[string]interface{}
@@ -60,6 +65,9 @@ remaining: 3
 	if instance.Remaining != 3 {
 		t.Errorf(`Expected Remaining to be 3, got %v`, instance.Remaining)
 	}
+	if instance.SummaryLength == nil || *instance.SummaryLength != 1200 {
+		t.Errorf(`Expected SummaryLength to be 1200, got %v`, instance.SummaryLength)
+	}
 }
 
 // TestCompactionCompletePayloadRoundtrip tests load -> save -> load produces equivalent data
@@ -67,7 +75,8 @@ func TestCompactionCompletePayloadRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "removed": 5,
-  "remaining": 3
+  "remaining": 3,
+  "summaryLength": 1200
 }
 `
 	var data map[string]interface{}
@@ -93,6 +102,9 @@ func TestCompactionCompletePayloadRoundtrip(t *testing.T) {
 	if reloaded.Remaining != 3 {
 		t.Errorf(`Expected Remaining to be 3, got %v`, reloaded.Remaining)
 	}
+	if reloaded.SummaryLength == nil || *reloaded.SummaryLength != 1200 {
+		t.Errorf(`Expected SummaryLength to be 1200, got %v`, reloaded.SummaryLength)
+	}
 }
 
 // TestCompactionCompletePayloadToJSON tests that ToJSON produces valid JSON
@@ -100,7 +112,8 @@ func TestCompactionCompletePayloadToJSON(t *testing.T) {
 	jsonData := `
 {
   "removed": 5,
-  "remaining": 3
+  "remaining": 3,
+  "summaryLength": 1200
 }
 `
 	var data map[string]interface{}
@@ -129,7 +142,8 @@ func TestCompactionCompletePayloadToYAML(t *testing.T) {
 	jsonData := `
 {
   "removed": 5,
-  "remaining": 3
+  "remaining": 3,
+  "summaryLength": 1200
 }
 `
 	var data map[string]interface{}

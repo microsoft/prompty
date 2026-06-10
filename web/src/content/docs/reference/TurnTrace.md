@@ -1,0 +1,75 @@
+---
+title: "TurnTrace"
+description: "Documentation for the TurnTrace type."
+slug: "reference/turntrace"
+---
+
+Portable JSONL/replay container for a recorded turn harness run.
+
+## Class Diagram
+
+```mermaid
+---
+title: TurnTrace
+config:
+  look: handDrawn
+  theme: colorful
+  class:
+    hideEmptyMembersBox: true
+---
+classDiagram
+    class TurnTrace {
+        +string version
+        +string runtime
+        +string promptyVersion
+        +TurnEvent[] events
+        +TurnSummary summary
+    }
+    class TurnEvent {
+        +string id
+        +string type
+        +string timestamp
+        +string turnId
+        +int32 iteration
+        +string parentId
+        +string spanId
+        +dictionary payload
+    }
+    TurnTrace *-- TurnEvent
+    class TurnSummary {
+        +string turnId
+        +string status
+        +int32 iterations
+        +int32 llmCalls
+        +int32 toolCalls
+        +int32 retries
+        +TokenUsage usage
+        +float64 durationMs
+    }
+    TurnTrace *-- TurnSummary
+```
+
+## Yaml Example
+
+```yaml
+version: "1"
+runtime: typescript
+promptyVersion: 2.0.0
+```
+
+## Properties
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| version | string | Trace schema version |
+| runtime | string | Runtime name that produced the trace |
+| promptyVersion | string | Prompty library version that produced the trace |
+| events | [TurnEvent[]](../turnevent/) | Recorded turn events in emission order |
+| summary | [TurnSummary](../turnsummary/) | Optional summary computed from the event stream |
+
+## Composed Types
+
+The following types are composed within `TurnTrace`:
+
+- [TurnEvent](../turnevent/)
+- [TurnSummary](../turnsummary/)

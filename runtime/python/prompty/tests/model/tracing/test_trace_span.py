@@ -26,7 +26,7 @@ def test_load_yaml_tracespan():
     name: prompty.core.pipeline.run
     signature: prompty.core.pipeline.run
     error: Connection refused
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TraceSpan.load(data)

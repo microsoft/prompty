@@ -22,7 +22,7 @@ def test_load_yaml_arrayproperty():
     yaml_data = r"""
     items:
       kind: string
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ArrayProperty.load(data)

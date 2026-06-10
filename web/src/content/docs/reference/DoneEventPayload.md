@@ -19,7 +19,7 @@ config:
 ---
 classDiagram
     class DoneEventPayload {
-        +string response
+        +unknown response
         +Message[] messages
     }
     class Message {
@@ -32,17 +32,11 @@ classDiagram
     DoneEventPayload *-- Message
 ```
 
-## Yaml Example
-
-```yaml
-response: The weather in Paris is 72°F and sunny.
-```
-
 ## Properties
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| response | string | The final text response from the LLM |
+| response | unknown | The final response from the LLM after processing |
 | messages | [Message[]](../message/) | The final conversation state including all messages |
 
 ## Composed Types

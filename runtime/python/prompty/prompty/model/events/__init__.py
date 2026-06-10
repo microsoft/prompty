@@ -5,9 +5,15 @@
 ##########################################
 from ._CompactionCompletePayload import CompactionCompletePayload
 from ._CompactionFailedPayload import CompactionFailedPayload
+from ._CompactionStartPayload import CompactionStartPayload
 from ._DoneEventPayload import DoneEventPayload
 from ._ErrorEventPayload import ErrorEventPayload
+from ._LlmCompletePayload import LlmCompletePayload
+from ._LlmStartPayload import LlmStartPayload
 from ._MessagesUpdatedPayload import MessagesUpdatedPayload
+from ._PermissionCompletedPayload import PermissionCompletedPayload
+from ._PermissionRequestedPayload import PermissionRequestedPayload
+from ._RetryPayload import RetryPayload
 from ._StatusEventPayload import StatusEventPayload
 from ._StreamChunk import (
     ErrorChunk,
@@ -18,20 +24,38 @@ from ._StreamChunk import (
 )
 from ._ThinkingEventPayload import ThinkingEventPayload
 from ._TokenEventPayload import TokenEventPayload
+from ._ToolCallCompletePayload import ToolCallCompletePayload
 from ._ToolCallStartPayload import ToolCallStartPayload
 from ._ToolResultPayload import ToolResultPayload
+from ._TurnEndPayload import TurnEndPayload
+from ._TurnEvent import TurnEvent
+from ._TurnStartPayload import TurnStartPayload
+from ._TurnSummary import TurnSummary
+from ._TurnTrace import TurnTrace
 
 __all__ = [
+    "TurnEvent",
+    "TurnStartPayload",
+    "TurnEndPayload",
+    "LlmStartPayload",
+    "LlmCompletePayload",
+    "RetryPayload",
+    "PermissionRequestedPayload",
+    "PermissionCompletedPayload",
     "TokenEventPayload",
     "ThinkingEventPayload",
     "ToolCallStartPayload",
+    "ToolCallCompletePayload",
     "ToolResultPayload",
     "StatusEventPayload",
     "MessagesUpdatedPayload",
     "DoneEventPayload",
     "ErrorEventPayload",
+    "CompactionStartPayload",
     "CompactionCompletePayload",
     "CompactionFailedPayload",
+    "TurnSummary",
+    "TurnTrace",
     "StreamChunk",
     "TextChunk",
     "ThinkingChunk",

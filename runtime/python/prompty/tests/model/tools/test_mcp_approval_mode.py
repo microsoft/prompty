@@ -30,7 +30,7 @@ def test_load_yaml_mcpapprovalmode():
       - operation1
     neverRequireApprovalTools:
       - operation2
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = McpApprovalMode.load(data)

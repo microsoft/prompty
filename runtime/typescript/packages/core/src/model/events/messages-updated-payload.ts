@@ -7,10 +7,24 @@ import { Message } from "../conversation/message";
 export class MessagesUpdatedPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
-  messages: Message[] = [];
+  messages?: Message[] = [];
+  reason?: string | undefined;
+  appended?: Message[] = [];
+  removed?: number | undefined;
 
   constructor(init?: Partial<MessagesUpdatedPayload>) {
-    this.messages = init?.messages ?? [];
+    if (init?.messages !== undefined) {
+      this.messages = init.messages;
+    }
+    if (init?.reason !== undefined) {
+      this.reason = init.reason;
+    }
+    if (init?.appended !== undefined) {
+      this.appended = init.appended;
+    }
+    if (init?.removed !== undefined) {
+      this.removed = init.removed;
+    }
   }
 
   //#region Load Methods
@@ -30,6 +44,18 @@ export class MessagesUpdatedPayload {
         data["messages"] as unknown[],
         context,
       );
+    }
+    if (data["reason"] !== undefined && data["reason"] !== null) {
+      instance.reason = String(data["reason"]);
+    }
+    if (data["appended"] !== undefined && data["appended"] !== null) {
+      instance.appended = MessagesUpdatedPayload.loadAppended(
+        data["appended"] as unknown[],
+        context,
+      );
+    }
+    if (data["removed"] !== undefined && data["removed"] !== null) {
+      instance.removed = Number(data["removed"]);
     }
 
     if (context) {
@@ -71,6 +97,39 @@ export class MessagesUpdatedPayload {
     return items.map((item) => item.save(context));
   }
 
+  static loadAppended(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Message[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, role: v });
+        }
+      }
+      data = result;
+    }
+    return data.map((item) =>
+      Message.load(item as Record<string, unknown>, context),
+    );
+  }
+
+  static saveAppended(
+    items: Message[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
+    }
+
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map((item) => item.save(context));
+  }
+
   //#endregion
 
   //#region Save Methods
@@ -88,6 +147,18 @@ export class MessagesUpdatedPayload {
         obj.messages,
         context,
       );
+    }
+    if (obj.reason !== undefined && obj.reason !== null) {
+      result["reason"] = obj.reason;
+    }
+    if (obj.appended !== undefined && obj.appended !== null) {
+      result["appended"] = MessagesUpdatedPayload.saveAppended(
+        obj.appended,
+        context,
+      );
+    }
+    if (obj.removed !== undefined && obj.removed !== null) {
+      result["removed"] = obj.removed;
     }
 
     if (context) {

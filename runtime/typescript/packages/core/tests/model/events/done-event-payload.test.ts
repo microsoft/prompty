@@ -16,44 +16,6 @@ describe("DoneEventPayload", () => {
     });
   });
 
-  describe("JSON serialization", () => {
-    it("should load from JSON - example 1", () => {
-      const json = `{\n  "response": "The weather in Paris is 72°F and sunny."\n}`;
-      const instance = DoneEventPayload.fromJson(json);
-      expect(instance).toBeDefined();
-      expect(instance.response).toEqual(
-        "The weather in Paris is 72°F and sunny.",
-      );
-    });
-
-    it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "response": "The weather in Paris is 72°F and sunny."\n}`;
-      const instance = DoneEventPayload.fromJson(json);
-      const output = instance.toJson();
-      const reloaded = DoneEventPayload.fromJson(output);
-      expect(reloaded.response).toEqual(instance.response);
-    });
-  });
-
-  describe("YAML serialization", () => {
-    it("should load from YAML - example 1", () => {
-      const yaml = `response: The weather in Paris is 72°F and sunny.\n`;
-      const instance = DoneEventPayload.fromYaml(yaml);
-      expect(instance).toBeDefined();
-      expect(instance.response).toEqual(
-        "The weather in Paris is 72°F and sunny.",
-      );
-    });
-
-    it("should round-trip YAML - example 1", () => {
-      const yaml = `response: The weather in Paris is 72°F and sunny.\n`;
-      const instance = DoneEventPayload.fromYaml(yaml);
-      const output = instance.toYaml();
-      const reloaded = DoneEventPayload.fromYaml(output);
-      expect(reloaded.response).toEqual(instance.response);
-    });
-  });
-
   describe("load and save", () => {
     it("should load from dictionary", () => {
       const data: Record<string, unknown> = {};

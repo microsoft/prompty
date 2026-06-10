@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Context passed to tool handlers during agent loop execution. Provides
-/// 
+///
 /// access to the agent configuration, current conversation state, and
-/// 
+///
 /// arbitrary metadata for tool implementations that need broader context.
 /// </summary>
 public partial class ToolContext

@@ -20,12 +20,15 @@ class CompactionCompletePayload:
         Number of messages removed during compaction
     remaining : int
         Number of messages remaining after compaction
+    summary_length : Optional[int]
+        Length of the generated summary, when a summarization strategy is used
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     removed: int = field(default=0)
     remaining: int = field(default=0)
+    summary_length: int | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "CompactionCompletePayload":
@@ -51,6 +54,8 @@ class CompactionCompletePayload:
             instance.removed = data["removed"]
         if data is not None and "remaining" in data:
             instance.remaining = data["remaining"]
+        if data is not None and "summaryLength" in data:
+            instance.summary_length = data["summaryLength"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -73,6 +78,8 @@ class CompactionCompletePayload:
             result["removed"] = obj.removed
         if obj.remaining is not None:
             result["remaining"] = obj.remaining
+        if obj.summary_length is not None:
+            result["summaryLength"] = obj.summary_length
 
         if context is not None:
             result = context.process_dict(result)

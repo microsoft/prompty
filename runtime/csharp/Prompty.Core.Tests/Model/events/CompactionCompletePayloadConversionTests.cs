@@ -13,6 +13,7 @@ public class CompactionCompletePayloadConversionTests
         string yamlData = """
 removed: 5
 remaining: 3
+summaryLength: 1200
 
 """;
 
@@ -21,6 +22,7 @@ remaining: 3
         Assert.NotNull(instance);
         Assert.Equal(5, instance.Removed);
         Assert.Equal(3, instance.Remaining);
+        Assert.Equal(1200, instance.SummaryLength);
     }
 
     [Fact]
@@ -29,7 +31,8 @@ remaining: 3
         string jsonData = """
 {
   "removed": 5,
-  "remaining": 3
+  "remaining": 3,
+  "summaryLength": 1200
 }
 """;
 
@@ -37,6 +40,7 @@ remaining: 3
         Assert.NotNull(instance);
         Assert.Equal(5, instance.Removed);
         Assert.Equal(3, instance.Remaining);
+        Assert.Equal(1200, instance.SummaryLength);
     }
 
     [Fact]
@@ -46,7 +50,8 @@ remaining: 3
         string jsonData = """
 {
   "removed": 5,
-  "remaining": 3
+  "remaining": 3,
+  "summaryLength": 1200
 }
 """;
 
@@ -60,6 +65,7 @@ remaining: 3
         Assert.NotNull(reloaded);
         Assert.Equal(5, reloaded.Removed);
         Assert.Equal(3, reloaded.Remaining);
+        Assert.Equal(1200, reloaded.SummaryLength);
     }
 
     [Fact]
@@ -69,6 +75,7 @@ remaining: 3
         string yamlData = """
 removed: 5
 remaining: 3
+summaryLength: 1200
 
 """;
 
@@ -82,6 +89,7 @@ remaining: 3
         Assert.NotNull(reloaded);
         Assert.Equal(5, reloaded.Removed);
         Assert.Equal(3, reloaded.Remaining);
+        Assert.Equal(1200, reloaded.SummaryLength);
     }
 
     [Fact]
@@ -90,7 +98,8 @@ remaining: 3
         string jsonData = """
 {
   "removed": 5,
-  "remaining": 3
+  "remaining": 3,
+  "summaryLength": 1200
 }
 """;
 
@@ -108,6 +117,7 @@ remaining: 3
         string yamlData = """
 removed: 5
 remaining: 3
+summaryLength: 1200
 
 """;
 

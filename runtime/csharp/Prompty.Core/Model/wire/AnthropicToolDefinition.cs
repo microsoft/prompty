@@ -8,9 +8,9 @@ namespace Prompty.Core;
 
 /// <summary>
 /// A tool definition in Anthropic's format. Unlike OpenAI which wraps
-/// 
+///
 /// tools in `{type: "function", function: {...}}`, Anthropic uses a
-/// 
+///
 /// flat structure with `input_schema` (§7.5).
 /// </summary>
 public partial class AnthropicToolDefinition

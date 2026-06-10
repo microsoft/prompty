@@ -24,6 +24,10 @@ config:
 classDiagram
     class ToolResult {
         +ContentPart[] parts
+        +string status
+        +string errorKind
+        +string errorMessage
+        +float64 durationMs
         +text() string [async-capable]
     }
     class ContentPart {
@@ -39,6 +43,9 @@ classDiagram
 parts:
   - kind: text
     value: 72°F and sunny
+errorKind: missing_tool
+errorMessage: Tool 'get_weather' is not registered
+durationMs: 42
 ```
 
 ## Properties
@@ -46,6 +53,10 @@ parts:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | parts | [ContentPart[]](../contentpart/) | The content parts of the tool result(Related Types: [TextPart](../textpart/), [ImagePart](../imagepart/), [FilePart](../filepart/), [AudioPart](../audiopart/)) |
+| status | string | Semantic execution status for the tool result |
+| errorKind | string | Stable machine-readable error category when status is not success |
+| errorMessage | string | Human-readable error message when status is not success |
+| durationMs | float64 | Tool execution duration in milliseconds |
 
 ## Helper Methods
 

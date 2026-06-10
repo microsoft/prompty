@@ -20,7 +20,7 @@ def test_load_json_textchunk():
 def test_load_yaml_textchunk():
     yaml_data = r"""
     value: Hello
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TextChunk.load(data)

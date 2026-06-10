@@ -34,16 +34,28 @@ export { ValidationError } from "./core/validation-error";
 export { FileNotFoundError } from "./core/file-not-found-error";
 export { ValidationResult } from "./core/validation-result";
 
+export { TurnEvent } from "./events/turn-event";
+export { TurnStartPayload } from "./events/turn-start-payload";
+export { TurnEndPayload } from "./events/turn-end-payload";
+export { LlmStartPayload } from "./events/llm-start-payload";
+export { LlmCompletePayload } from "./events/llm-complete-payload";
+export { RetryPayload } from "./events/retry-payload";
+export { PermissionRequestedPayload } from "./events/permission-requested-payload";
+export { PermissionCompletedPayload } from "./events/permission-completed-payload";
 export { TokenEventPayload } from "./events/token-event-payload";
 export { ThinkingEventPayload } from "./events/thinking-event-payload";
 export { ToolCallStartPayload } from "./events/tool-call-start-payload";
+export { ToolCallCompletePayload } from "./events/tool-call-complete-payload";
 export { ToolResultPayload } from "./events/tool-result-payload";
 export { StatusEventPayload } from "./events/status-event-payload";
 export { MessagesUpdatedPayload } from "./events/messages-updated-payload";
 export { DoneEventPayload } from "./events/done-event-payload";
 export { ErrorEventPayload } from "./events/error-event-payload";
+export { CompactionStartPayload } from "./events/compaction-start-payload";
 export { CompactionCompletePayload } from "./events/compaction-complete-payload";
 export { CompactionFailedPayload } from "./events/compaction-failed-payload";
+export { TurnSummary } from "./events/turn-summary";
+export { TurnTrace } from "./events/turn-trace";
 export {
   StreamChunk,
   TextChunk,

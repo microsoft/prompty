@@ -8,7 +8,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Represents an object property.
-/// 
+///
 /// This extends the base Property model to represent a structured object.
 /// </summary>
 public partial class ObjectProperty : Property

@@ -26,7 +26,7 @@ def test_load_yaml_promptytool():
     kind: prompty
     path: ./summarize.prompty
     mode: single
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = PromptyTool.load(data)

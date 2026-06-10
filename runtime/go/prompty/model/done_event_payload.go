@@ -12,8 +12,8 @@ import (
 // DoneEventPayload represents Payload for "done" events — the agent loop completed successfully.
 
 type DoneEventPayload struct {
-	Response string    `json:"response" yaml:"response"`
-	Messages []Message `json:"messages" yaml:"messages"`
+	Response interface{} `json:"response" yaml:"response"`
+	Messages []Message   `json:"messages" yaml:"messages"`
 }
 
 // LoadDoneEventPayload creates a DoneEventPayload from a map[string]interface{}
@@ -23,7 +23,7 @@ func LoadDoneEventPayload(data interface{}, ctx *LoadContext) (DoneEventPayload,
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["response"]; ok && val != nil {
-			result.Response = string(val.(string))
+			result.Response = val
 		}
 		if val, ok := m["messages"]; ok && val != nil {
 			if arr, ok := val.([]interface{}); ok {

@@ -26,7 +26,13 @@ public class AgentEventsTests
         AgentEvents.EmitEvent(cb, AgentEventType.ToolCallStart, data);
 
         Assert.Equal(AgentEventType.ToolCallStart, captured);
-        Assert.Same(data, capturedData);
+        Assert.NotNull(capturedData);
+        Assert.Equal("value", capturedData["key"]);
+        var turnEvent = Assert.IsType<Dictionary<string, object?>>(capturedData["turnEvent"]);
+        Assert.IsType<string>(turnEvent["id"]);
+        Assert.Equal("tool_call_start", turnEvent["type"]);
+        Assert.IsType<string>(turnEvent["timestamp"]);
+        Assert.Same(data, turnEvent["payload"]);
     }
 
     [Fact]

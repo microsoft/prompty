@@ -30,6 +30,16 @@ public partial class ErrorEventPayload
     /// </summary>
     public string Message { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Stable machine-readable error category
+    /// </summary>
+    public string? ErrorKind { get; set; }
+
+    /// <summary>
+    /// Operation or phase where the error occurred
+    /// </summary>
+    public string? Phase { get; set; }
+
 
 
     #region Load Methods
@@ -55,6 +65,16 @@ public partial class ErrorEventPayload
         if (data.TryGetValue("message", out var messageValue) && messageValue is not null)
         {
             instance.Message = messageValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("errorKind", out var errorKindValue) && errorKindValue is not null)
+        {
+            instance.ErrorKind = errorKindValue?.ToString()!;
+        }
+
+        if (data.TryGetValue("phase", out var phaseValue) && phaseValue is not null)
+        {
+            instance.Phase = phaseValue?.ToString()!;
         }
 
         if (context is not null)
@@ -87,6 +107,18 @@ public partial class ErrorEventPayload
 
 
         result["message"] = obj.Message;
+
+
+        if (obj.ErrorKind is not null)
+        {
+            result["errorKind"] = obj.ErrorKind;
+        }
+
+
+        if (obj.Phase is not null)
+        {
+            result["phase"] = obj.Phase;
+        }
 
 
         if (context is not null)

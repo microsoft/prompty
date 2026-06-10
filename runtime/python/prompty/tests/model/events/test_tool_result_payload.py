@@ -32,7 +32,7 @@ def test_load_yaml_toolresultpayload():
       parts:
         - kind: text
           value: 72°F and sunny
-    
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ToolResultPayload.load(data)
