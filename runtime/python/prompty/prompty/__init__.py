@@ -110,6 +110,12 @@ __all__ = [
     "GuardrailError",
     "GuardrailResult",
     "Guardrails",
+    "AllowAllPermissionResolver",
+    "CollectingEventSink",
+    "DenyAllPermissionResolver",
+    "FunctionHostToolExecutor",
+    "InMemoryCheckpointStore",
+    "JsonlTraceWriter",
     "Steering",
     "StructuredResult",
     "cast",
@@ -132,6 +138,14 @@ from .core.cancellation import CancellationToken, CancelledError
 from .core.connections import clear_connections, get_connection, register_connection
 from .core.context import estimate_chars, format_dropped_messages, summarize_dropped, trim_to_context_window
 from .core.guardrails import GuardrailError, GuardrailResult, Guardrails
+from .harness import (
+    AllowAllPermissionResolver,
+    CollectingEventSink,
+    DenyAllPermissionResolver,
+    FunctionHostToolExecutor,
+    InMemoryCheckpointStore,
+    JsonlTraceWriter,
+)
 
 # Loader
 from .core.loader import load, load_async

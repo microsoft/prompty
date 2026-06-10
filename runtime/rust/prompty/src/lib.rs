@@ -38,6 +38,7 @@
 pub mod connections;
 pub mod context;
 pub mod guardrails;
+pub mod harness;
 pub mod interfaces;
 pub mod loader;
 pub mod model;
@@ -61,6 +62,10 @@ pub use context::{
 pub use guardrails::{
     GuardrailError, GuardrailPhase, GuardrailResult, Guardrails, InputGuardrail, OutputGuardrail,
     ToolGuardrail,
+};
+pub use harness::{
+    AllowAllPermissionResolver, CollectingEventSink, DenyAllPermissionResolver,
+    FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlTraceWriter,
 };
 pub use interfaces::{ExecuteError, Executor, InvokerError, Parser, Processor, Renderer};
 pub use loader::{
