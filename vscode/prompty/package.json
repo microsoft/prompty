@@ -367,7 +367,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^20",
     "@vscode/vsce": "^3.7.1",
-    "esbuild": "^0.28.0",
+    "esbuild": "^0.28.1",
     "eslint": "^9.13.0",
     "js-yaml": "^4.1.1",
     "mocha": "^10.3.0",
