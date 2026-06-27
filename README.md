@@ -65,6 +65,47 @@ console.log(result);
 
 **VS Code** — open the `.prompty` file and press **F5**.
 
+### OpenAI-compatible endpoints
+
+The `openai` provider can target compatible endpoints through
+`model.connection.endpoint`. That means the same `.prompty` file can run against
+OpenAI directly, a self-hosted server, or a governed endpoint such as Tuning
+Engines.
+
+```prompty
+---
+name: governed-greeting
+model:
+  id: gpt-4o-mini
+  provider: openai
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_BASE_URL:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+template:
+  format:
+    kind: jinja2
+  parser:
+    kind: prompty
+---
+system:
+You are a careful assistant.
+
+user:
+Say hello to {{name}}.
+```
+
+For Tuning Engines specifically:
+
+```bash
+export OPENAI_BASE_URL=https://api.tuningengines.com/v1
+export OPENAI_API_KEY=sk-te-your-inference-key
+```
+
+This keeps the prompt asset unchanged while routing execution through a control
+plane that can add routing, approvals, usage tracking, and runtime trace
+correlation around OpenAI-compatible calls.
+
 ## Contributor hygiene
 
 Prompty normalizes text files to LF line endings via `.gitattributes`. Enable the
