@@ -16,8 +16,9 @@ use prompty::model::events::{
     turn_event::{TurnEvent, TurnEventType},
 };
 use prompty::model::pipeline::{
-    checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter, event_sink::EventSink,
-    host_tool_executor::HostToolExecutor, permission_resolver::PermissionResolver,
+    checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter,
+    event_sink::EventSink, host_tool_executor::HostToolExecutor,
+    permission_resolver::PermissionResolver,
 };
 use serde_json::{Value, json};
 

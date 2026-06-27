@@ -17,8 +17,9 @@ use crate::model::events::{
     session_event::SessionEvent, session_summary::SessionSummary, turn_event::TurnEvent,
 };
 use crate::model::pipeline::{
-    checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter, event_sink::EventSink,
-    host_tool_executor::HostToolExecutor, permission_resolver::PermissionResolver,
+    checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter,
+    event_sink::EventSink, host_tool_executor::HostToolExecutor,
+    permission_resolver::PermissionResolver,
 };
 
 type AdapterError = Box<dyn Error + Send + Sync>;
@@ -117,11 +118,7 @@ impl JsonlEventJournalWriter {
     }
 
     fn append_record(path: &PathBuf, record: Value) -> bool {
-        let mut file = match OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-        {
+        let mut file = match OpenOptions::new().create(true).append(true).open(path) {
             Ok(file) => file,
             Err(_) => return false,
         };

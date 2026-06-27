@@ -1,4 +1,4 @@
-import "prompty-emitter";
+import "@typra/emitter";
 import "../conversation/tool-invocation.tsp";
 
 namespace Prompty;

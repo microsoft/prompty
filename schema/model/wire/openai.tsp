@@ -1,4 +1,4 @@
-import "prompty-emitter";
+import "@typra/emitter";
 import "../model/model.tsp";
 import "../model/usage.tsp";
 

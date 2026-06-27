@@ -1,4 +1,4 @@
-import "prompty-emitter";
+import "@typra/emitter";
 import "../events/payloads.tsp";
 import "../events/session.tsp";
 

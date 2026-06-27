@@ -1,4 +1,4 @@
-import "prompty-emitter";
+import "@typra/emitter";
 import "../agent/agent.tsp";
 import "../conversation/message.tsp";
 
