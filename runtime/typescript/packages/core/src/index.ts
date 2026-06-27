@@ -123,7 +123,7 @@ export {
   DenyAllPermissionResolver,
   FunctionHostToolExecutor,
   InMemoryCheckpointStore,
-  JsonlTraceWriter,
+  JsonlEventJournalWriter,
 } from "./harness/index.js";
 
 // ---------------------------------------------------------------------------
@@ -187,8 +187,8 @@ export {
   PermissionDecision,
   HostToolRequest,
   HostToolResult,
+  type EventJournalWriter,
   type EventSink,
-  type TraceWriter,
   type PermissionResolver,
   type CheckpointStore,
   type HostToolExecutor,

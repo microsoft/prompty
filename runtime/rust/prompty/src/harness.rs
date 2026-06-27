@@ -17,8 +17,8 @@ use crate::model::events::{
     session_event::SessionEvent, session_summary::SessionSummary, turn_event::TurnEvent,
 };
 use crate::model::pipeline::{
-    checkpoint_store::CheckpointStore, event_sink::EventSink, host_tool_executor::HostToolExecutor,
-    permission_resolver::PermissionResolver, trace_writer::TraceWriter,
+    checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter, event_sink::EventSink,
+    host_tool_executor::HostToolExecutor, permission_resolver::PermissionResolver,
 };
 
 type AdapterError = Box<dyn Error + Send + Sync>;
@@ -89,14 +89,14 @@ impl EventSink for CollectingEventSink {
     }
 }
 
-/// Appends replayable trace records as newline-delimited JSON.
+/// Appends replayable event journal records as newline-delimited JSON.
 #[derive(Debug)]
-pub struct JsonlTraceWriter {
+pub struct JsonlEventJournalWriter {
     path: PathBuf,
     closed: Mutex<bool>,
 }
 
-impl JsonlTraceWriter {
+impl JsonlEventJournalWriter {
     pub fn new(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
         if let Some(parent) = path.parent() {
@@ -129,7 +129,7 @@ impl JsonlTraceWriter {
     }
 }
 
-impl TraceWriter for JsonlTraceWriter {
+impl EventJournalWriter for JsonlEventJournalWriter {
     fn append_turn(&self, turn_event: &TurnEvent) -> bool {
         self.write(json!({ "kind": "turn", "event": turn_event.to_value(&SaveContext::new()) }))
     }

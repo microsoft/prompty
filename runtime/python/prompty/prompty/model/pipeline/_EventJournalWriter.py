@@ -12,17 +12,17 @@ from ..events._TurnEvent import TurnEvent
 
 
 @runtime_checkable
-class TraceWriter(Protocol):
-    """Persists typed events to a replayable trace."""
+class EventJournalWriter(Protocol):
+    """Persists typed events to a durable replay journal."""
 
     def append_turn(self, turn_event: TurnEvent) -> bool:
-        """Append a turn event to a replayable trace"""
+        """Append a turn event to a durable replay journal"""
         ...
 
     def append_session(self, session_event: SessionEvent) -> bool:
-        """Append a session event to a replayable trace"""
+        """Append a session event to a durable replay journal"""
         ...
 
     def close(self, summary: SessionSummary | None) -> bool:
-        """Finalize the trace with an optional session summary"""
+        """Finalize the journal with an optional session summary"""
         ...

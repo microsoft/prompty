@@ -8,7 +8,7 @@ export type { Parser } from "./parser";
 export type { Executor } from "./executor";
 export type { Processor } from "./processor";
 export type { EventSink } from "./event-sink";
-export type { TraceWriter } from "./trace-writer";
+export type { EventJournalWriter } from "./event-journal-writer";
 export type { PermissionResolver } from "./permission-resolver";
 export type { CheckpointStore } from "./checkpoint-store";
 export type { HostToolExecutor } from "./host-tool-executor";

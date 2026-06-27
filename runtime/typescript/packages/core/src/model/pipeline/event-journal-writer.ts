@@ -5,12 +5,12 @@ import { SessionEvent } from "../events/session-event";
 import { SessionSummary } from "../events/session-summary";
 import { TurnEvent } from "../events/turn-event";
 
-/** Persists typed events to a replayable trace. */
-export interface TraceWriter {
-  /** Append a turn event to a replayable trace */
+/** Persists typed events to a durable replay journal. */
+export interface EventJournalWriter {
+  /** Append a turn event to a durable replay journal */
   appendTurn(turnEvent: TurnEvent): boolean;
-  /** Append a session event to a replayable trace */
+  /** Append a session event to a durable replay journal */
   appendSession(sessionEvent: SessionEvent): boolean;
-  /** Finalize the trace with an optional session summary */
+  /** Finalize the journal with an optional session summary */
   close(summary: SessionSummary | null): boolean;
 }

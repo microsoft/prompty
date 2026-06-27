@@ -98,6 +98,7 @@ from .model import (
 from .pipeline import (
     CheckpointStore,
     CompactionConfig,
+    EventJournalWriter,
     EventSink,
     Executor,
     HostToolExecutor,
@@ -105,7 +106,6 @@ from .pipeline import (
     PermissionResolver,
     Processor,
     Renderer,
-    TraceWriter,
     TurnOptions,
 )
 from .streaming import (
@@ -200,7 +200,7 @@ __all__ = [
     "Executor",
     "Processor",
     "EventSink",
-    "TraceWriter",
+    "EventJournalWriter",
     "PermissionResolver",
     "CheckpointStore",
     "HostToolExecutor",

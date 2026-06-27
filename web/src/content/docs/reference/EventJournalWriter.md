@@ -1,16 +1,16 @@
 ---
-title: "TraceWriter"
-description: "Documentation for the TraceWriter type."
-slug: "reference/tracewriter"
+title: "EventJournalWriter"
+description: "Documentation for the EventJournalWriter type."
+slug: "reference/eventjournalwriter"
 ---
 
-Persists typed events to a replayable trace.
+Persists typed events to a durable replay journal.
 
 ## Class Diagram
 
 ```mermaid
 ---
-title: TraceWriter
+title: EventJournalWriter
 config:
   look: handDrawn
   theme: colorful
@@ -18,7 +18,7 @@ config:
     hideEmptyMembersBox: true
 ---
 classDiagram
-    class TraceWriter {
+    class EventJournalWriter {
       <<protocol>>
         +appendTurn(turnEvent: TurnEvent) boolean [sync]
         +appendSession(sessionEvent: SessionEvent) boolean [sync]
@@ -32,6 +32,6 @@ The following helper methods are declared via `@method` and must be implemented 
 
 | Name | Signature | Runtime shape | Description |
 | ---- | --------- | ------------- | ----------- |
-| `appendTurn` | `appendTurn(turnEvent: TurnEvent) -> boolean` | sync | Append a turn event to a replayable trace |
-| `appendSession` | `appendSession(sessionEvent: SessionEvent) -> boolean` | sync | Append a session event to a replayable trace |
-| `close` | `close(summary: SessionSummary?) -> boolean` | sync | Finalize the trace with an optional session summary |
+| `appendTurn` | `appendTurn(turnEvent: TurnEvent) -> boolean` | sync | Append a turn event to a durable replay journal |
+| `appendSession` | `appendSession(sessionEvent: SessionEvent) -> boolean` | sync | Append a session event to a durable replay journal |
+| `close` | `close(summary: SessionSummary?) -> boolean` | sync | Finalize the journal with an optional session summary |

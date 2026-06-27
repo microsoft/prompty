@@ -10,7 +10,7 @@ from prompty import (
     DenyAllPermissionResolver,
     FunctionHostToolExecutor,
     InMemoryCheckpointStore,
-    JsonlTraceWriter,
+    JsonlEventJournalWriter,
 )
 from prompty.model import Checkpoint, HostToolRequest, PermissionRequest, SessionEvent, SessionSummary, TurnEvent
 
@@ -39,9 +39,9 @@ def test_collecting_event_sink_captures_events() -> None:
     assert [event.id for event in sink.session_events] == ["session-event"]
 
 
-def test_jsonl_trace_writer_writes_records(tmp_path) -> None:
+def test_jsonl_event_journal_writer_writes_records(tmp_path) -> None:
     trace_path = tmp_path / "trace.jsonl"
-    writer = JsonlTraceWriter(trace_path)
+    writer = JsonlEventJournalWriter(trace_path)
 
     writer.append_turn(_turn_event())
     writer.append_session(_session_event())
@@ -54,8 +54,8 @@ def test_jsonl_trace_writer_writes_records(tmp_path) -> None:
     assert lines[2]["summary"]["sessionId"] == "session-1"
 
 
-def test_jsonl_trace_writer_returns_false_after_close(tmp_path) -> None:
-    writer = JsonlTraceWriter(tmp_path / "trace.jsonl")
+def test_jsonl_event_journal_writer_returns_false_after_close(tmp_path) -> None:
+    writer = JsonlEventJournalWriter(tmp_path / "trace.jsonl")
 
     assert writer.close(None) is True
     assert writer.append_turn(_turn_event()) is False

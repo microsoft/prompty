@@ -57,8 +57,8 @@ class CollectingEventSink:
         return True
 
 
-class JsonlTraceWriter:
-    """Append replayable trace records as newline-delimited JSON."""
+class JsonlEventJournalWriter:
+    """Append replayable event journal records as newline-delimited JSON."""
 
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)

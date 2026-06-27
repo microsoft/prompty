@@ -5,6 +5,7 @@
 ##########################################
 from ._CheckpointStore import CheckpointStore
 from ._CompactionConfig import CompactionConfig
+from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
 from ._HostToolExecutor import HostToolExecutor
@@ -12,7 +13,6 @@ from ._Parser import Parser
 from ._PermissionResolver import PermissionResolver
 from ._Processor import Processor
 from ._Renderer import Renderer
-from ._TraceWriter import TraceWriter
 from ._TurnOptions import TurnOptions
 
 __all__ = [
@@ -23,7 +23,7 @@ __all__ = [
     "Executor",
     "Processor",
     "EventSink",
-    "TraceWriter",
+    "EventJournalWriter",
     "PermissionResolver",
     "CheckpointStore",
     "HostToolExecutor",

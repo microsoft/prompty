@@ -9,13 +9,13 @@ use super::super::events::session_summary::SessionSummary;
 
 use super::super::events::turn_event::TurnEvent;
 
-/// Persists typed events to a replayable trace.
+/// Persists typed events to a durable replay journal.
 #[async_trait::async_trait]
-pub trait TraceWriter: Send + Sync {
-    /// Append a turn event to a replayable trace
+pub trait EventJournalWriter: Send + Sync {
+    /// Append a turn event to a durable replay journal
     fn append_turn(&self, turn_event: &TurnEvent) -> bool;
-    /// Append a session event to a replayable trace
+    /// Append a session event to a durable replay journal
     fn append_session(&self, session_event: &SessionEvent) -> bool;
-    /// Finalize the trace with an optional session summary
+    /// Finalize the journal with an optional session summary
     fn close(&self, summary: &Option<SessionSummary>) -> bool;
 }

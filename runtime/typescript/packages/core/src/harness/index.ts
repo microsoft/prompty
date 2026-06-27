@@ -4,5 +4,5 @@ export {
   DenyAllPermissionResolver,
   FunctionHostToolExecutor,
   InMemoryCheckpointStore,
-  JsonlTraceWriter,
+  JsonlEventJournalWriter,
 } from "./adapters.js";

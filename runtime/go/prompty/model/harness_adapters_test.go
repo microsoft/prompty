@@ -46,9 +46,9 @@ func TestCollectingEventSink(t *testing.T) {
 	}
 }
 
-func TestJsonlTraceWriter(t *testing.T) {
+func TestJsonlEventJournalWriter(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "trace.jsonl")
-	writer, err := NewJsonlTraceWriter(path)
+	writer, err := NewJsonlEventJournalWriter(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,9 +84,9 @@ func TestJsonlTraceWriter(t *testing.T) {
 	}
 }
 
-func TestJsonlTraceWriterAfterClose(t *testing.T) {
+func TestJsonlEventJournalWriterAfterClose(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "trace.jsonl")
-	writer, err := NewJsonlTraceWriter(path)
+	writer, err := NewJsonlEventJournalWriter(path)
 	if err != nil {
 		t.Fatal(err)
 	}

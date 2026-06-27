@@ -65,7 +65,7 @@ pub use guardrails::{
 };
 pub use harness::{
     AllowAllPermissionResolver, CollectingEventSink, DenyAllPermissionResolver,
-    FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlTraceWriter,
+    FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlEventJournalWriter,
 };
 pub use interfaces::{ExecuteError, Executor, InvokerError, Parser, Processor, Renderer};
 pub use loader::{

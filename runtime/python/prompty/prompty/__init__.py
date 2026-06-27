@@ -115,7 +115,7 @@ __all__ = [
     "DenyAllPermissionResolver",
     "FunctionHostToolExecutor",
     "InMemoryCheckpointStore",
-    "JsonlTraceWriter",
+    "JsonlEventJournalWriter",
     "Steering",
     "StructuredResult",
     "cast",
@@ -144,7 +144,7 @@ from .harness import (
     DenyAllPermissionResolver,
     FunctionHostToolExecutor,
     InMemoryCheckpointStore,
-    JsonlTraceWriter,
+    JsonlEventJournalWriter,
 )
 
 # Loader

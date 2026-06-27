@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use prompty::harness::{
     AllowAllPermissionResolver, CollectingEventSink, DenyAllPermissionResolver,
-    FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlTraceWriter,
+    FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlEventJournalWriter,
 };
 use prompty::model::events::{
     checkpoint::Checkpoint,
@@ -16,8 +16,8 @@ use prompty::model::events::{
     turn_event::{TurnEvent, TurnEventType},
 };
 use prompty::model::pipeline::{
-    checkpoint_store::CheckpointStore, event_sink::EventSink, host_tool_executor::HostToolExecutor,
-    permission_resolver::PermissionResolver, trace_writer::TraceWriter,
+    checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter, event_sink::EventSink,
+    host_tool_executor::HostToolExecutor, permission_resolver::PermissionResolver,
 };
 use serde_json::{Value, json};
 
@@ -54,7 +54,7 @@ fn collecting_event_sink_captures_events() {
 }
 
 #[test]
-fn jsonl_trace_writer_writes_records() {
+fn jsonl_event_journal_writer_writes_records() {
     let path = std::env::temp_dir().join(format!(
         "prompty-trace-{}.jsonl",
         SystemTime::now()
@@ -62,7 +62,7 @@ fn jsonl_trace_writer_writes_records() {
             .unwrap()
             .as_nanos()
     ));
-    let writer = JsonlTraceWriter::new(&path);
+    let writer = JsonlEventJournalWriter::new(&path);
 
     assert!(writer.append_turn(&turn_event()));
     assert!(writer.append_session(&session_event()));
@@ -88,7 +88,7 @@ fn jsonl_trace_writer_writes_records() {
 }
 
 #[test]
-fn jsonl_trace_writer_returns_false_after_close() {
+fn jsonl_event_journal_writer_returns_false_after_close() {
     let path = std::env::temp_dir().join(format!(
         "prompty-trace-closed-{}.jsonl",
         SystemTime::now()
@@ -96,7 +96,7 @@ fn jsonl_trace_writer_returns_false_after_close() {
             .unwrap()
             .as_nanos()
     ));
-    let writer = JsonlTraceWriter::new(&path);
+    let writer = JsonlEventJournalWriter::new(&path);
 
     assert!(writer.close(&None));
     assert!(!writer.append_turn(&turn_event()));

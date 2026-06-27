@@ -13,10 +13,10 @@ import {
   SessionSummary,
   TurnEvent,
   type CheckpointStore,
+  type EventJournalWriter,
   type EventSink,
   type HostToolExecutor,
   type PermissionResolver,
-  type TraceWriter,
 } from "../model/index.js";
 
 type JsonRecord = Record<string, unknown>;
@@ -56,8 +56,8 @@ export class CollectingEventSink implements EventSink {
   }
 }
 
-/** Appends replayable trace records as newline-delimited JSON. */
-export class JsonlTraceWriter implements TraceWriter {
+/** Appends replayable event journal records as newline-delimited JSON. */
+export class JsonlEventJournalWriter implements EventJournalWriter {
   private closed = false;
 
   constructor(private readonly path: string) {

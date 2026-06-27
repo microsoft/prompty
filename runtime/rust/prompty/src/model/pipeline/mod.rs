@@ -23,8 +23,8 @@ pub use processor::*;
 pub mod event_sink;
 pub use event_sink::*;
 
-pub mod trace_writer;
-pub use trace_writer::*;
+pub mod event_journal_writer;
+pub use event_journal_writer::*;
 
 pub mod permission_resolver;
 pub use permission_resolver::*;

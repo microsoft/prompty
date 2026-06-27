@@ -10,7 +10,7 @@ import {
   FunctionHostToolExecutor,
   HostToolRequest,
   InMemoryCheckpointStore,
-  JsonlTraceWriter,
+  JsonlEventJournalWriter,
   PermissionRequest,
   SessionEvent,
   SessionSummary,
@@ -47,11 +47,11 @@ describe("harness reference adapters", () => {
     expect(sink.sessionEvents.map((event) => event.id)).toEqual(["session-event"]);
   });
 
-  it("writes JSONL trace records", () => {
+  it("writes JSONL event journal records", () => {
     const dir = mkdtempSync(join(tmpdir(), "prompty-trace-"));
     try {
       const path = join(dir, "trace.jsonl");
-      const writer = new JsonlTraceWriter(path);
+      const writer = new JsonlEventJournalWriter(path);
 
       writer.appendTurn(turnEvent());
       writer.appendSession(sessionEvent());
@@ -70,7 +70,7 @@ describe("harness reference adapters", () => {
   it("returns false when writing after trace close", () => {
     const dir = mkdtempSync(join(tmpdir(), "prompty-trace-"));
     try {
-      const writer = new JsonlTraceWriter(join(dir, "trace.jsonl"));
+      const writer = new JsonlEventJournalWriter(join(dir, "trace.jsonl"));
 
       expect(writer.close(null)).toBe(true);
       expect(writer.appendTurn(turnEvent())).toBe(false);

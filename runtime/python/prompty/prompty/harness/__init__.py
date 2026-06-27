@@ -6,7 +6,7 @@ from .adapters import (
     DenyAllPermissionResolver,
     FunctionHostToolExecutor,
     InMemoryCheckpointStore,
-    JsonlTraceWriter,
+    JsonlEventJournalWriter,
 )
 
 __all__ = [
@@ -15,5 +15,5 @@ __all__ = [
     "DenyAllPermissionResolver",
     "FunctionHostToolExecutor",
     "InMemoryCheckpointStore",
-    "JsonlTraceWriter",
+    "JsonlEventJournalWriter",
 ]

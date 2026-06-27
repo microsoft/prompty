@@ -31,29 +31,29 @@ func (s *CollectingEventSink) EmitSession(sessionEvent SessionEvent) (bool, erro
 	return true, nil
 }
 
-// JsonlTraceWriter appends replayable trace records as newline-delimited JSON.
-type JsonlTraceWriter struct {
+// JsonlEventJournalWriter appends replayable event journal records as newline-delimited JSON.
+type JsonlEventJournalWriter struct {
 	mu     sync.Mutex
 	Path   string
 	closed bool
 }
 
-func NewJsonlTraceWriter(path string) (*JsonlTraceWriter, error) {
+func NewJsonlEventJournalWriter(path string) (*JsonlEventJournalWriter, error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return nil, err
 	}
-	return &JsonlTraceWriter{Path: path}, nil
+	return &JsonlEventJournalWriter{Path: path}, nil
 }
 
-func (w *JsonlTraceWriter) AppendTurn(turnEvent TurnEvent) (bool, error) {
+func (w *JsonlEventJournalWriter) AppendTurn(turnEvent TurnEvent) (bool, error) {
 	return w.write(map[string]interface{}{"kind": "turn", "event": turnEvent.Save(NewSaveContext())})
 }
 
-func (w *JsonlTraceWriter) AppendSession(sessionEvent SessionEvent) (bool, error) {
+func (w *JsonlEventJournalWriter) AppendSession(sessionEvent SessionEvent) (bool, error) {
 	return w.write(map[string]interface{}{"kind": "session", "event": sessionEvent.Save(NewSaveContext())})
 }
 
-func (w *JsonlTraceWriter) Close(summary *SessionSummary) (bool, error) {
+func (w *JsonlEventJournalWriter) Close(summary *SessionSummary) (bool, error) {
 	if summary != nil {
 		if ok, err := w.write(map[string]interface{}{"kind": "summary", "summary": summary.Save(NewSaveContext())}); !ok || err != nil {
 			return ok, err
@@ -65,7 +65,7 @@ func (w *JsonlTraceWriter) Close(summary *SessionSummary) (bool, error) {
 	return true, nil
 }
 
-func (w *JsonlTraceWriter) write(record map[string]interface{}) (bool, error) {
+func (w *JsonlEventJournalWriter) write(record map[string]interface{}) (bool, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.closed {

@@ -56,15 +56,15 @@ public sealed class CollectingEventSink : IEventSink
 }
 
 /// <summary>
-/// Appends replayable trace records as newline-delimited JSON.
+/// Appends replayable event journal records as newline-delimited JSON.
 /// </summary>
-public sealed class JsonlTraceWriter : ITraceWriter
+public sealed class JsonlEventJournalWriter : IEventJournalWriter
 {
     private readonly object _lock = new();
     private readonly string _path;
     private bool _closed;
 
-    public JsonlTraceWriter(string path)
+    public JsonlEventJournalWriter(string path)
     {
         _path = path;
         var directory = Path.GetDirectoryName(path);

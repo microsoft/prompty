@@ -5,20 +5,20 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 /// <summary>
-/// Persists typed events to a replayable trace.
+/// Persists typed events to a durable replay journal.
 /// </summary>
-public interface ITraceWriter
+public interface IEventJournalWriter
 {
     /// <summary>
-    /// Append a turn event to a replayable trace
+    /// Append a turn event to a durable replay journal
     /// </summary>
     bool AppendTurn(TurnEvent turnEvent);
     /// <summary>
-    /// Append a session event to a replayable trace
+    /// Append a session event to a durable replay journal
     /// </summary>
     bool AppendSession(SessionEvent sessionEvent);
     /// <summary>
-    /// Finalize the trace with an optional session summary
+    /// Finalize the journal with an optional session summary
     /// </summary>
     bool Close(SessionSummary? summary);
 }

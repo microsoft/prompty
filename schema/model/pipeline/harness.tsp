@@ -25,34 +25,34 @@ namespace Prompty;
 /** Receives typed turn and session events from a harness. */
 model EventSink {}
 
-@@protocol(TraceWriter);
-@@method(TraceWriter,
+@@protocol(EventJournalWriter);
+@@method(EventJournalWriter,
   "appendTurn",
   "boolean",
-  "Append a turn event to a replayable trace",
+  "Append a turn event to a durable replay journal",
   #{ turnEvent: "TurnEvent" },
   false,
   true
 );
-@@method(TraceWriter,
+@@method(EventJournalWriter,
   "appendSession",
   "boolean",
-  "Append a session event to a replayable trace",
+  "Append a session event to a durable replay journal",
   #{ sessionEvent: "SessionEvent" },
   false,
   true
 );
-@@method(TraceWriter,
+@@method(EventJournalWriter,
   "close",
   "boolean",
-  "Finalize the trace with an optional session summary",
+  "Finalize the journal with an optional session summary",
   #{ summary: "SessionSummary?" },
   false,
   true
 );
 
-/** Persists typed events to a replayable trace. */
-model TraceWriter {}
+/** Persists typed events to a durable replay journal. */
+model EventJournalWriter {}
 
 @@protocol(PermissionResolver);
 @@method(PermissionResolver,

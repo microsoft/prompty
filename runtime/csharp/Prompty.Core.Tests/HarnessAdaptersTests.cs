@@ -20,13 +20,13 @@ public class HarnessAdaptersTests
     }
 
     [Fact]
-    public void JsonlTraceWriter_WritesRecords()
+    public void JsonlEventJournalWriter_WritesRecords()
     {
         var directory = Directory.CreateTempSubdirectory("prompty-trace-");
         try
         {
             var path = Path.Combine(directory.FullName, "trace.jsonl");
-            var writer = new JsonlTraceWriter(path);
+            var writer = new JsonlEventJournalWriter(path);
 
             writer.AppendTurn(TurnEvent());
             writer.AppendSession(SessionEvent());
@@ -49,12 +49,12 @@ public class HarnessAdaptersTests
     }
 
     [Fact]
-    public void JsonlTraceWriter_ReturnsFalseAfterClose()
+    public void JsonlEventJournalWriter_ReturnsFalseAfterClose()
     {
         var directory = Directory.CreateTempSubdirectory("prompty-trace-");
         try
         {
-            var writer = new JsonlTraceWriter(Path.Combine(directory.FullName, "trace.jsonl"));
+            var writer = new JsonlEventJournalWriter(Path.Combine(directory.FullName, "trace.jsonl"));
 
             Assert.True(writer.Close(null));
             Assert.False(writer.AppendTurn(TurnEvent()));

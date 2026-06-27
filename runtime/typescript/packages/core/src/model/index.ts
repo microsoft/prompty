@@ -97,7 +97,7 @@ export type { Parser } from "./pipeline/parser";
 export type { Executor } from "./pipeline/executor";
 export type { Processor } from "./pipeline/processor";
 export type { EventSink } from "./pipeline/event-sink";
-export type { TraceWriter } from "./pipeline/trace-writer";
+export type { EventJournalWriter } from "./pipeline/event-journal-writer";
 export type { PermissionResolver } from "./pipeline/permission-resolver";
 export type { CheckpointStore } from "./pipeline/checkpoint-store";
 export type { HostToolExecutor } from "./pipeline/host-tool-executor";
