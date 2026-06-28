@@ -51,6 +51,7 @@ const typraVerify =
     : join(repoRoot, "schema", "node_modules", ".bin", "typra-verify");
 const result = spawnSync(typraVerify, ["--baseline", baselineRoot, "--current", currentRoot], {
   cwd: repoRoot,
+  shell: process.platform === "win32",
   stdio: "inherit",
 });
 
