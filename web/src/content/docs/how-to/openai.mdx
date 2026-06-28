@@ -77,6 +77,27 @@ user:
 To target a direct OpenAI-compatible endpoint or proxy, keep `provider: openai`
 and add `endpoint` under `connection`.
 
+```yaml
+model:
+  id: gpt-4o-mini
+  provider: openai
+  apiType: chat
+  connection:
+    kind: key
+    endpoint: ${env:OPENAI_BASE_URL:https://api.openai.com/v1}
+    apiKey: ${env:OPENAI_API_KEY}
+```
+
+For example, to route through Tuning Engines:
+
+```bash
+export OPENAI_BASE_URL=https://api.tuningengines.com/v1
+export OPENAI_API_KEY=sk-te-your-inference-key
+```
+
+The `.prompty` file stays unchanged while the endpoint provides routing,
+policy, usage tracking, or trace correlation around OpenAI-compatible calls.
+
 <Aside type="note">
   `${env:OPENAI_API_KEY}` is resolved at load time from your environment or
   `.env` file. The key never appears in your prompt file.
