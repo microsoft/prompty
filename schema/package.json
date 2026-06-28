@@ -10,7 +10,7 @@
     "build": "npm run format:tsp && npm run generate && npm run format:rust"
   },
   "dependencies": {
-    "@typra/emitter": "0.2.6",
+    "@typra/emitter": "0.2.7",
     "@typespec/compiler": "1.10.0",
     "@typespec/json-schema": "1.10.0"
   }
