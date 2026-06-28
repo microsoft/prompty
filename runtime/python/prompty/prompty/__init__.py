@@ -116,8 +116,13 @@ __all__ = [
     "FunctionHostToolExecutor",
     "InMemoryCheckpointStore",
     "JsonlEventJournalWriter",
+    "ReferenceTurnRunner",
+    "RunTurnRequest",
+    "RunTurnResult",
     "Steering",
     "StructuredResult",
+    "TurnModelRequest",
+    "TurnModelResponse",
     "cast",
     "bind_tools",
     "tool",
@@ -145,6 +150,11 @@ from .harness import (
     FunctionHostToolExecutor,
     InMemoryCheckpointStore,
     JsonlEventJournalWriter,
+    ReferenceTurnRunner,
+    RunTurnRequest,
+    RunTurnResult,
+    TurnModelRequest,
+    TurnModelResponse,
 )
 
 # Loader

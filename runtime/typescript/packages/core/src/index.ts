@@ -124,6 +124,13 @@ export {
   FunctionHostToolExecutor,
   InMemoryCheckpointStore,
   JsonlEventJournalWriter,
+  ReferenceTurnRunner,
+  type RunTurnRequest,
+  type RunTurnResult,
+  type TurnModelCallback,
+  type TurnModelRequest,
+  type TurnModelResponse,
+  type TurnRunnerDependencies,
 } from "./harness/index.js";
 
 // ---------------------------------------------------------------------------
