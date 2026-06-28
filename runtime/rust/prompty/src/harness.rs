@@ -12,17 +12,22 @@ use serde_json::{Value, json};
 
 use crate::model::context::SaveContext;
 use crate::model::events::{
-    checkpoint::Checkpoint, host_tool_request::HostToolRequest, host_tool_result::HostToolResult,
-    permission_decision::PermissionDecision, permission_request::PermissionRequest,
-    session_event::SessionEvent, session_summary::SessionSummary, turn_event::TurnEvent,
+    checkpoint::Checkpoint,
+    host_tool_request::HostToolRequest,
+    host_tool_result::HostToolResult,
+    permission_decision::PermissionDecision,
+    permission_request::PermissionRequest,
+    session_event::{SessionEvent, SessionEventType},
+    session_summary::{SessionSummary, SessionSummaryStatus},
+    turn_event::{TurnEvent, TurnEventType},
 };
 use crate::model::pipeline::{
     checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter,
     event_sink::EventSink, host_tool_executor::HostToolExecutor,
-    permission_resolver::PermissionResolver,
+    permission_resolver::PermissionResolver, turn_options::TurnOptions,
 };
 
-type AdapterError = Box<dyn Error + Send + Sync>;
+pub type AdapterError = Box<dyn Error + Send + Sync>;
 type ToolHandler = dyn Fn(&Value, &HostToolRequest) -> Result<Value, AdapterError> + Send + Sync;
 
 fn checkpoint_key(session_id: &str, checkpoint_id: &str) -> (String, String) {
@@ -314,5 +319,387 @@ impl HostToolExecutor for FunctionHostToolExecutor {
                 telemetry: Value::Null,
             }),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TurnModelRequest {
+    pub session_id: String,
+    pub turn_id: String,
+    pub iteration: usize,
+    pub inputs: Value,
+    pub options: TurnOptions,
+    pub tool_results: Vec<HostToolResult>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct TurnModelResponse {
+    pub output: Option<Value>,
+    pub tool_requests: Vec<HostToolRequest>,
+    pub checkpoint_state: Value,
+}
+
+#[derive(Debug, Clone)]
+pub struct RunTurnRequest {
+    pub session_id: String,
+    pub turn_id: String,
+    pub inputs: Value,
+    pub options: TurnOptions,
+}
+
+impl RunTurnRequest {
+    pub fn new(session_id: impl Into<String>, turn_id: impl Into<String>) -> Self {
+        Self {
+            session_id: session_id.into(),
+            turn_id: turn_id.into(),
+            inputs: json!({}),
+            options: TurnOptions::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RunTurnResult {
+    pub session_id: String,
+    pub turn_id: String,
+    pub status: String,
+    pub output: Option<Value>,
+    pub iterations: usize,
+    pub tool_results: Vec<HostToolResult>,
+    pub checkpoints: Vec<Checkpoint>,
+}
+
+type ModelCallback =
+    dyn Fn(TurnModelRequest) -> Result<TurnModelResponse, AdapterError> + Send + Sync;
+type Clock = dyn Fn() -> String + Send + Sync;
+type IdFactory = dyn Fn(&str) -> String + Send + Sync;
+
+pub struct ReferenceTurnRunner<S, J, C, P, H>
+where
+    S: EventSink,
+    J: EventJournalWriter,
+    C: CheckpointStore,
+    P: PermissionResolver,
+    H: HostToolExecutor,
+{
+    event_sink: S,
+    journal: J,
+    checkpoint_store: C,
+    permission_resolver: P,
+    host_tool_executor: H,
+    invoke_model: Arc<ModelCallback>,
+    now: Arc<Clock>,
+    next_id: Arc<IdFactory>,
+}
+
+impl<S, J, C, P, H> ReferenceTurnRunner<S, J, C, P, H>
+where
+    S: EventSink,
+    J: EventJournalWriter,
+    C: CheckpointStore,
+    P: PermissionResolver,
+    H: HostToolExecutor,
+{
+    pub fn new(
+        event_sink: S,
+        journal: J,
+        checkpoint_store: C,
+        permission_resolver: P,
+        host_tool_executor: H,
+        invoke_model: Arc<ModelCallback>,
+        now: Arc<Clock>,
+        next_id: Arc<IdFactory>,
+    ) -> Self {
+        Self {
+            event_sink,
+            journal,
+            checkpoint_store,
+            permission_resolver,
+            host_tool_executor,
+            invoke_model,
+            now,
+            next_id,
+        }
+    }
+
+    pub async fn run(&self, request: RunTurnRequest) -> Result<RunTurnResult, AdapterError> {
+        let max_iterations = request.options.max_iterations.unwrap_or(10).max(0) as usize;
+        let mut checkpoints = Vec::new();
+        let mut all_tool_results = Vec::new();
+        let mut pending_tool_results = Vec::new();
+        let mut output = None;
+        let mut status = "success".to_string();
+        let mut iterations = 0usize;
+
+        self.record_session(
+            SessionEventType::Session_start,
+            &request.session_id,
+            &request.turn_id,
+            json!({ "sessionId": request.session_id, "schemaVersion": "1" }),
+        );
+        self.record_turn(
+            TurnEventType::Turn_start,
+            &request.turn_id,
+            0,
+            json!({ "inputs": request.inputs, "maxIterations": max_iterations }),
+        );
+
+        for iteration in 0..max_iterations {
+            iterations = iteration + 1;
+            self.record_turn(
+                TurnEventType::Llm_start,
+                &request.turn_id,
+                iteration,
+                json!({ "attempt": 0 }),
+            );
+            let model_response = (self.invoke_model)(TurnModelRequest {
+                session_id: request.session_id.clone(),
+                turn_id: request.turn_id.clone(),
+                iteration,
+                inputs: request.inputs.clone(),
+                options: request.options.clone(),
+                tool_results: pending_tool_results.clone(),
+            })?;
+            self.record_turn(
+                TurnEventType::Llm_complete,
+                &request.turn_id,
+                iteration,
+                json!({}),
+            );
+            let checkpoint = self
+                .save_checkpoint(
+                    &request.session_id,
+                    &request.turn_id,
+                    iteration,
+                    &model_response,
+                )
+                .await?;
+            checkpoints.push(checkpoint);
+
+            if model_response.tool_requests.is_empty() {
+                output = model_response.output;
+                break;
+            }
+
+            pending_tool_results = Vec::new();
+            for tool_request in model_response.tool_requests {
+                let tool_result = self
+                    .resolve_and_execute_tool(&request.turn_id, iteration, &tool_request)
+                    .await?;
+                pending_tool_results.push(tool_result.clone());
+                all_tool_results.push(tool_result);
+            }
+
+            self.record_turn(
+                TurnEventType::Messages_updated,
+                &request.turn_id,
+                iteration,
+                json!({
+                    "toolResults": pending_tool_results
+                        .iter()
+                        .map(|result| result.to_value(&SaveContext::new()))
+                        .collect::<Vec<_>>()
+                }),
+            );
+        }
+
+        if output.is_none() && !pending_tool_results.is_empty() {
+            status = "error".to_string();
+            output = Some(json!({ "message": "Maximum turn iterations reached" }));
+            self.record_turn(
+                TurnEventType::Error,
+                &request.turn_id,
+                iterations,
+                json!({
+                    "errorKind": "max_iterations",
+                    "message": "Maximum turn iterations reached"
+                }),
+            );
+        }
+
+        self.record_turn(
+            TurnEventType::Turn_end,
+            &request.turn_id,
+            iterations,
+            json!({ "iterations": iterations, "status": status, "response": output }),
+        );
+        self.record_session(
+            SessionEventType::Session_end,
+            &request.session_id,
+            &request.turn_id,
+            json!({ "sessionId": request.session_id, "status": status, "reason": "turn_complete" }),
+        );
+        let summary_status = if status == "success" {
+            SessionSummaryStatus::Success
+        } else {
+            SessionSummaryStatus::Error
+        };
+        self.journal.close(&Some(SessionSummary {
+            session_id: request.session_id.clone(),
+            status: Some(summary_status),
+            turns: Some(1),
+            checkpoints: Some(checkpoints.len() as i32),
+            ..Default::default()
+        }));
+
+        Ok(RunTurnResult {
+            session_id: request.session_id,
+            turn_id: request.turn_id,
+            status,
+            output,
+            iterations,
+            tool_results: all_tool_results,
+            checkpoints,
+        })
+    }
+
+    async fn save_checkpoint(
+        &self,
+        session_id: &str,
+        turn_id: &str,
+        iteration: usize,
+        response: &TurnModelResponse,
+    ) -> Result<Checkpoint, AdapterError> {
+        let mut state = json!({
+            "iteration": iteration,
+            "output": response.output,
+            "toolRequests": response
+                .tool_requests
+                .iter()
+                .map(|request| request.to_value(&SaveContext::new()))
+                .collect::<Vec<_>>()
+        });
+        if let (Some(target), Some(extra)) =
+            (state.as_object_mut(), response.checkpoint_state.as_object())
+        {
+            for (key, value) in extra {
+                target.insert(key.clone(), value.clone());
+            }
+        }
+        let checkpoint = Checkpoint {
+            id: Some(format!("{turn_id}-checkpoint-{iteration}")),
+            session_id: Some(session_id.to_string()),
+            turn_id: Some(turn_id.to_string()),
+            checkpoint_number: Some(iteration as i32 + 1),
+            title: format!("Turn {turn_id} iteration {iteration}"),
+            state,
+            created_at: Some((self.now)()),
+            ..Default::default()
+        };
+        let saved = self.checkpoint_store.save(&checkpoint).await?;
+        self.record_session(
+            SessionEventType::Checkpoint_created,
+            session_id,
+            turn_id,
+            json!({
+                "checkpointId": saved.id,
+                "checkpointNumber": saved.checkpoint_number
+            }),
+        );
+        Ok(saved)
+    }
+
+    async fn resolve_and_execute_tool(
+        &self,
+        turn_id: &str,
+        iteration: usize,
+        tool_request: &HostToolRequest,
+    ) -> Result<HostToolResult, AdapterError> {
+        let permission = PermissionRequest {
+            request_id: Some(
+                tool_request
+                    .request_id
+                    .as_ref()
+                    .map(|request_id| format!("{request_id}-permission"))
+                    .unwrap_or_else(|| (self.next_id)("permission")),
+            ),
+            tool_call_id: tool_request.tool_call_id.clone(),
+            permission: "tool.execute".to_string(),
+            target: Some(tool_request.tool_name.clone()),
+            details: tool_request.to_value(&SaveContext::new()),
+            ..Default::default()
+        };
+        self.record_turn(
+            TurnEventType::Permission_requested,
+            turn_id,
+            iteration,
+            permission.to_value(&SaveContext::new()),
+        );
+        let decision = self.permission_resolver.request(&permission).await?;
+        self.record_turn(
+            TurnEventType::Permission_completed,
+            turn_id,
+            iteration,
+            decision.to_value(&SaveContext::new()),
+        );
+
+        if !decision.approved {
+            return Ok(HostToolResult {
+                request_id: tool_request.request_id.clone(),
+                tool_call_id: tool_request.tool_call_id.clone(),
+                tool_name: tool_request.tool_name.clone(),
+                success: false,
+                result: Some(
+                    json!({ "message": decision.reason.unwrap_or_else(|| "Permission denied".to_string()) }),
+                ),
+                error_kind: Some("permission_denied".to_string()),
+                ..Default::default()
+            });
+        }
+
+        self.record_turn(
+            TurnEventType::Tool_execution_start,
+            turn_id,
+            iteration,
+            tool_request.to_value(&SaveContext::new()),
+        );
+        let result = self.host_tool_executor.execute(tool_request).await?;
+        self.record_turn(
+            TurnEventType::Tool_execution_complete,
+            turn_id,
+            iteration,
+            result.to_value(&SaveContext::new()),
+        );
+        self.record_turn(
+            TurnEventType::Tool_result,
+            turn_id,
+            iteration,
+            result.to_value(&SaveContext::new()),
+        );
+        Ok(result)
+    }
+
+    fn record_turn(&self, r#type: TurnEventType, turn_id: &str, iteration: usize, payload: Value) {
+        let event = TurnEvent {
+            id: (self.next_id)("turn-event"),
+            r#type,
+            timestamp: (self.now)(),
+            turn_id: Some(turn_id.to_string()),
+            iteration: Some(iteration as i32),
+            payload,
+            ..Default::default()
+        };
+        self.event_sink.emit_turn(&event);
+        self.journal.append_turn(&event);
+    }
+
+    fn record_session(
+        &self,
+        r#type: SessionEventType,
+        session_id: &str,
+        turn_id: &str,
+        payload: Value,
+    ) {
+        let event = SessionEvent {
+            id: (self.next_id)("session-event"),
+            r#type,
+            timestamp: (self.now)(),
+            session_id: Some(session_id.to_string()),
+            turn_id: Some(turn_id.to_string()),
+            payload,
+            ..Default::default()
+        };
+        self.event_sink.emit_session(&event);
+        self.journal.append_session(&event);
     }
 }
