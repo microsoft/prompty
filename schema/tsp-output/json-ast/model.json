@@ -1,0 +1,4018 @@
+{
+  "typeName": {
+    "namespace": "Prompty",
+    "name": "Prompty"
+  },
+  "description": "A Prompty is a markdown file format for LLM prompts. The frontmatter defines\nstructured metadata including model configuration, input/output schemas, tools,\nand template settings. The markdown body becomes the instructions.\n\nThis is the single root type for the Prompty schema — there is no abstract base\nclass or kind discriminator. A .prompty file always produces a Prompty instance.\n\nRuntime loaders may resolve frontmatter references such as `${env:VAR}` and\n`${file:relative/path}`. File references must be treated as a host-controlled\ncapability: by default they are scoped to the containing .prompty file's\ndirectory tree after canonicalization, and any additional allowed roots must\nbe supplied by the host application's load options rather than frontmatter.",
+  "base": {},
+  "isAbstract": false,
+  "isProtocol": false,
+  "coercions": [],
+  "factories": [],
+  "methods": [],
+  "childTypes": [],
+  "properties": [
+    {
+      "name": "name",
+      "typeName": {
+        "namespace": "",
+        "name": "string"
+      },
+      "description": "Human-readable name of the prompt",
+      "samples": [
+        {
+          "sample": {
+            "name": "basic-prompt"
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": true,
+      "isOptional": false,
+      "isCollection": false,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false
+    },
+    {
+      "name": "displayName",
+      "typeName": {
+        "namespace": "",
+        "name": "string"
+      },
+      "description": "Display name for UI purposes",
+      "samples": [
+        {
+          "sample": {
+            "displayName": "Basic Prompt"
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": true,
+      "isOptional": true,
+      "isCollection": false,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false
+    },
+    {
+      "name": "description",
+      "typeName": {
+        "namespace": "",
+        "name": "string"
+      },
+      "description": "Description of the prompt's purpose",
+      "samples": [
+        {
+          "sample": {
+            "description": "A basic prompt that uses the GPT-3 chat API to answer questions"
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": true,
+      "isOptional": true,
+      "isCollection": false,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false
+    },
+    {
+      "name": "metadata",
+      "typeName": {
+        "namespace": "",
+        "name": "dictionary"
+      },
+      "description": "Additional metadata including authors, tags, and other arbitrary properties",
+      "samples": [
+        {
+          "sample": {
+            "metadata": {
+              "authors": [
+                "sethjuarez",
+                "jietong"
+              ],
+              "tags": [
+                "example",
+                "prompt"
+              ]
+            }
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": true,
+      "isOptional": true,
+      "isCollection": false,
+      "isAny": false,
+      "isDict": true,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false
+    },
+    {
+      "name": "inputs",
+      "typeName": {
+        "namespace": "Prompty",
+        "name": "Property"
+      },
+      "description": "Input parameters that participate in template rendering",
+      "samples": [
+        {
+          "sample": {
+            "inputs": {
+              "firstName": {
+                "kind": "string",
+                "default": "Jane"
+              },
+              "lastName": {
+                "kind": "string",
+                "default": "Doe"
+              },
+              "question": {
+                "kind": "string",
+                "default": "What is the meaning of life?"
+              }
+            }
+          },
+          "title": "",
+          "description": ""
+        },
+        {
+          "sample": {
+            "inputs": [
+              {
+                "name": "firstName",
+                "kind": "string",
+                "default": "Jane"
+              },
+              {
+                "name": "lastName",
+                "kind": "string",
+                "default": "Doe"
+              },
+              {
+                "name": "question",
+                "kind": "string",
+                "default": "What is the meaning of life?"
+              }
+            ]
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": false,
+      "isOptional": true,
+      "isCollection": true,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false,
+      "type": {
+        "typeName": {
+          "namespace": "Prompty",
+          "name": "Property"
+        },
+        "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+        "base": {},
+        "isAbstract": false,
+        "isProtocol": false,
+        "discriminator": "kind",
+        "coercions": [
+          {
+            "scalar": "boolean",
+            "expansion": {
+              "kind": "boolean",
+              "example": "{value}"
+            },
+            "title": "input",
+            "description": "Simple construction with just a kind of boolean"
+          },
+          {
+            "scalar": "float32",
+            "expansion": {
+              "kind": "float",
+              "example": "{value}"
+            },
+            "title": "input",
+            "description": "Simple construction with just a kind of float"
+          },
+          {
+            "scalar": "integer",
+            "expansion": {
+              "kind": "integer",
+              "example": "{value}"
+            },
+            "example": 4,
+            "title": "input",
+            "description": "Simple construction with just a kind of integer"
+          },
+          {
+            "scalar": "string",
+            "expansion": {
+              "kind": "string",
+              "example": "{value}"
+            },
+            "title": "input",
+            "description": "Simple construction with just a kind of string"
+          }
+        ],
+        "factories": [],
+        "methods": [],
+        "childTypes": [
+          {
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "ArrayProperty"
+            },
+            "description": "Represents an array property.\nThis extends the base Property model to represent an array of items.",
+            "base": {
+              "namespace": "Prompty",
+              "name": "Property"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "kind",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "",
+                "samples": [],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "array",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "items",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "Property"
+                },
+                "description": "The type of items contained in the array",
+                "samples": [
+                  {
+                    "sample": {
+                      "items": {
+                        "kind": "string"
+                      }
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false,
+                "type": {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "Property"
+                  },
+                  "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+                  "base": {},
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "discriminator": "kind",
+                  "coercions": [
+                    {
+                      "scalar": "boolean",
+                      "expansion": {
+                        "kind": "boolean",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of boolean"
+                    },
+                    {
+                      "scalar": "float32",
+                      "expansion": {
+                        "kind": "float",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of float"
+                    },
+                    {
+                      "scalar": "integer",
+                      "expansion": {
+                        "kind": "integer",
+                        "example": "{value}"
+                      },
+                      "example": 4,
+                      "title": "input",
+                      "description": "Simple construction with just a kind of integer"
+                    },
+                    {
+                      "scalar": "string",
+                      "expansion": {
+                        "kind": "string",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of string"
+                    }
+                  ],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [
+                    {
+                      "typeName": {
+                        "namespace": "Prompty",
+                        "name": "ObjectProperty"
+                      },
+                      "description": "Represents an object property.\nThis extends the base Property model to represent a structured object.",
+                      "base": {
+                        "namespace": "Prompty",
+                        "name": "Property"
+                      },
+                      "isAbstract": false,
+                      "isProtocol": false,
+                      "coercions": [],
+                      "factories": [],
+                      "methods": [],
+                      "childTypes": [],
+                      "properties": [
+                        {
+                          "name": "kind",
+                          "typeName": {
+                            "namespace": "",
+                            "name": "string"
+                          },
+                          "description": "",
+                          "samples": [],
+                          "knownAs": [],
+                          "defaultFor": [],
+                          "isScalar": true,
+                          "isOptional": false,
+                          "isCollection": false,
+                          "isAny": false,
+                          "isDict": false,
+                          "defaultValue": "object",
+                          "allowedValues": [],
+                          "enumName": null,
+                          "isOpenEnum": false
+                        },
+                        {
+                          "name": "properties",
+                          "typeName": {
+                            "namespace": "Prompty",
+                            "name": "Property"
+                          },
+                          "description": "The properties contained in the object",
+                          "samples": [
+                            {
+                              "sample": {
+                                "properties": {
+                                  "property1": {
+                                    "kind": "string"
+                                  },
+                                  "property2": {
+                                    "kind": "number"
+                                  }
+                                }
+                              },
+                              "title": "",
+                              "description": ""
+                            }
+                          ],
+                          "knownAs": [],
+                          "defaultFor": [],
+                          "isScalar": false,
+                          "isOptional": false,
+                          "isCollection": true,
+                          "isAny": false,
+                          "isDict": false,
+                          "defaultValue": "null",
+                          "allowedValues": [],
+                          "enumName": null,
+                          "isOpenEnum": false,
+                          "type": {
+                            "typeName": {
+                              "namespace": "Prompty",
+                              "name": "Property"
+                            },
+                            "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+                            "base": {},
+                            "isAbstract": false,
+                            "isProtocol": false,
+                            "discriminator": "kind",
+                            "coercions": [
+                              {
+                                "scalar": "boolean",
+                                "expansion": {
+                                  "kind": "boolean",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of boolean"
+                              },
+                              {
+                                "scalar": "float32",
+                                "expansion": {
+                                  "kind": "float",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of float"
+                              },
+                              {
+                                "scalar": "integer",
+                                "expansion": {
+                                  "kind": "integer",
+                                  "example": "{value}"
+                                },
+                                "example": 4,
+                                "title": "input",
+                                "description": "Simple construction with just a kind of integer"
+                              },
+                              {
+                                "scalar": "string",
+                                "expansion": {
+                                  "kind": "string",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of string"
+                              }
+                            ],
+                            "factories": [],
+                            "methods": [],
+                            "childTypes": [],
+                            "properties": [
+                              {
+                                "name": "name",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "string"
+                                },
+                                "description": "Name of the property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "name": "my-input"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": false,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "enumName": null,
+                                "isOpenEnum": false
+                              },
+                              {
+                                "name": "kind",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "string"
+                                },
+                                "description": "The data type of the input property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "kind": "string"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": false,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [
+                                  "string",
+                                  "integer",
+                                  "float",
+                                  "boolean",
+                                  "array",
+                                  "object",
+                                  "thread",
+                                  "image",
+                                  "audio",
+                                  "file"
+                                ],
+                                "enumName": "SimpleTypes",
+                                "isOpenEnum": false
+                              },
+                              {
+                                "name": "description",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "string"
+                                },
+                                "description": "A short description of the input property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "description": "A description of the input property"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "enumName": null,
+                                "isOpenEnum": false
+                              },
+                              {
+                                "name": "required",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "boolean"
+                                },
+                                "description": "Whether the property is required",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "required": true
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "enumName": null,
+                                "isOpenEnum": false
+                              },
+                              {
+                                "name": "default",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "The default value of the property - this represents the default value if none is provided",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "default": "default value"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "enumName": null,
+                                "isOpenEnum": false
+                              },
+                              {
+                                "name": "example",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "Example value used for either initialization or tooling",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "example": "example value"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "enumName": null,
+                                "isOpenEnum": false
+                              },
+                              {
+                                "name": "enumValues",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "Allowed enumeration values for the property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "enumValues": [
+                                        "value1",
+                                        "value2",
+                                        "value3"
+                                      ]
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": true,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "enumName": null,
+                                "isOpenEnum": false
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The data type of the input property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "string"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [
+                        "string",
+                        "integer",
+                        "float",
+                        "boolean",
+                        "array",
+                        "object",
+                        "thread",
+                        "image",
+                        "audio",
+                        "file"
+                      ],
+                      "enumName": "SimpleTypes",
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "description",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "A short description of the input property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "description": "A description of the input property"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "required",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "boolean"
+                      },
+                      "description": "Whether the property is required",
+                      "samples": [
+                        {
+                          "sample": {
+                            "required": true
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "default",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "The default value of the property - this represents the default value if none is provided",
+                      "samples": [
+                        {
+                          "sample": {
+                            "default": "default value"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "example",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "Example value used for either initialization or tooling",
+                      "samples": [
+                        {
+                          "sample": {
+                            "example": "example value"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "enumValues",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "Allowed enumeration values for the property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "enumValues": [
+                              "value1",
+                              "value2",
+                              "value3"
+                            ]
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": true,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "ObjectProperty"
+            },
+            "description": "Represents an object property.\nThis extends the base Property model to represent a structured object.",
+            "base": {
+              "namespace": "Prompty",
+              "name": "Property"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "kind",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "",
+                "samples": [],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "object",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "properties",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "Property"
+                },
+                "description": "The properties contained in the object",
+                "samples": [
+                  {
+                    "sample": {
+                      "properties": {
+                        "property1": {
+                          "kind": "string"
+                        },
+                        "property2": {
+                          "kind": "number"
+                        }
+                      }
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": false,
+                "isCollection": true,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              }
+            ]
+          }
+        ],
+        "properties": [
+          {
+            "name": "name",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "Name of the property",
+            "samples": [
+              {
+                "sample": {
+                  "name": "my-input"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": false,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "kind",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "The data type of the input property",
+            "samples": [
+              {
+                "sample": {
+                  "kind": "string"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": false,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [
+              "string",
+              "integer",
+              "float",
+              "boolean",
+              "array",
+              "object",
+              "thread",
+              "image",
+              "audio",
+              "file"
+            ],
+            "enumName": "SimpleTypes",
+            "isOpenEnum": false
+          },
+          {
+            "name": "description",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "A short description of the input property",
+            "samples": [
+              {
+                "sample": {
+                  "description": "A description of the input property"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "required",
+            "typeName": {
+              "namespace": "",
+              "name": "boolean"
+            },
+            "description": "Whether the property is required",
+            "samples": [
+              {
+                "sample": {
+                  "required": true
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "default",
+            "typeName": {
+              "namespace": "",
+              "name": "unknown"
+            },
+            "description": "The default value of the property - this represents the default value if none is provided",
+            "samples": [
+              {
+                "sample": {
+                  "default": "default value"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": true,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "example",
+            "typeName": {
+              "namespace": "",
+              "name": "unknown"
+            },
+            "description": "Example value used for either initialization or tooling",
+            "samples": [
+              {
+                "sample": {
+                  "example": "example value"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": true,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "enumValues",
+            "typeName": {
+              "namespace": "",
+              "name": "unknown"
+            },
+            "description": "Allowed enumeration values for the property",
+            "samples": [
+              {
+                "sample": {
+                  "enumValues": [
+                    "value1",
+                    "value2",
+                    "value3"
+                  ]
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": true,
+            "isAny": true,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "outputs",
+      "typeName": {
+        "namespace": "Prompty",
+        "name": "Property"
+      },
+      "description": "Expected output format and structure",
+      "samples": [
+        {
+          "sample": {
+            "outputs": {
+              "answer": {
+                "kind": "string",
+                "description": "The answer to the user's question."
+              }
+            }
+          },
+          "title": "",
+          "description": ""
+        },
+        {
+          "sample": {
+            "outputs": [
+              {
+                "name": "answer",
+                "kind": "string",
+                "description": "The answer to the user's question."
+              }
+            ]
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": false,
+      "isOptional": true,
+      "isCollection": true,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false
+    },
+    {
+      "name": "model",
+      "typeName": {
+        "namespace": "Prompty",
+        "name": "Model"
+      },
+      "description": "AI model configuration",
+      "samples": [
+        {
+          "sample": {
+            "model": {
+              "id": "gpt-35-turbo",
+              "connection": {
+                "kind": "key",
+                "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+                "apiKey": "{your-api-key}"
+              }
+            }
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": false,
+      "isOptional": false,
+      "isCollection": false,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false,
+      "type": {
+        "typeName": {
+          "namespace": "Prompty",
+          "name": "Model"
+        },
+        "description": "Model for defining the structure and behavior of AI agents.\nThis model includes properties for specifying the model's provider, connection details, and various options.\nIt allows for flexible configuration of AI models to suit different use cases and requirements.",
+        "base": {},
+        "isAbstract": false,
+        "isProtocol": false,
+        "coercions": [
+          {
+            "scalar": "string",
+            "expansion": {
+              "id": "{value}"
+            },
+            "title": "model",
+            "description": "Simple construction with just an id"
+          }
+        ],
+        "factories": [],
+        "methods": [],
+        "childTypes": [],
+        "properties": [
+          {
+            "name": "id",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "The unique identifier of the model - can be used as the single property shorthand",
+            "samples": [
+              {
+                "sample": {
+                  "id": "gpt-35-turbo"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": false,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "provider",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "The provider of the model (e.g., 'openai', 'foundry', 'anthropic')",
+            "samples": [
+              {
+                "sample": {
+                  "provider": "foundry"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "apiType",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "The type of API to use for the model (e.g., 'chat', 'response', etc.)",
+            "samples": [
+              {
+                "sample": {
+                  "apiType": "chat"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [
+              "chat",
+              "embedding",
+              "image",
+              "responses"
+            ],
+            "enumName": "apiType",
+            "isOpenEnum": true
+          },
+          {
+            "name": "connection",
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "Connection"
+            },
+            "description": "The connection configuration for the model",
+            "samples": [
+              {
+                "sample": {
+                  "connection": {
+                    "kind": "key",
+                    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+                    "key": "{your-api-key}"
+                  }
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": false,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false,
+            "type": {
+              "typeName": {
+                "namespace": "Prompty",
+                "name": "Connection"
+              },
+              "description": "Connection configuration for AI agents.\n`provider`, `kind`, and `endpoint` are required properties here,\nbut this section can accept additional via options.",
+              "base": {},
+              "isAbstract": true,
+              "isProtocol": false,
+              "discriminator": "kind",
+              "coercions": [],
+              "factories": [],
+              "methods": [],
+              "childTypes": [
+                {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "ReferenceConnection"
+                  },
+                  "description": "Connection configuration for AI services using named connections.",
+                  "base": {
+                    "namespace": "Prompty",
+                    "name": "Connection"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "reference"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "reference",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "name",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The name of the connection",
+                      "samples": [
+                        {
+                          "sample": {
+                            "name": "my-reference-connection"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "target",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The target resource or service that this connection refers to",
+                      "samples": [
+                        {
+                          "sample": {
+                            "target": "my-target-resource"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    }
+                  ]
+                },
+                {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "RemoteConnection"
+                  },
+                  "description": "Connection configuration for AI services using named connections.",
+                  "base": {
+                    "namespace": "Prompty",
+                    "name": "Connection"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "remote"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "remote",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "name",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The name of the connection",
+                      "samples": [
+                        {
+                          "sample": {
+                            "name": "my-reference-connection"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "endpoint",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The endpoint URL for the AI service",
+                      "samples": [
+                        {
+                          "sample": {
+                            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    }
+                  ]
+                },
+                {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "ApiKeyConnection"
+                  },
+                  "description": "Connection configuration for AI services using API keys.",
+                  "base": {
+                    "namespace": "Prompty",
+                    "name": "Connection"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "key"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "key",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "endpoint",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The endpoint URL for the AI service",
+                      "samples": [
+                        {
+                          "sample": {
+                            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "apiKey",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The API key for authenticating with the AI service",
+                      "samples": [
+                        {
+                          "sample": {
+                            "apiKey": "your-api-key"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    }
+                  ]
+                },
+                {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "AnonymousConnection"
+                  },
+                  "description": "",
+                  "base": {
+                    "namespace": "Prompty",
+                    "name": "Connection"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "anonymous"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "anonymous",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "endpoint",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The endpoint for authenticating with the AI service",
+                      "samples": [
+                        {
+                          "sample": {
+                            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    }
+                  ]
+                },
+                {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "OAuthConnection"
+                  },
+                  "description": "Connection configuration using OAuth 2.0 client credentials.\nUseful for tools and services that require OAuth authentication,\nsuch as MCP servers, OpenAPI endpoints, or other REST APIs.",
+                  "base": {
+                    "namespace": "Prompty",
+                    "name": "Connection"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The connection kind for OAuth authentication",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "oauth"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "oauth",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "endpoint",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The endpoint URL for the service",
+                      "samples": [
+                        {
+                          "sample": {
+                            "endpoint": "https://api.example.com"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "clientId",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The OAuth client ID",
+                      "samples": [
+                        {
+                          "sample": {
+                            "clientId": "your-client-id"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "clientSecret",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The OAuth client secret",
+                      "samples": [
+                        {
+                          "sample": {
+                            "clientSecret": "your-client-secret"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "tokenUrl",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The OAuth token endpoint URL",
+                      "samples": [
+                        {
+                          "sample": {
+                            "tokenUrl": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "scopes",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "OAuth scopes to request",
+                      "samples": [
+                        {
+                          "sample": {
+                            "scopes": [
+                              "https://cognitiveservices.azure.com/.default"
+                            ]
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": true,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    }
+                  ]
+                },
+                {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "FoundryConnection"
+                  },
+                  "description": "Connection configuration for Microsoft Foundry projects.\nProvides project-scoped access to models, tools, and services\nvia Entra ID (DefaultAzureCredential) authentication.",
+                  "base": {
+                    "namespace": "Prompty",
+                    "name": "Connection"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The connection kind for Foundry project access",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "foundry"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "foundry",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "endpoint",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The Foundry project endpoint URL",
+                      "samples": [
+                        {
+                          "sample": {
+                            "endpoint": "https://myresource.services.ai.azure.com/api/projects/myproject"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "name",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The named connection within the Foundry project",
+                      "samples": [
+                        {
+                          "sample": {
+                            "name": "my-openai-connection"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "connectionType",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The connection type within the Foundry project (e.g., 'model', 'index', 'storage')",
+                      "samples": [
+                        {
+                          "sample": {
+                            "connectionType": "model"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    }
+                  ]
+                }
+              ],
+              "properties": [
+                {
+                  "name": "kind",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)",
+                  "samples": [
+                    {
+                      "sample": {
+                        "kind": "reference"
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": false,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [
+                    "remote",
+                    "reference",
+                    "key",
+                    "anonymous",
+                    "foundry",
+                    "oauth"
+                  ],
+                  "enumName": "ConnectionType",
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "authenticationMode",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')",
+                  "samples": [
+                    {
+                      "sample": {
+                        "authenticationMode": "system"
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [
+                    "user",
+                    "system"
+                  ],
+                  "enumName": "AuthenticationMode",
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "usageDescription",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "The usage description for the connection, providing context on how this connection will be used",
+                  "samples": [
+                    {
+                      "sample": {
+                        "usageDescription": "This will allow the agent to respond to an email on your behalf"
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "options",
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "ModelOptions"
+            },
+            "description": "Additional options for the model",
+            "samples": [
+              {
+                "sample": {
+                  "options": {
+                    "type": "chat",
+                    "temperature": 0.7,
+                    "maxOutputTokens": 1000
+                  }
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": false,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false,
+            "type": {
+              "typeName": {
+                "namespace": "Prompty",
+                "name": "ModelOptions"
+              },
+              "description": "Options for configuring the behavior of the AI model.",
+              "base": {},
+              "isAbstract": false,
+              "isProtocol": false,
+              "coercions": [],
+              "factories": [],
+              "methods": [],
+              "childTypes": [],
+              "properties": [
+                {
+                  "name": "frequencyPenalty",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "float32"
+                  },
+                  "description": "The frequency penalty to apply to the model's output",
+                  "samples": [
+                    {
+                      "sample": {
+                        "frequencyPenalty": 0.5
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "frequency_penalty"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "maxOutputTokens",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "int32"
+                  },
+                  "description": "The maximum number of tokens to generate in the output",
+                  "samples": [
+                    {
+                      "sample": {
+                        "maxOutputTokens": 2048
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "max_completion_tokens"
+                    },
+                    {
+                      "provider": "responses",
+                      "name": "max_output_tokens"
+                    },
+                    {
+                      "provider": "anthropic",
+                      "name": "max_tokens"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "presencePenalty",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "float32"
+                  },
+                  "description": "The presence penalty to apply to the model's output",
+                  "samples": [
+                    {
+                      "sample": {
+                        "presencePenalty": 0.3
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "presence_penalty"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "seed",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "int32"
+                  },
+                  "description": "A random seed for deterministic output",
+                  "samples": [
+                    {
+                      "sample": {
+                        "seed": 42
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "seed"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "temperature",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "float32"
+                  },
+                  "description": "The temperature to use for sampling",
+                  "samples": [
+                    {
+                      "sample": {
+                        "temperature": 0.7
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "temperature"
+                    },
+                    {
+                      "provider": "responses",
+                      "name": "temperature"
+                    },
+                    {
+                      "provider": "anthropic",
+                      "name": "temperature"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "topK",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "int32"
+                  },
+                  "description": "The top-K sampling value",
+                  "samples": [
+                    {
+                      "sample": {
+                        "topK": 40
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "top_k"
+                    },
+                    {
+                      "provider": "anthropic",
+                      "name": "top_k"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "topP",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "float32"
+                  },
+                  "description": "The top-P sampling value",
+                  "samples": [
+                    {
+                      "sample": {
+                        "topP": 0.9
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "top_p"
+                    },
+                    {
+                      "provider": "responses",
+                      "name": "top_p"
+                    },
+                    {
+                      "provider": "anthropic",
+                      "name": "top_p"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "stopSequences",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "Stop sequences to end generation",
+                  "samples": [
+                    {
+                      "sample": {
+                        "stopSequences": [
+                          "\n",
+                          "###"
+                        ]
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "stop"
+                    },
+                    {
+                      "provider": "anthropic",
+                      "name": "stop_sequences"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": true,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "allowMultipleToolCalls",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "boolean"
+                  },
+                  "description": "Whether to allow multiple tool calls in a single response",
+                  "samples": [
+                    {
+                      "sample": {
+                        "allowMultipleToolCalls": true
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "parallel_tool_calls"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "additionalProperties",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "dictionary"
+                  },
+                  "description": "Additional custom properties for model options",
+                  "samples": [
+                    {
+                      "sample": {
+                        "additionalProperties": {
+                          "customProperty": "value",
+                          "anotherProperty": "anotherValue"
+                        }
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": true,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "tools",
+      "typeName": {
+        "namespace": "Prompty",
+        "name": "Tool"
+      },
+      "description": "Tools available for extended functionality",
+      "samples": [
+        {
+          "sample": {
+            "tools": [
+              {
+                "name": "getCurrentWeather",
+                "kind": "function",
+                "description": "Get the current weather in a given location",
+                "parameters": {
+                  "location": {
+                    "kind": "string",
+                    "description": "The city and state, e.g. San Francisco, CA"
+                  },
+                  "unit": {
+                    "kind": "string",
+                    "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+                  }
+                }
+              }
+            ]
+          },
+          "title": "",
+          "description": ""
+        },
+        {
+          "sample": {
+            "tools": {
+              "getCurrentWeather": {
+                "kind": "function",
+                "description": "Get the current weather in a given location",
+                "parameters": {
+                  "location": {
+                    "kind": "string",
+                    "description": "The city and state, e.g. San Francisco, CA"
+                  },
+                  "unit": {
+                    "kind": "string",
+                    "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+                  }
+                }
+              }
+            }
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": false,
+      "isOptional": true,
+      "isCollection": true,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false,
+      "type": {
+        "typeName": {
+          "namespace": "Prompty",
+          "name": "Tool"
+        },
+        "description": "Represents a tool that can be used in prompts.",
+        "base": {},
+        "isAbstract": true,
+        "isProtocol": false,
+        "discriminator": "kind",
+        "coercions": [],
+        "factories": [],
+        "methods": [],
+        "childTypes": [
+          {
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "FunctionTool"
+            },
+            "description": "Represents a local function tool.",
+            "base": {
+              "namespace": "Prompty",
+              "name": "Tool"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "kind",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The kind identifier for function tools",
+                "samples": [
+                  {
+                    "sample": {
+                      "kind": "function"
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "function",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "parameters",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "Property"
+                },
+                "description": "Parameters accepted by the function tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "parameters": {
+                        "firstName": {
+                          "kind": "string",
+                          "default": "Jane"
+                        },
+                        "lastName": {
+                          "kind": "string",
+                          "default": "Doe"
+                        },
+                        "question": {
+                          "kind": "string",
+                          "default": "What is the meaning of life?"
+                        }
+                      }
+                    },
+                    "title": "",
+                    "description": ""
+                  },
+                  {
+                    "sample": {
+                      "parameters": [
+                        {
+                          "name": "firstName",
+                          "kind": "string",
+                          "default": "Jane"
+                        },
+                        {
+                          "name": "lastName",
+                          "kind": "string",
+                          "default": "Doe"
+                        },
+                        {
+                          "name": "question",
+                          "kind": "string",
+                          "default": "What is the meaning of life?"
+                        }
+                      ]
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": false,
+                "isCollection": true,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "strict",
+                "typeName": {
+                  "namespace": "",
+                  "name": "boolean"
+                },
+                "description": "Indicates whether the function tool enforces strict validation on its parameters",
+                "samples": [
+                  {
+                    "sample": {
+                      "strict": true
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": true,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": true,
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              }
+            ]
+          },
+          {
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "CustomTool"
+            },
+            "description": "Represents a generic server tool that runs on a server\nThis tool kind is designed for operations that require server-side execution\nIt may include features such as authentication, data storage, and long-running processes\nThis tool kind is ideal for tasks that involve complex computations or access to secure resources\nServer tools can be used to offload heavy processing from client applications",
+            "base": {
+              "namespace": "Prompty",
+              "name": "Tool"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "kind",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The kind identifier for server tools. This is a wildcard and can represent any server tool type not explicitly defined.",
+                "samples": [],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "*",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "connection",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "Connection"
+                },
+                "description": "Connection configuration for the server tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "connection": {
+                        "kind": "reference"
+                      }
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "options",
+                "typeName": {
+                  "namespace": "",
+                  "name": "dictionary"
+                },
+                "description": "Configuration options for the server tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "options": {
+                        "timeout": 30,
+                        "retries": 3
+                      }
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": true,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              }
+            ]
+          },
+          {
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "McpTool"
+            },
+            "description": "The MCP Server tool.",
+            "base": {
+              "namespace": "Prompty",
+              "name": "Tool"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "kind",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The kind identifier for MCP tools",
+                "samples": [
+                  {
+                    "sample": {
+                      "kind": "mcp"
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "mcp",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "connection",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "Connection"
+                },
+                "description": "The connection configuration for the MCP tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "connection": {
+                        "kind": "reference"
+                      }
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "serverName",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The server name of the MCP tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "serverName": "My MCP Server"
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "serverDescription",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The description of the MCP tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "serverDescription": "This tool allows access to MCP services."
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": true,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "approvalMode",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "McpApprovalMode"
+                },
+                "description": "The approval mode for the MCP tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "approvalMode": {
+                        "kind": "always"
+                      }
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false,
+                "type": {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "McpApprovalMode"
+                  },
+                  "description": "The approval mode for MCP server tools.\nWhen kind is \"specify\", use alwaysRequireApprovalTools and neverRequireApprovalTools\nto control per-tool approval. For \"always\" and \"never\", those fields are ignored.",
+                  "base": {},
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "coercions": [
+                    {
+                      "scalar": "string",
+                      "expansion": {
+                        "kind": "{value}"
+                      },
+                      "example": "never",
+                      "title": "kind",
+                      "description": "Mcp Approval Mode"
+                    }
+                  ],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The approval mode: 'always', 'never', or 'specify'",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "never"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [
+                        "always",
+                        "never",
+                        "specify"
+                      ],
+                      "enumName": "mcpApprovalModeKind",
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "alwaysRequireApprovalTools",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "List of tools that always require approval (only used when kind is 'specify')",
+                      "samples": [
+                        {
+                          "sample": {
+                            "alwaysRequireApprovalTools": [
+                              "operation1"
+                            ]
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": true,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    },
+                    {
+                      "name": "neverRequireApprovalTools",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "List of tools that never require approval (only used when kind is 'specify')",
+                      "samples": [
+                        {
+                          "sample": {
+                            "neverRequireApprovalTools": [
+                              "operation2"
+                            ]
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": true,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "enumName": null,
+                      "isOpenEnum": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "allowedTools",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "List of allowed operations or resources for the MCP tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "allowedTools": [
+                        "operation1",
+                        "operation2"
+                      ]
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": true,
+                "isCollection": true,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              }
+            ]
+          },
+          {
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "OpenApiTool"
+            },
+            "description": "",
+            "base": {
+              "namespace": "Prompty",
+              "name": "Tool"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "kind",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The kind identifier for OpenAPI tools",
+                "samples": [
+                  {
+                    "sample": {
+                      "kind": "openapi"
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "openapi",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "connection",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "Connection"
+                },
+                "description": "The connection configuration for the OpenAPI tool",
+                "samples": [
+                  {
+                    "sample": {
+                      "connection": {
+                        "kind": "reference"
+                      }
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "specification",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The full OpenAPI specification",
+                "samples": [
+                  {
+                    "sample": {
+                      "specification": "./openapi.json"
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              }
+            ]
+          },
+          {
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "PromptyTool"
+            },
+            "description": "A tool that references another .prompty file to be invoked as a tool.\n\nThe child prompty is executed as a single prompt invocation. Nested agent\nloops are intentionally not started from PromptyTool.",
+            "base": {
+              "namespace": "Prompty",
+              "name": "Tool"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "kind",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The kind identifier for prompty tools",
+                "samples": [
+                  {
+                    "sample": {
+                      "kind": "prompty"
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "prompty",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "path",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "Path to the child .prompty file, relative to the parent",
+                "samples": [
+                  {
+                    "sample": {
+                      "path": "./summarize.prompty"
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              },
+              {
+                "name": "mode",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool.",
+                "samples": [
+                  {
+                    "sample": {
+                      "mode": "single"
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "single",
+                "allowedValues": [],
+                "enumName": null,
+                "isOpenEnum": false
+              }
+            ]
+          }
+        ],
+        "properties": [
+          {
+            "name": "name",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "Name of the tool. If a function tool, this is the function name, otherwise it is the type",
+            "samples": [
+              {
+                "sample": {
+                  "name": "my-tool"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": false,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "kind",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "The kind identifier for the tool",
+            "samples": [
+              {
+                "sample": {
+                  "kind": "function"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": false,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [
+              "function",
+              "mcp",
+              "openapi",
+              "prompty"
+            ],
+            "enumName": "ToolTypes",
+            "isOpenEnum": true
+          },
+          {
+            "name": "description",
+            "typeName": {
+              "namespace": "",
+              "name": "string"
+            },
+            "description": "A short description of the tool for metadata purposes",
+            "samples": [
+              {
+                "sample": {
+                  "description": "A description of the tool"
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false
+          },
+          {
+            "name": "bindings",
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "Binding"
+            },
+            "description": "Tool argument bindings to input properties",
+            "samples": [
+              {
+                "sample": {
+                  "bindings": {
+                    "input": "value"
+                  }
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": false,
+            "isOptional": true,
+            "isCollection": true,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false,
+            "type": {
+              "typeName": {
+                "namespace": "Prompty",
+                "name": "Binding"
+              },
+              "description": "Represents a binding between an input property and a tool parameter.",
+              "base": {},
+              "isAbstract": false,
+              "isProtocol": false,
+              "coercions": [
+                {
+                  "scalar": "string",
+                  "expansion": {
+                    "input": "{value}"
+                  },
+                  "title": "",
+                  "description": ""
+                }
+              ],
+              "factories": [],
+              "methods": [],
+              "childTypes": [],
+              "properties": [
+                {
+                  "name": "name",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "Name of the binding",
+                  "samples": [
+                    {
+                      "sample": {
+                        "name": "my-tool"
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": false,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "input",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "The input property that will be bound to the tool parameter argument",
+                  "samples": [
+                    {
+                      "sample": {
+                        "input": "input-variable"
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": false,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "template",
+      "typeName": {
+        "namespace": "Prompty",
+        "name": "Template"
+      },
+      "description": "Template configuration for prompt rendering",
+      "samples": [
+        {
+          "sample": {
+            "template": {
+              "format": "mustache",
+              "parser": "prompty"
+            }
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": false,
+      "isOptional": true,
+      "isCollection": false,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false,
+      "type": {
+        "typeName": {
+          "namespace": "Prompty",
+          "name": "Template"
+        },
+        "description": "Template model for defining prompt templates.\n\nThis model specifies the rendering engine used for slot filling prompts,\nthe parser used to process the rendered template into API-compatible format,\nand additional options for the template engine.\n\nIt allows for the creation of reusable templates that can be filled with dynamic data\nand processed to generate prompts for AI models.",
+        "base": {},
+        "isAbstract": false,
+        "isProtocol": false,
+        "coercions": [],
+        "factories": [],
+        "methods": [],
+        "childTypes": [],
+        "properties": [
+          {
+            "name": "format",
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "FormatConfig"
+            },
+            "description": "Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)",
+            "samples": [
+              {
+                "sample": {
+                  "format": {
+                    "kind": "mustache"
+                  }
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": false,
+            "isOptional": false,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false,
+            "type": {
+              "typeName": {
+                "namespace": "Prompty",
+                "name": "FormatConfig"
+              },
+              "description": "Template format definition",
+              "base": {},
+              "isAbstract": false,
+              "isProtocol": false,
+              "discriminator": "kind",
+              "coercions": [
+                {
+                  "scalar": "string",
+                  "expansion": {
+                    "kind": "{value}"
+                  },
+                  "title": "format",
+                  "description": "Simple construction with just a \"kind\" string"
+                }
+              ],
+              "factories": [],
+              "methods": [],
+              "childTypes": [],
+              "properties": [
+                {
+                  "name": "kind",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)",
+                  "samples": [
+                    {
+                      "sample": {
+                        "kind": "mustache"
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": false,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "*",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "strict",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "boolean"
+                  },
+                  "description": "Whether the template can emit structural text for parsing output",
+                  "samples": [
+                    {
+                      "sample": {
+                        "strict": true
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "options",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "dictionary"
+                  },
+                  "description": "Options for the template engine",
+                  "samples": [
+                    {
+                      "sample": {
+                        "options": {
+                          "key": "value"
+                        }
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": true,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                }
+              ]
+            }
+          },
+          {
+            "name": "parser",
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "ParserConfig"
+            },
+            "description": "Parser used to process the rendered template into API-compatible format",
+            "samples": [
+              {
+                "sample": {
+                  "parser": {
+                    "kind": "mustache"
+                  }
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": false,
+            "isOptional": false,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "enumName": null,
+            "isOpenEnum": false,
+            "type": {
+              "typeName": {
+                "namespace": "Prompty",
+                "name": "ParserConfig"
+              },
+              "description": "Template parser definition",
+              "base": {},
+              "isAbstract": false,
+              "isProtocol": false,
+              "discriminator": "kind",
+              "coercions": [
+                {
+                  "scalar": "string",
+                  "expansion": {
+                    "kind": "{value}"
+                  },
+                  "title": "parser",
+                  "description": "Simple construction with just a \"kind\" string"
+                }
+              ],
+              "factories": [],
+              "methods": [],
+              "childTypes": [],
+              "properties": [
+                {
+                  "name": "kind",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "Parser used to process the rendered template into API-compatible format",
+                  "samples": [
+                    {
+                      "sample": {
+                        "kind": "prompty"
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": false,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "defaultValue": "*",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                },
+                {
+                  "name": "options",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "dictionary"
+                  },
+                  "description": "Options for the parser",
+                  "samples": [
+                    {
+                      "sample": {
+                        "options": {
+                          "key": "value"
+                        }
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": true,
+                  "defaultValue": "null",
+                  "allowedValues": [],
+                  "enumName": null,
+                  "isOpenEnum": false
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "instructions",
+      "typeName": {
+        "namespace": "",
+        "name": "string"
+      },
+      "description": "Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body.",
+      "samples": [
+        {
+          "sample": {
+            "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+          },
+          "title": "",
+          "description": ""
+        }
+      ],
+      "knownAs": [],
+      "defaultFor": [],
+      "isScalar": true,
+      "isOptional": true,
+      "isCollection": false,
+      "isAny": false,
+      "isDict": false,
+      "defaultValue": "null",
+      "allowedValues": [],
+      "enumName": null,
+      "isOpenEnum": false
+    }
+  ]
+}
