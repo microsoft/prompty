@@ -1,0 +1,32 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ReplayVerificationResult.yaml
+type: object
+properties:
+  status:
+    anyOf:
+      - type: string
+        const: passed
+      - type: string
+        const: failed
+    description: Replay verification status
+  mismatches:
+    type: array
+    items:
+      $ref: ReplayMismatch.yaml
+    default: []
+    description: Record mismatches, empty when verification passed
+  expectedCount:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of expected records
+  actualCount:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of actual records
+required:
+  - status
+  - expectedCount
+  - actualCount
+description: Result returned by a replay verifier implementation.

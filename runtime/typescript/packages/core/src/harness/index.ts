@@ -16,3 +16,9 @@ export {
   TurnModelResponse,
   type TurnRunnerDependencies,
 } from "./turn-runner.js";
+
+export {
+  ReferenceReplayVerifier,
+  ReplayVerificationRequest,
+  ReplayVerificationResult,
+} from "./replay-verifier.js";

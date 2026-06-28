@@ -10,6 +10,10 @@
 )]
 
 mod compaction_config_test;
+mod replay_journal_record_test;
+mod replay_mismatch_test;
+mod replay_verification_request_test;
+mod replay_verification_result_test;
 mod run_turn_request_test;
 mod run_turn_result_test;
 mod turn_model_request_test;

@@ -14,6 +14,10 @@ from ._Parser import Parser
 from ._PermissionResolver import PermissionResolver
 from ._Processor import Processor
 from ._Renderer import Renderer
+from ._ReplayJournalRecord import ReplayJournalRecord
+from ._ReplayMismatch import ReplayMismatch
+from ._ReplayVerificationRequest import ReplayVerificationRequest
+from ._ReplayVerificationResult import ReplayVerificationResult
 from ._RunTurnRequest import RunTurnRequest
 from ._RunTurnResult import RunTurnResult
 from ._TurnModelRequest import TurnModelRequest
@@ -27,6 +31,10 @@ __all__ = [
     "TurnModelResponse",
     "RunTurnRequest",
     "RunTurnResult",
+    "ReplayJournalRecord",
+    "ReplayVerificationRequest",
+    "ReplayMismatch",
+    "ReplayVerificationResult",
     "Renderer",
     "Parser",
     "Executor",

@@ -3804,6 +3804,48 @@ for (const userInput of messages) {
 }
 ```
 
+### §14.7 Reference Harness Contracts
+
+The reference harness turn runner is a lower-level deterministic orchestration
+surface, not a model/provider runtime. Its structural contract is owned by
+TypeSpec and emitted through Typra:
+
+| Contract | Purpose |
+| -------- | ------- |
+| `TurnOptions` | Canonical deterministic turn execution options |
+| `TurnModelRequest` / `TurnModelResponse` | Boundary between orchestration and injected model/provider behavior |
+| `RunTurnRequest` / `RunTurnResult` | Request/result shape for one deterministic reference turn |
+| `ReplayJournalRecord` | Stable projection of replayable journal records |
+| `ReplayVerificationRequest` / `ReplayVerificationResult` | Contract for normalized replay verification |
+
+Runtime reference implementations MUST compose the generated contracts with the
+existing harness protocols (`EventSink`, `EventJournalWriter`, `CheckpointStore`,
+`PermissionResolver`, and `HostToolExecutor`). They MUST NOT own LLM/provider
+execution; that behavior stays behind injected callbacks.
+
+Replay verification compares `ReplayJournalRecord` values rather than raw event
+payloads. Raw journals MAY include runtime-only fields such as durations,
+telemetry, or provider payloads, but the normalized replay record MUST contain
+only deterministic orchestration fields.
+
+### §14.8 Contract Ownership Audit
+
+Anything structural and cross-runtime SHOULD be represented in TypeSpec before
+runtime code is added. Current harness ownership is:
+
+| Area | TypeSpec-owned | Runtime-owned |
+| ---- | -------------- | ------------- |
+| Turn runner inputs/results | `RunTurnRequest`, `RunTurnResult`, `RunTurnStatus` | Loop control and callback invocation |
+| Model callback boundary | `TurnModelRequest`, `TurnModelResponse` | Provider-specific callback implementation |
+| Events and summaries | `TurnEvent`, `SessionEvent`, `SessionSummary` | Emission order and durable write mechanics |
+| Checkpoints | `Checkpoint`, `CheckpointStore` | Storage adapter behavior |
+| Permissions and tools | `PermissionRequest`, `PermissionDecision`, `HostToolRequest`, `HostToolResult` | Host policy and execution handlers |
+| Replay verification | `ReplayJournalRecord`, `ReplayVerificationRequest`, `ReplayVerificationResult`, `ReplayMismatch` | Normalization from raw journals and comparison execution |
+
+The remaining intentional runtime-only footprint is behavior that cannot be
+expressed as a structural schema: clocks/ID factories, callback dispatch,
+I/O adapters, permission policy, host tool execution, and journal normalization.
+
 ---
 
 ## §15 Model Discovery

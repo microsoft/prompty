@@ -27,6 +27,10 @@ use crate::model::pipeline::{
     event_sink::EventSink,
     host_tool_executor::HostToolExecutor,
     permission_resolver::PermissionResolver,
+    replay_journal_record::ReplayJournalRecord,
+    replay_mismatch::ReplayMismatch,
+    replay_verification_request::ReplayVerificationRequest,
+    replay_verification_result::{ReplayVerificationResult, ReplayVerificationStatus},
     run_turn_request::RunTurnRequest,
     run_turn_result::{RunTurnResult, RunTurnStatus},
     turn_model_request::TurnModelRequest,
@@ -166,6 +170,56 @@ impl EventJournalWriter for JsonlEventJournalWriter {
         *closed = true;
         wrote_summary
     }
+}
+
+/// Verifies normalized replay journal records.
+#[derive(Debug, Clone, Default)]
+pub struct ReferenceReplayVerifier;
+
+impl ReferenceReplayVerifier {
+    pub fn verify(&self, request: ReplayVerificationRequest) -> ReplayVerificationResult {
+        let expected = request.expected;
+        let actual = request.actual;
+        let max = expected.len().max(actual.len());
+        let mut mismatches = Vec::new();
+
+        for index in 0..max {
+            let expected_record = expected.get(index).cloned();
+            let actual_record = actual.get(index).cloned();
+            if comparable_replay_record(expected_record.as_ref())
+                != comparable_replay_record(actual_record.as_ref())
+            {
+                let message = if expected_record.is_none() {
+                    "Unexpected extra replay record"
+                } else if actual_record.is_none() {
+                    "Missing replay record"
+                } else {
+                    "Replay record mismatch"
+                };
+                mismatches.push(ReplayMismatch {
+                    index: index as i32,
+                    expected: expected_record,
+                    actual: actual_record,
+                    message: message.to_string(),
+                });
+            }
+        }
+
+        ReplayVerificationResult {
+            status: if mismatches.is_empty() {
+                ReplayVerificationStatus::Passed
+            } else {
+                ReplayVerificationStatus::Failed
+            },
+            expected_count: expected.len() as i32,
+            actual_count: actual.len() as i32,
+            mismatches,
+        }
+    }
+}
+
+fn comparable_replay_record(record: Option<&ReplayJournalRecord>) -> Option<String> {
+    record.map(|record| serde_json::to_string(&record.to_value(&SaveContext::new())).unwrap())
 }
 
 /// Stores checkpoints in memory by session and checkpoint identifier.

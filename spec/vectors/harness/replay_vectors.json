@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "description": "Deterministic normalized journal sequences for the reference turn runner.",
+  "clock": "2026-06-28T00:00:00Z",
+  "sessionId": "session-1",
+  "turnId": "turn-1",
+  "scenarios": [
+    {
+      "name": "no_tool",
+      "inputs": { "name": "Ada" },
+      "maxIterations": 3,
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:turn_end:1:success",
+        "session:session_end:session-1:turn-1:success",
+        "summary:session-1:success:turns=1:checkpoints=1"
+      ]
+    },
+    {
+      "name": "tool_success",
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:permission_requested:0:exec-1-permission",
+        "turn:permission_completed:0:true",
+        "turn:tool_execution_start:0:add",
+        "turn:tool_execution_complete:0:add:true",
+        "turn:tool_result:0:add:true",
+        "turn:messages_updated:0",
+        "turn:llm_start:1",
+        "turn:llm_complete:1",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:turn_end:2:success",
+        "session:session_end:session-1:turn-1:success",
+        "summary:session-1:success:turns=1:checkpoints=2"
+      ]
+    },
+    {
+      "name": "permission_denied",
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:permission_requested:0:exec-1-permission",
+        "turn:permission_completed:0:false",
+        "turn:messages_updated:0",
+        "turn:llm_start:1",
+        "turn:llm_complete:1",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:turn_end:2:success",
+        "session:session_end:session-1:turn-1:success",
+        "summary:session-1:success:turns=1:checkpoints=2"
+      ]
+    },
+    {
+      "name": "tool_failure",
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:permission_requested:0:exec-1-permission",
+        "turn:permission_completed:0:true",
+        "turn:tool_execution_start:0:fail",
+        "turn:tool_execution_complete:0:fail:false:exception",
+        "turn:tool_result:0:fail:false:exception",
+        "turn:messages_updated:0",
+        "turn:llm_start:1",
+        "turn:llm_complete:1",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:turn_end:2:success",
+        "session:session_end:session-1:turn-1:success",
+        "summary:session-1:success:turns=1:checkpoints=2"
+      ]
+    },
+    {
+      "name": "max_iterations",
+      "maxIterations": 1,
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:permission_requested:0:exec-1-permission",
+        "turn:permission_completed:0:true",
+        "turn:tool_execution_start:0:add",
+        "turn:tool_execution_complete:0:add:true",
+        "turn:tool_result:0:add:true",
+        "turn:messages_updated:0",
+        "turn:error:1:max_iterations",
+        "turn:turn_end:1:error",
+        "session:session_end:session-1:turn-1:error",
+        "summary:session-1:error:turns=1:checkpoints=1"
+      ]
+    }
+  ]
+}

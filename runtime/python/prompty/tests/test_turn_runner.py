@@ -36,6 +36,82 @@ def _records(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
+def _replay_vectors() -> dict[str, Any]:
+    path = Path(__file__).parents[4] / "spec" / "vectors" / "harness" / "replay_vectors.json"
+    vectors = json.loads(path.read_text(encoding="utf-8"))
+    assert vectors["version"] == 1
+    return vectors
+
+
+def _normalize_journal(records: list[dict[str, Any]]) -> list[str]:
+    normalized = []
+    for record in records:
+        if record["kind"] == "summary":
+            summary = record["summary"]
+            normalized.append(
+                f"summary:{summary['sessionId']}:{summary['status']}:"
+                f"turns={summary['turns']}:checkpoints={summary['checkpoints']}"
+            )
+            continue
+
+        event = record["event"]
+        if record["kind"] == "session":
+            if event["type"] == "session_end":
+                normalized.append(
+                    f"session:{event['type']}:{event['sessionId']}:{event['turnId']}:{event['payload']['status']}"
+                )
+            else:
+                normalized.append(f"session:{event['type']}:{event['sessionId']}:{event['turnId']}")
+            continue
+
+        payload = event.get("payload") or {}
+        match event["type"]:
+            case "permission_requested":
+                normalized.append(f"turn:{event['type']}:{event['iteration']}:{payload['requestId']}")
+            case "permission_completed":
+                normalized.append(f"turn:{event['type']}:{event['iteration']}:{str(payload['approved']).lower()}")
+            case "tool_execution_start":
+                normalized.append(f"turn:{event['type']}:{event['iteration']}:{payload['toolName']}")
+            case "tool_execution_complete" | "tool_result":
+                value = f"turn:{event['type']}:{event['iteration']}:{payload['toolName']}:{str(payload['success']).lower()}"
+                if payload.get("errorKind"):
+                    value = f"{value}:{payload['errorKind']}"
+                normalized.append(value)
+            case "error":
+                normalized.append(f"turn:{event['type']}:{event['iteration']}:{payload['errorKind']}")
+            case "turn_end":
+                normalized.append(f"turn:{event['type']}:{event['iteration']}:{payload['status']}")
+            case _:
+                normalized.append(f"turn:{event['type']}:{event['iteration']}")
+    return normalized
+
+
+def _model_for_scenario(name: str):
+    def invoke_model(request: TurnModelRequest) -> TurnModelResponse:
+        if name == "no_tool":
+            return TurnModelResponse(
+                output={"text": f"hello {request.inputs['name']}"},
+                checkpoint_state={"stable": True},
+            )
+        if request.iteration == 0:
+            tool_name = "fail" if name == "tool_failure" else "add"
+            return TurnModelResponse(
+                tool_requests=[
+                    HostToolRequest(
+                        request_id="exec-1",
+                        tool_call_id="call-1",
+                        tool_name=tool_name,
+                        arguments={"a": 2, "b": 3},
+                    )
+                ]
+            )
+        return TurnModelResponse(
+            output={"toolResult": request.tool_results[0].result, "errorKind": request.tool_results[0].error_kind}
+        )
+
+    return invoke_model
+
+
 @pytest.mark.asyncio
 async def test_turn_runner_emits_journals_and_checkpoints_in_order(tmp_path: Path) -> None:
     journal_path = tmp_path / "trace.jsonl"
@@ -217,3 +293,43 @@ async def test_turn_runner_produces_deterministic_replayable_records(tmp_path: P
         return _records(path)
 
     assert await run_once(tmp_path / "first.jsonl") == await run_once(tmp_path / "second.jsonl")
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_matches_shared_golden_replay_vectors(tmp_path: Path) -> None:
+    vectors = _replay_vectors()
+
+    for scenario in vectors["scenarios"]:
+        journal_path = tmp_path / f"{scenario['name']}.jsonl"
+
+        def fail(args: dict[str, Any], request: HostToolRequest) -> object:
+            raise RuntimeError("boom")
+
+        runner = ReferenceTurnRunner(
+            event_sink=CollectingEventSink(),
+            journal=JsonlEventJournalWriter(journal_path),
+            checkpoint_store=InMemoryCheckpointStore(),
+            permission_resolver=DenyAllPermissionResolver()
+            if scenario["name"] == "permission_denied"
+            else AllowAllPermissionResolver(),
+            host_tool_executor=FunctionHostToolExecutor(
+                {
+                    "add": lambda args, request: int(args["a"]) + int(args["b"]),
+                    "fail": fail,
+                }
+            ),
+            invoke_model=_model_for_scenario(scenario["name"]),
+            now=lambda: vectors["clock"],
+            next_id=_fixed_ids(),
+        )
+
+        await runner.run(
+            RunTurnRequest(
+                session_id=vectors["sessionId"],
+                turn_id=vectors["turnId"],
+                inputs=scenario.get("inputs"),
+                options=TurnOptions(max_iterations=scenario.get("maxIterations")),
+            )
+        )
+
+        assert _normalize_journal(_records(journal_path)) == scenario["expected"], scenario["name"]

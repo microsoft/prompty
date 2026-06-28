@@ -159,3 +159,111 @@ model RunTurnResult {
   @doc("Checkpoints created during the turn")
   checkpoints?: Checkpoint[] = #[];
 }
+
+/**
+ * Stable, replay-comparable projection of a journal record.
+ *
+ * Runtime journal records may carry additional payload fields, durations, telemetry,
+ * or provider-specific data. Replay verification compares this normalized shape so
+ * deterministic orchestration semantics are mechanically shared across runtimes.
+ */
+model ReplayJournalRecord {
+  @doc("Journal record kind")
+  kind: ReplayRecordKind;
+
+  @doc("Turn or session event type, when kind is not summary")
+  type?: string;
+
+  @doc("Stable harness session identifier")
+  sessionId?: string;
+
+  @doc("Stable turn identifier within the session")
+  turnId?: string;
+
+  @doc("Zero-based model loop iteration for turn records")
+  iteration?: int32;
+
+  @doc("Final semantic status for turn/session/summary records")
+  status?: ReplayRecordStatus;
+
+  @doc("Permission request identifier for permission request records")
+  requestId?: string;
+
+  @doc("Host tool name for tool execution/result records")
+  toolName?: string;
+
+  @doc("Whether a permission or host tool operation succeeded")
+  success?: boolean;
+
+  @doc("Stable error discriminator for failed records")
+  errorKind?: string;
+
+  @doc("Number of turns represented by a summary record")
+  turns?: int32;
+
+  @doc("Number of checkpoints represented by a summary record")
+  checkpoints?: int32;
+}
+
+/**
+ * Durable journal record kind.
+ */
+alias ReplayRecordKind = "session" | "turn" | "summary";
+
+/**
+ * Status values captured in normalized replay records.
+ *
+ * This mirrors RunTurnStatus but remains distinct so generators can emit stable,
+ * model-local enum names without collisions.
+ */
+alias ReplayRecordStatus = "success" | "error" | "cancelled";
+
+/**
+ * Request accepted by a replay verifier implementation.
+ */
+model ReplayVerificationRequest {
+  @doc("Expected normalized replay records")
+  expected: ReplayJournalRecord[] = #[];
+
+  @doc("Actual normalized replay records")
+  actual: ReplayJournalRecord[] = #[];
+}
+
+/**
+ * Final semantic status for replay verification.
+ */
+alias ReplayVerificationStatus = "passed" | "failed";
+
+/**
+ * A single mismatch produced by replay verification.
+ */
+model ReplayMismatch {
+  @doc("Zero-based record index where the mismatch was found")
+  index: int32;
+
+  @doc("Expected record at this index, when present")
+  expected?: ReplayJournalRecord;
+
+  @doc("Actual record at this index, when present")
+  actual?: ReplayJournalRecord;
+
+  @doc("Human-readable mismatch explanation")
+  message: string;
+}
+
+/**
+ * Result returned by a replay verifier implementation.
+ */
+model ReplayVerificationResult {
+  @doc("Replay verification status")
+  status: ReplayVerificationStatus;
+
+  @doc("Record mismatches, empty when verification passed")
+  mismatches?: ReplayMismatch[] = #[];
+
+  @doc("Number of expected records")
+  expectedCount: int32;
+
+  @doc("Number of actual records")
+  actualCount: int32;
+}

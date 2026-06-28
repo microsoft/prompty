@@ -38,6 +38,137 @@ func readJournalRecords(t *testing.T, path string) []map[string]interface{} {
 	return records
 }
 
+type replayVectors struct {
+	Version   int              `json:"version"`
+	Clock     string           `json:"clock"`
+	SessionId string           `json:"sessionId"`
+	TurnId    string           `json:"turnId"`
+	Scenarios []replayScenario `json:"scenarios"`
+}
+
+type replayScenario struct {
+	Name          string                 `json:"name"`
+	Inputs        map[string]interface{} `json:"inputs"`
+	MaxIterations *int32                 `json:"maxIterations"`
+	Expected      []string               `json:"expected"`
+}
+
+func loadReplayVectors(t *testing.T) replayVectors {
+	t.Helper()
+	path := filepath.Join("..", "..", "..", "..", "spec", "vectors", "harness", "replay_vectors.json")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var vectors replayVectors
+	if err := json.Unmarshal(content, &vectors); err != nil {
+		t.Fatal(err)
+	}
+	if vectors.Version != 1 {
+		t.Fatalf("unsupported replay vector version: %d", vectors.Version)
+	}
+	return vectors
+}
+
+func normalizeJournal(records []map[string]interface{}) []string {
+	normalized := []string{}
+	for _, record := range records {
+		if record["kind"] == "summary" {
+			summary := record["summary"].(map[string]interface{})
+			normalized = append(normalized, fmt.Sprintf(
+				"summary:%s:%s:turns=%v:checkpoints=%v",
+				summary["sessionId"],
+				summary["status"],
+				summary["turns"],
+				summary["checkpoints"],
+			))
+			continue
+		}
+
+		event := record["event"].(map[string]interface{})
+		eventType := event["type"].(string)
+		if record["kind"] == "session" {
+			if eventType == "session_end" {
+				payload := event["payload"].(map[string]interface{})
+				normalized = append(normalized, fmt.Sprintf(
+					"session:%s:%s:%s:%s",
+					eventType,
+					event["sessionId"],
+					event["turnId"],
+					payload["status"],
+				))
+			} else {
+				normalized = append(normalized, fmt.Sprintf("session:%s:%s:%s", eventType, event["sessionId"], event["turnId"]))
+			}
+			continue
+		}
+
+		payload := event["payload"].(map[string]interface{})
+		iteration := event["iteration"]
+		switch eventType {
+		case "permission_requested":
+			normalized = append(normalized, fmt.Sprintf("turn:%s:%v:%s", eventType, iteration, payload["requestId"]))
+		case "permission_completed":
+			normalized = append(normalized, fmt.Sprintf("turn:%s:%v:%v", eventType, iteration, payload["approved"]))
+		case "tool_execution_start":
+			normalized = append(normalized, fmt.Sprintf("turn:%s:%v:%s", eventType, iteration, payload["toolName"]))
+		case "tool_execution_complete", "tool_result":
+			value := fmt.Sprintf("turn:%s:%v:%s:%v", eventType, iteration, payload["toolName"], payload["success"])
+			if payload["errorKind"] != nil {
+				value = fmt.Sprintf("%s:%s", value, payload["errorKind"])
+			}
+			normalized = append(normalized, value)
+		case "error":
+			normalized = append(normalized, fmt.Sprintf("turn:%s:%v:%s", eventType, iteration, payload["errorKind"]))
+		case "turn_end":
+			normalized = append(normalized, fmt.Sprintf("turn:%s:%v:%s", eventType, iteration, payload["status"]))
+		default:
+			normalized = append(normalized, fmt.Sprintf("turn:%s:%v", eventType, iteration))
+		}
+	}
+	return normalized
+}
+
+func modelForScenario(name string) TurnModelCallback {
+	return func(request TurnModelRequest) (TurnModelResponse, error) {
+		if name == "no_tool" {
+			return TurnModelResponse{
+				Output:          outputPtr(map[string]interface{}{"text": "hello " + request.Inputs["name"].(string)}),
+				CheckpointState: map[string]interface{}{"stable": true},
+			}, nil
+		}
+		if request.Iteration == 0 {
+			requestId := "exec-1"
+			toolCallId := "call-1"
+			toolName := "add"
+			if name == "tool_failure" {
+				toolName = "fail"
+			}
+			return TurnModelResponse{ToolRequests: []HostToolRequest{{
+				RequestId:  &requestId,
+				ToolCallId: &toolCallId,
+				ToolName:   toolName,
+				Arguments:  map[string]interface{}{"a": 2, "b": 3},
+			}}}, nil
+		}
+		return TurnModelResponse{Output: outputPtr(map[string]interface{}{
+			"toolResult": *request.ToolResults[0].Result,
+			"errorKind":  request.ToolResults[0].ErrorKind,
+		})}, nil
+	}
+}
+
+func numberAsInt(value interface{}) int {
+	switch typed := value.(type) {
+	case int:
+		return typed
+	case float64:
+		return int(typed)
+	default:
+		return 0
+	}
+}
+
 func TestReferenceTurnRunnerEmitsJournalsAndCheckpoints(t *testing.T) {
 	journalPath := filepath.Join(t.TempDir(), "trace.jsonl")
 	journal, err := NewJsonlEventJournalWriter(journalPath)
@@ -105,7 +236,7 @@ func TestReferenceTurnRunnerExecutesHostTools(t *testing.T) {
 		PermissionResolver: AllowAllPermissionResolver{},
 		HostToolExecutor: FunctionHostToolExecutor{Handlers: map[string]HostToolHandler{
 			"add": func(arguments map[string]interface{}, request HostToolRequest) (interface{}, error) {
-				return arguments["a"].(int) + arguments["b"].(int), nil
+				return numberAsInt(arguments["a"]) + numberAsInt(arguments["b"]), nil
 			},
 		}},
 		InvokeModel: func(request TurnModelRequest) (TurnModelResponse, error) {
@@ -251,6 +382,56 @@ func TestReferenceTurnRunnerDeterministicJournal(t *testing.T) {
 	secondJSON, _ := json.Marshal(second)
 	if string(firstJSON) != string(secondJSON) {
 		t.Fatalf("journals differ:\n%s\n%s", firstJSON, secondJSON)
+	}
+}
+
+func TestReferenceTurnRunnerMatchesSharedGoldenReplayVectors(t *testing.T) {
+	vectors := loadReplayVectors(t)
+	for _, scenario := range vectors.Scenarios {
+		t.Run(scenario.Name, func(t *testing.T) {
+			journalPath := filepath.Join(t.TempDir(), "trace.jsonl")
+			journal, err := NewJsonlEventJournalWriter(journalPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			permissionResolver := PermissionResolver(AllowAllPermissionResolver{})
+			if scenario.Name == "permission_denied" {
+				permissionResolver = DenyAllPermissionResolver{}
+			}
+			runner := ReferenceTurnRunner{
+				EventSink:          &CollectingEventSink{},
+				Journal:            journal,
+				CheckpointStore:    NewInMemoryCheckpointStore(),
+				PermissionResolver: permissionResolver,
+				HostToolExecutor: FunctionHostToolExecutor{Handlers: map[string]HostToolHandler{
+					"add": func(arguments map[string]interface{}, request HostToolRequest) (interface{}, error) {
+						return numberAsInt(arguments["a"]) + numberAsInt(arguments["b"]), nil
+					},
+					"fail": func(arguments map[string]interface{}, request HostToolRequest) (interface{}, error) {
+						return nil, fmt.Errorf("boom")
+					},
+				}},
+				InvokeModel: modelForScenario(scenario.Name),
+				Now:         func() string { return vectors.Clock },
+				NextId:      fixedIds(),
+			}
+
+			_, err = runner.Run(RunTurnRequest{
+				SessionId: vectors.SessionId,
+				TurnId:    vectors.TurnId,
+				Inputs:    scenario.Inputs,
+				Options:   &TurnOptions{MaxIterations: scenario.MaxIterations},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			actual := strings.Join(normalizeJournal(readJournalRecords(t, journalPath)), "\n")
+			expected := strings.Join(scenario.Expected, "\n")
+			if actual != expected {
+				t.Fatalf("normalized journal mismatch:\nexpected:\n%s\nactual:\n%s", expected, actual)
+			}
+		})
 	}
 }
 

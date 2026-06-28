@@ -27,6 +27,18 @@ pub use run_turn_request::*;
 pub mod run_turn_result;
 pub use run_turn_result::*;
 
+pub mod replay_journal_record;
+pub use replay_journal_record::*;
+
+pub mod replay_verification_request;
+pub use replay_verification_request::*;
+
+pub mod replay_mismatch;
+pub use replay_mismatch::*;
+
+pub mod replay_verification_result;
+pub use replay_verification_result::*;
+
 pub mod renderer;
 pub use renderer::*;
 

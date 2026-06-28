@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Prompty.Core;
 
@@ -79,7 +81,7 @@ public sealed class JsonlEventJournalWriter : IEventJournalWriter
         return Write(new Dictionary<string, object?>
         {
             ["kind"] = "turn",
-            ["event"] = turnEvent.Save()
+            ["event"] = SaveEvent(turnEvent)
         });
     }
 
@@ -88,7 +90,7 @@ public sealed class JsonlEventJournalWriter : IEventJournalWriter
         return Write(new Dictionary<string, object?>
         {
             ["kind"] = "session",
-            ["event"] = sessionEvent.Save()
+            ["event"] = SaveEvent(sessionEvent)
         });
     }
 
@@ -120,6 +122,27 @@ public sealed class JsonlEventJournalWriter : IEventJournalWriter
             File.AppendAllText(_path, JsonSerializer.Serialize(record) + "\n");
             return true;
         }
+    }
+
+    private static Dictionary<string, object?> SaveEvent(TurnEvent turnEvent)
+    {
+        var saved = turnEvent.Save();
+        saved["type"] = JsonEnumName(turnEvent.Type);
+        return saved;
+    }
+
+    private static Dictionary<string, object?> SaveEvent(SessionEvent sessionEvent)
+    {
+        var saved = sessionEvent.Save();
+        saved["type"] = JsonEnumName(sessionEvent.Type);
+        return saved;
+    }
+
+    private static string JsonEnumName<TEnum>(TEnum value)
+        where TEnum : struct, Enum
+    {
+        var member = typeof(TEnum).GetMember(value.ToString()).SingleOrDefault();
+        return member?.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? value.ToString().ToLowerInvariant();
     }
 }
 

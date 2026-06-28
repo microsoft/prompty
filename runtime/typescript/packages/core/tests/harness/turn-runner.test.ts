@@ -24,6 +24,93 @@ function journalRecords(path: string): unknown[] {
   return readFileSync(path, "utf8").trim().split("\n").map((line) => JSON.parse(line));
 }
 
+type ReplayVector = {
+  version: number;
+  clock: string;
+  sessionId: string;
+  turnId: string;
+  scenarios: Array<{
+    name: string;
+    inputs?: Record<string, unknown>;
+    maxIterations?: number;
+    expected: string[];
+  }>;
+};
+
+function replayVectors(): ReplayVector {
+  const vectors = JSON.parse(
+    readFileSync(new URL("../../../../../../spec/vectors/harness/replay_vectors.json", import.meta.url), "utf8"),
+  );
+  if (vectors.version !== 1) {
+    throw new Error(`Unsupported replay vector version ${vectors.version}`);
+  }
+  return vectors;
+}
+
+function normalizeJournal(records: unknown[]): string[] {
+  return records.map((record: any) => {
+    if (record.kind === "summary") {
+      const summary = record.summary;
+      return `summary:${summary.sessionId}:${summary.status}:turns=${summary.turns}:checkpoints=${summary.checkpoints}`;
+    }
+
+    const event = record.event;
+    if (record.kind === "session") {
+      if (event.type === "session_end") {
+        return `session:${event.type}:${event.sessionId}:${event.turnId}:${event.payload.status}`;
+      }
+      return `session:${event.type}:${event.sessionId}:${event.turnId}`;
+    }
+
+    const payload = event.payload ?? {};
+    switch (event.type) {
+      case "permission_requested":
+        return `turn:${event.type}:${event.iteration}:${payload.requestId}`;
+      case "permission_completed":
+        return `turn:${event.type}:${event.iteration}:${payload.approved}`;
+      case "tool_execution_start":
+        return `turn:${event.type}:${event.iteration}:${payload.toolName}`;
+      case "tool_execution_complete":
+      case "tool_result":
+        return [
+          `turn:${event.type}:${event.iteration}:${payload.toolName}:${payload.success}`,
+          payload.errorKind,
+        ].filter(Boolean).join(":");
+      case "error":
+        return `turn:${event.type}:${event.iteration}:${payload.errorKind}`;
+      case "turn_end":
+        return `turn:${event.type}:${event.iteration}:${payload.status}`;
+      default:
+        return `turn:${event.type}:${event.iteration}`;
+    }
+  });
+}
+
+function modelForScenario(name: string): (request: any) => unknown {
+  return (request) => {
+    if (name === "no_tool") {
+      return {
+        output: { text: `hello ${request.inputs.name}` },
+        checkpointState: { stable: true },
+      };
+    }
+    if (request.iteration === 0) {
+      const toolName = name === "tool_failure" ? "fail" : "add";
+      return {
+        toolRequests: [
+          new HostToolRequest({
+            requestId: "exec-1",
+            toolCallId: "call-1",
+            toolName,
+            arguments: { a: 2, b: 3 },
+          }),
+        ],
+      };
+    }
+    return { output: { toolResult: request.toolResults[0]?.result, errorKind: request.toolResults[0]?.errorKind } };
+  };
+}
+
 describe("ReferenceTurnRunner", () => {
   it("emits, journals, and checkpoints a deterministic single turn in order", async () => {
     const dir = mkdtempSync(join(tmpdir(), "prompty-turn-"));
@@ -231,6 +318,45 @@ describe("ReferenceTurnRunner", () => {
       await expect(runOnce(join(dir, "first.jsonl"))).resolves.toEqual(await runOnce(join(dir, "second.jsonl")));
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("matches shared golden replay journal vectors", async () => {
+    const vectors = replayVectors();
+
+    for (const scenario of vectors.scenarios) {
+      const dir = mkdtempSync(join(tmpdir(), `prompty-replay-${scenario.name}-`));
+      try {
+        const runner = new ReferenceTurnRunner({
+          eventSink: new CollectingEventSink(),
+          journal: new JsonlEventJournalWriter(join(dir, "trace.jsonl")),
+          checkpointStore: new InMemoryCheckpointStore(),
+          permissionResolver:
+            scenario.name === "permission_denied"
+              ? new DenyAllPermissionResolver()
+              : new AllowAllPermissionResolver(),
+          hostToolExecutor: new FunctionHostToolExecutor({
+            add: (args) => Number(args.a) + Number(args.b),
+            fail: () => {
+              throw new Error("boom");
+            },
+          }),
+          invokeModel: modelForScenario(scenario.name),
+          now: () => vectors.clock,
+          nextId: fixedIds(),
+        });
+
+        await runner.run({
+          sessionId: vectors.sessionId,
+          turnId: vectors.turnId,
+          inputs: scenario.inputs,
+          options: new TurnOptions({ maxIterations: scenario.maxIterations }),
+        });
+
+        expect(normalizeJournal(journalRecords(join(dir, "trace.jsonl"))), scenario.name).toEqual(scenario.expected);
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
     }
   });
 });
