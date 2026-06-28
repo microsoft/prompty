@@ -79,6 +79,63 @@ sessionId: sess_abc123
 	}
 }
 
+// TestSessionTraceFromJSON tests loading SessionTrace through the generated JSON helper
+func TestSessionTraceFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "version": "1",
+  "runtime": "typescript",
+  "promptyVersion": "2.0.0",
+  "sessionId": "sess_abc123"
+}
+`
+
+	instance, err := prompty.SessionTraceFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionTrace from JSON helper: %v", err)
+	}
+	if instance.Version != "1" {
+		t.Errorf(`Expected Version to be "1", got %v`, instance.Version)
+	}
+	if instance.Runtime == nil || *instance.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, instance.Runtime)
+	}
+	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+}
+
+// TestSessionTraceFromYAML tests loading SessionTrace through the generated YAML helper
+func TestSessionTraceFromYAML(t *testing.T) {
+	yamlData := `
+version: "1"
+runtime: typescript
+promptyVersion: 2.0.0
+sessionId: sess_abc123
+
+`
+
+	instance, err := prompty.SessionTraceFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionTrace from YAML helper: %v", err)
+	}
+	if instance.Version != "1" {
+		t.Errorf(`Expected Version to be "1", got %v`, instance.Version)
+	}
+	if instance.Runtime == nil || *instance.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, instance.Runtime)
+	}
+	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+}
+
 // TestSessionTraceRoundtrip tests load -> save -> load produces equivalent data
 func TestSessionTraceRoundtrip(t *testing.T) {
 	jsonData := `
@@ -149,6 +206,23 @@ func TestSessionTraceToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadSessionTrace(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Version != "1" {
+		t.Errorf(`Expected Version to be "1", got %v`, reloaded.Version)
+	}
+	if reloaded.Runtime == nil || *reloaded.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, reloaded.Runtime)
+	}
+	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
 }
 
 // TestSessionTraceToYAML tests that ToYAML produces valid YAML
@@ -179,5 +253,29 @@ func TestSessionTraceToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadSessionTrace(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Version != "1" {
+		t.Errorf(`Expected Version to be "1", got %v`, reloaded.Version)
+	}
+	if reloaded.Runtime == nil || *reloaded.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, reloaded.Runtime)
+	}
+	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+}
+
+// TestSessionTraceFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestSessionTraceFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.SessionTraceFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

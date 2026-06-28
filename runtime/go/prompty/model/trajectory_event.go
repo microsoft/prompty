@@ -84,7 +84,7 @@ func LoadTrajectoryEvent(data interface{}, ctx *LoadContext) (TrajectoryEvent, e
 }
 
 // Save serializes TrajectoryEvent to map[string]interface{}
-func (obj *TrajectoryEvent) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TrajectoryEvent) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Id != nil {
 		result["id"] = *obj.Id
@@ -130,11 +130,7 @@ func (obj *TrajectoryEvent) ToJSON() (string, error) {
 func (obj *TrajectoryEvent) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TrajectoryEvent from JSON string

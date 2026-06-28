@@ -63,6 +63,47 @@ mediaType: application/pdf
 	}
 }
 
+// TestFilePartFromJSON tests loading FilePart through the generated JSON helper
+func TestFilePartFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "source": "https://example.com/document.pdf",
+  "mediaType": "application/pdf"
+}
+`
+
+	instance, err := prompty.FilePartFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load FilePart from JSON helper: %v", err)
+	}
+	if instance.Source != "https://example.com/document.pdf" {
+		t.Errorf(`Expected Source to be "https://example.com/document.pdf", got %v`, instance.Source)
+	}
+	if instance.MediaType == nil || *instance.MediaType != "application/pdf" {
+		t.Errorf(`Expected MediaType to be "application/pdf", got %v`, instance.MediaType)
+	}
+}
+
+// TestFilePartFromYAML tests loading FilePart through the generated YAML helper
+func TestFilePartFromYAML(t *testing.T) {
+	yamlData := `
+source: "https://example.com/document.pdf"
+mediaType: application/pdf
+
+`
+
+	instance, err := prompty.FilePartFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load FilePart from YAML helper: %v", err)
+	}
+	if instance.Source != "https://example.com/document.pdf" {
+		t.Errorf(`Expected Source to be "https://example.com/document.pdf", got %v`, instance.Source)
+	}
+	if instance.MediaType == nil || *instance.MediaType != "application/pdf" {
+		t.Errorf(`Expected MediaType to be "application/pdf", got %v`, instance.MediaType)
+	}
+}
+
 // TestFilePartRoundtrip tests load -> save -> load produces equivalent data
 func TestFilePartRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestFilePartToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadFilePart(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Source != "https://example.com/document.pdf" {
+		t.Errorf(`Expected Source to be "https://example.com/document.pdf", got %v`, reloaded.Source)
+	}
+	if reloaded.MediaType == nil || *reloaded.MediaType != "application/pdf" {
+		t.Errorf(`Expected MediaType to be "application/pdf", got %v`, reloaded.MediaType)
+	}
 }
 
 // TestFilePartToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestFilePartToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadFilePart(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Source != "https://example.com/document.pdf" {
+		t.Errorf(`Expected Source to be "https://example.com/document.pdf", got %v`, reloaded.Source)
+	}
+	if reloaded.MediaType == nil || *reloaded.MediaType != "application/pdf" {
+		t.Errorf(`Expected MediaType to be "application/pdf", got %v`, reloaded.MediaType)
+	}
+}
+
+// TestFilePartFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestFilePartFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.FilePartFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

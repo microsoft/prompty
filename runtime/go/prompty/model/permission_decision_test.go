@@ -87,6 +87,71 @@ reason: user_approved
 	}
 }
 
+// TestPermissionDecisionFromJSON tests loading PermissionDecision through the generated JSON helper
+func TestPermissionDecisionFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
+  "permission": "tool.execute",
+  "approved": true,
+  "reason": "user_approved"
+}
+`
+
+	instance, err := prompty.PermissionDecisionFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load PermissionDecision from JSON helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
+	}
+	if instance.Approved != true {
+		t.Errorf(`Expected Approved to be true, got %v`, instance.Approved)
+	}
+	if instance.Reason == nil || *instance.Reason != "user_approved" {
+		t.Errorf(`Expected Reason to be "user_approved", got %v`, instance.Reason)
+	}
+}
+
+// TestPermissionDecisionFromYAML tests loading PermissionDecision through the generated YAML helper
+func TestPermissionDecisionFromYAML(t *testing.T) {
+	yamlData := `
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+approved: true
+reason: user_approved
+
+`
+
+	instance, err := prompty.PermissionDecisionFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load PermissionDecision from YAML helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
+	}
+	if instance.Approved != true {
+		t.Errorf(`Expected Approved to be true, got %v`, instance.Approved)
+	}
+	if instance.Reason == nil || *instance.Reason != "user_approved" {
+		t.Errorf(`Expected Reason to be "user_approved", got %v`, instance.Reason)
+	}
+}
+
 // TestPermissionDecisionRoundtrip tests load -> save -> load produces equivalent data
 func TestPermissionDecisionRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestPermissionDecisionToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPermissionDecision(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, reloaded.Permission)
+	}
+	if reloaded.Approved != true {
+		t.Errorf(`Expected Approved to be true, got %v`, reloaded.Approved)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "user_approved" {
+		t.Errorf(`Expected Reason to be "user_approved", got %v`, reloaded.Reason)
+	}
 }
 
 // TestPermissionDecisionToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestPermissionDecisionToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPermissionDecision(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, reloaded.Permission)
+	}
+	if reloaded.Approved != true {
+		t.Errorf(`Expected Approved to be true, got %v`, reloaded.Approved)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "user_approved" {
+		t.Errorf(`Expected Reason to be "user_approved", got %v`, reloaded.Reason)
+	}
+}
+
+// TestPermissionDecisionFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestPermissionDecisionFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.PermissionDecisionFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

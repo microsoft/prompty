@@ -60,7 +60,7 @@ func LoadSessionRef(data interface{}, ctx *LoadContext) (SessionRef, error) {
 }
 
 // Save serializes SessionRef to map[string]interface{}
-func (obj *SessionRef) Save(ctx *SaveContext) map[string]interface{} {
+func (obj SessionRef) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.SessionId != nil {
 		result["sessionId"] = *obj.SessionId
@@ -92,11 +92,7 @@ func (obj *SessionRef) ToJSON() (string, error) {
 func (obj *SessionRef) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates SessionRef from JSON string

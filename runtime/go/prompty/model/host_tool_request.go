@@ -52,7 +52,7 @@ func LoadHostToolRequest(data interface{}, ctx *LoadContext) (HostToolRequest, e
 }
 
 // Save serializes HostToolRequest to map[string]interface{}
-func (obj *HostToolRequest) Save(ctx *SaveContext) map[string]interface{} {
+func (obj HostToolRequest) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.RequestId != nil {
 		result["requestId"] = *obj.RequestId
@@ -86,11 +86,7 @@ func (obj *HostToolRequest) ToJSON() (string, error) {
 func (obj *HostToolRequest) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates HostToolRequest from JSON string

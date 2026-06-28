@@ -63,6 +63,47 @@ input: input-variable
 	}
 }
 
+// TestBindingFromJSON tests loading Binding through the generated JSON helper
+func TestBindingFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "name": "my-tool",
+  "input": "input-variable"
+}
+`
+
+	instance, err := prompty.BindingFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Binding from JSON helper: %v", err)
+	}
+	if instance.Name != "my-tool" {
+		t.Errorf(`Expected Name to be "my-tool", got %v`, instance.Name)
+	}
+	if instance.Input != "input-variable" {
+		t.Errorf(`Expected Input to be "input-variable", got %v`, instance.Input)
+	}
+}
+
+// TestBindingFromYAML tests loading Binding through the generated YAML helper
+func TestBindingFromYAML(t *testing.T) {
+	yamlData := `
+name: my-tool
+input: input-variable
+
+`
+
+	instance, err := prompty.BindingFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Binding from YAML helper: %v", err)
+	}
+	if instance.Name != "my-tool" {
+		t.Errorf(`Expected Name to be "my-tool", got %v`, instance.Name)
+	}
+	if instance.Input != "input-variable" {
+		t.Errorf(`Expected Input to be "input-variable", got %v`, instance.Input)
+	}
+}
+
 // TestBindingRoundtrip tests load -> save -> load produces equivalent data
 func TestBindingRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestBindingToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadBinding(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "my-tool" {
+		t.Errorf(`Expected Name to be "my-tool", got %v`, reloaded.Name)
+	}
+	if reloaded.Input != "input-variable" {
+		t.Errorf(`Expected Input to be "input-variable", got %v`, reloaded.Input)
+	}
 }
 
 // TestBindingToYAML tests that ToYAML produces valid YAML
@@ -151,6 +203,24 @@ func TestBindingToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadBinding(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "my-tool" {
+		t.Errorf(`Expected Name to be "my-tool", got %v`, reloaded.Name)
+	}
+	if reloaded.Input != "input-variable" {
+		t.Errorf(`Expected Input to be "input-variable", got %v`, reloaded.Input)
+	}
+}
+
+// TestBindingFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestBindingFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.BindingFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }
 

@@ -71,6 +71,55 @@ durationMs: 820
 	}
 }
 
+// TestLlmCompletePayloadFromJSON tests loading LlmCompletePayload through the generated JSON helper
+func TestLlmCompletePayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "requestId": "req_abc123",
+  "serviceRequestId": "srv_abc123",
+  "durationMs": 820
+}
+`
+
+	instance, err := prompty.LlmCompletePayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load LlmCompletePayload from JSON helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "req_abc123" {
+		t.Errorf(`Expected RequestId to be "req_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ServiceRequestId == nil || *instance.ServiceRequestId != "srv_abc123" {
+		t.Errorf(`Expected ServiceRequestId to be "srv_abc123", got %v`, instance.ServiceRequestId)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 820 {
+		t.Errorf(`Expected DurationMs to be 820, got %v`, instance.DurationMs)
+	}
+}
+
+// TestLlmCompletePayloadFromYAML tests loading LlmCompletePayload through the generated YAML helper
+func TestLlmCompletePayloadFromYAML(t *testing.T) {
+	yamlData := `
+requestId: req_abc123
+serviceRequestId: srv_abc123
+durationMs: 820
+
+`
+
+	instance, err := prompty.LlmCompletePayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load LlmCompletePayload from YAML helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "req_abc123" {
+		t.Errorf(`Expected RequestId to be "req_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ServiceRequestId == nil || *instance.ServiceRequestId != "srv_abc123" {
+		t.Errorf(`Expected ServiceRequestId to be "srv_abc123", got %v`, instance.ServiceRequestId)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 820 {
+		t.Errorf(`Expected DurationMs to be 820, got %v`, instance.DurationMs)
+	}
+}
+
 // TestLlmCompletePayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestLlmCompletePayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestLlmCompletePayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadLlmCompletePayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "req_abc123" {
+		t.Errorf(`Expected RequestId to be "req_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ServiceRequestId == nil || *reloaded.ServiceRequestId != "srv_abc123" {
+		t.Errorf(`Expected ServiceRequestId to be "srv_abc123", got %v`, reloaded.ServiceRequestId)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 820 {
+		t.Errorf(`Expected DurationMs to be 820, got %v`, reloaded.DurationMs)
+	}
 }
 
 // TestLlmCompletePayloadToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestLlmCompletePayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadLlmCompletePayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "req_abc123" {
+		t.Errorf(`Expected RequestId to be "req_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ServiceRequestId == nil || *reloaded.ServiceRequestId != "srv_abc123" {
+		t.Errorf(`Expected ServiceRequestId to be "srv_abc123", got %v`, reloaded.ServiceRequestId)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 820 {
+		t.Errorf(`Expected DurationMs to be 820, got %v`, reloaded.DurationMs)
+	}
+}
+
+// TestLlmCompletePayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestLlmCompletePayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.LlmCompletePayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

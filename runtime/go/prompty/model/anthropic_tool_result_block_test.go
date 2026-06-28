@@ -63,6 +63,47 @@ content: 72°F and sunny in Paris
 	}
 }
 
+// TestAnthropicToolResultBlockFromJSON tests loading AnthropicToolResultBlock through the generated JSON helper
+func TestAnthropicToolResultBlockFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "tool_use_id": "toolu_01A09q90qw90lq917835lq9",
+  "content": "72°F and sunny in Paris"
+}
+`
+
+	instance, err := prompty.AnthropicToolResultBlockFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicToolResultBlock from JSON helper: %v", err)
+	}
+	if instance.ToolUseId != "toolu_01A09q90qw90lq917835lq9" {
+		t.Errorf(`Expected ToolUseId to be "toolu_01A09q90qw90lq917835lq9", got %v`, instance.ToolUseId)
+	}
+	if instance.Content != "72°F and sunny in Paris" {
+		t.Errorf(`Expected Content to be "72°F and sunny in Paris", got %v`, instance.Content)
+	}
+}
+
+// TestAnthropicToolResultBlockFromYAML tests loading AnthropicToolResultBlock through the generated YAML helper
+func TestAnthropicToolResultBlockFromYAML(t *testing.T) {
+	yamlData := `
+tool_use_id: toolu_01A09q90qw90lq917835lq9
+content: 72°F and sunny in Paris
+
+`
+
+	instance, err := prompty.AnthropicToolResultBlockFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicToolResultBlock from YAML helper: %v", err)
+	}
+	if instance.ToolUseId != "toolu_01A09q90qw90lq917835lq9" {
+		t.Errorf(`Expected ToolUseId to be "toolu_01A09q90qw90lq917835lq9", got %v`, instance.ToolUseId)
+	}
+	if instance.Content != "72°F and sunny in Paris" {
+		t.Errorf(`Expected Content to be "72°F and sunny in Paris", got %v`, instance.Content)
+	}
+}
+
 // TestAnthropicToolResultBlockRoundtrip tests load -> save -> load produces equivalent data
 func TestAnthropicToolResultBlockRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestAnthropicToolResultBlockToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAnthropicToolResultBlock(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.ToolUseId != "toolu_01A09q90qw90lq917835lq9" {
+		t.Errorf(`Expected ToolUseId to be "toolu_01A09q90qw90lq917835lq9", got %v`, reloaded.ToolUseId)
+	}
+	if reloaded.Content != "72°F and sunny in Paris" {
+		t.Errorf(`Expected Content to be "72°F and sunny in Paris", got %v`, reloaded.Content)
+	}
 }
 
 // TestAnthropicToolResultBlockToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestAnthropicToolResultBlockToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAnthropicToolResultBlock(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.ToolUseId != "toolu_01A09q90qw90lq917835lq9" {
+		t.Errorf(`Expected ToolUseId to be "toolu_01A09q90qw90lq917835lq9", got %v`, reloaded.ToolUseId)
+	}
+	if reloaded.Content != "72°F and sunny in Paris" {
+		t.Errorf(`Expected Content to be "72°F and sunny in Paris", got %v`, reloaded.Content)
+	}
+}
+
+// TestAnthropicToolResultBlockFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAnthropicToolResultBlockFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AnthropicToolResultBlockFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

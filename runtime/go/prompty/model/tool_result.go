@@ -86,7 +86,7 @@ func LoadToolResult(data interface{}, ctx *LoadContext) (ToolResult, error) {
 }
 
 // Save serializes ToolResult to map[string]interface{}
-func (obj *ToolResult) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ToolResult) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Parts != nil {
 		arr := make([]interface{}, len(obj.Parts))
@@ -134,11 +134,7 @@ func (obj *ToolResult) ToJSON() (string, error) {
 func (obj *ToolResult) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ToolResult from JSON string

@@ -55,6 +55,39 @@ message: Rate limit exceeded
 	}
 }
 
+// TestErrorChunkFromJSON tests loading ErrorChunk through the generated JSON helper
+func TestErrorChunkFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "message": "Rate limit exceeded"
+}
+`
+
+	instance, err := prompty.ErrorChunkFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ErrorChunk from JSON helper: %v", err)
+	}
+	if instance.Message != "Rate limit exceeded" {
+		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, instance.Message)
+	}
+}
+
+// TestErrorChunkFromYAML tests loading ErrorChunk through the generated YAML helper
+func TestErrorChunkFromYAML(t *testing.T) {
+	yamlData := `
+message: Rate limit exceeded
+
+`
+
+	instance, err := prompty.ErrorChunkFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ErrorChunk from YAML helper: %v", err)
+	}
+	if instance.Message != "Rate limit exceeded" {
+		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, instance.Message)
+	}
+}
+
 // TestErrorChunkRoundtrip tests load -> save -> load produces equivalent data
 func TestErrorChunkRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestErrorChunkToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadErrorChunk(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Message != "Rate limit exceeded" {
+		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, reloaded.Message)
+	}
 }
 
 // TestErrorChunkToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestErrorChunkToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadErrorChunk(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Message != "Rate limit exceeded" {
+		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, reloaded.Message)
+	}
+}
+
+// TestErrorChunkFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestErrorChunkFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ErrorChunkFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

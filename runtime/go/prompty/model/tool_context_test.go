@@ -32,6 +32,12 @@ func TestToolContextLoadJSON(t *testing.T) {
 		t.Fatalf("Failed to load ToolContext: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := instance.Metadata["userId"]; got != "user-123" {
+		t.Errorf(`Expected Metadata["userId"] to be "user-123", got %v`, got)
+	}
 }
 
 // TestToolContextLoadYAML tests loading ToolContext from YAML
@@ -52,6 +58,56 @@ metadata:
 		t.Fatalf("Failed to load ToolContext: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := instance.Metadata["userId"]; got != "user-123" {
+		t.Errorf(`Expected Metadata["userId"] to be "user-123", got %v`, got)
+	}
+}
+
+// TestToolContextFromJSON tests loading ToolContext through the generated JSON helper
+func TestToolContextFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "metadata": {
+    "userId": "user-123"
+  }
+}
+`
+
+	instance, err := prompty.ToolContextFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolContext from JSON helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := instance.Metadata["userId"]; got != "user-123" {
+		t.Errorf(`Expected Metadata["userId"] to be "user-123", got %v`, got)
+	}
+}
+
+// TestToolContextFromYAML tests loading ToolContext through the generated YAML helper
+func TestToolContextFromYAML(t *testing.T) {
+	yamlData := `
+metadata:
+  userId: user-123
+
+`
+
+	instance, err := prompty.ToolContextFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolContext from YAML helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := instance.Metadata["userId"]; got != "user-123" {
+		t.Errorf(`Expected Metadata["userId"] to be "user-123", got %v`, got)
+	}
 }
 
 // TestToolContextRoundtrip tests load -> save -> load produces equivalent data
@@ -81,6 +137,12 @@ func TestToolContextRoundtrip(t *testing.T) {
 		t.Fatalf("Failed to reload ToolContext: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := reloaded.Metadata["userId"]; got != "user-123" {
+		t.Errorf(`Expected Metadata["userId"] to be "user-123", got %v`, got)
+	}
 }
 
 // TestToolContextToJSON tests that ToJSON produces valid JSON
@@ -111,6 +173,18 @@ func TestToolContextToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadToolContext(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := reloaded.Metadata["userId"]; got != "user-123" {
+		t.Errorf(`Expected Metadata["userId"] to be "user-123", got %v`, got)
+	}
 }
 
 // TestToolContextToYAML tests that ToYAML produces valid YAML
@@ -140,5 +214,24 @@ func TestToolContextToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadToolContext(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := reloaded.Metadata["userId"]; got != "user-123" {
+		t.Errorf(`Expected Metadata["userId"] to be "user-123", got %v`, got)
+	}
+}
+
+// TestToolContextFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolContextFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolContextFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

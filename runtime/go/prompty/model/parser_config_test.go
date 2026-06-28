@@ -60,6 +60,44 @@ options:
 	// Note: Validation skipped for polymorphic base types - test child types directly
 }
 
+// TestParserConfigFromJSON tests loading ParserConfig through the generated JSON helper
+func TestParserConfigFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "prompty",
+  "options": {
+    "key": "value"
+  }
+}
+`
+
+	instance, err := prompty.ParserConfigFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ParserConfig from JSON helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
+// TestParserConfigFromYAML tests loading ParserConfig through the generated YAML helper
+func TestParserConfigFromYAML(t *testing.T) {
+	yamlData := `
+kind: prompty
+options:
+  key: value
+
+`
+
+	instance, err := prompty.ParserConfigFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ParserConfig from YAML helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
 // TestParserConfigRoundtrip tests load -> save -> load produces equivalent data
 func TestParserConfigRoundtrip(t *testing.T) {
 	jsonData := `
@@ -133,6 +171,13 @@ func TestParserConfigToYAML(t *testing.T) {
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly
+}
+
+// TestParserConfigFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestParserConfigFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ParserConfigFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
+	}
 }
 
 // TestParserConfigFromParser tests loading ParserConfig from string

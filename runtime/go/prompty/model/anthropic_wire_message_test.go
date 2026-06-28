@@ -55,6 +55,39 @@ role: user
 	}
 }
 
+// TestAnthropicWireMessageFromJSON tests loading AnthropicWireMessage through the generated JSON helper
+func TestAnthropicWireMessageFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "role": "user"
+}
+`
+
+	instance, err := prompty.AnthropicWireMessageFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicWireMessage from JSON helper: %v", err)
+	}
+	if instance.Role != "user" {
+		t.Errorf(`Expected Role to be "user", got %v`, instance.Role)
+	}
+}
+
+// TestAnthropicWireMessageFromYAML tests loading AnthropicWireMessage through the generated YAML helper
+func TestAnthropicWireMessageFromYAML(t *testing.T) {
+	yamlData := `
+role: user
+
+`
+
+	instance, err := prompty.AnthropicWireMessageFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicWireMessage from YAML helper: %v", err)
+	}
+	if instance.Role != "user" {
+		t.Errorf(`Expected Role to be "user", got %v`, instance.Role)
+	}
+}
+
 // TestAnthropicWireMessageRoundtrip tests load -> save -> load produces equivalent data
 func TestAnthropicWireMessageRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestAnthropicWireMessageToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAnthropicWireMessage(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Role != "user" {
+		t.Errorf(`Expected Role to be "user", got %v`, reloaded.Role)
+	}
 }
 
 // TestAnthropicWireMessageToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestAnthropicWireMessageToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAnthropicWireMessage(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Role != "user" {
+		t.Errorf(`Expected Role to be "user", got %v`, reloaded.Role)
+	}
+}
+
+// TestAnthropicWireMessageFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAnthropicWireMessageFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AnthropicWireMessageFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

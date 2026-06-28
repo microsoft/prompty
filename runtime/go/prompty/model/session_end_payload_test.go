@@ -79,6 +79,63 @@ durationMs: 12500
 	}
 }
 
+// TestSessionEndPayloadFromJSON tests loading SessionEndPayload through the generated JSON helper
+func TestSessionEndPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "sessionId": "sess_abc123",
+  "status": "success",
+  "reason": "complete",
+  "durationMs": 12500
+}
+`
+
+	instance, err := prompty.SessionEndPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionEndPayload from JSON helper: %v", err)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.Status == nil || *instance.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, instance.Status)
+	}
+	if instance.Reason == nil || *instance.Reason != "complete" {
+		t.Errorf(`Expected Reason to be "complete", got %v`, instance.Reason)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 12500 {
+		t.Errorf(`Expected DurationMs to be 12500, got %v`, instance.DurationMs)
+	}
+}
+
+// TestSessionEndPayloadFromYAML tests loading SessionEndPayload through the generated YAML helper
+func TestSessionEndPayloadFromYAML(t *testing.T) {
+	yamlData := `
+sessionId: sess_abc123
+status: success
+reason: complete
+durationMs: 12500
+
+`
+
+	instance, err := prompty.SessionEndPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionEndPayload from YAML helper: %v", err)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.Status == nil || *instance.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, instance.Status)
+	}
+	if instance.Reason == nil || *instance.Reason != "complete" {
+		t.Errorf(`Expected Reason to be "complete", got %v`, instance.Reason)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 12500 {
+		t.Errorf(`Expected DurationMs to be 12500, got %v`, instance.DurationMs)
+	}
+}
+
 // TestSessionEndPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestSessionEndPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -149,6 +206,23 @@ func TestSessionEndPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadSessionEndPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.Status == nil || *reloaded.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, reloaded.Status)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "complete" {
+		t.Errorf(`Expected Reason to be "complete", got %v`, reloaded.Reason)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 12500 {
+		t.Errorf(`Expected DurationMs to be 12500, got %v`, reloaded.DurationMs)
+	}
 }
 
 // TestSessionEndPayloadToYAML tests that ToYAML produces valid YAML
@@ -179,5 +253,29 @@ func TestSessionEndPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadSessionEndPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.Status == nil || *reloaded.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, reloaded.Status)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "complete" {
+		t.Errorf(`Expected Reason to be "complete", got %v`, reloaded.Reason)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 12500 {
+		t.Errorf(`Expected DurationMs to be 12500, got %v`, reloaded.DurationMs)
+	}
+}
+
+// TestSessionEndPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestSessionEndPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.SessionEndPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

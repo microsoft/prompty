@@ -33,7 +33,7 @@ func LoadStreamOptions(data interface{}, ctx *LoadContext) (StreamOptions, error
 }
 
 // Save serializes StreamOptions to map[string]interface{}
-func (obj *StreamOptions) Save(ctx *SaveContext) map[string]interface{} {
+func (obj StreamOptions) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.IncludeUsage != nil {
 		result["includeUsage"] = *obj.IncludeUsage
@@ -57,11 +57,7 @@ func (obj *StreamOptions) ToJSON() (string, error) {
 func (obj *StreamOptions) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates StreamOptions from JSON string

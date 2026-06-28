@@ -67,6 +67,51 @@ result:
 	}
 }
 
+// TestToolResultPayloadFromJSON tests loading ToolResultPayload through the generated JSON helper
+func TestToolResultPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "name": "get_weather",
+  "result": {
+    "parts": [
+      {
+        "kind": "text",
+        "value": "72°F and sunny"
+      }
+    ]
+  }
+}
+`
+
+	instance, err := prompty.ToolResultPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolResultPayload from JSON helper: %v", err)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+}
+
+// TestToolResultPayloadFromYAML tests loading ToolResultPayload through the generated YAML helper
+func TestToolResultPayloadFromYAML(t *testing.T) {
+	yamlData := `
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+
+`
+
+	instance, err := prompty.ToolResultPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolResultPayload from YAML helper: %v", err)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+}
+
 // TestToolResultPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestToolResultPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -138,6 +183,14 @@ func TestToolResultPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadToolResultPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
 }
 
 // TestToolResultPayloadToYAML tests that ToYAML produces valid YAML
@@ -173,5 +226,20 @@ func TestToolResultPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadToolResultPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
+}
+
+// TestToolResultPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolResultPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolResultPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

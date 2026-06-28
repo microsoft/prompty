@@ -63,6 +63,47 @@ maxIterations: 10
 	}
 }
 
+// TestTurnStartPayloadFromJSON tests loading TurnStartPayload through the generated JSON helper
+func TestTurnStartPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "agent": "weather-agent",
+  "maxIterations": 10
+}
+`
+
+	instance, err := prompty.TurnStartPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TurnStartPayload from JSON helper: %v", err)
+	}
+	if instance.Agent == nil || *instance.Agent != "weather-agent" {
+		t.Errorf(`Expected Agent to be "weather-agent", got %v`, instance.Agent)
+	}
+	if instance.MaxIterations == nil || *instance.MaxIterations != 10 {
+		t.Errorf(`Expected MaxIterations to be 10, got %v`, instance.MaxIterations)
+	}
+}
+
+// TestTurnStartPayloadFromYAML tests loading TurnStartPayload through the generated YAML helper
+func TestTurnStartPayloadFromYAML(t *testing.T) {
+	yamlData := `
+agent: weather-agent
+maxIterations: 10
+
+`
+
+	instance, err := prompty.TurnStartPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TurnStartPayload from YAML helper: %v", err)
+	}
+	if instance.Agent == nil || *instance.Agent != "weather-agent" {
+		t.Errorf(`Expected Agent to be "weather-agent", got %v`, instance.Agent)
+	}
+	if instance.MaxIterations == nil || *instance.MaxIterations != 10 {
+		t.Errorf(`Expected MaxIterations to be 10, got %v`, instance.MaxIterations)
+	}
+}
+
 // TestTurnStartPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestTurnStartPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestTurnStartPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTurnStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Agent == nil || *reloaded.Agent != "weather-agent" {
+		t.Errorf(`Expected Agent to be "weather-agent", got %v`, reloaded.Agent)
+	}
+	if reloaded.MaxIterations == nil || *reloaded.MaxIterations != 10 {
+		t.Errorf(`Expected MaxIterations to be 10, got %v`, reloaded.MaxIterations)
+	}
 }
 
 // TestTurnStartPayloadToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestTurnStartPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTurnStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Agent == nil || *reloaded.Agent != "weather-agent" {
+		t.Errorf(`Expected Agent to be "weather-agent", got %v`, reloaded.Agent)
+	}
+	if reloaded.MaxIterations == nil || *reloaded.MaxIterations != 10 {
+		t.Errorf(`Expected MaxIterations to be 10, got %v`, reloaded.MaxIterations)
+	}
+}
+
+// TestTurnStartPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTurnStartPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TurnStartPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

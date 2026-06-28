@@ -56,7 +56,7 @@ func LoadPermissionDecision(data interface{}, ctx *LoadContext) (PermissionDecis
 }
 
 // Save serializes PermissionDecision to map[string]interface{}
-func (obj *PermissionDecision) Save(ctx *SaveContext) map[string]interface{} {
+func (obj PermissionDecision) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.RequestId != nil {
 		result["requestId"] = *obj.RequestId
@@ -91,11 +91,7 @@ func (obj *PermissionDecision) ToJSON() (string, error) {
 func (obj *PermissionDecision) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates PermissionDecision from JSON string

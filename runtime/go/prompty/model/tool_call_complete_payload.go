@@ -69,7 +69,7 @@ func LoadToolCallCompletePayload(data interface{}, ctx *LoadContext) (ToolCallCo
 }
 
 // Save serializes ToolCallCompletePayload to map[string]interface{}
-func (obj *ToolCallCompletePayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ToolCallCompletePayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Id != nil {
 		result["id"] = *obj.Id
@@ -104,11 +104,7 @@ func (obj *ToolCallCompletePayload) ToJSON() (string, error) {
 func (obj *ToolCallCompletePayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ToolCallCompletePayload from JSON string

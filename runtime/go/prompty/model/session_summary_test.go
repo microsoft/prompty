@@ -87,6 +87,71 @@ durationMs: 12500
 	}
 }
 
+// TestSessionSummaryFromJSON tests loading SessionSummary through the generated JSON helper
+func TestSessionSummaryFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "sessionId": "sess_abc123",
+  "status": "success",
+  "turns": 5,
+  "checkpoints": 2,
+  "durationMs": 12500
+}
+`
+
+	instance, err := prompty.SessionSummaryFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionSummary from JSON helper: %v", err)
+	}
+	if instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.Status == nil || *instance.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, instance.Status)
+	}
+	if instance.Turns == nil || *instance.Turns != 5 {
+		t.Errorf(`Expected Turns to be 5, got %v`, instance.Turns)
+	}
+	if instance.Checkpoints == nil || *instance.Checkpoints != 2 {
+		t.Errorf(`Expected Checkpoints to be 2, got %v`, instance.Checkpoints)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 12500 {
+		t.Errorf(`Expected DurationMs to be 12500, got %v`, instance.DurationMs)
+	}
+}
+
+// TestSessionSummaryFromYAML tests loading SessionSummary through the generated YAML helper
+func TestSessionSummaryFromYAML(t *testing.T) {
+	yamlData := `
+sessionId: sess_abc123
+status: success
+turns: 5
+checkpoints: 2
+durationMs: 12500
+
+`
+
+	instance, err := prompty.SessionSummaryFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionSummary from YAML helper: %v", err)
+	}
+	if instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.Status == nil || *instance.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, instance.Status)
+	}
+	if instance.Turns == nil || *instance.Turns != 5 {
+		t.Errorf(`Expected Turns to be 5, got %v`, instance.Turns)
+	}
+	if instance.Checkpoints == nil || *instance.Checkpoints != 2 {
+		t.Errorf(`Expected Checkpoints to be 2, got %v`, instance.Checkpoints)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 12500 {
+		t.Errorf(`Expected DurationMs to be 12500, got %v`, instance.DurationMs)
+	}
+}
+
 // TestSessionSummaryRoundtrip tests load -> save -> load produces equivalent data
 func TestSessionSummaryRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestSessionSummaryToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadSessionSummary(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.Status == nil || *reloaded.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, reloaded.Status)
+	}
+	if reloaded.Turns == nil || *reloaded.Turns != 5 {
+		t.Errorf(`Expected Turns to be 5, got %v`, reloaded.Turns)
+	}
+	if reloaded.Checkpoints == nil || *reloaded.Checkpoints != 2 {
+		t.Errorf(`Expected Checkpoints to be 2, got %v`, reloaded.Checkpoints)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 12500 {
+		t.Errorf(`Expected DurationMs to be 12500, got %v`, reloaded.DurationMs)
+	}
 }
 
 // TestSessionSummaryToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestSessionSummaryToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadSessionSummary(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.Status == nil || *reloaded.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, reloaded.Status)
+	}
+	if reloaded.Turns == nil || *reloaded.Turns != 5 {
+		t.Errorf(`Expected Turns to be 5, got %v`, reloaded.Turns)
+	}
+	if reloaded.Checkpoints == nil || *reloaded.Checkpoints != 2 {
+		t.Errorf(`Expected Checkpoints to be 2, got %v`, reloaded.Checkpoints)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 12500 {
+		t.Errorf(`Expected DurationMs to be 12500, got %v`, reloaded.DurationMs)
+	}
+}
+
+// TestSessionSummaryFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestSessionSummaryFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.SessionSummaryFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

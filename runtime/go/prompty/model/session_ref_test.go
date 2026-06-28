@@ -87,6 +87,71 @@ createdAt: "2026-06-09T20:00:00Z"
 	}
 }
 
+// TestSessionRefFromJSON tests loading SessionRef through the generated JSON helper
+func TestSessionRefFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "sessionId": "sess_abc123",
+  "refType": "issue",
+  "refValue": "owner/repo#123",
+  "turnIndex": 2,
+  "createdAt": "2026-06-09T20:00:00Z"
+}
+`
+
+	instance, err := prompty.SessionRefFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionRef from JSON helper: %v", err)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.RefType != "issue" {
+		t.Errorf(`Expected RefType to be "issue", got %v`, instance.RefType)
+	}
+	if instance.RefValue != "owner/repo#123" {
+		t.Errorf(`Expected RefValue to be "owner/repo#123", got %v`, instance.RefValue)
+	}
+	if instance.TurnIndex == nil || *instance.TurnIndex != 2 {
+		t.Errorf(`Expected TurnIndex to be 2, got %v`, instance.TurnIndex)
+	}
+	if instance.CreatedAt == nil || *instance.CreatedAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, instance.CreatedAt)
+	}
+}
+
+// TestSessionRefFromYAML tests loading SessionRef through the generated YAML helper
+func TestSessionRefFromYAML(t *testing.T) {
+	yamlData := `
+sessionId: sess_abc123
+refType: issue
+refValue: "owner/repo#123"
+turnIndex: 2
+createdAt: "2026-06-09T20:00:00Z"
+
+`
+
+	instance, err := prompty.SessionRefFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionRef from YAML helper: %v", err)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.RefType != "issue" {
+		t.Errorf(`Expected RefType to be "issue", got %v`, instance.RefType)
+	}
+	if instance.RefValue != "owner/repo#123" {
+		t.Errorf(`Expected RefValue to be "owner/repo#123", got %v`, instance.RefValue)
+	}
+	if instance.TurnIndex == nil || *instance.TurnIndex != 2 {
+		t.Errorf(`Expected TurnIndex to be 2, got %v`, instance.TurnIndex)
+	}
+	if instance.CreatedAt == nil || *instance.CreatedAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, instance.CreatedAt)
+	}
+}
+
 // TestSessionRefRoundtrip tests load -> save -> load produces equivalent data
 func TestSessionRefRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestSessionRefToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadSessionRef(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.RefType != "issue" {
+		t.Errorf(`Expected RefType to be "issue", got %v`, reloaded.RefType)
+	}
+	if reloaded.RefValue != "owner/repo#123" {
+		t.Errorf(`Expected RefValue to be "owner/repo#123", got %v`, reloaded.RefValue)
+	}
+	if reloaded.TurnIndex == nil || *reloaded.TurnIndex != 2 {
+		t.Errorf(`Expected TurnIndex to be 2, got %v`, reloaded.TurnIndex)
+	}
+	if reloaded.CreatedAt == nil || *reloaded.CreatedAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.CreatedAt)
+	}
 }
 
 // TestSessionRefToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestSessionRefToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadSessionRef(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.RefType != "issue" {
+		t.Errorf(`Expected RefType to be "issue", got %v`, reloaded.RefType)
+	}
+	if reloaded.RefValue != "owner/repo#123" {
+		t.Errorf(`Expected RefValue to be "owner/repo#123", got %v`, reloaded.RefValue)
+	}
+	if reloaded.TurnIndex == nil || *reloaded.TurnIndex != 2 {
+		t.Errorf(`Expected TurnIndex to be 2, got %v`, reloaded.TurnIndex)
+	}
+	if reloaded.CreatedAt == nil || *reloaded.CreatedAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.CreatedAt)
+	}
+}
+
+// TestSessionRefFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestSessionRefFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.SessionRefFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

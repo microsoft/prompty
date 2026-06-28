@@ -63,6 +63,47 @@ policy: default-v1
 	}
 }
 
+// TestRedactionMetadataFromJSON tests loading RedactionMetadata through the generated JSON helper
+func TestRedactionMetadataFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "sanitized": true,
+  "policy": "default-v1"
+}
+`
+
+	instance, err := prompty.RedactionMetadataFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load RedactionMetadata from JSON helper: %v", err)
+	}
+	if instance.Sanitized == nil || *instance.Sanitized != true {
+		t.Errorf(`Expected Sanitized to be true, got %v`, instance.Sanitized)
+	}
+	if instance.Policy == nil || *instance.Policy != "default-v1" {
+		t.Errorf(`Expected Policy to be "default-v1", got %v`, instance.Policy)
+	}
+}
+
+// TestRedactionMetadataFromYAML tests loading RedactionMetadata through the generated YAML helper
+func TestRedactionMetadataFromYAML(t *testing.T) {
+	yamlData := `
+sanitized: true
+policy: default-v1
+
+`
+
+	instance, err := prompty.RedactionMetadataFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load RedactionMetadata from YAML helper: %v", err)
+	}
+	if instance.Sanitized == nil || *instance.Sanitized != true {
+		t.Errorf(`Expected Sanitized to be true, got %v`, instance.Sanitized)
+	}
+	if instance.Policy == nil || *instance.Policy != "default-v1" {
+		t.Errorf(`Expected Policy to be "default-v1", got %v`, instance.Policy)
+	}
+}
+
 // TestRedactionMetadataRoundtrip tests load -> save -> load produces equivalent data
 func TestRedactionMetadataRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestRedactionMetadataToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadRedactionMetadata(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Sanitized == nil || *reloaded.Sanitized != true {
+		t.Errorf(`Expected Sanitized to be true, got %v`, reloaded.Sanitized)
+	}
+	if reloaded.Policy == nil || *reloaded.Policy != "default-v1" {
+		t.Errorf(`Expected Policy to be "default-v1", got %v`, reloaded.Policy)
+	}
 }
 
 // TestRedactionMetadataToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestRedactionMetadataToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadRedactionMetadata(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Sanitized == nil || *reloaded.Sanitized != true {
+		t.Errorf(`Expected Sanitized to be true, got %v`, reloaded.Sanitized)
+	}
+	if reloaded.Policy == nil || *reloaded.Policy != "default-v1" {
+		t.Errorf(`Expected Policy to be "default-v1", got %v`, reloaded.Policy)
+	}
+}
+
+// TestRedactionMetadataFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestRedactionMetadataFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.RedactionMetadataFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

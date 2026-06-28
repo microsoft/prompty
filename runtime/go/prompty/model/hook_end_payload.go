@@ -87,7 +87,7 @@ func LoadHookEndPayload(data interface{}, ctx *LoadContext) (HookEndPayload, err
 }
 
 // Save serializes HookEndPayload to map[string]interface{}
-func (obj *HookEndPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj HookEndPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["hookInvocationId"] = obj.HookInvocationId
 	result["hookType"] = obj.HookType
@@ -126,11 +126,7 @@ func (obj *HookEndPayload) ToJSON() (string, error) {
 func (obj *HookEndPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates HookEndPayload from JSON string

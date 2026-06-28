@@ -36,7 +36,7 @@ func LoadFileNotFoundError(data interface{}, ctx *LoadContext) (FileNotFoundErro
 }
 
 // Save serializes FileNotFoundError to map[string]interface{}
-func (obj *FileNotFoundError) Save(ctx *SaveContext) map[string]interface{} {
+func (obj FileNotFoundError) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["message"] = obj.Message
 	result["path"] = obj.Path
@@ -59,11 +59,7 @@ func (obj *FileNotFoundError) ToJSON() (string, error) {
 func (obj *FileNotFoundError) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates FileNotFoundError from JSON string

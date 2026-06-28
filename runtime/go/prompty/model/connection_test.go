@@ -59,6 +59,43 @@ usageDescription: This will allow the agent to respond to an email on your behal
 	// Note: Validation skipped for polymorphic base types - test child types directly
 }
 
+// TestConnectionFromJSON tests loading Connection through the generated JSON helper
+func TestConnectionFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "reference",
+  "authenticationMode": "system",
+  "usageDescription": "This will allow the agent to respond to an email on your behalf"
+}
+`
+
+	instance, err := prompty.ConnectionFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Connection from JSON helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
+// TestConnectionFromYAML tests loading Connection through the generated YAML helper
+func TestConnectionFromYAML(t *testing.T) {
+	yamlData := `
+kind: reference
+authenticationMode: system
+usageDescription: This will allow the agent to respond to an email on your behalf
+
+`
+
+	instance, err := prompty.ConnectionFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Connection from YAML helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
 // TestConnectionRoundtrip tests load -> save -> load produces equivalent data
 func TestConnectionRoundtrip(t *testing.T) {
 	jsonData := `
@@ -129,4 +166,11 @@ func TestConnectionToYAML(t *testing.T) {
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly
+}
+
+// TestConnectionFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestConnectionFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ConnectionFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
+	}
 }

@@ -63,6 +63,47 @@ removed: 2
 	}
 }
 
+// TestMessagesUpdatedPayloadFromJSON tests loading MessagesUpdatedPayload through the generated JSON helper
+func TestMessagesUpdatedPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "reason": "tool_results",
+  "removed": 2
+}
+`
+
+	instance, err := prompty.MessagesUpdatedPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load MessagesUpdatedPayload from JSON helper: %v", err)
+	}
+	if instance.Reason == nil || *instance.Reason != "tool_results" {
+		t.Errorf(`Expected Reason to be "tool_results", got %v`, instance.Reason)
+	}
+	if instance.Removed == nil || *instance.Removed != 2 {
+		t.Errorf(`Expected Removed to be 2, got %v`, instance.Removed)
+	}
+}
+
+// TestMessagesUpdatedPayloadFromYAML tests loading MessagesUpdatedPayload through the generated YAML helper
+func TestMessagesUpdatedPayloadFromYAML(t *testing.T) {
+	yamlData := `
+reason: tool_results
+removed: 2
+
+`
+
+	instance, err := prompty.MessagesUpdatedPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load MessagesUpdatedPayload from YAML helper: %v", err)
+	}
+	if instance.Reason == nil || *instance.Reason != "tool_results" {
+		t.Errorf(`Expected Reason to be "tool_results", got %v`, instance.Reason)
+	}
+	if instance.Removed == nil || *instance.Removed != 2 {
+		t.Errorf(`Expected Removed to be 2, got %v`, instance.Removed)
+	}
+}
+
 // TestMessagesUpdatedPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestMessagesUpdatedPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestMessagesUpdatedPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadMessagesUpdatedPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "tool_results" {
+		t.Errorf(`Expected Reason to be "tool_results", got %v`, reloaded.Reason)
+	}
+	if reloaded.Removed == nil || *reloaded.Removed != 2 {
+		t.Errorf(`Expected Removed to be 2, got %v`, reloaded.Removed)
+	}
 }
 
 // TestMessagesUpdatedPayloadToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestMessagesUpdatedPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadMessagesUpdatedPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "tool_results" {
+		t.Errorf(`Expected Reason to be "tool_results", got %v`, reloaded.Reason)
+	}
+	if reloaded.Removed == nil || *reloaded.Removed != 2 {
+		t.Errorf(`Expected Removed to be 2, got %v`, reloaded.Removed)
+	}
+}
+
+// TestMessagesUpdatedPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestMessagesUpdatedPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.MessagesUpdatedPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

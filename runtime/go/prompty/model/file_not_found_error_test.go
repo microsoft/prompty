@@ -63,6 +63,47 @@ path: ./chat.prompty
 	}
 }
 
+// TestFileNotFoundErrorFromJSON tests loading FileNotFoundError through the generated JSON helper
+func TestFileNotFoundErrorFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "message": "Prompty file not found: ./chat.prompty",
+  "path": "./chat.prompty"
+}
+`
+
+	instance, err := prompty.FileNotFoundErrorFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load FileNotFoundError from JSON helper: %v", err)
+	}
+	if instance.Message != "Prompty file not found: ./chat.prompty" {
+		t.Errorf(`Expected Message to be "Prompty file not found: ./chat.prompty", got %v`, instance.Message)
+	}
+	if instance.Path != "./chat.prompty" {
+		t.Errorf(`Expected Path to be "./chat.prompty", got %v`, instance.Path)
+	}
+}
+
+// TestFileNotFoundErrorFromYAML tests loading FileNotFoundError through the generated YAML helper
+func TestFileNotFoundErrorFromYAML(t *testing.T) {
+	yamlData := `
+message: "Prompty file not found: ./chat.prompty"
+path: ./chat.prompty
+
+`
+
+	instance, err := prompty.FileNotFoundErrorFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load FileNotFoundError from YAML helper: %v", err)
+	}
+	if instance.Message != "Prompty file not found: ./chat.prompty" {
+		t.Errorf(`Expected Message to be "Prompty file not found: ./chat.prompty", got %v`, instance.Message)
+	}
+	if instance.Path != "./chat.prompty" {
+		t.Errorf(`Expected Path to be "./chat.prompty", got %v`, instance.Path)
+	}
+}
+
 // TestFileNotFoundErrorRoundtrip tests load -> save -> load produces equivalent data
 func TestFileNotFoundErrorRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestFileNotFoundErrorToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadFileNotFoundError(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Message != "Prompty file not found: ./chat.prompty" {
+		t.Errorf(`Expected Message to be "Prompty file not found: ./chat.prompty", got %v`, reloaded.Message)
+	}
+	if reloaded.Path != "./chat.prompty" {
+		t.Errorf(`Expected Path to be "./chat.prompty", got %v`, reloaded.Path)
+	}
 }
 
 // TestFileNotFoundErrorToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestFileNotFoundErrorToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadFileNotFoundError(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Message != "Prompty file not found: ./chat.prompty" {
+		t.Errorf(`Expected Message to be "Prompty file not found: ./chat.prompty", got %v`, reloaded.Message)
+	}
+	if reloaded.Path != "./chat.prompty" {
+		t.Errorf(`Expected Path to be "./chat.prompty", got %v`, reloaded.Path)
+	}
+}
+
+// TestFileNotFoundErrorFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestFileNotFoundErrorFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.FileNotFoundErrorFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

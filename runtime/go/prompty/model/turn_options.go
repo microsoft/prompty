@@ -109,7 +109,7 @@ func LoadTurnOptions(data interface{}, ctx *LoadContext) (TurnOptions, error) {
 }
 
 // Save serializes TurnOptions to map[string]interface{}
-func (obj *TurnOptions) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TurnOptions) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.MaxIterations != nil {
 		result["maxIterations"] = *obj.MaxIterations
@@ -151,11 +151,7 @@ func (obj *TurnOptions) ToJSON() (string, error) {
 func (obj *TurnOptions) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TurnOptions from JSON string

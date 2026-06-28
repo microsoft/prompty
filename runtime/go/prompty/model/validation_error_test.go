@@ -71,6 +71,55 @@ constraint: required
 	}
 }
 
+// TestValidationErrorFromJSON tests loading ValidationError through the generated JSON helper
+func TestValidationErrorFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "message": "Missing required input: firstName",
+  "property": "firstName",
+  "constraint": "required"
+}
+`
+
+	instance, err := prompty.ValidationErrorFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ValidationError from JSON helper: %v", err)
+	}
+	if instance.Message != "Missing required input: firstName" {
+		t.Errorf(`Expected Message to be "Missing required input: firstName", got %v`, instance.Message)
+	}
+	if instance.Property != "firstName" {
+		t.Errorf(`Expected Property to be "firstName", got %v`, instance.Property)
+	}
+	if instance.Constraint != "required" {
+		t.Errorf(`Expected Constraint to be "required", got %v`, instance.Constraint)
+	}
+}
+
+// TestValidationErrorFromYAML tests loading ValidationError through the generated YAML helper
+func TestValidationErrorFromYAML(t *testing.T) {
+	yamlData := `
+message: "Missing required input: firstName"
+property: firstName
+constraint: required
+
+`
+
+	instance, err := prompty.ValidationErrorFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ValidationError from YAML helper: %v", err)
+	}
+	if instance.Message != "Missing required input: firstName" {
+		t.Errorf(`Expected Message to be "Missing required input: firstName", got %v`, instance.Message)
+	}
+	if instance.Property != "firstName" {
+		t.Errorf(`Expected Property to be "firstName", got %v`, instance.Property)
+	}
+	if instance.Constraint != "required" {
+		t.Errorf(`Expected Constraint to be "required", got %v`, instance.Constraint)
+	}
+}
+
 // TestValidationErrorRoundtrip tests load -> save -> load produces equivalent data
 func TestValidationErrorRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestValidationErrorToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadValidationError(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Message != "Missing required input: firstName" {
+		t.Errorf(`Expected Message to be "Missing required input: firstName", got %v`, reloaded.Message)
+	}
+	if reloaded.Property != "firstName" {
+		t.Errorf(`Expected Property to be "firstName", got %v`, reloaded.Property)
+	}
+	if reloaded.Constraint != "required" {
+		t.Errorf(`Expected Constraint to be "required", got %v`, reloaded.Constraint)
+	}
 }
 
 // TestValidationErrorToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestValidationErrorToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadValidationError(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Message != "Missing required input: firstName" {
+		t.Errorf(`Expected Message to be "Missing required input: firstName", got %v`, reloaded.Message)
+	}
+	if reloaded.Property != "firstName" {
+		t.Errorf(`Expected Property to be "firstName", got %v`, reloaded.Property)
+	}
+	if reloaded.Constraint != "required" {
+		t.Errorf(`Expected Constraint to be "required", got %v`, reloaded.Constraint)
+	}
+}
+
+// TestValidationErrorFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestValidationErrorFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ValidationErrorFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

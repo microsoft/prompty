@@ -57,7 +57,7 @@ func LoadAnthropicUsage(data interface{}, ctx *LoadContext) (AnthropicUsage, err
 }
 
 // Save serializes AnthropicUsage to map[string]interface{}
-func (obj *AnthropicUsage) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AnthropicUsage) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["input_tokens"] = obj.InputTokens
 	result["output_tokens"] = obj.OutputTokens
@@ -80,11 +80,7 @@ func (obj *AnthropicUsage) ToJSON() (string, error) {
 func (obj *AnthropicUsage) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AnthropicUsage from JSON string

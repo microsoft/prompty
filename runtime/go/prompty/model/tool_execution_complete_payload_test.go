@@ -103,6 +103,87 @@ errorKind: timeout
 	}
 }
 
+// TestToolExecutionCompletePayloadFromJSON tests loading ToolExecutionCompletePayload through the generated JSON helper
+func TestToolExecutionCompletePayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "requestId": "exec_abc123",
+  "toolCallId": "call_abc123",
+  "toolName": "powershell",
+  "success": true,
+  "exitCode": 0,
+  "durationMs": 250,
+  "errorKind": "timeout"
+}
+`
+
+	instance, err := prompty.ToolExecutionCompletePayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolExecutionCompletePayload from JSON helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "exec_abc123" {
+		t.Errorf(`Expected RequestId to be "exec_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.ToolName != "powershell" {
+		t.Errorf(`Expected ToolName to be "powershell", got %v`, instance.ToolName)
+	}
+	if instance.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, instance.Success)
+	}
+	if instance.ExitCode == nil || *instance.ExitCode != 0 {
+		t.Errorf(`Expected ExitCode to be 0, got %v`, instance.ExitCode)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 250 {
+		t.Errorf(`Expected DurationMs to be 250, got %v`, instance.DurationMs)
+	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "timeout" {
+		t.Errorf(`Expected ErrorKind to be "timeout", got %v`, instance.ErrorKind)
+	}
+}
+
+// TestToolExecutionCompletePayloadFromYAML tests loading ToolExecutionCompletePayload through the generated YAML helper
+func TestToolExecutionCompletePayloadFromYAML(t *testing.T) {
+	yamlData := `
+requestId: exec_abc123
+toolCallId: call_abc123
+toolName: powershell
+success: true
+exitCode: 0
+durationMs: 250
+errorKind: timeout
+
+`
+
+	instance, err := prompty.ToolExecutionCompletePayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolExecutionCompletePayload from YAML helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "exec_abc123" {
+		t.Errorf(`Expected RequestId to be "exec_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.ToolName != "powershell" {
+		t.Errorf(`Expected ToolName to be "powershell", got %v`, instance.ToolName)
+	}
+	if instance.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, instance.Success)
+	}
+	if instance.ExitCode == nil || *instance.ExitCode != 0 {
+		t.Errorf(`Expected ExitCode to be 0, got %v`, instance.ExitCode)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 250 {
+		t.Errorf(`Expected DurationMs to be 250, got %v`, instance.DurationMs)
+	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "timeout" {
+		t.Errorf(`Expected ErrorKind to be "timeout", got %v`, instance.ErrorKind)
+	}
+}
+
 // TestToolExecutionCompletePayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestToolExecutionCompletePayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -188,6 +269,32 @@ func TestToolExecutionCompletePayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadToolExecutionCompletePayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "exec_abc123" {
+		t.Errorf(`Expected RequestId to be "exec_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.ToolName != "powershell" {
+		t.Errorf(`Expected ToolName to be "powershell", got %v`, reloaded.ToolName)
+	}
+	if reloaded.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, reloaded.Success)
+	}
+	if reloaded.ExitCode == nil || *reloaded.ExitCode != 0 {
+		t.Errorf(`Expected ExitCode to be 0, got %v`, reloaded.ExitCode)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 250 {
+		t.Errorf(`Expected DurationMs to be 250, got %v`, reloaded.DurationMs)
+	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "timeout" {
+		t.Errorf(`Expected ErrorKind to be "timeout", got %v`, reloaded.ErrorKind)
+	}
 }
 
 // TestToolExecutionCompletePayloadToYAML tests that ToYAML produces valid YAML
@@ -221,5 +328,38 @@ func TestToolExecutionCompletePayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadToolExecutionCompletePayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "exec_abc123" {
+		t.Errorf(`Expected RequestId to be "exec_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.ToolName != "powershell" {
+		t.Errorf(`Expected ToolName to be "powershell", got %v`, reloaded.ToolName)
+	}
+	if reloaded.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, reloaded.Success)
+	}
+	if reloaded.ExitCode == nil || *reloaded.ExitCode != 0 {
+		t.Errorf(`Expected ExitCode to be 0, got %v`, reloaded.ExitCode)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 250 {
+		t.Errorf(`Expected DurationMs to be 250, got %v`, reloaded.DurationMs)
+	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "timeout" {
+		t.Errorf(`Expected ErrorKind to be "timeout", got %v`, reloaded.ErrorKind)
+	}
+}
+
+// TestToolExecutionCompletePayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolExecutionCompletePayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolExecutionCompletePayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

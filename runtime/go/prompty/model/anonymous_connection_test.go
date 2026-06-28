@@ -63,6 +63,47 @@ endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
 	}
 }
 
+// TestAnonymousConnectionFromJSON tests loading AnonymousConnection through the generated JSON helper
+func TestAnonymousConnectionFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "anonymous",
+  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"
+}
+`
+
+	instance, err := prompty.AnonymousConnectionFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AnonymousConnection from JSON helper: %v", err)
+	}
+	if instance.Kind != "anonymous" {
+		t.Errorf(`Expected Kind to be "anonymous", got %v`, instance.Kind)
+	}
+	if instance.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, instance.Endpoint)
+	}
+}
+
+// TestAnonymousConnectionFromYAML tests loading AnonymousConnection through the generated YAML helper
+func TestAnonymousConnectionFromYAML(t *testing.T) {
+	yamlData := `
+kind: anonymous
+endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+
+`
+
+	instance, err := prompty.AnonymousConnectionFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AnonymousConnection from YAML helper: %v", err)
+	}
+	if instance.Kind != "anonymous" {
+		t.Errorf(`Expected Kind to be "anonymous", got %v`, instance.Kind)
+	}
+	if instance.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, instance.Endpoint)
+	}
+}
+
 // TestAnonymousConnectionRoundtrip tests load -> save -> load produces equivalent data
 func TestAnonymousConnectionRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestAnonymousConnectionToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAnonymousConnection(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Kind != "anonymous" {
+		t.Errorf(`Expected Kind to be "anonymous", got %v`, reloaded.Kind)
+	}
+	if reloaded.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, reloaded.Endpoint)
+	}
 }
 
 // TestAnonymousConnectionToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestAnonymousConnectionToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAnonymousConnection(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Kind != "anonymous" {
+		t.Errorf(`Expected Kind to be "anonymous", got %v`, reloaded.Kind)
+	}
+	if reloaded.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, reloaded.Endpoint)
+	}
+}
+
+// TestAnonymousConnectionFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAnonymousConnectionFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AnonymousConnectionFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

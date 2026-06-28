@@ -87,6 +87,71 @@ reason: user_approved
 	}
 }
 
+// TestPermissionCompletedPayloadFromJSON tests loading PermissionCompletedPayload through the generated JSON helper
+func TestPermissionCompletedPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
+  "permission": "tool.execute",
+  "approved": true,
+  "reason": "user_approved"
+}
+`
+
+	instance, err := prompty.PermissionCompletedPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load PermissionCompletedPayload from JSON helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
+	}
+	if instance.Approved != true {
+		t.Errorf(`Expected Approved to be true, got %v`, instance.Approved)
+	}
+	if instance.Reason == nil || *instance.Reason != "user_approved" {
+		t.Errorf(`Expected Reason to be "user_approved", got %v`, instance.Reason)
+	}
+}
+
+// TestPermissionCompletedPayloadFromYAML tests loading PermissionCompletedPayload through the generated YAML helper
+func TestPermissionCompletedPayloadFromYAML(t *testing.T) {
+	yamlData := `
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+approved: true
+reason: user_approved
+
+`
+
+	instance, err := prompty.PermissionCompletedPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load PermissionCompletedPayload from YAML helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
+	}
+	if instance.Approved != true {
+		t.Errorf(`Expected Approved to be true, got %v`, instance.Approved)
+	}
+	if instance.Reason == nil || *instance.Reason != "user_approved" {
+		t.Errorf(`Expected Reason to be "user_approved", got %v`, instance.Reason)
+	}
+}
+
 // TestPermissionCompletedPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestPermissionCompletedPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestPermissionCompletedPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPermissionCompletedPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, reloaded.Permission)
+	}
+	if reloaded.Approved != true {
+		t.Errorf(`Expected Approved to be true, got %v`, reloaded.Approved)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "user_approved" {
+		t.Errorf(`Expected Reason to be "user_approved", got %v`, reloaded.Reason)
+	}
 }
 
 // TestPermissionCompletedPayloadToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestPermissionCompletedPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPermissionCompletedPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, reloaded.Permission)
+	}
+	if reloaded.Approved != true {
+		t.Errorf(`Expected Approved to be true, got %v`, reloaded.Approved)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "user_approved" {
+		t.Errorf(`Expected Reason to be "user_approved", got %v`, reloaded.Reason)
+	}
+}
+
+// TestPermissionCompletedPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestPermissionCompletedPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.PermissionCompletedPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

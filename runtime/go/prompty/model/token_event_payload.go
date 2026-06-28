@@ -31,7 +31,7 @@ func LoadTokenEventPayload(data interface{}, ctx *LoadContext) (TokenEventPayloa
 }
 
 // Save serializes TokenEventPayload to map[string]interface{}
-func (obj *TokenEventPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TokenEventPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["token"] = obj.Token
 
@@ -53,11 +53,7 @@ func (obj *TokenEventPayload) ToJSON() (string, error) {
 func (obj *TokenEventPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TokenEventPayload from JSON string

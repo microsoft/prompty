@@ -71,6 +71,55 @@ arguments: "{\"city\": \"Paris\"}"
 	}
 }
 
+// TestToolCallStartPayloadFromJSON tests loading ToolCallStartPayload through the generated JSON helper
+func TestToolCallStartPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "id": "call_abc123",
+  "name": "get_weather",
+  "arguments": "{\"city\": \"Paris\"}"
+}
+`
+
+	instance, err := prompty.ToolCallStartPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolCallStartPayload from JSON helper: %v", err)
+	}
+	if instance.Id == nil || *instance.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, instance.Id)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+	if instance.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected Arguments to be "{\"city\": \"Paris\"}", got %v`, instance.Arguments)
+	}
+}
+
+// TestToolCallStartPayloadFromYAML tests loading ToolCallStartPayload through the generated YAML helper
+func TestToolCallStartPayloadFromYAML(t *testing.T) {
+	yamlData := `
+id: call_abc123
+name: get_weather
+arguments: "{\"city\": \"Paris\"}"
+
+`
+
+	instance, err := prompty.ToolCallStartPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolCallStartPayload from YAML helper: %v", err)
+	}
+	if instance.Id == nil || *instance.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, instance.Id)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+	if instance.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected Arguments to be "{\"city\": \"Paris\"}", got %v`, instance.Arguments)
+	}
+}
+
 // TestToolCallStartPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestToolCallStartPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestToolCallStartPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadToolCallStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Id == nil || *reloaded.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, reloaded.Id)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
+	if reloaded.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected Arguments to be "{\"city\": \"Paris\"}", got %v`, reloaded.Arguments)
+	}
 }
 
 // TestToolCallStartPayloadToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestToolCallStartPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadToolCallStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Id == nil || *reloaded.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, reloaded.Id)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
+	if reloaded.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected Arguments to be "{\"city\": \"Paris\"}", got %v`, reloaded.Arguments)
+	}
+}
+
+// TestToolCallStartPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolCallStartPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolCallStartPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

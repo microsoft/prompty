@@ -39,7 +39,7 @@ func LoadThreadMarker(data interface{}, ctx *LoadContext) (ThreadMarker, error) 
 }
 
 // Save serializes ThreadMarker to map[string]interface{}
-func (obj *ThreadMarker) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ThreadMarker) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 	result["kind"] = obj.Kind
@@ -62,11 +62,7 @@ func (obj *ThreadMarker) ToJSON() (string, error) {
 func (obj *ThreadMarker) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ThreadMarker from JSON string

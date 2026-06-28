@@ -71,6 +71,55 @@ phase: llm
 	}
 }
 
+// TestErrorEventPayloadFromJSON tests loading ErrorEventPayload through the generated JSON helper
+func TestErrorEventPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
+}
+`
+
+	instance, err := prompty.ErrorEventPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ErrorEventPayload from JSON helper: %v", err)
+	}
+	if instance.Message != "Rate limit exceeded" {
+		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, instance.Message)
+	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "rate_limit" {
+		t.Errorf(`Expected ErrorKind to be "rate_limit", got %v`, instance.ErrorKind)
+	}
+	if instance.Phase == nil || *instance.Phase != "llm" {
+		t.Errorf(`Expected Phase to be "llm", got %v`, instance.Phase)
+	}
+}
+
+// TestErrorEventPayloadFromYAML tests loading ErrorEventPayload through the generated YAML helper
+func TestErrorEventPayloadFromYAML(t *testing.T) {
+	yamlData := `
+message: Rate limit exceeded
+errorKind: rate_limit
+phase: llm
+
+`
+
+	instance, err := prompty.ErrorEventPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ErrorEventPayload from YAML helper: %v", err)
+	}
+	if instance.Message != "Rate limit exceeded" {
+		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, instance.Message)
+	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "rate_limit" {
+		t.Errorf(`Expected ErrorKind to be "rate_limit", got %v`, instance.ErrorKind)
+	}
+	if instance.Phase == nil || *instance.Phase != "llm" {
+		t.Errorf(`Expected Phase to be "llm", got %v`, instance.Phase)
+	}
+}
+
 // TestErrorEventPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestErrorEventPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestErrorEventPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadErrorEventPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Message != "Rate limit exceeded" {
+		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, reloaded.Message)
+	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "rate_limit" {
+		t.Errorf(`Expected ErrorKind to be "rate_limit", got %v`, reloaded.ErrorKind)
+	}
+	if reloaded.Phase == nil || *reloaded.Phase != "llm" {
+		t.Errorf(`Expected Phase to be "llm", got %v`, reloaded.Phase)
+	}
 }
 
 // TestErrorEventPayloadToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestErrorEventPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadErrorEventPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Message != "Rate limit exceeded" {
+		t.Errorf(`Expected Message to be "Rate limit exceeded", got %v`, reloaded.Message)
+	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "rate_limit" {
+		t.Errorf(`Expected ErrorKind to be "rate_limit", got %v`, reloaded.ErrorKind)
+	}
+	if reloaded.Phase == nil || *reloaded.Phase != "llm" {
+		t.Errorf(`Expected Phase to be "llm", got %v`, reloaded.Phase)
+	}
+}
+
+// TestErrorEventPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestErrorEventPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ErrorEventPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

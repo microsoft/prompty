@@ -87,6 +87,71 @@ strict: true
 	}
 }
 
+// TestFunctionToolFromJSON tests loading FunctionTool through the generated JSON helper
+func TestFunctionToolFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "function",
+  "parameters": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "strict": true
+}
+`
+
+	instance, err := prompty.FunctionToolFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load FunctionTool from JSON helper: %v", err)
+	}
+	if instance.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, instance.Kind)
+	}
+	if instance.Strict == nil || *instance.Strict != true {
+		t.Errorf(`Expected Strict to be true, got %v`, instance.Strict)
+	}
+}
+
+// TestFunctionToolFromYAML tests loading FunctionTool through the generated YAML helper
+func TestFunctionToolFromYAML(t *testing.T) {
+	yamlData := `
+kind: function
+parameters:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+strict: true
+
+`
+
+	instance, err := prompty.FunctionToolFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load FunctionTool from YAML helper: %v", err)
+	}
+	if instance.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, instance.Kind)
+	}
+	if instance.Strict == nil || *instance.Strict != true {
+		t.Errorf(`Expected Strict to be true, got %v`, instance.Strict)
+	}
+}
+
 // TestFunctionToolRoundtrip tests load -> save -> load produces equivalent data
 func TestFunctionToolRoundtrip(t *testing.T) {
 	jsonData := `
@@ -175,6 +240,17 @@ func TestFunctionToolToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadFunctionTool(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, reloaded.Kind)
+	}
+	if reloaded.Strict == nil || *reloaded.Strict != true {
+		t.Errorf(`Expected Strict to be true, got %v`, reloaded.Strict)
+	}
 }
 
 // TestFunctionToolToYAML tests that ToYAML produces valid YAML
@@ -217,6 +293,17 @@ func TestFunctionToolToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadFunctionTool(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, reloaded.Kind)
+	}
+	if reloaded.Strict == nil || *reloaded.Strict != true {
+		t.Errorf(`Expected Strict to be true, got %v`, reloaded.Strict)
 	}
 }
 
@@ -261,6 +348,9 @@ func TestFunctionToolLoadJSON1(t *testing.T) {
 	if instance.Strict == nil || *instance.Strict != true {
 		t.Errorf(`Expected Strict to be true, got %v`, instance.Strict)
 	}
+	if len(instance.Parameters) != 3 {
+		t.Fatalf("Expected Parameters length to be 3, got %d", len(instance.Parameters))
+	}
 }
 
 // TestFunctionToolLoadYAML1 tests loading FunctionTool from YAML
@@ -295,6 +385,83 @@ strict: true
 	}
 	if instance.Strict == nil || *instance.Strict != true {
 		t.Errorf(`Expected Strict to be true, got %v`, instance.Strict)
+	}
+	if len(instance.Parameters) != 3 {
+		t.Fatalf("Expected Parameters length to be 3, got %d", len(instance.Parameters))
+	}
+}
+
+// TestFunctionToolFromJSON1 tests loading FunctionTool through the generated JSON helper
+func TestFunctionToolFromJSON1(t *testing.T) {
+	jsonData := `
+{
+  "kind": "function",
+  "parameters": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "strict": true
+}
+`
+
+	instance, err := prompty.FunctionToolFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load FunctionTool from JSON helper: %v", err)
+	}
+	if instance.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, instance.Kind)
+	}
+	if instance.Strict == nil || *instance.Strict != true {
+		t.Errorf(`Expected Strict to be true, got %v`, instance.Strict)
+	}
+	if len(instance.Parameters) != 3 {
+		t.Fatalf("Expected Parameters length to be 3, got %d", len(instance.Parameters))
+	}
+}
+
+// TestFunctionToolFromYAML1 tests loading FunctionTool through the generated YAML helper
+func TestFunctionToolFromYAML1(t *testing.T) {
+	yamlData := `
+kind: function
+parameters:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+strict: true
+
+`
+
+	instance, err := prompty.FunctionToolFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load FunctionTool from YAML helper: %v", err)
+	}
+	if instance.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, instance.Kind)
+	}
+	if instance.Strict == nil || *instance.Strict != true {
+		t.Errorf(`Expected Strict to be true, got %v`, instance.Strict)
+	}
+	if len(instance.Parameters) != 3 {
+		t.Fatalf("Expected Parameters length to be 3, got %d", len(instance.Parameters))
 	}
 }
 
@@ -346,6 +513,9 @@ func TestFunctionToolRoundtrip1(t *testing.T) {
 	if reloaded.Strict == nil || *reloaded.Strict != true {
 		t.Errorf(`Expected Strict to be true, got %v`, reloaded.Strict)
 	}
+	if len(reloaded.Parameters) != 3 {
+		t.Fatalf("Expected Parameters length to be 3, got %d", len(reloaded.Parameters))
+	}
 }
 
 // TestFunctionToolToJSON1 tests that ToJSON produces valid JSON
@@ -392,6 +562,20 @@ func TestFunctionToolToJSON1(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadFunctionTool(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, reloaded.Kind)
+	}
+	if reloaded.Strict == nil || *reloaded.Strict != true {
+		t.Errorf(`Expected Strict to be true, got %v`, reloaded.Strict)
+	}
+	if len(reloaded.Parameters) != 3 {
+		t.Fatalf("Expected Parameters length to be 3, got %d", len(reloaded.Parameters))
+	}
 }
 
 // TestFunctionToolToYAML1 tests that ToYAML produces valid YAML
@@ -437,5 +621,26 @@ func TestFunctionToolToYAML1(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadFunctionTool(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, reloaded.Kind)
+	}
+	if reloaded.Strict == nil || *reloaded.Strict != true {
+		t.Errorf(`Expected Strict to be true, got %v`, reloaded.Strict)
+	}
+	if len(reloaded.Parameters) != 3 {
+		t.Fatalf("Expected Parameters length to be 3, got %d", len(reloaded.Parameters))
+	}
+}
+
+// TestFunctionToolFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestFunctionToolFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.FunctionToolFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

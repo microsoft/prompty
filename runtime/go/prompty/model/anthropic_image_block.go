@@ -39,7 +39,7 @@ func LoadAnthropicImageBlock(data interface{}, ctx *LoadContext) (AnthropicImage
 }
 
 // Save serializes AnthropicImageBlock to map[string]interface{}
-func (obj *AnthropicImageBlock) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AnthropicImageBlock) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["type"] = obj.Type
 
@@ -63,11 +63,7 @@ func (obj *AnthropicImageBlock) ToJSON() (string, error) {
 func (obj *AnthropicImageBlock) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AnthropicImageBlock from JSON string

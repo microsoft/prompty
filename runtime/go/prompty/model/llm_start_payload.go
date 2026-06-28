@@ -67,7 +67,7 @@ func LoadLlmStartPayload(data interface{}, ctx *LoadContext) (LlmStartPayload, e
 }
 
 // Save serializes LlmStartPayload to map[string]interface{}
-func (obj *LlmStartPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj LlmStartPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Provider != nil {
 		result["provider"] = *obj.Provider
@@ -100,11 +100,7 @@ func (obj *LlmStartPayload) ToJSON() (string, error) {
 func (obj *LlmStartPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates LlmStartPayload from JSON string

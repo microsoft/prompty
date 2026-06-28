@@ -63,6 +63,47 @@ message: Remote session disabled
 	}
 }
 
+// TestSessionWarningPayloadFromJSON tests loading SessionWarningPayload through the generated JSON helper
+func TestSessionWarningPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "warningType": "remote",
+  "message": "Remote session disabled"
+}
+`
+
+	instance, err := prompty.SessionWarningPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionWarningPayload from JSON helper: %v", err)
+	}
+	if instance.WarningType != "remote" {
+		t.Errorf(`Expected WarningType to be "remote", got %v`, instance.WarningType)
+	}
+	if instance.Message != "Remote session disabled" {
+		t.Errorf(`Expected Message to be "Remote session disabled", got %v`, instance.Message)
+	}
+}
+
+// TestSessionWarningPayloadFromYAML tests loading SessionWarningPayload through the generated YAML helper
+func TestSessionWarningPayloadFromYAML(t *testing.T) {
+	yamlData := `
+warningType: remote
+message: Remote session disabled
+
+`
+
+	instance, err := prompty.SessionWarningPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionWarningPayload from YAML helper: %v", err)
+	}
+	if instance.WarningType != "remote" {
+		t.Errorf(`Expected WarningType to be "remote", got %v`, instance.WarningType)
+	}
+	if instance.Message != "Remote session disabled" {
+		t.Errorf(`Expected Message to be "Remote session disabled", got %v`, instance.Message)
+	}
+}
+
 // TestSessionWarningPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestSessionWarningPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestSessionWarningPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadSessionWarningPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.WarningType != "remote" {
+		t.Errorf(`Expected WarningType to be "remote", got %v`, reloaded.WarningType)
+	}
+	if reloaded.Message != "Remote session disabled" {
+		t.Errorf(`Expected Message to be "Remote session disabled", got %v`, reloaded.Message)
+	}
 }
 
 // TestSessionWarningPayloadToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestSessionWarningPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadSessionWarningPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.WarningType != "remote" {
+		t.Errorf(`Expected WarningType to be "remote", got %v`, reloaded.WarningType)
+	}
+	if reloaded.Message != "Remote session disabled" {
+		t.Errorf(`Expected Message to be "Remote session disabled", got %v`, reloaded.Message)
+	}
+}
+
+// TestSessionWarningPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestSessionWarningPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.SessionWarningPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

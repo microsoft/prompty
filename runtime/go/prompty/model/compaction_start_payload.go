@@ -42,7 +42,7 @@ func LoadCompactionStartPayload(data interface{}, ctx *LoadContext) (CompactionS
 }
 
 // Save serializes CompactionStartPayload to map[string]interface{}
-func (obj *CompactionStartPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj CompactionStartPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["droppedCount"] = obj.DroppedCount
 
@@ -64,11 +64,7 @@ func (obj *CompactionStartPayload) ToJSON() (string, error) {
 func (obj *CompactionStartPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates CompactionStartPayload from JSON string

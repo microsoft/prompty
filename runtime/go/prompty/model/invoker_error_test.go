@@ -71,6 +71,55 @@ key: jinja2
 	}
 }
 
+// TestInvokerErrorFromJSON tests loading InvokerError through the generated JSON helper
+func TestInvokerErrorFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "message": "No renderer registered for key: jinja2",
+  "component": "renderer",
+  "key": "jinja2"
+}
+`
+
+	instance, err := prompty.InvokerErrorFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load InvokerError from JSON helper: %v", err)
+	}
+	if instance.Message != "No renderer registered for key: jinja2" {
+		t.Errorf(`Expected Message to be "No renderer registered for key: jinja2", got %v`, instance.Message)
+	}
+	if instance.Component != "renderer" {
+		t.Errorf(`Expected Component to be "renderer", got %v`, instance.Component)
+	}
+	if instance.Key != "jinja2" {
+		t.Errorf(`Expected Key to be "jinja2", got %v`, instance.Key)
+	}
+}
+
+// TestInvokerErrorFromYAML tests loading InvokerError through the generated YAML helper
+func TestInvokerErrorFromYAML(t *testing.T) {
+	yamlData := `
+message: "No renderer registered for key: jinja2"
+component: renderer
+key: jinja2
+
+`
+
+	instance, err := prompty.InvokerErrorFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load InvokerError from YAML helper: %v", err)
+	}
+	if instance.Message != "No renderer registered for key: jinja2" {
+		t.Errorf(`Expected Message to be "No renderer registered for key: jinja2", got %v`, instance.Message)
+	}
+	if instance.Component != "renderer" {
+		t.Errorf(`Expected Component to be "renderer", got %v`, instance.Component)
+	}
+	if instance.Key != "jinja2" {
+		t.Errorf(`Expected Key to be "jinja2", got %v`, instance.Key)
+	}
+}
+
 // TestInvokerErrorRoundtrip tests load -> save -> load produces equivalent data
 func TestInvokerErrorRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestInvokerErrorToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadInvokerError(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Message != "No renderer registered for key: jinja2" {
+		t.Errorf(`Expected Message to be "No renderer registered for key: jinja2", got %v`, reloaded.Message)
+	}
+	if reloaded.Component != "renderer" {
+		t.Errorf(`Expected Component to be "renderer", got %v`, reloaded.Component)
+	}
+	if reloaded.Key != "jinja2" {
+		t.Errorf(`Expected Key to be "jinja2", got %v`, reloaded.Key)
+	}
 }
 
 // TestInvokerErrorToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestInvokerErrorToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadInvokerError(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Message != "No renderer registered for key: jinja2" {
+		t.Errorf(`Expected Message to be "No renderer registered for key: jinja2", got %v`, reloaded.Message)
+	}
+	if reloaded.Component != "renderer" {
+		t.Errorf(`Expected Component to be "renderer", got %v`, reloaded.Component)
+	}
+	if reloaded.Key != "jinja2" {
+		t.Errorf(`Expected Key to be "jinja2", got %v`, reloaded.Key)
+	}
+}
+
+// TestInvokerErrorFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestInvokerErrorFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.InvokerErrorFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

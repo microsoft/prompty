@@ -71,7 +71,7 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 }
 
 // Save serializes Connection to map[string]interface{}
-func (obj *Connection) Save(ctx *SaveContext) map[string]interface{} {
+func (obj Connection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	if obj.AuthenticationMode != nil {
@@ -99,11 +99,7 @@ func (obj *Connection) ToJSON() (string, error) {
 func (obj *Connection) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates Connection from JSON string
@@ -158,7 +154,7 @@ func LoadReferenceConnection(data interface{}, ctx *LoadContext) (ReferenceConne
 }
 
 // Save serializes ReferenceConnection to map[string]interface{}
-func (obj *ReferenceConnection) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ReferenceConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["name"] = obj.Name
@@ -184,11 +180,7 @@ func (obj *ReferenceConnection) ToJSON() (string, error) {
 func (obj *ReferenceConnection) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ReferenceConnection from JSON string
@@ -240,7 +232,7 @@ func LoadRemoteConnection(data interface{}, ctx *LoadContext) (RemoteConnection,
 }
 
 // Save serializes RemoteConnection to map[string]interface{}
-func (obj *RemoteConnection) Save(ctx *SaveContext) map[string]interface{} {
+func (obj RemoteConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["name"] = obj.Name
@@ -264,11 +256,7 @@ func (obj *RemoteConnection) ToJSON() (string, error) {
 func (obj *RemoteConnection) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates RemoteConnection from JSON string
@@ -320,7 +308,7 @@ func LoadApiKeyConnection(data interface{}, ctx *LoadContext) (ApiKeyConnection,
 }
 
 // Save serializes ApiKeyConnection to map[string]interface{}
-func (obj *ApiKeyConnection) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ApiKeyConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["endpoint"] = obj.Endpoint
@@ -344,11 +332,7 @@ func (obj *ApiKeyConnection) ToJSON() (string, error) {
 func (obj *ApiKeyConnection) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ApiKeyConnection from JSON string
@@ -395,7 +379,7 @@ func LoadAnonymousConnection(data interface{}, ctx *LoadContext) (AnonymousConne
 }
 
 // Save serializes AnonymousConnection to map[string]interface{}
-func (obj *AnonymousConnection) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AnonymousConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["endpoint"] = obj.Endpoint
@@ -418,11 +402,7 @@ func (obj *AnonymousConnection) ToJSON() (string, error) {
 func (obj *AnonymousConnection) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AnonymousConnection from JSON string
@@ -480,11 +460,14 @@ func LoadOAuthConnection(data interface{}, ctx *LoadContext) (OAuthConnection, e
 			result.TokenUrl = string(val.(string))
 		}
 		if val, ok := m["scopes"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result.Scopes = make([]string, len(arr))
 				for i, v := range arr {
 					result.Scopes[i] = v.(string)
 				}
+			case []string:
+				result.Scopes = arr
 			}
 		}
 	}
@@ -493,7 +476,7 @@ func LoadOAuthConnection(data interface{}, ctx *LoadContext) (OAuthConnection, e
 }
 
 // Save serializes OAuthConnection to map[string]interface{}
-func (obj *OAuthConnection) Save(ctx *SaveContext) map[string]interface{} {
+func (obj OAuthConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["endpoint"] = obj.Endpoint
@@ -520,11 +503,7 @@ func (obj *OAuthConnection) ToJSON() (string, error) {
 func (obj *OAuthConnection) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates OAuthConnection from JSON string
@@ -584,7 +563,7 @@ func LoadFoundryConnection(data interface{}, ctx *LoadContext) (FoundryConnectio
 }
 
 // Save serializes FoundryConnection to map[string]interface{}
-func (obj *FoundryConnection) Save(ctx *SaveContext) map[string]interface{} {
+func (obj FoundryConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["endpoint"] = obj.Endpoint
@@ -613,11 +592,7 @@ func (obj *FoundryConnection) ToJSON() (string, error) {
 func (obj *FoundryConnection) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates FoundryConnection from JSON string

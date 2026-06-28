@@ -87,6 +87,71 @@ reason: rate_limit
 	}
 }
 
+// TestRetryPayloadFromJSON tests loading RetryPayload through the generated JSON helper
+func TestRetryPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "operation": "llm",
+  "attempt": 2,
+  "maxAttempts": 3,
+  "delayMs": 1250,
+  "reason": "rate_limit"
+}
+`
+
+	instance, err := prompty.RetryPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load RetryPayload from JSON helper: %v", err)
+	}
+	if instance.Operation != "llm" {
+		t.Errorf(`Expected Operation to be "llm", got %v`, instance.Operation)
+	}
+	if instance.Attempt != 2 {
+		t.Errorf(`Expected Attempt to be 2, got %v`, instance.Attempt)
+	}
+	if instance.MaxAttempts == nil || *instance.MaxAttempts != 3 {
+		t.Errorf(`Expected MaxAttempts to be 3, got %v`, instance.MaxAttempts)
+	}
+	if instance.DelayMs == nil || *instance.DelayMs != 1250 {
+		t.Errorf(`Expected DelayMs to be 1250, got %v`, instance.DelayMs)
+	}
+	if instance.Reason == nil || *instance.Reason != "rate_limit" {
+		t.Errorf(`Expected Reason to be "rate_limit", got %v`, instance.Reason)
+	}
+}
+
+// TestRetryPayloadFromYAML tests loading RetryPayload through the generated YAML helper
+func TestRetryPayloadFromYAML(t *testing.T) {
+	yamlData := `
+operation: llm
+attempt: 2
+maxAttempts: 3
+delayMs: 1250
+reason: rate_limit
+
+`
+
+	instance, err := prompty.RetryPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load RetryPayload from YAML helper: %v", err)
+	}
+	if instance.Operation != "llm" {
+		t.Errorf(`Expected Operation to be "llm", got %v`, instance.Operation)
+	}
+	if instance.Attempt != 2 {
+		t.Errorf(`Expected Attempt to be 2, got %v`, instance.Attempt)
+	}
+	if instance.MaxAttempts == nil || *instance.MaxAttempts != 3 {
+		t.Errorf(`Expected MaxAttempts to be 3, got %v`, instance.MaxAttempts)
+	}
+	if instance.DelayMs == nil || *instance.DelayMs != 1250 {
+		t.Errorf(`Expected DelayMs to be 1250, got %v`, instance.DelayMs)
+	}
+	if instance.Reason == nil || *instance.Reason != "rate_limit" {
+		t.Errorf(`Expected Reason to be "rate_limit", got %v`, instance.Reason)
+	}
+}
+
 // TestRetryPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestRetryPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestRetryPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadRetryPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Operation != "llm" {
+		t.Errorf(`Expected Operation to be "llm", got %v`, reloaded.Operation)
+	}
+	if reloaded.Attempt != 2 {
+		t.Errorf(`Expected Attempt to be 2, got %v`, reloaded.Attempt)
+	}
+	if reloaded.MaxAttempts == nil || *reloaded.MaxAttempts != 3 {
+		t.Errorf(`Expected MaxAttempts to be 3, got %v`, reloaded.MaxAttempts)
+	}
+	if reloaded.DelayMs == nil || *reloaded.DelayMs != 1250 {
+		t.Errorf(`Expected DelayMs to be 1250, got %v`, reloaded.DelayMs)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "rate_limit" {
+		t.Errorf(`Expected Reason to be "rate_limit", got %v`, reloaded.Reason)
+	}
 }
 
 // TestRetryPayloadToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestRetryPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadRetryPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Operation != "llm" {
+		t.Errorf(`Expected Operation to be "llm", got %v`, reloaded.Operation)
+	}
+	if reloaded.Attempt != 2 {
+		t.Errorf(`Expected Attempt to be 2, got %v`, reloaded.Attempt)
+	}
+	if reloaded.MaxAttempts == nil || *reloaded.MaxAttempts != 3 {
+		t.Errorf(`Expected MaxAttempts to be 3, got %v`, reloaded.MaxAttempts)
+	}
+	if reloaded.DelayMs == nil || *reloaded.DelayMs != 1250 {
+		t.Errorf(`Expected DelayMs to be 1250, got %v`, reloaded.DelayMs)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "rate_limit" {
+		t.Errorf(`Expected Reason to be "rate_limit", got %v`, reloaded.Reason)
+	}
+}
+
+// TestRetryPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestRetryPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.RetryPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

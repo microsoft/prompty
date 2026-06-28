@@ -55,6 +55,39 @@ text: Hello, how can I help?
 	}
 }
 
+// TestAnthropicTextBlockFromJSON tests loading AnthropicTextBlock through the generated JSON helper
+func TestAnthropicTextBlockFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "text": "Hello, how can I help?"
+}
+`
+
+	instance, err := prompty.AnthropicTextBlockFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicTextBlock from JSON helper: %v", err)
+	}
+	if instance.Text != "Hello, how can I help?" {
+		t.Errorf(`Expected Text to be "Hello, how can I help?", got %v`, instance.Text)
+	}
+}
+
+// TestAnthropicTextBlockFromYAML tests loading AnthropicTextBlock through the generated YAML helper
+func TestAnthropicTextBlockFromYAML(t *testing.T) {
+	yamlData := `
+text: Hello, how can I help?
+
+`
+
+	instance, err := prompty.AnthropicTextBlockFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicTextBlock from YAML helper: %v", err)
+	}
+	if instance.Text != "Hello, how can I help?" {
+		t.Errorf(`Expected Text to be "Hello, how can I help?", got %v`, instance.Text)
+	}
+}
+
 // TestAnthropicTextBlockRoundtrip tests load -> save -> load produces equivalent data
 func TestAnthropicTextBlockRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestAnthropicTextBlockToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAnthropicTextBlock(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Text != "Hello, how can I help?" {
+		t.Errorf(`Expected Text to be "Hello, how can I help?", got %v`, reloaded.Text)
+	}
 }
 
 // TestAnthropicTextBlockToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestAnthropicTextBlockToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAnthropicTextBlock(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Text != "Hello, how can I help?" {
+		t.Errorf(`Expected Text to be "Hello, how can I help?", got %v`, reloaded.Text)
+	}
+}
+
+// TestAnthropicTextBlockFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAnthropicTextBlockFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AnthropicTextBlockFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

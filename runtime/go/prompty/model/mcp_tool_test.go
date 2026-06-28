@@ -50,6 +50,18 @@ func TestMcpToolLoadJSON(t *testing.T) {
 	if instance.ServerDescription == nil || *instance.ServerDescription != "This tool allows access to MCP services." {
 		t.Errorf(`Expected ServerDescription to be "This tool allows access to MCP services.", got %v`, instance.ServerDescription)
 	}
+	if instance.ApprovalMode.Kind != "always" {
+		t.Errorf(`Expected ApprovalMode.Kind to be "always", got %v`, instance.ApprovalMode.Kind)
+	}
+	if len(instance.AllowedTools) != 2 {
+		t.Fatalf("Expected AllowedTools length to be 2, got %d", len(instance.AllowedTools))
+	}
+	if instance.AllowedTools[0] != "operation1" {
+		t.Errorf(`Expected AllowedTools[0] to be "operation1", got %v`, instance.AllowedTools[0])
+	}
+	if instance.AllowedTools[1] != "operation2" {
+		t.Errorf(`Expected AllowedTools[1] to be "operation2", got %v`, instance.AllowedTools[1])
+	}
 }
 
 // TestMcpToolLoadYAML tests loading McpTool from YAML
@@ -85,6 +97,108 @@ allowedTools:
 	}
 	if instance.ServerDescription == nil || *instance.ServerDescription != "This tool allows access to MCP services." {
 		t.Errorf(`Expected ServerDescription to be "This tool allows access to MCP services.", got %v`, instance.ServerDescription)
+	}
+	if instance.ApprovalMode.Kind != "always" {
+		t.Errorf(`Expected ApprovalMode.Kind to be "always", got %v`, instance.ApprovalMode.Kind)
+	}
+	if len(instance.AllowedTools) != 2 {
+		t.Fatalf("Expected AllowedTools length to be 2, got %d", len(instance.AllowedTools))
+	}
+	if instance.AllowedTools[0] != "operation1" {
+		t.Errorf(`Expected AllowedTools[0] to be "operation1", got %v`, instance.AllowedTools[0])
+	}
+	if instance.AllowedTools[1] != "operation2" {
+		t.Errorf(`Expected AllowedTools[1] to be "operation2", got %v`, instance.AllowedTools[1])
+	}
+}
+
+// TestMcpToolFromJSON tests loading McpTool through the generated JSON helper
+func TestMcpToolFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "mcp",
+  "connection": {
+    "kind": "reference"
+  },
+  "serverName": "My MCP Server",
+  "serverDescription": "This tool allows access to MCP services.",
+  "approvalMode": {
+    "kind": "always"
+  },
+  "allowedTools": [
+    "operation1",
+    "operation2"
+  ]
+}
+`
+
+	instance, err := prompty.McpToolFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load McpTool from JSON helper: %v", err)
+	}
+	if instance.Kind != "mcp" {
+		t.Errorf(`Expected Kind to be "mcp", got %v`, instance.Kind)
+	}
+	if instance.ServerName != "My MCP Server" {
+		t.Errorf(`Expected ServerName to be "My MCP Server", got %v`, instance.ServerName)
+	}
+	if instance.ServerDescription == nil || *instance.ServerDescription != "This tool allows access to MCP services." {
+		t.Errorf(`Expected ServerDescription to be "This tool allows access to MCP services.", got %v`, instance.ServerDescription)
+	}
+	if instance.ApprovalMode.Kind != "always" {
+		t.Errorf(`Expected ApprovalMode.Kind to be "always", got %v`, instance.ApprovalMode.Kind)
+	}
+	if len(instance.AllowedTools) != 2 {
+		t.Fatalf("Expected AllowedTools length to be 2, got %d", len(instance.AllowedTools))
+	}
+	if instance.AllowedTools[0] != "operation1" {
+		t.Errorf(`Expected AllowedTools[0] to be "operation1", got %v`, instance.AllowedTools[0])
+	}
+	if instance.AllowedTools[1] != "operation2" {
+		t.Errorf(`Expected AllowedTools[1] to be "operation2", got %v`, instance.AllowedTools[1])
+	}
+}
+
+// TestMcpToolFromYAML tests loading McpTool through the generated YAML helper
+func TestMcpToolFromYAML(t *testing.T) {
+	yamlData := `
+kind: mcp
+connection:
+  kind: reference
+serverName: My MCP Server
+serverDescription: This tool allows access to MCP services.
+approvalMode:
+  kind: always
+allowedTools:
+  - operation1
+  - operation2
+
+`
+
+	instance, err := prompty.McpToolFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load McpTool from YAML helper: %v", err)
+	}
+	if instance.Kind != "mcp" {
+		t.Errorf(`Expected Kind to be "mcp", got %v`, instance.Kind)
+	}
+	if instance.ServerName != "My MCP Server" {
+		t.Errorf(`Expected ServerName to be "My MCP Server", got %v`, instance.ServerName)
+	}
+	if instance.ServerDescription == nil || *instance.ServerDescription != "This tool allows access to MCP services." {
+		t.Errorf(`Expected ServerDescription to be "This tool allows access to MCP services.", got %v`, instance.ServerDescription)
+	}
+	if instance.ApprovalMode.Kind != "always" {
+		t.Errorf(`Expected ApprovalMode.Kind to be "always", got %v`, instance.ApprovalMode.Kind)
+	}
+	if len(instance.AllowedTools) != 2 {
+		t.Fatalf("Expected AllowedTools length to be 2, got %d", len(instance.AllowedTools))
+	}
+	if instance.AllowedTools[0] != "operation1" {
+		t.Errorf(`Expected AllowedTools[0] to be "operation1", got %v`, instance.AllowedTools[0])
+	}
+	if instance.AllowedTools[1] != "operation2" {
+		t.Errorf(`Expected AllowedTools[1] to be "operation2", got %v`, instance.AllowedTools[1])
 	}
 }
 
@@ -133,6 +247,18 @@ func TestMcpToolRoundtrip(t *testing.T) {
 	if reloaded.ServerDescription == nil || *reloaded.ServerDescription != "This tool allows access to MCP services." {
 		t.Errorf(`Expected ServerDescription to be "This tool allows access to MCP services.", got %v`, reloaded.ServerDescription)
 	}
+	if reloaded.ApprovalMode.Kind != "always" {
+		t.Errorf(`Expected ApprovalMode.Kind to be "always", got %v`, reloaded.ApprovalMode.Kind)
+	}
+	if len(reloaded.AllowedTools) != 2 {
+		t.Fatalf("Expected AllowedTools length to be 2, got %d", len(reloaded.AllowedTools))
+	}
+	if reloaded.AllowedTools[0] != "operation1" {
+		t.Errorf(`Expected AllowedTools[0] to be "operation1", got %v`, reloaded.AllowedTools[0])
+	}
+	if reloaded.AllowedTools[1] != "operation2" {
+		t.Errorf(`Expected AllowedTools[1] to be "operation2", got %v`, reloaded.AllowedTools[1])
+	}
 }
 
 // TestMcpToolToJSON tests that ToJSON produces valid JSON
@@ -173,6 +299,32 @@ func TestMcpToolToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadMcpTool(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Kind != "mcp" {
+		t.Errorf(`Expected Kind to be "mcp", got %v`, reloaded.Kind)
+	}
+	if reloaded.ServerName != "My MCP Server" {
+		t.Errorf(`Expected ServerName to be "My MCP Server", got %v`, reloaded.ServerName)
+	}
+	if reloaded.ServerDescription == nil || *reloaded.ServerDescription != "This tool allows access to MCP services." {
+		t.Errorf(`Expected ServerDescription to be "This tool allows access to MCP services.", got %v`, reloaded.ServerDescription)
+	}
+	if reloaded.ApprovalMode.Kind != "always" {
+		t.Errorf(`Expected ApprovalMode.Kind to be "always", got %v`, reloaded.ApprovalMode.Kind)
+	}
+	if len(reloaded.AllowedTools) != 2 {
+		t.Fatalf("Expected AllowedTools length to be 2, got %d", len(reloaded.AllowedTools))
+	}
+	if reloaded.AllowedTools[0] != "operation1" {
+		t.Errorf(`Expected AllowedTools[0] to be "operation1", got %v`, reloaded.AllowedTools[0])
+	}
+	if reloaded.AllowedTools[1] != "operation2" {
+		t.Errorf(`Expected AllowedTools[1] to be "operation2", got %v`, reloaded.AllowedTools[1])
+	}
 }
 
 // TestMcpToolToYAML tests that ToYAML produces valid YAML
@@ -212,5 +364,38 @@ func TestMcpToolToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadMcpTool(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Kind != "mcp" {
+		t.Errorf(`Expected Kind to be "mcp", got %v`, reloaded.Kind)
+	}
+	if reloaded.ServerName != "My MCP Server" {
+		t.Errorf(`Expected ServerName to be "My MCP Server", got %v`, reloaded.ServerName)
+	}
+	if reloaded.ServerDescription == nil || *reloaded.ServerDescription != "This tool allows access to MCP services." {
+		t.Errorf(`Expected ServerDescription to be "This tool allows access to MCP services.", got %v`, reloaded.ServerDescription)
+	}
+	if reloaded.ApprovalMode.Kind != "always" {
+		t.Errorf(`Expected ApprovalMode.Kind to be "always", got %v`, reloaded.ApprovalMode.Kind)
+	}
+	if len(reloaded.AllowedTools) != 2 {
+		t.Fatalf("Expected AllowedTools length to be 2, got %d", len(reloaded.AllowedTools))
+	}
+	if reloaded.AllowedTools[0] != "operation1" {
+		t.Errorf(`Expected AllowedTools[0] to be "operation1", got %v`, reloaded.AllowedTools[0])
+	}
+	if reloaded.AllowedTools[1] != "operation2" {
+		t.Errorf(`Expected AllowedTools[1] to be "operation2", got %v`, reloaded.AllowedTools[1])
+	}
+}
+
+// TestMcpToolFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestMcpToolFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.McpToolFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

@@ -55,6 +55,39 @@ droppedCount: 5
 	}
 }
 
+// TestCompactionStartPayloadFromJSON tests loading CompactionStartPayload through the generated JSON helper
+func TestCompactionStartPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "droppedCount": 5
+}
+`
+
+	instance, err := prompty.CompactionStartPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load CompactionStartPayload from JSON helper: %v", err)
+	}
+	if instance.DroppedCount != 5 {
+		t.Errorf(`Expected DroppedCount to be 5, got %v`, instance.DroppedCount)
+	}
+}
+
+// TestCompactionStartPayloadFromYAML tests loading CompactionStartPayload through the generated YAML helper
+func TestCompactionStartPayloadFromYAML(t *testing.T) {
+	yamlData := `
+droppedCount: 5
+
+`
+
+	instance, err := prompty.CompactionStartPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load CompactionStartPayload from YAML helper: %v", err)
+	}
+	if instance.DroppedCount != 5 {
+		t.Errorf(`Expected DroppedCount to be 5, got %v`, instance.DroppedCount)
+	}
+}
+
 // TestCompactionStartPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestCompactionStartPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestCompactionStartPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadCompactionStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.DroppedCount != 5 {
+		t.Errorf(`Expected DroppedCount to be 5, got %v`, reloaded.DroppedCount)
+	}
 }
 
 // TestCompactionStartPayloadToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestCompactionStartPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadCompactionStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.DroppedCount != 5 {
+		t.Errorf(`Expected DroppedCount to be 5, got %v`, reloaded.DroppedCount)
+	}
+}
+
+// TestCompactionStartPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestCompactionStartPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.CompactionStartPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

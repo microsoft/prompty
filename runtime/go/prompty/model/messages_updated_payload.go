@@ -71,7 +71,7 @@ func LoadMessagesUpdatedPayload(data interface{}, ctx *LoadContext) (MessagesUpd
 }
 
 // Save serializes MessagesUpdatedPayload to map[string]interface{}
-func (obj *MessagesUpdatedPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj MessagesUpdatedPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Messages != nil {
 		arr := make([]interface{}, len(obj.Messages))
@@ -112,11 +112,7 @@ func (obj *MessagesUpdatedPayload) ToJSON() (string, error) {
 func (obj *MessagesUpdatedPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates MessagesUpdatedPayload from JSON string

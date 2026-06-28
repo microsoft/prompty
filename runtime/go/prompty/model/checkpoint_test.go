@@ -95,6 +95,79 @@ createdAt: "2026-06-09T20:00:00Z"
 	}
 }
 
+// TestCheckpointFromJSON tests loading Checkpoint through the generated JSON helper
+func TestCheckpointFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "id": "chk_abc123",
+  "sessionId": "sess_abc123",
+  "turnId": "turn_001",
+  "checkpointNumber": 3,
+  "title": "Added harness contracts",
+  "createdAt": "2026-06-09T20:00:00Z"
+}
+`
+
+	instance, err := prompty.CheckpointFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Checkpoint from JSON helper: %v", err)
+	}
+	if instance.Id == nil || *instance.Id != "chk_abc123" {
+		t.Errorf(`Expected Id to be "chk_abc123", got %v`, instance.Id)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.TurnId == nil || *instance.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, instance.TurnId)
+	}
+	if instance.CheckpointNumber == nil || *instance.CheckpointNumber != 3 {
+		t.Errorf(`Expected CheckpointNumber to be 3, got %v`, instance.CheckpointNumber)
+	}
+	if instance.Title != "Added harness contracts" {
+		t.Errorf(`Expected Title to be "Added harness contracts", got %v`, instance.Title)
+	}
+	if instance.CreatedAt == nil || *instance.CreatedAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, instance.CreatedAt)
+	}
+}
+
+// TestCheckpointFromYAML tests loading Checkpoint through the generated YAML helper
+func TestCheckpointFromYAML(t *testing.T) {
+	yamlData := `
+id: chk_abc123
+sessionId: sess_abc123
+turnId: turn_001
+checkpointNumber: 3
+title: Added harness contracts
+createdAt: "2026-06-09T20:00:00Z"
+
+`
+
+	instance, err := prompty.CheckpointFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Checkpoint from YAML helper: %v", err)
+	}
+	if instance.Id == nil || *instance.Id != "chk_abc123" {
+		t.Errorf(`Expected Id to be "chk_abc123", got %v`, instance.Id)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.TurnId == nil || *instance.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, instance.TurnId)
+	}
+	if instance.CheckpointNumber == nil || *instance.CheckpointNumber != 3 {
+		t.Errorf(`Expected CheckpointNumber to be 3, got %v`, instance.CheckpointNumber)
+	}
+	if instance.Title != "Added harness contracts" {
+		t.Errorf(`Expected Title to be "Added harness contracts", got %v`, instance.Title)
+	}
+	if instance.CreatedAt == nil || *instance.CreatedAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, instance.CreatedAt)
+	}
+}
+
 // TestCheckpointRoundtrip tests load -> save -> load produces equivalent data
 func TestCheckpointRoundtrip(t *testing.T) {
 	jsonData := `
@@ -175,6 +248,29 @@ func TestCheckpointToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadCheckpoint(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Id == nil || *reloaded.Id != "chk_abc123" {
+		t.Errorf(`Expected Id to be "chk_abc123", got %v`, reloaded.Id)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.TurnId == nil || *reloaded.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, reloaded.TurnId)
+	}
+	if reloaded.CheckpointNumber == nil || *reloaded.CheckpointNumber != 3 {
+		t.Errorf(`Expected CheckpointNumber to be 3, got %v`, reloaded.CheckpointNumber)
+	}
+	if reloaded.Title != "Added harness contracts" {
+		t.Errorf(`Expected Title to be "Added harness contracts", got %v`, reloaded.Title)
+	}
+	if reloaded.CreatedAt == nil || *reloaded.CreatedAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.CreatedAt)
+	}
 }
 
 // TestCheckpointToYAML tests that ToYAML produces valid YAML
@@ -207,5 +303,35 @@ func TestCheckpointToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadCheckpoint(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Id == nil || *reloaded.Id != "chk_abc123" {
+		t.Errorf(`Expected Id to be "chk_abc123", got %v`, reloaded.Id)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.TurnId == nil || *reloaded.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, reloaded.TurnId)
+	}
+	if reloaded.CheckpointNumber == nil || *reloaded.CheckpointNumber != 3 {
+		t.Errorf(`Expected CheckpointNumber to be 3, got %v`, reloaded.CheckpointNumber)
+	}
+	if reloaded.Title != "Added harness contracts" {
+		t.Errorf(`Expected Title to be "Added harness contracts", got %v`, reloaded.Title)
+	}
+	if reloaded.CreatedAt == nil || *reloaded.CreatedAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.CreatedAt)
+	}
+}
+
+// TestCheckpointFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestCheckpointFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.CheckpointFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

@@ -60,7 +60,7 @@ func LoadTurnTrace(data interface{}, ctx *LoadContext) (TurnTrace, error) {
 }
 
 // Save serializes TurnTrace to map[string]interface{}
-func (obj *TurnTrace) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TurnTrace) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["version"] = obj.Version
 	if obj.Runtime != nil {
@@ -98,11 +98,7 @@ func (obj *TurnTrace) ToJSON() (string, error) {
 func (obj *TurnTrace) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TurnTrace from JSON string

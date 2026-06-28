@@ -55,6 +55,39 @@ includeUsage: true
 	}
 }
 
+// TestStreamOptionsFromJSON tests loading StreamOptions through the generated JSON helper
+func TestStreamOptionsFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "includeUsage": true
+}
+`
+
+	instance, err := prompty.StreamOptionsFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load StreamOptions from JSON helper: %v", err)
+	}
+	if instance.IncludeUsage == nil || *instance.IncludeUsage != true {
+		t.Errorf(`Expected IncludeUsage to be true, got %v`, instance.IncludeUsage)
+	}
+}
+
+// TestStreamOptionsFromYAML tests loading StreamOptions through the generated YAML helper
+func TestStreamOptionsFromYAML(t *testing.T) {
+	yamlData := `
+includeUsage: true
+
+`
+
+	instance, err := prompty.StreamOptionsFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load StreamOptions from YAML helper: %v", err)
+	}
+	if instance.IncludeUsage == nil || *instance.IncludeUsage != true {
+		t.Errorf(`Expected IncludeUsage to be true, got %v`, instance.IncludeUsage)
+	}
+}
+
 // TestStreamOptionsRoundtrip tests load -> save -> load produces equivalent data
 func TestStreamOptionsRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestStreamOptionsToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadStreamOptions(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.IncludeUsage == nil || *reloaded.IncludeUsage != true {
+		t.Errorf(`Expected IncludeUsage to be true, got %v`, reloaded.IncludeUsage)
+	}
 }
 
 // TestStreamOptionsToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestStreamOptionsToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadStreamOptions(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.IncludeUsage == nil || *reloaded.IncludeUsage != true {
+		t.Errorf(`Expected IncludeUsage to be true, got %v`, reloaded.IncludeUsage)
+	}
+}
+
+// TestStreamOptionsFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestStreamOptionsFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.StreamOptionsFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

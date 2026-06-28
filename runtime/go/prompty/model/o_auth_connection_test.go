@@ -51,6 +51,12 @@ func TestOAuthConnectionLoadJSON(t *testing.T) {
 	if instance.TokenUrl != "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" {
 		t.Errorf(`Expected TokenUrl to be "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", got %v`, instance.TokenUrl)
 	}
+	if len(instance.Scopes) != 1 {
+		t.Fatalf("Expected Scopes length to be 1, got %d", len(instance.Scopes))
+	}
+	if instance.Scopes[0] != "https://cognitiveservices.azure.com/.default" {
+		t.Errorf(`Expected Scopes[0] to be "https://cognitiveservices.azure.com/.default", got %v`, instance.Scopes[0])
+	}
 }
 
 // TestOAuthConnectionLoadYAML tests loading OAuthConnection from YAML
@@ -89,6 +95,94 @@ scopes:
 	}
 	if instance.TokenUrl != "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" {
 		t.Errorf(`Expected TokenUrl to be "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", got %v`, instance.TokenUrl)
+	}
+	if len(instance.Scopes) != 1 {
+		t.Fatalf("Expected Scopes length to be 1, got %d", len(instance.Scopes))
+	}
+	if instance.Scopes[0] != "https://cognitiveservices.azure.com/.default" {
+		t.Errorf(`Expected Scopes[0] to be "https://cognitiveservices.azure.com/.default", got %v`, instance.Scopes[0])
+	}
+}
+
+// TestOAuthConnectionFromJSON tests loading OAuthConnection through the generated JSON helper
+func TestOAuthConnectionFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "oauth",
+  "endpoint": "https://api.example.com",
+  "clientId": "your-client-id",
+  "clientSecret": "your-client-secret",
+  "tokenUrl": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
+  "scopes": [
+    "https://cognitiveservices.azure.com/.default"
+  ]
+}
+`
+
+	instance, err := prompty.OAuthConnectionFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load OAuthConnection from JSON helper: %v", err)
+	}
+	if instance.Kind != "oauth" {
+		t.Errorf(`Expected Kind to be "oauth", got %v`, instance.Kind)
+	}
+	if instance.Endpoint != "https://api.example.com" {
+		t.Errorf(`Expected Endpoint to be "https://api.example.com", got %v`, instance.Endpoint)
+	}
+	if instance.ClientId != "your-client-id" {
+		t.Errorf(`Expected ClientId to be "your-client-id", got %v`, instance.ClientId)
+	}
+	if instance.ClientSecret != "your-client-secret" {
+		t.Errorf(`Expected ClientSecret to be "your-client-secret", got %v`, instance.ClientSecret)
+	}
+	if instance.TokenUrl != "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" {
+		t.Errorf(`Expected TokenUrl to be "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", got %v`, instance.TokenUrl)
+	}
+	if len(instance.Scopes) != 1 {
+		t.Fatalf("Expected Scopes length to be 1, got %d", len(instance.Scopes))
+	}
+	if instance.Scopes[0] != "https://cognitiveservices.azure.com/.default" {
+		t.Errorf(`Expected Scopes[0] to be "https://cognitiveservices.azure.com/.default", got %v`, instance.Scopes[0])
+	}
+}
+
+// TestOAuthConnectionFromYAML tests loading OAuthConnection through the generated YAML helper
+func TestOAuthConnectionFromYAML(t *testing.T) {
+	yamlData := `
+kind: oauth
+endpoint: "https://api.example.com"
+clientId: your-client-id
+clientSecret: your-client-secret
+tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
+scopes:
+  - "https://cognitiveservices.azure.com/.default"
+
+`
+
+	instance, err := prompty.OAuthConnectionFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load OAuthConnection from YAML helper: %v", err)
+	}
+	if instance.Kind != "oauth" {
+		t.Errorf(`Expected Kind to be "oauth", got %v`, instance.Kind)
+	}
+	if instance.Endpoint != "https://api.example.com" {
+		t.Errorf(`Expected Endpoint to be "https://api.example.com", got %v`, instance.Endpoint)
+	}
+	if instance.ClientId != "your-client-id" {
+		t.Errorf(`Expected ClientId to be "your-client-id", got %v`, instance.ClientId)
+	}
+	if instance.ClientSecret != "your-client-secret" {
+		t.Errorf(`Expected ClientSecret to be "your-client-secret", got %v`, instance.ClientSecret)
+	}
+	if instance.TokenUrl != "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" {
+		t.Errorf(`Expected TokenUrl to be "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", got %v`, instance.TokenUrl)
+	}
+	if len(instance.Scopes) != 1 {
+		t.Fatalf("Expected Scopes length to be 1, got %d", len(instance.Scopes))
+	}
+	if instance.Scopes[0] != "https://cognitiveservices.azure.com/.default" {
+		t.Errorf(`Expected Scopes[0] to be "https://cognitiveservices.azure.com/.default", got %v`, instance.Scopes[0])
 	}
 }
 
@@ -138,6 +232,12 @@ func TestOAuthConnectionRoundtrip(t *testing.T) {
 	if reloaded.TokenUrl != "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" {
 		t.Errorf(`Expected TokenUrl to be "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", got %v`, reloaded.TokenUrl)
 	}
+	if len(reloaded.Scopes) != 1 {
+		t.Fatalf("Expected Scopes length to be 1, got %d", len(reloaded.Scopes))
+	}
+	if reloaded.Scopes[0] != "https://cognitiveservices.azure.com/.default" {
+		t.Errorf(`Expected Scopes[0] to be "https://cognitiveservices.azure.com/.default", got %v`, reloaded.Scopes[0])
+	}
 }
 
 // TestOAuthConnectionToJSON tests that ToJSON produces valid JSON
@@ -173,6 +273,32 @@ func TestOAuthConnectionToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadOAuthConnection(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Kind != "oauth" {
+		t.Errorf(`Expected Kind to be "oauth", got %v`, reloaded.Kind)
+	}
+	if reloaded.Endpoint != "https://api.example.com" {
+		t.Errorf(`Expected Endpoint to be "https://api.example.com", got %v`, reloaded.Endpoint)
+	}
+	if reloaded.ClientId != "your-client-id" {
+		t.Errorf(`Expected ClientId to be "your-client-id", got %v`, reloaded.ClientId)
+	}
+	if reloaded.ClientSecret != "your-client-secret" {
+		t.Errorf(`Expected ClientSecret to be "your-client-secret", got %v`, reloaded.ClientSecret)
+	}
+	if reloaded.TokenUrl != "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" {
+		t.Errorf(`Expected TokenUrl to be "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", got %v`, reloaded.TokenUrl)
+	}
+	if len(reloaded.Scopes) != 1 {
+		t.Fatalf("Expected Scopes length to be 1, got %d", len(reloaded.Scopes))
+	}
+	if reloaded.Scopes[0] != "https://cognitiveservices.azure.com/.default" {
+		t.Errorf(`Expected Scopes[0] to be "https://cognitiveservices.azure.com/.default", got %v`, reloaded.Scopes[0])
+	}
 }
 
 // TestOAuthConnectionToYAML tests that ToYAML produces valid YAML
@@ -207,5 +333,38 @@ func TestOAuthConnectionToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadOAuthConnection(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Kind != "oauth" {
+		t.Errorf(`Expected Kind to be "oauth", got %v`, reloaded.Kind)
+	}
+	if reloaded.Endpoint != "https://api.example.com" {
+		t.Errorf(`Expected Endpoint to be "https://api.example.com", got %v`, reloaded.Endpoint)
+	}
+	if reloaded.ClientId != "your-client-id" {
+		t.Errorf(`Expected ClientId to be "your-client-id", got %v`, reloaded.ClientId)
+	}
+	if reloaded.ClientSecret != "your-client-secret" {
+		t.Errorf(`Expected ClientSecret to be "your-client-secret", got %v`, reloaded.ClientSecret)
+	}
+	if reloaded.TokenUrl != "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token" {
+		t.Errorf(`Expected TokenUrl to be "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token", got %v`, reloaded.TokenUrl)
+	}
+	if len(reloaded.Scopes) != 1 {
+		t.Fatalf("Expected Scopes length to be 1, got %d", len(reloaded.Scopes))
+	}
+	if reloaded.Scopes[0] != "https://cognitiveservices.azure.com/.default" {
+		t.Errorf(`Expected Scopes[0] to be "https://cognitiveservices.azure.com/.default", got %v`, reloaded.Scopes[0])
+	}
+}
+
+// TestOAuthConnectionFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestOAuthConnectionFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.OAuthConnectionFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

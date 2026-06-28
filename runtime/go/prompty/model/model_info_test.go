@@ -54,6 +54,24 @@ func TestModelInfoLoadJSON(t *testing.T) {
 	if instance.ContextWindow == nil || *instance.ContextWindow != 128000 {
 		t.Errorf(`Expected ContextWindow to be 128000, got %v`, instance.ContextWindow)
 	}
+	if len(instance.InputModalities) != 2 {
+		t.Fatalf("Expected InputModalities length to be 2, got %d", len(instance.InputModalities))
+	}
+	if instance.InputModalities[0] != "text" {
+		t.Errorf(`Expected InputModalities[0] to be "text", got %v`, instance.InputModalities[0])
+	}
+	if instance.InputModalities[1] != "image" {
+		t.Errorf(`Expected InputModalities[1] to be "image", got %v`, instance.InputModalities[1])
+	}
+	if len(instance.OutputModalities) != 1 {
+		t.Fatalf("Expected OutputModalities length to be 1, got %d", len(instance.OutputModalities))
+	}
+	if instance.OutputModalities[0] != "text" {
+		t.Errorf(`Expected OutputModalities[0] to be "text", got %v`, instance.OutputModalities[0])
+	}
+	if instance.AdditionalProperties == nil {
+		t.Fatalf("Expected AdditionalProperties to be populated")
+	}
 }
 
 // TestModelInfoLoadYAML tests loading ModelInfo from YAML
@@ -93,6 +111,134 @@ additionalProperties:
 	}
 	if instance.ContextWindow == nil || *instance.ContextWindow != 128000 {
 		t.Errorf(`Expected ContextWindow to be 128000, got %v`, instance.ContextWindow)
+	}
+	if len(instance.InputModalities) != 2 {
+		t.Fatalf("Expected InputModalities length to be 2, got %d", len(instance.InputModalities))
+	}
+	if instance.InputModalities[0] != "text" {
+		t.Errorf(`Expected InputModalities[0] to be "text", got %v`, instance.InputModalities[0])
+	}
+	if instance.InputModalities[1] != "image" {
+		t.Errorf(`Expected InputModalities[1] to be "image", got %v`, instance.InputModalities[1])
+	}
+	if len(instance.OutputModalities) != 1 {
+		t.Fatalf("Expected OutputModalities length to be 1, got %d", len(instance.OutputModalities))
+	}
+	if instance.OutputModalities[0] != "text" {
+		t.Errorf(`Expected OutputModalities[0] to be "text", got %v`, instance.OutputModalities[0])
+	}
+	if instance.AdditionalProperties == nil {
+		t.Fatalf("Expected AdditionalProperties to be populated")
+	}
+}
+
+// TestModelInfoFromJSON tests loading ModelInfo through the generated JSON helper
+func TestModelInfoFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "id": "gpt-4o",
+  "displayName": "GPT-4o",
+  "ownedBy": "openai",
+  "contextWindow": 128000,
+  "inputModalities": [
+    "text",
+    "image"
+  ],
+  "outputModalities": [
+    "text"
+  ],
+  "additionalProperties": {
+    "supportsStreaming": true
+  }
+}
+`
+
+	instance, err := prompty.ModelInfoFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ModelInfo from JSON helper: %v", err)
+	}
+	if instance.Id != "gpt-4o" {
+		t.Errorf(`Expected Id to be "gpt-4o", got %v`, instance.Id)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "GPT-4o" {
+		t.Errorf(`Expected DisplayName to be "GPT-4o", got %v`, instance.DisplayName)
+	}
+	if instance.OwnedBy == nil || *instance.OwnedBy != "openai" {
+		t.Errorf(`Expected OwnedBy to be "openai", got %v`, instance.OwnedBy)
+	}
+	if instance.ContextWindow == nil || *instance.ContextWindow != 128000 {
+		t.Errorf(`Expected ContextWindow to be 128000, got %v`, instance.ContextWindow)
+	}
+	if len(instance.InputModalities) != 2 {
+		t.Fatalf("Expected InputModalities length to be 2, got %d", len(instance.InputModalities))
+	}
+	if instance.InputModalities[0] != "text" {
+		t.Errorf(`Expected InputModalities[0] to be "text", got %v`, instance.InputModalities[0])
+	}
+	if instance.InputModalities[1] != "image" {
+		t.Errorf(`Expected InputModalities[1] to be "image", got %v`, instance.InputModalities[1])
+	}
+	if len(instance.OutputModalities) != 1 {
+		t.Fatalf("Expected OutputModalities length to be 1, got %d", len(instance.OutputModalities))
+	}
+	if instance.OutputModalities[0] != "text" {
+		t.Errorf(`Expected OutputModalities[0] to be "text", got %v`, instance.OutputModalities[0])
+	}
+	if instance.AdditionalProperties == nil {
+		t.Fatalf("Expected AdditionalProperties to be populated")
+	}
+}
+
+// TestModelInfoFromYAML tests loading ModelInfo through the generated YAML helper
+func TestModelInfoFromYAML(t *testing.T) {
+	yamlData := `
+id: gpt-4o
+displayName: GPT-4o
+ownedBy: openai
+contextWindow: 128000
+inputModalities:
+  - text
+  - image
+outputModalities:
+  - text
+additionalProperties:
+  supportsStreaming: true
+
+`
+
+	instance, err := prompty.ModelInfoFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ModelInfo from YAML helper: %v", err)
+	}
+	if instance.Id != "gpt-4o" {
+		t.Errorf(`Expected Id to be "gpt-4o", got %v`, instance.Id)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "GPT-4o" {
+		t.Errorf(`Expected DisplayName to be "GPT-4o", got %v`, instance.DisplayName)
+	}
+	if instance.OwnedBy == nil || *instance.OwnedBy != "openai" {
+		t.Errorf(`Expected OwnedBy to be "openai", got %v`, instance.OwnedBy)
+	}
+	if instance.ContextWindow == nil || *instance.ContextWindow != 128000 {
+		t.Errorf(`Expected ContextWindow to be 128000, got %v`, instance.ContextWindow)
+	}
+	if len(instance.InputModalities) != 2 {
+		t.Fatalf("Expected InputModalities length to be 2, got %d", len(instance.InputModalities))
+	}
+	if instance.InputModalities[0] != "text" {
+		t.Errorf(`Expected InputModalities[0] to be "text", got %v`, instance.InputModalities[0])
+	}
+	if instance.InputModalities[1] != "image" {
+		t.Errorf(`Expected InputModalities[1] to be "image", got %v`, instance.InputModalities[1])
+	}
+	if len(instance.OutputModalities) != 1 {
+		t.Fatalf("Expected OutputModalities length to be 1, got %d", len(instance.OutputModalities))
+	}
+	if instance.OutputModalities[0] != "text" {
+		t.Errorf(`Expected OutputModalities[0] to be "text", got %v`, instance.OutputModalities[0])
+	}
+	if instance.AdditionalProperties == nil {
+		t.Fatalf("Expected AdditionalProperties to be populated")
 	}
 }
 
@@ -145,6 +291,24 @@ func TestModelInfoRoundtrip(t *testing.T) {
 	if reloaded.ContextWindow == nil || *reloaded.ContextWindow != 128000 {
 		t.Errorf(`Expected ContextWindow to be 128000, got %v`, reloaded.ContextWindow)
 	}
+	if len(reloaded.InputModalities) != 2 {
+		t.Fatalf("Expected InputModalities length to be 2, got %d", len(reloaded.InputModalities))
+	}
+	if reloaded.InputModalities[0] != "text" {
+		t.Errorf(`Expected InputModalities[0] to be "text", got %v`, reloaded.InputModalities[0])
+	}
+	if reloaded.InputModalities[1] != "image" {
+		t.Errorf(`Expected InputModalities[1] to be "image", got %v`, reloaded.InputModalities[1])
+	}
+	if len(reloaded.OutputModalities) != 1 {
+		t.Fatalf("Expected OutputModalities length to be 1, got %d", len(reloaded.OutputModalities))
+	}
+	if reloaded.OutputModalities[0] != "text" {
+		t.Errorf(`Expected OutputModalities[0] to be "text", got %v`, reloaded.OutputModalities[0])
+	}
+	if reloaded.AdditionalProperties == nil {
+		t.Fatalf("Expected AdditionalProperties to be populated")
+	}
 }
 
 // TestModelInfoToJSON tests that ToJSON produces valid JSON
@@ -186,6 +350,41 @@ func TestModelInfoToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadModelInfo(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Id != "gpt-4o" {
+		t.Errorf(`Expected Id to be "gpt-4o", got %v`, reloaded.Id)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "GPT-4o" {
+		t.Errorf(`Expected DisplayName to be "GPT-4o", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.OwnedBy == nil || *reloaded.OwnedBy != "openai" {
+		t.Errorf(`Expected OwnedBy to be "openai", got %v`, reloaded.OwnedBy)
+	}
+	if reloaded.ContextWindow == nil || *reloaded.ContextWindow != 128000 {
+		t.Errorf(`Expected ContextWindow to be 128000, got %v`, reloaded.ContextWindow)
+	}
+	if len(reloaded.InputModalities) != 2 {
+		t.Fatalf("Expected InputModalities length to be 2, got %d", len(reloaded.InputModalities))
+	}
+	if reloaded.InputModalities[0] != "text" {
+		t.Errorf(`Expected InputModalities[0] to be "text", got %v`, reloaded.InputModalities[0])
+	}
+	if reloaded.InputModalities[1] != "image" {
+		t.Errorf(`Expected InputModalities[1] to be "image", got %v`, reloaded.InputModalities[1])
+	}
+	if len(reloaded.OutputModalities) != 1 {
+		t.Fatalf("Expected OutputModalities length to be 1, got %d", len(reloaded.OutputModalities))
+	}
+	if reloaded.OutputModalities[0] != "text" {
+		t.Errorf(`Expected OutputModalities[0] to be "text", got %v`, reloaded.OutputModalities[0])
+	}
+	if reloaded.AdditionalProperties == nil {
+		t.Fatalf("Expected AdditionalProperties to be populated")
+	}
 }
 
 // TestModelInfoToYAML tests that ToYAML produces valid YAML
@@ -226,5 +425,47 @@ func TestModelInfoToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadModelInfo(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Id != "gpt-4o" {
+		t.Errorf(`Expected Id to be "gpt-4o", got %v`, reloaded.Id)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "GPT-4o" {
+		t.Errorf(`Expected DisplayName to be "GPT-4o", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.OwnedBy == nil || *reloaded.OwnedBy != "openai" {
+		t.Errorf(`Expected OwnedBy to be "openai", got %v`, reloaded.OwnedBy)
+	}
+	if reloaded.ContextWindow == nil || *reloaded.ContextWindow != 128000 {
+		t.Errorf(`Expected ContextWindow to be 128000, got %v`, reloaded.ContextWindow)
+	}
+	if len(reloaded.InputModalities) != 2 {
+		t.Fatalf("Expected InputModalities length to be 2, got %d", len(reloaded.InputModalities))
+	}
+	if reloaded.InputModalities[0] != "text" {
+		t.Errorf(`Expected InputModalities[0] to be "text", got %v`, reloaded.InputModalities[0])
+	}
+	if reloaded.InputModalities[1] != "image" {
+		t.Errorf(`Expected InputModalities[1] to be "image", got %v`, reloaded.InputModalities[1])
+	}
+	if len(reloaded.OutputModalities) != 1 {
+		t.Fatalf("Expected OutputModalities length to be 1, got %d", len(reloaded.OutputModalities))
+	}
+	if reloaded.OutputModalities[0] != "text" {
+		t.Errorf(`Expected OutputModalities[0] to be "text", got %v`, reloaded.OutputModalities[0])
+	}
+	if reloaded.AdditionalProperties == nil {
+		t.Fatalf("Expected AdditionalProperties to be populated")
+	}
+}
+
+// TestModelInfoFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestModelInfoFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ModelInfoFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

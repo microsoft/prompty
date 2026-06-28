@@ -59,19 +59,25 @@ func LoadModelInfo(data interface{}, ctx *LoadContext) (ModelInfo, error) {
 			result.ContextWindow = &v
 		}
 		if val, ok := m["inputModalities"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result.InputModalities = make([]string, len(arr))
 				for i, v := range arr {
 					result.InputModalities[i] = v.(string)
 				}
+			case []string:
+				result.InputModalities = arr
 			}
 		}
 		if val, ok := m["outputModalities"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result.OutputModalities = make([]string, len(arr))
 				for i, v := range arr {
 					result.OutputModalities[i] = v.(string)
 				}
+			case []string:
+				result.OutputModalities = arr
 			}
 		}
 		if val, ok := m["additionalProperties"]; ok && val != nil {
@@ -85,7 +91,7 @@ func LoadModelInfo(data interface{}, ctx *LoadContext) (ModelInfo, error) {
 }
 
 // Save serializes ModelInfo to map[string]interface{}
-func (obj *ModelInfo) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ModelInfo) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["id"] = obj.Id
 	if obj.DisplayName != nil {
@@ -121,11 +127,7 @@ func (obj *ModelInfo) ToJSON() (string, error) {
 func (obj *ModelInfo) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ModelInfo from JSON string

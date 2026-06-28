@@ -62,6 +62,46 @@ properties:
 	_ = instance // No scalar properties to validate
 }
 
+// TestObjectPropertyFromJSON tests loading ObjectProperty through the generated JSON helper
+func TestObjectPropertyFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "properties": {
+    "property1": {
+      "kind": "string"
+    },
+    "property2": {
+      "kind": "number"
+    }
+  }
+}
+`
+
+	instance, err := prompty.ObjectPropertyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ObjectProperty from JSON helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+}
+
+// TestObjectPropertyFromYAML tests loading ObjectProperty through the generated YAML helper
+func TestObjectPropertyFromYAML(t *testing.T) {
+	yamlData := `
+properties:
+  property1:
+    kind: string
+  property2:
+    kind: number
+
+`
+
+	instance, err := prompty.ObjectPropertyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ObjectProperty from YAML helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+}
+
 // TestObjectPropertyRoundtrip tests load -> save -> load produces equivalent data
 func TestObjectPropertyRoundtrip(t *testing.T) {
 	jsonData := `
@@ -129,6 +169,12 @@ func TestObjectPropertyToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadObjectProperty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
 }
 
 // TestObjectPropertyToYAML tests that ToYAML produces valid YAML
@@ -163,5 +209,18 @@ func TestObjectPropertyToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadObjectProperty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
+}
+
+// TestObjectPropertyFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestObjectPropertyFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ObjectPropertyFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

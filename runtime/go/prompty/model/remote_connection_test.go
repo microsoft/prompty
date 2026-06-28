@@ -71,6 +71,55 @@ endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
 	}
 }
 
+// TestRemoteConnectionFromJSON tests loading RemoteConnection through the generated JSON helper
+func TestRemoteConnectionFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "remote",
+  "name": "my-reference-connection",
+  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"
+}
+`
+
+	instance, err := prompty.RemoteConnectionFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load RemoteConnection from JSON helper: %v", err)
+	}
+	if instance.Kind != "remote" {
+		t.Errorf(`Expected Kind to be "remote", got %v`, instance.Kind)
+	}
+	if instance.Name != "my-reference-connection" {
+		t.Errorf(`Expected Name to be "my-reference-connection", got %v`, instance.Name)
+	}
+	if instance.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, instance.Endpoint)
+	}
+}
+
+// TestRemoteConnectionFromYAML tests loading RemoteConnection through the generated YAML helper
+func TestRemoteConnectionFromYAML(t *testing.T) {
+	yamlData := `
+kind: remote
+name: my-reference-connection
+endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+
+`
+
+	instance, err := prompty.RemoteConnectionFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load RemoteConnection from YAML helper: %v", err)
+	}
+	if instance.Kind != "remote" {
+		t.Errorf(`Expected Kind to be "remote", got %v`, instance.Kind)
+	}
+	if instance.Name != "my-reference-connection" {
+		t.Errorf(`Expected Name to be "my-reference-connection", got %v`, instance.Name)
+	}
+	if instance.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, instance.Endpoint)
+	}
+}
+
 // TestRemoteConnectionRoundtrip tests load -> save -> load produces equivalent data
 func TestRemoteConnectionRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestRemoteConnectionToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadRemoteConnection(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Kind != "remote" {
+		t.Errorf(`Expected Kind to be "remote", got %v`, reloaded.Kind)
+	}
+	if reloaded.Name != "my-reference-connection" {
+		t.Errorf(`Expected Name to be "my-reference-connection", got %v`, reloaded.Name)
+	}
+	if reloaded.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, reloaded.Endpoint)
+	}
 }
 
 // TestRemoteConnectionToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestRemoteConnectionToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadRemoteConnection(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Kind != "remote" {
+		t.Errorf(`Expected Kind to be "remote", got %v`, reloaded.Kind)
+	}
+	if reloaded.Name != "my-reference-connection" {
+		t.Errorf(`Expected Name to be "my-reference-connection", got %v`, reloaded.Name)
+	}
+	if reloaded.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, reloaded.Endpoint)
+	}
+}
+
+// TestRemoteConnectionFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestRemoteConnectionFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.RemoteConnectionFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

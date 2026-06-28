@@ -45,7 +45,7 @@ func LoadHarnessContext(data interface{}, ctx *LoadContext) (HarnessContext, err
 }
 
 // Save serializes HarnessContext to map[string]interface{}
-func (obj *HarnessContext) Save(ctx *SaveContext) map[string]interface{} {
+func (obj HarnessContext) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Cwd != nil {
 		result["cwd"] = *obj.Cwd
@@ -75,11 +75,7 @@ func (obj *HarnessContext) ToJSON() (string, error) {
 func (obj *HarnessContext) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates HarnessContext from JSON string

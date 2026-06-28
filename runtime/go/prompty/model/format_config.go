@@ -49,7 +49,7 @@ func LoadFormatConfig(data interface{}, ctx *LoadContext) (FormatConfig, error) 
 }
 
 // Save serializes FormatConfig to map[string]interface{}
-func (obj *FormatConfig) Save(ctx *SaveContext) map[string]interface{} {
+func (obj FormatConfig) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	if obj.Strict != nil {
@@ -77,11 +77,7 @@ func (obj *FormatConfig) ToJSON() (string, error) {
 func (obj *FormatConfig) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates FormatConfig from JSON string

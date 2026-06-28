@@ -85,7 +85,8 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 			result.Example = &val
 		}
 		if val, ok := m["enumValues"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result.EnumValues = arr
 			}
 		}
@@ -95,7 +96,7 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 }
 
 // Save serializes Property to map[string]interface{}
-func (obj *Property) Save(ctx *SaveContext) map[string]interface{} {
+func (obj Property) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 	result["kind"] = obj.Kind
@@ -131,11 +132,7 @@ func (obj *Property) ToJSON() (string, error) {
 func (obj *Property) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates Property from JSON string
@@ -182,6 +179,9 @@ func LoadArrayProperty(data interface{}, ctx *LoadContext) (ArrayProperty, error
 				loaded, _ := LoadProperty(m, ctx)
 				// Polymorphic type - keep as interface{}
 				result.Items = loaded
+			} else {
+				loaded, _ := LoadProperty(val, ctx)
+				result.Items = loaded
 			}
 		}
 	}
@@ -190,7 +190,7 @@ func LoadArrayProperty(data interface{}, ctx *LoadContext) (ArrayProperty, error
 }
 
 // Save serializes ArrayProperty to map[string]interface{}
-func (obj *ArrayProperty) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ArrayProperty) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 
@@ -222,11 +222,7 @@ func (obj *ArrayProperty) ToJSON() (string, error) {
 func (obj *ArrayProperty) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ArrayProperty from JSON string
@@ -284,7 +280,7 @@ func LoadObjectProperty(data interface{}, ctx *LoadContext) (ObjectProperty, err
 }
 
 // Save serializes ObjectProperty to map[string]interface{}
-func (obj *ObjectProperty) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ObjectProperty) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	if obj.Properties != nil {
@@ -321,11 +317,7 @@ func (obj *ObjectProperty) ToJSON() (string, error) {
 func (obj *ObjectProperty) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ObjectProperty from JSON string

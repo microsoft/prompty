@@ -64,6 +64,48 @@ bindings:
 	// Note: Validation skipped for polymorphic base types - test child types directly
 }
 
+// TestToolFromJSON tests loading Tool through the generated JSON helper
+func TestToolFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "name": "my-tool",
+  "kind": "function",
+  "description": "A description of the tool",
+  "bindings": {
+    "input": "value"
+  }
+}
+`
+
+	instance, err := prompty.ToolFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Tool from JSON helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
+// TestToolFromYAML tests loading Tool through the generated YAML helper
+func TestToolFromYAML(t *testing.T) {
+	yamlData := `
+name: my-tool
+kind: function
+description: A description of the tool
+bindings:
+  input: value
+
+`
+
+	instance, err := prompty.ToolFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Tool from YAML helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
 // TestToolRoundtrip tests load -> save -> load produces equivalent data
 func TestToolRoundtrip(t *testing.T) {
 	jsonData := `
@@ -143,4 +185,11 @@ func TestToolToYAML(t *testing.T) {
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly
+}
+
+// TestToolFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
+	}
 }

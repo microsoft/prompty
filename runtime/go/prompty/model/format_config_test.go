@@ -62,6 +62,46 @@ options:
 	// Note: Validation skipped for polymorphic base types - test child types directly
 }
 
+// TestFormatConfigFromJSON tests loading FormatConfig through the generated JSON helper
+func TestFormatConfigFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "mustache",
+  "strict": true,
+  "options": {
+    "key": "value"
+  }
+}
+`
+
+	instance, err := prompty.FormatConfigFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load FormatConfig from JSON helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
+// TestFormatConfigFromYAML tests loading FormatConfig through the generated YAML helper
+func TestFormatConfigFromYAML(t *testing.T) {
+	yamlData := `
+kind: mustache
+strict: true
+options:
+  key: value
+
+`
+
+	instance, err := prompty.FormatConfigFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load FormatConfig from YAML helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
 // TestFormatConfigRoundtrip tests load -> save -> load produces equivalent data
 func TestFormatConfigRoundtrip(t *testing.T) {
 	jsonData := `
@@ -138,6 +178,13 @@ func TestFormatConfigToYAML(t *testing.T) {
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly
+}
+
+// TestFormatConfigFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestFormatConfigFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.FormatConfigFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
+	}
 }
 
 // TestFormatConfigFromFormat tests loading FormatConfig from string

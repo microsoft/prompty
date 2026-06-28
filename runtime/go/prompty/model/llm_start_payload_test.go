@@ -79,6 +79,63 @@ attempt: 0
 	}
 }
 
+// TestLlmStartPayloadFromJSON tests loading LlmStartPayload through the generated JSON helper
+func TestLlmStartPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "provider": "openai",
+  "modelId": "gpt-4o-mini",
+  "messageCount": 4,
+  "attempt": 0
+}
+`
+
+	instance, err := prompty.LlmStartPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load LlmStartPayload from JSON helper: %v", err)
+	}
+	if instance.Provider == nil || *instance.Provider != "openai" {
+		t.Errorf(`Expected Provider to be "openai", got %v`, instance.Provider)
+	}
+	if instance.ModelId == nil || *instance.ModelId != "gpt-4o-mini" {
+		t.Errorf(`Expected ModelId to be "gpt-4o-mini", got %v`, instance.ModelId)
+	}
+	if instance.MessageCount == nil || *instance.MessageCount != 4 {
+		t.Errorf(`Expected MessageCount to be 4, got %v`, instance.MessageCount)
+	}
+	if instance.Attempt == nil || *instance.Attempt != 0 {
+		t.Errorf(`Expected Attempt to be 0, got %v`, instance.Attempt)
+	}
+}
+
+// TestLlmStartPayloadFromYAML tests loading LlmStartPayload through the generated YAML helper
+func TestLlmStartPayloadFromYAML(t *testing.T) {
+	yamlData := `
+provider: openai
+modelId: gpt-4o-mini
+messageCount: 4
+attempt: 0
+
+`
+
+	instance, err := prompty.LlmStartPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load LlmStartPayload from YAML helper: %v", err)
+	}
+	if instance.Provider == nil || *instance.Provider != "openai" {
+		t.Errorf(`Expected Provider to be "openai", got %v`, instance.Provider)
+	}
+	if instance.ModelId == nil || *instance.ModelId != "gpt-4o-mini" {
+		t.Errorf(`Expected ModelId to be "gpt-4o-mini", got %v`, instance.ModelId)
+	}
+	if instance.MessageCount == nil || *instance.MessageCount != 4 {
+		t.Errorf(`Expected MessageCount to be 4, got %v`, instance.MessageCount)
+	}
+	if instance.Attempt == nil || *instance.Attempt != 0 {
+		t.Errorf(`Expected Attempt to be 0, got %v`, instance.Attempt)
+	}
+}
+
 // TestLlmStartPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestLlmStartPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -149,6 +206,23 @@ func TestLlmStartPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadLlmStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Provider == nil || *reloaded.Provider != "openai" {
+		t.Errorf(`Expected Provider to be "openai", got %v`, reloaded.Provider)
+	}
+	if reloaded.ModelId == nil || *reloaded.ModelId != "gpt-4o-mini" {
+		t.Errorf(`Expected ModelId to be "gpt-4o-mini", got %v`, reloaded.ModelId)
+	}
+	if reloaded.MessageCount == nil || *reloaded.MessageCount != 4 {
+		t.Errorf(`Expected MessageCount to be 4, got %v`, reloaded.MessageCount)
+	}
+	if reloaded.Attempt == nil || *reloaded.Attempt != 0 {
+		t.Errorf(`Expected Attempt to be 0, got %v`, reloaded.Attempt)
+	}
 }
 
 // TestLlmStartPayloadToYAML tests that ToYAML produces valid YAML
@@ -179,5 +253,29 @@ func TestLlmStartPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadLlmStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Provider == nil || *reloaded.Provider != "openai" {
+		t.Errorf(`Expected Provider to be "openai", got %v`, reloaded.Provider)
+	}
+	if reloaded.ModelId == nil || *reloaded.ModelId != "gpt-4o-mini" {
+		t.Errorf(`Expected ModelId to be "gpt-4o-mini", got %v`, reloaded.ModelId)
+	}
+	if reloaded.MessageCount == nil || *reloaded.MessageCount != 4 {
+		t.Errorf(`Expected MessageCount to be 4, got %v`, reloaded.MessageCount)
+	}
+	if reloaded.Attempt == nil || *reloaded.Attempt != 0 {
+		t.Errorf(`Expected Attempt to be 0, got %v`, reloaded.Attempt)
+	}
+}
+
+// TestLlmStartPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestLlmStartPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.LlmStartPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

@@ -35,7 +35,7 @@ func LoadAnthropicTextBlock(data interface{}, ctx *LoadContext) (AnthropicTextBl
 }
 
 // Save serializes AnthropicTextBlock to map[string]interface{}
-func (obj *AnthropicTextBlock) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AnthropicTextBlock) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["type"] = obj.Type
 	result["text"] = obj.Text
@@ -58,11 +58,7 @@ func (obj *AnthropicTextBlock) ToJSON() (string, error) {
 func (obj *AnthropicTextBlock) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AnthropicTextBlock from JSON string

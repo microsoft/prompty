@@ -40,7 +40,7 @@ func LoadToolCall(data interface{}, ctx *LoadContext) (ToolCall, error) {
 }
 
 // Save serializes ToolCall to map[string]interface{}
-func (obj *ToolCall) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ToolCall) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["id"] = obj.Id
 	result["name"] = obj.Name
@@ -64,11 +64,7 @@ func (obj *ToolCall) ToJSON() (string, error) {
 func (obj *ToolCall) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ToolCall from JSON string

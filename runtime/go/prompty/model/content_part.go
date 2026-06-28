@@ -48,7 +48,7 @@ func LoadContentPart(data interface{}, ctx *LoadContext) (interface{}, error) {
 }
 
 // Save serializes ContentPart to map[string]interface{}
-func (obj *ContentPart) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ContentPart) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 
@@ -70,11 +70,7 @@ func (obj *ContentPart) ToJSON() (string, error) {
 func (obj *ContentPart) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ContentPart from JSON string
@@ -124,7 +120,7 @@ func LoadTextPart(data interface{}, ctx *LoadContext) (TextPart, error) {
 }
 
 // Save serializes TextPart to map[string]interface{}
-func (obj *TextPart) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TextPart) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["value"] = obj.Value
@@ -147,11 +143,7 @@ func (obj *TextPart) ToJSON() (string, error) {
 func (obj *TextPart) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TextPart from JSON string
@@ -209,7 +201,7 @@ func LoadImagePart(data interface{}, ctx *LoadContext) (ImagePart, error) {
 }
 
 // Save serializes ImagePart to map[string]interface{}
-func (obj *ImagePart) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ImagePart) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["source"] = obj.Source
@@ -238,11 +230,7 @@ func (obj *ImagePart) ToJSON() (string, error) {
 func (obj *ImagePart) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ImagePart from JSON string
@@ -295,7 +283,7 @@ func LoadFilePart(data interface{}, ctx *LoadContext) (FilePart, error) {
 }
 
 // Save serializes FilePart to map[string]interface{}
-func (obj *FilePart) Save(ctx *SaveContext) map[string]interface{} {
+func (obj FilePart) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["source"] = obj.Source
@@ -321,11 +309,7 @@ func (obj *FilePart) ToJSON() (string, error) {
 func (obj *FilePart) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates FilePart from JSON string
@@ -378,7 +362,7 @@ func LoadAudioPart(data interface{}, ctx *LoadContext) (AudioPart, error) {
 }
 
 // Save serializes AudioPart to map[string]interface{}
-func (obj *AudioPart) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AudioPart) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["source"] = obj.Source
@@ -404,11 +388,7 @@ func (obj *AudioPart) ToJSON() (string, error) {
 func (obj *AudioPart) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AudioPart from JSON string

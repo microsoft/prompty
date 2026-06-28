@@ -41,6 +41,25 @@ func TestMessageLoadJSON(t *testing.T) {
 	if instance.Role != "user" {
 		t.Errorf(`Expected Role to be "user", got %v`, instance.Role)
 	}
+	if len(instance.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(instance.Parts))
+	}
+	parts0Value, ok := instance.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", instance.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "Hello!" {
+		t.Errorf(`Expected Value to be "Hello!", got %v`, parts0Value.Value)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := instance.Metadata["source"]; got != "user-input" {
+		t.Errorf(`Expected Metadata["source"] to be "user-input", got %v`, got)
+	}
 }
 
 // TestMessageLoadYAML tests loading Message from YAML
@@ -66,6 +85,110 @@ metadata:
 	}
 	if instance.Role != "user" {
 		t.Errorf(`Expected Role to be "user", got %v`, instance.Role)
+	}
+	if len(instance.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(instance.Parts))
+	}
+	parts0Value, ok := instance.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", instance.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "Hello!" {
+		t.Errorf(`Expected Value to be "Hello!", got %v`, parts0Value.Value)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := instance.Metadata["source"]; got != "user-input" {
+		t.Errorf(`Expected Metadata["source"] to be "user-input", got %v`, got)
+	}
+}
+
+// TestMessageFromJSON tests loading Message through the generated JSON helper
+func TestMessageFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "role": "user",
+  "parts": [
+    {
+      "kind": "text",
+      "value": "Hello!"
+    }
+  ],
+  "metadata": {
+    "source": "user-input"
+  }
+}
+`
+
+	instance, err := prompty.MessageFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Message from JSON helper: %v", err)
+	}
+	if instance.Role != "user" {
+		t.Errorf(`Expected Role to be "user", got %v`, instance.Role)
+	}
+	if len(instance.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(instance.Parts))
+	}
+	parts0Value, ok := instance.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", instance.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "Hello!" {
+		t.Errorf(`Expected Value to be "Hello!", got %v`, parts0Value.Value)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := instance.Metadata["source"]; got != "user-input" {
+		t.Errorf(`Expected Metadata["source"] to be "user-input", got %v`, got)
+	}
+}
+
+// TestMessageFromYAML tests loading Message through the generated YAML helper
+func TestMessageFromYAML(t *testing.T) {
+	yamlData := `
+role: user
+parts:
+  - kind: text
+    value: Hello!
+metadata:
+  source: user-input
+
+`
+
+	instance, err := prompty.MessageFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Message from YAML helper: %v", err)
+	}
+	if instance.Role != "user" {
+		t.Errorf(`Expected Role to be "user", got %v`, instance.Role)
+	}
+	if len(instance.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(instance.Parts))
+	}
+	parts0Value, ok := instance.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", instance.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "Hello!" {
+		t.Errorf(`Expected Value to be "Hello!", got %v`, parts0Value.Value)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := instance.Metadata["source"]; got != "user-input" {
+		t.Errorf(`Expected Metadata["source"] to be "user-input", got %v`, got)
 	}
 }
 
@@ -105,6 +228,25 @@ func TestMessageRoundtrip(t *testing.T) {
 	if reloaded.Role != "user" {
 		t.Errorf(`Expected Role to be "user", got %v`, reloaded.Role)
 	}
+	if len(reloaded.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(reloaded.Parts))
+	}
+	parts0Value, ok := reloaded.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", reloaded.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "Hello!" {
+		t.Errorf(`Expected Value to be "Hello!", got %v`, parts0Value.Value)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := reloaded.Metadata["source"]; got != "user-input" {
+		t.Errorf(`Expected Metadata["source"] to be "user-input", got %v`, got)
+	}
 }
 
 // TestMessageToJSON tests that ToJSON produces valid JSON
@@ -142,6 +284,33 @@ func TestMessageToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadMessage(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Role != "user" {
+		t.Errorf(`Expected Role to be "user", got %v`, reloaded.Role)
+	}
+	if len(reloaded.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(reloaded.Parts))
+	}
+	parts0Value, ok := reloaded.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", reloaded.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "Hello!" {
+		t.Errorf(`Expected Value to be "Hello!", got %v`, parts0Value.Value)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := reloaded.Metadata["source"]; got != "user-input" {
+		t.Errorf(`Expected Metadata["source"] to be "user-input", got %v`, got)
+	}
 }
 
 // TestMessageToYAML tests that ToYAML produces valid YAML
@@ -178,5 +347,39 @@ func TestMessageToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadMessage(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Role != "user" {
+		t.Errorf(`Expected Role to be "user", got %v`, reloaded.Role)
+	}
+	if len(reloaded.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(reloaded.Parts))
+	}
+	parts0Value, ok := reloaded.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", reloaded.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "Hello!" {
+		t.Errorf(`Expected Value to be "Hello!", got %v`, parts0Value.Value)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if got := reloaded.Metadata["source"]; got != "user-input" {
+		t.Errorf(`Expected Metadata["source"] to be "user-input", got %v`, got)
+	}
+}
+
+// TestMessageFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestMessageFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.MessageFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

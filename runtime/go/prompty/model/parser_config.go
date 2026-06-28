@@ -44,7 +44,7 @@ func LoadParserConfig(data interface{}, ctx *LoadContext) (ParserConfig, error) 
 }
 
 // Save serializes ParserConfig to map[string]interface{}
-func (obj *ParserConfig) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ParserConfig) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	if obj.Options != nil {
@@ -69,11 +69,7 @@ func (obj *ParserConfig) ToJSON() (string, error) {
 func (obj *ParserConfig) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ParserConfig from JSON string

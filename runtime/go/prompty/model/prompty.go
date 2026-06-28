@@ -86,6 +86,9 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 			if m, ok := val.(map[string]interface{}); ok {
 				loaded, _ := LoadModel(m, ctx)
 				result.Model = loaded
+			} else {
+				loaded, _ := LoadModel(val, ctx)
+				result.Model = loaded
 			}
 		}
 		if val, ok := m["tools"]; ok && val != nil {
@@ -116,7 +119,7 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 }
 
 // Save serializes Prompty to map[string]interface{}
-func (obj *Prompty) Save(ctx *SaveContext) map[string]interface{} {
+func (obj Prompty) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 	if obj.DisplayName != nil {
@@ -200,11 +203,7 @@ func (obj *Prompty) ToJSON() (string, error) {
 func (obj *Prompty) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates Prompty from JSON string

@@ -44,7 +44,7 @@ func LoadToolDispatchResult(data interface{}, ctx *LoadContext) (ToolDispatchRes
 }
 
 // Save serializes ToolDispatchResult to map[string]interface{}
-func (obj *ToolDispatchResult) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ToolDispatchResult) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["toolCallId"] = obj.ToolCallId
 	result["name"] = obj.Name
@@ -69,11 +69,7 @@ func (obj *ToolDispatchResult) ToJSON() (string, error) {
 func (obj *ToolDispatchResult) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ToolDispatchResult from JSON string

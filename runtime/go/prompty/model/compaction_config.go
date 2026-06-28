@@ -55,7 +55,7 @@ func LoadCompactionConfig(data interface{}, ctx *LoadContext) (CompactionConfig,
 }
 
 // Save serializes CompactionConfig to map[string]interface{}
-func (obj *CompactionConfig) Save(ctx *SaveContext) map[string]interface{} {
+func (obj CompactionConfig) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Strategy != nil {
 		result["strategy"] = *obj.Strategy
@@ -85,11 +85,7 @@ func (obj *CompactionConfig) ToJSON() (string, error) {
 func (obj *CompactionConfig) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates CompactionConfig from JSON string

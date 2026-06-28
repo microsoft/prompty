@@ -63,6 +63,47 @@ description: Get the current weather for a city
 	}
 }
 
+// TestAnthropicToolDefinitionFromJSON tests loading AnthropicToolDefinition through the generated JSON helper
+func TestAnthropicToolDefinitionFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "name": "get_weather",
+  "description": "Get the current weather for a city"
+}
+`
+
+	instance, err := prompty.AnthropicToolDefinitionFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicToolDefinition from JSON helper: %v", err)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+	if instance.Description == nil || *instance.Description != "Get the current weather for a city" {
+		t.Errorf(`Expected Description to be "Get the current weather for a city", got %v`, instance.Description)
+	}
+}
+
+// TestAnthropicToolDefinitionFromYAML tests loading AnthropicToolDefinition through the generated YAML helper
+func TestAnthropicToolDefinitionFromYAML(t *testing.T) {
+	yamlData := `
+name: get_weather
+description: Get the current weather for a city
+
+`
+
+	instance, err := prompty.AnthropicToolDefinitionFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicToolDefinition from YAML helper: %v", err)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+	if instance.Description == nil || *instance.Description != "Get the current weather for a city" {
+		t.Errorf(`Expected Description to be "Get the current weather for a city", got %v`, instance.Description)
+	}
+}
+
 // TestAnthropicToolDefinitionRoundtrip tests load -> save -> load produces equivalent data
 func TestAnthropicToolDefinitionRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestAnthropicToolDefinitionToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAnthropicToolDefinition(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "Get the current weather for a city" {
+		t.Errorf(`Expected Description to be "Get the current weather for a city", got %v`, reloaded.Description)
+	}
 }
 
 // TestAnthropicToolDefinitionToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestAnthropicToolDefinitionToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAnthropicToolDefinition(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "Get the current weather for a city" {
+		t.Errorf(`Expected Description to be "Get the current weather for a city", got %v`, reloaded.Description)
+	}
+}
+
+// TestAnthropicToolDefinitionFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAnthropicToolDefinitionFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AnthropicToolDefinitionFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

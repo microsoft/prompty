@@ -40,7 +40,7 @@ func LoadValidationError(data interface{}, ctx *LoadContext) (ValidationError, e
 }
 
 // Save serializes ValidationError to map[string]interface{}
-func (obj *ValidationError) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ValidationError) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["message"] = obj.Message
 	result["property"] = obj.Property
@@ -64,11 +64,7 @@ func (obj *ValidationError) ToJSON() (string, error) {
 func (obj *ValidationError) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ValidationError from JSON string

@@ -119,7 +119,7 @@ func LoadTurnSummary(data interface{}, ctx *LoadContext) (TurnSummary, error) {
 }
 
 // Save serializes TurnSummary to map[string]interface{}
-func (obj *TurnSummary) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TurnSummary) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["turnId"] = obj.TurnId
 	result["status"] = obj.Status
@@ -158,11 +158,7 @@ func (obj *TurnSummary) ToJSON() (string, error) {
 func (obj *TurnSummary) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TurnSummary from JSON string

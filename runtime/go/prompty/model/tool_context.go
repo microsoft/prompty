@@ -47,7 +47,7 @@ func LoadToolContext(data interface{}, ctx *LoadContext) (ToolContext, error) {
 }
 
 // Save serializes ToolContext to map[string]interface{}
-func (obj *ToolContext) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ToolContext) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Messages != nil {
 		arr := make([]interface{}, len(obj.Messages))
@@ -78,11 +78,7 @@ func (obj *ToolContext) ToJSON() (string, error) {
 func (obj *ToolContext) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ToolContext from JSON string

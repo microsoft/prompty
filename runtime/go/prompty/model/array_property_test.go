@@ -54,6 +54,38 @@ items:
 	_ = instance // No scalar properties to validate
 }
 
+// TestArrayPropertyFromJSON tests loading ArrayProperty through the generated JSON helper
+func TestArrayPropertyFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "items": {
+    "kind": "string"
+  }
+}
+`
+
+	instance, err := prompty.ArrayPropertyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ArrayProperty from JSON helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+}
+
+// TestArrayPropertyFromYAML tests loading ArrayProperty through the generated YAML helper
+func TestArrayPropertyFromYAML(t *testing.T) {
+	yamlData := `
+items:
+  kind: string
+
+`
+
+	instance, err := prompty.ArrayPropertyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ArrayProperty from YAML helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+}
+
 // TestArrayPropertyRoundtrip tests load -> save -> load produces equivalent data
 func TestArrayPropertyRoundtrip(t *testing.T) {
 	jsonData := `
@@ -111,6 +143,12 @@ func TestArrayPropertyToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadArrayProperty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
 }
 
 // TestArrayPropertyToYAML tests that ToYAML produces valid YAML
@@ -140,5 +178,18 @@ func TestArrayPropertyToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadArrayProperty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
+}
+
+// TestArrayPropertyFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestArrayPropertyFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ArrayPropertyFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

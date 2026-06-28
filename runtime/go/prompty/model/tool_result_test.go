@@ -46,6 +46,19 @@ func TestToolResultLoadJSON(t *testing.T) {
 	if instance.DurationMs == nil || *instance.DurationMs != 42 {
 		t.Errorf(`Expected DurationMs to be 42, got %v`, instance.DurationMs)
 	}
+	if len(instance.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(instance.Parts))
+	}
+	parts0Value, ok := instance.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", instance.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "72°F and sunny" {
+		t.Errorf(`Expected Value to be "72°F and sunny", got %v`, parts0Value.Value)
+	}
 }
 
 // TestToolResultLoadYAML tests loading ToolResult from YAML
@@ -77,6 +90,103 @@ durationMs: 42
 	}
 	if instance.DurationMs == nil || *instance.DurationMs != 42 {
 		t.Errorf(`Expected DurationMs to be 42, got %v`, instance.DurationMs)
+	}
+	if len(instance.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(instance.Parts))
+	}
+	parts0Value, ok := instance.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", instance.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "72°F and sunny" {
+		t.Errorf(`Expected Value to be "72°F and sunny", got %v`, parts0Value.Value)
+	}
+}
+
+// TestToolResultFromJSON tests loading ToolResult through the generated JSON helper
+func TestToolResultFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "parts": [
+    {
+      "kind": "text",
+      "value": "72°F and sunny"
+    }
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
+}
+`
+
+	instance, err := prompty.ToolResultFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolResult from JSON helper: %v", err)
+	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "missing_tool" {
+		t.Errorf(`Expected ErrorKind to be "missing_tool", got %v`, instance.ErrorKind)
+	}
+	if instance.ErrorMessage == nil || *instance.ErrorMessage != "Tool 'get_weather' is not registered" {
+		t.Errorf(`Expected ErrorMessage to be "Tool 'get_weather' is not registered", got %v`, instance.ErrorMessage)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, instance.DurationMs)
+	}
+	if len(instance.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(instance.Parts))
+	}
+	parts0Value, ok := instance.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", instance.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "72°F and sunny" {
+		t.Errorf(`Expected Value to be "72°F and sunny", got %v`, parts0Value.Value)
+	}
+}
+
+// TestToolResultFromYAML tests loading ToolResult through the generated YAML helper
+func TestToolResultFromYAML(t *testing.T) {
+	yamlData := `
+parts:
+  - kind: text
+    value: 72°F and sunny
+errorKind: missing_tool
+errorMessage: Tool 'get_weather' is not registered
+durationMs: 42
+
+`
+
+	instance, err := prompty.ToolResultFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolResult from YAML helper: %v", err)
+	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "missing_tool" {
+		t.Errorf(`Expected ErrorKind to be "missing_tool", got %v`, instance.ErrorKind)
+	}
+	if instance.ErrorMessage == nil || *instance.ErrorMessage != "Tool 'get_weather' is not registered" {
+		t.Errorf(`Expected ErrorMessage to be "Tool 'get_weather' is not registered", got %v`, instance.ErrorMessage)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, instance.DurationMs)
+	}
+	if len(instance.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(instance.Parts))
+	}
+	parts0Value, ok := instance.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", instance.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "72°F and sunny" {
+		t.Errorf(`Expected Value to be "72°F and sunny", got %v`, parts0Value.Value)
 	}
 }
 
@@ -121,6 +231,19 @@ func TestToolResultRoundtrip(t *testing.T) {
 	if reloaded.DurationMs == nil || *reloaded.DurationMs != 42 {
 		t.Errorf(`Expected DurationMs to be 42, got %v`, reloaded.DurationMs)
 	}
+	if len(reloaded.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(reloaded.Parts))
+	}
+	parts0Value, ok := reloaded.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", reloaded.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "72°F and sunny" {
+		t.Errorf(`Expected Value to be "72°F and sunny", got %v`, parts0Value.Value)
+	}
 }
 
 // TestToolResultToJSON tests that ToJSON produces valid JSON
@@ -157,6 +280,33 @@ func TestToolResultToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadToolResult(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "missing_tool" {
+		t.Errorf(`Expected ErrorKind to be "missing_tool", got %v`, reloaded.ErrorKind)
+	}
+	if reloaded.ErrorMessage == nil || *reloaded.ErrorMessage != "Tool 'get_weather' is not registered" {
+		t.Errorf(`Expected ErrorMessage to be "Tool 'get_weather' is not registered", got %v`, reloaded.ErrorMessage)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, reloaded.DurationMs)
+	}
+	if len(reloaded.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(reloaded.Parts))
+	}
+	parts0Value, ok := reloaded.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", reloaded.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "72°F and sunny" {
+		t.Errorf(`Expected Value to be "72°F and sunny", got %v`, parts0Value.Value)
+	}
 }
 
 // TestToolResultToYAML tests that ToYAML produces valid YAML
@@ -192,5 +342,39 @@ func TestToolResultToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadToolResult(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "missing_tool" {
+		t.Errorf(`Expected ErrorKind to be "missing_tool", got %v`, reloaded.ErrorKind)
+	}
+	if reloaded.ErrorMessage == nil || *reloaded.ErrorMessage != "Tool 'get_weather' is not registered" {
+		t.Errorf(`Expected ErrorMessage to be "Tool 'get_weather' is not registered", got %v`, reloaded.ErrorMessage)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, reloaded.DurationMs)
+	}
+	if len(reloaded.Parts) != 1 {
+		t.Fatalf("Expected Parts length to be 1, got %d", len(reloaded.Parts))
+	}
+	parts0Value, ok := reloaded.Parts[0].(prompty.TextPart)
+	if !ok {
+		t.Fatalf("Expected Parts[0] to be prompty.TextPart, got %T", reloaded.Parts[0])
+	}
+	if parts0Value.Kind != "text" {
+		t.Errorf(`Expected Kind to be "text", got %v`, parts0Value.Kind)
+	}
+	if parts0Value.Value != "72°F and sunny" {
+		t.Errorf(`Expected Value to be "72°F and sunny", got %v`, parts0Value.Value)
+	}
+}
+
+// TestToolResultFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolResultFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolResultFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

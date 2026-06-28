@@ -63,6 +63,47 @@ version: 2.0.0
 	}
 }
 
+// TestTraceFileFromJSON tests loading TraceFile through the generated JSON helper
+func TestTraceFileFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "runtime": "python",
+  "version": "2.0.0"
+}
+`
+
+	instance, err := prompty.TraceFileFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TraceFile from JSON helper: %v", err)
+	}
+	if instance.Runtime != "python" {
+		t.Errorf(`Expected Runtime to be "python", got %v`, instance.Runtime)
+	}
+	if instance.Version != "2.0.0" {
+		t.Errorf(`Expected Version to be "2.0.0", got %v`, instance.Version)
+	}
+}
+
+// TestTraceFileFromYAML tests loading TraceFile through the generated YAML helper
+func TestTraceFileFromYAML(t *testing.T) {
+	yamlData := `
+runtime: python
+version: 2.0.0
+
+`
+
+	instance, err := prompty.TraceFileFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TraceFile from YAML helper: %v", err)
+	}
+	if instance.Runtime != "python" {
+		t.Errorf(`Expected Runtime to be "python", got %v`, instance.Runtime)
+	}
+	if instance.Version != "2.0.0" {
+		t.Errorf(`Expected Version to be "2.0.0", got %v`, instance.Version)
+	}
+}
+
 // TestTraceFileRoundtrip tests load -> save -> load produces equivalent data
 func TestTraceFileRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestTraceFileToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTraceFile(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Runtime != "python" {
+		t.Errorf(`Expected Runtime to be "python", got %v`, reloaded.Runtime)
+	}
+	if reloaded.Version != "2.0.0" {
+		t.Errorf(`Expected Version to be "2.0.0", got %v`, reloaded.Version)
+	}
 }
 
 // TestTraceFileToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestTraceFileToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTraceFile(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Runtime != "python" {
+		t.Errorf(`Expected Runtime to be "python", got %v`, reloaded.Runtime)
+	}
+	if reloaded.Version != "2.0.0" {
+		t.Errorf(`Expected Version to be "2.0.0", got %v`, reloaded.Version)
+	}
+}
+
+// TestTraceFileFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTraceFileFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TraceFileFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

@@ -71,6 +71,55 @@ reason: secret
 	}
 }
 
+// TestRedactedFieldFromJSON tests loading RedactedField through the generated JSON helper
+func TestRedactedFieldFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "path": "$.arguments.apiKey",
+  "mode": "redacted",
+  "reason": "secret"
+}
+`
+
+	instance, err := prompty.RedactedFieldFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load RedactedField from JSON helper: %v", err)
+	}
+	if instance.Path != "$.arguments.apiKey" {
+		t.Errorf(`Expected Path to be "$.arguments.apiKey", got %v`, instance.Path)
+	}
+	if instance.Mode != "redacted" {
+		t.Errorf(`Expected Mode to be "redacted", got %v`, instance.Mode)
+	}
+	if instance.Reason == nil || *instance.Reason != "secret" {
+		t.Errorf(`Expected Reason to be "secret", got %v`, instance.Reason)
+	}
+}
+
+// TestRedactedFieldFromYAML tests loading RedactedField through the generated YAML helper
+func TestRedactedFieldFromYAML(t *testing.T) {
+	yamlData := `
+path: $.arguments.apiKey
+mode: redacted
+reason: secret
+
+`
+
+	instance, err := prompty.RedactedFieldFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load RedactedField from YAML helper: %v", err)
+	}
+	if instance.Path != "$.arguments.apiKey" {
+		t.Errorf(`Expected Path to be "$.arguments.apiKey", got %v`, instance.Path)
+	}
+	if instance.Mode != "redacted" {
+		t.Errorf(`Expected Mode to be "redacted", got %v`, instance.Mode)
+	}
+	if instance.Reason == nil || *instance.Reason != "secret" {
+		t.Errorf(`Expected Reason to be "secret", got %v`, instance.Reason)
+	}
+}
+
 // TestRedactedFieldRoundtrip tests load -> save -> load produces equivalent data
 func TestRedactedFieldRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestRedactedFieldToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadRedactedField(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Path != "$.arguments.apiKey" {
+		t.Errorf(`Expected Path to be "$.arguments.apiKey", got %v`, reloaded.Path)
+	}
+	if reloaded.Mode != "redacted" {
+		t.Errorf(`Expected Mode to be "redacted", got %v`, reloaded.Mode)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "secret" {
+		t.Errorf(`Expected Reason to be "secret", got %v`, reloaded.Reason)
+	}
 }
 
 // TestRedactedFieldToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestRedactedFieldToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadRedactedField(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Path != "$.arguments.apiKey" {
+		t.Errorf(`Expected Path to be "$.arguments.apiKey", got %v`, reloaded.Path)
+	}
+	if reloaded.Mode != "redacted" {
+		t.Errorf(`Expected Mode to be "redacted", got %v`, reloaded.Mode)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "secret" {
+		t.Errorf(`Expected Reason to be "secret", got %v`, reloaded.Reason)
+	}
+}
+
+// TestRedactedFieldFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestRedactedFieldFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.RedactedFieldFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

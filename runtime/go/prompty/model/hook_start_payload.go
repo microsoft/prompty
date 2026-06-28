@@ -61,7 +61,7 @@ func LoadHookStartPayload(data interface{}, ctx *LoadContext) (HookStartPayload,
 }
 
 // Save serializes HookStartPayload to map[string]interface{}
-func (obj *HookStartPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj HookStartPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["hookInvocationId"] = obj.HookInvocationId
 	result["hookType"] = obj.HookType
@@ -93,11 +93,7 @@ func (obj *HookStartPayload) ToJSON() (string, error) {
 func (obj *HookStartPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates HookStartPayload from JSON string

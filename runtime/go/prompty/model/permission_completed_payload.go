@@ -63,7 +63,7 @@ func LoadPermissionCompletedPayload(data interface{}, ctx *LoadContext) (Permiss
 }
 
 // Save serializes PermissionCompletedPayload to map[string]interface{}
-func (obj *PermissionCompletedPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj PermissionCompletedPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.RequestId != nil {
 		result["requestId"] = *obj.RequestId
@@ -101,11 +101,7 @@ func (obj *PermissionCompletedPayload) ToJSON() (string, error) {
 func (obj *PermissionCompletedPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates PermissionCompletedPayload from JSON string

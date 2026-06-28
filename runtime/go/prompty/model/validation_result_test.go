@@ -33,6 +33,9 @@ func TestValidationResultLoadJSON(t *testing.T) {
 	if instance.Valid != true {
 		t.Errorf(`Expected Valid to be true, got %v`, instance.Valid)
 	}
+	if len(instance.Errors) != 0 {
+		t.Fatalf("Expected Errors length to be 0, got %d", len(instance.Errors))
+	}
 }
 
 // TestValidationResultLoadYAML tests loading ValidationResult from YAML
@@ -54,6 +57,50 @@ errors: []
 	}
 	if instance.Valid != true {
 		t.Errorf(`Expected Valid to be true, got %v`, instance.Valid)
+	}
+	if len(instance.Errors) != 0 {
+		t.Fatalf("Expected Errors length to be 0, got %d", len(instance.Errors))
+	}
+}
+
+// TestValidationResultFromJSON tests loading ValidationResult through the generated JSON helper
+func TestValidationResultFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "valid": true,
+  "errors": []
+}
+`
+
+	instance, err := prompty.ValidationResultFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ValidationResult from JSON helper: %v", err)
+	}
+	if instance.Valid != true {
+		t.Errorf(`Expected Valid to be true, got %v`, instance.Valid)
+	}
+	if len(instance.Errors) != 0 {
+		t.Fatalf("Expected Errors length to be 0, got %d", len(instance.Errors))
+	}
+}
+
+// TestValidationResultFromYAML tests loading ValidationResult through the generated YAML helper
+func TestValidationResultFromYAML(t *testing.T) {
+	yamlData := `
+valid: true
+errors: []
+
+`
+
+	instance, err := prompty.ValidationResultFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ValidationResult from YAML helper: %v", err)
+	}
+	if instance.Valid != true {
+		t.Errorf(`Expected Valid to be true, got %v`, instance.Valid)
+	}
+	if len(instance.Errors) != 0 {
+		t.Fatalf("Expected Errors length to be 0, got %d", len(instance.Errors))
 	}
 }
 
@@ -85,6 +132,9 @@ func TestValidationResultRoundtrip(t *testing.T) {
 	if reloaded.Valid != true {
 		t.Errorf(`Expected Valid to be true, got %v`, reloaded.Valid)
 	}
+	if len(reloaded.Errors) != 0 {
+		t.Fatalf("Expected Errors length to be 0, got %d", len(reloaded.Errors))
+	}
 }
 
 // TestValidationResultToJSON tests that ToJSON produces valid JSON
@@ -114,6 +164,17 @@ func TestValidationResultToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadValidationResult(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Valid != true {
+		t.Errorf(`Expected Valid to be true, got %v`, reloaded.Valid)
+	}
+	if len(reloaded.Errors) != 0 {
+		t.Fatalf("Expected Errors length to be 0, got %d", len(reloaded.Errors))
+	}
 }
 
 // TestValidationResultToYAML tests that ToYAML produces valid YAML
@@ -142,5 +203,23 @@ func TestValidationResultToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadValidationResult(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Valid != true {
+		t.Errorf(`Expected Valid to be true, got %v`, reloaded.Valid)
+	}
+	if len(reloaded.Errors) != 0 {
+		t.Fatalf("Expected Errors length to be 0, got %d", len(reloaded.Errors))
+	}
+}
+
+// TestValidationResultFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestValidationResultFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ValidationResultFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

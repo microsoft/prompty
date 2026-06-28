@@ -48,7 +48,7 @@ func LoadStreamChunk(data interface{}, ctx *LoadContext) (interface{}, error) {
 }
 
 // Save serializes StreamChunk to map[string]interface{}
-func (obj *StreamChunk) Save(ctx *SaveContext) map[string]interface{} {
+func (obj StreamChunk) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 
@@ -70,11 +70,7 @@ func (obj *StreamChunk) ToJSON() (string, error) {
 func (obj *StreamChunk) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates StreamChunk from JSON string
@@ -124,7 +120,7 @@ func LoadTextChunk(data interface{}, ctx *LoadContext) (TextChunk, error) {
 }
 
 // Save serializes TextChunk to map[string]interface{}
-func (obj *TextChunk) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TextChunk) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["value"] = obj.Value
@@ -147,11 +143,7 @@ func (obj *TextChunk) ToJSON() (string, error) {
 func (obj *TextChunk) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TextChunk from JSON string
@@ -199,7 +191,7 @@ func LoadThinkingChunk(data interface{}, ctx *LoadContext) (ThinkingChunk, error
 }
 
 // Save serializes ThinkingChunk to map[string]interface{}
-func (obj *ThinkingChunk) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ThinkingChunk) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["value"] = obj.Value
@@ -222,11 +214,7 @@ func (obj *ThinkingChunk) ToJSON() (string, error) {
 func (obj *ThinkingChunk) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ThinkingChunk from JSON string
@@ -277,7 +265,7 @@ func LoadToolChunk(data interface{}, ctx *LoadContext) (ToolChunk, error) {
 }
 
 // Save serializes ToolChunk to map[string]interface{}
-func (obj *ToolChunk) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ToolChunk) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 
@@ -301,11 +289,7 @@ func (obj *ToolChunk) ToJSON() (string, error) {
 func (obj *ToolChunk) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ToolChunk from JSON string
@@ -353,7 +337,7 @@ func LoadErrorChunk(data interface{}, ctx *LoadContext) (ErrorChunk, error) {
 }
 
 // Save serializes ErrorChunk to map[string]interface{}
-func (obj *ErrorChunk) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ErrorChunk) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["message"] = obj.Message
@@ -376,11 +360,7 @@ func (obj *ErrorChunk) ToJSON() (string, error) {
 func (obj *ErrorChunk) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ErrorChunk from JSON string

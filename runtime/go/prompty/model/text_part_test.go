@@ -55,6 +55,39 @@ value: Hello, world!
 	}
 }
 
+// TestTextPartFromJSON tests loading TextPart through the generated JSON helper
+func TestTextPartFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "value": "Hello, world!"
+}
+`
+
+	instance, err := prompty.TextPartFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TextPart from JSON helper: %v", err)
+	}
+	if instance.Value != "Hello, world!" {
+		t.Errorf(`Expected Value to be "Hello, world!", got %v`, instance.Value)
+	}
+}
+
+// TestTextPartFromYAML tests loading TextPart through the generated YAML helper
+func TestTextPartFromYAML(t *testing.T) {
+	yamlData := `
+value: Hello, world!
+
+`
+
+	instance, err := prompty.TextPartFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TextPart from YAML helper: %v", err)
+	}
+	if instance.Value != "Hello, world!" {
+		t.Errorf(`Expected Value to be "Hello, world!", got %v`, instance.Value)
+	}
+}
+
 // TestTextPartRoundtrip tests load -> save -> load produces equivalent data
 func TestTextPartRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestTextPartToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTextPart(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Value != "Hello, world!" {
+		t.Errorf(`Expected Value to be "Hello, world!", got %v`, reloaded.Value)
+	}
 }
 
 // TestTextPartToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestTextPartToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTextPart(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Value != "Hello, world!" {
+		t.Errorf(`Expected Value to be "Hello, world!", got %v`, reloaded.Value)
+	}
+}
+
+// TestTextPartFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTextPartFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TextPartFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

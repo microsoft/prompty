@@ -71,6 +71,55 @@ promptyVersion: 2.0.0
 	}
 }
 
+// TestTurnTraceFromJSON tests loading TurnTrace through the generated JSON helper
+func TestTurnTraceFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "version": "1",
+  "runtime": "typescript",
+  "promptyVersion": "2.0.0"
+}
+`
+
+	instance, err := prompty.TurnTraceFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TurnTrace from JSON helper: %v", err)
+	}
+	if instance.Version != "1" {
+		t.Errorf(`Expected Version to be "1", got %v`, instance.Version)
+	}
+	if instance.Runtime == nil || *instance.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, instance.Runtime)
+	}
+	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
+	}
+}
+
+// TestTurnTraceFromYAML tests loading TurnTrace through the generated YAML helper
+func TestTurnTraceFromYAML(t *testing.T) {
+	yamlData := `
+version: "1"
+runtime: typescript
+promptyVersion: 2.0.0
+
+`
+
+	instance, err := prompty.TurnTraceFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TurnTrace from YAML helper: %v", err)
+	}
+	if instance.Version != "1" {
+		t.Errorf(`Expected Version to be "1", got %v`, instance.Version)
+	}
+	if instance.Runtime == nil || *instance.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, instance.Runtime)
+	}
+	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
+	}
+}
+
 // TestTurnTraceRoundtrip tests load -> save -> load produces equivalent data
 func TestTurnTraceRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestTurnTraceToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTurnTrace(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Version != "1" {
+		t.Errorf(`Expected Version to be "1", got %v`, reloaded.Version)
+	}
+	if reloaded.Runtime == nil || *reloaded.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, reloaded.Runtime)
+	}
+	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
+	}
 }
 
 // TestTurnTraceToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestTurnTraceToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTurnTrace(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Version != "1" {
+		t.Errorf(`Expected Version to be "1", got %v`, reloaded.Version)
+	}
+	if reloaded.Runtime == nil || *reloaded.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, reloaded.Runtime)
+	}
+	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
+	}
+}
+
+// TestTurnTraceFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTurnTraceFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TurnTraceFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

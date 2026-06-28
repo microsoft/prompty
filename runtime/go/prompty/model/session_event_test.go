@@ -95,6 +95,79 @@ spanId: span_hook_001
 	}
 }
 
+// TestSessionEventFromJSON tests loading SessionEvent through the generated JSON helper
+func TestSessionEventFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "id": "evt_abc123",
+  "timestamp": "2026-06-09T20:00:00Z",
+  "sessionId": "sess_abc123",
+  "turnId": "turn_001",
+  "parentId": "evt_parent",
+  "spanId": "span_hook_001"
+}
+`
+
+	instance, err := prompty.SessionEventFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionEvent from JSON helper: %v", err)
+	}
+	if instance.Id != "evt_abc123" {
+		t.Errorf(`Expected Id to be "evt_abc123", got %v`, instance.Id)
+	}
+	if instance.Timestamp != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected Timestamp to be "2026-06-09T20:00:00Z", got %v`, instance.Timestamp)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.TurnId == nil || *instance.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, instance.TurnId)
+	}
+	if instance.ParentId == nil || *instance.ParentId != "evt_parent" {
+		t.Errorf(`Expected ParentId to be "evt_parent", got %v`, instance.ParentId)
+	}
+	if instance.SpanId == nil || *instance.SpanId != "span_hook_001" {
+		t.Errorf(`Expected SpanId to be "span_hook_001", got %v`, instance.SpanId)
+	}
+}
+
+// TestSessionEventFromYAML tests loading SessionEvent through the generated YAML helper
+func TestSessionEventFromYAML(t *testing.T) {
+	yamlData := `
+id: evt_abc123
+timestamp: "2026-06-09T20:00:00Z"
+sessionId: sess_abc123
+turnId: turn_001
+parentId: evt_parent
+spanId: span_hook_001
+
+`
+
+	instance, err := prompty.SessionEventFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionEvent from YAML helper: %v", err)
+	}
+	if instance.Id != "evt_abc123" {
+		t.Errorf(`Expected Id to be "evt_abc123", got %v`, instance.Id)
+	}
+	if instance.Timestamp != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected Timestamp to be "2026-06-09T20:00:00Z", got %v`, instance.Timestamp)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.TurnId == nil || *instance.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, instance.TurnId)
+	}
+	if instance.ParentId == nil || *instance.ParentId != "evt_parent" {
+		t.Errorf(`Expected ParentId to be "evt_parent", got %v`, instance.ParentId)
+	}
+	if instance.SpanId == nil || *instance.SpanId != "span_hook_001" {
+		t.Errorf(`Expected SpanId to be "span_hook_001", got %v`, instance.SpanId)
+	}
+}
+
 // TestSessionEventRoundtrip tests load -> save -> load produces equivalent data
 func TestSessionEventRoundtrip(t *testing.T) {
 	jsonData := `
@@ -175,6 +248,29 @@ func TestSessionEventToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadSessionEvent(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Id != "evt_abc123" {
+		t.Errorf(`Expected Id to be "evt_abc123", got %v`, reloaded.Id)
+	}
+	if reloaded.Timestamp != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected Timestamp to be "2026-06-09T20:00:00Z", got %v`, reloaded.Timestamp)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.TurnId == nil || *reloaded.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, reloaded.TurnId)
+	}
+	if reloaded.ParentId == nil || *reloaded.ParentId != "evt_parent" {
+		t.Errorf(`Expected ParentId to be "evt_parent", got %v`, reloaded.ParentId)
+	}
+	if reloaded.SpanId == nil || *reloaded.SpanId != "span_hook_001" {
+		t.Errorf(`Expected SpanId to be "span_hook_001", got %v`, reloaded.SpanId)
+	}
 }
 
 // TestSessionEventToYAML tests that ToYAML produces valid YAML
@@ -207,5 +303,35 @@ func TestSessionEventToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadSessionEvent(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Id != "evt_abc123" {
+		t.Errorf(`Expected Id to be "evt_abc123", got %v`, reloaded.Id)
+	}
+	if reloaded.Timestamp != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected Timestamp to be "2026-06-09T20:00:00Z", got %v`, reloaded.Timestamp)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.TurnId == nil || *reloaded.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, reloaded.TurnId)
+	}
+	if reloaded.ParentId == nil || *reloaded.ParentId != "evt_parent" {
+		t.Errorf(`Expected ParentId to be "evt_parent", got %v`, reloaded.ParentId)
+	}
+	if reloaded.SpanId == nil || *reloaded.SpanId != "span_hook_001" {
+		t.Errorf(`Expected SpanId to be "span_hook_001", got %v`, reloaded.SpanId)
+	}
+}
+
+// TestSessionEventFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestSessionEventFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.SessionEventFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

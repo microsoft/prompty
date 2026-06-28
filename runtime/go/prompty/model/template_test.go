@@ -35,6 +35,12 @@ func TestTemplateLoadJSON(t *testing.T) {
 		t.Fatalf("Failed to load Template: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if instance.Format.Kind != "mustache" {
+		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, instance.Format.Kind)
+	}
+	if instance.Parser.Kind != "mustache" {
+		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, instance.Parser.Kind)
+	}
 }
 
 // TestTemplateLoadYAML tests loading Template from YAML
@@ -57,6 +63,61 @@ parser:
 		t.Fatalf("Failed to load Template: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if instance.Format.Kind != "mustache" {
+		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, instance.Format.Kind)
+	}
+	if instance.Parser.Kind != "mustache" {
+		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, instance.Parser.Kind)
+	}
+}
+
+// TestTemplateFromJSON tests loading Template through the generated JSON helper
+func TestTemplateFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "format": {
+    "kind": "mustache"
+  },
+  "parser": {
+    "kind": "mustache"
+  }
+}
+`
+
+	instance, err := prompty.TemplateFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Template from JSON helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+	if instance.Format.Kind != "mustache" {
+		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, instance.Format.Kind)
+	}
+	if instance.Parser.Kind != "mustache" {
+		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, instance.Parser.Kind)
+	}
+}
+
+// TestTemplateFromYAML tests loading Template through the generated YAML helper
+func TestTemplateFromYAML(t *testing.T) {
+	yamlData := `
+format:
+  kind: mustache
+parser:
+  kind: mustache
+
+`
+
+	instance, err := prompty.TemplateFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Template from YAML helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+	if instance.Format.Kind != "mustache" {
+		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, instance.Format.Kind)
+	}
+	if instance.Parser.Kind != "mustache" {
+		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, instance.Parser.Kind)
+	}
 }
 
 // TestTemplateRoundtrip tests load -> save -> load produces equivalent data
@@ -89,6 +150,12 @@ func TestTemplateRoundtrip(t *testing.T) {
 		t.Fatalf("Failed to reload Template: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
+	if reloaded.Format.Kind != "mustache" {
+		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, reloaded.Format.Kind)
+	}
+	if reloaded.Parser.Kind != "mustache" {
+		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, reloaded.Parser.Kind)
+	}
 }
 
 // TestTemplateToJSON tests that ToJSON produces valid JSON
@@ -122,6 +189,18 @@ func TestTemplateToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTemplate(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
+	if reloaded.Format.Kind != "mustache" {
+		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, reloaded.Format.Kind)
+	}
+	if reloaded.Parser.Kind != "mustache" {
+		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, reloaded.Parser.Kind)
+	}
 }
 
 // TestTemplateToYAML tests that ToYAML produces valid YAML
@@ -154,5 +233,24 @@ func TestTemplateToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTemplate(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
+	if reloaded.Format.Kind != "mustache" {
+		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, reloaded.Format.Kind)
+	}
+	if reloaded.Parser.Kind != "mustache" {
+		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, reloaded.Parser.Kind)
+	}
+}
+
+// TestTemplateFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTemplateFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TemplateFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

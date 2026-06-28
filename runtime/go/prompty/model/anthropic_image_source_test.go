@@ -63,6 +63,47 @@ data: iVBORw0KGgo...
 	}
 }
 
+// TestAnthropicImageSourceFromJSON tests loading AnthropicImageSource through the generated JSON helper
+func TestAnthropicImageSourceFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "media_type": "image/png",
+  "data": "iVBORw0KGgo..."
+}
+`
+
+	instance, err := prompty.AnthropicImageSourceFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicImageSource from JSON helper: %v", err)
+	}
+	if instance.MediaType != "image/png" {
+		t.Errorf(`Expected MediaType to be "image/png", got %v`, instance.MediaType)
+	}
+	if instance.Data != "iVBORw0KGgo..." {
+		t.Errorf(`Expected Data to be "iVBORw0KGgo...", got %v`, instance.Data)
+	}
+}
+
+// TestAnthropicImageSourceFromYAML tests loading AnthropicImageSource through the generated YAML helper
+func TestAnthropicImageSourceFromYAML(t *testing.T) {
+	yamlData := `
+media_type: image/png
+data: iVBORw0KGgo...
+
+`
+
+	instance, err := prompty.AnthropicImageSourceFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicImageSource from YAML helper: %v", err)
+	}
+	if instance.MediaType != "image/png" {
+		t.Errorf(`Expected MediaType to be "image/png", got %v`, instance.MediaType)
+	}
+	if instance.Data != "iVBORw0KGgo..." {
+		t.Errorf(`Expected Data to be "iVBORw0KGgo...", got %v`, instance.Data)
+	}
+}
+
 // TestAnthropicImageSourceRoundtrip tests load -> save -> load produces equivalent data
 func TestAnthropicImageSourceRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestAnthropicImageSourceToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAnthropicImageSource(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.MediaType != "image/png" {
+		t.Errorf(`Expected MediaType to be "image/png", got %v`, reloaded.MediaType)
+	}
+	if reloaded.Data != "iVBORw0KGgo..." {
+		t.Errorf(`Expected Data to be "iVBORw0KGgo...", got %v`, reloaded.Data)
+	}
 }
 
 // TestAnthropicImageSourceToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestAnthropicImageSourceToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAnthropicImageSource(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.MediaType != "image/png" {
+		t.Errorf(`Expected MediaType to be "image/png", got %v`, reloaded.MediaType)
+	}
+	if reloaded.Data != "iVBORw0KGgo..." {
+		t.Errorf(`Expected Data to be "iVBORw0KGgo...", got %v`, reloaded.Data)
+	}
+}
+
+// TestAnthropicImageSourceFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAnthropicImageSourceFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AnthropicImageSourceFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

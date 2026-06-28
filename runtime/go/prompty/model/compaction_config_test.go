@@ -39,6 +39,9 @@ func TestCompactionConfigLoadJSON(t *testing.T) {
 	if instance.Budget == nil || *instance.Budget != 50000 {
 		t.Errorf(`Expected Budget to be 50000, got %v`, instance.Budget)
 	}
+	if instance.Options == nil {
+		t.Fatalf("Expected Options to be populated")
+	}
 }
 
 // TestCompactionConfigLoadYAML tests loading CompactionConfig from YAML
@@ -65,6 +68,61 @@ options:
 	}
 	if instance.Budget == nil || *instance.Budget != 50000 {
 		t.Errorf(`Expected Budget to be 50000, got %v`, instance.Budget)
+	}
+	if instance.Options == nil {
+		t.Fatalf("Expected Options to be populated")
+	}
+}
+
+// TestCompactionConfigFromJSON tests loading CompactionConfig through the generated JSON helper
+func TestCompactionConfigFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "strategy": "summarize",
+  "budget": 50000,
+  "options": {
+    "preserveSystemMessages": true
+  }
+}
+`
+
+	instance, err := prompty.CompactionConfigFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load CompactionConfig from JSON helper: %v", err)
+	}
+	if instance.Strategy == nil || *instance.Strategy != "summarize" {
+		t.Errorf(`Expected Strategy to be "summarize", got %v`, instance.Strategy)
+	}
+	if instance.Budget == nil || *instance.Budget != 50000 {
+		t.Errorf(`Expected Budget to be 50000, got %v`, instance.Budget)
+	}
+	if instance.Options == nil {
+		t.Fatalf("Expected Options to be populated")
+	}
+}
+
+// TestCompactionConfigFromYAML tests loading CompactionConfig through the generated YAML helper
+func TestCompactionConfigFromYAML(t *testing.T) {
+	yamlData := `
+strategy: summarize
+budget: 50000
+options:
+  preserveSystemMessages: true
+
+`
+
+	instance, err := prompty.CompactionConfigFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load CompactionConfig from YAML helper: %v", err)
+	}
+	if instance.Strategy == nil || *instance.Strategy != "summarize" {
+		t.Errorf(`Expected Strategy to be "summarize", got %v`, instance.Strategy)
+	}
+	if instance.Budget == nil || *instance.Budget != 50000 {
+		t.Errorf(`Expected Budget to be 50000, got %v`, instance.Budget)
+	}
+	if instance.Options == nil {
+		t.Fatalf("Expected Options to be populated")
 	}
 }
 
@@ -102,6 +160,9 @@ func TestCompactionConfigRoundtrip(t *testing.T) {
 	if reloaded.Budget == nil || *reloaded.Budget != 50000 {
 		t.Errorf(`Expected Budget to be 50000, got %v`, reloaded.Budget)
 	}
+	if reloaded.Options == nil {
+		t.Fatalf("Expected Options to be populated")
+	}
 }
 
 // TestCompactionConfigToJSON tests that ToJSON produces valid JSON
@@ -134,6 +195,20 @@ func TestCompactionConfigToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadCompactionConfig(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Strategy == nil || *reloaded.Strategy != "summarize" {
+		t.Errorf(`Expected Strategy to be "summarize", got %v`, reloaded.Strategy)
+	}
+	if reloaded.Budget == nil || *reloaded.Budget != 50000 {
+		t.Errorf(`Expected Budget to be 50000, got %v`, reloaded.Budget)
+	}
+	if reloaded.Options == nil {
+		t.Fatalf("Expected Options to be populated")
+	}
 }
 
 // TestCompactionConfigToYAML tests that ToYAML produces valid YAML
@@ -165,5 +240,26 @@ func TestCompactionConfigToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadCompactionConfig(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Strategy == nil || *reloaded.Strategy != "summarize" {
+		t.Errorf(`Expected Strategy to be "summarize", got %v`, reloaded.Strategy)
+	}
+	if reloaded.Budget == nil || *reloaded.Budget != 50000 {
+		t.Errorf(`Expected Budget to be 50000, got %v`, reloaded.Budget)
+	}
+	if reloaded.Options == nil {
+		t.Fatalf("Expected Options to be populated")
+	}
+}
+
+// TestCompactionConfigFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestCompactionConfigFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.CompactionConfigFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

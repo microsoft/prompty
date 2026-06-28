@@ -99,7 +99,7 @@ func LoadToolExecutionCompletePayload(data interface{}, ctx *LoadContext) (ToolE
 }
 
 // Save serializes ToolExecutionCompletePayload to map[string]interface{}
-func (obj *ToolExecutionCompletePayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ToolExecutionCompletePayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.RequestId != nil {
 		result["requestId"] = *obj.RequestId
@@ -146,11 +146,7 @@ func (obj *ToolExecutionCompletePayload) ToJSON() (string, error) {
 func (obj *ToolExecutionCompletePayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ToolExecutionCompletePayload from JSON string

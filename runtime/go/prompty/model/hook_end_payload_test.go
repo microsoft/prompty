@@ -87,6 +87,71 @@ error: hook failed
 	}
 }
 
+// TestHookEndPayloadFromJSON tests loading HookEndPayload through the generated JSON helper
+func TestHookEndPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "hookInvocationId": "hook_abc123",
+  "hookType": "preToolUse",
+  "success": true,
+  "durationMs": 12,
+  "error": "hook failed"
+}
+`
+
+	instance, err := prompty.HookEndPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load HookEndPayload from JSON helper: %v", err)
+	}
+	if instance.HookInvocationId != "hook_abc123" {
+		t.Errorf(`Expected HookInvocationId to be "hook_abc123", got %v`, instance.HookInvocationId)
+	}
+	if instance.HookType != "preToolUse" {
+		t.Errorf(`Expected HookType to be "preToolUse", got %v`, instance.HookType)
+	}
+	if instance.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, instance.Success)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 12 {
+		t.Errorf(`Expected DurationMs to be 12, got %v`, instance.DurationMs)
+	}
+	if instance.Error == nil || *instance.Error != "hook failed" {
+		t.Errorf(`Expected Error to be "hook failed", got %v`, instance.Error)
+	}
+}
+
+// TestHookEndPayloadFromYAML tests loading HookEndPayload through the generated YAML helper
+func TestHookEndPayloadFromYAML(t *testing.T) {
+	yamlData := `
+hookInvocationId: hook_abc123
+hookType: preToolUse
+success: true
+durationMs: 12
+error: hook failed
+
+`
+
+	instance, err := prompty.HookEndPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load HookEndPayload from YAML helper: %v", err)
+	}
+	if instance.HookInvocationId != "hook_abc123" {
+		t.Errorf(`Expected HookInvocationId to be "hook_abc123", got %v`, instance.HookInvocationId)
+	}
+	if instance.HookType != "preToolUse" {
+		t.Errorf(`Expected HookType to be "preToolUse", got %v`, instance.HookType)
+	}
+	if instance.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, instance.Success)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 12 {
+		t.Errorf(`Expected DurationMs to be 12, got %v`, instance.DurationMs)
+	}
+	if instance.Error == nil || *instance.Error != "hook failed" {
+		t.Errorf(`Expected Error to be "hook failed", got %v`, instance.Error)
+	}
+}
+
 // TestHookEndPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestHookEndPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestHookEndPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadHookEndPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.HookInvocationId != "hook_abc123" {
+		t.Errorf(`Expected HookInvocationId to be "hook_abc123", got %v`, reloaded.HookInvocationId)
+	}
+	if reloaded.HookType != "preToolUse" {
+		t.Errorf(`Expected HookType to be "preToolUse", got %v`, reloaded.HookType)
+	}
+	if reloaded.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, reloaded.Success)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 12 {
+		t.Errorf(`Expected DurationMs to be 12, got %v`, reloaded.DurationMs)
+	}
+	if reloaded.Error == nil || *reloaded.Error != "hook failed" {
+		t.Errorf(`Expected Error to be "hook failed", got %v`, reloaded.Error)
+	}
 }
 
 // TestHookEndPayloadToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestHookEndPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadHookEndPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.HookInvocationId != "hook_abc123" {
+		t.Errorf(`Expected HookInvocationId to be "hook_abc123", got %v`, reloaded.HookInvocationId)
+	}
+	if reloaded.HookType != "preToolUse" {
+		t.Errorf(`Expected HookType to be "preToolUse", got %v`, reloaded.HookType)
+	}
+	if reloaded.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, reloaded.Success)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 12 {
+		t.Errorf(`Expected DurationMs to be 12, got %v`, reloaded.DurationMs)
+	}
+	if reloaded.Error == nil || *reloaded.Error != "hook failed" {
+		t.Errorf(`Expected Error to be "hook failed", got %v`, reloaded.Error)
+	}
+}
+
+// TestHookEndPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestHookEndPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.HookEndPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

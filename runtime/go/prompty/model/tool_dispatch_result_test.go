@@ -75,6 +75,59 @@ result:
 	}
 }
 
+// TestToolDispatchResultFromJSON tests loading ToolDispatchResult through the generated JSON helper
+func TestToolDispatchResultFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "toolCallId": "call_abc123",
+  "name": "get_weather",
+  "result": {
+    "parts": [
+      {
+        "kind": "text",
+        "value": "72°F and sunny"
+      }
+    ]
+  }
+}
+`
+
+	instance, err := prompty.ToolDispatchResultFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolDispatchResult from JSON helper: %v", err)
+	}
+	if instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+}
+
+// TestToolDispatchResultFromYAML tests loading ToolDispatchResult through the generated YAML helper
+func TestToolDispatchResultFromYAML(t *testing.T) {
+	yamlData := `
+toolCallId: call_abc123
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
+
+`
+
+	instance, err := prompty.ToolDispatchResultFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolDispatchResult from YAML helper: %v", err)
+	}
+	if instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+}
+
 // TestToolDispatchResultRoundtrip tests load -> save -> load produces equivalent data
 func TestToolDispatchResultRoundtrip(t *testing.T) {
 	jsonData := `
@@ -151,6 +204,17 @@ func TestToolDispatchResultToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadToolDispatchResult(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
 }
 
 // TestToolDispatchResultToYAML tests that ToYAML produces valid YAML
@@ -187,5 +251,23 @@ func TestToolDispatchResultToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadToolDispatchResult(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
+}
+
+// TestToolDispatchResultFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolDispatchResultFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolDispatchResultFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

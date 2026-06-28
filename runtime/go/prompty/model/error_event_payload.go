@@ -41,7 +41,7 @@ func LoadErrorEventPayload(data interface{}, ctx *LoadContext) (ErrorEventPayloa
 }
 
 // Save serializes ErrorEventPayload to map[string]interface{}
-func (obj *ErrorEventPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ErrorEventPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["message"] = obj.Message
 	if obj.ErrorKind != nil {
@@ -69,11 +69,7 @@ func (obj *ErrorEventPayload) ToJSON() (string, error) {
 func (obj *ErrorEventPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ErrorEventPayload from JSON string

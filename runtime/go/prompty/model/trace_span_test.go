@@ -71,6 +71,55 @@ error: Connection refused
 	}
 }
 
+// TestTraceSpanFromJSON tests loading TraceSpan through the generated JSON helper
+func TestTraceSpanFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "name": "prompty.core.pipeline.run",
+  "signature": "prompty.core.pipeline.run",
+  "error": "Connection refused"
+}
+`
+
+	instance, err := prompty.TraceSpanFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TraceSpan from JSON helper: %v", err)
+	}
+	if instance.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Name to be "prompty.core.pipeline.run", got %v`, instance.Name)
+	}
+	if instance.Signature == nil || *instance.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Signature to be "prompty.core.pipeline.run", got %v`, instance.Signature)
+	}
+	if instance.Error == nil || *instance.Error != "Connection refused" {
+		t.Errorf(`Expected Error to be "Connection refused", got %v`, instance.Error)
+	}
+}
+
+// TestTraceSpanFromYAML tests loading TraceSpan through the generated YAML helper
+func TestTraceSpanFromYAML(t *testing.T) {
+	yamlData := `
+name: prompty.core.pipeline.run
+signature: prompty.core.pipeline.run
+error: Connection refused
+
+`
+
+	instance, err := prompty.TraceSpanFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TraceSpan from YAML helper: %v", err)
+	}
+	if instance.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Name to be "prompty.core.pipeline.run", got %v`, instance.Name)
+	}
+	if instance.Signature == nil || *instance.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Signature to be "prompty.core.pipeline.run", got %v`, instance.Signature)
+	}
+	if instance.Error == nil || *instance.Error != "Connection refused" {
+		t.Errorf(`Expected Error to be "Connection refused", got %v`, instance.Error)
+	}
+}
+
 // TestTraceSpanRoundtrip tests load -> save -> load produces equivalent data
 func TestTraceSpanRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestTraceSpanToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTraceSpan(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Name to be "prompty.core.pipeline.run", got %v`, reloaded.Name)
+	}
+	if reloaded.Signature == nil || *reloaded.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Signature to be "prompty.core.pipeline.run", got %v`, reloaded.Signature)
+	}
+	if reloaded.Error == nil || *reloaded.Error != "Connection refused" {
+		t.Errorf(`Expected Error to be "Connection refused", got %v`, reloaded.Error)
+	}
 }
 
 // TestTraceSpanToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestTraceSpanToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTraceSpan(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Name to be "prompty.core.pipeline.run", got %v`, reloaded.Name)
+	}
+	if reloaded.Signature == nil || *reloaded.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Signature to be "prompty.core.pipeline.run", got %v`, reloaded.Signature)
+	}
+	if reloaded.Error == nil || *reloaded.Error != "Connection refused" {
+		t.Errorf(`Expected Error to be "Connection refused", got %v`, reloaded.Error)
+	}
+}
+
+// TestTraceSpanFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTraceSpanFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TraceSpanFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

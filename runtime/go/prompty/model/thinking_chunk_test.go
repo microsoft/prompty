@@ -55,6 +55,39 @@ value: Let me consider...
 	}
 }
 
+// TestThinkingChunkFromJSON tests loading ThinkingChunk through the generated JSON helper
+func TestThinkingChunkFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "value": "Let me consider..."
+}
+`
+
+	instance, err := prompty.ThinkingChunkFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ThinkingChunk from JSON helper: %v", err)
+	}
+	if instance.Value != "Let me consider..." {
+		t.Errorf(`Expected Value to be "Let me consider...", got %v`, instance.Value)
+	}
+}
+
+// TestThinkingChunkFromYAML tests loading ThinkingChunk through the generated YAML helper
+func TestThinkingChunkFromYAML(t *testing.T) {
+	yamlData := `
+value: Let me consider...
+
+`
+
+	instance, err := prompty.ThinkingChunkFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ThinkingChunk from YAML helper: %v", err)
+	}
+	if instance.Value != "Let me consider..." {
+		t.Errorf(`Expected Value to be "Let me consider...", got %v`, instance.Value)
+	}
+}
+
 // TestThinkingChunkRoundtrip tests load -> save -> load produces equivalent data
 func TestThinkingChunkRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestThinkingChunkToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadThinkingChunk(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Value != "Let me consider..." {
+		t.Errorf(`Expected Value to be "Let me consider...", got %v`, reloaded.Value)
+	}
 }
 
 // TestThinkingChunkToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestThinkingChunkToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadThinkingChunk(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Value != "Let me consider..." {
+		t.Errorf(`Expected Value to be "Let me consider...", got %v`, reloaded.Value)
+	}
+}
+
+// TestThinkingChunkFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestThinkingChunkFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ThinkingChunkFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

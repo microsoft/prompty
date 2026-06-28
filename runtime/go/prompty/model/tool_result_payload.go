@@ -38,7 +38,7 @@ func LoadToolResultPayload(data interface{}, ctx *LoadContext) (ToolResultPayloa
 }
 
 // Save serializes ToolResultPayload to map[string]interface{}
-func (obj *ToolResultPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj ToolResultPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 
@@ -62,11 +62,7 @@ func (obj *ToolResultPayload) ToJSON() (string, error) {
 func (obj *ToolResultPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates ToolResultPayload from JSON string

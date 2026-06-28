@@ -55,6 +55,39 @@ message: Summarization prompt exceeded context window
 	}
 }
 
+// TestCompactionFailedPayloadFromJSON tests loading CompactionFailedPayload through the generated JSON helper
+func TestCompactionFailedPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "message": "Summarization prompt exceeded context window"
+}
+`
+
+	instance, err := prompty.CompactionFailedPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load CompactionFailedPayload from JSON helper: %v", err)
+	}
+	if instance.Message != "Summarization prompt exceeded context window" {
+		t.Errorf(`Expected Message to be "Summarization prompt exceeded context window", got %v`, instance.Message)
+	}
+}
+
+// TestCompactionFailedPayloadFromYAML tests loading CompactionFailedPayload through the generated YAML helper
+func TestCompactionFailedPayloadFromYAML(t *testing.T) {
+	yamlData := `
+message: Summarization prompt exceeded context window
+
+`
+
+	instance, err := prompty.CompactionFailedPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load CompactionFailedPayload from YAML helper: %v", err)
+	}
+	if instance.Message != "Summarization prompt exceeded context window" {
+		t.Errorf(`Expected Message to be "Summarization prompt exceeded context window", got %v`, instance.Message)
+	}
+}
+
 // TestCompactionFailedPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestCompactionFailedPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestCompactionFailedPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadCompactionFailedPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Message != "Summarization prompt exceeded context window" {
+		t.Errorf(`Expected Message to be "Summarization prompt exceeded context window", got %v`, reloaded.Message)
+	}
 }
 
 // TestCompactionFailedPayloadToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestCompactionFailedPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadCompactionFailedPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Message != "Summarization prompt exceeded context window" {
+		t.Errorf(`Expected Message to be "Summarization prompt exceeded context window", got %v`, reloaded.Message)
+	}
+}
+
+// TestCompactionFailedPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestCompactionFailedPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.CompactionFailedPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

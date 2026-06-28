@@ -95,7 +95,7 @@ func LoadCheckpoint(data interface{}, ctx *LoadContext) (Checkpoint, error) {
 }
 
 // Save serializes Checkpoint to map[string]interface{}
-func (obj *Checkpoint) Save(ctx *SaveContext) map[string]interface{} {
+func (obj Checkpoint) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Id != nil {
 		result["id"] = *obj.Id
@@ -147,11 +147,7 @@ func (obj *Checkpoint) ToJSON() (string, error) {
 func (obj *Checkpoint) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates Checkpoint from JSON string

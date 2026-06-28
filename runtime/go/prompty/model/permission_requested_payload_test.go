@@ -87,6 +87,71 @@ promptRequest: Allow shell to run tests?
 	}
 }
 
+// TestPermissionRequestedPayloadFromJSON tests loading PermissionRequestedPayload through the generated JSON helper
+func TestPermissionRequestedPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
+  "permission": "tool.execute",
+  "target": "shell",
+  "promptRequest": "Allow shell to run tests?"
+}
+`
+
+	instance, err := prompty.PermissionRequestedPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load PermissionRequestedPayload from JSON helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
+	}
+	if instance.Target == nil || *instance.Target != "shell" {
+		t.Errorf(`Expected Target to be "shell", got %v`, instance.Target)
+	}
+	if instance.PromptRequest == nil || *instance.PromptRequest != "Allow shell to run tests?" {
+		t.Errorf(`Expected PromptRequest to be "Allow shell to run tests?", got %v`, instance.PromptRequest)
+	}
+}
+
+// TestPermissionRequestedPayloadFromYAML tests loading PermissionRequestedPayload through the generated YAML helper
+func TestPermissionRequestedPayloadFromYAML(t *testing.T) {
+	yamlData := `
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+target: shell
+promptRequest: Allow shell to run tests?
+
+`
+
+	instance, err := prompty.PermissionRequestedPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load PermissionRequestedPayload from YAML helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, instance.Permission)
+	}
+	if instance.Target == nil || *instance.Target != "shell" {
+		t.Errorf(`Expected Target to be "shell", got %v`, instance.Target)
+	}
+	if instance.PromptRequest == nil || *instance.PromptRequest != "Allow shell to run tests?" {
+		t.Errorf(`Expected PromptRequest to be "Allow shell to run tests?", got %v`, instance.PromptRequest)
+	}
+}
+
 // TestPermissionRequestedPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestPermissionRequestedPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestPermissionRequestedPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPermissionRequestedPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, reloaded.Permission)
+	}
+	if reloaded.Target == nil || *reloaded.Target != "shell" {
+		t.Errorf(`Expected Target to be "shell", got %v`, reloaded.Target)
+	}
+	if reloaded.PromptRequest == nil || *reloaded.PromptRequest != "Allow shell to run tests?" {
+		t.Errorf(`Expected PromptRequest to be "Allow shell to run tests?", got %v`, reloaded.PromptRequest)
+	}
 }
 
 // TestPermissionRequestedPayloadToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestPermissionRequestedPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPermissionRequestedPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "perm_abc123" {
+		t.Errorf(`Expected RequestId to be "perm_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.Permission != "tool.execute" {
+		t.Errorf(`Expected Permission to be "tool.execute", got %v`, reloaded.Permission)
+	}
+	if reloaded.Target == nil || *reloaded.Target != "shell" {
+		t.Errorf(`Expected Target to be "shell", got %v`, reloaded.Target)
+	}
+	if reloaded.PromptRequest == nil || *reloaded.PromptRequest != "Allow shell to run tests?" {
+		t.Errorf(`Expected PromptRequest to be "Allow shell to run tests?", got %v`, reloaded.PromptRequest)
+	}
+}
+
+// TestPermissionRequestedPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestPermissionRequestedPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.PermissionRequestedPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

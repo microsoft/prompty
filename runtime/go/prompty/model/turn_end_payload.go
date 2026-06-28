@@ -77,7 +77,7 @@ func LoadTurnEndPayload(data interface{}, ctx *LoadContext) (TurnEndPayload, err
 }
 
 // Save serializes TurnEndPayload to map[string]interface{}
-func (obj *TurnEndPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TurnEndPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Iterations != nil {
 		result["iterations"] = *obj.Iterations
@@ -110,11 +110,7 @@ func (obj *TurnEndPayload) ToJSON() (string, error) {
 func (obj *TurnEndPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TurnEndPayload from JSON string

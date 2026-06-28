@@ -68,6 +68,52 @@ specification: ./openapi.json
 	}
 }
 
+// TestOpenApiToolFromJSON tests loading OpenApiTool through the generated JSON helper
+func TestOpenApiToolFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "openapi",
+  "connection": {
+    "kind": "reference"
+  },
+  "specification": "./openapi.json"
+}
+`
+
+	instance, err := prompty.OpenApiToolFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load OpenApiTool from JSON helper: %v", err)
+	}
+	if instance.Kind != "openapi" {
+		t.Errorf(`Expected Kind to be "openapi", got %v`, instance.Kind)
+	}
+	if instance.Specification != "./openapi.json" {
+		t.Errorf(`Expected Specification to be "./openapi.json", got %v`, instance.Specification)
+	}
+}
+
+// TestOpenApiToolFromYAML tests loading OpenApiTool through the generated YAML helper
+func TestOpenApiToolFromYAML(t *testing.T) {
+	yamlData := `
+kind: openapi
+connection:
+  kind: reference
+specification: ./openapi.json
+
+`
+
+	instance, err := prompty.OpenApiToolFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load OpenApiTool from YAML helper: %v", err)
+	}
+	if instance.Kind != "openapi" {
+		t.Errorf(`Expected Kind to be "openapi", got %v`, instance.Kind)
+	}
+	if instance.Specification != "./openapi.json" {
+		t.Errorf(`Expected Specification to be "./openapi.json", got %v`, instance.Specification)
+	}
+}
+
 // TestOpenApiToolRoundtrip tests load -> save -> load produces equivalent data
 func TestOpenApiToolRoundtrip(t *testing.T) {
 	jsonData := `
@@ -134,6 +180,17 @@ func TestOpenApiToolToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadOpenApiTool(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Kind != "openapi" {
+		t.Errorf(`Expected Kind to be "openapi", got %v`, reloaded.Kind)
+	}
+	if reloaded.Specification != "./openapi.json" {
+		t.Errorf(`Expected Specification to be "./openapi.json", got %v`, reloaded.Specification)
+	}
 }
 
 // TestOpenApiToolToYAML tests that ToYAML produces valid YAML
@@ -165,5 +222,23 @@ func TestOpenApiToolToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadOpenApiTool(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Kind != "openapi" {
+		t.Errorf(`Expected Kind to be "openapi", got %v`, reloaded.Kind)
+	}
+	if reloaded.Specification != "./openapi.json" {
+		t.Errorf(`Expected Specification to be "./openapi.json", got %v`, reloaded.Specification)
+	}
+}
+
+// TestOpenApiToolFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestOpenApiToolFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.OpenApiToolFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

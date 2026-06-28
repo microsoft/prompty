@@ -71,6 +71,55 @@ mediaType: image/png
 	}
 }
 
+// TestImagePartFromJSON tests loading ImagePart through the generated JSON helper
+func TestImagePartFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "source": "https://example.com/image.png",
+  "detail": "auto",
+  "mediaType": "image/png"
+}
+`
+
+	instance, err := prompty.ImagePartFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ImagePart from JSON helper: %v", err)
+	}
+	if instance.Source != "https://example.com/image.png" {
+		t.Errorf(`Expected Source to be "https://example.com/image.png", got %v`, instance.Source)
+	}
+	if instance.Detail == nil || *instance.Detail != "auto" {
+		t.Errorf(`Expected Detail to be "auto", got %v`, instance.Detail)
+	}
+	if instance.MediaType == nil || *instance.MediaType != "image/png" {
+		t.Errorf(`Expected MediaType to be "image/png", got %v`, instance.MediaType)
+	}
+}
+
+// TestImagePartFromYAML tests loading ImagePart through the generated YAML helper
+func TestImagePartFromYAML(t *testing.T) {
+	yamlData := `
+source: "https://example.com/image.png"
+detail: auto
+mediaType: image/png
+
+`
+
+	instance, err := prompty.ImagePartFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ImagePart from YAML helper: %v", err)
+	}
+	if instance.Source != "https://example.com/image.png" {
+		t.Errorf(`Expected Source to be "https://example.com/image.png", got %v`, instance.Source)
+	}
+	if instance.Detail == nil || *instance.Detail != "auto" {
+		t.Errorf(`Expected Detail to be "auto", got %v`, instance.Detail)
+	}
+	if instance.MediaType == nil || *instance.MediaType != "image/png" {
+		t.Errorf(`Expected MediaType to be "image/png", got %v`, instance.MediaType)
+	}
+}
+
 // TestImagePartRoundtrip tests load -> save -> load produces equivalent data
 func TestImagePartRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestImagePartToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadImagePart(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Source != "https://example.com/image.png" {
+		t.Errorf(`Expected Source to be "https://example.com/image.png", got %v`, reloaded.Source)
+	}
+	if reloaded.Detail == nil || *reloaded.Detail != "auto" {
+		t.Errorf(`Expected Detail to be "auto", got %v`, reloaded.Detail)
+	}
+	if reloaded.MediaType == nil || *reloaded.MediaType != "image/png" {
+		t.Errorf(`Expected MediaType to be "image/png", got %v`, reloaded.MediaType)
+	}
 }
 
 // TestImagePartToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestImagePartToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadImagePart(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Source != "https://example.com/image.png" {
+		t.Errorf(`Expected Source to be "https://example.com/image.png", got %v`, reloaded.Source)
+	}
+	if reloaded.Detail == nil || *reloaded.Detail != "auto" {
+		t.Errorf(`Expected Detail to be "auto", got %v`, reloaded.Detail)
+	}
+	if reloaded.MediaType == nil || *reloaded.MediaType != "image/png" {
+		t.Errorf(`Expected MediaType to be "image/png", got %v`, reloaded.MediaType)
+	}
+}
+
+// TestImagePartFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestImagePartFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ImagePartFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

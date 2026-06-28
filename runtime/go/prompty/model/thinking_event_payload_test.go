@@ -55,6 +55,39 @@ token: Let me consider...
 	}
 }
 
+// TestThinkingEventPayloadFromJSON tests loading ThinkingEventPayload through the generated JSON helper
+func TestThinkingEventPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "token": "Let me consider..."
+}
+`
+
+	instance, err := prompty.ThinkingEventPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ThinkingEventPayload from JSON helper: %v", err)
+	}
+	if instance.Token != "Let me consider..." {
+		t.Errorf(`Expected Token to be "Let me consider...", got %v`, instance.Token)
+	}
+}
+
+// TestThinkingEventPayloadFromYAML tests loading ThinkingEventPayload through the generated YAML helper
+func TestThinkingEventPayloadFromYAML(t *testing.T) {
+	yamlData := `
+token: Let me consider...
+
+`
+
+	instance, err := prompty.ThinkingEventPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ThinkingEventPayload from YAML helper: %v", err)
+	}
+	if instance.Token != "Let me consider..." {
+		t.Errorf(`Expected Token to be "Let me consider...", got %v`, instance.Token)
+	}
+}
+
 // TestThinkingEventPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestThinkingEventPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestThinkingEventPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadThinkingEventPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Token != "Let me consider..." {
+		t.Errorf(`Expected Token to be "Let me consider...", got %v`, reloaded.Token)
+	}
 }
 
 // TestThinkingEventPayloadToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestThinkingEventPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadThinkingEventPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Token != "Let me consider..." {
+		t.Errorf(`Expected Token to be "Let me consider...", got %v`, reloaded.Token)
+	}
+}
+
+// TestThinkingEventPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestThinkingEventPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ThinkingEventPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

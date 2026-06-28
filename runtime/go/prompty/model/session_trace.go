@@ -125,7 +125,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 }
 
 // Save serializes SessionTrace to map[string]interface{}
-func (obj *SessionTrace) Save(ctx *SaveContext) map[string]interface{} {
+func (obj SessionTrace) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["version"] = obj.Version
 	if obj.Runtime != nil {
@@ -201,11 +201,7 @@ func (obj *SessionTrace) ToJSON() (string, error) {
 func (obj *SessionTrace) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates SessionTrace from JSON string

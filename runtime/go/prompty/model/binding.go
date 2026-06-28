@@ -42,7 +42,7 @@ func LoadBinding(data interface{}, ctx *LoadContext) (Binding, error) {
 }
 
 // Save serializes Binding to map[string]interface{}
-func (obj *Binding) Save(ctx *SaveContext) map[string]interface{} {
+func (obj Binding) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 	result["input"] = obj.Input
@@ -65,11 +65,7 @@ func (obj *Binding) ToJSON() (string, error) {
 func (obj *Binding) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates Binding from JSON string

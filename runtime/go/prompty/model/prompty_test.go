@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -103,6 +104,28 @@ func TestPromptyLoadJSON(t *testing.T) {
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyLoadYAML tests loading Prompty from YAML
@@ -195,6 +218,248 @@ instructions: "system:
 	}
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSON tests loading Prompty through the generated JSON helper
+func TestPromptyFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+`
+
+	instance, err := prompty.PromptyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromYAML tests loading Prompty through the generated YAML helper
+func TestPromptyFromYAML(t *testing.T) {
+	yamlData := `
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  answer:
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:
+
+  You are an AI assistant who helps people find information.
+
+  As the assistant, you answer questions briefly, succinctly,
+
+  and in a personable manner using markdown and even add some\ 
+
+  personal flair with appropriate emojis.
+
+
+  # Customer
+
+  You are helping {{firstName}} {{lastName}} to find answers to\ 
+
+  their questions. Use their name to address them in your responses.
+
+  user:
+
+  {{question}}"
+
+`
+
+	instance, err := prompty.PromptyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
 	}
 }
 
@@ -296,6 +561,28 @@ func TestPromptyRoundtrip(t *testing.T) {
 	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToJSON tests that ToJSON produces valid JSON
@@ -386,6 +673,45 @@ func TestPromptyToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToYAML tests that ToYAML produces valid YAML
@@ -475,6 +801,45 @@ func TestPromptyToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
 	}
 }
 
@@ -568,6 +933,18 @@ func TestPromptyLoadJSON1(t *testing.T) {
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyLoadYAML1 tests loading Prompty from YAML
@@ -660,6 +1037,217 @@ instructions: "system:
 	}
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSON1 tests loading Prompty through the generated JSON helper
+func TestPromptyFromJSON1(t *testing.T) {
+	jsonData := `
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+`
+
+	instance, err := prompty.PromptyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromYAML1 tests loading Prompty through the generated YAML helper
+func TestPromptyFromYAML1(t *testing.T) {
+	yamlData := `
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  answer:
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  getCurrentWeather:
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:
+
+  You are an AI assistant who helps people find information.
+
+  As the assistant, you answer questions briefly, succinctly,
+
+  and in a personable manner using markdown and even add some\ 
+
+  personal flair with appropriate emojis.
+
+
+  # Customer
+
+  You are helping {{firstName}} {{lastName}} to find answers to\ 
+
+  their questions. Use their name to address them in your responses.
+
+  user:
+
+  {{question}}"
+
+`
+
+	instance, err := prompty.PromptyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
 	}
 }
 
@@ -760,6 +1348,18 @@ func TestPromptyRoundtrip1(t *testing.T) {
 	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToJSON1 tests that ToJSON produces valid JSON
@@ -849,6 +1449,35 @@ func TestPromptyToJSON1(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToYAML1 tests that ToYAML produces valid YAML
@@ -937,6 +1566,35 @@ func TestPromptyToYAML1(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
 	}
 }
 
@@ -1032,6 +1690,31 @@ func TestPromptyLoadJSON2(t *testing.T) {
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyLoadYAML2 tests loading Prompty from YAML
@@ -1124,6 +1807,258 @@ instructions: "system:
 	}
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSON2 tests loading Prompty through the generated JSON helper
+func TestPromptyFromJSON2(t *testing.T) {
+	jsonData := `
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+`
+
+	instance, err := prompty.PromptyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromYAML2 tests loading Prompty through the generated YAML helper
+func TestPromptyFromYAML2(t *testing.T) {
+	yamlData := `
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  - name: answer
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:
+
+  You are an AI assistant who helps people find information.
+
+  As the assistant, you answer questions briefly, succinctly,
+
+  and in a personable manner using markdown and even add some\ 
+
+  personal flair with appropriate emojis.
+
+
+  # Customer
+
+  You are helping {{firstName}} {{lastName}} to find answers to\ 
+
+  their questions. Use their name to address them in your responses.
+
+  user:
+
+  {{question}}"
+
+`
+
+	instance, err := prompty.PromptyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
 	}
 }
 
@@ -1226,6 +2161,31 @@ func TestPromptyRoundtrip2(t *testing.T) {
 	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToJSON2 tests that ToJSON produces valid JSON
@@ -1317,6 +2277,48 @@ func TestPromptyToJSON2(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToYAML2 tests that ToYAML produces valid YAML
@@ -1407,6 +2409,48 @@ func TestPromptyToYAML2(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
 	}
 }
 
@@ -1501,6 +2545,21 @@ func TestPromptyLoadJSON3(t *testing.T) {
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyLoadYAML3 tests loading Prompty from YAML
@@ -1593,6 +2652,227 @@ instructions: "system:
 	}
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSON3 tests loading Prompty through the generated JSON helper
+func TestPromptyFromJSON3(t *testing.T) {
+	jsonData := `
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+`
+
+	instance, err := prompty.PromptyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromYAML3 tests loading Prompty through the generated YAML helper
+func TestPromptyFromYAML3(t *testing.T) {
+	yamlData := `
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  - name: answer
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  getCurrentWeather:
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:
+
+  You are an AI assistant who helps people find information.
+
+  As the assistant, you answer questions briefly, succinctly,
+
+  and in a personable manner using markdown and even add some\ 
+
+  personal flair with appropriate emojis.
+
+
+  # Customer
+
+  You are helping {{firstName}} {{lastName}} to find answers to\ 
+
+  their questions. Use their name to address them in your responses.
+
+  user:
+
+  {{question}}"
+
+`
+
+	instance, err := prompty.PromptyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
 	}
 }
 
@@ -1694,6 +2974,21 @@ func TestPromptyRoundtrip3(t *testing.T) {
 	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToJSON3 tests that ToJSON produces valid JSON
@@ -1784,6 +3079,38 @@ func TestPromptyToJSON3(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToYAML3 tests that ToYAML produces valid YAML
@@ -1873,6 +3200,38 @@ func TestPromptyToYAML3(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
 	}
 }
 
@@ -1970,6 +3329,40 @@ func TestPromptyLoadJSON4(t *testing.T) {
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyLoadYAML4 tests loading Prompty from YAML
@@ -2062,6 +3455,287 @@ instructions: "system:
 	}
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSON4 tests loading Prompty through the generated JSON helper
+func TestPromptyFromJSON4(t *testing.T) {
+	jsonData := `
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+`
+
+	instance, err := prompty.PromptyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromYAML4 tests loading Prompty through the generated YAML helper
+func TestPromptyFromYAML4(t *testing.T) {
+	yamlData := `
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  answer:
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:
+
+  You are an AI assistant who helps people find information.
+
+  As the assistant, you answer questions briefly, succinctly,
+
+  and in a personable manner using markdown and even add some\ 
+
+  personal flair with appropriate emojis.
+
+
+  # Customer
+
+  You are helping {{firstName}} {{lastName}} to find answers to\ 
+
+  their questions. Use their name to address them in your responses.
+
+  user:
+
+  {{question}}"
+
+`
+
+	instance, err := prompty.PromptyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
 	}
 }
 
@@ -2166,6 +3840,40 @@ func TestPromptyRoundtrip4(t *testing.T) {
 	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToJSON4 tests that ToJSON produces valid JSON
@@ -2259,6 +3967,57 @@ func TestPromptyToJSON4(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToYAML4 tests that ToYAML produces valid YAML
@@ -2351,6 +4110,57 @@ func TestPromptyToYAML4(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
 	}
 }
 
@@ -2447,6 +4257,30 @@ func TestPromptyLoadJSON5(t *testing.T) {
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyLoadYAML5 tests loading Prompty from YAML
@@ -2539,6 +4373,256 @@ instructions: "system:
 	}
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSON5 tests loading Prompty through the generated JSON helper
+func TestPromptyFromJSON5(t *testing.T) {
+	jsonData := `
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+`
+
+	instance, err := prompty.PromptyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromYAML5 tests loading Prompty through the generated YAML helper
+func TestPromptyFromYAML5(t *testing.T) {
+	yamlData := `
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  answer:
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  getCurrentWeather:
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:
+
+  You are an AI assistant who helps people find information.
+
+  As the assistant, you answer questions briefly, succinctly,
+
+  and in a personable manner using markdown and even add some\ 
+
+  personal flair with appropriate emojis.
+
+
+  # Customer
+
+  You are helping {{firstName}} {{lastName}} to find answers to\ 
+
+  their questions. Use their name to address them in your responses.
+
+  user:
+
+  {{question}}"
+
+`
+
+	instance, err := prompty.PromptyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
 	}
 }
 
@@ -2642,6 +4726,30 @@ func TestPromptyRoundtrip5(t *testing.T) {
 	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToJSON5 tests that ToJSON produces valid JSON
@@ -2734,6 +4842,47 @@ func TestPromptyToJSON5(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToYAML5 tests that ToYAML produces valid YAML
@@ -2825,6 +4974,47 @@ func TestPromptyToYAML5(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
 	}
 }
 
@@ -2923,6 +5113,43 @@ func TestPromptyLoadJSON6(t *testing.T) {
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyLoadYAML6 tests loading Prompty from YAML
@@ -3015,6 +5242,297 @@ instructions: "system:
 	}
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSON6 tests loading Prompty through the generated JSON helper
+func TestPromptyFromJSON6(t *testing.T) {
+	jsonData := `
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+`
+
+	instance, err := prompty.PromptyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromYAML6 tests loading Prompty through the generated YAML helper
+func TestPromptyFromYAML6(t *testing.T) {
+	yamlData := `
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  - name: answer
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:
+
+  You are an AI assistant who helps people find information.
+
+  As the assistant, you answer questions briefly, succinctly,
+
+  and in a personable manner using markdown and even add some\ 
+
+  personal flair with appropriate emojis.
+
+
+  # Customer
+
+  You are helping {{firstName}} {{lastName}} to find answers to\ 
+
+  their questions. Use their name to address them in your responses.
+
+  user:
+
+  {{question}}"
+
+`
+
+	instance, err := prompty.PromptyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if len(instance.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
+	}
+	tools0Value, ok := instance.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", instance.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
 	}
 }
 
@@ -3120,6 +5638,43 @@ func TestPromptyRoundtrip6(t *testing.T) {
 	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToJSON6 tests that ToJSON produces valid JSON
@@ -3214,6 +5769,60 @@ func TestPromptyToJSON6(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToYAML6 tests that ToYAML produces valid YAML
@@ -3307,6 +5916,60 @@ func TestPromptyToYAML6(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if len(reloaded.Tools) != 1 {
+		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
+	}
+	tools0Value, ok := reloaded.Tools[0].(prompty.FunctionTool)
+	if !ok {
+		t.Fatalf("Expected Tools[0] to be prompty.FunctionTool, got %T", reloaded.Tools[0])
+	}
+	if tools0Value.Kind != "function" {
+		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
 	}
 }
 
@@ -3404,6 +6067,33 @@ func TestPromptyLoadJSON7(t *testing.T) {
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyLoadYAML7 tests loading Prompty from YAML
@@ -3496,6 +6186,266 @@ instructions: "system:
 	}
 	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSON7 tests loading Prompty through the generated JSON helper
+func TestPromptyFromJSON7(t *testing.T) {
+	jsonData := `
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+`
+
+	instance, err := prompty.PromptyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromYAML7 tests loading Prompty through the generated YAML helper
+func TestPromptyFromYAML7(t *testing.T) {
+	yamlData := `
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  - name: answer
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  getCurrentWeather:
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:
+
+  You are an AI assistant who helps people find information.
+
+  As the assistant, you answer questions briefly, succinctly,
+
+  and in a personable manner using markdown and even add some\ 
+
+  personal flair with appropriate emojis.
+
+
+  # Customer
+
+  You are helping {{firstName}} {{lastName}} to find answers to\ 
+
+  their questions. Use their name to address them in your responses.
+
+  user:
+
+  {{question}}"
+
+`
+
+	instance, err := prompty.PromptyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+	}
+	if instance.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
+	}
+	if instance.DisplayName == nil || *instance.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, instance.DisplayName)
+	}
+	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
+	}
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	}
+	if instance.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(instance.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
+	}
+	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(instance.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
+	}
+	if instance.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	}
+	if instance.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	}
+	if instance.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
 	}
 }
 
@@ -3600,6 +6550,33 @@ func TestPromptyRoundtrip7(t *testing.T) {
 	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
 		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToJSON7 tests that ToJSON produces valid JSON
@@ -3693,6 +6670,50 @@ func TestPromptyToJSON7(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
 }
 
 // TestPromptyToYAML7 tests that ToYAML produces valid YAML
@@ -3785,5 +6806,92 @@ func TestPromptyToYAML7(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "basic-prompt" {
+		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
+	}
+	if reloaded.DisplayName == nil || *reloaded.DisplayName != "Basic Prompt" {
+		t.Errorf(`Expected DisplayName to be "Basic Prompt", got %v`, reloaded.DisplayName)
+	}
+	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
+		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
+	}
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	}
+	if reloaded.Metadata == nil {
+		t.Fatalf("Expected Metadata to be populated")
+	}
+	if len(reloaded.Inputs) != 3 {
+		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
+	}
+	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	if len(reloaded.Outputs) != 1 {
+		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
+	}
+	if reloaded.Model.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	}
+	if reloaded.Template.Format.Kind != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	}
+	if reloaded.Template.Parser.Kind != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	}
+}
+
+// TestPromptyFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestPromptyFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.PromptyFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertPromptyStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

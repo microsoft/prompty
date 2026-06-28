@@ -42,7 +42,7 @@ func LoadGuardrailResult(data interface{}, ctx *LoadContext) (GuardrailResult, e
 }
 
 // Save serializes GuardrailResult to map[string]interface{}
-func (obj *GuardrailResult) Save(ctx *SaveContext) map[string]interface{} {
+func (obj GuardrailResult) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["allowed"] = obj.Allowed
 	if obj.Reason != nil {
@@ -70,11 +70,7 @@ func (obj *GuardrailResult) ToJSON() (string, error) {
 func (obj *GuardrailResult) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates GuardrailResult from JSON string

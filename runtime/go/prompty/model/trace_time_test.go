@@ -71,6 +71,55 @@ duration: 1000
 	}
 }
 
+// TestTraceTimeFromJSON tests loading TraceTime through the generated JSON helper
+func TestTraceTimeFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "start": "2026-04-04T12:00:00Z",
+  "end": "2026-04-04T12:00:01Z",
+  "duration": 1000
+}
+`
+
+	instance, err := prompty.TraceTimeFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TraceTime from JSON helper: %v", err)
+	}
+	if instance.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Start to be "2026-04-04T12:00:00Z", got %v`, instance.Start)
+	}
+	if instance.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected End to be "2026-04-04T12:00:01Z", got %v`, instance.End)
+	}
+	if instance.Duration != 1000 {
+		t.Errorf(`Expected Duration to be 1000, got %v`, instance.Duration)
+	}
+}
+
+// TestTraceTimeFromYAML tests loading TraceTime through the generated YAML helper
+func TestTraceTimeFromYAML(t *testing.T) {
+	yamlData := `
+start: "2026-04-04T12:00:00Z"
+end: "2026-04-04T12:00:01Z"
+duration: 1000
+
+`
+
+	instance, err := prompty.TraceTimeFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TraceTime from YAML helper: %v", err)
+	}
+	if instance.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Start to be "2026-04-04T12:00:00Z", got %v`, instance.Start)
+	}
+	if instance.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected End to be "2026-04-04T12:00:01Z", got %v`, instance.End)
+	}
+	if instance.Duration != 1000 {
+		t.Errorf(`Expected Duration to be 1000, got %v`, instance.Duration)
+	}
+}
+
 // TestTraceTimeRoundtrip tests load -> save -> load produces equivalent data
 func TestTraceTimeRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestTraceTimeToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTraceTime(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Start to be "2026-04-04T12:00:00Z", got %v`, reloaded.Start)
+	}
+	if reloaded.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected End to be "2026-04-04T12:00:01Z", got %v`, reloaded.End)
+	}
+	if reloaded.Duration != 1000 {
+		t.Errorf(`Expected Duration to be 1000, got %v`, reloaded.Duration)
+	}
 }
 
 // TestTraceTimeToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestTraceTimeToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTraceTime(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Start to be "2026-04-04T12:00:00Z", got %v`, reloaded.Start)
+	}
+	if reloaded.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected End to be "2026-04-04T12:00:01Z", got %v`, reloaded.End)
+	}
+	if reloaded.Duration != 1000 {
+		t.Errorf(`Expected Duration to be 1000, got %v`, reloaded.Duration)
+	}
+}
+
+// TestTraceTimeFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTraceTimeFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TraceTimeFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

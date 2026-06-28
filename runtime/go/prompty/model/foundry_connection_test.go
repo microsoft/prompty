@@ -79,6 +79,63 @@ connectionType: model
 	}
 }
 
+// TestFoundryConnectionFromJSON tests loading FoundryConnection through the generated JSON helper
+func TestFoundryConnectionFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "kind": "foundry",
+  "endpoint": "https://myresource.services.ai.azure.com/api/projects/myproject",
+  "name": "my-openai-connection",
+  "connectionType": "model"
+}
+`
+
+	instance, err := prompty.FoundryConnectionFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load FoundryConnection from JSON helper: %v", err)
+	}
+	if instance.Kind != "foundry" {
+		t.Errorf(`Expected Kind to be "foundry", got %v`, instance.Kind)
+	}
+	if instance.Endpoint != "https://myresource.services.ai.azure.com/api/projects/myproject" {
+		t.Errorf(`Expected Endpoint to be "https://myresource.services.ai.azure.com/api/projects/myproject", got %v`, instance.Endpoint)
+	}
+	if instance.Name == nil || *instance.Name != "my-openai-connection" {
+		t.Errorf(`Expected Name to be "my-openai-connection", got %v`, instance.Name)
+	}
+	if instance.ConnectionType == nil || *instance.ConnectionType != "model" {
+		t.Errorf(`Expected ConnectionType to be "model", got %v`, instance.ConnectionType)
+	}
+}
+
+// TestFoundryConnectionFromYAML tests loading FoundryConnection through the generated YAML helper
+func TestFoundryConnectionFromYAML(t *testing.T) {
+	yamlData := `
+kind: foundry
+endpoint: "https://myresource.services.ai.azure.com/api/projects/myproject"
+name: my-openai-connection
+connectionType: model
+
+`
+
+	instance, err := prompty.FoundryConnectionFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load FoundryConnection from YAML helper: %v", err)
+	}
+	if instance.Kind != "foundry" {
+		t.Errorf(`Expected Kind to be "foundry", got %v`, instance.Kind)
+	}
+	if instance.Endpoint != "https://myresource.services.ai.azure.com/api/projects/myproject" {
+		t.Errorf(`Expected Endpoint to be "https://myresource.services.ai.azure.com/api/projects/myproject", got %v`, instance.Endpoint)
+	}
+	if instance.Name == nil || *instance.Name != "my-openai-connection" {
+		t.Errorf(`Expected Name to be "my-openai-connection", got %v`, instance.Name)
+	}
+	if instance.ConnectionType == nil || *instance.ConnectionType != "model" {
+		t.Errorf(`Expected ConnectionType to be "model", got %v`, instance.ConnectionType)
+	}
+}
+
 // TestFoundryConnectionRoundtrip tests load -> save -> load produces equivalent data
 func TestFoundryConnectionRoundtrip(t *testing.T) {
 	jsonData := `
@@ -149,6 +206,23 @@ func TestFoundryConnectionToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadFoundryConnection(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Kind != "foundry" {
+		t.Errorf(`Expected Kind to be "foundry", got %v`, reloaded.Kind)
+	}
+	if reloaded.Endpoint != "https://myresource.services.ai.azure.com/api/projects/myproject" {
+		t.Errorf(`Expected Endpoint to be "https://myresource.services.ai.azure.com/api/projects/myproject", got %v`, reloaded.Endpoint)
+	}
+	if reloaded.Name == nil || *reloaded.Name != "my-openai-connection" {
+		t.Errorf(`Expected Name to be "my-openai-connection", got %v`, reloaded.Name)
+	}
+	if reloaded.ConnectionType == nil || *reloaded.ConnectionType != "model" {
+		t.Errorf(`Expected ConnectionType to be "model", got %v`, reloaded.ConnectionType)
+	}
 }
 
 // TestFoundryConnectionToYAML tests that ToYAML produces valid YAML
@@ -179,5 +253,29 @@ func TestFoundryConnectionToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadFoundryConnection(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Kind != "foundry" {
+		t.Errorf(`Expected Kind to be "foundry", got %v`, reloaded.Kind)
+	}
+	if reloaded.Endpoint != "https://myresource.services.ai.azure.com/api/projects/myproject" {
+		t.Errorf(`Expected Endpoint to be "https://myresource.services.ai.azure.com/api/projects/myproject", got %v`, reloaded.Endpoint)
+	}
+	if reloaded.Name == nil || *reloaded.Name != "my-openai-connection" {
+		t.Errorf(`Expected Name to be "my-openai-connection", got %v`, reloaded.Name)
+	}
+	if reloaded.ConnectionType == nil || *reloaded.ConnectionType != "model" {
+		t.Errorf(`Expected ConnectionType to be "model", got %v`, reloaded.ConnectionType)
+	}
+}
+
+// TestFoundryConnectionFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestFoundryConnectionFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.FoundryConnectionFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

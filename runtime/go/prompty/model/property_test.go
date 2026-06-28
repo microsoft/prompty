@@ -74,6 +74,58 @@ enumValues:
 	// Note: Validation skipped for polymorphic base types - test child types directly
 }
 
+// TestPropertyFromJSON tests loading Property through the generated JSON helper
+func TestPropertyFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "name": "my-input",
+  "kind": "string",
+  "description": "A description of the input property",
+  "required": true,
+  "default": "default value",
+  "example": "example value",
+  "enumValues": [
+    "value1",
+    "value2",
+    "value3"
+  ]
+}
+`
+
+	instance, err := prompty.PropertyFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Property from JSON helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
+// TestPropertyFromYAML tests loading Property through the generated YAML helper
+func TestPropertyFromYAML(t *testing.T) {
+	yamlData := `
+name: my-input
+kind: string
+description: A description of the input property
+required: true
+default: default value
+example: example value
+enumValues:
+  - value1
+  - value2
+  - value3
+
+`
+
+	instance, err := prompty.PropertyFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Property from YAML helper: %v", err)
+	}
+	// Polymorphic types return interface{}, extract common fields via reflection or type-specific access
+	_ = instance // Load succeeded, exact type depends on discriminator
+	// Note: Validation skipped for polymorphic base types - test child types directly
+}
+
 // TestPropertyRoundtrip tests load -> save -> load produces equivalent data
 func TestPropertyRoundtrip(t *testing.T) {
 	jsonData := `
@@ -168,6 +220,13 @@ func TestPropertyToYAML(t *testing.T) {
 	// Polymorphic ToYAML requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: ToYAML test skipped for polymorphic base types - test child types directly
+}
+
+// TestPropertyFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestPropertyFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.PropertyFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
+	}
 }
 
 // TestPropertyFromInput tests loading Property from bool

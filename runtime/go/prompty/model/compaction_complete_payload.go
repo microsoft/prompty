@@ -72,7 +72,7 @@ func LoadCompactionCompletePayload(data interface{}, ctx *LoadContext) (Compacti
 }
 
 // Save serializes CompactionCompletePayload to map[string]interface{}
-func (obj *CompactionCompletePayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj CompactionCompletePayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["removed"] = obj.Removed
 	result["remaining"] = obj.Remaining
@@ -98,11 +98,7 @@ func (obj *CompactionCompletePayload) ToJSON() (string, error) {
 func (obj *CompactionCompletePayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates CompactionCompletePayload from JSON string

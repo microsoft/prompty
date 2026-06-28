@@ -87,6 +87,71 @@ errorKind: timeout
 	}
 }
 
+// TestToolCallCompletePayloadFromJSON tests loading ToolCallCompletePayload through the generated JSON helper
+func TestToolCallCompletePayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "id": "call_abc123",
+  "name": "get_weather",
+  "success": true,
+  "durationMs": 42,
+  "errorKind": "timeout"
+}
+`
+
+	instance, err := prompty.ToolCallCompletePayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolCallCompletePayload from JSON helper: %v", err)
+	}
+	if instance.Id == nil || *instance.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, instance.Id)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+	if instance.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, instance.Success)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, instance.DurationMs)
+	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "timeout" {
+		t.Errorf(`Expected ErrorKind to be "timeout", got %v`, instance.ErrorKind)
+	}
+}
+
+// TestToolCallCompletePayloadFromYAML tests loading ToolCallCompletePayload through the generated YAML helper
+func TestToolCallCompletePayloadFromYAML(t *testing.T) {
+	yamlData := `
+id: call_abc123
+name: get_weather
+success: true
+durationMs: 42
+errorKind: timeout
+
+`
+
+	instance, err := prompty.ToolCallCompletePayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolCallCompletePayload from YAML helper: %v", err)
+	}
+	if instance.Id == nil || *instance.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, instance.Id)
+	}
+	if instance.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, instance.Name)
+	}
+	if instance.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, instance.Success)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, instance.DurationMs)
+	}
+	if instance.ErrorKind == nil || *instance.ErrorKind != "timeout" {
+		t.Errorf(`Expected ErrorKind to be "timeout", got %v`, instance.ErrorKind)
+	}
+}
+
 // TestToolCallCompletePayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestToolCallCompletePayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestToolCallCompletePayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadToolCallCompletePayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Id == nil || *reloaded.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, reloaded.Id)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
+	if reloaded.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, reloaded.Success)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, reloaded.DurationMs)
+	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "timeout" {
+		t.Errorf(`Expected ErrorKind to be "timeout", got %v`, reloaded.ErrorKind)
+	}
 }
 
 // TestToolCallCompletePayloadToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestToolCallCompletePayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadToolCallCompletePayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Id == nil || *reloaded.Id != "call_abc123" {
+		t.Errorf(`Expected Id to be "call_abc123", got %v`, reloaded.Id)
+	}
+	if reloaded.Name != "get_weather" {
+		t.Errorf(`Expected Name to be "get_weather", got %v`, reloaded.Name)
+	}
+	if reloaded.Success != true {
+		t.Errorf(`Expected Success to be true, got %v`, reloaded.Success)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 42 {
+		t.Errorf(`Expected DurationMs to be 42, got %v`, reloaded.DurationMs)
+	}
+	if reloaded.ErrorKind == nil || *reloaded.ErrorKind != "timeout" {
+		t.Errorf(`Expected ErrorKind to be "timeout", got %v`, reloaded.ErrorKind)
+	}
+}
+
+// TestToolCallCompletePayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolCallCompletePayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolCallCompletePayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

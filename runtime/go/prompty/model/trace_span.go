@@ -69,7 +69,8 @@ func LoadTraceSpan(data interface{}, ctx *LoadContext) (TraceSpan, error) {
 			}
 		}
 		if val, ok := m["__frames"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result._Frames = arr
 			}
 		}
@@ -79,7 +80,7 @@ func LoadTraceSpan(data interface{}, ctx *LoadContext) (TraceSpan, error) {
 }
 
 // Save serializes TraceSpan to map[string]interface{}
-func (obj *TraceSpan) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TraceSpan) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 
@@ -122,11 +123,7 @@ func (obj *TraceSpan) ToJSON() (string, error) {
 func (obj *TraceSpan) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TraceSpan from JSON string

@@ -71,6 +71,55 @@ stop_reason: end_turn
 	}
 }
 
+// TestAnthropicMessagesResponseFromJSON tests loading AnthropicMessagesResponse through the generated JSON helper
+func TestAnthropicMessagesResponseFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
+  "model": "claude-sonnet-4-20250514",
+  "stop_reason": "end_turn"
+}
+`
+
+	instance, err := prompty.AnthropicMessagesResponseFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicMessagesResponse from JSON helper: %v", err)
+	}
+	if instance.Id != "msg_01XFDUDYJgAACzvnptvVoYEL" {
+		t.Errorf(`Expected Id to be "msg_01XFDUDYJgAACzvnptvVoYEL", got %v`, instance.Id)
+	}
+	if instance.Model != "claude-sonnet-4-20250514" {
+		t.Errorf(`Expected Model to be "claude-sonnet-4-20250514", got %v`, instance.Model)
+	}
+	if instance.StopReason != "end_turn" {
+		t.Errorf(`Expected StopReason to be "end_turn", got %v`, instance.StopReason)
+	}
+}
+
+// TestAnthropicMessagesResponseFromYAML tests loading AnthropicMessagesResponse through the generated YAML helper
+func TestAnthropicMessagesResponseFromYAML(t *testing.T) {
+	yamlData := `
+id: msg_01XFDUDYJgAACzvnptvVoYEL
+model: claude-sonnet-4-20250514
+stop_reason: end_turn
+
+`
+
+	instance, err := prompty.AnthropicMessagesResponseFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicMessagesResponse from YAML helper: %v", err)
+	}
+	if instance.Id != "msg_01XFDUDYJgAACzvnptvVoYEL" {
+		t.Errorf(`Expected Id to be "msg_01XFDUDYJgAACzvnptvVoYEL", got %v`, instance.Id)
+	}
+	if instance.Model != "claude-sonnet-4-20250514" {
+		t.Errorf(`Expected Model to be "claude-sonnet-4-20250514", got %v`, instance.Model)
+	}
+	if instance.StopReason != "end_turn" {
+		t.Errorf(`Expected StopReason to be "end_turn", got %v`, instance.StopReason)
+	}
+}
+
 // TestAnthropicMessagesResponseRoundtrip tests load -> save -> load produces equivalent data
 func TestAnthropicMessagesResponseRoundtrip(t *testing.T) {
 	jsonData := `
@@ -136,6 +185,20 @@ func TestAnthropicMessagesResponseToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAnthropicMessagesResponse(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Id != "msg_01XFDUDYJgAACzvnptvVoYEL" {
+		t.Errorf(`Expected Id to be "msg_01XFDUDYJgAACzvnptvVoYEL", got %v`, reloaded.Id)
+	}
+	if reloaded.Model != "claude-sonnet-4-20250514" {
+		t.Errorf(`Expected Model to be "claude-sonnet-4-20250514", got %v`, reloaded.Model)
+	}
+	if reloaded.StopReason != "end_turn" {
+		t.Errorf(`Expected StopReason to be "end_turn", got %v`, reloaded.StopReason)
+	}
 }
 
 // TestAnthropicMessagesResponseToYAML tests that ToYAML produces valid YAML
@@ -165,5 +228,26 @@ func TestAnthropicMessagesResponseToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAnthropicMessagesResponse(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Id != "msg_01XFDUDYJgAACzvnptvVoYEL" {
+		t.Errorf(`Expected Id to be "msg_01XFDUDYJgAACzvnptvVoYEL", got %v`, reloaded.Id)
+	}
+	if reloaded.Model != "claude-sonnet-4-20250514" {
+		t.Errorf(`Expected Model to be "claude-sonnet-4-20250514", got %v`, reloaded.Model)
+	}
+	if reloaded.StopReason != "end_turn" {
+		t.Errorf(`Expected StopReason to be "end_turn", got %v`, reloaded.StopReason)
+	}
+}
+
+// TestAnthropicMessagesResponseFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAnthropicMessagesResponseFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AnthropicMessagesResponseFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

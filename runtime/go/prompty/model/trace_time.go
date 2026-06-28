@@ -52,7 +52,7 @@ func LoadTraceTime(data interface{}, ctx *LoadContext) (TraceTime, error) {
 }
 
 // Save serializes TraceTime to map[string]interface{}
-func (obj *TraceTime) Save(ctx *SaveContext) map[string]interface{} {
+func (obj TraceTime) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["start"] = obj.Start
 	result["end"] = obj.End
@@ -76,11 +76,7 @@ func (obj *TraceTime) ToJSON() (string, error) {
 func (obj *TraceTime) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates TraceTime from JSON string

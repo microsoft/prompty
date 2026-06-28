@@ -44,7 +44,7 @@ func LoadAnthropicToolDefinition(data interface{}, ctx *LoadContext) (AnthropicT
 }
 
 // Save serializes AnthropicToolDefinition to map[string]interface{}
-func (obj *AnthropicToolDefinition) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AnthropicToolDefinition) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 	if obj.Description != nil {
@@ -70,11 +70,7 @@ func (obj *AnthropicToolDefinition) ToJSON() (string, error) {
 func (obj *AnthropicToolDefinition) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AnthropicToolDefinition from JSON string

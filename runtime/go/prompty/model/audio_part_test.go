@@ -63,6 +63,47 @@ mediaType: audio/wav
 	}
 }
 
+// TestAudioPartFromJSON tests loading AudioPart through the generated JSON helper
+func TestAudioPartFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "source": "https://example.com/audio.wav",
+  "mediaType": "audio/wav"
+}
+`
+
+	instance, err := prompty.AudioPartFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AudioPart from JSON helper: %v", err)
+	}
+	if instance.Source != "https://example.com/audio.wav" {
+		t.Errorf(`Expected Source to be "https://example.com/audio.wav", got %v`, instance.Source)
+	}
+	if instance.MediaType == nil || *instance.MediaType != "audio/wav" {
+		t.Errorf(`Expected MediaType to be "audio/wav", got %v`, instance.MediaType)
+	}
+}
+
+// TestAudioPartFromYAML tests loading AudioPart through the generated YAML helper
+func TestAudioPartFromYAML(t *testing.T) {
+	yamlData := `
+source: "https://example.com/audio.wav"
+mediaType: audio/wav
+
+`
+
+	instance, err := prompty.AudioPartFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AudioPart from YAML helper: %v", err)
+	}
+	if instance.Source != "https://example.com/audio.wav" {
+		t.Errorf(`Expected Source to be "https://example.com/audio.wav", got %v`, instance.Source)
+	}
+	if instance.MediaType == nil || *instance.MediaType != "audio/wav" {
+		t.Errorf(`Expected MediaType to be "audio/wav", got %v`, instance.MediaType)
+	}
+}
+
 // TestAudioPartRoundtrip tests load -> save -> load produces equivalent data
 func TestAudioPartRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestAudioPartToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAudioPart(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Source != "https://example.com/audio.wav" {
+		t.Errorf(`Expected Source to be "https://example.com/audio.wav", got %v`, reloaded.Source)
+	}
+	if reloaded.MediaType == nil || *reloaded.MediaType != "audio/wav" {
+		t.Errorf(`Expected MediaType to be "audio/wav", got %v`, reloaded.MediaType)
+	}
 }
 
 // TestAudioPartToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestAudioPartToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAudioPart(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Source != "https://example.com/audio.wav" {
+		t.Errorf(`Expected Source to be "https://example.com/audio.wav", got %v`, reloaded.Source)
+	}
+	if reloaded.MediaType == nil || *reloaded.MediaType != "audio/wav" {
+		t.Errorf(`Expected MediaType to be "audio/wav", got %v`, reloaded.MediaType)
+	}
+}
+
+// TestAudioPartFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAudioPartFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AudioPartFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

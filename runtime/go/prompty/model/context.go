@@ -4,6 +4,15 @@
 
 package prompty
 
+import (
+	"fmt"
+	"reflect"
+	"sort"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
+
 // LoadContext provides context for loading operations
 type LoadContext struct {
 	// Add any context fields needed for loading
@@ -30,4 +39,76 @@ func NewSaveContext() *SaveContext {
 // to set optional (pointer) fields in struct literals.
 func ptrOf[T any](v T) *T {
 	return &v
+}
+
+func marshalYAMLDocument(data interface{}) (string, error) {
+	node := toYAMLNode(data)
+	bytes, err := yaml.Marshal(node)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+func toYAMLNode(value interface{}) *yaml.Node {
+	switch v := value.(type) {
+	case nil:
+		return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!null"}
+	case string:
+		node := &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: v}
+		if strings.Contains(v, "\n") {
+			node.Style = yaml.DoubleQuotedStyle
+		}
+		return node
+	case map[string]interface{}:
+		return mapToYAMLNode(v)
+	case []interface{}:
+		node := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+		for _, item := range v {
+			node.Content = append(node.Content, toYAMLNode(item))
+		}
+		return node
+	}
+
+	rv := reflect.ValueOf(value)
+	if rv.IsValid() {
+		switch rv.Kind() {
+		case reflect.Slice, reflect.Array:
+			node := &yaml.Node{Kind: yaml.SequenceNode, Tag: "!!seq"}
+			for i := 0; i < rv.Len(); i++ {
+				node.Content = append(node.Content, toYAMLNode(rv.Index(i).Interface()))
+			}
+			return node
+		case reflect.Map:
+			if rv.Type().Key().Kind() == reflect.String {
+				items := make(map[string]interface{}, rv.Len())
+				for _, key := range rv.MapKeys() {
+					items[key.String()] = rv.MapIndex(key).Interface()
+				}
+				return mapToYAMLNode(items)
+			}
+		}
+	}
+
+	node := &yaml.Node{}
+	if err := node.Encode(value); err == nil {
+		if node.Kind == yaml.ScalarNode && node.Tag == "!!str" && strings.Contains(node.Value, "\n") {
+			node.Style = yaml.DoubleQuotedStyle
+		}
+		return node
+	}
+	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: fmt.Sprint(value)}
+}
+
+func mapToYAMLNode(items map[string]interface{}) *yaml.Node {
+	node := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+	keys := make([]string, 0, len(items))
+	for key := range items {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		node.Content = append(node.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: key}, toYAMLNode(items[key]))
+	}
+	return node
 }

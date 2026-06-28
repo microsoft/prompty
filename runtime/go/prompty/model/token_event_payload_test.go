@@ -55,6 +55,39 @@ token: Hello
 	}
 }
 
+// TestTokenEventPayloadFromJSON tests loading TokenEventPayload through the generated JSON helper
+func TestTokenEventPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "token": "Hello"
+}
+`
+
+	instance, err := prompty.TokenEventPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TokenEventPayload from JSON helper: %v", err)
+	}
+	if instance.Token != "Hello" {
+		t.Errorf(`Expected Token to be "Hello", got %v`, instance.Token)
+	}
+}
+
+// TestTokenEventPayloadFromYAML tests loading TokenEventPayload through the generated YAML helper
+func TestTokenEventPayloadFromYAML(t *testing.T) {
+	yamlData := `
+token: Hello
+
+`
+
+	instance, err := prompty.TokenEventPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TokenEventPayload from YAML helper: %v", err)
+	}
+	if instance.Token != "Hello" {
+		t.Errorf(`Expected Token to be "Hello", got %v`, instance.Token)
+	}
+}
+
 // TestTokenEventPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestTokenEventPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestTokenEventPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTokenEventPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Token != "Hello" {
+		t.Errorf(`Expected Token to be "Hello", got %v`, reloaded.Token)
+	}
 }
 
 // TestTokenEventPayloadToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestTokenEventPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTokenEventPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Token != "Hello" {
+		t.Errorf(`Expected Token to be "Hello", got %v`, reloaded.Token)
+	}
+}
+
+// TestTokenEventPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTokenEventPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TokenEventPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

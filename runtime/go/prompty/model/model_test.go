@@ -50,6 +50,16 @@ func TestModelLoadJSON(t *testing.T) {
 	if instance.ApiType == nil || *instance.ApiType != "chat" {
 		t.Errorf(`Expected ApiType to be "chat", got %v`, instance.ApiType)
 	}
+	connectionValue, ok := instance.Connection.(prompty.ApiKeyConnection)
+	if !ok {
+		t.Fatalf("Expected Connection to be prompty.ApiKeyConnection, got %T", instance.Connection)
+	}
+	if connectionValue.Kind != "key" {
+		t.Errorf(`Expected Kind to be "key", got %v`, connectionValue.Kind)
+	}
+	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
+	}
 }
 
 // TestModelLoadYAML tests loading Model from YAML
@@ -86,6 +96,103 @@ options:
 	}
 	if instance.ApiType == nil || *instance.ApiType != "chat" {
 		t.Errorf(`Expected ApiType to be "chat", got %v`, instance.ApiType)
+	}
+	connectionValue, ok := instance.Connection.(prompty.ApiKeyConnection)
+	if !ok {
+		t.Fatalf("Expected Connection to be prompty.ApiKeyConnection, got %T", instance.Connection)
+	}
+	if connectionValue.Kind != "key" {
+		t.Errorf(`Expected Kind to be "key", got %v`, connectionValue.Kind)
+	}
+	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
+	}
+}
+
+// TestModelFromJSON tests loading Model through the generated JSON helper
+func TestModelFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "id": "gpt-35-turbo",
+  "provider": "foundry",
+  "apiType": "chat",
+  "connection": {
+    "kind": "key",
+    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+    "key": "{your-api-key}"
+  },
+  "options": {
+    "type": "chat",
+    "temperature": 0.7,
+    "maxOutputTokens": 1000
+  }
+}
+`
+
+	instance, err := prompty.ModelFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load Model from JSON helper: %v", err)
+	}
+	if instance.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, instance.Id)
+	}
+	if instance.Provider == nil || *instance.Provider != "foundry" {
+		t.Errorf(`Expected Provider to be "foundry", got %v`, instance.Provider)
+	}
+	if instance.ApiType == nil || *instance.ApiType != "chat" {
+		t.Errorf(`Expected ApiType to be "chat", got %v`, instance.ApiType)
+	}
+	connectionValue, ok := instance.Connection.(prompty.ApiKeyConnection)
+	if !ok {
+		t.Fatalf("Expected Connection to be prompty.ApiKeyConnection, got %T", instance.Connection)
+	}
+	if connectionValue.Kind != "key" {
+		t.Errorf(`Expected Kind to be "key", got %v`, connectionValue.Kind)
+	}
+	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
+	}
+}
+
+// TestModelFromYAML tests loading Model through the generated YAML helper
+func TestModelFromYAML(t *testing.T) {
+	yamlData := `
+id: gpt-35-turbo
+provider: foundry
+apiType: chat
+connection:
+  kind: key
+  endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+  key: "{your-api-key}"
+options:
+  type: chat
+  temperature: 0.7
+  maxOutputTokens: 1000
+
+`
+
+	instance, err := prompty.ModelFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load Model from YAML helper: %v", err)
+	}
+	if instance.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, instance.Id)
+	}
+	if instance.Provider == nil || *instance.Provider != "foundry" {
+		t.Errorf(`Expected Provider to be "foundry", got %v`, instance.Provider)
+	}
+	if instance.ApiType == nil || *instance.ApiType != "chat" {
+		t.Errorf(`Expected ApiType to be "chat", got %v`, instance.ApiType)
+	}
+	connectionValue, ok := instance.Connection.(prompty.ApiKeyConnection)
+	if !ok {
+		t.Fatalf("Expected Connection to be prompty.ApiKeyConnection, got %T", instance.Connection)
+	}
+	if connectionValue.Kind != "key" {
+		t.Errorf(`Expected Kind to be "key", got %v`, connectionValue.Kind)
+	}
+	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
 	}
 }
 
@@ -134,6 +241,16 @@ func TestModelRoundtrip(t *testing.T) {
 	if reloaded.ApiType == nil || *reloaded.ApiType != "chat" {
 		t.Errorf(`Expected ApiType to be "chat", got %v`, reloaded.ApiType)
 	}
+	connectionValue, ok := reloaded.Connection.(prompty.ApiKeyConnection)
+	if !ok {
+		t.Fatalf("Expected Connection to be prompty.ApiKeyConnection, got %T", reloaded.Connection)
+	}
+	if connectionValue.Kind != "key" {
+		t.Errorf(`Expected Kind to be "key", got %v`, connectionValue.Kind)
+	}
+	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
+	}
 }
 
 // TestModelToJSON tests that ToJSON produces valid JSON
@@ -174,6 +291,30 @@ func TestModelToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadModel(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, reloaded.Id)
+	}
+	if reloaded.Provider == nil || *reloaded.Provider != "foundry" {
+		t.Errorf(`Expected Provider to be "foundry", got %v`, reloaded.Provider)
+	}
+	if reloaded.ApiType == nil || *reloaded.ApiType != "chat" {
+		t.Errorf(`Expected ApiType to be "chat", got %v`, reloaded.ApiType)
+	}
+	connectionValue, ok := reloaded.Connection.(prompty.ApiKeyConnection)
+	if !ok {
+		t.Fatalf("Expected Connection to be prompty.ApiKeyConnection, got %T", reloaded.Connection)
+	}
+	if connectionValue.Kind != "key" {
+		t.Errorf(`Expected Kind to be "key", got %v`, connectionValue.Kind)
+	}
+	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
+	}
 }
 
 // TestModelToYAML tests that ToYAML produces valid YAML
@@ -213,6 +354,37 @@ func TestModelToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadModel(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Id != "gpt-35-turbo" {
+		t.Errorf(`Expected Id to be "gpt-35-turbo", got %v`, reloaded.Id)
+	}
+	if reloaded.Provider == nil || *reloaded.Provider != "foundry" {
+		t.Errorf(`Expected Provider to be "foundry", got %v`, reloaded.Provider)
+	}
+	if reloaded.ApiType == nil || *reloaded.ApiType != "chat" {
+		t.Errorf(`Expected ApiType to be "chat", got %v`, reloaded.ApiType)
+	}
+	connectionValue, ok := reloaded.Connection.(prompty.ApiKeyConnection)
+	if !ok {
+		t.Fatalf("Expected Connection to be prompty.ApiKeyConnection, got %T", reloaded.Connection)
+	}
+	if connectionValue.Kind != "key" {
+		t.Errorf(`Expected Kind to be "key", got %v`, connectionValue.Kind)
+	}
+	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
+		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
+	}
+}
+
+// TestModelFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestModelFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ModelFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }
 

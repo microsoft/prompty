@@ -109,11 +109,14 @@ func LoadAnthropicMessagesRequest(data interface{}, ctx *LoadContext) (Anthropic
 			result.TopK = &v
 		}
 		if val, ok := m["stop_sequences"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result.StopSequences = make([]string, len(arr))
 				for i, v := range arr {
 					result.StopSequences[i] = v.(string)
 				}
+			case []string:
+				result.StopSequences = arr
 			}
 		}
 		if val, ok := m["tools"]; ok && val != nil {
@@ -133,7 +136,7 @@ func LoadAnthropicMessagesRequest(data interface{}, ctx *LoadContext) (Anthropic
 }
 
 // Save serializes AnthropicMessagesRequest to map[string]interface{}
-func (obj *AnthropicMessagesRequest) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AnthropicMessagesRequest) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["model"] = obj.Model
 	if obj.Messages != nil {
@@ -183,11 +186,7 @@ func (obj *AnthropicMessagesRequest) ToJSON() (string, error) {
 func (obj *AnthropicMessagesRequest) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AnthropicMessagesRequest from JSON string

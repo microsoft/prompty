@@ -34,6 +34,15 @@ func TestToolChunkLoadJSON(t *testing.T) {
 		t.Fatalf("Failed to load ToolChunk: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if instance.ToolCall.Id != "call_abc123" {
+		t.Errorf(`Expected ToolCall.Id to be "call_abc123", got %v`, instance.ToolCall.Id)
+	}
+	if instance.ToolCall.Name != "get_weather" {
+		t.Errorf(`Expected ToolCall.Name to be "get_weather", got %v`, instance.ToolCall.Name)
+	}
+	if instance.ToolCall.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected ToolCall.Arguments to be "{\"city\": \"Paris\"}", got %v`, instance.ToolCall.Arguments)
+	}
 }
 
 // TestToolChunkLoadYAML tests loading ToolChunk from YAML
@@ -56,6 +65,69 @@ toolCall:
 		t.Fatalf("Failed to load ToolChunk: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if instance.ToolCall.Id != "call_abc123" {
+		t.Errorf(`Expected ToolCall.Id to be "call_abc123", got %v`, instance.ToolCall.Id)
+	}
+	if instance.ToolCall.Name != "get_weather" {
+		t.Errorf(`Expected ToolCall.Name to be "get_weather", got %v`, instance.ToolCall.Name)
+	}
+	if instance.ToolCall.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected ToolCall.Arguments to be "{\"city\": \"Paris\"}", got %v`, instance.ToolCall.Arguments)
+	}
+}
+
+// TestToolChunkFromJSON tests loading ToolChunk through the generated JSON helper
+func TestToolChunkFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "toolCall": {
+    "id": "call_abc123",
+    "name": "get_weather",
+    "arguments": "{\"city\": \"Paris\"}"
+  }
+}
+`
+
+	instance, err := prompty.ToolChunkFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolChunk from JSON helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+	if instance.ToolCall.Id != "call_abc123" {
+		t.Errorf(`Expected ToolCall.Id to be "call_abc123", got %v`, instance.ToolCall.Id)
+	}
+	if instance.ToolCall.Name != "get_weather" {
+		t.Errorf(`Expected ToolCall.Name to be "get_weather", got %v`, instance.ToolCall.Name)
+	}
+	if instance.ToolCall.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected ToolCall.Arguments to be "{\"city\": \"Paris\"}", got %v`, instance.ToolCall.Arguments)
+	}
+}
+
+// TestToolChunkFromYAML tests loading ToolChunk through the generated YAML helper
+func TestToolChunkFromYAML(t *testing.T) {
+	yamlData := `
+toolCall:
+  id: call_abc123
+  name: get_weather
+  arguments: "{\"city\": \"Paris\"}"
+
+`
+
+	instance, err := prompty.ToolChunkFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ToolChunk from YAML helper: %v", err)
+	}
+	_ = instance // No scalar properties to validate
+	if instance.ToolCall.Id != "call_abc123" {
+		t.Errorf(`Expected ToolCall.Id to be "call_abc123", got %v`, instance.ToolCall.Id)
+	}
+	if instance.ToolCall.Name != "get_weather" {
+		t.Errorf(`Expected ToolCall.Name to be "get_weather", got %v`, instance.ToolCall.Name)
+	}
+	if instance.ToolCall.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected ToolCall.Arguments to be "{\"city\": \"Paris\"}", got %v`, instance.ToolCall.Arguments)
+	}
 }
 
 // TestToolChunkRoundtrip tests load -> save -> load produces equivalent data
@@ -87,6 +159,15 @@ func TestToolChunkRoundtrip(t *testing.T) {
 		t.Fatalf("Failed to reload ToolChunk: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
+	if reloaded.ToolCall.Id != "call_abc123" {
+		t.Errorf(`Expected ToolCall.Id to be "call_abc123", got %v`, reloaded.ToolCall.Id)
+	}
+	if reloaded.ToolCall.Name != "get_weather" {
+		t.Errorf(`Expected ToolCall.Name to be "get_weather", got %v`, reloaded.ToolCall.Name)
+	}
+	if reloaded.ToolCall.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected ToolCall.Arguments to be "{\"city\": \"Paris\"}", got %v`, reloaded.ToolCall.Arguments)
+	}
 }
 
 // TestToolChunkToJSON tests that ToJSON produces valid JSON
@@ -119,6 +200,21 @@ func TestToolChunkToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadToolChunk(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
+	if reloaded.ToolCall.Id != "call_abc123" {
+		t.Errorf(`Expected ToolCall.Id to be "call_abc123", got %v`, reloaded.ToolCall.Id)
+	}
+	if reloaded.ToolCall.Name != "get_weather" {
+		t.Errorf(`Expected ToolCall.Name to be "get_weather", got %v`, reloaded.ToolCall.Name)
+	}
+	if reloaded.ToolCall.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected ToolCall.Arguments to be "{\"city\": \"Paris\"}", got %v`, reloaded.ToolCall.Arguments)
+	}
 }
 
 // TestToolChunkToYAML tests that ToYAML produces valid YAML
@@ -150,5 +246,27 @@ func TestToolChunkToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadToolChunk(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	_ = reloaded // No scalar properties to validate
+	if reloaded.ToolCall.Id != "call_abc123" {
+		t.Errorf(`Expected ToolCall.Id to be "call_abc123", got %v`, reloaded.ToolCall.Id)
+	}
+	if reloaded.ToolCall.Name != "get_weather" {
+		t.Errorf(`Expected ToolCall.Name to be "get_weather", got %v`, reloaded.ToolCall.Name)
+	}
+	if reloaded.ToolCall.Arguments != "{\"city\": \"Paris\"}" {
+		t.Errorf(`Expected ToolCall.Arguments to be "{\"city\": \"Paris\"}", got %v`, reloaded.ToolCall.Arguments)
+	}
+}
+
+// TestToolChunkFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestToolChunkFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ToolChunkFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

@@ -63,6 +63,47 @@ hookType: preToolUse
 	}
 }
 
+// TestHookStartPayloadFromJSON tests loading HookStartPayload through the generated JSON helper
+func TestHookStartPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "hookInvocationId": "hook_abc123",
+  "hookType": "preToolUse"
+}
+`
+
+	instance, err := prompty.HookStartPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load HookStartPayload from JSON helper: %v", err)
+	}
+	if instance.HookInvocationId != "hook_abc123" {
+		t.Errorf(`Expected HookInvocationId to be "hook_abc123", got %v`, instance.HookInvocationId)
+	}
+	if instance.HookType != "preToolUse" {
+		t.Errorf(`Expected HookType to be "preToolUse", got %v`, instance.HookType)
+	}
+}
+
+// TestHookStartPayloadFromYAML tests loading HookStartPayload through the generated YAML helper
+func TestHookStartPayloadFromYAML(t *testing.T) {
+	yamlData := `
+hookInvocationId: hook_abc123
+hookType: preToolUse
+
+`
+
+	instance, err := prompty.HookStartPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load HookStartPayload from YAML helper: %v", err)
+	}
+	if instance.HookInvocationId != "hook_abc123" {
+		t.Errorf(`Expected HookInvocationId to be "hook_abc123", got %v`, instance.HookInvocationId)
+	}
+	if instance.HookType != "preToolUse" {
+		t.Errorf(`Expected HookType to be "preToolUse", got %v`, instance.HookType)
+	}
+}
+
 // TestHookStartPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestHookStartPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestHookStartPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadHookStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.HookInvocationId != "hook_abc123" {
+		t.Errorf(`Expected HookInvocationId to be "hook_abc123", got %v`, reloaded.HookInvocationId)
+	}
+	if reloaded.HookType != "preToolUse" {
+		t.Errorf(`Expected HookType to be "preToolUse", got %v`, reloaded.HookType)
+	}
 }
 
 // TestHookStartPayloadToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestHookStartPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadHookStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.HookInvocationId != "hook_abc123" {
+		t.Errorf(`Expected HookInvocationId to be "hook_abc123", got %v`, reloaded.HookInvocationId)
+	}
+	if reloaded.HookType != "preToolUse" {
+		t.Errorf(`Expected HookType to be "preToolUse", got %v`, reloaded.HookType)
+	}
+}
+
+// TestHookStartPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestHookStartPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.HookStartPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

@@ -63,6 +63,47 @@ gitRoot: /workspace/project
 	}
 }
 
+// TestHarnessContextFromJSON tests loading HarnessContext through the generated JSON helper
+func TestHarnessContextFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "cwd": "/workspace/project",
+  "gitRoot": "/workspace/project"
+}
+`
+
+	instance, err := prompty.HarnessContextFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load HarnessContext from JSON helper: %v", err)
+	}
+	if instance.Cwd == nil || *instance.Cwd != "/workspace/project" {
+		t.Errorf(`Expected Cwd to be "/workspace/project", got %v`, instance.Cwd)
+	}
+	if instance.GitRoot == nil || *instance.GitRoot != "/workspace/project" {
+		t.Errorf(`Expected GitRoot to be "/workspace/project", got %v`, instance.GitRoot)
+	}
+}
+
+// TestHarnessContextFromYAML tests loading HarnessContext through the generated YAML helper
+func TestHarnessContextFromYAML(t *testing.T) {
+	yamlData := `
+cwd: /workspace/project
+gitRoot: /workspace/project
+
+`
+
+	instance, err := prompty.HarnessContextFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load HarnessContext from YAML helper: %v", err)
+	}
+	if instance.Cwd == nil || *instance.Cwd != "/workspace/project" {
+		t.Errorf(`Expected Cwd to be "/workspace/project", got %v`, instance.Cwd)
+	}
+	if instance.GitRoot == nil || *instance.GitRoot != "/workspace/project" {
+		t.Errorf(`Expected GitRoot to be "/workspace/project", got %v`, instance.GitRoot)
+	}
+}
+
 // TestHarnessContextRoundtrip tests load -> save -> load produces equivalent data
 func TestHarnessContextRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestHarnessContextToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadHarnessContext(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Cwd == nil || *reloaded.Cwd != "/workspace/project" {
+		t.Errorf(`Expected Cwd to be "/workspace/project", got %v`, reloaded.Cwd)
+	}
+	if reloaded.GitRoot == nil || *reloaded.GitRoot != "/workspace/project" {
+		t.Errorf(`Expected GitRoot to be "/workspace/project", got %v`, reloaded.GitRoot)
+	}
 }
 
 // TestHarnessContextToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestHarnessContextToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadHarnessContext(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Cwd == nil || *reloaded.Cwd != "/workspace/project" {
+		t.Errorf(`Expected Cwd to be "/workspace/project", got %v`, reloaded.Cwd)
+	}
+	if reloaded.GitRoot == nil || *reloaded.GitRoot != "/workspace/project" {
+		t.Errorf(`Expected GitRoot to be "/workspace/project", got %v`, reloaded.GitRoot)
+	}
+}
+
+// TestHarnessContextFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestHarnessContextFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.HarnessContextFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

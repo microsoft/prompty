@@ -73,7 +73,7 @@ func LoadSessionStartPayload(data interface{}, ctx *LoadContext) (SessionStartPa
 }
 
 // Save serializes SessionStartPayload to map[string]interface{}
-func (obj *SessionStartPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj SessionStartPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["sessionId"] = obj.SessionId
 	if obj.SchemaVersion != nil {
@@ -119,11 +119,7 @@ func (obj *SessionStartPayload) ToJSON() (string, error) {
 func (obj *SessionStartPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates SessionStartPayload from JSON string

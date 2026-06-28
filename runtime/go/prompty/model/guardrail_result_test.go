@@ -63,6 +63,47 @@ reason: Content is safe
 	}
 }
 
+// TestGuardrailResultFromJSON tests loading GuardrailResult through the generated JSON helper
+func TestGuardrailResultFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "allowed": true,
+  "reason": "Content is safe"
+}
+`
+
+	instance, err := prompty.GuardrailResultFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load GuardrailResult from JSON helper: %v", err)
+	}
+	if instance.Allowed != true {
+		t.Errorf(`Expected Allowed to be true, got %v`, instance.Allowed)
+	}
+	if instance.Reason == nil || *instance.Reason != "Content is safe" {
+		t.Errorf(`Expected Reason to be "Content is safe", got %v`, instance.Reason)
+	}
+}
+
+// TestGuardrailResultFromYAML tests loading GuardrailResult through the generated YAML helper
+func TestGuardrailResultFromYAML(t *testing.T) {
+	yamlData := `
+allowed: true
+reason: Content is safe
+
+`
+
+	instance, err := prompty.GuardrailResultFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load GuardrailResult from YAML helper: %v", err)
+	}
+	if instance.Allowed != true {
+		t.Errorf(`Expected Allowed to be true, got %v`, instance.Allowed)
+	}
+	if instance.Reason == nil || *instance.Reason != "Content is safe" {
+		t.Errorf(`Expected Reason to be "Content is safe", got %v`, instance.Reason)
+	}
+}
+
 // TestGuardrailResultRoundtrip tests load -> save -> load produces equivalent data
 func TestGuardrailResultRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestGuardrailResultToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadGuardrailResult(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Allowed != true {
+		t.Errorf(`Expected Allowed to be true, got %v`, reloaded.Allowed)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "Content is safe" {
+		t.Errorf(`Expected Reason to be "Content is safe", got %v`, reloaded.Reason)
+	}
 }
 
 // TestGuardrailResultToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestGuardrailResultToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadGuardrailResult(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Allowed != true {
+		t.Errorf(`Expected Allowed to be true, got %v`, reloaded.Allowed)
+	}
+	if reloaded.Reason == nil || *reloaded.Reason != "Content is safe" {
+		t.Errorf(`Expected Reason to be "Content is safe", got %v`, reloaded.Reason)
+	}
+}
+
+// TestGuardrailResultFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestGuardrailResultFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.GuardrailResultFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

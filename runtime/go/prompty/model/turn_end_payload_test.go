@@ -63,6 +63,47 @@ durationMs: 1500
 	}
 }
 
+// TestTurnEndPayloadFromJSON tests loading TurnEndPayload through the generated JSON helper
+func TestTurnEndPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "iterations": 2,
+  "durationMs": 1500
+}
+`
+
+	instance, err := prompty.TurnEndPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TurnEndPayload from JSON helper: %v", err)
+	}
+	if instance.Iterations == nil || *instance.Iterations != 2 {
+		t.Errorf(`Expected Iterations to be 2, got %v`, instance.Iterations)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 1500 {
+		t.Errorf(`Expected DurationMs to be 1500, got %v`, instance.DurationMs)
+	}
+}
+
+// TestTurnEndPayloadFromYAML tests loading TurnEndPayload through the generated YAML helper
+func TestTurnEndPayloadFromYAML(t *testing.T) {
+	yamlData := `
+iterations: 2
+durationMs: 1500
+
+`
+
+	instance, err := prompty.TurnEndPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TurnEndPayload from YAML helper: %v", err)
+	}
+	if instance.Iterations == nil || *instance.Iterations != 2 {
+		t.Errorf(`Expected Iterations to be 2, got %v`, instance.Iterations)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 1500 {
+		t.Errorf(`Expected DurationMs to be 1500, got %v`, instance.DurationMs)
+	}
+}
+
 // TestTurnEndPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestTurnEndPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestTurnEndPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTurnEndPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Iterations == nil || *reloaded.Iterations != 2 {
+		t.Errorf(`Expected Iterations to be 2, got %v`, reloaded.Iterations)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 1500 {
+		t.Errorf(`Expected DurationMs to be 1500, got %v`, reloaded.DurationMs)
+	}
 }
 
 // TestTurnEndPayloadToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestTurnEndPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTurnEndPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Iterations == nil || *reloaded.Iterations != 2 {
+		t.Errorf(`Expected Iterations to be 2, got %v`, reloaded.Iterations)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 1500 {
+		t.Errorf(`Expected DurationMs to be 1500, got %v`, reloaded.DurationMs)
+	}
+}
+
+// TestTurnEndPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTurnEndPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TurnEndPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

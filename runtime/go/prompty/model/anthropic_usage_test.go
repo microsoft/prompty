@@ -63,6 +63,47 @@ output_tokens: 42
 	}
 }
 
+// TestAnthropicUsageFromJSON tests loading AnthropicUsage through the generated JSON helper
+func TestAnthropicUsageFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "input_tokens": 150,
+  "output_tokens": 42
+}
+`
+
+	instance, err := prompty.AnthropicUsageFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicUsage from JSON helper: %v", err)
+	}
+	if instance.InputTokens != 150 {
+		t.Errorf(`Expected InputTokens to be 150, got %v`, instance.InputTokens)
+	}
+	if instance.OutputTokens != 42 {
+		t.Errorf(`Expected OutputTokens to be 42, got %v`, instance.OutputTokens)
+	}
+}
+
+// TestAnthropicUsageFromYAML tests loading AnthropicUsage through the generated YAML helper
+func TestAnthropicUsageFromYAML(t *testing.T) {
+	yamlData := `
+input_tokens: 150
+output_tokens: 42
+
+`
+
+	instance, err := prompty.AnthropicUsageFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load AnthropicUsage from YAML helper: %v", err)
+	}
+	if instance.InputTokens != 150 {
+		t.Errorf(`Expected InputTokens to be 150, got %v`, instance.InputTokens)
+	}
+	if instance.OutputTokens != 42 {
+		t.Errorf(`Expected OutputTokens to be 42, got %v`, instance.OutputTokens)
+	}
+}
+
 // TestAnthropicUsageRoundtrip tests load -> save -> load produces equivalent data
 func TestAnthropicUsageRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestAnthropicUsageToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadAnthropicUsage(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.InputTokens != 150 {
+		t.Errorf(`Expected InputTokens to be 150, got %v`, reloaded.InputTokens)
+	}
+	if reloaded.OutputTokens != 42 {
+		t.Errorf(`Expected OutputTokens to be 42, got %v`, reloaded.OutputTokens)
+	}
 }
 
 // TestAnthropicUsageToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestAnthropicUsageToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadAnthropicUsage(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.InputTokens != 150 {
+		t.Errorf(`Expected InputTokens to be 150, got %v`, reloaded.InputTokens)
+	}
+	if reloaded.OutputTokens != 42 {
+		t.Errorf(`Expected OutputTokens to be 42, got %v`, reloaded.OutputTokens)
+	}
+}
+
+// TestAnthropicUsageFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAnthropicUsageFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AnthropicUsageFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

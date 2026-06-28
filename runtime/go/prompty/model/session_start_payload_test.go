@@ -111,6 +111,95 @@ reasoningEffort: medium
 	}
 }
 
+// TestSessionStartPayloadFromJSON tests loading SessionStartPayload through the generated JSON helper
+func TestSessionStartPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "sessionId": "sess_abc123",
+  "schemaVersion": "1",
+  "producer": "prompty-agent",
+  "runtime": "typescript",
+  "promptyVersion": "2.0.0",
+  "startTime": "2026-06-09T20:00:00Z",
+  "selectedModel": "gpt-4o-mini",
+  "reasoningEffort": "medium"
+}
+`
+
+	instance, err := prompty.SessionStartPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionStartPayload from JSON helper: %v", err)
+	}
+	if instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.SchemaVersion == nil || *instance.SchemaVersion != "1" {
+		t.Errorf(`Expected SchemaVersion to be "1", got %v`, instance.SchemaVersion)
+	}
+	if instance.Producer == nil || *instance.Producer != "prompty-agent" {
+		t.Errorf(`Expected Producer to be "prompty-agent", got %v`, instance.Producer)
+	}
+	if instance.Runtime == nil || *instance.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, instance.Runtime)
+	}
+	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
+	}
+	if instance.StartTime == nil || *instance.StartTime != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected StartTime to be "2026-06-09T20:00:00Z", got %v`, instance.StartTime)
+	}
+	if instance.SelectedModel == nil || *instance.SelectedModel != "gpt-4o-mini" {
+		t.Errorf(`Expected SelectedModel to be "gpt-4o-mini", got %v`, instance.SelectedModel)
+	}
+	if instance.ReasoningEffort == nil || *instance.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, instance.ReasoningEffort)
+	}
+}
+
+// TestSessionStartPayloadFromYAML tests loading SessionStartPayload through the generated YAML helper
+func TestSessionStartPayloadFromYAML(t *testing.T) {
+	yamlData := `
+sessionId: sess_abc123
+schemaVersion: "1"
+producer: prompty-agent
+runtime: typescript
+promptyVersion: 2.0.0
+startTime: "2026-06-09T20:00:00Z"
+selectedModel: gpt-4o-mini
+reasoningEffort: medium
+
+`
+
+	instance, err := prompty.SessionStartPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionStartPayload from YAML helper: %v", err)
+	}
+	if instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.SchemaVersion == nil || *instance.SchemaVersion != "1" {
+		t.Errorf(`Expected SchemaVersion to be "1", got %v`, instance.SchemaVersion)
+	}
+	if instance.Producer == nil || *instance.Producer != "prompty-agent" {
+		t.Errorf(`Expected Producer to be "prompty-agent", got %v`, instance.Producer)
+	}
+	if instance.Runtime == nil || *instance.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, instance.Runtime)
+	}
+	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
+	}
+	if instance.StartTime == nil || *instance.StartTime != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected StartTime to be "2026-06-09T20:00:00Z", got %v`, instance.StartTime)
+	}
+	if instance.SelectedModel == nil || *instance.SelectedModel != "gpt-4o-mini" {
+		t.Errorf(`Expected SelectedModel to be "gpt-4o-mini", got %v`, instance.SelectedModel)
+	}
+	if instance.ReasoningEffort == nil || *instance.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, instance.ReasoningEffort)
+	}
+}
+
 // TestSessionStartPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestSessionStartPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -201,6 +290,35 @@ func TestSessionStartPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadSessionStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.SchemaVersion == nil || *reloaded.SchemaVersion != "1" {
+		t.Errorf(`Expected SchemaVersion to be "1", got %v`, reloaded.SchemaVersion)
+	}
+	if reloaded.Producer == nil || *reloaded.Producer != "prompty-agent" {
+		t.Errorf(`Expected Producer to be "prompty-agent", got %v`, reloaded.Producer)
+	}
+	if reloaded.Runtime == nil || *reloaded.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, reloaded.Runtime)
+	}
+	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
+	}
+	if reloaded.StartTime == nil || *reloaded.StartTime != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected StartTime to be "2026-06-09T20:00:00Z", got %v`, reloaded.StartTime)
+	}
+	if reloaded.SelectedModel == nil || *reloaded.SelectedModel != "gpt-4o-mini" {
+		t.Errorf(`Expected SelectedModel to be "gpt-4o-mini", got %v`, reloaded.SelectedModel)
+	}
+	if reloaded.ReasoningEffort == nil || *reloaded.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, reloaded.ReasoningEffort)
+	}
 }
 
 // TestSessionStartPayloadToYAML tests that ToYAML produces valid YAML
@@ -235,5 +353,41 @@ func TestSessionStartPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadSessionStartPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.SchemaVersion == nil || *reloaded.SchemaVersion != "1" {
+		t.Errorf(`Expected SchemaVersion to be "1", got %v`, reloaded.SchemaVersion)
+	}
+	if reloaded.Producer == nil || *reloaded.Producer != "prompty-agent" {
+		t.Errorf(`Expected Producer to be "prompty-agent", got %v`, reloaded.Producer)
+	}
+	if reloaded.Runtime == nil || *reloaded.Runtime != "typescript" {
+		t.Errorf(`Expected Runtime to be "typescript", got %v`, reloaded.Runtime)
+	}
+	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
+		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
+	}
+	if reloaded.StartTime == nil || *reloaded.StartTime != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected StartTime to be "2026-06-09T20:00:00Z", got %v`, reloaded.StartTime)
+	}
+	if reloaded.SelectedModel == nil || *reloaded.SelectedModel != "gpt-4o-mini" {
+		t.Errorf(`Expected SelectedModel to be "gpt-4o-mini", got %v`, reloaded.SelectedModel)
+	}
+	if reloaded.ReasoningEffort == nil || *reloaded.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, reloaded.ReasoningEffort)
+	}
+}
+
+// TestSessionStartPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestSessionStartPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.SessionStartPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

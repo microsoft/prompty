@@ -55,6 +55,39 @@ message: Starting iteration 3
 	}
 }
 
+// TestStatusEventPayloadFromJSON tests loading StatusEventPayload through the generated JSON helper
+func TestStatusEventPayloadFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "message": "Starting iteration 3"
+}
+`
+
+	instance, err := prompty.StatusEventPayloadFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load StatusEventPayload from JSON helper: %v", err)
+	}
+	if instance.Message != "Starting iteration 3" {
+		t.Errorf(`Expected Message to be "Starting iteration 3", got %v`, instance.Message)
+	}
+}
+
+// TestStatusEventPayloadFromYAML tests loading StatusEventPayload through the generated YAML helper
+func TestStatusEventPayloadFromYAML(t *testing.T) {
+	yamlData := `
+message: Starting iteration 3
+
+`
+
+	instance, err := prompty.StatusEventPayloadFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load StatusEventPayload from YAML helper: %v", err)
+	}
+	if instance.Message != "Starting iteration 3" {
+		t.Errorf(`Expected Message to be "Starting iteration 3", got %v`, instance.Message)
+	}
+}
+
 // TestStatusEventPayloadRoundtrip tests load -> save -> load produces equivalent data
 func TestStatusEventPayloadRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestStatusEventPayloadToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadStatusEventPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Message != "Starting iteration 3" {
+		t.Errorf(`Expected Message to be "Starting iteration 3", got %v`, reloaded.Message)
+	}
 }
 
 // TestStatusEventPayloadToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestStatusEventPayloadToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadStatusEventPayload(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Message != "Starting iteration 3" {
+		t.Errorf(`Expected Message to be "Starting iteration 3", got %v`, reloaded.Message)
+	}
+}
+
+// TestStatusEventPayloadFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestStatusEventPayloadFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.StatusEventPayloadFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

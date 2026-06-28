@@ -55,6 +55,39 @@ value: Hello
 	}
 }
 
+// TestTextChunkFromJSON tests loading TextChunk through the generated JSON helper
+func TestTextChunkFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "value": "Hello"
+}
+`
+
+	instance, err := prompty.TextChunkFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TextChunk from JSON helper: %v", err)
+	}
+	if instance.Value != "Hello" {
+		t.Errorf(`Expected Value to be "Hello", got %v`, instance.Value)
+	}
+}
+
+// TestTextChunkFromYAML tests loading TextChunk through the generated YAML helper
+func TestTextChunkFromYAML(t *testing.T) {
+	yamlData := `
+value: Hello
+
+`
+
+	instance, err := prompty.TextChunkFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TextChunk from YAML helper: %v", err)
+	}
+	if instance.Value != "Hello" {
+		t.Errorf(`Expected Value to be "Hello", got %v`, instance.Value)
+	}
+}
+
 // TestTextChunkRoundtrip tests load -> save -> load produces equivalent data
 func TestTextChunkRoundtrip(t *testing.T) {
 	jsonData := `
@@ -110,6 +143,14 @@ func TestTextChunkToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTextChunk(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Value != "Hello" {
+		t.Errorf(`Expected Value to be "Hello", got %v`, reloaded.Value)
+	}
 }
 
 // TestTextChunkToYAML tests that ToYAML produces valid YAML
@@ -137,5 +178,20 @@ func TestTextChunkToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTextChunk(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Value != "Hello" {
+		t.Errorf(`Expected Value to be "Hello", got %v`, reloaded.Value)
+	}
+}
+
+// TestTextChunkFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTextChunkFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TextChunkFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

@@ -79,6 +79,63 @@ workingDirectory: /workspace/project
 	}
 }
 
+// TestHostToolRequestFromJSON tests loading HostToolRequest through the generated JSON helper
+func TestHostToolRequestFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "requestId": "exec_abc123",
+  "toolCallId": "call_abc123",
+  "toolName": "powershell",
+  "workingDirectory": "/workspace/project"
+}
+`
+
+	instance, err := prompty.HostToolRequestFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load HostToolRequest from JSON helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "exec_abc123" {
+		t.Errorf(`Expected RequestId to be "exec_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.ToolName != "powershell" {
+		t.Errorf(`Expected ToolName to be "powershell", got %v`, instance.ToolName)
+	}
+	if instance.WorkingDirectory == nil || *instance.WorkingDirectory != "/workspace/project" {
+		t.Errorf(`Expected WorkingDirectory to be "/workspace/project", got %v`, instance.WorkingDirectory)
+	}
+}
+
+// TestHostToolRequestFromYAML tests loading HostToolRequest through the generated YAML helper
+func TestHostToolRequestFromYAML(t *testing.T) {
+	yamlData := `
+requestId: exec_abc123
+toolCallId: call_abc123
+toolName: powershell
+workingDirectory: /workspace/project
+
+`
+
+	instance, err := prompty.HostToolRequestFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load HostToolRequest from YAML helper: %v", err)
+	}
+	if instance.RequestId == nil || *instance.RequestId != "exec_abc123" {
+		t.Errorf(`Expected RequestId to be "exec_abc123", got %v`, instance.RequestId)
+	}
+	if instance.ToolCallId == nil || *instance.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, instance.ToolCallId)
+	}
+	if instance.ToolName != "powershell" {
+		t.Errorf(`Expected ToolName to be "powershell", got %v`, instance.ToolName)
+	}
+	if instance.WorkingDirectory == nil || *instance.WorkingDirectory != "/workspace/project" {
+		t.Errorf(`Expected WorkingDirectory to be "/workspace/project", got %v`, instance.WorkingDirectory)
+	}
+}
+
 // TestHostToolRequestRoundtrip tests load -> save -> load produces equivalent data
 func TestHostToolRequestRoundtrip(t *testing.T) {
 	jsonData := `
@@ -149,6 +206,23 @@ func TestHostToolRequestToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadHostToolRequest(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "exec_abc123" {
+		t.Errorf(`Expected RequestId to be "exec_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.ToolName != "powershell" {
+		t.Errorf(`Expected ToolName to be "powershell", got %v`, reloaded.ToolName)
+	}
+	if reloaded.WorkingDirectory == nil || *reloaded.WorkingDirectory != "/workspace/project" {
+		t.Errorf(`Expected WorkingDirectory to be "/workspace/project", got %v`, reloaded.WorkingDirectory)
+	}
 }
 
 // TestHostToolRequestToYAML tests that ToYAML produces valid YAML
@@ -179,5 +253,29 @@ func TestHostToolRequestToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadHostToolRequest(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.RequestId == nil || *reloaded.RequestId != "exec_abc123" {
+		t.Errorf(`Expected RequestId to be "exec_abc123", got %v`, reloaded.RequestId)
+	}
+	if reloaded.ToolCallId == nil || *reloaded.ToolCallId != "call_abc123" {
+		t.Errorf(`Expected ToolCallId to be "call_abc123", got %v`, reloaded.ToolCallId)
+	}
+	if reloaded.ToolName != "powershell" {
+		t.Errorf(`Expected ToolName to be "powershell", got %v`, reloaded.ToolName)
+	}
+	if reloaded.WorkingDirectory == nil || *reloaded.WorkingDirectory != "/workspace/project" {
+		t.Errorf(`Expected WorkingDirectory to be "/workspace/project", got %v`, reloaded.WorkingDirectory)
+	}
+}
+
+// TestHostToolRequestFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestHostToolRequestFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.HostToolRequestFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

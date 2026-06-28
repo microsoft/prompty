@@ -41,7 +41,7 @@ func LoadSessionWarningPayload(data interface{}, ctx *LoadContext) (SessionWarni
 }
 
 // Save serializes SessionWarningPayload to map[string]interface{}
-func (obj *SessionWarningPayload) Save(ctx *SaveContext) map[string]interface{} {
+func (obj SessionWarningPayload) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["warningType"] = obj.WarningType
 	result["message"] = obj.Message
@@ -67,11 +67,7 @@ func (obj *SessionWarningPayload) ToJSON() (string, error) {
 func (obj *SessionWarningPayload) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates SessionWarningPayload from JSON string

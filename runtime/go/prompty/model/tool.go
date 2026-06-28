@@ -70,7 +70,7 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 }
 
 // Save serializes Tool to map[string]interface{}
-func (obj *Tool) Save(ctx *SaveContext) map[string]interface{} {
+func (obj Tool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 	result["kind"] = obj.Kind
@@ -103,11 +103,7 @@ func (obj *Tool) ToJSON() (string, error) {
 func (obj *Tool) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates Tool from JSON string
@@ -171,7 +167,7 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 }
 
 // Save serializes FunctionTool to map[string]interface{}
-func (obj *FunctionTool) Save(ctx *SaveContext) map[string]interface{} {
+func (obj FunctionTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	if obj.Parameters != nil {
@@ -211,11 +207,7 @@ func (obj *FunctionTool) ToJSON() (string, error) {
 func (obj *FunctionTool) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates FunctionTool from JSON string
@@ -277,7 +269,7 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 }
 
 // Save serializes CustomTool to map[string]interface{}
-func (obj *CustomTool) Save(ctx *SaveContext) map[string]interface{} {
+func (obj CustomTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 
@@ -310,11 +302,7 @@ func (obj *CustomTool) ToJSON() (string, error) {
 func (obj *CustomTool) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates CustomTool from JSON string
@@ -375,14 +363,20 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 			if m, ok := val.(map[string]interface{}); ok {
 				loaded, _ := LoadMcpApprovalMode(m, ctx)
 				result.ApprovalMode = loaded
+			} else {
+				loaded, _ := LoadMcpApprovalMode(val, ctx)
+				result.ApprovalMode = loaded
 			}
 		}
 		if val, ok := m["allowedTools"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result.AllowedTools = make([]string, len(arr))
 				for i, v := range arr {
 					result.AllowedTools[i] = v.(string)
 				}
+			case []string:
+				result.AllowedTools = arr
 			}
 		}
 	}
@@ -391,7 +385,7 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 }
 
 // Save serializes McpTool to map[string]interface{}
-func (obj *McpTool) Save(ctx *SaveContext) map[string]interface{} {
+func (obj McpTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 
@@ -430,11 +424,7 @@ func (obj *McpTool) ToJSON() (string, error) {
 func (obj *McpTool) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates McpTool from JSON string
@@ -489,7 +479,7 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 }
 
 // Save serializes OpenApiTool to map[string]interface{}
-func (obj *OpenApiTool) Save(ctx *SaveContext) map[string]interface{} {
+func (obj OpenApiTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 
@@ -522,11 +512,7 @@ func (obj *OpenApiTool) ToJSON() (string, error) {
 func (obj *OpenApiTool) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates OpenApiTool from JSON string
@@ -581,7 +567,7 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 }
 
 // Save serializes PromptyTool to map[string]interface{}
-func (obj *PromptyTool) Save(ctx *SaveContext) map[string]interface{} {
+func (obj PromptyTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
 	result["path"] = obj.Path
@@ -605,11 +591,7 @@ func (obj *PromptyTool) ToJSON() (string, error) {
 func (obj *PromptyTool) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates PromptyTool from JSON string

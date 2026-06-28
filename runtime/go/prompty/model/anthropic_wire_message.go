@@ -29,7 +29,8 @@ func LoadAnthropicWireMessage(data interface{}, ctx *LoadContext) (AnthropicWire
 			result.Role = string(val.(string))
 		}
 		if val, ok := m["content"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result.Content = arr
 			}
 		}
@@ -39,7 +40,7 @@ func LoadAnthropicWireMessage(data interface{}, ctx *LoadContext) (AnthropicWire
 }
 
 // Save serializes AnthropicWireMessage to map[string]interface{}
-func (obj *AnthropicWireMessage) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AnthropicWireMessage) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["role"] = obj.Role
 	result["content"] = obj.Content
@@ -62,11 +63,7 @@ func (obj *AnthropicWireMessage) ToJSON() (string, error) {
 func (obj *AnthropicWireMessage) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AnthropicWireMessage from JSON string

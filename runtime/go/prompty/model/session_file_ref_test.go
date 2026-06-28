@@ -87,6 +87,71 @@ firstSeenAt: "2026-06-09T20:00:00Z"
 	}
 }
 
+// TestSessionFileRefFromJSON tests loading SessionFileRef through the generated JSON helper
+func TestSessionFileRefFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "sessionId": "sess_abc123",
+  "path": "src/index.ts",
+  "toolName": "view",
+  "turnIndex": 2,
+  "firstSeenAt": "2026-06-09T20:00:00Z"
+}
+`
+
+	instance, err := prompty.SessionFileRefFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionFileRef from JSON helper: %v", err)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.Path != "src/index.ts" {
+		t.Errorf(`Expected Path to be "src/index.ts", got %v`, instance.Path)
+	}
+	if instance.ToolName == nil || *instance.ToolName != "view" {
+		t.Errorf(`Expected ToolName to be "view", got %v`, instance.ToolName)
+	}
+	if instance.TurnIndex == nil || *instance.TurnIndex != 2 {
+		t.Errorf(`Expected TurnIndex to be 2, got %v`, instance.TurnIndex)
+	}
+	if instance.FirstSeenAt == nil || *instance.FirstSeenAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected FirstSeenAt to be "2026-06-09T20:00:00Z", got %v`, instance.FirstSeenAt)
+	}
+}
+
+// TestSessionFileRefFromYAML tests loading SessionFileRef through the generated YAML helper
+func TestSessionFileRefFromYAML(t *testing.T) {
+	yamlData := `
+sessionId: sess_abc123
+path: src/index.ts
+toolName: view
+turnIndex: 2
+firstSeenAt: "2026-06-09T20:00:00Z"
+
+`
+
+	instance, err := prompty.SessionFileRefFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load SessionFileRef from YAML helper: %v", err)
+	}
+	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
+	}
+	if instance.Path != "src/index.ts" {
+		t.Errorf(`Expected Path to be "src/index.ts", got %v`, instance.Path)
+	}
+	if instance.ToolName == nil || *instance.ToolName != "view" {
+		t.Errorf(`Expected ToolName to be "view", got %v`, instance.ToolName)
+	}
+	if instance.TurnIndex == nil || *instance.TurnIndex != 2 {
+		t.Errorf(`Expected TurnIndex to be 2, got %v`, instance.TurnIndex)
+	}
+	if instance.FirstSeenAt == nil || *instance.FirstSeenAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected FirstSeenAt to be "2026-06-09T20:00:00Z", got %v`, instance.FirstSeenAt)
+	}
+}
+
 // TestSessionFileRefRoundtrip tests load -> save -> load produces equivalent data
 func TestSessionFileRefRoundtrip(t *testing.T) {
 	jsonData := `
@@ -162,6 +227,26 @@ func TestSessionFileRefToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadSessionFileRef(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.Path != "src/index.ts" {
+		t.Errorf(`Expected Path to be "src/index.ts", got %v`, reloaded.Path)
+	}
+	if reloaded.ToolName == nil || *reloaded.ToolName != "view" {
+		t.Errorf(`Expected ToolName to be "view", got %v`, reloaded.ToolName)
+	}
+	if reloaded.TurnIndex == nil || *reloaded.TurnIndex != 2 {
+		t.Errorf(`Expected TurnIndex to be 2, got %v`, reloaded.TurnIndex)
+	}
+	if reloaded.FirstSeenAt == nil || *reloaded.FirstSeenAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected FirstSeenAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.FirstSeenAt)
+	}
 }
 
 // TestSessionFileRefToYAML tests that ToYAML produces valid YAML
@@ -193,5 +278,32 @@ func TestSessionFileRefToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadSessionFileRef(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
+		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
+	}
+	if reloaded.Path != "src/index.ts" {
+		t.Errorf(`Expected Path to be "src/index.ts", got %v`, reloaded.Path)
+	}
+	if reloaded.ToolName == nil || *reloaded.ToolName != "view" {
+		t.Errorf(`Expected ToolName to be "view", got %v`, reloaded.ToolName)
+	}
+	if reloaded.TurnIndex == nil || *reloaded.TurnIndex != 2 {
+		t.Errorf(`Expected TurnIndex to be 2, got %v`, reloaded.TurnIndex)
+	}
+	if reloaded.FirstSeenAt == nil || *reloaded.FirstSeenAt != "2026-06-09T20:00:00Z" {
+		t.Errorf(`Expected FirstSeenAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.FirstSeenAt)
+	}
+}
+
+// TestSessionFileRefFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestSessionFileRefFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.SessionFileRefFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

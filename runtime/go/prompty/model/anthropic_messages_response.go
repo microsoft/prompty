@@ -38,7 +38,8 @@ func LoadAnthropicMessagesResponse(data interface{}, ctx *LoadContext) (Anthropi
 			result.Role = string(val.(string))
 		}
 		if val, ok := m["content"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			switch arr := val.(type) {
+			case []interface{}:
 				result.Content = arr
 			}
 		}
@@ -60,7 +61,7 @@ func LoadAnthropicMessagesResponse(data interface{}, ctx *LoadContext) (Anthropi
 }
 
 // Save serializes AnthropicMessagesResponse to map[string]interface{}
-func (obj *AnthropicMessagesResponse) Save(ctx *SaveContext) map[string]interface{} {
+func (obj AnthropicMessagesResponse) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["id"] = obj.Id
 	result["type"] = obj.Type
@@ -89,11 +90,7 @@ func (obj *AnthropicMessagesResponse) ToJSON() (string, error) {
 func (obj *AnthropicMessagesResponse) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return marshalYAMLDocument(data)
 }
 
 // FromJSON creates AnthropicMessagesResponse from JSON string

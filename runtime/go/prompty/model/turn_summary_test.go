@@ -103,6 +103,87 @@ durationMs: 2500
 	}
 }
 
+// TestTurnSummaryFromJSON tests loading TurnSummary through the generated JSON helper
+func TestTurnSummaryFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "turnId": "turn_001",
+  "status": "success",
+  "iterations": 2,
+  "llmCalls": 3,
+  "toolCalls": 2,
+  "retries": 1,
+  "durationMs": 2500
+}
+`
+
+	instance, err := prompty.TurnSummaryFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load TurnSummary from JSON helper: %v", err)
+	}
+	if instance.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, instance.TurnId)
+	}
+	if instance.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, instance.Status)
+	}
+	if instance.Iterations != 2 {
+		t.Errorf(`Expected Iterations to be 2, got %v`, instance.Iterations)
+	}
+	if instance.LlmCalls == nil || *instance.LlmCalls != 3 {
+		t.Errorf(`Expected LlmCalls to be 3, got %v`, instance.LlmCalls)
+	}
+	if instance.ToolCalls == nil || *instance.ToolCalls != 2 {
+		t.Errorf(`Expected ToolCalls to be 2, got %v`, instance.ToolCalls)
+	}
+	if instance.Retries == nil || *instance.Retries != 1 {
+		t.Errorf(`Expected Retries to be 1, got %v`, instance.Retries)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 2500 {
+		t.Errorf(`Expected DurationMs to be 2500, got %v`, instance.DurationMs)
+	}
+}
+
+// TestTurnSummaryFromYAML tests loading TurnSummary through the generated YAML helper
+func TestTurnSummaryFromYAML(t *testing.T) {
+	yamlData := `
+turnId: turn_001
+status: success
+iterations: 2
+llmCalls: 3
+toolCalls: 2
+retries: 1
+durationMs: 2500
+
+`
+
+	instance, err := prompty.TurnSummaryFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load TurnSummary from YAML helper: %v", err)
+	}
+	if instance.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, instance.TurnId)
+	}
+	if instance.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, instance.Status)
+	}
+	if instance.Iterations != 2 {
+		t.Errorf(`Expected Iterations to be 2, got %v`, instance.Iterations)
+	}
+	if instance.LlmCalls == nil || *instance.LlmCalls != 3 {
+		t.Errorf(`Expected LlmCalls to be 3, got %v`, instance.LlmCalls)
+	}
+	if instance.ToolCalls == nil || *instance.ToolCalls != 2 {
+		t.Errorf(`Expected ToolCalls to be 2, got %v`, instance.ToolCalls)
+	}
+	if instance.Retries == nil || *instance.Retries != 1 {
+		t.Errorf(`Expected Retries to be 1, got %v`, instance.Retries)
+	}
+	if instance.DurationMs == nil || *instance.DurationMs != 2500 {
+		t.Errorf(`Expected DurationMs to be 2500, got %v`, instance.DurationMs)
+	}
+}
+
 // TestTurnSummaryRoundtrip tests load -> save -> load produces equivalent data
 func TestTurnSummaryRoundtrip(t *testing.T) {
 	jsonData := `
@@ -188,6 +269,32 @@ func TestTurnSummaryToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadTurnSummary(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, reloaded.TurnId)
+	}
+	if reloaded.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, reloaded.Status)
+	}
+	if reloaded.Iterations != 2 {
+		t.Errorf(`Expected Iterations to be 2, got %v`, reloaded.Iterations)
+	}
+	if reloaded.LlmCalls == nil || *reloaded.LlmCalls != 3 {
+		t.Errorf(`Expected LlmCalls to be 3, got %v`, reloaded.LlmCalls)
+	}
+	if reloaded.ToolCalls == nil || *reloaded.ToolCalls != 2 {
+		t.Errorf(`Expected ToolCalls to be 2, got %v`, reloaded.ToolCalls)
+	}
+	if reloaded.Retries == nil || *reloaded.Retries != 1 {
+		t.Errorf(`Expected Retries to be 1, got %v`, reloaded.Retries)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 2500 {
+		t.Errorf(`Expected DurationMs to be 2500, got %v`, reloaded.DurationMs)
+	}
 }
 
 // TestTurnSummaryToYAML tests that ToYAML produces valid YAML
@@ -221,5 +328,38 @@ func TestTurnSummaryToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadTurnSummary(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.TurnId != "turn_001" {
+		t.Errorf(`Expected TurnId to be "turn_001", got %v`, reloaded.TurnId)
+	}
+	if reloaded.Status != "success" {
+		t.Errorf(`Expected Status to be "success", got %v`, reloaded.Status)
+	}
+	if reloaded.Iterations != 2 {
+		t.Errorf(`Expected Iterations to be 2, got %v`, reloaded.Iterations)
+	}
+	if reloaded.LlmCalls == nil || *reloaded.LlmCalls != 3 {
+		t.Errorf(`Expected LlmCalls to be 3, got %v`, reloaded.LlmCalls)
+	}
+	if reloaded.ToolCalls == nil || *reloaded.ToolCalls != 2 {
+		t.Errorf(`Expected ToolCalls to be 2, got %v`, reloaded.ToolCalls)
+	}
+	if reloaded.Retries == nil || *reloaded.Retries != 1 {
+		t.Errorf(`Expected Retries to be 1, got %v`, reloaded.Retries)
+	}
+	if reloaded.DurationMs == nil || *reloaded.DurationMs != 2500 {
+		t.Errorf(`Expected DurationMs to be 2500, got %v`, reloaded.DurationMs)
+	}
+}
+
+// TestTurnSummaryFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestTurnSummaryFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.TurnSummaryFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }

@@ -63,6 +63,47 @@ kind: thread
 	}
 }
 
+// TestThreadMarkerFromJSON tests loading ThreadMarker through the generated JSON helper
+func TestThreadMarkerFromJSON(t *testing.T) {
+	jsonData := `
+{
+  "name": "thread",
+  "kind": "thread"
+}
+`
+
+	instance, err := prompty.ThreadMarkerFromJSON(jsonData)
+	if err != nil {
+		t.Fatalf("Failed to load ThreadMarker from JSON helper: %v", err)
+	}
+	if instance.Name != "thread" {
+		t.Errorf(`Expected Name to be "thread", got %v`, instance.Name)
+	}
+	if instance.Kind != "thread" {
+		t.Errorf(`Expected Kind to be "thread", got %v`, instance.Kind)
+	}
+}
+
+// TestThreadMarkerFromYAML tests loading ThreadMarker through the generated YAML helper
+func TestThreadMarkerFromYAML(t *testing.T) {
+	yamlData := `
+name: thread
+kind: thread
+
+`
+
+	instance, err := prompty.ThreadMarkerFromYAML(yamlData)
+	if err != nil {
+		t.Fatalf("Failed to load ThreadMarker from YAML helper: %v", err)
+	}
+	if instance.Name != "thread" {
+		t.Errorf(`Expected Name to be "thread", got %v`, instance.Name)
+	}
+	if instance.Kind != "thread" {
+		t.Errorf(`Expected Kind to be "thread", got %v`, instance.Kind)
+	}
+}
+
 // TestThreadMarkerRoundtrip tests load -> save -> load produces equivalent data
 func TestThreadMarkerRoundtrip(t *testing.T) {
 	jsonData := `
@@ -123,6 +164,17 @@ func TestThreadMarkerToJSON(t *testing.T) {
 	if err := json.Unmarshal([]byte(jsonOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
+
+	reloaded, err := prompty.LoadThreadMarker(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated JSON: %v", err)
+	}
+	if reloaded.Name != "thread" {
+		t.Errorf(`Expected Name to be "thread", got %v`, reloaded.Name)
+	}
+	if reloaded.Kind != "thread" {
+		t.Errorf(`Expected Kind to be "thread", got %v`, reloaded.Kind)
+	}
 }
 
 // TestThreadMarkerToYAML tests that ToYAML produces valid YAML
@@ -151,5 +203,23 @@ func TestThreadMarkerToYAML(t *testing.T) {
 	var parsed map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlOutput), &parsed); err != nil {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
+	}
+
+	reloaded, err := prompty.LoadThreadMarker(parsed, ctx)
+	if err != nil {
+		t.Fatalf("Failed to reload generated YAML: %v", err)
+	}
+	if reloaded.Name != "thread" {
+		t.Errorf(`Expected Name to be "thread", got %v`, reloaded.Name)
+	}
+	if reloaded.Kind != "thread" {
+		t.Errorf(`Expected Kind to be "thread", got %v`, reloaded.Kind)
+	}
+}
+
+// TestThreadMarkerFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestThreadMarkerFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.ThreadMarkerFromJSON("{"); err == nil {
+		t.Fatalf("Expected malformed JSON to fail")
 	}
 }
