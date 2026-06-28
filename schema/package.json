@@ -6,7 +6,8 @@
     "format:tsp": "npx tsp format \"model/**/*.tsp\"",
     "format:tsp:check": "npx tsp format \"model/**/*.tsp\" --check",
     "format:rust": "cargo fmt --all --manifest-path ../runtime/rust/prompty/Cargo.toml",
-    "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml",
+    "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml && node scripts/normalize-typra-output.mjs",
+    "verify:typra": "node scripts/verify-typra.mjs",
     "build": "npm run format:tsp && npm run generate && npm run format:rust"
   },
   "dependencies": {
