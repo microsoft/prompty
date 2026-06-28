@@ -9,6 +9,21 @@
     clippy::all
 )]
 
+pub mod host_tool_result;
+pub use host_tool_result::*;
+
+pub mod host_tool_request;
+pub use host_tool_request::*;
+
+pub mod redacted_field;
+pub use redacted_field::*;
+
+pub mod redaction_metadata;
+pub use redaction_metadata::*;
+
+pub mod checkpoint;
+pub use checkpoint::*;
+
 pub mod turn_event;
 pub use turn_event::*;
 
@@ -26,12 +41,6 @@ pub use llm_complete_payload::*;
 
 pub mod retry_payload;
 pub use retry_payload::*;
-
-pub mod redacted_field;
-pub use redacted_field::*;
-
-pub mod redaction_metadata;
-pub use redaction_metadata::*;
 
 pub mod permission_requested_payload;
 pub use permission_requested_payload::*;
@@ -62,12 +71,6 @@ pub use tool_execution_start_payload::*;
 
 pub mod tool_execution_complete_payload;
 pub use tool_execution_complete_payload::*;
-
-pub mod host_tool_request;
-pub use host_tool_request::*;
-
-pub mod host_tool_result;
-pub use host_tool_result::*;
 
 pub mod hook_start_payload;
 pub use hook_start_payload::*;
@@ -119,9 +122,6 @@ pub use session_warning_payload::*;
 
 pub mod session_event;
 pub use session_event::*;
-
-pub mod checkpoint;
-pub use checkpoint::*;
 
 pub mod trajectory_event;
 pub use trajectory_event::*;

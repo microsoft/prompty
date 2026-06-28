@@ -5,9 +5,13 @@ import {
   HostToolRequest,
   HostToolResult,
   PermissionRequest,
+  RunTurnRequest,
+  RunTurnResult,
   SessionEvent,
   SessionSummary,
   TurnEvent,
+  TurnModelRequest,
+  TurnModelResponse,
   TurnOptions,
   type CheckpointStore,
   type EventJournalWriter,
@@ -18,20 +22,7 @@ import {
 
 type JsonRecord = Record<string, unknown>;
 
-export interface TurnModelRequest {
-  sessionId: string;
-  turnId: string;
-  iteration: number;
-  inputs: JsonRecord;
-  options: TurnOptions;
-  toolResults: HostToolResult[];
-}
-
-export interface TurnModelResponse {
-  output?: unknown;
-  toolRequests?: HostToolRequest[];
-  checkpointState?: JsonRecord;
-}
+export { RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse };
 
 export type TurnModelCallback = (request: TurnModelRequest) => TurnModelResponse | Promise<TurnModelResponse>;
 
@@ -44,23 +35,6 @@ export interface TurnRunnerDependencies {
   invokeModel: TurnModelCallback;
   now?: () => string;
   nextId?: (prefix: string) => string;
-}
-
-export interface RunTurnRequest {
-  sessionId: string;
-  turnId: string;
-  inputs?: JsonRecord;
-  options?: TurnOptions;
-}
-
-export interface RunTurnResult {
-  sessionId: string;
-  turnId: string;
-  status: "success" | "error";
-  output?: unknown;
-  iterations: number;
-  toolResults: HostToolResult[];
-  checkpoints: Checkpoint[];
 }
 
 export class ReferenceTurnRunner {
@@ -94,14 +68,14 @@ export class ReferenceTurnRunner {
         attempt: 0,
       });
 
-      const modelResponse = await this.dependencies.invokeModel({
+      const modelResponse = await this.dependencies.invokeModel(new TurnModelRequest({
         sessionId: request.sessionId,
         turnId: request.turnId,
         iteration,
         inputs,
         options,
         toolResults: pendingToolResults,
-      });
+      }));
 
       this.recordTurn("llm_complete", request.turnId, iteration, {});
 
@@ -154,7 +128,7 @@ export class ReferenceTurnRunner {
       }),
     );
 
-    return {
+    return new RunTurnResult({
       sessionId: request.sessionId,
       turnId: request.turnId,
       status,
@@ -162,7 +136,7 @@ export class ReferenceTurnRunner {
       iterations,
       toolResults: allToolResults,
       checkpoints,
-    };
+    });
   }
 
   private async saveCheckpoint(
@@ -266,4 +240,3 @@ export class ReferenceTurnRunner {
     return `${prefix}-${this.sequence}`;
   }
 }
-

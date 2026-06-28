@@ -22,9 +22,15 @@ use crate::model::events::{
     turn_event::{TurnEvent, TurnEventType},
 };
 use crate::model::pipeline::{
-    checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter,
-    event_sink::EventSink, host_tool_executor::HostToolExecutor,
-    permission_resolver::PermissionResolver, turn_options::TurnOptions,
+    checkpoint_store::CheckpointStore,
+    event_journal_writer::EventJournalWriter,
+    event_sink::EventSink,
+    host_tool_executor::HostToolExecutor,
+    permission_resolver::PermissionResolver,
+    run_turn_request::RunTurnRequest,
+    run_turn_result::{RunTurnResult, RunTurnStatus},
+    turn_model_request::TurnModelRequest,
+    turn_model_response::TurnModelResponse,
 };
 
 pub type AdapterError = Box<dyn Error + Send + Sync>;
@@ -322,53 +328,6 @@ impl HostToolExecutor for FunctionHostToolExecutor {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct TurnModelRequest {
-    pub session_id: String,
-    pub turn_id: String,
-    pub iteration: usize,
-    pub inputs: Value,
-    pub options: TurnOptions,
-    pub tool_results: Vec<HostToolResult>,
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct TurnModelResponse {
-    pub output: Option<Value>,
-    pub tool_requests: Vec<HostToolRequest>,
-    pub checkpoint_state: Value,
-}
-
-#[derive(Debug, Clone)]
-pub struct RunTurnRequest {
-    pub session_id: String,
-    pub turn_id: String,
-    pub inputs: Value,
-    pub options: TurnOptions,
-}
-
-impl RunTurnRequest {
-    pub fn new(session_id: impl Into<String>, turn_id: impl Into<String>) -> Self {
-        Self {
-            session_id: session_id.into(),
-            turn_id: turn_id.into(),
-            inputs: json!({}),
-            options: TurnOptions::default(),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct RunTurnResult {
-    pub session_id: String,
-    pub turn_id: String,
-    pub status: String,
-    pub output: Option<Value>,
-    pub iterations: usize,
-    pub tool_results: Vec<HostToolResult>,
-    pub checkpoints: Vec<Checkpoint>,
-}
-
 type ModelCallback =
     dyn Fn(TurnModelRequest) -> Result<TurnModelResponse, AdapterError> + Send + Sync;
 type Clock = dyn Fn() -> String + Send + Sync;
@@ -423,13 +382,19 @@ where
     }
 
     pub async fn run(&self, request: RunTurnRequest) -> Result<RunTurnResult, AdapterError> {
-        let max_iterations = request.options.max_iterations.unwrap_or(10).max(0) as usize;
+        let options = request.options.clone().unwrap_or_default();
+        let max_iterations = options.max_iterations.unwrap_or(10).max(0) as usize;
+        let inputs = if request.inputs.is_null() {
+            json!({})
+        } else {
+            request.inputs.clone()
+        };
         let mut checkpoints = Vec::new();
         let mut all_tool_results = Vec::new();
         let mut pending_tool_results = Vec::new();
         let mut output = None;
-        let mut status = "success".to_string();
-        let mut iterations = 0usize;
+        let mut status = RunTurnStatus::Success;
+        let mut iterations = 0i32;
 
         self.record_session(
             SessionEventType::Session_start,
@@ -441,11 +406,11 @@ where
             TurnEventType::Turn_start,
             &request.turn_id,
             0,
-            json!({ "inputs": request.inputs, "maxIterations": max_iterations }),
+            json!({ "inputs": inputs, "maxIterations": max_iterations }),
         );
 
         for iteration in 0..max_iterations {
-            iterations = iteration + 1;
+            iterations = iteration as i32 + 1;
             self.record_turn(
                 TurnEventType::Llm_start,
                 &request.turn_id,
@@ -455,9 +420,9 @@ where
             let model_response = (self.invoke_model)(TurnModelRequest {
                 session_id: request.session_id.clone(),
                 turn_id: request.turn_id.clone(),
-                iteration,
-                inputs: request.inputs.clone(),
-                options: request.options.clone(),
+                iteration: iteration as i32,
+                inputs: inputs.clone(),
+                options: Some(options.clone()),
                 tool_results: pending_tool_results.clone(),
             })?;
             self.record_turn(
@@ -504,12 +469,12 @@ where
         }
 
         if output.is_none() && !pending_tool_results.is_empty() {
-            status = "error".to_string();
+            status = RunTurnStatus::Error;
             output = Some(json!({ "message": "Maximum turn iterations reached" }));
             self.record_turn(
                 TurnEventType::Error,
                 &request.turn_id,
-                iterations,
+                iterations as usize,
                 json!({
                     "errorKind": "max_iterations",
                     "message": "Maximum turn iterations reached"
@@ -520,16 +485,16 @@ where
         self.record_turn(
             TurnEventType::Turn_end,
             &request.turn_id,
-            iterations,
-            json!({ "iterations": iterations, "status": status, "response": output }),
+            iterations as usize,
+            json!({ "iterations": iterations, "status": status.as_str(), "response": output }),
         );
         self.record_session(
             SessionEventType::Session_end,
             &request.session_id,
             &request.turn_id,
-            json!({ "sessionId": request.session_id, "status": status, "reason": "turn_complete" }),
+            json!({ "sessionId": request.session_id, "status": status.as_str(), "reason": "turn_complete" }),
         );
-        let summary_status = if status == "success" {
+        let summary_status = if status == RunTurnStatus::Success {
             SessionSummaryStatus::Success
         } else {
             SessionSummaryStatus::Error

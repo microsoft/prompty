@@ -38,7 +38,7 @@ public class TurnRunnerTests
                 Options = new TurnOptions { MaxIterations = 3 }
             });
 
-            Assert.Equal("success", result.Status);
+            Assert.Equal(RunTurnStatus.Success, result.Status);
             Assert.Equal(1, result.Iterations);
             Assert.Equal("hello Ada", Assert.IsType<Dictionary<string, object>>(result.Output)["text"]);
             Assert.Equal(

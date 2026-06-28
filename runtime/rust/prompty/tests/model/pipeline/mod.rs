@@ -10,4 +10,8 @@
 )]
 
 mod compaction_config_test;
+mod run_turn_request_test;
+mod run_turn_result_test;
+mod turn_model_request_test;
+mod turn_model_response_test;
 mod turn_options_test;

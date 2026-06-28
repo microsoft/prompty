@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import inspect
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Literal, Protocol
 
@@ -14,58 +13,18 @@ from ..model import (
     HostToolResult,
     PermissionDecision,
     PermissionRequest,
+    RunTurnRequest,
+    RunTurnResult,
     SessionEvent,
     SessionSummary,
     TurnEvent,
+    TurnModelRequest,
+    TurnModelResponse,
     TurnOptions,
 )
 
 JsonRecord = dict[str, Any]
 TurnStatus = Literal["success", "error"]
-
-
-@dataclass
-class TurnModelRequest:
-    """Input passed to the injected model callback for one loop iteration."""
-
-    session_id: str
-    turn_id: str
-    iteration: int
-    inputs: JsonRecord
-    options: TurnOptions
-    tool_results: list[HostToolResult] = field(default_factory=list)
-
-
-@dataclass
-class TurnModelResponse:
-    """Provider-agnostic model callback response consumed by the turn runner."""
-
-    output: Any | None = None
-    tool_requests: list[HostToolRequest] = field(default_factory=list)
-    checkpoint_state: JsonRecord = field(default_factory=dict)
-
-
-@dataclass
-class RunTurnRequest:
-    """Configuration for a single deterministic turn run."""
-
-    session_id: str
-    turn_id: str
-    inputs: JsonRecord = field(default_factory=dict)
-    options: TurnOptions = field(default_factory=TurnOptions)
-
-
-@dataclass
-class RunTurnResult:
-    """Replayable result returned after a turn completes."""
-
-    session_id: str
-    turn_id: str
-    status: TurnStatus
-    iterations: int
-    tool_results: list[HostToolResult] = field(default_factory=list)
-    checkpoints: list[Checkpoint] = field(default_factory=list)
-    output: Any | None = None
 
 
 class EventSinkProtocol(Protocol):
@@ -134,7 +93,9 @@ class ReferenceTurnRunner:
 
     async def run(self, request: RunTurnRequest) -> RunTurnResult:
         """Run one turn and return its deterministic, replayable result."""
-        max_iterations = request.options.max_iterations if request.options.max_iterations is not None else 10
+        options = request.options or TurnOptions()
+        inputs = request.inputs or {}
+        max_iterations = options.max_iterations if options.max_iterations is not None else 10
         checkpoints: list[Checkpoint] = []
         all_tool_results: list[HostToolResult] = []
         pending_tool_results: list[HostToolResult] = []
@@ -152,7 +113,7 @@ class ReferenceTurnRunner:
             "turn_start",
             request.turn_id,
             0,
-            {"inputs": request.inputs, "maxIterations": max_iterations},
+            {"inputs": inputs, "maxIterations": max_iterations},
         )
 
         for iteration in range(max_iterations):
@@ -163,8 +124,8 @@ class ReferenceTurnRunner:
                     session_id=request.session_id,
                     turn_id=request.turn_id,
                     iteration=iteration,
-                    inputs=request.inputs,
-                    options=request.options,
+                    inputs=inputs,
+                    options=options,
                     tool_results=pending_tool_results,
                 )
             )
@@ -175,12 +136,13 @@ class ReferenceTurnRunner:
             checkpoint = await self._save_checkpoint(request.session_id, request.turn_id, iteration, response)
             checkpoints.append(checkpoint)
 
-            if not response.tool_requests:
+            tool_requests = response.tool_requests or []
+            if not tool_requests:
                 output = response.output
                 break
 
             pending_tool_results = []
-            for tool_request in response.tool_requests:
+            for tool_request in tool_requests:
                 tool_result = await self._resolve_and_execute_tool(request.turn_id, iteration, tool_request)
                 pending_tool_results.append(tool_result)
                 all_tool_results.append(tool_result)
@@ -249,8 +211,8 @@ class ReferenceTurnRunner:
             state={
                 "iteration": iteration,
                 "output": response.output,
-                "toolRequests": [tool_request.save() for tool_request in response.tool_requests],
-                **response.checkpoint_state,
+                "toolRequests": [tool_request.save() for tool_request in response.tool_requests or []],
+                **(response.checkpoint_state or {}),
             },
             created_at=self._timestamp(),
         )

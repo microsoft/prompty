@@ -15,6 +15,18 @@ pub use compaction_config::*;
 pub mod turn_options;
 pub use turn_options::*;
 
+pub mod turn_model_request;
+pub use turn_model_request::*;
+
+pub mod turn_model_response;
+pub use turn_model_response::*;
+
+pub mod run_turn_request;
+pub use run_turn_request::*;
+
+pub mod run_turn_result;
+pub use run_turn_result::*;
+
 pub mod renderer;
 pub use renderer::*;
 

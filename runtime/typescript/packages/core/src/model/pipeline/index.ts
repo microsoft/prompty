@@ -4,6 +4,10 @@
 
 export { CompactionConfig } from "./compaction-config";
 export { TurnOptions } from "./turn-options";
+export { TurnModelRequest } from "./turn-model-request";
+export { TurnModelResponse } from "./turn-model-response";
+export { RunTurnRequest } from "./run-turn-request";
+export { RunTurnResult } from "./run-turn-result";
 export type { Renderer } from "./renderer";
 export type { Parser } from "./parser";
 export type { Executor } from "./executor";

@@ -2,42 +2,6 @@
 
 namespace Prompty.Core;
 
-public sealed class TurnModelRequest
-{
-    public string SessionId { get; init; } = string.Empty;
-    public string TurnId { get; init; } = string.Empty;
-    public int Iteration { get; init; }
-    public IDictionary<string, object> Inputs { get; init; } = new Dictionary<string, object>();
-    public TurnOptions Options { get; init; } = new();
-    public IReadOnlyList<HostToolResult> ToolResults { get; init; } = [];
-}
-
-public sealed class TurnModelResponse
-{
-    public object? Output { get; init; }
-    public IReadOnlyList<HostToolRequest> ToolRequests { get; init; } = [];
-    public IDictionary<string, object> CheckpointState { get; init; } = new Dictionary<string, object>();
-}
-
-public sealed class RunTurnRequest
-{
-    public string SessionId { get; init; } = string.Empty;
-    public string TurnId { get; init; } = string.Empty;
-    public IDictionary<string, object> Inputs { get; init; } = new Dictionary<string, object>();
-    public TurnOptions Options { get; init; } = new();
-}
-
-public sealed class RunTurnResult
-{
-    public string SessionId { get; init; } = string.Empty;
-    public string TurnId { get; init; } = string.Empty;
-    public string Status { get; init; } = "success";
-    public object? Output { get; init; }
-    public int Iterations { get; init; }
-    public IReadOnlyList<HostToolResult> ToolResults { get; init; } = [];
-    public IReadOnlyList<Checkpoint> Checkpoints { get; init; } = [];
-}
-
 public sealed class ReferenceTurnRunner
 {
     private readonly IEventSink _eventSink;
@@ -72,13 +36,15 @@ public sealed class ReferenceTurnRunner
 
     public async Task<RunTurnResult> RunAsync(RunTurnRequest request)
     {
-        var maxIterations = request.Options.MaxIterations ?? 10;
+        var options = request.Options ?? new TurnOptions();
+        var inputs = request.Inputs ?? new Dictionary<string, object>();
+        var maxIterations = options.MaxIterations ?? 10;
         var checkpoints = new List<Checkpoint>();
         var allToolResults = new List<HostToolResult>();
         var pendingToolResults = new List<HostToolResult>();
         object? output = null;
         var hasFinalOutput = false;
-        var status = "success";
+        var status = RunTurnStatus.Success;
         var iterations = 0;
 
         RecordSession(SessionEventType.SessionStart, request.SessionId, request.TurnId, new Dictionary<string, object>
@@ -88,7 +54,7 @@ public sealed class ReferenceTurnRunner
         });
         RecordTurn(TurnEventType.TurnStart, request.TurnId, 0, new Dictionary<string, object>
         {
-            ["inputs"] = request.Inputs,
+            ["inputs"] = inputs,
             ["maxIterations"] = maxIterations
         });
 
@@ -101,8 +67,8 @@ public sealed class ReferenceTurnRunner
                 SessionId = request.SessionId,
                 TurnId = request.TurnId,
                 Iteration = iteration,
-                Inputs = request.Inputs,
-                Options = request.Options,
+                Inputs = inputs,
+                Options = options,
                 ToolResults = pendingToolResults
             });
             RecordTurn(TurnEventType.LlmComplete, request.TurnId, iteration, new Dictionary<string, object>());
@@ -110,7 +76,8 @@ public sealed class ReferenceTurnRunner
             var checkpoint = await SaveCheckpointAsync(request.SessionId, request.TurnId, iteration, modelResponse);
             checkpoints.Add(checkpoint);
 
-            if (modelResponse.ToolRequests.Count == 0)
+            var toolRequests = modelResponse.ToolRequests ?? [];
+            if (toolRequests.Count == 0)
             {
                 output = modelResponse.Output;
                 hasFinalOutput = true;
@@ -118,7 +85,7 @@ public sealed class ReferenceTurnRunner
             }
 
             pendingToolResults = [];
-            foreach (var toolRequest in modelResponse.ToolRequests)
+            foreach (var toolRequest in toolRequests)
             {
                 var toolResult = await ResolveAndExecuteToolAsync(request.TurnId, iteration, toolRequest);
                 pendingToolResults.Add(toolResult);
@@ -133,7 +100,7 @@ public sealed class ReferenceTurnRunner
 
         if (!hasFinalOutput && pendingToolResults.Count > 0)
         {
-            status = "error";
+            status = RunTurnStatus.Error;
             output = new Dictionary<string, object> { ["message"] = "Maximum turn iterations reached" };
             RecordTurn(TurnEventType.Error, request.TurnId, iterations, new Dictionary<string, object>
             {
@@ -145,19 +112,19 @@ public sealed class ReferenceTurnRunner
         RecordTurn(TurnEventType.TurnEnd, request.TurnId, iterations, new Dictionary<string, object?>
         {
             ["iterations"] = iterations,
-            ["status"] = status,
+            ["status"] = status == RunTurnStatus.Success ? "success" : "error",
             ["response"] = output
         }!);
         RecordSession(SessionEventType.SessionEnd, request.SessionId, request.TurnId, new Dictionary<string, object>
         {
             ["sessionId"] = request.SessionId,
-            ["status"] = status,
+            ["status"] = status == RunTurnStatus.Success ? "success" : "error",
             ["reason"] = "turn_complete"
         });
         _journal.Close(new SessionSummary
         {
             SessionId = request.SessionId,
-            Status = status == "success" ? SessionSummaryStatus.Success : SessionSummaryStatus.Error,
+            Status = status == RunTurnStatus.Success ? SessionSummaryStatus.Success : SessionSummaryStatus.Error,
             Turns = 1,
             Checkpoints = checkpoints.Count
         });
@@ -180,9 +147,9 @@ public sealed class ReferenceTurnRunner
         {
             ["iteration"] = iteration,
             ["output"] = response.Output,
-            ["toolRequests"] = response.ToolRequests.Select(request => request.Save()).ToList()
+            ["toolRequests"] = (response.ToolRequests ?? []).Select(request => request.Save()).ToList()
         };
-        foreach (var (key, value) in response.CheckpointState)
+        foreach (var (key, value) in response.CheckpointState ?? new Dictionary<string, object>())
         {
             state[key] = value;
         }

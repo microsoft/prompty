@@ -14,11 +14,19 @@ from ._Parser import Parser
 from ._PermissionResolver import PermissionResolver
 from ._Processor import Processor
 from ._Renderer import Renderer
+from ._RunTurnRequest import RunTurnRequest
+from ._RunTurnResult import RunTurnResult
+from ._TurnModelRequest import TurnModelRequest
+from ._TurnModelResponse import TurnModelResponse
 from ._TurnOptions import TurnOptions
 
 __all__ = [
     "CompactionConfig",
     "TurnOptions",
+    "TurnModelRequest",
+    "TurnModelResponse",
+    "RunTurnRequest",
+    "RunTurnResult",
     "Renderer",
     "Parser",
     "Executor",

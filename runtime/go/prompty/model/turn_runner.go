@@ -5,21 +5,6 @@ import (
 	"time"
 )
 
-type TurnModelRequest struct {
-	SessionId   string
-	TurnId      string
-	Iteration   int
-	Inputs      map[string]interface{}
-	Options     TurnOptions
-	ToolResults []HostToolResult
-}
-
-type TurnModelResponse struct {
-	Output          interface{}
-	ToolRequests    []HostToolRequest
-	CheckpointState map[string]interface{}
-}
-
 type TurnModelCallback func(request TurnModelRequest) (TurnModelResponse, error)
 
 type ReferenceTurnRunner struct {
@@ -34,38 +19,25 @@ type ReferenceTurnRunner struct {
 	sequence           int
 }
 
-type RunTurnRequest struct {
-	SessionId string
-	TurnId    string
-	Inputs    map[string]interface{}
-	Options   TurnOptions
-}
-
-type RunTurnResult struct {
-	SessionId   string
-	TurnId      string
-	Status      string
-	Output      interface{}
-	Iterations  int
-	ToolResults []HostToolResult
-	Checkpoints []Checkpoint
-}
-
 func (r *ReferenceTurnRunner) Run(request RunTurnRequest) (RunTurnResult, error) {
 	inputs := request.Inputs
 	if inputs == nil {
 		inputs = map[string]interface{}{}
 	}
+	options := request.Options
+	if options == nil {
+		options = &TurnOptions{}
+	}
 	maxIterations := int32(10)
-	if request.Options.MaxIterations != nil {
-		maxIterations = *request.Options.MaxIterations
+	if options.MaxIterations != nil {
+		maxIterations = *options.MaxIterations
 	}
 	checkpoints := []Checkpoint{}
 	allToolResults := []HostToolResult{}
 	pendingToolResults := []HostToolResult{}
 	var output interface{}
-	status := "success"
-	iterations := 0
+	status := RunTurnStatusSuccess
+	iterations := int32(0)
 
 	if err := r.recordSession(SessionEventTypeSessionStart, request.SessionId, request.TurnId, map[string]interface{}{
 		"sessionId":     request.SessionId,
@@ -80,9 +52,9 @@ func (r *ReferenceTurnRunner) Run(request RunTurnRequest) (RunTurnResult, error)
 		return RunTurnResult{}, err
 	}
 
-	for iteration := 0; iteration < int(maxIterations); iteration++ {
+	for iteration := int32(0); iteration < maxIterations; iteration++ {
 		iterations = iteration + 1
-		if err := r.recordTurn(TurnEventTypeLlmStart, request.TurnId, iteration, map[string]interface{}{"attempt": 0}); err != nil {
+		if err := r.recordTurn(TurnEventTypeLlmStart, request.TurnId, int(iteration), map[string]interface{}{"attempt": 0}); err != nil {
 			return RunTurnResult{}, err
 		}
 		modelResponse, err := r.InvokeModel(TurnModelRequest{
@@ -90,28 +62,30 @@ func (r *ReferenceTurnRunner) Run(request RunTurnRequest) (RunTurnResult, error)
 			TurnId:      request.TurnId,
 			Iteration:   iteration,
 			Inputs:      inputs,
-			Options:     request.Options,
+			Options:     options,
 			ToolResults: pendingToolResults,
 		})
 		if err != nil {
 			return RunTurnResult{}, err
 		}
-		if err := r.recordTurn(TurnEventTypeLlmComplete, request.TurnId, iteration, map[string]interface{}{}); err != nil {
+		if err := r.recordTurn(TurnEventTypeLlmComplete, request.TurnId, int(iteration), map[string]interface{}{}); err != nil {
 			return RunTurnResult{}, err
 		}
-		checkpoint, err := r.saveCheckpoint(request.SessionId, request.TurnId, iteration, modelResponse)
+		checkpoint, err := r.saveCheckpoint(request.SessionId, request.TurnId, int(iteration), modelResponse)
 		if err != nil {
 			return RunTurnResult{}, err
 		}
 		checkpoints = append(checkpoints, checkpoint)
 
 		if len(modelResponse.ToolRequests) == 0 {
-			output = modelResponse.Output
+			if modelResponse.Output != nil {
+				output = *modelResponse.Output
+			}
 			break
 		}
 		pendingToolResults = []HostToolResult{}
 		for _, toolRequest := range modelResponse.ToolRequests {
-			toolResult, err := r.resolveAndExecuteTool(request.TurnId, iteration, toolRequest)
+			toolResult, err := r.resolveAndExecuteTool(request.TurnId, int(iteration), toolRequest)
 			if err != nil {
 				return RunTurnResult{}, err
 			}
@@ -122,15 +96,15 @@ func (r *ReferenceTurnRunner) Run(request RunTurnRequest) (RunTurnResult, error)
 		for _, result := range pendingToolResults {
 			serializedResults = append(serializedResults, result.Save(NewSaveContext()))
 		}
-		if err := r.recordTurn(TurnEventTypeMessagesUpdated, request.TurnId, iteration, map[string]interface{}{"toolResults": serializedResults}); err != nil {
+		if err := r.recordTurn(TurnEventTypeMessagesUpdated, request.TurnId, int(iteration), map[string]interface{}{"toolResults": serializedResults}); err != nil {
 			return RunTurnResult{}, err
 		}
 	}
 
 	if output == nil && len(pendingToolResults) > 0 {
-		status = "error"
+		status = RunTurnStatusError
 		output = map[string]interface{}{"message": "Maximum turn iterations reached"}
-		if err := r.recordTurn(TurnEventTypeError, request.TurnId, iterations, map[string]interface{}{
+		if err := r.recordTurn(TurnEventTypeError, request.TurnId, int(iterations), map[string]interface{}{
 			"errorKind": "max_iterations",
 			"message":   "Maximum turn iterations reached",
 		}); err != nil {
@@ -138,7 +112,7 @@ func (r *ReferenceTurnRunner) Run(request RunTurnRequest) (RunTurnResult, error)
 		}
 	}
 
-	if err := r.recordTurn(TurnEventTypeTurnEnd, request.TurnId, iterations, map[string]interface{}{
+	if err := r.recordTurn(TurnEventTypeTurnEnd, request.TurnId, int(iterations), map[string]interface{}{
 		"iterations": iterations,
 		"status":     status,
 		"response":   output,
@@ -164,11 +138,16 @@ func (r *ReferenceTurnRunner) Run(request RunTurnRequest) (RunTurnResult, error)
 		return RunTurnResult{}, err
 	}
 
+	var outputPtr *interface{}
+	if output != nil {
+		outputPtr = &output
+	}
+
 	return RunTurnResult{
 		SessionId:   request.SessionId,
 		TurnId:      request.TurnId,
 		Status:      status,
-		Output:      output,
+		Output:      outputPtr,
 		Iterations:  iterations,
 		ToolResults: allToolResults,
 		Checkpoints: checkpoints,
@@ -180,7 +159,7 @@ func (r *ReferenceTurnRunner) saveCheckpoint(sessionId string, turnId string, it
 	checkpointNumber := int32(iteration + 1)
 	state := map[string]interface{}{
 		"iteration":    iteration,
-		"output":       response.Output,
+		"output":       dereferenceOutput(response.Output),
 		"toolRequests": saveToolRequests(response.ToolRequests),
 	}
 	for key, value := range response.CheckpointState {
@@ -206,6 +185,13 @@ func (r *ReferenceTurnRunner) saveCheckpoint(sessionId string, turnId string, it
 		return Checkpoint{}, err
 	}
 	return saved, nil
+}
+
+func dereferenceOutput(output *interface{}) interface{} {
+	if output == nil {
+		return nil
+	}
+	return *output
 }
 
 func (r *ReferenceTurnRunner) resolveAndExecuteTool(turnId string, iteration int, toolRequest HostToolRequest) (HostToolResult, error) {

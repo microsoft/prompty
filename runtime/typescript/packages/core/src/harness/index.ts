@@ -9,10 +9,10 @@ export {
 
 export {
   ReferenceTurnRunner,
-  type RunTurnRequest,
-  type RunTurnResult,
+  RunTurnRequest,
+  RunTurnResult,
   type TurnModelCallback,
-  type TurnModelRequest,
-  type TurnModelResponse,
+  TurnModelRequest,
+  TurnModelResponse,
   type TurnRunnerDependencies,
 } from "./turn-runner.js";

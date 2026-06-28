@@ -1,4 +1,6 @@
 import "@typra/emitter";
+import "../events/payloads.tsp";
+import "../events/session.tsp";
 
 namespace Prompty;
 
@@ -57,4 +59,103 @@ model CompactionConfig {
   @doc("Additional strategy-specific options")
   @sample(#{ options: #{ preserveSystemMessages: true } })
   options?: Record<unknown> = #{};
+}
+
+/**
+ * Request passed by the reference turn runner to the injected model callback.
+ *
+ * The runner owns deterministic orchestration semantics; model/provider-specific
+ * execution stays behind this callback boundary.
+ */
+model TurnModelRequest {
+  @doc("Stable harness session identifier")
+  @sample(#{ sessionId: "sess_abc123" })
+  sessionId: string;
+
+  @doc("Stable turn identifier within the session")
+  @sample(#{ turnId: "turn_abc123" })
+  turnId: string;
+
+  @doc("Zero-based model loop iteration")
+  @sample(#{ iteration: 0 })
+  iteration: int32;
+
+  @doc("Inputs supplied to the deterministic single-turn run")
+  inputs?: Record<unknown> = #{};
+
+  @doc("Canonical turn execution options")
+  options?: TurnOptions;
+
+  @doc("Host tool results produced by the previous iteration")
+  toolResults?: HostToolResult[] = #[];
+}
+
+/**
+ * Response returned by the injected model callback to the reference turn runner.
+ */
+model TurnModelResponse {
+  @doc("Provider-neutral final model output for the turn when no more tools are requested")
+  output?: unknown;
+
+  @doc("Host tool execution requests emitted by the model callback")
+  toolRequests?: HostToolRequest[] = #[];
+
+  @doc("Additional deterministic state to merge into the iteration checkpoint")
+  checkpointState?: Record<unknown> = #{};
+}
+
+/**
+ * Request accepted by a reference turn runner implementation.
+ */
+model RunTurnRequest {
+  @doc("Stable harness session identifier")
+  @sample(#{ sessionId: "sess_abc123" })
+  sessionId: string;
+
+  @doc("Stable turn identifier within the session")
+  @sample(#{ turnId: "turn_abc123" })
+  turnId: string;
+
+  @doc("Inputs supplied to the deterministic single-turn run")
+  inputs?: Record<unknown> = #{};
+
+  @doc("Canonical turn execution options")
+  options?: TurnOptions;
+}
+
+/**
+ * Final semantic status for a reference turn runner result.
+ *
+ * This mirrors TurnStatus but remains distinct so generators can emit stable,
+ * model-local enum names without collisions.
+ */
+alias RunTurnStatus = "success" | "error" | "cancelled";
+
+/**
+ * Result returned by a reference turn runner implementation.
+ */
+model RunTurnResult {
+  @doc("Stable harness session identifier")
+  @sample(#{ sessionId: "sess_abc123" })
+  sessionId: string;
+
+  @doc("Stable turn identifier within the session")
+  @sample(#{ turnId: "turn_abc123" })
+  turnId: string;
+
+  @doc("Final semantic status for the deterministic turn")
+  status: RunTurnStatus;
+
+  @doc("Provider-neutral final output returned by the injected model callback")
+  output?: unknown;
+
+  @doc("Number of model loop iterations executed")
+  @sample(#{ iterations: 1 })
+  iterations: int32;
+
+  @doc("Host tool results produced during the turn")
+  toolResults?: HostToolResult[] = #[];
+
+  @doc("Checkpoints created during the turn")
+  checkpoints?: Checkpoint[] = #[];
 }

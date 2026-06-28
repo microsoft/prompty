@@ -17,6 +17,10 @@ func fixedIds() func(prefix string) string {
 	}
 }
 
+func outputPtr(value interface{}) *interface{} {
+	return &value
+}
+
 func readJournalRecords(t *testing.T, path string) []map[string]interface{} {
 	t.Helper()
 	content, err := os.ReadFile(path)
@@ -51,7 +55,7 @@ func TestReferenceTurnRunnerEmitsJournalsAndCheckpoints(t *testing.T) {
 		HostToolExecutor:   FunctionHostToolExecutor{},
 		InvokeModel: func(request TurnModelRequest) (TurnModelResponse, error) {
 			return TurnModelResponse{
-				Output:          map[string]interface{}{"text": "hello " + request.Inputs["name"].(string)},
+				Output:          outputPtr(map[string]interface{}{"text": "hello " + request.Inputs["name"].(string)}),
 				CheckpointState: map[string]interface{}{"stable": true},
 			}, nil
 		},
@@ -63,7 +67,7 @@ func TestReferenceTurnRunnerEmitsJournalsAndCheckpoints(t *testing.T) {
 		SessionId: "session-1",
 		TurnId:    "turn-1",
 		Inputs:    map[string]interface{}{"name": "Ada"},
-		Options:   TurnOptions{MaxIterations: &maxIterations},
+		Options:   &TurnOptions{MaxIterations: &maxIterations},
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -72,7 +76,7 @@ func TestReferenceTurnRunnerEmitsJournalsAndCheckpoints(t *testing.T) {
 	if result.Status != "success" || result.Iterations != 1 {
 		t.Fatalf("unexpected result: %#v", result)
 	}
-	if result.Output.(map[string]interface{})["text"] != "hello Ada" {
+	if (*result.Output).(map[string]interface{})["text"] != "hello Ada" {
 		t.Fatalf("unexpected output: %#v", result.Output)
 	}
 	assertEventTypes(t, turnTypes(sink.TurnEvents), []string{"turn_start", "llm_start", "llm_complete", "turn_end"})
@@ -115,7 +119,7 @@ func TestReferenceTurnRunnerExecutesHostTools(t *testing.T) {
 					Arguments:  map[string]interface{}{"a": 2, "b": 3},
 				}}}, nil
 			}
-			return TurnModelResponse{Output: map[string]interface{}{"toolResult": *request.ToolResults[0].Result}}, nil
+			return TurnModelResponse{Output: outputPtr(map[string]interface{}{"toolResult": *request.ToolResults[0].Result})}, nil
 		},
 		Now:    func() string { return "2026-06-28T00:00:00Z" },
 		NextId: fixedIds(),
@@ -126,7 +130,7 @@ func TestReferenceTurnRunnerExecutesHostTools(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if result.Output.(map[string]interface{})["toolResult"] != 5 {
+	if (*result.Output).(map[string]interface{})["toolResult"] != 5 {
 		t.Fatalf("unexpected output: %#v", result.Output)
 	}
 	if !result.ToolResults[0].Success || *result.ToolResults[0].Result != 5 {
@@ -161,7 +165,7 @@ func TestReferenceTurnRunnerDeniedPermissionSkipsExecution(t *testing.T) {
 				requestId := "exec-1"
 				return TurnModelResponse{ToolRequests: []HostToolRequest{{RequestId: &requestId, ToolName: "shell"}}}, nil
 			}
-			return TurnModelResponse{Output: map[string]interface{}{"denied": *request.ToolResults[0].ErrorKind}}, nil
+			return TurnModelResponse{Output: outputPtr(map[string]interface{}{"denied": *request.ToolResults[0].ErrorKind})}, nil
 		},
 		Now:    func() string { return "2026-06-28T00:00:00Z" },
 		NextId: fixedIds(),
@@ -171,7 +175,7 @@ func TestReferenceTurnRunnerDeniedPermissionSkipsExecution(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result.Output.(map[string]interface{})["denied"] != "permission_denied" {
+	if (*result.Output).(map[string]interface{})["denied"] != "permission_denied" {
 		t.Fatalf("unexpected output: %#v", result.Output)
 	}
 	for _, event := range sink.TurnEvents {
@@ -201,7 +205,7 @@ func TestReferenceTurnRunnerHostToolFailure(t *testing.T) {
 				requestId := "exec-1"
 				return TurnModelResponse{ToolRequests: []HostToolRequest{{RequestId: &requestId, ToolName: "fail"}}}, nil
 			}
-			return TurnModelResponse{Output: request.ToolResults[0].Save(NewSaveContext())}, nil
+			return TurnModelResponse{Output: outputPtr(request.ToolResults[0].Save(NewSaveContext()))}, nil
 		},
 		Now:    func() string { return "2026-06-28T00:00:00Z" },
 		NextId: fixedIds(),
@@ -211,7 +215,7 @@ func TestReferenceTurnRunnerHostToolFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	output := result.Output.(map[string]interface{})
+	output := (*result.Output).(map[string]interface{})
 	if output["success"] != false || output["errorKind"] != "exception" {
 		t.Fatalf("unexpected output: %#v", output)
 	}
@@ -230,7 +234,7 @@ func TestReferenceTurnRunnerDeterministicJournal(t *testing.T) {
 			PermissionResolver: AllowAllPermissionResolver{},
 			HostToolExecutor:   FunctionHostToolExecutor{},
 			InvokeModel: func(request TurnModelRequest) (TurnModelResponse, error) {
-				return TurnModelResponse{Output: "done"}, nil
+				return TurnModelResponse{Output: outputPtr("done")}, nil
 			},
 			Now:    func() string { return "2026-06-28T00:00:00Z" },
 			NextId: fixedIds(),

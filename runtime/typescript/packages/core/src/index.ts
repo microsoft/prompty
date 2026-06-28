@@ -125,11 +125,11 @@ export {
   InMemoryCheckpointStore,
   JsonlEventJournalWriter,
   ReferenceTurnRunner,
-  type RunTurnRequest,
-  type RunTurnResult,
+  RunTurnRequest,
+  RunTurnResult,
   type TurnModelCallback,
-  type TurnModelRequest,
-  type TurnModelResponse,
+  TurnModelRequest,
+  TurnModelResponse,
   type TurnRunnerDependencies,
 } from "./harness/index.js";
 

@@ -42,6 +42,7 @@ pub mod harness;
 pub mod interfaces;
 pub mod loader;
 pub mod model;
+pub use model::pipeline::{RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse};
 mod model_ext;
 pub mod parsers;
 pub mod pipeline;
@@ -66,7 +67,7 @@ pub use guardrails::{
 pub use harness::{
     AllowAllPermissionResolver, CollectingEventSink, DenyAllPermissionResolver,
     FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlEventJournalWriter,
-    ReferenceTurnRunner, RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse,
+    ReferenceTurnRunner,
 };
 pub use interfaces::{ExecuteError, Executor, InvokerError, Parser, Processor, Renderer};
 pub use loader::{

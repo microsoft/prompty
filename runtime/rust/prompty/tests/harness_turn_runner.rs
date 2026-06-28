@@ -6,10 +6,14 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use prompty::harness::{
     AllowAllPermissionResolver, CollectingEventSink, DenyAllPermissionResolver,
     FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlEventJournalWriter,
-    ReferenceTurnRunner, RunTurnRequest, TurnModelRequest, TurnModelResponse,
+    ReferenceTurnRunner,
 };
 use prompty::model::events::host_tool_request::HostToolRequest;
+use prompty::model::pipeline::RunTurnRequest;
+use prompty::model::pipeline::TurnModelRequest;
+use prompty::model::pipeline::TurnModelResponse;
 use prompty::model::pipeline::checkpoint_store::CheckpointStore;
+use prompty::model::pipeline::run_turn_result::RunTurnStatus;
 use prompty::model::pipeline::turn_options::TurnOptions;
 use serde_json::{Value, json};
 
@@ -34,6 +38,15 @@ fn fixed_ids() -> Arc<dyn Fn(&str) -> String + Send + Sync> {
 
 fn fixed_clock() -> Arc<dyn Fn() -> String + Send + Sync> {
     Arc::new(|| "2026-06-28T00:00:00Z".to_string())
+}
+
+fn run_request(session_id: &str, turn_id: &str) -> RunTurnRequest {
+    RunTurnRequest {
+        session_id: session_id.to_string(),
+        turn_id: turn_id.to_string(),
+        inputs: json!({}),
+        options: None,
+    }
 }
 
 fn records(path: &std::path::Path) -> Vec<Value> {
@@ -73,15 +86,15 @@ async fn reference_turn_runner_emits_journals_and_checkpoints() {
             session_id: "session-1".to_string(),
             turn_id: "turn-1".to_string(),
             inputs: json!({ "name": "Ada" }),
-            options: TurnOptions {
+            options: Some(TurnOptions {
                 max_iterations: Some(3),
                 ..Default::default()
-            },
+            }),
         })
         .await
         .unwrap();
 
-    assert_eq!(result.status, "success");
+    assert_eq!(result.status, RunTurnStatus::Success);
     assert_eq!(result.iterations, 1);
     assert_eq!(result.output, Some(json!({ "text": "hello Ada" })));
     assert_eq!(
@@ -162,7 +175,7 @@ async fn reference_turn_runner_executes_host_tools() {
     );
 
     let result = runner
-        .run(RunTurnRequest::new("session-1", "turn-1"))
+        .run(run_request("session-1", "turn-1"))
         .await
         .unwrap();
 
@@ -233,7 +246,7 @@ async fn reference_turn_runner_denied_permission_skips_execution() {
     );
 
     let result = runner
-        .run(RunTurnRequest::new("session-1", "turn-1"))
+        .run(run_request("session-1", "turn-1"))
         .await
         .unwrap();
 
@@ -293,7 +306,7 @@ async fn reference_turn_runner_host_tool_failure_is_replayable() {
     );
 
     let result = runner
-        .run(RunTurnRequest::new("session-1", "turn-1"))
+        .run(run_request("session-1", "turn-1"))
         .await
         .unwrap();
 
@@ -321,7 +334,7 @@ async fn reference_turn_runner_deterministic_journal() {
             fixed_ids(),
         );
         runner
-            .run(RunTurnRequest::new("session-1", "turn-1"))
+            .run(run_request("session-1", "turn-1"))
             .await
             .unwrap();
         records(path)
