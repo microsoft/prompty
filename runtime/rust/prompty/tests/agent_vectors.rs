@@ -547,9 +547,15 @@ async fn run_vector_with_events(
     let events_clone = events.clone();
     let on_event: EventCallback = Box::new(move |event: AgentEvent| {
         let event_type = match &event {
+            AgentEvent::TurnStart { .. } => "turn_start",
+            AgentEvent::TurnEnd { .. } => "turn_end",
+            AgentEvent::LlmStart { .. } => "llm_start",
+            AgentEvent::LlmComplete { .. } => "llm_complete",
+            AgentEvent::Retry { .. } => "retry",
             AgentEvent::Token(_) => "token",
             AgentEvent::Thinking(_) => "thinking",
             AgentEvent::ToolCallStart { .. } => "tool_call_start",
+            AgentEvent::ToolCallComplete { .. } => "tool_call_complete",
             AgentEvent::ToolResult { .. } => "tool_result",
             AgentEvent::Status(_) => "status",
             AgentEvent::MessagesUpdated { .. } => "messages_updated",
@@ -591,9 +597,17 @@ async fn test_events_basic_tool_loop() {
         events.contains(&"tool_result".to_string()),
         "missing tool_result event in {events:?}"
     );
+    let done_index = events
+        .iter()
+        .position(|event| event == "done")
+        .expect("missing done event");
+    let turn_end_index = events
+        .iter()
+        .position(|event| event == "turn_end")
+        .expect("missing turn_end event");
     assert!(
-        events.last() == Some(&"done".to_string()),
-        "last event should be 'done', got {events:?}"
+        done_index < turn_end_index,
+        "done should be emitted before turn_end, got {events:?}"
     );
 }
 
@@ -716,9 +730,15 @@ async fn test_cancellation_between_iterations() {
     let events_clone = events.clone();
     let on_event: EventCallback = Box::new(move |event: AgentEvent| {
         let event_type = match &event {
+            AgentEvent::TurnStart { .. } => "turn_start",
+            AgentEvent::TurnEnd { .. } => "turn_end",
+            AgentEvent::LlmStart { .. } => "llm_start",
+            AgentEvent::LlmComplete { .. } => "llm_complete",
+            AgentEvent::Retry { .. } => "retry",
             AgentEvent::Token(_) => "token",
             AgentEvent::Thinking(_) => "thinking",
             AgentEvent::ToolCallStart { .. } => "tool_call_start",
+            AgentEvent::ToolCallComplete { .. } => "tool_call_complete",
             AgentEvent::ToolResult { .. } => "tool_result",
             AgentEvent::Status(_) => "status",
             AgentEvent::MessagesUpdated { .. } => "messages_updated",
@@ -988,7 +1008,7 @@ fn build_extension_opts(
 
     // Steering
     let steering = input.get("steering").map(|s| {
-        let mut steering = prompty::steering::Steering::new();
+        let steering = prompty::steering::Steering::new();
         if let Some(msgs) = s.get("messages").and_then(|m| m.as_array()) {
             for msg in msgs {
                 let text = msg.get("text").and_then(|t| t.as_str()).unwrap_or("");

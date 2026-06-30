@@ -7,6 +7,17 @@ properties:
     items:
       $ref: Message.yaml
     description: The current full message list after the update
-required:
-  - messages
+  reason:
+    type: string
+    description: Why the message list changed
+  appended:
+    type: array
+    items:
+      $ref: Message.yaml
+    description: Messages appended by this update, when available
+  removed:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of messages removed by this update, when available
 description: Payload for "messages_updated" events — the conversation state has changed.

@@ -1,0 +1,440 @@
+{
+  "emitter": "typra-emitter",
+  "version": 1,
+  "protectedPaths": [],
+  "hydrationZones": [],
+  "seams": [
+    {
+      "contract": "CheckpointStore",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "CheckpointStore",
+      "generatedSource": "pipeline/CheckpointStore.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "pipeline/EventJournalWriter.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "EventSink",
+      "generatedSource": "pipeline/EventSink.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "Executor",
+      "generatedSource": "pipeline/Executor.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "pipeline/HostToolExecutor.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "Parser",
+      "generatedSource": "pipeline/Parser.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "PermissionResolver",
+      "generatedSource": "pipeline/PermissionResolver.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "Processor",
+      "generatedSource": "pipeline/Processor.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "Renderer",
+      "generatedSource": "pipeline/Renderer.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "CheckpointStore",
+      "generatedSource": "checkpoint_store.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "event_journal_writer.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "EventSink",
+      "generatedSource": "event_sink.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "Executor",
+      "generatedSource": "executor.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "host_tool_executor.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "Parser",
+      "generatedSource": "parser.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "PermissionResolver",
+      "generatedSource": "permission_resolver.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "Processor",
+      "generatedSource": "processor.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "Renderer",
+      "generatedSource": "renderer.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "CheckpointStore",
+      "generatedSource": "CheckpointStore",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "EventJournalWriter",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "EventSink",
+      "generatedSource": "EventSink",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "Executor",
+      "generatedSource": "Executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "HostToolExecutor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "Parser",
+      "generatedSource": "Parser",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "PermissionResolver",
+      "generatedSource": "PermissionResolver",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "Processor",
+      "generatedSource": "Processor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "Renderer",
+      "generatedSource": "Renderer",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "CheckpointStore",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "EventJournalWriter",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "EventSink",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "Executor",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "HostToolExecutor",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "Parser",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "PermissionResolver",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "Processor",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "Renderer",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "CheckpointStore",
+      "generatedSource": "pipeline::checkpoint_store",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "pipeline::event_journal_writer",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "EventSink",
+      "generatedSource": "pipeline::event_sink",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "Executor",
+      "generatedSource": "pipeline::executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "pipeline::host_tool_executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "Parser",
+      "generatedSource": "pipeline::parser",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "PermissionResolver",
+      "generatedSource": "pipeline::permission_resolver",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "Processor",
+      "generatedSource": "pipeline::processor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "Renderer",
+      "generatedSource": "pipeline::renderer",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "CheckpointStore",
+      "generatedSource": "./pipeline/checkpoint-store",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "./pipeline/event-journal-writer",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "EventSink",
+      "generatedSource": "./pipeline/event-sink",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "Executor",
+      "generatedSource": "./pipeline/executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "./pipeline/host-tool-executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "Parser",
+      "generatedSource": "./pipeline/parser",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "PermissionResolver",
+      "generatedSource": "./pipeline/permission-resolver",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "Processor",
+      "generatedSource": "./pipeline/processor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "Renderer",
+      "generatedSource": "./pipeline/renderer",
+      "seamKind": "protocol-adapter"
+    }
+  ]
+}

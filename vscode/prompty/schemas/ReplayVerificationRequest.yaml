@@ -1,0 +1,20 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ReplayVerificationRequest.yaml
+type: object
+properties:
+  expected:
+    type: array
+    items:
+      $ref: ReplayJournalRecord.yaml
+    default: []
+    description: Expected normalized replay records
+  actual:
+    type: array
+    items:
+      $ref: ReplayJournalRecord.yaml
+    default: []
+    description: Actual normalized replay records
+required:
+  - expected
+  - actual
+description: Request accepted by a replay verifier implementation.

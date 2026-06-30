@@ -1,0 +1,66 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ReplayJournalRecord.yaml
+type: object
+properties:
+  kind:
+    anyOf:
+      - type: string
+        const: session
+      - type: string
+        const: turn
+      - type: string
+        const: summary
+    description: Journal record kind
+  type:
+    type: string
+    description: Turn or session event type, when kind is not summary
+  sessionId:
+    type: string
+    description: Stable harness session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier within the session
+  iteration:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based model loop iteration for turn records
+  status:
+    anyOf:
+      - type: string
+        const: success
+      - type: string
+        const: error
+      - type: string
+        const: cancelled
+    description: Final semantic status for turn/session/summary records
+  requestId:
+    type: string
+    description: Permission request identifier for permission request records
+  toolName:
+    type: string
+    description: Host tool name for tool execution/result records
+  success:
+    type: boolean
+    description: Whether a permission or host tool operation succeeded
+  errorKind:
+    type: string
+    description: Stable error discriminator for failed records
+  turns:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of turns represented by a summary record
+  checkpoints:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of checkpoints represented by a summary record
+required:
+  - kind
+description: |-
+  Stable, replay-comparable projection of a journal record.
+
+  Runtime journal records may carry additional payload fields, durations, telemetry,
+  or provider-specific data. Replay verification compares this normalized shape so
+  deterministic orchestration semantics are mechanically shared across runtimes.

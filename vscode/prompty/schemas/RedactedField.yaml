@@ -1,0 +1,27 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RedactedField.yaml
+type: object
+properties:
+  path:
+    type: string
+    description: JSONPath-like field path, relative to the containing payload
+  mode:
+    anyOf:
+      - type: string
+        const: none
+      - type: string
+        const: redacted
+      - type: string
+        const: hashed
+      - type: string
+        const: summary
+      - type: string
+        const: reference
+    description: How the field was represented
+  reason:
+    type: string
+    description: Human-readable reason or policy that caused this handling
+required:
+  - path
+  - mode
+description: Redaction handling for one JSON-shaped field path.

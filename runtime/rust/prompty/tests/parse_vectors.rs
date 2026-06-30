@@ -7,7 +7,7 @@ use regex::Regex;
 use serde_json::Value;
 
 use prompty::parsers::parse_chat;
-use prompty::types::{ContentPart, ContentPartKind, Message, Role};
+use prompty::types::{ContentPartKind, Message, Role};
 
 /// Path to the parse vectors JSON file.
 fn vectors_path() -> PathBuf {

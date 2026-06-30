@@ -5,6 +5,12 @@ properties:
   message:
     type: string
     description: Human-readable error description
+  errorKind:
+    type: string
+    description: Stable machine-readable error category
+  phase:
+    type: string
+    description: Operation or phase where the error occurred
 required:
   - message
 description: Payload for "error" events — an error occurred during the loop.

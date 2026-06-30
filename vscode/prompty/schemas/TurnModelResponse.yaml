@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnModelResponse.yaml
+type: object
+properties:
+  output:
+    description: Provider-neutral final model output for the turn when no more tools are requested
+  toolRequests:
+    type: array
+    items:
+      $ref: HostToolRequest.yaml
+    default: []
+    description: Host tool execution requests emitted by the model callback
+  checkpointState:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Additional deterministic state to merge into the iteration checkpoint
+description: Response returned by the injected model callback to the reference turn runner.

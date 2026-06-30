@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PermissionCompletedPayload.yaml
+type: object
+properties:
+  requestId:
+    type: string
+    description: Stable permission request identifier
+  toolCallId:
+    type: string
+    description: Associated tool call identifier, when the permission gated a tool call
+  permission:
+    type: string
+    description: Permission/action name that was decided
+  approved:
+    type: boolean
+    description: Whether the requested permission was approved
+  reason:
+    type: string
+    description: Decision reason, if available
+  result:
+    $ref: RecordUnknown.yaml
+    description: Host-specific decision result, such as a durable approval token or denial details
+  redaction:
+    $ref: RedactionMetadata.yaml
+    description: Redaction state for sensitive decision fields
+required:
+  - permission
+  - approved
+description: Payload for permission completion events — an approval decision was made.

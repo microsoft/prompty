@@ -1,0 +1,35 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SessionStartPayload.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable session identifier
+  schemaVersion:
+    type: string
+    default: "1"
+    description: Session event schema version
+  producer:
+    type: string
+    description: Producer that started the session
+  runtime:
+    type: string
+    description: Runtime that produced the session
+  promptyVersion:
+    type: string
+    description: Prompty library version
+  startTime:
+    type: string
+    description: ISO 8601 UTC timestamp when the session started
+  selectedModel:
+    type: string
+    description: Selected model identifier, when known
+  reasoningEffort:
+    type: string
+    description: Selected reasoning effort or equivalent model setting, when known
+  context:
+    $ref: HarnessContext.yaml
+    description: Repository and execution context
+required:
+  - sessionId
+description: Payload for "session_start" events.

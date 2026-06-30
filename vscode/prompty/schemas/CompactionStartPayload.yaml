@@ -1,0 +1,12 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CompactionStartPayload.yaml
+type: object
+properties:
+  droppedCount:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of messages selected for compaction
+required:
+  - droppedCount
+description: Payload for "compaction_start" events — context compaction is beginning.

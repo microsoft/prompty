@@ -1,0 +1,37 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnModelRequest.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable harness session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier within the session
+  iteration:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based model loop iteration
+  inputs:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Inputs supplied to the deterministic single-turn run
+  options:
+    $ref: TurnOptions.yaml
+    description: Canonical turn execution options
+  toolResults:
+    type: array
+    items:
+      $ref: HostToolResult.yaml
+    default: []
+    description: Host tool results produced by the previous iteration
+required:
+  - sessionId
+  - turnId
+  - iteration
+description: |-
+  Request passed by the reference turn runner to the injected model callback.
+
+  The runner owns deterministic orchestration semantics; model/provider-specific
+  execution stays behind this callback boundary.

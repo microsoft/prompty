@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: HarnessContext.yaml
+type: object
+properties:
+  cwd:
+    type: string
+    description: Current working directory for the harness
+  gitRoot:
+    type: string
+    description: Git repository root, when known
+  metadata:
+    $ref: RecordUnknown.yaml
+    description: Host-defined context metadata, such as source-control or sandbox details
+description: |-
+  Execution context associated with a harness session. Host-specific
+  environments can store detailed profiles in metadata without making the core
+  contract depend on one source-control provider or workspace shape.

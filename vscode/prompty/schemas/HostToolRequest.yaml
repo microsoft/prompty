@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: HostToolRequest.yaml
+type: object
+properties:
+  requestId:
+    type: string
+    description: Stable host execution request identifier
+  toolCallId:
+    type: string
+    description: Associated model tool call identifier, when available
+  toolName:
+    type: string
+    description: Name of the host tool being executed
+  arguments:
+    $ref: RecordUnknown.yaml
+    description: Tool arguments after host-side sanitization
+  workingDirectory:
+    type: string
+    description: Working directory or execution scope for the tool
+required:
+  - toolName
+description: Request passed to a host tool executor after policy and permission checks.

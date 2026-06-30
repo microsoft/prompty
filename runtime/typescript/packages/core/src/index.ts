@@ -114,6 +114,29 @@ export { NunjucksRenderer, MustacheRenderer } from "./renderers/index.js";
 export { PromptyChatParser } from "./parsers/index.js";
 
 // ---------------------------------------------------------------------------
+// Harness reference adapters
+// ---------------------------------------------------------------------------
+
+export {
+  AllowAllPermissionResolver,
+  CollectingEventSink,
+  DenyAllPermissionResolver,
+  FunctionHostToolExecutor,
+  InMemoryCheckpointStore,
+  JsonlEventJournalWriter,
+  ReferenceReplayVerifier,
+  ReferenceTurnRunner,
+  ReplayVerificationRequest,
+  ReplayVerificationResult,
+  RunTurnRequest,
+  RunTurnResult,
+  type TurnModelCallback,
+  TurnModelRequest,
+  TurnModelResponse,
+  type TurnRunnerDependencies,
+} from "./harness/index.js";
+
+// ---------------------------------------------------------------------------
 // Tracing
 // ---------------------------------------------------------------------------
 
@@ -166,6 +189,19 @@ export {
   PromptyTool,
   McpApprovalMode,
   Binding,
+  TurnEvent,
+  SessionEvent,
+  SessionSummary,
+  Checkpoint,
+  PermissionRequest,
+  PermissionDecision,
+  HostToolRequest,
+  HostToolResult,
+  type EventJournalWriter,
+  type EventSink,
+  type PermissionResolver,
+  type CheckpointStore,
+  type HostToolExecutor,
 } from "./model/index.js";
 
 // Backward-compat aliases (will be removed in a future version)

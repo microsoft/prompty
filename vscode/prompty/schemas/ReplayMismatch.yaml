@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ReplayMismatch.yaml
+type: object
+properties:
+  index:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based record index where the mismatch was found
+  expected:
+    $ref: ReplayJournalRecord.yaml
+    description: Expected record at this index, when present
+  actual:
+    $ref: ReplayJournalRecord.yaml
+    description: Actual record at this index, when present
+  message:
+    type: string
+    description: Human-readable mismatch explanation
+required:
+  - index
+  - message
+description: A single mismatch produced by replay verification.

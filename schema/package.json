@@ -3,16 +3,16 @@
   "name": "prompty-schema",
   "description": "TypeSpec models and code generation for Prompty",
   "scripts": {
-    "build:emitter": "cd emitter && npm run build",
     "format:tsp": "npx tsp format \"model/**/*.tsp\"",
     "format:tsp:check": "npx tsp format \"model/**/*.tsp\" --check",
     "format:rust": "cargo fmt --all --manifest-path ../runtime/rust/prompty/Cargo.toml",
-    "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml",
-    "build": "npm run build:emitter && npm run format:tsp && npm run generate && npm run format:rust"
+    "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml && node scripts/normalize-typra-output.mjs",
+    "verify:typra": "node scripts/verify-typra.mjs",
+    "build": "npm run format:tsp && npm run generate && npm run format:rust"
   },
   "dependencies": {
-    "prompty-emitter": "file:./emitter",
-    "@typespec/compiler": "latest",
-    "@typespec/json-schema": "latest"
+    "@typespec/compiler": "1.10.0",
+    "@typespec/json-schema": "1.10.0",
+    "@typra/emitter": "0.3.1"
   }
 }

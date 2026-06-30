@@ -1,0 +1,5 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: HostToolExecutor.yaml
+type: object
+properties: {}
+description: Executes host tools after policy and permission checks.

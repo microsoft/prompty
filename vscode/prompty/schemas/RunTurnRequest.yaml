@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RunTurnRequest.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable harness session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier within the session
+  inputs:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Inputs supplied to the deterministic single-turn run
+  options:
+    $ref: TurnOptions.yaml
+    description: Canonical turn execution options
+required:
+  - sessionId
+  - turnId
+description: Request accepted by a reference turn runner implementation.

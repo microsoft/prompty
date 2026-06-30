@@ -1,0 +1,88 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnEvent.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for this event
+  type:
+    anyOf:
+      - type: string
+        const: turn_start
+      - type: string
+        const: turn_end
+      - type: string
+        const: llm_start
+      - type: string
+        const: llm_complete
+      - type: string
+        const: retry
+      - type: string
+        const: permission_requested
+      - type: string
+        const: permission_completed
+      - type: string
+        const: token
+      - type: string
+        const: thinking
+      - type: string
+        const: tool_call_start
+      - type: string
+        const: tool_call_complete
+      - type: string
+        const: tool_execution_start
+      - type: string
+        const: tool_execution_complete
+      - type: string
+        const: tool_result
+      - type: string
+        const: hook_start
+      - type: string
+        const: hook_end
+      - type: string
+        const: status
+      - type: string
+        const: messages_updated
+      - type: string
+        const: done
+      - type: string
+        const: error
+      - type: string
+        const: cancelled
+      - type: string
+        const: compaction_start
+      - type: string
+        const: compaction_complete
+      - type: string
+        const: compaction_failed
+    description: Event type discriminator
+  timestamp:
+    type: string
+    description: ISO 8601 UTC timestamp when the event was emitted
+  turnId:
+    type: string
+    description: Stable identifier for the outer turn
+  iteration:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based agent-loop iteration associated with the event
+  parentId:
+    type: string
+    description: Parent event or span identifier for reconstructing event hierarchy
+  spanId:
+    type: string
+    description: Trace span identifier associated with this event
+  payload:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Event-specific payload. Use the typed payload model matching 'type'.
+required:
+  - id
+  - type
+  - timestamp
+  - payload
+description: |-
+  A canonical event envelope emitted by the turn harness. The payload is kept
+  JSON-shaped so runtimes can load all events even when newer payload types are
+  added; event-specific typed payload models below define the canonical shapes.

@@ -38,9 +38,11 @@
 pub mod connections;
 pub mod context;
 pub mod guardrails;
+pub mod harness;
 pub mod interfaces;
 pub mod loader;
 pub mod model;
+pub use model::pipeline::{RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse};
 mod model_ext;
 pub mod parsers;
 pub mod pipeline;
@@ -61,6 +63,11 @@ pub use context::{
 pub use guardrails::{
     GuardrailError, GuardrailPhase, GuardrailResult, Guardrails, InputGuardrail, OutputGuardrail,
     ToolGuardrail,
+};
+pub use harness::{
+    AllowAllPermissionResolver, CollectingEventSink, DenyAllPermissionResolver,
+    FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlEventJournalWriter,
+    ReferenceReplayVerifier, ReferenceTurnRunner,
 };
 pub use interfaces::{ExecuteError, Executor, InvokerError, Parser, Processor, Renderer};
 pub use loader::{

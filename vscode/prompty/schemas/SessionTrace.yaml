@@ -1,0 +1,54 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SessionTrace.yaml
+type: object
+properties:
+  version:
+    type: string
+    default: "1"
+    description: Trace schema version
+  runtime:
+    type: string
+    description: Runtime name that produced the trace
+  promptyVersion:
+    type: string
+    description: Prompty library version that produced the trace
+  sessionId:
+    type: string
+    description: Stable session identifier
+  events:
+    type: array
+    items:
+      $ref: SessionEvent.yaml
+    description: Recorded session events in emission order
+  turns:
+    type: array
+    items:
+      $ref: TurnTrace.yaml
+    description: Recorded turn traces associated with the session
+  checkpoints:
+    type: array
+    items:
+      $ref: Checkpoint.yaml
+    description: Checkpoints created during the session
+  trajectory:
+    type: array
+    items:
+      $ref: TrajectoryEvent.yaml
+    description: Compact trajectory records associated with the session
+  files:
+    type: array
+    items:
+      $ref: SessionFileRef.yaml
+    description: Files observed or touched during the session
+  refs:
+    type: array
+    items:
+      $ref: SessionRef.yaml
+    description: Non-file references observed during the session
+  summary:
+    $ref: SessionSummary.yaml
+    description: Optional summary computed from the event stream
+required:
+  - version
+  - events
+description: Portable replay container for an outer harness session.

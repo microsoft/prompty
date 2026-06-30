@@ -14,5 +14,11 @@ __pycache__/
 
 # Schema emitter build artifacts
 schema/emitter/dist/
-schema/tsp-output/
+schema/tsp-output/*
+!schema/tsp-output/.typra-generated/
+!schema/tsp-output/.typra-generated/export-surfaces.json
+!schema/tsp-output/.typra-generated/hydration-seams.json
+!schema/tsp-output/.typra-generated/manifest.json
+!schema/tsp-output/json-ast/
+!schema/tsp-output/json-ast/model.json
 .playwright-mcp/

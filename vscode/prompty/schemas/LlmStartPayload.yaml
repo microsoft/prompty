@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: LlmStartPayload.yaml
+type: object
+properties:
+  provider:
+    type: string
+    description: Provider identifier used for the request
+  modelId:
+    type: string
+    description: Model or deployment identifier used for the request
+  messageCount:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of messages sent to the provider
+  attempt:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Retry attempt number, zero for the initial attempt
+description: Payload for "llm_start" events — an LLM request is about to be sent.

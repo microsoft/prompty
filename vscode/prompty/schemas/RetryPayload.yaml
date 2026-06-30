@@ -1,0 +1,27 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RetryPayload.yaml
+type: object
+properties:
+  operation:
+    type: string
+    description: Operation being retried
+  attempt:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Attempt number about to run
+  maxAttempts:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Maximum configured attempts
+  delayMs:
+    type: number
+    description: Backoff delay before the next attempt in milliseconds
+  reason:
+    type: string
+    description: Reason for the retry
+required:
+  - operation
+  - attempt
+description: Payload for "retry" events — a transient operation will be retried.

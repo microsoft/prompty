@@ -7,6 +7,26 @@ properties:
     items:
       $ref: ContentPart.yaml
     description: The content parts of the tool result
+  status:
+    anyOf:
+      - type: string
+        const: success
+      - type: string
+        const: error
+      - type: string
+        const: cancelled
+      - type: string
+        const: timeout
+    description: Semantic execution status for the tool result
+  errorKind:
+    type: string
+    description: Stable machine-readable error category when status is not success
+  errorMessage:
+    type: string
+    description: Human-readable error message when status is not success
+  durationMs:
+    type: number
+    description: Tool execution duration in milliseconds
 required:
   - parts
 description: |-

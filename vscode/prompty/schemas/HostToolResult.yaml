@@ -1,0 +1,36 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: HostToolResult.yaml
+type: object
+properties:
+  requestId:
+    type: string
+    description: Stable host execution request identifier
+  toolCallId:
+    type: string
+    description: Associated model tool call identifier, when available
+  toolName:
+    type: string
+    description: Name of the host tool that executed
+  success:
+    type: boolean
+    description: Whether the host execution completed successfully
+  result:
+    description: Host-normalized execution result
+  exitCode:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Process or host exit code, when applicable
+  durationMs:
+    type: number
+    description: Tool execution duration in milliseconds
+  errorKind:
+    type: string
+    description: Machine-readable error category when success is false
+  telemetry:
+    $ref: RecordUnknown.yaml
+    description: Host-specific telemetry for the execution
+required:
+  - toolName
+  - success
+description: Result returned by a host tool executor.

@@ -1,0 +1,5 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EventSink.yaml
+type: object
+properties: {}
+description: Receives typed turn and session events from a harness.

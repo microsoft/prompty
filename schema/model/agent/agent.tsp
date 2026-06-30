@@ -1,4 +1,4 @@
-import "prompty-emitter";
+import "@typra/emitter";
 import "@typespec/json-schema";
 import "../core/core.tsp";
 import "../model/model.tsp";

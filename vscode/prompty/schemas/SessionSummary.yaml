@@ -1,0 +1,37 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SessionSummary.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable session identifier
+  status:
+    anyOf:
+      - type: string
+        const: success
+      - type: string
+        const: error
+      - type: string
+        const: cancelled
+      - type: string
+        const: interrupted
+    description: Final session status
+  turns:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of user/assistant turns in the session
+  checkpoints:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of checkpoints created
+  usage:
+    $ref: TokenUsage.yaml
+    description: Aggregated token usage for the session
+  durationMs:
+    type: number
+    description: Total elapsed session duration in milliseconds
+required:
+  - sessionId
+description: Summary statistics for a completed session trace.

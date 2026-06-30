@@ -280,8 +280,8 @@ export function emitPythonTest(ctx: BaseTestContext & { classCtx: PythonClassCon
   for (let i = 0; i < examples.length; i++) {
     const sample = examples[i];
     const suffix = i === 0 ? '' : `_${i}`;
-    const jsonBlock = sample.json.map(line => `    ${line}`).join('\n');
-    const yamlBlock = sample.yaml.map(line => `    ${line}`).join('\n');
+    const jsonBlock = sample.json.map(line => line.length > 0 ? `    ${line}` : '').join('\n');
+    const yamlBlock = sample.yaml.map(line => line.length > 0 ? `    ${line}` : '').join('\n');
 
     // test_load_json
     lines.push(`def test_load_json_${typeNameLower}${suffix}():`);

@@ -1,0 +1,52 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SessionEvent.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for this event
+  type:
+    anyOf:
+      - type: string
+        const: session_start
+      - type: string
+        const: session_end
+      - type: string
+        const: session_warning
+      - type: string
+        const: session_hook_start
+      - type: string
+        const: session_hook_end
+      - type: string
+        const: checkpoint_created
+      - type: string
+        const: trajectory_event
+    description: Event type discriminator
+  timestamp:
+    type: string
+    description: ISO 8601 UTC timestamp when the event was emitted
+  sessionId:
+    type: string
+    description: Stable identifier for the outer session
+  turnId:
+    type: string
+    description: Associated turn identifier, when this session event is linked to a turn
+  parentId:
+    type: string
+    description: Parent event or span identifier for reconstructing event hierarchy
+  spanId:
+    type: string
+    description: Trace span identifier associated with this event
+  payload:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Event-specific payload. Use the typed payload model matching 'type'.
+  redaction:
+    $ref: RedactionMetadata.yaml
+    description: Redaction state for sensitive payload fields
+required:
+  - id
+  - type
+  - timestamp
+  - payload
+description: A canonical event envelope emitted by an outer harness session.

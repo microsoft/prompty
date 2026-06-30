@@ -1,0 +1,25 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: SessionEndPayload.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable session identifier
+  status:
+    anyOf:
+      - type: string
+        const: success
+      - type: string
+        const: error
+      - type: string
+        const: cancelled
+      - type: string
+        const: interrupted
+    description: Final session status
+  reason:
+    type: string
+    description: Host-specific reason the session ended
+  durationMs:
+    type: number
+    description: Total elapsed session duration in milliseconds
+description: Payload for "session_end" events.

@@ -654,6 +654,16 @@ def _invoke_with_retry(
                 "status",
                 {"message": f"LLM call failed, retrying (attempt {attempts + 1}/{max_retries})..."},
             )
+            emit_event(
+                on_event,
+                "retry",
+                {
+                    "operation": "llm",
+                    "attempt": attempts + 1,
+                    "maxAttempts": max_retries,
+                    "reason": str(e),
+                },
+            )
             # Exponential backoff with jitter, capped at 60s
             backoff = min(2**attempts + random.random(), 60)
             # Check cancellation during backoff
@@ -685,6 +695,16 @@ async def _invoke_with_retry_async(
                 on_event,
                 "status",
                 {"message": f"LLM call failed, retrying (attempt {attempts + 1}/{max_retries})..."},
+            )
+            emit_event(
+                on_event,
+                "retry",
+                {
+                    "operation": "llm",
+                    "attempt": attempts + 1,
+                    "maxAttempts": max_retries,
+                    "reason": str(e),
+                },
             )
             backoff = min(2**attempts + random.random(), 60)
             if cancel is not None and cancel.is_cancelled:
@@ -868,6 +888,20 @@ _DEFAULT_MAX_ITERATIONS = 10
 _DEFAULT_MAX_LLM_RETRIES = 3
 
 
+def _emit_failed_turn_end(
+    on_event: EventCallback | None,
+    exc: BaseException,
+    *,
+    iterations: int,
+    response: Any = None,
+) -> None:
+    status = "cancelled" if isinstance(exc, CancelledError) else "error"
+    payload: dict[str, Any] = {"iterations": iterations, "status": status}
+    if response is not None:
+        payload["response"] = response
+    emit_event(on_event, "turn_end", payload)
+
+
 @trace
 def turn(
     prompt: str | Prompty,
@@ -955,6 +989,15 @@ def turn(
     tools = tools or {}
     parent_inputs = inputs or {}
     messages = prepare(agent, inputs)
+    emit_event(
+        on_event,
+        "turn_start",
+        {
+            "agent": getattr(agent, "name", None),
+            "inputs": inputs or {},
+            "maxIterations": max_iterations,
+        },
+    )
 
     # Fast path: no tools and no loop extensions — single executor + process call (not via run)
     _has_extensions = (
@@ -965,10 +1008,26 @@ def turn(
         or steering is not None
     )
     if not tools and not _has_extensions:
-        response = _invoke_executor(agent, messages)
+        emit_event(
+            on_event,
+            "llm_start",
+            {"provider": agent.model.provider, "modelId": agent.model.id, "messageCount": len(messages), "attempt": 0},
+        )
+        try:
+            response = _invoke_executor(agent, messages)
+        except Exception as exc:
+            _emit_failed_turn_end(on_event, exc, iterations=0)
+            raise
+        emit_event(on_event, "llm_complete", {})
         if raw:
+            emit_event(on_event, "turn_end", {"iterations": 0, "status": "success", "response": response})
             return response
-        result = process(agent, response)
+        try:
+            result = process(agent, response)
+        except Exception as exc:
+            _emit_failed_turn_end(on_event, exc, iterations=0, response=response)
+            raise
+        emit_event(on_event, "turn_end", {"iterations": 0, "status": "success", "response": result})
         if target_type is not None:
             return cast(result, target_type)
         return result
@@ -984,6 +1043,7 @@ def turn(
         while True:
             if cancel is not None and cancel.is_cancelled:
                 emit_event(on_event, "cancelled", {})
+                _emit_failed_turn_end(on_event, CancelledError(), iterations=iteration)
                 raise CancelledError()
 
             if steering is not None:
@@ -1005,6 +1065,9 @@ def turn(
                 gr_input = guardrails.check_input(messages)
                 if not gr_input.allowed:
                     emit_event(on_event, "error", {"message": f"Input guardrail denied: {gr_input.reason}"})
+                    _emit_failed_turn_end(
+                        on_event, GuardrailError(gr_input.reason or "Input guardrail denied"), iterations=iteration
+                    )
                     raise GuardrailError(gr_input.reason or "Input guardrail denied")
                 if gr_input.rewrite is not None:
                     messages = gr_input.rewrite
@@ -1012,14 +1075,35 @@ def turn(
 
             if cancel is not None and cancel.is_cancelled:
                 emit_event(on_event, "cancelled", {})
+                _emit_failed_turn_end(on_event, CancelledError(), iterations=iteration)
                 raise CancelledError()
 
             # Call LLM (with retry per §9.10 in agent loop)
-            response = _invoke_with_retry(agent, messages, max_llm_retries, on_event, cancel)
+            emit_event(
+                on_event,
+                "llm_start",
+                {
+                    "provider": agent.model.provider,
+                    "modelId": agent.model.id,
+                    "messageCount": len(messages),
+                    "attempt": 0,
+                    "iteration": iteration,
+                },
+            )
+            try:
+                response = _invoke_with_retry(agent, messages, max_llm_retries, on_event, cancel)
+            except Exception as exc:
+                _emit_failed_turn_end(on_event, exc, iterations=iteration)
+                raise
+            emit_event(on_event, "llm_complete", {"iteration": iteration})
 
             # Streaming: consume through processor, extract tool calls
             if _is_stream(response):
-                streamed_tool_calls, content = _consume_stream(agent, response, on_event)
+                try:
+                    streamed_tool_calls, content = _consume_stream(agent, response, on_event)
+                except Exception as exc:
+                    _emit_failed_turn_end(on_event, exc, iterations=iteration, response=response)
+                    raise
 
                 if not streamed_tool_calls:
                     if guardrails is not None and content:
@@ -1027,12 +1111,21 @@ def turn(
                         gr = guardrails.check_output(assistant_msg)
                         if not gr.allowed:
                             emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                            _emit_failed_turn_end(
+                                on_event,
+                                GuardrailError(gr.reason or "Output guardrail denied"),
+                                iterations=iteration,
+                                response=content,
+                            )
                             raise GuardrailError(gr.reason or "Output guardrail denied")
                         if gr.rewrite is not None:
                             content = gr.rewrite
                     t("iterations", iteration)
                     t("result", content)
                     emit_event(on_event, "done", {"response": content, "messages": messages})
+                    emit_event(
+                        on_event, "turn_end", {"iterations": iteration, "status": "success", "response": content}
+                    )
                     return content
 
                 if guardrails is not None and content:
@@ -1040,28 +1133,41 @@ def turn(
                     gr = guardrails.check_output(assistant_msg)
                     if not gr.allowed:
                         emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                        _emit_failed_turn_end(
+                            on_event,
+                            GuardrailError(gr.reason or "Output guardrail denied"),
+                            iterations=iteration,
+                            response=content,
+                        )
                         raise GuardrailError(gr.reason or "Output guardrail denied")
                     if gr.rewrite is not None:
                         content = gr.rewrite
 
                 iteration += 1
                 if iteration > max_iterations:
+                    _emit_failed_turn_end(
+                        on_event, ValueError("Agent loop exceeded max_iterations"), iterations=iteration
+                    )
                     raise ValueError(
                         f"Agent loop exceeded max_iterations ({max_iterations}). "
                         f"The model kept requesting tool calls. Increase max_iterations or check your tools."
                     )
 
-                tool_messages = _build_tool_messages_from_calls_with_extensions(
-                    streamed_tool_calls,
-                    content,
-                    tools,
-                    agent,
-                    parent_inputs,
-                    on_event=on_event,
-                    cancel=cancel,
-                    guardrails=guardrails,
-                    parallel=parallel_tool_calls,
-                )
+                try:
+                    tool_messages = _build_tool_messages_from_calls_with_extensions(
+                        streamed_tool_calls,
+                        content,
+                        tools,
+                        agent,
+                        parent_inputs,
+                        on_event=on_event,
+                        cancel=cancel,
+                        guardrails=guardrails,
+                        parallel=parallel_tool_calls,
+                    )
+                except Exception as exc:
+                    _emit_failed_turn_end(on_event, exc, iterations=iteration, response=content)
+                    raise
                 messages.extend(tool_messages)
                 emit_event(on_event, "messages_updated", {"messages": messages})
                 continue
@@ -1077,27 +1183,38 @@ def turn(
                     gr = guardrails.check_output(assistant_msg)
                     if not gr.allowed:
                         emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                        _emit_failed_turn_end(
+                            on_event,
+                            GuardrailError(gr.reason or "Output guardrail denied"),
+                            iterations=iteration,
+                            response=text_content,
+                        )
                         raise GuardrailError(gr.reason or "Output guardrail denied")
                     if gr.rewrite is not None:
                         text_content = gr.rewrite
 
             iteration += 1
             if iteration > max_iterations:
+                _emit_failed_turn_end(on_event, ValueError("Agent loop exceeded max_iterations"), iterations=iteration)
                 raise ValueError(
                     f"Agent loop exceeded max_iterations ({max_iterations}). "
                     f"The model kept requesting tool calls. Increase max_iterations or check your tools."
                 )
 
-            tool_messages, _ = _build_tool_result_messages_with_extensions(
-                response,
-                tools,
-                agent,
-                parent_inputs,
-                on_event=on_event,
-                cancel=cancel,
-                guardrails=guardrails,
-                parallel=parallel_tool_calls,
-            )
+            try:
+                tool_messages, _ = _build_tool_result_messages_with_extensions(
+                    response,
+                    tools,
+                    agent,
+                    parent_inputs,
+                    on_event=on_event,
+                    cancel=cancel,
+                    guardrails=guardrails,
+                    parallel=parallel_tool_calls,
+                )
+            except Exception as exc:
+                _emit_failed_turn_end(on_event, exc, iterations=iteration, response=response)
+                raise
             messages.extend(tool_messages)
             emit_event(on_event, "messages_updated", {"messages": messages})
 
@@ -1107,17 +1224,29 @@ def turn(
     # Process final response (directly, not via run)
     if raw:
         emit_event(on_event, "done", {"response": response, "messages": messages})
+        emit_event(on_event, "turn_end", {"iterations": iteration, "status": "success", "response": response})
         return response
-    processed_result = process(agent, response)
+    try:
+        processed_result = process(agent, response)
+    except Exception as exc:
+        _emit_failed_turn_end(on_event, exc, iterations=iteration, response=response)
+        raise
     if guardrails is not None and isinstance(processed_result, str):
         assistant_msg = Message(role="assistant", parts=[TextPart(value=processed_result)])
         gr = guardrails.check_output(assistant_msg)
         if not gr.allowed:
             emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+            _emit_failed_turn_end(
+                on_event,
+                GuardrailError(gr.reason or "Output guardrail denied"),
+                iterations=iteration,
+                response=processed_result,
+            )
             raise GuardrailError(gr.reason or "Output guardrail denied")
         if gr.rewrite is not None:
             processed_result = gr.rewrite
     emit_event(on_event, "done", {"response": processed_result, "messages": messages})
+    emit_event(on_event, "turn_end", {"iterations": iteration, "status": "success", "response": processed_result})
     if target_type is not None:
         return cast(processed_result, target_type)
     return processed_result
@@ -1152,6 +1281,15 @@ async def turn_async(
     tools = tools or {}
     parent_inputs = inputs or {}
     messages = await prepare_async(agent, inputs)
+    emit_event(
+        on_event,
+        "turn_start",
+        {
+            "agent": getattr(agent, "name", None),
+            "inputs": inputs or {},
+            "maxIterations": max_iterations,
+        },
+    )
 
     # Fast path: no tools and no loop extensions — single executor + process call (not via run)
     _has_extensions = (
@@ -1162,10 +1300,26 @@ async def turn_async(
         or steering is not None
     )
     if not tools and not _has_extensions:
-        response = await _invoke_executor_async(agent, messages)
+        emit_event(
+            on_event,
+            "llm_start",
+            {"provider": agent.model.provider, "modelId": agent.model.id, "messageCount": len(messages), "attempt": 0},
+        )
+        try:
+            response = await _invoke_executor_async(agent, messages)
+        except Exception as exc:
+            _emit_failed_turn_end(on_event, exc, iterations=0)
+            raise
+        emit_event(on_event, "llm_complete", {})
         if raw:
+            emit_event(on_event, "turn_end", {"iterations": 0, "status": "success", "response": response})
             return response
-        result = await process_async(agent, response)
+        try:
+            result = await process_async(agent, response)
+        except Exception as exc:
+            _emit_failed_turn_end(on_event, exc, iterations=0, response=response)
+            raise
+        emit_event(on_event, "turn_end", {"iterations": 0, "status": "success", "response": result})
         if target_type is not None:
             return cast(result, target_type)
         return result
@@ -1181,6 +1335,7 @@ async def turn_async(
         while True:
             if cancel is not None and cancel.is_cancelled:
                 emit_event(on_event, "cancelled", {})
+                _emit_failed_turn_end(on_event, CancelledError(), iterations=iteration)
                 raise CancelledError()
 
             if steering is not None:
@@ -1202,6 +1357,9 @@ async def turn_async(
                 gr_input = guardrails.check_input(messages)
                 if not gr_input.allowed:
                     emit_event(on_event, "error", {"message": f"Input guardrail denied: {gr_input.reason}"})
+                    _emit_failed_turn_end(
+                        on_event, GuardrailError(gr_input.reason or "Input guardrail denied"), iterations=iteration
+                    )
                     raise GuardrailError(gr_input.reason or "Input guardrail denied")
                 if gr_input.rewrite is not None:
                     messages = gr_input.rewrite
@@ -1209,14 +1367,35 @@ async def turn_async(
 
             if cancel is not None and cancel.is_cancelled:
                 emit_event(on_event, "cancelled", {})
+                _emit_failed_turn_end(on_event, CancelledError(), iterations=iteration)
                 raise CancelledError()
 
             # Call LLM (with retry per §9.10 in agent loop)
-            response = await _invoke_with_retry_async(agent, messages, max_llm_retries, on_event, cancel)
+            emit_event(
+                on_event,
+                "llm_start",
+                {
+                    "provider": agent.model.provider,
+                    "modelId": agent.model.id,
+                    "messageCount": len(messages),
+                    "attempt": 0,
+                    "iteration": iteration,
+                },
+            )
+            try:
+                response = await _invoke_with_retry_async(agent, messages, max_llm_retries, on_event, cancel)
+            except Exception as exc:
+                _emit_failed_turn_end(on_event, exc, iterations=iteration)
+                raise
+            emit_event(on_event, "llm_complete", {"iteration": iteration})
 
             # Streaming: consume through processor, extract tool calls
             if _is_stream(response):
-                streamed_tool_calls, content = await _consume_stream_async(agent, response, on_event)
+                try:
+                    streamed_tool_calls, content = await _consume_stream_async(agent, response, on_event)
+                except Exception as exc:
+                    _emit_failed_turn_end(on_event, exc, iterations=iteration, response=response)
+                    raise
 
                 if not streamed_tool_calls:
                     if guardrails is not None and content:
@@ -1224,12 +1403,21 @@ async def turn_async(
                         gr = guardrails.check_output(assistant_msg)
                         if not gr.allowed:
                             emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                            _emit_failed_turn_end(
+                                on_event,
+                                GuardrailError(gr.reason or "Output guardrail denied"),
+                                iterations=iteration,
+                                response=content,
+                            )
                             raise GuardrailError(gr.reason or "Output guardrail denied")
                         if gr.rewrite is not None:
                             content = gr.rewrite
                     t("iterations", iteration)
                     t("result", content)
                     emit_event(on_event, "done", {"response": content, "messages": messages})
+                    emit_event(
+                        on_event, "turn_end", {"iterations": iteration, "status": "success", "response": content}
+                    )
                     return content
 
                 if guardrails is not None and content:
@@ -1237,28 +1425,41 @@ async def turn_async(
                     gr = guardrails.check_output(assistant_msg)
                     if not gr.allowed:
                         emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                        _emit_failed_turn_end(
+                            on_event,
+                            GuardrailError(gr.reason or "Output guardrail denied"),
+                            iterations=iteration,
+                            response=content,
+                        )
                         raise GuardrailError(gr.reason or "Output guardrail denied")
                     if gr.rewrite is not None:
                         content = gr.rewrite
 
                 iteration += 1
                 if iteration > max_iterations:
+                    _emit_failed_turn_end(
+                        on_event, ValueError("Agent loop exceeded max_iterations"), iterations=iteration
+                    )
                     raise ValueError(
                         f"Agent loop exceeded max_iterations ({max_iterations}). "
                         f"The model kept requesting tool calls. Increase max_iterations or check your tools."
                     )
 
-                tool_messages = await _build_tool_messages_from_calls_with_extensions_async(
-                    streamed_tool_calls,
-                    content,
-                    tools,
-                    agent,
-                    parent_inputs,
-                    on_event=on_event,
-                    cancel=cancel,
-                    guardrails=guardrails,
-                    parallel=parallel_tool_calls,
-                )
+                try:
+                    tool_messages = await _build_tool_messages_from_calls_with_extensions_async(
+                        streamed_tool_calls,
+                        content,
+                        tools,
+                        agent,
+                        parent_inputs,
+                        on_event=on_event,
+                        cancel=cancel,
+                        guardrails=guardrails,
+                        parallel=parallel_tool_calls,
+                    )
+                except Exception as exc:
+                    _emit_failed_turn_end(on_event, exc, iterations=iteration, response=content)
+                    raise
                 messages.extend(tool_messages)
                 emit_event(on_event, "messages_updated", {"messages": messages})
                 continue
@@ -1274,27 +1475,38 @@ async def turn_async(
                     gr = guardrails.check_output(assistant_msg)
                     if not gr.allowed:
                         emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+                        _emit_failed_turn_end(
+                            on_event,
+                            GuardrailError(gr.reason or "Output guardrail denied"),
+                            iterations=iteration,
+                            response=text_content,
+                        )
                         raise GuardrailError(gr.reason or "Output guardrail denied")
                     if gr.rewrite is not None:
                         text_content = gr.rewrite
 
             iteration += 1
             if iteration > max_iterations:
+                _emit_failed_turn_end(on_event, ValueError("Agent loop exceeded max_iterations"), iterations=iteration)
                 raise ValueError(
                     f"Agent loop exceeded max_iterations ({max_iterations}). "
                     f"The model kept requesting tool calls. Increase max_iterations or check your tools."
                 )
 
-            tool_messages = await _build_tool_result_messages_with_extensions_async(
-                response,
-                tools,
-                agent,
-                parent_inputs,
-                on_event=on_event,
-                cancel=cancel,
-                guardrails=guardrails,
-                parallel=parallel_tool_calls,
-            )
+            try:
+                tool_messages = await _build_tool_result_messages_with_extensions_async(
+                    response,
+                    tools,
+                    agent,
+                    parent_inputs,
+                    on_event=on_event,
+                    cancel=cancel,
+                    guardrails=guardrails,
+                    parallel=parallel_tool_calls,
+                )
+            except Exception as exc:
+                _emit_failed_turn_end(on_event, exc, iterations=iteration, response=response)
+                raise
             messages.extend(tool_messages)
             emit_event(on_event, "messages_updated", {"messages": messages})
 
@@ -1304,17 +1516,29 @@ async def turn_async(
     # Process final response (directly, not via run)
     if raw:
         emit_event(on_event, "done", {"response": response, "messages": messages})
+        emit_event(on_event, "turn_end", {"iterations": iteration, "status": "success", "response": response})
         return response
-    processed_result = await process_async(agent, response)
+    try:
+        processed_result = await process_async(agent, response)
+    except Exception as exc:
+        _emit_failed_turn_end(on_event, exc, iterations=iteration, response=response)
+        raise
     if guardrails is not None and isinstance(processed_result, str):
         assistant_msg = Message(role="assistant", parts=[TextPart(value=processed_result)])
         gr = guardrails.check_output(assistant_msg)
         if not gr.allowed:
             emit_event(on_event, "error", {"message": f"Output guardrail denied: {gr.reason}"})
+            _emit_failed_turn_end(
+                on_event,
+                GuardrailError(gr.reason or "Output guardrail denied"),
+                iterations=iteration,
+                response=processed_result,
+            )
             raise GuardrailError(gr.reason or "Output guardrail denied")
         if gr.rewrite is not None:
             processed_result = gr.rewrite
     emit_event(on_event, "done", {"response": processed_result, "messages": messages})
+    emit_event(on_event, "turn_end", {"iterations": iteration, "status": "success", "response": processed_result})
     if target_type is not None:
         return cast(processed_result, target_type)
     return processed_result
@@ -1872,6 +2096,7 @@ def _dispatch_tools_with_extensions(
 
         # §13.1 — Emit tool_call_start
         emit_event(on_event, "tool_call_start", {"name": name, "arguments": arguments})
+        started = time.perf_counter()
 
         # §13.4 — Tool guardrail
         if guardrails is not None:
@@ -1880,6 +2105,17 @@ def _dispatch_tools_with_extensions(
             if not gr.allowed:
                 denied_msg = f"Tool denied by guardrail: {gr.reason}"
                 emit_event(on_event, "tool_result", {"name": name, "result": denied_msg})
+                emit_event(
+                    on_event,
+                    "tool_call_complete",
+                    {
+                        "name": name,
+                        "success": False,
+                        "result": denied_msg,
+                        "durationMs": (time.perf_counter() - started) * 1000,
+                        "errorKind": "guardrail_denied",
+                    },
+                )
                 return denied_msg
             if gr.rewrite is not None:
                 arguments = json.dumps(gr.rewrite) if isinstance(gr.rewrite, dict) else gr.rewrite
@@ -1890,9 +2126,22 @@ def _dispatch_tools_with_extensions(
         except Exception as e:
             result = f"Error: Tool '{name}' failed: {type(e).__name__}: {e}"
             emit_event(on_event, "error", {"tool": name, "error": str(e)})
+        success = not result.startswith("Error:")
+        error_kind = None if success else "tool_error"
 
         # §13.1 — Emit tool_result
         emit_event(on_event, "tool_result", {"name": name, "result": result})
+        emit_event(
+            on_event,
+            "tool_call_complete",
+            {
+                "name": name,
+                "success": success,
+                "result": result,
+                "durationMs": (time.perf_counter() - started) * 1000,
+                "errorKind": error_kind,
+            },
+        )
         return result
 
     # §13.6 — Parallel tool execution
@@ -1928,6 +2177,7 @@ async def _dispatch_tools_with_extensions_async(
 
         # §13.1 — Emit tool_call_start
         emit_event(on_event, "tool_call_start", {"name": name, "arguments": arguments})
+        started = time.perf_counter()
 
         # §13.4 — Tool guardrail
         if guardrails is not None:
@@ -1936,6 +2186,17 @@ async def _dispatch_tools_with_extensions_async(
             if not gr.allowed:
                 denied_msg = f"Tool denied by guardrail: {gr.reason}"
                 emit_event(on_event, "tool_result", {"name": name, "result": denied_msg})
+                emit_event(
+                    on_event,
+                    "tool_call_complete",
+                    {
+                        "name": name,
+                        "success": False,
+                        "result": denied_msg,
+                        "durationMs": (time.perf_counter() - started) * 1000,
+                        "errorKind": "guardrail_denied",
+                    },
+                )
                 return denied_msg
             if gr.rewrite is not None:
                 arguments = json.dumps(gr.rewrite) if isinstance(gr.rewrite, dict) else gr.rewrite
@@ -1946,9 +2207,22 @@ async def _dispatch_tools_with_extensions_async(
         except Exception as e:
             result = f"Error: Tool '{name}' failed: {type(e).__name__}: {e}"
             emit_event(on_event, "error", {"tool": name, "error": str(e)})
+        success = not result.startswith("Error:")
+        error_kind = None if success else "tool_error"
 
         # §13.1 — Emit tool_result
         emit_event(on_event, "tool_result", {"name": name, "result": result})
+        emit_event(
+            on_event,
+            "tool_call_complete",
+            {
+                "name": name,
+                "success": success,
+                "result": result,
+                "durationMs": (time.perf_counter() - started) * 1000,
+                "errorKind": error_kind,
+            },
+        )
         return result
 
     # §13.6 — Parallel tool execution

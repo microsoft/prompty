@@ -1,13 +1,13 @@
 emit:
   - "@typespec/json-schema"
-  - "prompty-emitter"
+  - "@typra/emitter"
 options:
   "@typespec/json-schema":
     emitter-output-dir: "{cwd}/../vscode/prompty/schemas"
     emitAllModels: true
     emitAllRefs: true
     file-type: yaml
-  "prompty-emitter":
+  "@typra/emitter":
     emitter-output-dir: "{cwd}/tsp-output"
     root-object: "Prompty.Prompty"
     emit-targets:
@@ -27,6 +27,7 @@ options:
         output-dir: "../runtime/go/prompty/model"
         test-dir: "../runtime/go/prompty/model"
         import-path: "prompty/model"
+        package-name: "prompty"
       - type: Rust
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"

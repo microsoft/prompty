@@ -1,0 +1,44 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RunTurnResult.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable harness session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier within the session
+  status:
+    anyOf:
+      - type: string
+        const: success
+      - type: string
+        const: error
+      - type: string
+        const: cancelled
+    description: Final semantic status for the deterministic turn
+  output:
+    description: Provider-neutral final output returned by the injected model callback
+  iterations:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of model loop iterations executed
+  toolResults:
+    type: array
+    items:
+      $ref: HostToolResult.yaml
+    default: []
+    description: Host tool results produced during the turn
+  checkpoints:
+    type: array
+    items:
+      $ref: Checkpoint.yaml
+    default: []
+    description: Checkpoints created during the turn
+required:
+  - sessionId
+  - turnId
+  - status
+  - iterations
+description: Result returned by a reference turn runner implementation.

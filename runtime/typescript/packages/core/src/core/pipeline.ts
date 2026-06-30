@@ -61,6 +61,19 @@ const DEFAULT_PROVIDER = "openai";
 const DEFAULT_MAX_ITERATIONS = 10;
 const DEFAULT_MAX_LLM_RETRIES = 3;
 
+function emitFailedTurnEnd(
+  onEvent: EventCallback | undefined,
+  error: unknown,
+  iterations: number,
+  response?: unknown,
+): void {
+  emitEvent(onEvent, "turn_end", {
+    iterations,
+    status: error instanceof CancelledError ? "cancelled" : "error",
+    ...(response !== undefined ? { response } : {}),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // ExecuteError (§9.10)
 // ---------------------------------------------------------------------------
@@ -499,6 +512,12 @@ async function invokeWithRetry(
       emitEvent(onEvent, "status", {
         message: `LLM call failed, retrying (attempt ${attempts + 1}/${maxRetries})...`,
       });
+      emitEvent(onEvent, "retry", {
+        operation: "llm",
+        attempt: attempts + 1,
+        maxAttempts: maxRetries,
+        reason: err instanceof Error ? err.message : String(err),
+      });
       // Exponential backoff with jitter, capped at 60s (§9.10)
       // backoff = min(2^attempts + jitter(), 60) — values in seconds
       const backoffSecs = Math.min(Math.pow(2, attempts) + Math.random(), 60);
@@ -666,11 +685,22 @@ export async function turn<T = unknown>(
 
     const tools = options?.tools ?? {};
     const hasTools = Object.keys(tools).length > 0;
+    const onEvent = options?.onEvent;
+    emitEvent(onEvent, "turn_start", {
+      agent: agent.name,
+      inputs,
+      maxIterations: options?.maxIterations ?? DEFAULT_MAX_ITERATIONS,
+    });
 
     if (!hasTools) {
       // Simple mode: prepare → [extensions] → executor → [output guard] → process
-      let messages = await prepare(agent, inputs);
-      const onEvent = options?.onEvent;
+      let messages: Message[];
+      try {
+        messages = await prepare(agent, inputs);
+      } catch (err) {
+        emitFailedTurnEnd(onEvent, err, 0);
+        throw err;
+      }
 
       // §13.5 — Drain steering messages
       if (options?.steering) {
@@ -697,23 +727,50 @@ export async function turn<T = unknown>(
         const result = options.guardrails.checkInput(messages);
         if (!result.allowed) {
           emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
+          emitFailedTurnEnd(onEvent, new GuardrailError(result.reason ?? "Input guardrail denied"), 0);
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
         if (result.rewrite) messages = result.rewrite;
       }
 
       // §13.2 — Check cancellation before LLM call
-      checkCancellation(options?.signal);
+      try {
+        checkCancellation(options?.signal);
+      } catch (err) {
+        emitEvent(onEvent, "cancelled", {});
+        emitFailedTurnEnd(onEvent, err, 0);
+        throw err;
+      }
 
       const provider = resolveProvider(agent);
       const executor = getExecutor(provider);
-      const response = await executor.execute(agent, messages);
+      emitEvent(onEvent, "llm_start", {
+        provider,
+        modelId: agent.model?.id,
+        messageCount: messages.length,
+        attempt: 0,
+      });
+      let response: unknown;
+      try {
+        response = await executor.execute(agent, messages);
+      } catch (err) {
+        emitFailedTurnEnd(onEvent, err, 0);
+        throw err;
+      }
+      emitEvent(onEvent, "llm_complete", {});
 
       if (options?.raw) {
         emit("result", response);
+        emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response });
         return response;
       }
-      const processed = await process(agent, response);
+      let processed: unknown;
+      try {
+        processed = await process(agent, response);
+      } catch (err) {
+        emitFailedTurnEnd(onEvent, err, 0, response);
+        throw err;
+      }
 
       // §13.4 — Output guardrail on final response
       if (options?.guardrails) {
@@ -722,31 +779,39 @@ export async function turn<T = unknown>(
         const gr = options.guardrails.checkOutput(assistantMsg);
         if (!gr.allowed) {
           emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+          emitFailedTurnEnd(onEvent, new GuardrailError(gr.reason ?? "Output guardrail denied"), 0, processed);
           throw new GuardrailError(gr.reason ?? "Output guardrail denied");
         }
         if (gr.rewrite !== undefined) {
           emit("result", gr.rewrite);
           emitEvent(onEvent, "done", { response: gr.rewrite, messages });
+          emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response: gr.rewrite });
           return gr.rewrite;
         }
       }
 
       emit("result", sanitizeValue("result", processed));
       emitEvent(onEvent, "done", { response: processed, messages });
+      emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response: processed });
       return processed;
     }
 
     // Agent mode: prepare → [executor → toolCalls]* → executor → process
     const maxIterations = options?.maxIterations ?? DEFAULT_MAX_ITERATIONS;
     const maxLlmRetries = options?.maxLlmRetries ?? DEFAULT_MAX_LLM_RETRIES;
-    const onEvent = options?.onEvent;
     const signal = options?.signal;
     const contextBudget = options?.contextBudget;
     const guardrails = options?.guardrails;
     const steering = options?.steering;
     const parallelToolCalls = options?.parallelToolCalls ?? false;
 
-    let messages = await prepare(agent, inputs);
+    let messages: Message[];
+    try {
+      messages = await prepare(agent, inputs);
+    } catch (err) {
+      emitFailedTurnEnd(onEvent, err, 0);
+      throw err;
+    }
     const parentInputs = inputs ?? {};
     const provider = resolveProvider(agent);
     const executor = getExecutor(provider);
@@ -760,6 +825,7 @@ export async function turn<T = unknown>(
         checkCancellation(signal);
       } catch (err) {
         emitEvent(onEvent, "cancelled", {});
+        emitFailedTurnEnd(onEvent, err, iteration);
         throw err;
       }
 
@@ -790,6 +856,7 @@ export async function turn<T = unknown>(
         const result = guardrails.checkInput(messages);
         if (!result.allowed) {
           emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
+          emitFailedTurnEnd(onEvent, new GuardrailError(result.reason ?? "Input guardrail denied"), iteration);
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
         if (result.rewrite) messages = result.rewrite;
@@ -800,15 +867,36 @@ export async function turn<T = unknown>(
         checkCancellation(signal);
       } catch (err) {
         emitEvent(onEvent, "cancelled", {});
+        emitFailedTurnEnd(onEvent, err, iteration);
         throw err;
       }
 
       // Call LLM — §9.10: retry on transient failure
-      response = await invokeWithRetry(executor, agent, messages, maxLlmRetries, onEvent, signal);
+      emitEvent(onEvent, "llm_start", {
+        provider,
+        modelId: agent.model?.id,
+        messageCount: messages.length,
+        attempt: 0,
+        iteration,
+      });
+      try {
+        response = await invokeWithRetry(executor, agent, messages, maxLlmRetries, onEvent, signal);
+      } catch (err) {
+        emitFailedTurnEnd(onEvent, err, iteration);
+        throw err;
+      }
+      emitEvent(onEvent, "llm_complete", { iteration });
 
       // Streaming: consume the stream, extract tool calls from buffered chunks
       if (isAsyncIterable(response)) {
-        const { toolCalls, content } = await consumeStream(agent, response, onEvent);
+        let streamResult: Awaited<ReturnType<typeof consumeStream>>;
+        try {
+          streamResult = await consumeStream(agent, response, onEvent);
+        } catch (err) {
+          emitFailedTurnEnd(onEvent, err, iteration, response);
+          throw err;
+        }
+        const { toolCalls, content } = streamResult;
 
         // §13.4 — Output guardrail
         if (guardrails && content) {
@@ -816,6 +904,7 @@ export async function turn<T = unknown>(
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            emitFailedTurnEnd(onEvent, new GuardrailError(gr.reason ?? "Output guardrail denied"), iteration, content);
             throw new GuardrailError(gr.reason ?? "Output guardrail denied");
           }
         }
@@ -824,27 +913,35 @@ export async function turn<T = unknown>(
           emit("iterations", iteration);
           emit("result", content);
           emitEvent(onEvent, "done", { response: content, messages });
+          emitEvent(onEvent, "turn_end", { iterations: iteration, status: "success", response: content });
           return content;
         }
 
         iteration++;
         if (iteration > maxIterations) {
+          emitFailedTurnEnd(onEvent, new Error("Agent loop exceeded maxIterations"), iteration);
           throw new Error(
             `Agent loop exceeded maxIterations (${maxIterations}). ` +
             `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
           );
         }
 
-        const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
-          toolEmit("signature", "prompty.turn.toolCalls");
-          toolEmit("description", `Tool call round ${iteration}`);
-          const result = await buildToolMessagesFromCallsWithExtensions(
-            toolCalls, content, tools, agent, parentInputs, toolEmit,
-            { onEvent, signal, guardrails, parallel: parallelToolCalls },
-          );
-          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
-          return result;
-        });
+        let toolMessages: Message[];
+        try {
+          toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
+            toolEmit("signature", "prompty.turn.toolCalls");
+            toolEmit("description", `Tool call round ${iteration}`);
+            const result = await buildToolMessagesFromCallsWithExtensions(
+              toolCalls, content, tools, agent, parentInputs, toolEmit,
+              { onEvent, signal, guardrails, parallel: parallelToolCalls },
+            );
+            toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+            return result;
+          });
+        } catch (err) {
+          emitFailedTurnEnd(onEvent, err, iteration, content);
+          throw err;
+        }
 
         messages.push(...toolMessages);
         emitEvent(onEvent, "messages_updated", { messages });
@@ -853,25 +950,34 @@ export async function turn<T = unknown>(
 
       // Non-streaming: check raw response for tool calls
       if (!hasToolCalls(response)) {
-        const finalResult = options?.raw ? response : await process(agent, response);
+        let finalResult: unknown;
+        try {
+          finalResult = options?.raw ? response : await process(agent, response);
+        } catch (err) {
+          emitFailedTurnEnd(onEvent, err, iteration, response);
+          throw err;
+        }
         if (guardrails) {
           const contentStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
           const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            emitFailedTurnEnd(onEvent, new GuardrailError(gr.reason ?? "Output guardrail denied"), iteration, finalResult);
             throw new GuardrailError(gr.reason ?? "Output guardrail denied");
           }
           if (gr.rewrite !== undefined) {
             emit("iterations", iteration);
             emit("result", gr.rewrite);
             emitEvent(onEvent, "done", { response: gr.rewrite, messages });
+            emitEvent(onEvent, "turn_end", { iterations: iteration, status: "success", response: gr.rewrite });
             return gr.rewrite;
           }
         }
         emit("iterations", iteration);
         emit("result", finalResult);
         emitEvent(onEvent, "done", { response: finalResult, messages });
+        emitEvent(onEvent, "turn_end", { iterations: iteration, status: "success", response: finalResult });
         return finalResult;
       }
 
@@ -883,6 +989,7 @@ export async function turn<T = unknown>(
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
             emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
+            emitFailedTurnEnd(onEvent, new GuardrailError(gr.reason ?? "Output guardrail denied"), iteration, textContent);
             throw new GuardrailError(gr.reason ?? "Output guardrail denied");
           }
         }
@@ -890,22 +997,29 @@ export async function turn<T = unknown>(
 
       iteration++;
       if (iteration > maxIterations) {
+        emitFailedTurnEnd(onEvent, new Error("Agent loop exceeded maxIterations"), iteration);
         throw new Error(
           `Agent loop exceeded maxIterations (${maxIterations}). ` +
           `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
         );
       }
 
-      const toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
-        toolEmit("signature", "prompty.turn.toolCalls");
-        toolEmit("description", `Tool call round ${iteration}`);
-        const result = await buildToolResultMessagesWithExtensions(
-          response, tools, agent, parentInputs, toolEmit,
-          { onEvent, signal, guardrails, parallel: parallelToolCalls },
-        );
-        toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
-        return result;
-      });
+      let toolMessages: Message[];
+      try {
+        toolMessages = await traceSpan("toolCalls", async (toolEmit) => {
+          toolEmit("signature", "prompty.turn.toolCalls");
+          toolEmit("description", `Tool call round ${iteration}`);
+          const result = await buildToolResultMessagesWithExtensions(
+            response, tools, agent, parentInputs, toolEmit,
+            { onEvent, signal, guardrails, parallel: parallelToolCalls },
+          );
+          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+          return result;
+        });
+      } catch (err) {
+        emitFailedTurnEnd(onEvent, err, iteration, response);
+        throw err;
+      }
 
       messages.push(...toolMessages);
       emitEvent(onEvent, "messages_updated", { messages });
@@ -1207,7 +1321,8 @@ async function dispatchOneToolWithExtensions(
   }
 
   // §13.1 — Emit tool_call_start
-  emitEvent(onEvent, "tool_call_start", { name: tc.name, arguments: tc.arguments });
+  emitEvent(onEvent, "tool_call_start", { id: tc.id, name: tc.name, arguments: tc.arguments });
+  const started = performance.now();
 
   // §13.4 — Tool guardrail
   if (guardrails) {
@@ -1216,6 +1331,14 @@ async function dispatchOneToolWithExtensions(
     if (!gr.allowed) {
       const deniedMsg = `Tool denied by guardrail: ${gr.reason}`;
       emitEvent(onEvent, "tool_result", { name: tc.name, result: deniedMsg });
+      emitEvent(onEvent, "tool_call_complete", {
+        id: tc.id,
+        name: tc.name,
+        success: false,
+        result: deniedMsg,
+        durationMs: performance.now() - started,
+        errorKind: "guardrail_denied",
+      });
       return deniedMsg;
     }
     if (gr.rewrite !== undefined) {
@@ -1233,6 +1356,14 @@ async function dispatchOneToolWithExtensions(
       result = `Error: Tool '${tc.name}' received unparseable arguments`;
       emitEvent(onEvent, "error", { tool: tc.name, error: "Unparseable tool arguments" });
       emitEvent(onEvent, "tool_result", { name: tc.name, result });
+      emitEvent(onEvent, "tool_call_complete", {
+        id: tc.id,
+        name: tc.name,
+        success: false,
+        result,
+        durationMs: performance.now() - started,
+        errorKind: "invalid_arguments",
+      });
       return result;
     }
     if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
@@ -1257,6 +1388,15 @@ async function dispatchOneToolWithExtensions(
 
   // §13.1 — Emit tool_result
   emitEvent(onEvent, "tool_result", { name: tc.name, result });
+  const success = !result.startsWith("Error:");
+  emitEvent(onEvent, "tool_call_complete", {
+    id: tc.id,
+    name: tc.name,
+    success,
+    result,
+    durationMs: performance.now() - started,
+    errorKind: success ? undefined : "tool_error",
+  });
 
   // §9.9 — Emit error event when tool result indicates failure
   if (result.startsWith("Error:")) {

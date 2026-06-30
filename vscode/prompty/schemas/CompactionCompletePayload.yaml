@@ -12,6 +12,11 @@ properties:
     minimum: -2147483648
     maximum: 2147483647
     description: Number of messages remaining after compaction
+  summaryLength:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Length of the generated summary, when a summarization strategy is used
 required:
   - removed
   - remaining
