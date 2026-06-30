@@ -27,7 +27,7 @@ futures = "0.3"
 
 # OTel (optional)
 opentelemetry = { version = "0.29", optional = true }
-opentelemetry_sdk = { version = "0.29", optional = true }
+opentelemetry_sdk = { version = "0.32", optional = true }
 opentelemetry-stdout = { version = "0.29", features = ["trace"], optional = true }
 
 [features]
