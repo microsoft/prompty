@@ -57,7 +57,8 @@ def test_jsonl_event_journal_writer_writes_records(tmp_path) -> None:
 def test_jsonl_event_journal_writer_returns_false_after_close(tmp_path) -> None:
     writer = JsonlEventJournalWriter(tmp_path / "trace.jsonl")
 
-    assert writer.close(None) is True
+    closed = writer.close(None)
+    assert closed is True
     assert writer.append_turn(_turn_event()) is False
 
 

@@ -73,7 +73,9 @@ def _normalize_journal(records: list[dict[str, Any]]) -> list[str]:
             case "tool_execution_start":
                 normalized.append(f"turn:{event['type']}:{event['iteration']}:{payload['toolName']}")
             case "tool_execution_complete" | "tool_result":
-                value = f"turn:{event['type']}:{event['iteration']}:{payload['toolName']}:{str(payload['success']).lower()}"
+                value = (
+                    f"turn:{event['type']}:{event['iteration']}:{payload['toolName']}:{str(payload['success']).lower()}"
+                )
                 if payload.get("errorKind"):
                     value = f"{value}:{payload['errorKind']}"
                 normalized.append(value)

@@ -65,7 +65,7 @@ func (w *JsonlEventJournalWriter) Close(summary *SessionSummary) (bool, error) {
 	return true, nil
 }
 
-func (w *JsonlEventJournalWriter) write(record map[string]interface{}) (bool, error) {
+func (w *JsonlEventJournalWriter) write(record map[string]interface{}) (ok bool, err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.closed {
@@ -75,7 +75,12 @@ func (w *JsonlEventJournalWriter) write(record map[string]interface{}) (bool, er
 	if err != nil {
 		return false, err
 	}
-	defer file.Close()
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil && err == nil {
+			ok = false
+			err = closeErr
+		}
+	}()
 	bytes, err := json.Marshal(record)
 	if err != nil {
 		return false, err

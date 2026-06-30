@@ -413,6 +413,7 @@ where
     P: PermissionResolver,
     H: HostToolExecutor,
 {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         event_sink: S,
         journal: J,
