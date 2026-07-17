@@ -8,7 +8,7 @@
     "node": "*"
   },
   "dependencies": {
-    "@prompty/core": "^2.0.0-beta.1",
+    "@prompty/core": "^2.0.0-beta.2",
     "jsonc-parser": "^3.3.1",
     "vscode-json-languageservice": "^5.7.2",
     "vscode-languageserver": "^9.0.1",
