@@ -1,4 +1,4 @@
-name: prompty JavaScript build and publish
+name: prompty JavaScript build and test
 
 on:
   push:
