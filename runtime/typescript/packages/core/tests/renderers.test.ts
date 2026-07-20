@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { NunjucksRenderer } from "../src/renderers/nunjucks.js";
 import { MustacheRenderer } from "../src/renderers/mustache.js";
 import { Prompty } from "@prompty/core";
@@ -28,6 +28,30 @@ describe("NunjucksRenderer", () => {
     const template = "{% for item in items %}{{ item }} {% endfor %}";
     const result = await renderer.render(agent, template, { items: ["a", "b", "c"] });
     expect(result.trim()).toBe("a b c");
+  });
+
+  it("renders own nested data properties", async () => {
+    const result = await renderer.render(agent, "{{ customer.name }}", {
+      customer: { name: "Ada" },
+    });
+    expect(result).toBe("Ada");
+  });
+
+  it.each(["{{ value.constructor }}", "{{ value.__proto__ }}", "{{ value.prototype }}"])(
+    "rejects unsafe member access: %s",
+    async (template) => {
+      await expect(renderer.render(agent, template, { value: "test" })).rejects.toThrow(
+        "Unsafe template member access",
+      );
+    },
+  );
+
+  it("rejects template function calls without invoking the input function", async () => {
+    const callback = vi.fn();
+    await expect(renderer.render(agent, "{{ callback() }}", { callback })).rejects.toThrow(
+      "Template function calls are not allowed",
+    );
+    expect(callback).not.toHaveBeenCalled();
   });
 });
 
