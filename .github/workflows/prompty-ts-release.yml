@@ -1,0 +1,46 @@
+name: Legacy v1 @prompty/core Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    if: github.ref == 'refs/heads/v1'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: runtime/promptyjs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@10
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  publish:
+    if: github.ref == 'refs/heads/v1'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: runtime/promptyjs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@10
+      - run: npm ci
+      - name: Verify package version
+        run: test "$(node -p "require('./package.json').version")" = "0.1.5"
+      - run: npm publish --provenance --access public
