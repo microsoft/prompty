@@ -371,6 +371,29 @@ public class LoaderTests
         }
     }
 
+    [Fact]
+    public async Task LoadAsync_FileRef_IntermediateDirectorySymlinkEscape_Throws()
+    {
+        var root = Directory.CreateTempSubdirectory("prompty-loader-");
+        try
+        {
+            var promptDir = Directory.CreateDirectory(Path.Combine(root.FullName, "prompts"));
+            var externalDir = Directory.CreateDirectory(Path.Combine(root.FullName, "external"));
+            File.WriteAllText(Path.Combine(externalDir.FullName, "secret.txt"), "secret");
+            Directory.CreateSymbolicLink(Path.Combine(promptDir.FullName, "assets"), externalDir.FullName);
+
+            var prompt = Path.Combine(promptDir.FullName, "bad.prompty");
+            File.WriteAllText(prompt, "---\nname: bad\ndescription: \"${file:assets/secret.txt}\"\n---\nHello\n");
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => PromptyLoader.LoadAsync(prompt));
+            Assert.Contains("outside allowed roots", ex.Message);
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
     // --- Tools ---
 
     [Fact]
