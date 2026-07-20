@@ -171,18 +171,42 @@ public static class ReferenceResolver
     private static string GetCanonicalPath(string path)
     {
         var fullPath = Path.GetFullPath(path);
-        if (File.Exists(fullPath))
+        var root = Path.GetPathRoot(fullPath);
+        if (string.IsNullOrEmpty(root))
         {
-            var file = new FileInfo(fullPath);
-            var target = file.ResolveLinkTarget(returnFinalTarget: true);
-            return Path.GetFullPath(target?.FullName ?? file.FullName);
+            return fullPath;
         }
-        if (Directory.Exists(fullPath))
+
+        var canonicalPath = root;
+        var components = fullPath[root.Length..].Split(
+            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
+            StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var component in components)
         {
-            var directory = new DirectoryInfo(fullPath);
-            var target = directory.ResolveLinkTarget(returnFinalTarget: true);
-            return Path.GetFullPath(target?.FullName ?? directory.FullName);
+            canonicalPath = Path.Combine(canonicalPath, component);
+            var target = ResolveLinkTarget(canonicalPath);
+            if (target is not null)
+            {
+                canonicalPath = Path.GetFullPath(target.FullName);
+            }
         }
-        return fullPath;
+
+        return canonicalPath;
+    }
+
+    private static FileSystemInfo? ResolveLinkTarget(string path)
+    {
+        if (Directory.Exists(path))
+        {
+            return new DirectoryInfo(path).ResolveLinkTarget(returnFinalTarget: true);
+        }
+
+        if (File.Exists(path))
+        {
+            return new FileInfo(path).ResolveLinkTarget(returnFinalTarget: true);
+        }
+
+        return null;
     }
 }
