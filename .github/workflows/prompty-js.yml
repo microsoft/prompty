@@ -42,6 +42,7 @@ jobs:
 
   publish-artifacts:
     name: publish artifacts
+    if: github.event_name == 'push' && github.ref == 'refs/heads/v1'
     needs: prompty-tests
     runs-on: ubuntu-latest
     permissions:
