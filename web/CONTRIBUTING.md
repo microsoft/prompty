@@ -50,7 +50,7 @@ Use these names consistently in all documentation:
 
 ## Schema Property Names
 
-Use the v2 AgentSchema names — not the legacy v1 names:
+Use the v2 Prompty schema names — not the legacy v1 names:
 
 | Correct             | Incorrect (legacy)       |
 |---------------------|--------------------------|
@@ -100,6 +100,6 @@ python web/docs-examples/lint_docs.py
 
 - [ ] All code examples have Python / TypeScript / C# tabs
 - [ ] API names match the table above
-- [ ] Schema property names use v2 AgentSchema conventions
+- [ ] Schema property names use v2 Prompty schema conventions
 - [ ] `npm run build` succeeds without errors
 - [ ] New pages have correct `sidebar.order` in frontmatter

@@ -233,7 +233,7 @@ export class ConnectionWizard {
 		values: Record<string, string>,
 		fields: ConnectionField[]
 	): ConnectionProfile {
-		// Determine auth type — aligns with AgentSchema Connection.kind
+		// Determine auth type — aligns with Prompty Connection.kind
 		let authType: string;
 		if (providerType === "foundry") {
 			authType = "foundry";

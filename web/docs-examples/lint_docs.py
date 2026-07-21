@@ -25,7 +25,7 @@ except ImportError:
 
 
 # ---------------------------------------------------------------------------
-# Valid property sets per the Prompty v2 / AgentSchema spec
+# Valid property sets per the Prompty v2 spec
 # ---------------------------------------------------------------------------
 
 VALID_ROOT_PROPERTIES = {
