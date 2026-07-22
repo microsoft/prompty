@@ -417,6 +417,9 @@ impl GeneratedModelPort for LiveModelPort {
                     )
                 }
                 Err(stream_error) => {
+                    if matches!(stream_error, InvokerError::ExecuteIndeterminate { .. }) {
+                        return Err(self.failures.record_invoker(stream_error));
+                    }
                     match self.execute_non_streaming(request, cancellation).await {
                         Ok((mut response, raw_response)) => {
                             let provider_metadata = std::mem::take(&mut response.metadata);
@@ -543,6 +546,23 @@ impl ConversationPort for LiveConversationPort {
                 "tool conversation formatting requires non-empty requests and results",
             ));
         }
+        if response.delegated_state.as_deref().is_some_and(|states| {
+            states
+                .iter()
+                .any(|state| state.provider == "openai" && state.kind == "response")
+        }) {
+            return Ok(response
+                .tool_requests
+                .iter()
+                .filter_map(|request| {
+                    results
+                        .iter()
+                        .find(|result| result.request_id == request.id)
+                        .map(|result| Message::tool_result(&request.id, result.model_text()))
+                })
+                .collect());
+        }
+
         let tool_calls = response
             .tool_requests
             .iter()
@@ -1151,6 +1171,9 @@ pub(super) async fn turn_with_engine_request(
                     "model_error" => Err(failures
                         .take_invoker()
                         .unwrap_or_else(|| InvokerError::Execute(message.clone().into()))),
+                    "model_outcome_unknown" => Err(failures
+                        .take_invoker()
+                        .unwrap_or_else(|| InvokerError::Execute(message.clone().into()))),
                     "max_iterations" => Err(InvokerError::Execute(
                         format!("Agent loop exceeded max iterations ({max_iterations})").into(),
                     )),
@@ -1181,6 +1204,7 @@ fn map_engine_error(error: TurnEngineError) -> InvokerError {
 #[cfg(test)]
 mod tests {
     use std::pin::Pin;
+    use std::sync::atomic::Ordering;
 
     use async_trait::async_trait;
     use futures::{Stream, StreamExt};
@@ -1191,6 +1215,9 @@ mod tests {
     use crate::model::context::LoadContext;
 
     const RESPONSES_STREAM_PROVIDER: &str = "live-responses-stream-test";
+    const INDETERMINATE_STREAM_PROVIDER: &str = "live-indeterminate-stream-test";
+    static INDETERMINATE_STREAM_OPEN_CALLS: AtomicU64 = AtomicU64::new(0);
+    static INDETERMINATE_NON_STREAM_CALLS: AtomicU64 = AtomicU64::new(0);
 
     struct ResponsesStreamExecutor;
 
@@ -1227,6 +1254,57 @@ mod tests {
     }
 
     struct ResponsesStreamProcessor;
+
+    struct IndeterminateStreamExecutor;
+
+    #[async_trait]
+    impl Executor for IndeterminateStreamExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            INDETERMINATE_NON_STREAM_CALLS.fetch_add(1, Ordering::SeqCst);
+            Ok(json!({"unexpected": "non-stream fallback"}))
+        }
+
+        async fn execute_stream_with_context(
+            &self,
+            _agent: &Prompty,
+            _request: &ModelInvocationRequest,
+            _cancellation: &CancellationToken,
+        ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
+            INDETERMINATE_STREAM_OPEN_CALLS.fetch_add(1, Ordering::SeqCst);
+            Err(InvokerError::indeterminate_execution(
+                "stream request may have been dispatched",
+                json!({"provider": INDETERMINATE_STREAM_PROVIDER, "phase": "stream_open"}),
+            ))
+        }
+    }
+
+    #[derive(Default)]
+    struct CheckpointRecorder {
+        checkpoints: Mutex<Vec<EngineCheckpoint>>,
+    }
+
+    #[async_trait]
+    impl DurabilityPort for CheckpointRecorder {
+        async fn append(&self, _event: &EngineEvent) -> Result<(), PortError> {
+            Ok(())
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            _events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.checkpoints
+                .lock()
+                .expect("checkpoint lock poisoned")
+                .push(checkpoint.clone());
+            Ok(())
+        }
+    }
 
     #[async_trait]
     impl Processor for ResponsesStreamProcessor {
@@ -1291,6 +1369,24 @@ mod tests {
         )
     }
 
+    fn indeterminate_stream_agent() -> Prompty {
+        Prompty::load_from_value(
+            &json!({
+                "kind": "prompt",
+                "name": "indeterminate-stream",
+                "instructions": "test",
+                "model": {
+                    "id": "gpt-test",
+                    "provider": INDETERMINATE_STREAM_PROVIDER,
+                    "options": {
+                        "additionalProperties": {"stream": true}
+                    }
+                }
+            }),
+            &LoadContext::default(),
+        )
+    }
+
     #[tokio::test]
     async fn streamed_responses_tool_round_preserves_delegated_continuation() {
         registry::register_executor(RESPONSES_STREAM_PROVIDER, ResponsesStreamExecutor);
@@ -1324,6 +1420,92 @@ mod tests {
         assert_eq!(context.delegated_state[0].kind, "response");
         assert_eq!(context.delegated_state[0].id, "resp_streamed_tool_round");
         assert_eq!(response.tool_requests[0].id, "call_weather");
+    }
+
+    #[test]
+    fn delegated_responses_tool_exchange_keeps_only_tool_output_delta() {
+        let port = LiveConversationPort {
+            provider: "openai".to_string(),
+            failures: Arc::new(LiveFailureState::default()),
+        };
+        let response = EngineModelInvocationResponse {
+            output: None,
+            usage: None,
+            assistant_messages: Vec::new(),
+            tool_requests: vec![EngineToolRequest {
+                id: "call_weather".to_string(),
+                name: "weather".to_string(),
+                arguments: json!({"city": "Paris"}),
+                metadata: Value::Null,
+            }],
+            next_portability: Some(crate::engine::ContextPortability::Delegated),
+            delegated_state: Some(vec![crate::engine::DelegatedStateReference {
+                provider: "openai".to_string(),
+                kind: "response".to_string(),
+                id: "resp_123".to_string(),
+                metadata: Value::Null,
+            }]),
+            metadata: Value::Null,
+        };
+        let messages = port
+            .format_tool_exchange(
+                &response,
+                &[EngineToolResult {
+                    request_id: "call_weather".to_string(),
+                    name: "weather".to_string(),
+                    outcome: ToolOutcome::Success,
+                    output: json!("72F and sunny"),
+                    error_kind: None,
+                    metadata: Value::Null,
+                }],
+            )
+            .unwrap();
+
+        assert_eq!(messages.len(), 1);
+        assert_eq!(messages[0].role, crate::types::Role::Tool);
+        assert_eq!(messages[0].metadata["tool_call_id"], "call_weather");
+    }
+
+    #[tokio::test]
+    async fn indeterminate_stream_open_requires_reconciliation_without_fallback() {
+        INDETERMINATE_STREAM_OPEN_CALLS.store(0, Ordering::SeqCst);
+        INDETERMINATE_NON_STREAM_CALLS.store(0, Ordering::SeqCst);
+        registry::register_executor(INDETERMINATE_STREAM_PROVIDER, IndeterminateStreamExecutor);
+        let durability = Arc::new(CheckpointRecorder::default());
+        let request = TurnEngineRequest::new(
+            "stream-reconciliation-session",
+            "stream-reconciliation-turn",
+            vec![Message::with_text(crate::types::Role::User, "hello")],
+        );
+
+        let error = turn_with_engine_request(
+            &indeterminate_stream_agent(),
+            request,
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        )
+        .await
+        .expect_err("indeterminate stream opening must stop for reconciliation");
+
+        assert!(matches!(
+            error,
+            InvokerError::ExecuteIndeterminate { ref metadata, .. }
+                if metadata["phase"] == "stream_open"
+        ));
+        assert_eq!(INDETERMINATE_STREAM_OPEN_CALLS.load(Ordering::SeqCst), 1);
+        assert_eq!(INDETERMINATE_NON_STREAM_CALLS.load(Ordering::SeqCst), 0);
+        let checkpoint = durability
+            .checkpoints
+            .lock()
+            .unwrap()
+            .last()
+            .cloned()
+            .expect("indeterminate invocation must persist a reconciliation checkpoint");
+        assert!(checkpoint.reconciliation_required);
+        assert!(checkpoint.model_reconciliation.is_some());
     }
 
     #[test]

@@ -25,22 +25,25 @@ impl Processor for FoundryProcessor {
         &self,
         agent: &Prompty,
         response: Value,
-        _request: &ModelInvocationRequest,
+        request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
         // Azure OpenAI's supported endpoints do not expose a continuation handle
         // that can recreate model-visible state, so retain the canonical
         // conversation as explicitly portable context.
-        prompty_openai::process_invocation_response(agent, &response, "foundry", false)
+        prompty_openai::process_invocation_response_with_context(
+            agent, &response, "foundry", false, request,
+        )
     }
 
     async fn process_raw_with_context(
         &self,
         agent: &Prompty,
         response: Value,
-        _request: &ModelInvocationRequest,
+        request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
-        let mut mapped =
-            prompty_openai::process_invocation_response(agent, &response, "foundry", false)?;
+        let mut mapped = prompty_openai::process_invocation_response_with_context(
+            agent, &response, "foundry", false, request,
+        )?;
         mapped.output = Some(response);
         mapped.tool_requests.clear();
         Ok(mapped)

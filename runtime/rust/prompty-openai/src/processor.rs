@@ -12,6 +12,15 @@ use prompty::model::{
 };
 use prompty::types::{Message, Role, ToolCall};
 
+/// Provider-state metadata key for the exact message prefix represented by a
+/// Responses API `previous_response_id`.
+///
+/// The generated delegated-state contract intentionally leaves provider
+/// metadata opaque. This is OpenAI's stable, provider-owned continuation
+/// boundary, recorded from the immutable invocation snapshot rather than
+/// inferred from assistant or tool message metadata.
+pub(crate) const RESPONSES_CONTINUATION_BOUNDARY: &str = "prompty.openai.responses.boundary";
+
 /// OpenAI processor implementing the `Processor` trait.
 pub struct OpenAIProcessor;
 
@@ -25,18 +34,19 @@ impl Processor for OpenAIProcessor {
         &self,
         agent: &Prompty,
         response: Value,
-        _request: &ModelInvocationRequest,
+        request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
-        process_invocation_response(agent, &response, "openai", true)
+        process_invocation_response_with_context(agent, &response, "openai", true, request)
     }
 
     async fn process_raw_with_context(
         &self,
         agent: &Prompty,
         response: Value,
-        _request: &ModelInvocationRequest,
+        request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
-        let mut mapped = process_invocation_response(agent, &response, "openai", true)?;
+        let mut mapped =
+            process_invocation_response_with_context(agent, &response, "openai", true, request)?;
         mapped.output = Some(response);
         mapped.tool_requests.clear();
         Ok(mapped)
@@ -63,6 +73,31 @@ pub fn process_invocation_response(
     response: &Value,
     provider: &str,
     supports_responses_continuation: bool,
+) -> Result<ModelInvocationResponse, InvokerError> {
+    let mut mapped = process_invocation_response_with_context(
+        agent,
+        response,
+        provider,
+        supports_responses_continuation,
+        &ModelInvocationRequest::default(),
+    )?;
+    if let Some(state) = &mut mapped.next_context_state {
+        // The legacy surface has no immutable request snapshot, so it cannot
+        // establish a trustworthy native continuation boundary.
+        for delegated in &mut state.delegated_state {
+            delegated.metadata = Value::Null;
+        }
+    }
+    Ok(mapped)
+}
+
+/// Map a response while recording the immutable provider-visible continuation boundary.
+pub fn process_invocation_response_with_context(
+    agent: &Prompty,
+    response: &Value,
+    provider: &str,
+    supports_responses_continuation: bool,
+    request: &ModelInvocationRequest,
 ) -> Result<ModelInvocationResponse, InvokerError> {
     let output = process_response(agent, response)?;
     let tool_requests = extract_tool_calls(&output)
@@ -92,7 +127,11 @@ pub fn process_invocation_response(
                     provider: provider.to_string(),
                     kind: "response".to_string(),
                     id: id.to_string(),
-                    metadata: Value::Null,
+                    metadata: serde_json::json!({
+                        RESPONSES_CONTINUATION_BOUNDARY: {
+                            "inputMessages": request.context.messages,
+                        },
+                    }),
                 }],
             })
             .unwrap_or(InvocationContextState {
@@ -709,6 +748,7 @@ fn usage_from_value(value: &Value) -> Option<Usage> {
 mod tests {
     use super::*;
     use prompty::model::context::LoadContext;
+    use prompty::model::{ModelInvocationContextSnapshot, ModelInvocationRequest};
     use serde_json::json;
 
     fn make_agent(outputs_json: Value) -> Prompty {
@@ -722,6 +762,15 @@ mod tests {
             data["outputs"] = outputs_json;
         }
         Prompty::load_from_value(&data, &LoadContext::default())
+    }
+
+    fn request(messages: Vec<Message>) -> ModelInvocationRequest {
+        ModelInvocationRequest {
+            context: ModelInvocationContextSnapshot {
+                messages,
+                ..Default::default()
+            },
+        }
     }
 
     #[test]
@@ -748,7 +797,15 @@ mod tests {
             "output_text": "Hello from Responses"
         });
 
-        let result = process_invocation_response(&agent, &response, "openai", true).unwrap();
+        let initial_messages = vec![Message::with_text(Role::User, "Hello")];
+        let result = process_invocation_response_with_context(
+            &agent,
+            &response,
+            "openai",
+            true,
+            &request(initial_messages.clone()),
+        )
+        .unwrap();
 
         let state = result
             .next_context_state
@@ -757,6 +814,10 @@ mod tests {
         assert_eq!(state.delegated_state[0].provider, "openai");
         assert_eq!(state.delegated_state[0].kind, "response");
         assert_eq!(state.delegated_state[0].id, "resp_123");
+        assert_eq!(
+            state.delegated_state[0].metadata[RESPONSES_CONTINUATION_BOUNDARY]["inputMessages"],
+            serde_json::to_value(initial_messages).unwrap()
+        );
         assert_eq!(result.output, Some(json!("Hello from Responses")));
     }
 
@@ -776,7 +837,14 @@ mod tests {
             }}]
         });
 
-        let result = process_invocation_response(&agent, &response, "openai", true).unwrap();
+        let result = process_invocation_response_with_context(
+            &agent,
+            &response,
+            "openai",
+            true,
+            &request(Vec::new()),
+        )
+        .unwrap();
 
         let state = result.next_context_state.expect("context state");
         assert_eq!(state.portability, InvocationContextPortability::Portable);

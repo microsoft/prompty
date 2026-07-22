@@ -9,10 +9,14 @@ use std::sync::LazyLock;
 
 use prompty::engine::CancellationToken;
 use prompty::interfaces::{Executor, InvokerError};
-use prompty::model::{ModelInvocationRequest, Prompty};
+use prompty::model::{InvocationContextPortability, ModelInvocationRequest, Prompty};
 use prompty::types::Message;
 
+use crate::processor::RESPONSES_CONTINUATION_BOUNDARY;
 use crate::wire;
+
+#[cfg(test)]
+use crate::processor::process_invocation_response_with_context;
 
 /// Shared HTTP client — reuses connection pool across requests.
 static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
@@ -119,30 +123,12 @@ impl OpenAIExecutor {
             .map(|t| t.as_str())
             .unwrap_or("chat");
 
-        let (url, body) = match api_type {
-            "chat" | "agent" => {
-                let args = wire::build_chat_args(agent, messages);
-                let url = build_url(agent, "/v1/chat/completions")?;
-                (url, args)
-            }
-            "responses" => {
-                let mut args = wire::build_responses_args(agent, messages);
-                if let Some(response_id) = request.and_then(openai_response_id) {
-                    args["previous_response_id"] = Value::String(response_id.to_string());
-                }
-                let url = build_url(agent, "/v1/responses")?;
-                (url, args)
-            }
-            "embedding" => {
-                let args = wire::build_embedding_args(agent, messages);
-                let url = build_url(agent, "/v1/embeddings")?;
-                (url, args)
-            }
-            "image" => {
-                let args = wire::build_image_args(agent, messages);
-                let url = build_url(agent, "/v1/images/generations")?;
-                (url, args)
-            }
+        let body = Self::build_request_args(agent, messages, request)?;
+        let url = match api_type {
+            "chat" | "agent" => build_url(agent, "/v1/chat/completions")?,
+            "responses" => build_url(agent, "/v1/responses")?,
+            "embedding" => build_url(agent, "/v1/embeddings")?,
+            "image" => build_url(agent, "/v1/images/generations")?,
             other => {
                 return Err(InvokerError::Execute(
                     format!("Unsupported apiType: {other}").into(),
@@ -194,20 +180,10 @@ impl OpenAIExecutor {
             .map(|t| t.as_str())
             .unwrap_or("chat");
 
-        let (url, mut body) = match api_type {
-            "chat" | "agent" => {
-                let args = wire::build_chat_args(agent, messages);
-                let url = build_url(agent, "/v1/chat/completions")?;
-                (url, args)
-            }
-            "responses" => {
-                let mut args = wire::build_responses_args(agent, messages);
-                if let Some(response_id) = request.and_then(openai_response_id) {
-                    args["previous_response_id"] = Value::String(response_id.to_string());
-                }
-                let url = build_url(agent, "/v1/responses")?;
-                (url, args)
-            }
+        let mut body = Self::build_request_args(agent, messages, request)?;
+        let url = match api_type {
+            "chat" | "agent" => build_url(agent, "/v1/chat/completions")?,
+            "responses" => build_url(agent, "/v1/responses")?,
             other => {
                 return Err(InvokerError::Execute(
                     format!("Streaming not supported for apiType: {other}").into(),
@@ -254,6 +230,14 @@ impl OpenAIExecutor {
 
     /// Build the request args without sending — useful for testing wire format.
     pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+        Self::build_request_args(agent, messages, None)
+    }
+
+    fn build_request_args(
+        agent: &Prompty,
+        messages: &[Message],
+        request: Option<&ModelInvocationRequest>,
+    ) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
             .api_type
@@ -262,6 +246,18 @@ impl OpenAIExecutor {
             .unwrap_or("chat");
         Ok(match api_type {
             "chat" | "agent" => wire::build_chat_args(agent, messages),
+            "responses" => {
+                let continuation = request.map(responses_continuation).transpose()?.flatten();
+                let input_messages = continuation
+                    .as_ref()
+                    .map(|state| &messages[state.input_message_count..])
+                    .unwrap_or(messages);
+                let mut args = wire::build_responses_args(agent, input_messages);
+                if let Some(continuation) = continuation {
+                    args["previous_response_id"] = Value::String(continuation.response_id);
+                }
+                args
+            }
             "embedding" => wire::build_embedding_args(agent, messages),
             "image" => wire::build_image_args(agent, messages),
             other => {
@@ -289,15 +285,58 @@ fn classify_transport_failure(error: reqwest::Error) -> InvokerError {
     }
 }
 
-fn openai_response_id(request: &ModelInvocationRequest) -> Option<&str> {
-    request
+struct ResponsesContinuation {
+    response_id: String,
+    input_message_count: usize,
+}
+
+fn responses_continuation(
+    request: &ModelInvocationRequest,
+) -> Result<Option<ResponsesContinuation>, InvokerError> {
+    if request.context.context_state.portability != InvocationContextPortability::Delegated {
+        return Ok(None);
+    }
+
+    let Some(state) = request
         .context
         .context_state
         .delegated_state
         .iter()
         .find(|state| state.provider == "openai" && state.kind == "response")
-        .map(|state| state.id.as_str())
-        .filter(|id| !id.is_empty())
+        .filter(|state| !state.id.is_empty())
+    else {
+        return Ok(None);
+    };
+
+    let Some(boundary) = state
+        .metadata
+        .get(RESPONSES_CONTINUATION_BOUNDARY)
+        .and_then(Value::as_object)
+    else {
+        return Ok(None);
+    };
+    let Some(input_messages) = boundary.get("inputMessages") else {
+        return Ok(None);
+    };
+    let input_messages: Vec<Message> =
+        serde_json::from_value(input_messages.clone()).map_err(|error| {
+            InvokerError::Execute(
+                format!("Invalid OpenAI Responses continuation boundary: {error}").into(),
+            )
+        })?;
+    let input_message_count = input_messages.len();
+
+    // A delegated response ID can only continue the exact provider-visible
+    // prefix that produced it. If a host policy or context source has changed
+    // that prefix, use portable replay rather than risk a mixed context.
+    if request.context.messages.get(..input_message_count) != Some(input_messages.as_slice()) {
+        return Ok(None);
+    }
+
+    Ok(Some(ResponsesContinuation {
+        response_id: state.id.clone(),
+        input_message_count,
+    }))
 }
 
 /// Resolve the effective connection — if `kind == "reference"`, look up the
@@ -640,24 +679,76 @@ mod tests {
     }
 
     #[test]
-    fn test_reads_openai_delegated_response_state() {
-        let request = ModelInvocationRequest::load_from_value(
-            &json!({
-                "context": {
-                    "contextState": {
-                        "portability": "delegated",
-                        "delegatedState": [{
-                            "provider": "openai",
-                            "kind": "response",
-                            "id": "resp_123"
-                        }]
-                    }
-                }
-            }),
-            &LoadContext::default(),
-        );
+    fn test_responses_continuation_submits_only_verified_delta() {
+        use prompty::model::ModelInvocationContextSnapshot;
+        use prompty::types::Role;
 
-        assert_eq!(openai_response_id(&request), Some("resp_123"));
+        let agent = make_agent(json!({"id": "gpt-4", "apiType": "responses"}));
+        let initial_messages = vec![
+            Message::with_text(Role::System, "Prior instructions"),
+            Message::with_text(Role::User, "Prior request"),
+        ];
+        let response = json!({
+            "object": "response",
+            "id": "resp_123",
+            "output": [{
+                "type": "function_call",
+                "call_id": "call_weather",
+                "name": "weather",
+                "arguments": "{\"city\":\"Paris\"}"
+            }]
+        });
+        let initial_request = ModelInvocationRequest {
+            context: ModelInvocationContextSnapshot {
+                messages: initial_messages.clone(),
+                ..Default::default()
+            },
+        };
+        let state = process_invocation_response_with_context(
+            &agent,
+            &response,
+            "openai",
+            true,
+            &initial_request,
+        )
+        .unwrap()
+        .next_context_state
+        .unwrap();
+        let mut tool_output = Message::tool_result("call_weather", "72F and sunny");
+        tool_output
+            .metadata_mut()
+            .insert("name".to_string(), Value::String("weather".to_string()));
+        let messages = [
+            initial_messages.as_slice(),
+            &[tool_output],
+            &[Message::with_text(Role::User, "What should I pack?")],
+        ]
+        .concat();
+        let request = ModelInvocationRequest {
+            context: ModelInvocationContextSnapshot {
+                messages,
+                context_state: state,
+                ..Default::default()
+            },
+        };
+
+        let args =
+            OpenAIExecutor::build_request_args(&agent, &request.context.messages, Some(&request))
+                .unwrap();
+
+        assert_eq!(args["previous_response_id"], "resp_123");
+        assert_eq!(
+            args["input"],
+            json!([
+                {
+                    "type": "function_call_output",
+                    "call_id": "call_weather",
+                    "output": "72F and sunny"
+                },
+                {"role": "user", "content": "What should I pack?"}
+            ])
+        );
+        assert!(args.get("instructions").is_none());
     }
 
     #[tokio::test]
