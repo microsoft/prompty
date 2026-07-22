@@ -252,7 +252,16 @@ impl OpenAIExecutor {
                     .as_ref()
                     .map(|state| &messages[state.input_message_count..])
                     .unwrap_or(messages);
-                let mut args = wire::build_responses_args(agent, input_messages);
+                let input_messages = if continuation.is_some() {
+                    input_messages
+                        .iter()
+                        .filter(|message| !wire::is_responses_function_call(message))
+                        .cloned()
+                        .collect::<Vec<_>>()
+                } else {
+                    input_messages.to_vec()
+                };
+                let mut args = wire::build_responses_args(agent, &input_messages);
                 if let Some(continuation) = continuation {
                     args["previous_response_id"] = Value::String(continuation.response_id);
                 }
@@ -714,20 +723,23 @@ mod tests {
         .unwrap()
         .next_context_state
         .unwrap();
-        let mut tool_output = Message::tool_result("call_weather", "72F and sunny");
-        tool_output
-            .metadata_mut()
-            .insert("name".to_string(), Value::String("weather".to_string()));
+        let tool_calls = vec![prompty::types::ToolCall {
+            id: "call_weather".to_string(),
+            name: "weather".to_string(),
+            arguments: "{\"city\":\"Paris\"}".to_string(),
+        }];
+        let tool_exchange =
+            wire::format_responses_tool_messages(&response, &tool_calls, &["72F and sunny".into()]);
         let messages = [
             initial_messages.as_slice(),
-            &[tool_output],
+            tool_exchange.as_slice(),
             &[Message::with_text(Role::User, "What should I pack?")],
         ]
         .concat();
         let request = ModelInvocationRequest {
             context: ModelInvocationContextSnapshot {
-                messages,
-                context_state: state,
+                messages: messages.clone(),
+                context_state: state.clone(),
                 ..Default::default()
             },
         };
@@ -749,6 +761,32 @@ mod tests {
             ])
         );
         assert!(args.get("instructions").is_none());
+
+        let mut replay_messages = messages;
+        replay_messages[0] = Message::with_text(Role::System, "Changed instructions");
+        let replay_request = ModelInvocationRequest {
+            context: ModelInvocationContextSnapshot {
+                messages: replay_messages,
+                context_state: state,
+                ..Default::default()
+            },
+        };
+        let replay_args = OpenAIExecutor::build_request_args(
+            &agent,
+            &replay_request.context.messages,
+            Some(&replay_request),
+        )
+        .unwrap();
+
+        assert!(replay_args.get("previous_response_id").is_none());
+        let replay_input = replay_args["input"].as_array().unwrap();
+        let call_index = replay_input
+            .iter()
+            .position(|item| item["type"] == "function_call")
+            .expect("portable replay must retain the provider function call");
+        assert_eq!(replay_input[call_index]["call_id"], "call_weather");
+        assert_eq!(replay_input[call_index + 1]["type"], "function_call_output");
+        assert_eq!(replay_input[call_index + 1]["call_id"], "call_weather");
     }
 
     #[tokio::test]

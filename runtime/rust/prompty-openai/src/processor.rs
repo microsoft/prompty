@@ -10,7 +10,7 @@ use prompty::model::{
     DelegatedStateReference, InvocationContextPortability, InvocationContextState, InvocationUsage,
     ModelInvocationRequest, ModelInvocationResponse, ModelToolRequest, Prompty,
 };
-use prompty::types::{Message, Role, ToolCall};
+use prompty::types::{Message, Role, StreamFailure, ToolCall};
 
 /// Provider-state metadata key for the exact message prefix represented by a
 /// Responses API `previous_response_id`.
@@ -491,6 +491,21 @@ impl futures::Stream for OpenAIStreamProcessor {
             StreamPhase::Streaming => {
                 match this.inner.as_mut().poll_next(cx) {
                     std::task::Poll::Ready(Some(chunk)) => {
+                        if let Some(error) = chunk.get("error").and_then(Value::as_object) {
+                            this.phase = StreamPhase::Done;
+                            let message = error
+                                .get("message")
+                                .and_then(Value::as_str)
+                                .unwrap_or("OpenAI stream failed")
+                                .to_string();
+                            let failure = match error.get("type").and_then(Value::as_str) {
+                                Some("sse_transport_error") => {
+                                    StreamFailure::Indeterminate(message)
+                                }
+                                _ => StreamFailure::Determinate(message),
+                            };
+                            return std::task::Poll::Ready(Some(StreamChunk::Error(failure)));
+                        }
                         let event_type = chunk.get("type").and_then(Value::as_str);
                         match event_type {
                             Some("response.output_text.delta") => {
@@ -595,7 +610,9 @@ impl futures::Stream for OpenAIStreamProcessor {
                                 {
                                     this.phase = StreamPhase::Done;
                                     return std::task::Poll::Ready(Some(StreamChunk::Error(
-                                        format!("Model refused: {refusal}"),
+                                        StreamFailure::Determinate(format!(
+                                            "Model refused: {refusal}"
+                                        )),
                                     )));
                                 }
                             }
@@ -656,7 +673,9 @@ impl futures::Stream for OpenAIStreamProcessor {
                                 if !refusal.is_empty() {
                                     this.phase = StreamPhase::Done;
                                     return std::task::Poll::Ready(Some(StreamChunk::Error(
-                                        format!("Model refused: {refusal}"),
+                                        StreamFailure::Determinate(format!(
+                                            "Model refused: {refusal}"
+                                        )),
                                     )));
                                 }
                             }
@@ -1271,11 +1290,36 @@ mod tests {
         let mut errors = Vec::new();
         while let Some(chunk) = stream.next().await {
             if let StreamChunk::Error(e) = chunk {
-                errors.push(e);
+                errors.push(e.message().to_string());
             }
         }
         assert_eq!(errors.len(), 1);
         assert!(errors[0].contains("refused"));
+    }
+
+    #[tokio::test]
+    async fn test_stream_transport_error_is_indeterminate_after_tokens() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({"choices": [{"delta": {"content": "partial"}}]}),
+            json!({"error": {
+                "type": "sse_transport_error",
+                "message": "SSE stream error: connection reset"
+            }}),
+        ];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+
+        assert!(matches!(
+            stream.next().await,
+            Some(StreamChunk::Text(value)) if value == "partial"
+        ));
+        assert!(matches!(
+            stream.next().await,
+            Some(StreamChunk::Error(StreamFailure::Indeterminate(message)))
+                if message.contains("connection reset")
+        ));
+        assert!(stream.next().await.is_none());
     }
 
     #[tokio::test]

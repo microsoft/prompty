@@ -507,6 +507,14 @@ fn message_to_responses_input(msg: &Message) -> Value {
     Value::Object(obj)
 }
 
+/// Return whether a durable message holds a provider-owned Responses function-call item.
+///
+/// Native `previous_response_id` continuation already owns this item; its delta
+/// must carry only the following function-call output and later caller input.
+pub fn is_responses_function_call(msg: &Message) -> bool {
+    msg.metadata.get("responses_function_call").is_some()
+}
+
 fn apply_responses_options(args: &mut Map<String, Value>, opts: &Option<ModelOptions>) {
     let Some(opts) = opts else { return };
 

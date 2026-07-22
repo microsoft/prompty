@@ -282,8 +282,35 @@ pub enum StreamChunk {
     Tool(ToolCall),
     /// Cumulative terminal token usage for the provider invocation.
     Usage(Usage),
-    /// A stream error (e.g., model refusal). Consumers MUST stop iteration.
-    Error(String),
+    /// A stream failure. Consumers MUST stop iteration.
+    Error(StreamFailure),
+}
+
+/// Terminal failure reported by a streaming provider response.
+///
+/// Transport failures after a response has opened are indeterminate: the provider
+/// may have accepted or completed the invocation even though the local stream
+/// ended before a terminal response was received.
+#[derive(Debug, Clone)]
+pub enum StreamFailure {
+    /// The stream failed deterministically (for example, a model refusal).
+    Determinate(String),
+    /// The provider outcome cannot be determined and requires reconciliation.
+    Indeterminate(String),
+}
+
+impl StreamFailure {
+    /// Return the human-readable failure message.
+    pub fn message(&self) -> &str {
+        match self {
+            Self::Determinate(message) | Self::Indeterminate(message) => message,
+        }
+    }
+
+    /// Whether this failure requires reconciliation instead of retry or commit.
+    pub fn outcome_unknown(&self) -> bool {
+        matches!(self, Self::Indeterminate(_))
+    }
 }
 
 // ---------------------------------------------------------------------------

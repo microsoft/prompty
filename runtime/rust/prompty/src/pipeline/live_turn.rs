@@ -397,10 +397,19 @@ impl GeneratedModelPort for LiveModelPort {
                             }
                             StreamChunk::Tool(tool_call) => tool_calls.push(tool_call),
                             StreamChunk::Usage(value) => usage = Some(value),
-                            StreamChunk::Error(message) => {
-                                return Err(self
-                                    .failures
-                                    .record_invoker(InvokerError::Execute(message.into())));
+                            StreamChunk::Error(failure) => {
+                                let error = if failure.outcome_unknown() {
+                                    InvokerError::indeterminate_execution(
+                                        failure.message(),
+                                        json!({
+                                            "provider": self.provider,
+                                            "phase": "stream_transport",
+                                        }),
+                                    )
+                                } else {
+                                    InvokerError::Execute(failure.message().to_string().into())
+                                };
+                                return Err(self.failures.record_invoker(error));
                             }
                         }
                     }
@@ -546,23 +555,6 @@ impl ConversationPort for LiveConversationPort {
                 "tool conversation formatting requires non-empty requests and results",
             ));
         }
-        if response.delegated_state.as_deref().is_some_and(|states| {
-            states
-                .iter()
-                .any(|state| state.provider == "openai" && state.kind == "response")
-        }) {
-            return Ok(response
-                .tool_requests
-                .iter()
-                .filter_map(|request| {
-                    results
-                        .iter()
-                        .find(|result| result.request_id == request.id)
-                        .map(|result| Message::tool_result(&request.id, result.model_text()))
-                })
-                .collect());
-        }
-
         let tool_calls = response
             .tool_requests
             .iter()
@@ -1213,9 +1205,12 @@ mod tests {
     use super::*;
     use crate::interfaces::{Executor, Processor};
     use crate::model::context::LoadContext;
+    use crate::types::StreamFailure;
 
     const RESPONSES_STREAM_PROVIDER: &str = "live-responses-stream-test";
     const INDETERMINATE_STREAM_PROVIDER: &str = "live-indeterminate-stream-test";
+    const POST_OPEN_INDETERMINATE_STREAM_PROVIDER: &str =
+        "live-post-open-indeterminate-stream-test";
     static INDETERMINATE_STREAM_OPEN_CALLS: AtomicU64 = AtomicU64::new(0);
     static INDETERMINATE_NON_STREAM_CALLS: AtomicU64 = AtomicU64::new(0);
 
@@ -1257,6 +1252,10 @@ mod tests {
 
     struct IndeterminateStreamExecutor;
 
+    struct PostOpenIndeterminateStreamExecutor;
+
+    struct PostOpenIndeterminateStreamProcessor;
+
     #[async_trait]
     impl Executor for IndeterminateStreamExecutor {
         async fn execute(
@@ -1279,6 +1278,29 @@ mod tests {
                 "stream request may have been dispatched",
                 json!({"provider": INDETERMINATE_STREAM_PROVIDER, "phase": "stream_open"}),
             ))
+        }
+    }
+
+    #[async_trait]
+    impl Executor for PostOpenIndeterminateStreamExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            unreachable!("the test exercises the streaming path")
+        }
+
+        async fn execute_stream_with_context(
+            &self,
+            _agent: &Prompty,
+            _request: &ModelInvocationRequest,
+            _cancellation: &CancellationToken,
+        ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
+            Ok(Box::pin(futures::stream::iter(vec![
+                json!({"token": "partial"}),
+                json!({"transport_error": "connection reset"}),
+            ])))
         }
     }
 
@@ -1357,6 +1379,34 @@ mod tests {
         }
     }
 
+    #[async_trait]
+    impl Processor for PostOpenIndeterminateStreamProcessor {
+        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+            unreachable!("the test exercises the streaming path")
+        }
+
+        fn process_stream(
+            &self,
+            inner: Pin<Box<dyn Stream<Item = Value> + Send>>,
+        ) -> Result<Pin<Box<dyn Stream<Item = StreamChunk> + Send>>, InvokerError> {
+            Ok(Box::pin(inner.map(|chunk| {
+                if let Some(message) = chunk.get("transport_error").and_then(Value::as_str) {
+                    StreamChunk::Error(StreamFailure::Indeterminate(format!(
+                        "SSE stream error: {message}"
+                    )))
+                } else {
+                    StreamChunk::Text(
+                        chunk
+                            .get("token")
+                            .and_then(Value::as_str)
+                            .unwrap_or_default()
+                            .to_string(),
+                    )
+                }
+            })))
+        }
+    }
+
     fn responses_agent() -> Prompty {
         Prompty::load_from_value(
             &json!({
@@ -1423,9 +1473,10 @@ mod tests {
     }
 
     #[test]
-    fn delegated_responses_tool_exchange_keeps_only_tool_output_delta() {
+    fn delegated_responses_tool_exchange_uses_provider_formatter() {
+        registry::register_executor(RESPONSES_STREAM_PROVIDER, ResponsesStreamExecutor);
         let port = LiveConversationPort {
-            provider: "openai".to_string(),
+            provider: RESPONSES_STREAM_PROVIDER.to_string(),
             failures: Arc::new(LiveFailureState::default()),
         };
         let response = EngineModelInvocationResponse {
@@ -1440,7 +1491,7 @@ mod tests {
             }],
             next_portability: Some(crate::engine::ContextPortability::Delegated),
             delegated_state: Some(vec![crate::engine::DelegatedStateReference {
-                provider: "openai".to_string(),
+                provider: RESPONSES_STREAM_PROVIDER.to_string(),
                 kind: "response".to_string(),
                 id: "resp_123".to_string(),
                 metadata: Value::Null,
@@ -1461,9 +1512,85 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(messages.len(), 1);
-        assert_eq!(messages[0].role, crate::types::Role::Tool);
-        assert_eq!(messages[0].metadata["tool_call_id"], "call_weather");
+        assert_eq!(messages.len(), 2);
+        assert_eq!(messages[0].role, crate::types::Role::Assistant);
+        assert_eq!(messages[1].metadata["tool_call_id"], "call_weather");
+    }
+
+    #[tokio::test]
+    async fn post_open_indeterminate_stream_requires_reconciliation_without_success_commit() {
+        registry::register_executor(
+            POST_OPEN_INDETERMINATE_STREAM_PROVIDER,
+            PostOpenIndeterminateStreamExecutor,
+        );
+        registry::register_processor(
+            POST_OPEN_INDETERMINATE_STREAM_PROVIDER,
+            PostOpenIndeterminateStreamProcessor,
+        );
+        let durability = Arc::new(CheckpointRecorder::default());
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let captured_events = events.clone();
+        let request = TurnEngineRequest::new(
+            "post-open-stream-session",
+            "post-open-stream-turn",
+            vec![Message::with_text(crate::types::Role::User, "hello")],
+        );
+
+        let error = turn_with_engine_request(
+            &Prompty::load_from_value(
+                &json!({
+                    "kind": "prompt",
+                    "name": "post-open-indeterminate-stream",
+                    "instructions": "test",
+                    "model": {
+                        "id": "gpt-test",
+                        "provider": POST_OPEN_INDETERMINATE_STREAM_PROVIDER,
+                        "options": {
+                            "additionalProperties": {"stream": true}
+                        }
+                    }
+                }),
+                &LoadContext::default(),
+            ),
+            request,
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .on_event(Box::new(move |event| {
+                        captured_events
+                            .lock()
+                            .expect("event lock poisoned")
+                            .push(event);
+                    }))
+                    .build(),
+            ),
+        )
+        .await
+        .expect_err("post-open transport failure must require reconciliation");
+
+        assert!(matches!(error, InvokerError::ExecuteIndeterminate { .. }));
+        let events = events.lock().expect("event lock poisoned");
+        assert!(
+            events
+                .iter()
+                .any(|event| { matches!(event, AgentEvent::Token(value) if value == "partial") })
+        );
+        assert!(
+            !events
+                .iter()
+                .any(|event| matches!(event, AgentEvent::Done { .. }))
+        );
+        drop(events);
+        let checkpoint = durability
+            .checkpoints
+            .lock()
+            .unwrap()
+            .last()
+            .cloned()
+            .expect("indeterminate invocation must persist a reconciliation checkpoint");
+        assert!(checkpoint.reconciliation_required);
+        assert!(!checkpoint.final_output_ready);
+        assert!(checkpoint.pending_output.is_none());
     }
 
     #[tokio::test]
