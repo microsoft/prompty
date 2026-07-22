@@ -498,13 +498,13 @@ impl futures::Stream for OpenAIStreamProcessor {
                                 .and_then(Value::as_str)
                                 .unwrap_or("OpenAI stream failed")
                                 .to_string();
-                            let failure = match error.get("type").and_then(Value::as_str) {
+                            let stream_chunk = match error.get("type").and_then(Value::as_str) {
                                 Some("sse_transport_error") => {
-                                    StreamFailure::Indeterminate(message)
+                                    StreamChunk::Failure(StreamFailure::Indeterminate(message))
                                 }
-                                _ => StreamFailure::Determinate(message),
+                                _ => StreamChunk::Error(message),
                             };
-                            return std::task::Poll::Ready(Some(StreamChunk::Error(failure)));
+                            return std::task::Poll::Ready(Some(stream_chunk));
                         }
                         let event_type = chunk.get("type").and_then(Value::as_str);
                         match event_type {
@@ -618,9 +618,7 @@ impl futures::Stream for OpenAIStreamProcessor {
                                     if !refusal.is_empty() {
                                         this.phase = StreamPhase::Done;
                                         return std::task::Poll::Ready(Some(StreamChunk::Error(
-                                            StreamFailure::Determinate(format!(
-                                                "Model refused: {refusal}"
-                                            )),
+                                            format!("Model refused: {refusal}"),
                                         )));
                                     }
                                 }
@@ -682,9 +680,7 @@ impl futures::Stream for OpenAIStreamProcessor {
                                 if !refusal.is_empty() {
                                     this.phase = StreamPhase::Done;
                                     return std::task::Poll::Ready(Some(StreamChunk::Error(
-                                        StreamFailure::Determinate(format!(
-                                            "Model refused: {refusal}"
-                                        )),
+                                        format!("Model refused: {refusal}"),
                                     )));
                                 }
                             }
@@ -1298,8 +1294,8 @@ mod tests {
         let mut stream = process_stream(inner);
         let mut errors = Vec::new();
         while let Some(chunk) = stream.next().await {
-            if let StreamChunk::Error(e) = chunk {
-                errors.push(e.message().to_string());
+            if let StreamChunk::Error(message) = chunk {
+                errors.push(message);
             }
         }
         assert_eq!(errors.len(), 1);
@@ -1325,7 +1321,7 @@ mod tests {
         ));
         assert!(matches!(
             stream.next().await,
-            Some(StreamChunk::Error(StreamFailure::Indeterminate(message)))
+            Some(StreamChunk::Failure(StreamFailure::Indeterminate(message)))
                 if message.contains("connection reset")
         ));
         assert!(stream.next().await.is_none());

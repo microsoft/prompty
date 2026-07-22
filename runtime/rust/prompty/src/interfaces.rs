@@ -18,6 +18,26 @@ use crate::model::{
 };
 use crate::types::Message;
 
+/// Wrap a provider stream so cancellation interrupts every post-open poll.
+///
+/// Context-aware executors that open their own streams should use this helper
+/// before returning. The live turn bridge also races processor polling so a
+/// legacy context-aware override cannot stall cancellation.
+pub fn cancellable_stream(
+    stream: Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>,
+    cancellation: CancellationToken,
+) -> Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>> {
+    Box::pin(futures::stream::unfold(
+        (stream, cancellation),
+        |(mut inner, cancellation)| async move {
+            tokio::select! {
+                item = inner.next() => item.map(|chunk| (chunk, (inner, cancellation))),
+                _ = cancellation.cancelled() => None,
+            }
+        },
+    ))
+}
+
 /// Errors returned by pipeline stages.
 #[derive(Debug, thiserror::Error)]
 pub enum InvokerError {
@@ -228,15 +248,7 @@ pub trait Executor: Send + Sync {
                 ));
             }
         };
-        Ok(Box::pin(futures::stream::unfold(
-            (stream, cancellation),
-            |(mut inner, cancellation)| async move {
-                tokio::select! {
-                    item = inner.next() => item.map(|chunk| (chunk, (inner, cancellation))),
-                    _ = cancellation.cancelled() => None,
-                }
-            },
-        )))
+        Ok(cancellable_stream(stream, cancellation))
     }
 
     /// Execute a streaming LLM call using the generated invocation context.
@@ -473,6 +485,7 @@ fn legacy_assistant_messages(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use futures::StreamExt;
 
     // Minimal executor to test the default format_tool_messages impl
     struct DefaultFormatExecutor;
@@ -529,6 +542,25 @@ mod tests {
         .expect("cancellation should not leave the provider invocation pending");
 
         assert!(matches!(result, Err(InvokerError::Cancelled(_))));
+    }
+
+    #[tokio::test]
+    async fn test_cancellable_stream_aborts_pending_post_open_poll() {
+        let cancellation = CancellationToken::new();
+        let cancellation_task = cancellation.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            cancellation_task.cancel();
+        });
+        let mut stream = cancellable_stream(
+            Box::pin(futures::stream::pending::<serde_json::Value>()),
+            cancellation,
+        );
+
+        let next = tokio::time::timeout(std::time::Duration::from_millis(100), stream.next())
+            .await
+            .expect("cancellation should interrupt an already-open pending stream");
+        assert!(next.is_none());
     }
 
     #[test]

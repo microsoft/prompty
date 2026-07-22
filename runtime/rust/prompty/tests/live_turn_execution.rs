@@ -1,20 +1,23 @@
 //! Public live-turn behavior tests for output validation, retries, and result shape.
 
 use std::collections::VecDeque;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use async_trait::async_trait;
+use futures::StreamExt;
 use prompty::interfaces::{Executor, InvokerError, Processor};
-use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
+use prompty::model::{ModelInvocationRequest, Prompty};
 use prompty::structured::to_structured_value;
-use prompty::types::Message;
+use prompty::types::{Message, StreamChunk};
 use prompty::{
     DurabilityPort, EngineEvent, EngineEventKind, PortError, TurnOptions, register_defaults,
     register_executor, register_processor, turn,
 };
 use serde_json::{Value, json};
+use tokio::sync::Notify;
 
 #[derive(Default)]
 struct RecordingDurability {
@@ -84,6 +87,50 @@ impl Processor for StructuredProcessor {
             json!({"city": "Paris", "country": "France"}),
             r#"{"city":"Paris","country":"France"}"#.to_string(),
         )))
+    }
+}
+
+struct PendingAfterOpenStreamExecutor {
+    opened: Arc<Notify>,
+}
+
+#[async_trait]
+impl Executor for PendingAfterOpenStreamExecutor {
+    async fn execute(
+        &self,
+        _agent: &Prompty,
+        _messages: &[Message],
+    ) -> Result<Value, InvokerError> {
+        unreachable!("the test exercises the streaming path")
+    }
+
+    async fn execute_stream_with_context(
+        &self,
+        _agent: &Prompty,
+        _request: &ModelInvocationRequest,
+        _cancellation: &prompty::CancellationToken,
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
+        self.opened.notify_one();
+        Ok(Box::pin(futures::stream::pending()))
+    }
+}
+
+struct PendingStreamProcessor;
+
+#[async_trait]
+impl Processor for PendingStreamProcessor {
+    async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+        unreachable!("the test exercises the streaming path")
+    }
+
+    fn process_stream(
+        &self,
+        inner: std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = StreamChunk> + Send>>, InvokerError>
+    {
+        Ok(Box::pin(inner.map(|_| {
+            StreamChunk::Text("unexpected stream item".to_string())
+        })))
     }
 }
 
@@ -230,4 +277,64 @@ async fn public_turn_reports_non_agent_retry_exhaustion() {
 
     assert!(matches!(error, InvokerError::ExecuteRetryExhausted(_)));
     assert_eq!(calls.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test]
+async fn public_streaming_turn_cancels_after_open_and_persists_terminal_event() {
+    register_defaults();
+    let provider = "live_turn_pending_stream_cancel";
+    let opened = Arc::new(Notify::new());
+    register_executor(
+        provider,
+        PendingAfterOpenStreamExecutor {
+            opened: opened.clone(),
+        },
+    );
+    register_processor(provider, PendingStreamProcessor);
+
+    let cancelled = Arc::new(AtomicBool::new(false));
+    let cancellation_task = {
+        let opened = opened.clone();
+        let cancelled = cancelled.clone();
+        tokio::spawn(async move {
+            opened.notified().await;
+            cancelled.store(true, Ordering::Release);
+        })
+    };
+    let durability = Arc::new(RecordingDurability::default());
+    let mut streaming_agent = agent(provider);
+    streaming_agent.model.options = Some(prompty::model::ModelOptions::load_from_value(
+        &json!({"additionalProperties": {"stream": true}}),
+        &LoadContext::default(),
+    ));
+
+    let result = tokio::time::timeout(
+        Duration::from_millis(500),
+        turn(
+            &streaming_agent,
+            None,
+            Some(
+                TurnOptions::builder()
+                    .cancelled(cancelled)
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        ),
+    )
+    .await
+    .expect("post-open cancellation must not leave stream polling pending");
+    cancellation_task
+        .await
+        .expect("cancellation task should complete");
+
+    assert!(matches!(result, Err(InvokerError::Cancelled(_))));
+    assert!(
+        durability
+            .events
+            .lock()
+            .expect("event lock poisoned")
+            .iter()
+            .any(|event| event.kind == EngineEventKind::TurnCancelled),
+        "durability must record the TurnCancelled terminal state"
+    );
 }

@@ -558,10 +558,16 @@ impl GeneratedModelPort for LiveModelPort {
                     let mut text = Vec::new();
                     let mut tool_calls = Vec::new();
                     let mut usage = None;
-                    while let Some(chunk) = chunks.next().await {
-                        if cancellation.is_cancelled() {
-                            return Err(PortError::new("Operation cancelled"));
-                        }
+                    loop {
+                        let next_chunk = tokio::select! {
+                            chunk = chunks.next() => chunk,
+                            _ = cancellation.cancelled() => {
+                                return Err(PortError::new("Operation cancelled"));
+                            }
+                        };
+                        let Some(chunk) = next_chunk else {
+                            break;
+                        };
                         match chunk {
                             StreamChunk::Text(value) => {
                                 stream.emit(ModelStreamChunk::Text(value.clone())).await;
@@ -572,7 +578,12 @@ impl GeneratedModelPort for LiveModelPort {
                             }
                             StreamChunk::Tool(tool_call) => tool_calls.push(tool_call),
                             StreamChunk::Usage(value) => usage = Some(value),
-                            StreamChunk::Error(failure) => {
+                            StreamChunk::Error(message) => {
+                                return Err(self
+                                    .failures
+                                    .record_invoker(InvokerError::Execute(message.into())));
+                            }
+                            StreamChunk::Failure(failure) => {
                                 let error = if failure.outcome_unknown() {
                                     InvokerError::indeterminate_execution(
                                         failure.message(),
@@ -1968,7 +1979,7 @@ mod tests {
         ) -> Result<Pin<Box<dyn Stream<Item = StreamChunk> + Send>>, InvokerError> {
             Ok(Box::pin(inner.map(|chunk| {
                 if let Some(message) = chunk.get("transport_error").and_then(Value::as_str) {
-                    StreamChunk::Error(StreamFailure::Indeterminate(format!(
+                    StreamChunk::Failure(StreamFailure::Indeterminate(format!(
                         "SSE stream error: {message}"
                     )))
                 } else {

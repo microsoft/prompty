@@ -19,7 +19,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         StreamChunk::Text(text) => print!("{text}"),
         StreamChunk::Thinking(thought) => print!("[thinking] {thought}"),
         StreamChunk::Tool(tc) => println!("[tool call] {}: {}", tc.name, tc.arguments),
-        StreamChunk::Error(err) => eprintln!("[error] {}", err.message()),
+        StreamChunk::Error(message) => eprintln!("[error] {message}"),
+        StreamChunk::Failure(failure) => eprintln!("[error] {}", failure.message()),
     })
     .await;
 

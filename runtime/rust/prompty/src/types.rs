@@ -283,7 +283,15 @@ pub enum StreamChunk {
     /// Cumulative terminal token usage for the provider invocation.
     Usage(Usage),
     /// A stream failure. Consumers MUST stop iteration.
-    Error(StreamFailure),
+    ///
+    /// This legacy shape intentionally remains a `String` so existing
+    /// processors can continue constructing and matching it.
+    Error(String),
+    /// A classified stream failure for consumers that need outcome semantics.
+    ///
+    /// `StreamFailure::Indeterminate` means the provider may have accepted the
+    /// invocation and the engine must reconcile rather than retry or commit.
+    Failure(StreamFailure),
 }
 
 /// Terminal failure reported by a streaming provider response.
@@ -346,7 +354,7 @@ pub async fn consume_stream_chunks(
                 tool_calls.push(tc);
             }
             StreamChunk::Usage(_) => {}
-            StreamChunk::Error(_) => {
+            StreamChunk::Error(_) | StreamChunk::Failure(_) => {
                 // Error chunks signal stream termination; stop consuming
                 break;
             }
@@ -470,6 +478,27 @@ mod tests {
         let json = serde_json::to_value(&tc).unwrap();
         assert_eq!(json["id"], "call_abc");
         assert_eq!(json["name"], "get_weather");
+    }
+
+    #[test]
+    fn stream_chunk_error_string_construction_and_matching_remain_compatible() {
+        let chunk = StreamChunk::Error("legacy processor failure".to_string());
+
+        match chunk {
+            StreamChunk::Error(message) => assert_eq!(message, "legacy processor failure"),
+            _ => panic!("legacy StreamChunk::Error(String) must remain constructible"),
+        }
+    }
+
+    #[test]
+    fn classified_stream_failure_retains_indeterminate_outcome() {
+        let chunk =
+            StreamChunk::Failure(StreamFailure::Indeterminate("connection reset".to_string()));
+
+        assert!(matches!(
+            chunk,
+            StreamChunk::Failure(failure) if failure.outcome_unknown()
+        ));
     }
 
     // PromptyStream tests

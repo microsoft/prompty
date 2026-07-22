@@ -16,6 +16,7 @@ pub use crate::registry::{register_executor, register_processor};
 pub use crate::tool_dispatch::{register_tool, register_tool_handler};
 pub use crate::tracing::{Tracer, console_tracer, trace, trace_async};
 pub use crate::types::{
-    ContentPart, ContentPartKind, Message, PromptyStream, Role, StreamChunk, ToolCall,
+    ContentPart, ContentPartKind, Message, PromptyStream, Role, StreamChunk, StreamFailure,
+    ToolCall,
 };
 pub use crate::{PermissionPort, PostCommitPort};

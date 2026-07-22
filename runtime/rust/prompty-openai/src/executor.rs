@@ -8,7 +8,7 @@ use serde_json::{Value, json};
 use std::sync::LazyLock;
 
 use prompty::engine::CancellationToken;
-use prompty::interfaces::{Executor, InvokerError};
+use prompty::interfaces::{Executor, InvokerError, cancellable_stream};
 use prompty::model::{InvocationContextPortability, ModelInvocationRequest, Prompty};
 use prompty::types::Message;
 
@@ -101,12 +101,13 @@ impl Executor for OpenAIExecutor {
                 "streaming execution cancelled before OpenAI provider invocation".to_string(),
             ));
         }
-        tokio::select! {
+        let stream = tokio::select! {
             result = Self::execute_stream_request(agent, &request.context.messages, Some(request)) => result,
             _ = cancellation.cancelled() => Err(InvokerError::Cancelled(
                 "streaming execution cancelled during OpenAI provider invocation".to_string(),
             )),
-        }
+        }?;
+        Ok(cancellable_stream(stream, cancellation.clone()))
     }
 }
 
