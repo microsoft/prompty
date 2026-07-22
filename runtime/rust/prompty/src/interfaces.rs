@@ -9,7 +9,9 @@
 use std::pin::Pin;
 
 use async_trait::async_trait;
+use futures::StreamExt;
 
+use crate::engine::CancellationToken;
 use crate::model::Prompty;
 use crate::types::Message;
 
@@ -152,6 +154,39 @@ pub trait Executor: Send + Sync {
         ))
     }
 
+    /// Execute a streaming LLM call that stops the provider request and drops
+    /// its response stream when cancellation is requested.
+    async fn execute_stream_cancellable(
+        &self,
+        agent: &Prompty,
+        messages: &[Message],
+        cancellation: CancellationToken,
+    ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
+        if cancellation.is_cancelled() {
+            return Err(InvokerError::Cancelled(
+                "streaming execution cancelled before provider invocation".to_string(),
+            ));
+        }
+
+        let stream = tokio::select! {
+            result = self.execute_stream(agent, messages) => result?,
+            _ = cancellation.cancelled() => {
+                return Err(InvokerError::Cancelled(
+                    "streaming execution cancelled during provider invocation".to_string(),
+                ));
+            }
+        };
+        Ok(Box::pin(futures::stream::unfold(
+            (stream, cancellation),
+            |(mut inner, cancellation)| async move {
+                tokio::select! {
+                    item = inner.next() => item.map(|chunk| (chunk, (inner, cancellation))),
+                    _ = cancellation.cancelled() => None,
+                }
+            },
+        )))
+    }
+
     /// Format tool-call results into messages for the next iteration of the
     /// agent loop. Returns messages to append to the conversation.
     ///
@@ -178,6 +213,7 @@ pub trait Executor: Send + Sync {
                         "name": tc.name,
                         "arguments": tc.arguments,
                     }
+
                 })
             })
             .collect();
@@ -271,6 +307,48 @@ mod tests {
             Ok(serde_json::json!({}))
         }
         // Uses default format_tool_messages
+    }
+
+    struct PendingStreamExecutor;
+
+    #[async_trait]
+    impl Executor for PendingStreamExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<serde_json::Value, InvokerError> {
+            Ok(serde_json::Value::Null)
+        }
+
+        async fn execute_stream(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError>
+        {
+            futures::future::pending().await
+        }
+    }
+
+    #[tokio::test]
+    async fn test_cancellable_stream_aborts_pending_provider_invocation() {
+        let executor = PendingStreamExecutor;
+        let cancellation = CancellationToken::new();
+        let cancellation_task = cancellation.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+            cancellation_task.cancel();
+        });
+
+        let result = tokio::time::timeout(
+            std::time::Duration::from_millis(100),
+            executor.execute_stream_cancellable(&Prompty::default(), &[], cancellation),
+        )
+        .await
+        .expect("cancellation should not leave the provider invocation pending");
+
+        assert!(matches!(result, Err(InvokerError::Cancelled(_))));
     }
 
     #[test]
