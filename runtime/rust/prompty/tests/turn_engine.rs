@@ -2597,6 +2597,7 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
         requests: Mutex::new(Vec::new()),
     });
     let conversation = Arc::new(RecordingConversation::default());
+    let events = Arc::new(RecordingEvents::default());
     let checkpoints = Arc::new(RecordingCheckpoints::default());
     let mut engine_effects = effects(
         model.clone(),
@@ -2607,7 +2608,7 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
             ]),
             calls: Mutex::new(Vec::new()),
         }),
-        Arc::new(RecordingEvents::default()),
+        events.clone(),
         checkpoints.clone(),
         Arc::new(RecordingPostCommit::default()),
     );
@@ -2640,6 +2641,43 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
             .messages
             .iter()
             .any(|message| message.text_content() == "batched:A,B")
+    );
+    let event_kinds = events
+        .0
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|event| event.kind)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        event_kinds
+            .iter()
+            .filter(|kind| **kind == EngineEventKind::ToolExecutionCompleted)
+            .count(),
+        2
+    );
+    assert_eq!(
+        event_kinds
+            .iter()
+            .filter(|kind| **kind == EngineEventKind::ToolResultCommitted)
+            .count(),
+        2
+    );
+    assert!(
+        event_kinds
+            .iter()
+            .rposition(|kind| *kind == EngineEventKind::ToolExecutionCompleted)
+            < event_kinds
+                .iter()
+                .position(|kind| *kind == EngineEventKind::ToolResultCommitted)
+    );
+    assert!(
+        event_kinds
+            .iter()
+            .rposition(|kind| *kind == EngineEventKind::ToolResultCommitted)
+            < event_kinds
+                .iter()
+                .position(|kind| *kind == EngineEventKind::ConversationUpdated)
     );
     let checkpoints = checkpoints.0.lock().unwrap();
     assert!(

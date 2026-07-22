@@ -399,17 +399,20 @@ impl TurnEngine {
                     .active_invocation_id
                     .clone()
                     .unwrap_or_else(|| self.effects.ids.next_id("invocation"));
-                if let Err(error) = self.finalize_tool_exchange(&mut state) {
-                    return self
-                        .commit_failed(
-                            state,
-                            "conversation_format_error",
-                            &error.to_string(),
-                            &cancellation,
-                        )
-                        .await;
-                }
-                self.persist_conversation_update(&mut state, &invocation_id)
+                let results = match self.finalize_tool_exchange(&mut state) {
+                    Ok(results) => results,
+                    Err(error) => {
+                        return self
+                            .commit_failed(
+                                state,
+                                "conversation_format_error",
+                                &error.to_string(),
+                                &cancellation,
+                            )
+                            .await;
+                    }
+                };
+                self.persist_tool_exchange(&mut state, &invocation_id, &results)
                     .await?;
                 state.active_invocation_id = None;
                 state.iteration += 1;
@@ -742,12 +745,15 @@ impl TurnEngine {
         Ok(())
     }
 
-    fn finalize_tool_exchange(&self, state: &mut TurnState) -> Result<(), PortError> {
+    fn finalize_tool_exchange(
+        &self,
+        state: &mut TurnState,
+    ) -> Result<Vec<EngineToolResult>, PortError> {
         let Some(response) = state.pending_model_response.take() else {
-            return Ok(());
+            return Ok(Vec::new());
         };
         if response.tool_requests.is_empty() {
-            return Ok(());
+            return Ok(Vec::new());
         }
         let results = response
             .tool_requests
@@ -778,7 +784,7 @@ impl TurnEngine {
             }
         };
         state.messages.extend(messages);
-        Ok(())
+        Ok(results)
     }
 
     async fn persist_policy_update(
@@ -821,37 +827,52 @@ impl TurnEngine {
         Ok(checkpoint)
     }
 
-    async fn persist_conversation_update(
+    async fn persist_tool_exchange(
         &self,
         state: &mut TurnState,
         invocation_id: &str,
+        results: &[EngineToolResult],
     ) -> Result<EngineCheckpoint, TurnEngineError> {
-        let sequence = state.sequence + 1;
-        let checkpoint = self.build_checkpoint(state, sequence, false);
-        let event = self.build_event(
+        let mut sequence = state.sequence;
+        let mut events = Vec::with_capacity(results.len() + 1);
+        for result in results {
+            sequence += 1;
+            events.push(self.build_event(
+                state,
+                sequence,
+                EngineEventKind::ToolResultCommitted,
+                Some(invocation_id),
+                Some(state.iteration),
+                json!({ "toolResult": result }),
+            ));
+        }
+        sequence += 1;
+        events.push(self.build_event(
             state,
             sequence,
             EngineEventKind::ConversationUpdated,
             Some(invocation_id),
             Some(state.iteration),
             json!({ "messageCount": state.messages.len() }),
-        );
+        ));
+        let checkpoint = self.build_checkpoint(state, sequence, false);
         let checkpoint_event = self.build_checkpoint_event(state, &checkpoint, invocation_id);
+        events.push(checkpoint_event);
         if let Err(source) = self
             .effects
             .durability
-            .append_with_checkpoint(&[event, checkpoint_event], &checkpoint)
+            .append_with_checkpoint(&events, &checkpoint)
             .await
         {
             return Err(TurnEngineError::RecoveryRequired {
-                stage: "conversation update",
+                stage: "tool exchange",
                 request_id: invocation_id.to_string(),
                 checkpoint: Box::new(checkpoint),
                 tool_results: state.tool_results.clone(),
                 source: Box::new(source),
             });
         }
-        state.sequence = sequence + 1;
+        state.sequence = checkpoint.last_sequence + 1;
         Ok(checkpoint)
     }
 
@@ -1082,18 +1103,10 @@ impl TurnEngine {
             .tool_results
             .last()
             .expect("tool result must be added before persistence");
-        let event_kind = if matches!(
-            result.error_kind.as_deref(),
-            Some("permission_denied" | "guardrail_denied")
-        ) {
-            EngineEventKind::ToolResultCommitted
-        } else {
-            EngineEventKind::ToolExecutionCompleted
-        };
         let event = self.build_event(
             state,
             sequence,
-            event_kind,
+            EngineEventKind::ToolExecutionCompleted,
             Some(invocation_id),
             Some(state.iteration),
             json!({ "toolResult": result }),

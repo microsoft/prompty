@@ -71,6 +71,8 @@
           "tool_execution_started",
           "tool_execution_completed",
           "checkpoint_created",
+          "tool_result_committed",
+          "tool_result_committed",
           "conversation_updated",
           "checkpoint_created",
           "context_prepared",
