@@ -731,6 +731,18 @@ struct LiveConversationPort {
     failures: Arc<LiveFailureState>,
 }
 
+fn tool_request_arguments_text(request: &EngineToolRequest) -> String {
+    request
+        .metadata
+        .get("argumentsText")
+        .and_then(Value::as_str)
+        .map(str::to_string)
+        .unwrap_or_else(|| match &request.arguments {
+            Value::String(arguments) => arguments.clone(),
+            arguments => arguments.to_string(),
+        })
+}
+
 impl ConversationPort for LiveConversationPort {
     fn format_tool_exchange(
         &self,
@@ -748,12 +760,7 @@ impl ConversationPort for LiveConversationPort {
             .map(|request| ToolCall {
                 id: request.id.clone(),
                 name: request.name.clone(),
-                arguments: request
-                    .metadata
-                    .get("argumentsText")
-                    .and_then(Value::as_str)
-                    .map(str::to_string)
-                    .unwrap_or_else(|| request.arguments.to_string()),
+                arguments: tool_request_arguments_text(request),
             })
             .collect::<Vec<_>>();
         let tool_results = response
@@ -862,12 +869,7 @@ impl ToolPort for LiveToolPort {
         let tool_call = ToolCall {
             id: request.id.clone(),
             name: request.name.clone(),
-            arguments: request
-                .metadata
-                .get("argumentsText")
-                .and_then(Value::as_str)
-                .map(str::to_string)
-                .unwrap_or_else(|| request.arguments.to_string()),
+            arguments: tool_request_arguments_text(request),
         };
         let future = std::panic::AssertUnwindSafe(crate::tool_dispatch::dispatch_tool(
             &tool_call,
@@ -988,14 +990,10 @@ impl LiveDurabilityPort {
                 if let Ok(request) = serde_json::from_value::<EngineToolRequest>(
                     event.payload["toolRequest"].clone(),
                 ) {
+                    let arguments = tool_request_arguments_text(&request);
                     self.events.emit(AgentEvent::ToolCallStart {
                         name: request.name,
-                        arguments: request
-                            .metadata
-                            .get("argumentsText")
-                            .and_then(Value::as_str)
-                            .map(str::to_string)
-                            .unwrap_or_else(|| request.arguments.to_string()),
+                        arguments,
                     });
                 }
             }
@@ -1464,6 +1462,30 @@ mod tests {
             kind,
             payload,
         }
+    }
+
+    #[test]
+    fn tool_request_arguments_text_preserves_legacy_json_strings() {
+        let request = EngineToolRequest {
+            id: "call_1".to_string(),
+            name: "get_weather".to_string(),
+            arguments: json!("{\"city\":\"Paris\"}"),
+            metadata: Value::Null,
+        };
+
+        assert_eq!(tool_request_arguments_text(&request), r#"{"city":"Paris"}"#);
+    }
+
+    #[test]
+    fn tool_request_arguments_text_serializes_structured_arguments() {
+        let request = EngineToolRequest {
+            id: "call_1".to_string(),
+            name: "get_weather".to_string(),
+            arguments: json!({ "city": "Paris" }),
+            metadata: Value::Null,
+        };
+
+        assert_eq!(tool_request_arguments_text(&request), r#"{"city":"Paris"}"#);
     }
 
     #[test]

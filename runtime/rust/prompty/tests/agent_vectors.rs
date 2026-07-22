@@ -838,7 +838,7 @@ async fn test_cancellation_between_tools() {
 }
 
 // ===================================================================
-// BINDINGS — skip (not yet implemented in Rust runtime)
+// BINDINGS — legacy processor compatibility
 // ===================================================================
 
 #[tokio::test]
