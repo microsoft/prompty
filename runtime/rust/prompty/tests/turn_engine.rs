@@ -9,16 +9,17 @@ use std::{
 
 use async_trait::async_trait;
 use prompty::{
-    AppendContextPackingStrategy, CancellationToken, Clock, ContextCandidate, ContextError,
-    ContextPipeline, ContextPortability, ContextRequest, ContextSource, ConversationPort,
-    DefaultConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint,
-    EngineEvent, EngineEventKind, EnginePermissionDecision, EngineToolRequest, EngineToolResult,
-    FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyError, HostPolicyPort,
-    HostPolicyRequest, HostPolicyResult, IdGenerator, Message, ModelInvocationRequest,
-    ModelInvocationResponse, ModelPort, ModelStreamChunk, ModelStreamPort, NoopHostPolicyPort,
-    NoopModelStreamPort, NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort,
-    RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, Role, ToolOutcome, ToolPort, TurnCommit,
-    TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest, TurnStatus,
+    AllowAllPermissions, AppendContextPackingStrategy, CancellationToken, Clock, ContextCandidate,
+    ContextError, ContextPipeline, ContextPortability, ContextRequest, ContextSource,
+    ConversationPort, DefaultConversationPort, DelegatedStateReference, DurabilityPort,
+    EngineCheckpoint, EngineEvent, EngineEventKind, EnginePermissionDecision, EngineToolRequest,
+    EngineToolResult, FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyError,
+    HostPolicyPort, HostPolicyRequest, HostPolicyResult, IdGenerator, Message,
+    ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelStreamChunk, ModelStreamPort,
+    NoopDurabilityPort, NoopHostPolicyPort, NoopModelStreamPort, NoopPostCommitPort,
+    NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort, RetryPolicyError,
+    RetryPolicyPort, RetryPolicyRequest, Role, ToolOutcome, ToolPort, TurnCommit, TurnEngine,
+    TurnEngineEffects, TurnEngineError, TurnEngineRequest, TurnStatus,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -1571,6 +1572,79 @@ async fn tool_failure_is_committed_as_a_model_visible_result() {
             .iter()
             .any(|message| message.text_content().contains("simulated tool failure"))
     );
+}
+
+#[tokio::test]
+async fn no_op_durability_allows_tool_turns_without_a_state_store() {
+    let model = Arc::new(ScriptedModel {
+        responses: Mutex::new(VecDeque::from([
+            ModelInvocationResponse {
+                output: None,
+                assistant_messages: Vec::new(),
+                tool_requests: vec![EngineToolRequest {
+                    id: "call-project-files".to_string(),
+                    name: "list_project_files".to_string(),
+                    arguments: Value::Null,
+                    metadata: Value::Null,
+                }],
+                next_portability: None,
+                delegated_state: None,
+                metadata: Value::Null,
+            },
+            ModelInvocationResponse {
+                output: Some(Value::String("Project files inspected.".to_string())),
+                assistant_messages: Vec::new(),
+                tool_requests: Vec::new(),
+                next_portability: None,
+                delegated_state: None,
+                metadata: Value::Null,
+            },
+        ])),
+        requests: Mutex::new(Vec::new()),
+    });
+    let tools = Arc::new(VectorTools {
+        outputs: HashMap::from([("call-project-files".to_string(), "src/main.rs".to_string())]),
+        calls: Mutex::new(Vec::new()),
+    });
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        TurnEngineEffects {
+            model: model.clone(),
+            stream: Arc::new(NoopModelStreamPort),
+            policy: Arc::new(NoopHostPolicyPort),
+            retry: Arc::new(NoopRetryPolicyPort),
+            conversation: Arc::new(DefaultConversationPort),
+            permission: Arc::new(AllowAllPermissions),
+            tools: tools.clone(),
+            durability: Arc::new(NoopDurabilityPort),
+            post_commit: Arc::new(NoopPostCommitPort),
+            clock: Arc::new(FixedClock),
+            ids: Arc::new(SequentialIds::default()),
+        },
+    );
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                "session-no-store",
+                "turn-no-store",
+                vec![Message::with_text(Role::User, "Inspect the project")],
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(result.commit.status, TurnStatus::Success);
+    assert_eq!(
+        result.commit.output,
+        Some(Value::String("Project files inspected.".to_string()))
+    );
+    assert_eq!(
+        tools.calls.lock().unwrap().as_slice(),
+        &["call-project-files"]
+    );
+    assert_eq!(model.requests.lock().unwrap().len(), 2);
 }
 
 #[tokio::test]
