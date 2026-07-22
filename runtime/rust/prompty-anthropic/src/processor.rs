@@ -145,7 +145,7 @@ use std::collections::BTreeMap;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use prompty::types::StreamChunk;
+use prompty::types::{StreamChunk, Usage};
 
 /// Anthropic stream processor — converts SSE JSON events into `StreamChunk` items.
 ///
@@ -154,16 +154,20 @@ use prompty::types::StreamChunk;
 /// - `content_block_start` with `content_block.type == "tool_use"` → accumulates tool call
 /// - `content_block_delta` with `delta.type == "input_json_delta"` → appends to tool args
 /// - On stream end, yields accumulated tool calls as `StreamChunk::Tool`
+/// - On stream end, yields one cumulative `StreamChunk::Usage` after tool calls
 struct AnthropicStreamProcessor {
     inner: Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
     tool_call_acc: BTreeMap<usize, (String, String, String)>, // index → (id, name, arguments)
     pending: std::collections::VecDeque<StreamChunk>,
     phase: AnthropicStreamPhase,
+    usage: Usage,
+    has_usage: bool,
 }
 
 enum AnthropicStreamPhase {
     Streaming,
     YieldingTools(Vec<ToolCall>, usize),
+    YieldingUsage(Usage),
     Done,
 }
 
@@ -174,6 +178,8 @@ impl AnthropicStreamProcessor {
             tool_call_acc: BTreeMap::new(),
             pending: std::collections::VecDeque::new(),
             phase: AnthropicStreamPhase::Streaming,
+            usage: Usage::default(),
+            has_usage: false,
         }
     }
 }
@@ -196,6 +202,28 @@ impl futures::Stream for AnthropicStreamProcessor {
                         let event_type = event.get("type").and_then(Value::as_str).unwrap_or("");
 
                         match event_type {
+                            "message_start" => {
+                                if let Some(usage) = event.pointer("/message/usage") {
+                                    this.usage.input_tokens = usage
+                                        .get("input_tokens")
+                                        .and_then(Value::as_u64)
+                                        .unwrap_or(0);
+                                    this.has_usage = true;
+                                }
+                                cx.waker().wake_by_ref();
+                                Poll::Pending
+                            }
+                            "message_delta" => {
+                                if let Some(usage) = event.get("usage") {
+                                    this.usage.output_tokens = usage
+                                        .get("output_tokens")
+                                        .and_then(Value::as_u64)
+                                        .unwrap_or(0);
+                                    this.has_usage = true;
+                                }
+                                cx.waker().wake_by_ref();
+                                Poll::Pending
+                            }
                             "content_block_delta" => {
                                 if let Some(delta) = event.get("delta") {
                                     let delta_type =
@@ -294,8 +322,7 @@ impl futures::Stream for AnthropicStreamProcessor {
                             cx.waker().wake_by_ref();
                             Poll::Pending
                         } else {
-                            this.phase = AnthropicStreamPhase::Done;
-                            Poll::Ready(None)
+                            this.finish_with_usage(cx)
                         }
                     }
                     Poll::Pending => Poll::Pending,
@@ -307,11 +334,29 @@ impl futures::Stream for AnthropicStreamProcessor {
                     *idx += 1;
                     Poll::Ready(Some(StreamChunk::Tool(tc)))
                 } else {
-                    this.phase = AnthropicStreamPhase::Done;
-                    Poll::Ready(None)
+                    this.finish_with_usage(cx)
                 }
             }
+            AnthropicStreamPhase::YieldingUsage(usage) => {
+                let usage = *usage;
+                this.phase = AnthropicStreamPhase::Done;
+                Poll::Ready(Some(StreamChunk::Usage(usage)))
+            }
             AnthropicStreamPhase::Done => Poll::Ready(None),
+        }
+    }
+}
+
+impl AnthropicStreamProcessor {
+    fn finish_with_usage(&mut self, cx: &Context<'_>) -> Poll<Option<StreamChunk>> {
+        if self.has_usage {
+            self.usage.total_tokens = self.usage.input_tokens + self.usage.output_tokens;
+            self.phase = AnthropicStreamPhase::YieldingUsage(self.usage);
+            cx.waker().wake_by_ref();
+            Poll::Pending
+        } else {
+            self.phase = AnthropicStreamPhase::Done;
+            Poll::Ready(None)
         }
     }
 }
@@ -348,6 +393,33 @@ mod tests {
             ]
         });
         Prompty::load_from_value(&data, &LoadContext::default())
+    }
+
+    #[tokio::test]
+    async fn test_stream_emits_terminal_usage() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({"type": "message_start", "message": {"usage": {"input_tokens": 10}}}),
+            json!({"type": "message_delta", "usage": {"output_tokens": 5}}),
+            json!({"type": "message_stop"}),
+        ];
+        let mut stream = AnthropicStreamProcessor::new(futures::stream::iter(chunks));
+        let mut usage = None;
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Usage(value) = chunk {
+                usage = Some(value);
+            }
+        }
+
+        assert_eq!(
+            usage,
+            Some(Usage {
+                input_tokens: 10,
+                output_tokens: 5,
+                total_tokens: 15,
+            })
+        );
     }
 
     #[tokio::test]

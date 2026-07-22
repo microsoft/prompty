@@ -22,6 +22,14 @@ pub struct ToolCall {
     pub arguments: String,
 }
 
+/// Cumulative token usage reported once at the end of a provider invocation.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Usage {
+    pub input_tokens: u64,
+    pub output_tokens: u64,
+    pub total_tokens: u64,
+}
+
 // ---------------------------------------------------------------------------
 // ThreadMarker
 // ---------------------------------------------------------------------------
@@ -272,6 +280,8 @@ pub enum StreamChunk {
     Thinking(String),
     /// A completed tool call (yielded at end of stream).
     Tool(ToolCall),
+    /// Cumulative terminal token usage for the provider invocation.
+    Usage(Usage),
     /// A stream error (e.g., model refusal). Consumers MUST stop iteration.
     Error(String),
 }
@@ -308,6 +318,7 @@ pub async fn consume_stream_chunks(
             StreamChunk::Tool(tc) => {
                 tool_calls.push(tc);
             }
+            StreamChunk::Usage(_) => {}
             StreamChunk::Error(_) => {
                 // Error chunks signal stream termination; stop consuming
                 break;

@@ -227,7 +227,7 @@ pub fn extract_tool_calls(response: &Value) -> Option<Vec<ToolCall>> {
 // Streaming processor — yields StreamChunk from raw SSE chunks
 // ---------------------------------------------------------------------------
 
-use prompty::types::StreamChunk;
+use prompty::types::{StreamChunk, Usage};
 
 /// Process an OpenAI streaming response (SSE chunks) into a stream of `StreamChunk`s.
 ///
@@ -235,6 +235,7 @@ use prompty::types::StreamChunk;
 /// - `delta.content` — yields `StreamChunk::Text`
 /// - `delta.tool_calls` — accumulates partial tool call chunks,
 ///   yields `StreamChunk::Tool` objects when the stream ends
+/// - terminal usage — yields one cumulative `StreamChunk::Usage` after tools
 /// - `delta.refusal` — yields an error as text
 ///
 /// Matches TypeScript's `streamGenerator()` in `openai/processor.ts`.
@@ -253,12 +254,14 @@ struct OpenAIStreamProcessor {
     phase: StreamPhase,
     /// Buffer for chunks to yield (content text from a single SSE event can only produce one).
     pending: std::collections::VecDeque<StreamChunk>,
+    usage: Option<Usage>,
 }
 
 enum StreamPhase {
     Streaming,
     /// Yielding accumulated tool calls, current index.
     YieldingTools(Vec<ToolCall>, usize),
+    YieldingUsage(Usage),
     Done,
 }
 
@@ -269,6 +272,7 @@ impl OpenAIStreamProcessor {
             tool_call_acc: std::collections::BTreeMap::new(),
             phase: StreamPhase::Streaming,
             pending: std::collections::VecDeque::new(),
+            usage: None,
         }
     }
 }
@@ -356,6 +360,9 @@ impl futures::Stream for OpenAIStreamProcessor {
                                 }
                             }
                             Some("response.completed") => {
+                                this.usage = usage_from_value(
+                                    chunk.pointer("/response/usage").unwrap_or(&Value::Null),
+                                );
                                 if let Some(output) = chunk
                                     .get("response")
                                     .and_then(|response| response.get("output"))
@@ -404,6 +411,10 @@ impl futures::Stream for OpenAIStreamProcessor {
                             .and_then(Value::as_array)
                             .and_then(|c| c.first())
                             .and_then(|c| c.get("delta"));
+
+                        if let Some(usage) = chunk.get("usage") {
+                            this.usage = usage_from_value(usage);
+                        }
 
                         if let Some(delta) = delta {
                             // Content text
@@ -472,8 +483,14 @@ impl futures::Stream for OpenAIStreamProcessor {
                             .collect();
 
                         if tools.is_empty() {
-                            this.phase = StreamPhase::Done;
-                            std::task::Poll::Ready(None)
+                            if let Some(usage) = this.usage.take() {
+                                this.phase = StreamPhase::YieldingUsage(usage);
+                                cx.waker().wake_by_ref();
+                                std::task::Poll::Pending
+                            } else {
+                                this.phase = StreamPhase::Done;
+                                std::task::Poll::Ready(None)
+                            }
                         } else {
                             let first = tools[0].clone();
                             this.phase = StreamPhase::YieldingTools(tools, 1);
@@ -489,12 +506,42 @@ impl futures::Stream for OpenAIStreamProcessor {
                 std::task::Poll::Ready(Some(StreamChunk::Tool(tc)))
             }
             StreamPhase::YieldingTools(..) => {
+                if let Some(usage) = this.usage.take() {
+                    this.phase = StreamPhase::YieldingUsage(usage);
+                    cx.waker().wake_by_ref();
+                    std::task::Poll::Pending
+                } else {
+                    this.phase = StreamPhase::Done;
+                    std::task::Poll::Ready(None)
+                }
+            }
+            StreamPhase::YieldingUsage(usage) => {
+                let usage = *usage;
                 this.phase = StreamPhase::Done;
-                std::task::Poll::Ready(None)
+                std::task::Poll::Ready(Some(StreamChunk::Usage(usage)))
             }
             StreamPhase::Done => std::task::Poll::Ready(None),
         }
     }
+}
+
+fn usage_from_value(value: &Value) -> Option<Usage> {
+    let input_tokens = value
+        .get("input_tokens")
+        .or_else(|| value.get("prompt_tokens"))
+        .and_then(Value::as_u64)?;
+    let output_tokens = value
+        .get("output_tokens")
+        .or_else(|| value.get("completion_tokens"))
+        .and_then(Value::as_u64)?;
+    Some(Usage {
+        input_tokens,
+        output_tokens,
+        total_tokens: value
+            .get("total_tokens")
+            .and_then(Value::as_u64)
+            .unwrap_or(input_tokens + output_tokens),
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -827,6 +874,90 @@ mod tests {
             }
         }
         assert_eq!(texts.join(""), "Hello world");
+    }
+
+    #[tokio::test]
+    async fn test_stream_emits_terminal_chat_usage() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({"choices": [{"delta": {"content": "Hello"}}]}),
+            json!({
+                "choices": [{"delta": {}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}
+            }),
+        ];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut usage = None;
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Usage(value) = chunk {
+                usage = Some(value);
+            }
+        }
+
+        assert_eq!(
+            usage,
+            Some(Usage {
+                input_tokens: 10,
+                output_tokens: 5,
+                total_tokens: 15,
+            })
+        );
+    }
+
+    #[tokio::test]
+    async fn test_stream_emits_terminal_responses_usage() {
+        use futures::StreamExt;
+
+        let chunks = vec![json!({
+            "type": "response.completed",
+            "response": {
+                "usage": {"input_tokens": 9, "output_tokens": 6, "total_tokens": 15},
+                "output": []
+            }
+        })];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut usage = None;
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Usage(value) = chunk {
+                usage = Some(value);
+            }
+        }
+
+        assert_eq!(
+            usage,
+            Some(Usage {
+                input_tokens: 9,
+                output_tokens: 6,
+                total_tokens: 15,
+            })
+        );
+    }
+
+    #[tokio::test]
+    async fn test_stream_usage_calculates_missing_total() {
+        use futures::StreamExt;
+
+        let chunks = vec![json!({
+            "choices": [{"delta": {}}],
+            "usage": {"prompt_tokens": 9, "completion_tokens": 6}
+        })];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut usage = None;
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Usage(value) = chunk {
+                usage = Some(value);
+            }
+        }
+
+        assert_eq!(
+            usage,
+            Some(Usage {
+                input_tokens: 9,
+                output_tokens: 6,
+                total_tokens: 15,
+            })
+        );
     }
 
     #[tokio::test]

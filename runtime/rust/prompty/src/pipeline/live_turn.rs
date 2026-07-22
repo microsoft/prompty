@@ -303,7 +303,7 @@ impl ModelPort for LiveModelPort {
             return Err(PortError::new("Operation cancelled"));
         }
 
-        let (tool_calls, processed, raw_response, raw_chunks, streamed) = if self.streaming {
+        let (tool_calls, processed, raw_response, raw_chunks, streamed, usage) = if self.streaming {
             match registry::invoke_executor_stream(
                 &self.provider,
                 &self.agent,
@@ -327,6 +327,7 @@ impl ModelPort for LiveModelPort {
                             .map_err(|error| self.failures.record_invoker(error))?;
                     let mut text = Vec::new();
                     let mut tool_calls = Vec::new();
+                    let mut usage = None;
                     while let Some(chunk) = chunks.next().await {
                         if cancellation.is_cancelled() {
                             return Err(PortError::new("Operation cancelled"));
@@ -340,6 +341,7 @@ impl ModelPort for LiveModelPort {
                                 stream.emit(ModelStreamChunk::Thinking(value)).await;
                             }
                             StreamChunk::Tool(tool_call) => tool_calls.push(tool_call),
+                            StreamChunk::Usage(value) => usage = Some(value),
                             StreamChunk::Error(message) => {
                                 return Err(self
                                     .failures
@@ -356,12 +358,13 @@ impl ModelPort for LiveModelPort {
                             .expect("stream chunk lock poisoned")
                             .clone(),
                         true,
+                        usage,
                     )
                 }
                 Err(stream_error) => {
                     match self.execute_non_streaming(&request.context.messages).await {
                         Ok((tool_calls, processed, raw_response)) => {
-                            (tool_calls, processed, raw_response, Vec::new(), false)
+                            (tool_calls, processed, raw_response, Vec::new(), false, None)
                         }
                         Err(error) => {
                             return Err(self.failures.record_invoker(InvokerError::Execute(
@@ -375,7 +378,7 @@ impl ModelPort for LiveModelPort {
         } else {
             match self.execute_non_streaming(&request.context.messages).await {
                 Ok((tool_calls, processed, raw_response)) => {
-                    (tool_calls, processed, raw_response, Vec::new(), false)
+                    (tool_calls, processed, raw_response, Vec::new(), false, None)
                 }
                 Err(error) => return Err(self.failures.record_invoker(error)),
             }
@@ -406,6 +409,7 @@ impl ModelPort for LiveModelPort {
                 "rawChunks": raw_chunks,
                 "textContent": text_content,
                 "streamed": streamed,
+                "usage": usage,
             }),
         })
     }
