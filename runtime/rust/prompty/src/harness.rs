@@ -556,7 +556,7 @@ where
         if !decision.approved {
             let host = host_request(request)?;
             let result = HostToolResult {
-                request_id: host.request_id,
+                request_id: host.request_id.or_else(|| Some(request.id.clone())),
                 tool_call_id: host.tool_call_id,
                 tool_name: host.tool_name,
                 success: false,
@@ -845,7 +845,9 @@ where
                 let engine_result: EngineToolResult =
                     serde_json::from_value(event.payload["toolResult"].clone())
                         .map_err(|error| port_error("reference tool result event", error))?;
-                let result = host_result(&engine_result)?;
+                let Ok(result) = host_result(&engine_result) else {
+                    return Ok(());
+                };
                 let payload = result.to_value(&SaveContext::new());
                 self.record_turn(
                     TurnEventType::Tool_execution_complete,
@@ -853,6 +855,13 @@ where
                     iteration,
                     payload.clone(),
                 );
+            }
+            EngineEventKind::ToolResultCommitted => {
+                let engine_result: EngineToolResult =
+                    serde_json::from_value(event.payload["toolResult"].clone())
+                        .map_err(|error| port_error("reference tool result event", error))?;
+                let result = self.host_result(&engine_result)?;
+                let payload = result.to_value(&SaveContext::new());
                 self.record_turn(
                     TurnEventType::Tool_result,
                     &event.turn_id,
@@ -923,6 +932,22 @@ where
             _ => {}
         }
         Ok(())
+    }
+
+    fn host_result(&self, engine_result: &EngineToolResult) -> Result<HostToolResult, PortError> {
+        host_result(engine_result).or_else(|_| {
+            self.pending_results
+                .lock()
+                .expect("reference tool results lock poisoned")
+                .iter()
+                .find(|result| {
+                    result.request_id.as_deref() == Some(engine_result.request_id.as_str())
+                })
+                .cloned()
+                .ok_or_else(|| {
+                    PortError::new("engine tool result is missing hostToolResult metadata")
+                })
+        })
     }
 }
 
