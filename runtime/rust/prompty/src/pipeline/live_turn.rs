@@ -400,6 +400,7 @@ impl ModelPort for LiveModelPort {
 
         Ok(ModelInvocationResponse {
             output,
+            usage,
             assistant_messages: Vec::new(),
             tool_requests,
             next_portability: None,
@@ -409,7 +410,6 @@ impl ModelPort for LiveModelPort {
                 "rawChunks": raw_chunks,
                 "textContent": text_content,
                 "streamed": streamed,
-                "usage": usage,
             }),
         })
     }

@@ -504,6 +504,7 @@ impl ModelPort for ReferenceModelPort {
 
         Ok(ModelInvocationResponse {
             output: response.output,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests,
             next_portability: None,

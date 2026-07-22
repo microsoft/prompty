@@ -87,6 +87,7 @@ impl ModelPort for StreamingModel {
             .await;
         Ok(ModelInvocationResponse {
             output: Some(Value::String("hello".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -109,6 +110,7 @@ impl ModelPort for CancellingModel {
         cancellation.cancel();
         Ok(ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "should-not-run".to_string(),
@@ -136,6 +138,7 @@ impl ModelPort for CancellingFinalModel {
         cancellation.cancel();
         Ok(ModelInvocationResponse {
             output: Some(Value::String("must not commit".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -221,6 +224,7 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-unknown".to_string(),
@@ -277,6 +281,7 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
             checkpoint.last_sequence,
             ModelInvocationResponse {
                 output: Some(Value::String("wrong resolution type".to_string())),
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: Vec::new(),
                 next_portability: None,
@@ -315,6 +320,7 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
     let resolved_model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("reconciled".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -600,6 +606,7 @@ async fn indeterminate_model_invocation_is_not_retried() {
         checkpoint.last_sequence,
         ModelInvocationResponse {
             output: Some(Value::String("provider-confirmed".to_string())),
+            usage: None,
             assistant_messages: vec![Message::with_text(Role::Assistant, "provider-confirmed")],
             tool_requests: Vec::new(),
             next_portability: None,
@@ -650,6 +657,7 @@ async fn permission_port_failure_commits_a_failed_turn() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-permission".to_string(),
@@ -715,6 +723,7 @@ async fn unknown_tool_is_a_terminal_configuration_failure() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-missing".to_string(),
@@ -764,6 +773,7 @@ async fn cancellation_after_permission_prevents_tool_execution() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-cancelled".to_string(),
@@ -822,6 +832,7 @@ async fn durability_failure_after_tool_effect_returns_recovery_state() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-durable".to_string(),
@@ -1162,6 +1173,7 @@ fn to_message(message: &VectorMessage) -> Message {
 fn to_response(response: &VectorModelResponse) -> ModelInvocationResponse {
     ModelInvocationResponse {
         output: response.output.clone(),
+        usage: None,
         assistant_messages: response
             .assistant
             .iter()
@@ -1458,6 +1470,7 @@ async fn retry_reuses_the_same_context_snapshot() {
         snapshot_ids: Mutex::new(Vec::new()),
         response: ModelInvocationResponse {
             output: Some(Value::String("recovered".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -1513,6 +1526,7 @@ async fn tool_failure_is_committed_as_a_model_visible_result() {
         responses: Mutex::new(VecDeque::from([
             ModelInvocationResponse {
                 output: None,
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: vec![EngineToolRequest {
                     id: "call-fail".to_string(),
@@ -1526,6 +1540,7 @@ async fn tool_failure_is_committed_as_a_model_visible_result() {
             },
             ModelInvocationResponse {
                 output: Some(Value::String("recovered from tool failure".to_string())),
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: Vec::new(),
                 next_portability: None,
@@ -1580,6 +1595,7 @@ async fn no_op_durability_allows_tool_turns_without_a_state_store() {
         responses: Mutex::new(VecDeque::from([
             ModelInvocationResponse {
                 output: None,
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: vec![EngineToolRequest {
                     id: "call-project-files".to_string(),
@@ -1593,6 +1609,7 @@ async fn no_op_durability_allows_tool_turns_without_a_state_store() {
             },
             ModelInvocationResponse {
                 output: Some(Value::String("Project files inspected.".to_string())),
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: Vec::new(),
                 next_portability: None,
@@ -1652,6 +1669,7 @@ async fn memory_recall_composes_as_a_context_source() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("concise".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -1730,6 +1748,7 @@ async fn resume_continues_after_the_checkpoint_sequence_and_iteration() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("resumed".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -1800,6 +1819,7 @@ async fn resume_commits_checkpointed_final_model_response_without_reinvoking() {
             Arc::new(ScriptedModel {
                 responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
                     output: Some(Value::String("checkpointed".to_string())),
+                    usage: None,
                     assistant_messages: Vec::new(),
                     tool_requests: Vec::new(),
                     next_portability: None,
@@ -1909,6 +1929,7 @@ async fn resume_continues_remaining_tools_without_replaying_completed_effects() 
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("all complete".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -2034,6 +2055,7 @@ async fn post_commit_failure_does_not_uncommit_the_turn() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("committed".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -2100,6 +2122,7 @@ async fn post_commit_completion_journal_failure_is_non_fatal() {
             model: Arc::new(ScriptedModel {
                 responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
                     output: Some(Value::String("committed".to_string())),
+                    usage: None,
                     assistant_messages: Vec::new(),
                     tool_requests: Vec::new(),
                     next_portability: None,
@@ -2186,6 +2209,7 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("model output".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -2267,6 +2291,7 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
             output: Some(Value::String(
                 "resumed without duplicate policy".to_string(),
             )),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -2400,6 +2425,7 @@ async fn retry_policy_runs_between_retryable_model_attempts() {
         snapshot_ids: Mutex::new(Vec::new()),
         response: ModelInvocationResponse {
             output: Some(Value::String("recovered".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,
@@ -2487,6 +2513,7 @@ async fn conversation_failure_occurs_after_the_tool_result_is_durable() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-durable-format".to_string(),
@@ -2566,6 +2593,7 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
         responses: Mutex::new(VecDeque::from([
             ModelInvocationResponse {
                 output: None,
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: vec![
                     EngineToolRequest {
@@ -2587,6 +2615,7 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
             },
             ModelInvocationResponse {
                 output: Some(Value::String("done".to_string())),
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: Vec::new(),
                 next_portability: None,
@@ -2706,6 +2735,7 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
     let resumed_model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("resumed".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
             next_portability: None,

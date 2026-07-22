@@ -112,6 +112,9 @@ impl EngineToolResult {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ModelInvocationResponse {
     pub output: Option<Value>,
+    /// Cumulative token usage for this invocation when the provider reports it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub usage: Option<crate::types::Usage>,
     #[serde(default)]
     pub assistant_messages: Vec<Message>,
     #[serde(default)]
