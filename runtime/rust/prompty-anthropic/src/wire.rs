@@ -449,6 +449,106 @@ pub fn format_tool_messages(
     messages
 }
 
+/// Reconstruct streamed assistant content blocks before formatting tool results.
+pub fn format_stream_tool_messages(
+    raw_chunks: &[Value],
+    tool_calls: &[ToolCall],
+    tool_results: &[String],
+    text_content: Option<&str>,
+) -> Vec<Message> {
+    use std::collections::BTreeMap;
+
+    let mut blocks: BTreeMap<usize, Value> = BTreeMap::new();
+    let mut partial_inputs: BTreeMap<usize, String> = BTreeMap::new();
+    for event in raw_chunks {
+        let index = event.get("index").and_then(Value::as_u64).unwrap_or(0) as usize;
+        match event.get("type").and_then(Value::as_str) {
+            Some("content_block_start") => {
+                if let Some(block) = event.get("content_block") {
+                    blocks.insert(index, block.clone());
+                }
+            }
+            Some("content_block_delta") => {
+                let Some(delta) = event.get("delta") else {
+                    continue;
+                };
+                match delta.get("type").and_then(Value::as_str) {
+                    Some("text_delta") => {
+                        let text = delta.get("text").and_then(Value::as_str).unwrap_or("");
+                        let block = blocks
+                            .entry(index)
+                            .or_insert_with(|| json!({"type": "text", "text": ""}));
+                        let current = block.get("text").and_then(Value::as_str).unwrap_or("");
+                        block["text"] = Value::String(format!("{current}{text}"));
+                    }
+                    Some("thinking_delta") => {
+                        let thinking = delta.get("thinking").and_then(Value::as_str).unwrap_or("");
+                        let block = blocks
+                            .entry(index)
+                            .or_insert_with(|| json!({"type": "thinking", "thinking": ""}));
+                        let current = block.get("thinking").and_then(Value::as_str).unwrap_or("");
+                        block["thinking"] = Value::String(format!("{current}{thinking}"));
+                    }
+                    Some("signature_delta") => {
+                        let signature =
+                            delta.get("signature").and_then(Value::as_str).unwrap_or("");
+                        let block = blocks.entry(index).or_insert_with(
+                            || json!({"type": "thinking", "thinking": "", "signature": ""}),
+                        );
+                        let current = block.get("signature").and_then(Value::as_str).unwrap_or("");
+                        block["signature"] = Value::String(format!("{current}{signature}"));
+                    }
+                    Some("input_json_delta") => {
+                        partial_inputs.entry(index).or_default().push_str(
+                            delta
+                                .get("partial_json")
+                                .and_then(Value::as_str)
+                                .unwrap_or(""),
+                        );
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+    }
+
+    for (index, input) in partial_inputs {
+        if let Some(block) = blocks.get_mut(&index)
+            && !input.is_empty()
+        {
+            block["input"] = serde_json::from_str(&input).unwrap_or_else(|_| json!({}));
+        }
+    }
+
+    if blocks.is_empty() {
+        let mut index = 0usize;
+        if let Some(text) = text_content.filter(|text| !text.is_empty()) {
+            blocks.insert(index, json!({"type": "text", "text": text}));
+            index += 1;
+        }
+        for tool_call in tool_calls {
+            blocks.insert(
+                index,
+                json!({
+                    "type": "tool_use",
+                    "id": tool_call.id,
+                    "name": tool_call.name,
+                    "input": serde_json::from_str::<Value>(&tool_call.arguments)
+                        .unwrap_or_else(|_| json!({})),
+                }),
+            );
+            index += 1;
+        }
+    }
+
+    format_tool_messages(
+        &json!({"content": blocks.into_values().collect::<Vec<_>>() }),
+        tool_calls,
+        tool_results,
+    )
+}
+
 // ===========================================================================
 // Tests
 // ===========================================================================
@@ -634,6 +734,171 @@ mod tests {
         assert_eq!(results_arr.len(), 1);
         assert_eq!(results_arr[0]["type"], "tool_result");
         assert_eq!(results_arr[0]["tool_use_id"], "toolu_1");
+    }
+
+    #[test]
+    fn test_format_tool_messages_preserves_empty_result_in_non_empty_batch() {
+        let raw_response = json!({
+            "content": [
+                {"type": "tool_use", "id": "toolu_empty", "name": "lookup", "input": {}}
+            ]
+        });
+        let tool_calls = vec![ToolCall {
+            id: "toolu_empty".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{}".to_string(),
+        }];
+
+        let messages = format_tool_messages(&raw_response, &tool_calls, &["".to_string()]);
+
+        assert_eq!(messages.len(), 2);
+        let results = messages[1].metadata["tool_results"].as_array().unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0]["content"], "");
+    }
+
+    #[test]
+    fn test_stream_tool_messages_preserve_raw_assistant_content_and_batch_results() {
+        let chunks = vec![
+            json!({
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "text", "text": ""}
+            }),
+            json!({
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "text_delta", "text": "Checking "}
+            }),
+            json!({
+                "type": "content_block_start",
+                "index": 1,
+                "content_block": {"type": "tool_use", "id": "toolu_1", "name": "weather", "input": {}}
+            }),
+            json!({
+                "type": "content_block_delta",
+                "index": 1,
+                "delta": {"type": "input_json_delta", "partial_json": "{\"city\":\"Paris\"}"}
+            }),
+            json!({
+                "type": "content_block_start",
+                "index": 2,
+                "content_block": {"type": "tool_use", "id": "toolu_2", "name": "time", "input": {}}
+            }),
+            json!({
+                "type": "content_block_delta",
+                "index": 2,
+                "delta": {"type": "input_json_delta", "partial_json": "{\"zone\":\"CET\"}"}
+            }),
+        ];
+        let calls = vec![
+            ToolCall {
+                id: "toolu_1".to_string(),
+                name: "weather".to_string(),
+                arguments: r#"{"city":"Paris"}"#.to_string(),
+            },
+            ToolCall {
+                id: "toolu_2".to_string(),
+                name: "time".to_string(),
+                arguments: r#"{"zone":"CET"}"#.to_string(),
+            },
+        ];
+
+        let messages = format_stream_tool_messages(
+            &chunks,
+            &calls,
+            &["sunny".to_string(), "10:00".to_string()],
+            Some("Checking "),
+        );
+
+        let content = messages[0].metadata["content"].as_array().unwrap();
+        assert_eq!(content[0]["text"], "Checking ");
+        assert_eq!(content[1]["id"], "toolu_1");
+        assert_eq!(content[1]["input"]["city"], "Paris");
+        assert_eq!(content[2]["id"], "toolu_2");
+        let results = messages[1].metadata["tool_results"].as_array().unwrap();
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0]["tool_use_id"], "toolu_1");
+        assert_eq!(results[1]["tool_use_id"], "toolu_2");
+    }
+
+    #[test]
+    fn test_stream_tool_messages_preserve_extended_thinking_signature() {
+        let chunks = vec![
+            json!({
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "thinking", "thinking": ""}
+            }),
+            json!({
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "thinking_delta", "thinking": "I should inspect the data."}
+            }),
+            json!({
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "signature_delta", "signature": "ErYBCkYI"}
+            }),
+            json!({
+                "type": "content_block_start",
+                "index": 1,
+                "content_block": {
+                    "type": "tool_use",
+                    "id": "toolu_1",
+                    "name": "lookup",
+                    "input": {}
+                }
+            }),
+            json!({
+                "type": "content_block_delta",
+                "index": 1,
+                "delta": {"type": "input_json_delta", "partial_json": "{\"q\":\"rust\"}"}
+            }),
+        ];
+        let calls = vec![ToolCall {
+            id: "toolu_1".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{\"q\":\"rust\"}".to_string(),
+        }];
+
+        let messages = format_stream_tool_messages(&chunks, &calls, &["result".to_string()], None);
+
+        let content = messages[0].metadata["content"].as_array().unwrap();
+        assert_eq!(content[0]["type"], "thinking");
+        assert_eq!(content[0]["thinking"], "I should inspect the data.");
+        assert_eq!(content[0]["signature"], "ErYBCkYI");
+        assert_eq!(content[1]["type"], "tool_use");
+    }
+
+    #[test]
+    fn test_stream_tool_messages_keep_malformed_partial_input_provider_valid() {
+        let chunks = vec![
+            json!({
+                "type": "content_block_start",
+                "index": 0,
+                "content_block": {"type": "tool_use", "id": "toolu_bad", "name": "lookup", "input": {}}
+            }),
+            json!({
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "input_json_delta", "partial_json": "{\"broken\""}
+            }),
+        ];
+        let calls = vec![ToolCall {
+            id: "toolu_bad".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{\"broken\"".to_string(),
+        }];
+
+        let messages = format_stream_tool_messages(
+            &chunks,
+            &calls,
+            &["Error: invalid input".to_string()],
+            None,
+        );
+
+        assert!(messages[0].metadata["content"][0]["input"].is_object());
     }
 
     #[test]

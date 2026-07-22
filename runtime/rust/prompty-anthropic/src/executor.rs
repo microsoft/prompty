@@ -78,6 +78,16 @@ impl Executor for AnthropicExecutor {
         wire::format_tool_messages(raw_response, tool_calls, tool_results)
     }
 
+    fn format_stream_tool_messages(
+        &self,
+        raw_chunks: &[Value],
+        tool_calls: &[prompty::types::ToolCall],
+        tool_results: &[String],
+        text_content: Option<&str>,
+    ) -> Vec<Message> {
+        wire::format_stream_tool_messages(raw_chunks, tool_calls, tool_results, text_content)
+    }
+
     async fn execute_stream(
         &self,
         agent: &Prompty,

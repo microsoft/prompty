@@ -291,6 +291,114 @@ impl futures::Stream for OpenAIStreamProcessor {
             StreamPhase::Streaming => {
                 match this.inner.as_mut().poll_next(cx) {
                     std::task::Poll::Ready(Some(chunk)) => {
+                        let event_type = chunk.get("type").and_then(Value::as_str);
+                        match event_type {
+                            Some("response.output_text.delta") => {
+                                if let Some(text) = chunk.get("delta").and_then(Value::as_str)
+                                    && !text.is_empty()
+                                {
+                                    return std::task::Poll::Ready(Some(StreamChunk::Text(
+                                        text.to_string(),
+                                    )));
+                                }
+                            }
+                            Some("response.output_item.added" | "response.output_item.done") => {
+                                if let Some(item) = chunk.get("item")
+                                    && item.get("type").and_then(Value::as_str)
+                                        == Some("function_call")
+                                {
+                                    let index = chunk
+                                        .get("output_index")
+                                        .and_then(Value::as_u64)
+                                        .unwrap_or(this.tool_call_acc.len() as u64)
+                                        as usize;
+                                    this.tool_call_acc.insert(
+                                        index,
+                                        (
+                                            item.get("call_id")
+                                                .and_then(Value::as_str)
+                                                .unwrap_or("")
+                                                .to_string(),
+                                            item.get("name")
+                                                .and_then(Value::as_str)
+                                                .unwrap_or("")
+                                                .to_string(),
+                                            item.get("arguments")
+                                                .and_then(Value::as_str)
+                                                .unwrap_or("")
+                                                .to_string(),
+                                        ),
+                                    );
+                                }
+                            }
+                            Some("response.function_call_arguments.delta") => {
+                                if let Some(call_id) = chunk.get("call_id").and_then(Value::as_str)
+                                    && let Some(arguments) =
+                                        chunk.get("delta").and_then(Value::as_str)
+                                    && let Some(entry) = this
+                                        .tool_call_acc
+                                        .values_mut()
+                                        .find(|entry| entry.0 == call_id)
+                                {
+                                    entry.2.push_str(arguments);
+                                }
+                            }
+                            Some("response.function_call_arguments.done") => {
+                                if let Some(call_id) = chunk.get("call_id").and_then(Value::as_str)
+                                    && let Some(arguments) =
+                                        chunk.get("arguments").and_then(Value::as_str)
+                                    && let Some(entry) = this
+                                        .tool_call_acc
+                                        .values_mut()
+                                        .find(|entry| entry.0 == call_id)
+                                {
+                                    entry.2 = arguments.to_string();
+                                }
+                            }
+                            Some("response.completed") => {
+                                if let Some(output) = chunk
+                                    .get("response")
+                                    .and_then(|response| response.get("output"))
+                                    .and_then(Value::as_array)
+                                {
+                                    for (index, item) in output.iter().enumerate() {
+                                        if item.get("type").and_then(Value::as_str)
+                                            == Some("function_call")
+                                        {
+                                            this.tool_call_acc.insert(
+                                                index,
+                                                (
+                                                    item.get("call_id")
+                                                        .and_then(Value::as_str)
+                                                        .unwrap_or("")
+                                                        .to_string(),
+                                                    item.get("name")
+                                                        .and_then(Value::as_str)
+                                                        .unwrap_or("")
+                                                        .to_string(),
+                                                    item.get("arguments")
+                                                        .and_then(Value::as_str)
+                                                        .unwrap_or("")
+                                                        .to_string(),
+                                                ),
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                            Some("response.refusal.delta") => {
+                                if let Some(refusal) = chunk.get("delta").and_then(Value::as_str)
+                                    && !refusal.is_empty()
+                                {
+                                    this.phase = StreamPhase::Done;
+                                    return std::task::Poll::Ready(Some(StreamChunk::Error(
+                                        format!("Model refused: {refusal}"),
+                                    )));
+                                }
+                            }
+                            _ => {}
+                        }
+
                         let delta = chunk
                             .get("choices")
                             .and_then(Value::as_array)
@@ -777,6 +885,76 @@ mod tests {
         let (tool_calls, content) = consume_stream_chunks(stream, None).await;
         assert!(tool_calls.is_empty());
         assert_eq!(content, "Hello world");
+    }
+
+    #[tokio::test]
+    async fn test_stream_responses_api_text_delta() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({
+                "type": "response.output_text.delta",
+                "item_id": "msg_1",
+                "output_index": 0,
+                "content_index": 0,
+                "delta": "Hello"
+            }),
+            json!({
+                "type": "response.output_text.delta",
+                "item_id": "msg_1",
+                "output_index": 0,
+                "content_index": 0,
+                "delta": " world"
+            }),
+        ];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut text = String::new();
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Text(value) = chunk {
+                text.push_str(&value);
+            }
+        }
+        assert_eq!(text, "Hello world");
+    }
+
+    #[tokio::test]
+    async fn test_stream_responses_api_function_call() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({
+                "type": "response.output_item.added",
+                "output_index": 1,
+                "item": {
+                    "type": "function_call",
+                    "id": "fc_1",
+                    "call_id": "call_1",
+                    "name": "get_weather",
+                    "arguments": ""
+                }
+            }),
+            json!({
+                "type": "response.function_call_arguments.delta",
+                "call_id": "call_1",
+                "delta": "{\"city\""
+            }),
+            json!({
+                "type": "response.function_call_arguments.done",
+                "call_id": "call_1",
+                "arguments": "{\"city\":\"Seattle\"}"
+            }),
+        ];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut calls = Vec::new();
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Tool(call) = chunk {
+                calls.push(call);
+            }
+        }
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls[0].id, "call_1");
+        assert_eq!(calls[0].name, "get_weather");
+        assert_eq!(calls[0].arguments, "{\"city\":\"Seattle\"}");
     }
 
     #[tokio::test]

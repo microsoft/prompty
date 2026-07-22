@@ -3580,6 +3580,7 @@
       }
     ],
     "expected": {
+      "rust_expected_error": "parallel_tool_calls=true is not supported by the canonical Rust engine",
       "result": "Here's your update: Paris is 72\u00c2\u00b0F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
       "iterations": 2,
       "total_messages": 8,
@@ -3766,6 +3767,7 @@
       }
     ],
     "expected": {
+      "rust_expected_error": "parallel_tool_calls=true is not supported by the canonical Rust engine",
       "result": "Paris is 72\u00c2\u00b0F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
       "iterations": 2,
       "total_messages": 8,

@@ -196,6 +196,26 @@ pub trait Executor: Send + Sync {
 
         messages
     }
+
+    /// Format a streamed tool-call response for the next conversation round.
+    ///
+    /// Providers that require raw streamed assistant content can override this.
+    /// The default delegates to `format_tool_messages`; OpenAI-compatible
+    /// executors do not require raw response chunks.
+    fn format_stream_tool_messages(
+        &self,
+        _raw_chunks: &[serde_json::Value],
+        tool_calls: &[crate::types::ToolCall],
+        tool_results: &[String],
+        text_content: Option<&str>,
+    ) -> Vec<Message> {
+        self.format_tool_messages(
+            &serde_json::Value::Null,
+            tool_calls,
+            tool_results,
+            text_content,
+        )
+    }
 }
 
 // ---------------------------------------------------------------------------

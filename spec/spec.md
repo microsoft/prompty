@@ -10,6 +10,10 @@
 >
 > The type system (data model) is defined separately in TypeSpec (`schema/`). This
 > specification covers what implementations DO with those types.
+>
+> The Rust-first canonical agent orchestration architecture is defined in
+> [`turn-engine.md`](turn-engine.md). During incubation it supersedes the independent
+> live/reference loop design described in older sections of this draft.
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
 "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be

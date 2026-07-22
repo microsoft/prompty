@@ -1211,27 +1211,29 @@ async fn test_steering_multiple_messages() {
 }
 
 // -------------------------------------------------------------------
-// Parallel tool calls (§13.6)
+// Parallel tool option rejection (§13.6)
 // -------------------------------------------------------------------
 
 #[tokio::test]
 async fn test_parallel_tools_basic() {
-    // 3 tool calls in one turn, dispatched in parallel.
     let vector = find_vector("parallel_tools_basic");
-    let expected_result = vector["expected"]["result"].as_str().unwrap();
+    let expected_error = vector["expected"]["rust_expected_error"].as_str().unwrap();
 
-    let result = run_extension_vector("parallel_tools_basic").await.unwrap();
-    assert_eq!(result.as_str().unwrap(), expected_result);
+    let error = run_extension_vector("parallel_tools_basic")
+        .await
+        .unwrap_err();
+    assert!(matches!(error, InvokerError::Validation(_)));
+    assert!(error.to_string().contains(expected_error));
 }
 
 #[tokio::test]
 async fn test_parallel_tools_with_guardrail_deny() {
-    // 3 parallel tool calls — one denied by tool guardrail, two allowed.
     let vector = find_vector("parallel_tools_with_guardrail_deny");
-    let expected_result = vector["expected"]["result"].as_str().unwrap();
+    let expected_error = vector["expected"]["rust_expected_error"].as_str().unwrap();
 
-    let result = run_extension_vector("parallel_tools_with_guardrail_deny")
+    let error = run_extension_vector("parallel_tools_with_guardrail_deny")
         .await
-        .unwrap();
-    assert_eq!(result.as_str().unwrap(), expected_result);
+        .unwrap_err();
+    assert!(matches!(error, InvokerError::Validation(_)));
+    assert!(error.to_string().contains(expected_error));
 }

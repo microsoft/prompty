@@ -1,8 +1,8 @@
 //! # Prompty — Rust Runtime
 //!
-//! Prompty is a markdown file format (`.prompty`) for LLM prompts.
-//! YAML frontmatter defines model, connection, tools, and schema.
-//! The markdown body becomes instructions with template variables.
+//! Prompty is a portable asset and execution system for AI behavior.
+//! A `.prompty` file keeps instructions, inputs, outputs, tools, and model
+//! preferences reviewable while runtime policy and host bindings remain external.
 //!
 //! ## Core Pipeline
 //!
@@ -37,6 +37,7 @@
 
 pub mod connections;
 pub mod context;
+pub mod engine;
 pub mod guardrails;
 pub mod harness;
 pub mod interfaces;
@@ -59,6 +60,21 @@ pub mod types;
 pub use connections::{clear_connections, has_connection, register_connection, with_connection};
 pub use context::{
     estimate_chars, format_dropped_messages, summarize_dropped, trim_to_context_window,
+};
+pub use engine::{
+    AllowAllPermissions, AppendContextPackingStrategy, CancellationToken, Clock, ContextCandidate,
+    ContextDecision, ContextDisposition, ContextError, ContextPackingStrategy, ContextPipeline,
+    ContextPortability, ContextRequest, ContextSource, ContextTransform, ConversationPort,
+    DefaultConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint,
+    EngineEvent, EngineEventKind, EnginePermissionDecision, EngineToolRequest, EngineToolResult,
+    FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyError, HostPolicyPort,
+    HostPolicyRequest, HostPolicyResult, IdGenerator, ModelInvocationContextSnapshot,
+    ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelReconciliationState,
+    ModelStreamChunk, ModelStreamPort, NoopDurabilityPort, NoopHostPolicyPort, NoopModelStreamPort,
+    NoopPostCommitPort, NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort,
+    RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, ToolOutcome, ToolPort, TurnCommit,
+    TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest, TurnEngineResult,
+    TurnStatus,
 };
 pub use guardrails::{
     GuardrailError, GuardrailPhase, GuardrailResult, Guardrails, InputGuardrail, OutputGuardrail,

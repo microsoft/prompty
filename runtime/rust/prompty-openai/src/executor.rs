@@ -89,12 +89,35 @@ impl Executor for OpenAIExecutor {
 
     fn format_tool_messages(
         &self,
-        _raw_response: &serde_json::Value,
+        raw_response: &serde_json::Value,
         tool_calls: &[prompty::types::ToolCall],
         tool_results: &[String],
         _text_content: Option<&str>,
     ) -> Vec<Message> {
-        wire::format_tool_messages(tool_calls, tool_results)
+        if raw_response.get("object").and_then(Value::as_str) == Some("response") {
+            wire::format_responses_tool_messages(raw_response, tool_calls, tool_results)
+        } else {
+            wire::format_tool_messages(tool_calls, tool_results)
+        }
+    }
+
+    fn format_stream_tool_messages(
+        &self,
+        raw_chunks: &[Value],
+        tool_calls: &[prompty::types::ToolCall],
+        tool_results: &[String],
+        _text_content: Option<&str>,
+    ) -> Vec<Message> {
+        if raw_chunks.iter().any(|chunk| {
+            chunk
+                .get("type")
+                .and_then(Value::as_str)
+                .is_some_and(|event_type| event_type.starts_with("response."))
+        }) {
+            wire::format_stream_responses_tool_messages(raw_chunks, tool_calls, tool_results)
+        } else {
+            wire::format_tool_messages(tool_calls, tool_results)
+        }
     }
 
     async fn execute_stream(
@@ -518,6 +541,74 @@ mod tests {
         assert_eq!(items.len(), 2);
         assert_eq!(items[0]["id"], 1);
         assert_eq!(items[1]["id"], 2);
+    }
+
+    #[test]
+    fn test_responses_formatter_dispatches_to_responses_wire_contract() {
+        let executor = OpenAIExecutor;
+        let calls = vec![prompty::types::ToolCall {
+            id: "call_1".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{}".to_string(),
+        }];
+
+        let messages = executor.format_tool_messages(
+            &json!({
+                "object": "response",
+                "output": [{
+                    "type": "function_call",
+                    "id": "fc_1",
+                    "call_id": "call_1",
+                    "name": "lookup",
+                    "arguments": "{}"
+                }]
+            }),
+            &calls,
+            &["result".to_string()],
+            None,
+        );
+
+        assert!(
+            messages[0]
+                .metadata
+                .get("responses_function_call")
+                .is_some()
+        );
+        assert!(messages[0].metadata.get("tool_calls").is_none());
+    }
+
+    #[test]
+    fn test_stream_responses_formatter_dispatches_to_responses_wire_contract() {
+        let executor = OpenAIExecutor;
+        let calls = vec![prompty::types::ToolCall {
+            id: "call_stream".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{}".to_string(),
+        }];
+
+        let messages = executor.format_stream_tool_messages(
+            &[json!({
+                "type": "response.output_item.done",
+                "output_index": 0,
+                "item": {
+                    "type": "function_call",
+                    "id": "fc_stream",
+                    "call_id": "call_stream",
+                    "name": "lookup",
+                    "arguments": "{}",
+                    "status": "completed"
+                }
+            })],
+            &calls,
+            &["result".to_string()],
+            None,
+        );
+
+        assert_eq!(
+            messages[0].metadata["responses_function_call"]["id"],
+            "fc_stream"
+        );
+        assert!(messages[0].metadata.get("tool_calls").is_none());
     }
 
     // --- Reference connection resolution tests ---

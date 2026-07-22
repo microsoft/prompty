@@ -15,6 +15,7 @@ use prompty::model::pipeline::RunTurnRequest;
 use prompty::model::pipeline::TurnModelRequest;
 use prompty::model::pipeline::TurnModelResponse;
 use prompty::model::pipeline::checkpoint_store::CheckpointStore;
+use prompty::model::pipeline::host_tool_executor::HostToolExecutor;
 use prompty::model::pipeline::permission_resolver::PermissionResolver;
 use prompty::model::pipeline::run_turn_result::RunTurnStatus;
 use prompty::model::pipeline::turn_options::TurnOptions;
@@ -84,6 +85,18 @@ struct ReplayScenario {
 #[derive(Clone)]
 struct ScenarioPermissionResolver {
     approved: bool,
+}
+
+struct FailingHostToolExecutor;
+
+#[async_trait::async_trait]
+impl HostToolExecutor for FailingHostToolExecutor {
+    async fn execute(
+        &self,
+        _request: &HostToolRequest,
+    ) -> Result<prompty::model::events::host_tool_result::HostToolResult, AdapterError> {
+        Err(Box::new(std::io::Error::other("executor unavailable")))
+    }
 }
 
 #[async_trait::async_trait]
@@ -395,6 +408,50 @@ async fn reference_turn_runner_executes_host_tools() {
 }
 
 #[tokio::test]
+async fn reference_turn_runner_preserves_missing_request_id_allocation_order() {
+    let path = trace_path("prompty-turn-generated-permission");
+    let sink = CollectingEventSink::new();
+    let runner = ReferenceTurnRunner::new(
+        sink.clone(),
+        JsonlEventJournalWriter::new(&path),
+        InMemoryCheckpointStore::new(),
+        DenyAllPermissionResolver,
+        FunctionHostToolExecutor::default(),
+        Arc::new(|request: TurnModelRequest| {
+            if request.iteration == 0 {
+                return Ok(TurnModelResponse {
+                    tool_requests: vec![HostToolRequest {
+                        tool_name: "generated".to_string(),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                });
+            }
+            Ok(TurnModelResponse {
+                output: Some(json!("done")),
+                ..Default::default()
+            })
+        }),
+        fixed_clock(),
+        fixed_ids(),
+    );
+
+    runner
+        .run(run_request("session-1", "turn-1"))
+        .await
+        .unwrap();
+
+    let permission = sink
+        .turn_events()
+        .into_iter()
+        .find(|event| event.r#type.to_string() == "permission_requested")
+        .unwrap();
+    assert_eq!(permission.id, "turn-event-7");
+    assert_eq!(permission.payload["requestId"], "permission-6");
+    let _ = fs::remove_file(path);
+}
+
+#[tokio::test]
 async fn reference_turn_runner_denied_permission_skips_execution() {
     let path = trace_path("prompty-turn-deny");
     let sink = CollectingEventSink::new();
@@ -449,6 +506,132 @@ async fn reference_turn_runner_denied_permission_skips_execution() {
             .turn_events()
             .iter()
             .any(|event| event.r#type.to_string() == "tool_execution_start")
+    );
+    let messages_updated = sink
+        .turn_events()
+        .into_iter()
+        .find(|event| event.r#type.to_string() == "messages_updated")
+        .unwrap();
+    assert_eq!(
+        messages_updated.payload["toolResults"][0]["errorKind"],
+        "permission_denied"
+    );
+    let _ = fs::remove_file(path);
+}
+
+#[tokio::test]
+async fn reference_turn_runner_propagates_model_callback_errors() {
+    let path = trace_path("prompty-turn-model-error");
+    let sink = CollectingEventSink::new();
+    let runner = ReferenceTurnRunner::new(
+        sink.clone(),
+        JsonlEventJournalWriter::new(&path),
+        InMemoryCheckpointStore::new(),
+        AllowAllPermissionResolver,
+        FunctionHostToolExecutor::default(),
+        Arc::new(|_request: TurnModelRequest| {
+            Err(Box::new(std::io::Error::other("model unavailable")) as AdapterError)
+        }),
+        fixed_clock(),
+        fixed_ids(),
+    );
+
+    let error = runner
+        .run(run_request("session-1", "turn-1"))
+        .await
+        .unwrap_err();
+
+    assert!(error.to_string().contains("model unavailable"));
+    assert!(
+        !sink
+            .turn_events()
+            .iter()
+            .any(|event| event.r#type.to_string() == "turn_end")
+    );
+    assert!(
+        !sink
+            .session_events()
+            .iter()
+            .any(|event| event.r#type.to_string() == "session_end")
+    );
+    let _ = fs::remove_file(path);
+}
+
+#[tokio::test]
+async fn reference_turn_runner_propagates_host_executor_errors() {
+    let path = trace_path("prompty-turn-executor-error");
+    let runner = ReferenceTurnRunner::new(
+        CollectingEventSink::new(),
+        JsonlEventJournalWriter::new(&path),
+        InMemoryCheckpointStore::new(),
+        AllowAllPermissionResolver,
+        FailingHostToolExecutor,
+        Arc::new(|_request: TurnModelRequest| {
+            Ok(TurnModelResponse {
+                tool_requests: vec![HostToolRequest {
+                    request_id: Some("exec-1".to_string()),
+                    tool_name: "unavailable".to_string(),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            })
+        }),
+        fixed_clock(),
+        fixed_ids(),
+    );
+
+    let error = runner
+        .run(run_request("session-1", "turn-1"))
+        .await
+        .unwrap_err();
+
+    assert!(error.to_string().contains("executor unavailable"));
+    let _ = fs::remove_file(path);
+}
+
+#[tokio::test]
+async fn reference_turn_runner_preserves_zero_iteration_behavior() {
+    let path = trace_path("prompty-turn-zero");
+    let calls = Arc::new(Mutex::new(0usize));
+    let callback_calls = calls.clone();
+    let sink = CollectingEventSink::new();
+    let runner = ReferenceTurnRunner::new(
+        sink.clone(),
+        JsonlEventJournalWriter::new(&path),
+        InMemoryCheckpointStore::new(),
+        AllowAllPermissionResolver,
+        FunctionHostToolExecutor::default(),
+        Arc::new(move |_request: TurnModelRequest| {
+            *callback_calls.lock().unwrap() += 1;
+            Ok(TurnModelResponse::default())
+        }),
+        fixed_clock(),
+        fixed_ids(),
+    );
+
+    let result = runner
+        .run(RunTurnRequest {
+            session_id: "session-1".to_string(),
+            turn_id: "turn-1".to_string(),
+            inputs: json!({}),
+            options: Some(TurnOptions {
+                max_iterations: Some(0),
+                ..Default::default()
+            }),
+        })
+        .await
+        .unwrap();
+
+    assert_eq!(result.status, RunTurnStatus::Success);
+    assert_eq!(result.iterations, 0);
+    assert!(result.checkpoints.is_empty());
+    assert_eq!(*calls.lock().unwrap(), 0);
+    assert_eq!(
+        sink.turn_events()
+            .iter()
+            .map(|event| event.r#type.to_string())
+            .collect::<Vec<_>>(),
+        vec!["turn_start", "turn_end"]
     );
     let _ = fs::remove_file(path);
 }
@@ -538,6 +721,62 @@ async fn reference_turn_runner_deterministic_journal() {
 }
 
 #[tokio::test]
+async fn reference_turn_runner_preserves_stateful_clock_consumption() {
+    let path = trace_path("prompty-turn-clock");
+    let tick = Arc::new(Mutex::new(0usize));
+    let clock_tick = tick.clone();
+    let sink = CollectingEventSink::new();
+    let checkpoint_store = InMemoryCheckpointStore::new();
+    let runner = ReferenceTurnRunner::new(
+        sink.clone(),
+        JsonlEventJournalWriter::new(&path),
+        checkpoint_store.clone(),
+        AllowAllPermissionResolver,
+        FunctionHostToolExecutor::default(),
+        Arc::new(|_request: TurnModelRequest| {
+            Ok(TurnModelResponse {
+                output: Some(json!("done")),
+                ..Default::default()
+            })
+        }),
+        Arc::new(move || {
+            let mut tick = clock_tick.lock().unwrap();
+            *tick += 1;
+            format!("tick-{tick}")
+        }),
+        fixed_ids(),
+    );
+
+    runner
+        .run(run_request("session-1", "turn-1"))
+        .await
+        .unwrap();
+
+    assert_eq!(
+        sink.turn_events()
+            .iter()
+            .map(|event| event.timestamp.as_str())
+            .collect::<Vec<_>>(),
+        vec!["tick-2", "tick-3", "tick-4", "tick-7"]
+    );
+    assert_eq!(
+        sink.session_events()
+            .iter()
+            .map(|event| event.timestamp.as_str())
+            .collect::<Vec<_>>(),
+        vec!["tick-1", "tick-6", "tick-8"]
+    );
+    let checkpoint = checkpoint_store
+        .load(&"session-1".to_string(), &"turn-1-checkpoint-0".to_string())
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(checkpoint.created_at.as_deref(), Some("tick-5"));
+    assert_eq!(*tick.lock().unwrap(), 8);
+    let _ = fs::remove_file(path);
+}
+
+#[tokio::test]
 async fn reference_turn_runner_matches_shared_golden_replay_vectors() {
     let vectors = replay_vectors();
     for scenario in vectors.scenarios {
@@ -593,11 +832,38 @@ async fn reference_turn_runner_matches_shared_golden_replay_vectors() {
             .await
             .unwrap();
 
+        let journal_records = records(&path);
         assert_eq!(
-            normalize_journal(records(&path)),
+            normalize_journal(journal_records.clone()),
             scenario.expected,
             "{}",
             scenario.name
+        );
+        if scenario.name == "max_iterations" {
+            let error = journal_records
+                .iter()
+                .find(|record| record["event"]["type"] == "error")
+                .unwrap();
+            assert_eq!(
+                error["event"]["payload"]["message"],
+                "Maximum turn iterations reached"
+            );
+            let turn_end = journal_records
+                .iter()
+                .find(|record| record["event"]["type"] == "turn_end")
+                .unwrap();
+            assert_eq!(
+                turn_end["event"]["payload"]["response"],
+                json!({ "message": "Maximum turn iterations reached" })
+            );
+        }
+        let session_end = journal_records
+            .iter()
+            .find(|record| record["event"]["type"] == "session_end")
+            .unwrap();
+        assert_eq!(
+            session_end["event"]["payload"].as_object().unwrap().len(),
+            3
         );
         let _ = fs::remove_file(path);
     }

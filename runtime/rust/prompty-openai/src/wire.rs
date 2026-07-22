@@ -655,6 +655,109 @@ pub fn format_tool_messages(
     messages
 }
 
+/// Format a Responses API tool exchange while preserving original function-call items.
+pub fn format_responses_tool_messages(
+    raw_response: &Value,
+    tool_calls: &[prompty::types::ToolCall],
+    results: &[String],
+) -> Vec<Message> {
+    let originals = raw_response
+        .get("output")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|item| item.get("type").and_then(Value::as_str) == Some("function_call"))
+        .filter(|item| {
+            item.get("call_id")
+                .and_then(Value::as_str)
+                .is_some_and(|call_id| tool_calls.iter().any(|call| call.id == call_id))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+
+    format_responses_tool_exchange(originals, tool_calls, results)
+}
+
+/// Format a streamed Responses API tool exchange from raw response events.
+pub fn format_stream_responses_tool_messages(
+    raw_chunks: &[Value],
+    tool_calls: &[prompty::types::ToolCall],
+    results: &[String],
+) -> Vec<Message> {
+    use std::collections::BTreeMap;
+
+    let mut originals = BTreeMap::<usize, Value>::new();
+    for chunk in raw_chunks {
+        let event_type = chunk.get("type").and_then(Value::as_str);
+        if event_type == Some("response.completed")
+            && let Some(output) = chunk
+                .get("response")
+                .and_then(|response| response.get("output"))
+                .and_then(Value::as_array)
+        {
+            for (index, item) in output.iter().enumerate() {
+                if item.get("type").and_then(Value::as_str) == Some("function_call") {
+                    originals.insert(index, item.clone());
+                }
+            }
+        }
+        if matches!(
+            event_type,
+            Some("response.output_item.added" | "response.output_item.done")
+        ) && let Some(item) = chunk.get("item")
+            && item.get("type").and_then(Value::as_str) == Some("function_call")
+        {
+            let index = chunk
+                .get("output_index")
+                .and_then(Value::as_u64)
+                .unwrap_or(originals.len() as u64) as usize;
+            originals.insert(index, item.clone());
+        }
+        if event_type == Some("response.function_call_arguments.done")
+            && let Some(call_id) = chunk.get("call_id").and_then(Value::as_str)
+            && let Some(arguments) = chunk.get("arguments").and_then(Value::as_str)
+            && let Some(item) = originals
+                .values_mut()
+                .find(|item| item.get("call_id").and_then(Value::as_str) == Some(call_id))
+        {
+            item["arguments"] = Value::String(arguments.to_string());
+        }
+    }
+
+    format_responses_tool_exchange(originals.into_values().collect(), tool_calls, results)
+}
+
+fn format_responses_tool_exchange(
+    originals: Vec<Value>,
+    tool_calls: &[prompty::types::ToolCall],
+    results: &[String],
+) -> Vec<Message> {
+    let mut messages = Vec::new();
+    for tool_call in tool_calls {
+        let original = originals
+            .iter()
+            .find(|item| item.get("call_id").and_then(Value::as_str) == Some(tool_call.id.as_str()))
+            .cloned()
+            .unwrap_or_else(|| {
+                json!({
+                    "type": "function_call",
+                    "call_id": tool_call.id,
+                    "name": tool_call.name,
+                    "arguments": tool_call.arguments,
+                })
+            });
+        let mut message = Message::with_text(prompty::Role::Assistant, "");
+        message
+            .metadata_mut()
+            .insert("responses_function_call".to_string(), original);
+        messages.push(message);
+    }
+    for (tool_call, result) in tool_calls.iter().zip(results) {
+        messages.push(Message::tool_result(&tool_call.id, result));
+    }
+    messages
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -759,5 +862,174 @@ mod tests {
         assert!(msgs[0].metadata.get("tool_calls").is_some());
         assert_eq!(msgs[1].role.to_string(), "tool");
         assert_eq!(msgs[1].text_content(), "72°F");
+    }
+
+    #[test]
+    fn test_format_multiple_tool_messages_preserves_request_order() {
+        let tool_calls = vec![
+            prompty::types::ToolCall {
+                id: "call_1".to_string(),
+                name: "first".to_string(),
+                arguments: "{}".to_string(),
+            },
+            prompty::types::ToolCall {
+                id: "call_2".to_string(),
+                name: "second".to_string(),
+                arguments: "{}".to_string(),
+            },
+        ];
+
+        let messages = format_tool_messages(&tool_calls, &["one".to_string(), "two".to_string()]);
+
+        assert_eq!(messages.len(), 3);
+        assert_eq!(messages[1].metadata["tool_call_id"], "call_1");
+        assert_eq!(messages[1].text_content(), "one");
+        assert_eq!(messages[2].metadata["tool_call_id"], "call_2");
+        assert_eq!(messages[2].text_content(), "two");
+    }
+
+    #[test]
+    fn test_responses_tool_messages_preserve_original_calls_before_outputs() {
+        let raw_response = json!({
+            "object": "response",
+            "output": [
+                {
+                    "type": "function_call",
+                    "id": "fc_1",
+                    "call_id": "call_1",
+                    "name": "first",
+                    "arguments": "{\"value\":1}",
+                    "status": "completed"
+                },
+                {
+                    "type": "function_call",
+                    "id": "fc_2",
+                    "call_id": "call_2",
+                    "name": "second",
+                    "arguments": "{\"value\":2}",
+                    "status": "completed"
+                }
+            ]
+        });
+        let calls = vec![
+            prompty::types::ToolCall {
+                id: "call_1".to_string(),
+                name: "first".to_string(),
+                arguments: "{\"value\":1}".to_string(),
+            },
+            prompty::types::ToolCall {
+                id: "call_2".to_string(),
+                name: "second".to_string(),
+                arguments: "{\"value\":2}".to_string(),
+            },
+        ];
+
+        let messages =
+            format_responses_tool_messages(&raw_response, &calls, &["one".into(), "two".into()]);
+
+        assert_eq!(messages.len(), 4);
+        assert_eq!(
+            messages[0].metadata["responses_function_call"]["id"],
+            "fc_1"
+        );
+        assert_eq!(
+            messages[1].metadata["responses_function_call"]["status"],
+            "completed"
+        );
+        assert_eq!(messages[2].metadata["tool_call_id"], "call_1");
+        assert_eq!(messages[3].metadata["tool_call_id"], "call_2");
+    }
+
+    #[test]
+    fn test_responses_tool_messages_round_trip_to_function_call_items() {
+        let agent = Prompty::load_from_value(
+            &json!({
+                "name": "responses",
+                "kind": "prompt",
+                "model": {"id": "gpt-4o", "provider": "openai", "apiType": "responses"},
+                "instructions": "test"
+            }),
+            &prompty::model::context::LoadContext::default(),
+        );
+        let calls = vec![prompty::types::ToolCall {
+            id: "call_1".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{}".to_string(),
+        }];
+        let mut messages = vec![Message::with_text(prompty::Role::User, "run")];
+        messages.extend(format_responses_tool_messages(
+            &json!({
+                "object": "response",
+                "output": [{
+                    "type": "function_call",
+                    "id": "fc_original",
+                    "call_id": "call_1",
+                    "name": "lookup",
+                    "arguments": "{}",
+                    "status": "completed"
+                }]
+            }),
+            &calls,
+            &["result".to_string()],
+        ));
+
+        let input = build_responses_args(&agent, &messages)["input"]
+            .as_array()
+            .unwrap()
+            .clone();
+
+        assert_eq!(input[1]["type"], "function_call");
+        assert_eq!(input[1]["id"], "fc_original");
+        assert_eq!(input[2]["type"], "function_call_output");
+        assert_eq!(input[2]["call_id"], "call_1");
+        assert_eq!(input[2]["output"], "result");
+    }
+
+    #[test]
+    fn test_stream_responses_tool_messages_preserve_done_item_and_arguments() {
+        let calls = vec![prompty::types::ToolCall {
+            id: "call_stream".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{\"q\":\"rust\"}".to_string(),
+        }];
+        let chunks = vec![
+            json!({
+                "type": "response.output_item.added",
+                "output_index": 0,
+                "item": {
+                    "type": "function_call",
+                    "id": "fc_stream",
+                    "call_id": "call_stream",
+                    "name": "lookup",
+                    "arguments": ""
+                }
+            }),
+            json!({
+                "type": "response.function_call_arguments.done",
+                "call_id": "call_stream",
+                "arguments": "{\"q\":\"rust\"}"
+            }),
+            json!({
+                "type": "response.output_item.done",
+                "output_index": 0,
+                "item": {
+                    "type": "function_call",
+                    "id": "fc_stream",
+                    "call_id": "call_stream",
+                    "name": "lookup",
+                    "arguments": "{\"q\":\"rust\"}",
+                    "status": "completed"
+                }
+            }),
+        ];
+
+        let messages =
+            format_stream_responses_tool_messages(&chunks, &calls, &["found".to_string()]);
+
+        let original = &messages[0].metadata["responses_function_call"];
+        assert_eq!(original["id"], "fc_stream");
+        assert_eq!(original["arguments"], "{\"q\":\"rust\"}");
+        assert_eq!(original["status"], "completed");
+        assert_eq!(messages[1].metadata["tool_call_id"], "call_stream");
     }
 }

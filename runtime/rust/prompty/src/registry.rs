@@ -284,6 +284,24 @@ pub fn invoke_format_tool_messages(
     Ok(executor.format_tool_messages(raw_response, tool_calls, tool_results, text_content))
 }
 
+/// Format a streamed tool exchange using the registered executor.
+pub fn invoke_format_stream_tool_messages(
+    key: &str,
+    raw_chunks: &[serde_json::Value],
+    tool_calls: &[crate::types::ToolCall],
+    tool_results: &[String],
+    text_content: Option<&str>,
+) -> Result<Vec<crate::types::Message>, InvokerError> {
+    let executor = {
+        let guard = executors().read().expect("executors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "executor".into(),
+            key: key.into(),
+        })?)
+    };
+    Ok(executor.format_stream_tool_messages(raw_chunks, tool_calls, tool_results, text_content))
+}
+
 /// Get the pre-render hook from a registered parser (if it provides one).
 pub fn invoke_pre_render(
     key: &str,
