@@ -14,6 +14,7 @@ import (
 
 type TurnModelResponse struct {
 	Output          *interface{}           `json:"output,omitempty" yaml:"output,omitempty"`
+	Usage           *InvocationUsage       `json:"usage,omitempty" yaml:"usage,omitempty"`
 	ToolRequests    []HostToolRequest      `json:"toolRequests,omitempty" yaml:"toolRequests,omitempty"`
 	CheckpointState map[string]interface{} `json:"checkpointState,omitempty" yaml:"checkpointState,omitempty"`
 }
@@ -26,6 +27,12 @@ func LoadTurnModelResponse(data interface{}, ctx *LoadContext) (TurnModelRespons
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["output"]; ok && val != nil {
 			result.Output = &val
+		}
+		if val, ok := m["usage"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, _ := LoadInvocationUsage(m, ctx)
+				result.Usage = &loaded
+			}
 		}
 		if val, ok := m["toolRequests"]; ok && val != nil {
 			if arr, ok := val.([]interface{}); ok {
@@ -53,6 +60,9 @@ func (obj TurnModelResponse) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	if obj.Output != nil {
 		result["output"] = *obj.Output
+	}
+	if obj.Usage != nil {
+		result["usage"] = obj.Usage.Save(ctx)
 	}
 	if obj.ToolRequests != nil {
 		arr := make([]interface{}, len(obj.ToolRequests))

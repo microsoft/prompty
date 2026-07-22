@@ -5,4 +5,5 @@
 export { ModelOptions } from "./model-options";
 export { Model } from "./model";
 export { TokenUsage } from "./token-usage";
+export { InvocationUsage } from "./invocation-usage";
 export { ModelInfo } from "./model-info";

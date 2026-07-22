@@ -11,6 +11,8 @@
 
 use super::super::context::{LoadContext, SaveContext};
 
+use super::super::model::invocation_usage::InvocationUsage;
+
 use super::super::conversation::tool_call::ToolCall;
 
 /// Variant-specific data for [`StreamChunk`], discriminated by `kind`.
@@ -30,6 +32,11 @@ pub enum StreamChunkKind {
     ToolChunk {
         /// The tool call data
         tool_call: ToolCall,
+    },
+    /// `kind` = `"usage"`
+    UsageChunk {
+        /// Complete cumulative token usage for the completed provider invocation
+        usage: InvocationUsage,
     },
     /// `kind` = `"error"`
     ErrorChunk {
@@ -98,6 +105,13 @@ impl StreamChunk {
                     .map(|v| ToolCall::load_from_value(v, ctx))
                     .unwrap_or_default(),
             },
+            "usage" => StreamChunkKind::UsageChunk {
+                usage: value
+                    .get("usage")
+                    .filter(|v| v.is_object() || v.is_array() || v.is_string())
+                    .map(|v| InvocationUsage::load_from_value(v, ctx))
+                    .unwrap_or_default(),
+            },
             "error" => StreamChunkKind::ErrorChunk {
                 message: value
                     .get("message")
@@ -116,6 +130,7 @@ impl StreamChunk {
             StreamChunkKind::TextChunk { .. } => "text",
             StreamChunkKind::ThinkingChunk { .. } => "thinking",
             StreamChunkKind::ToolChunk { .. } => "tool",
+            StreamChunkKind::UsageChunk { .. } => "usage",
             StreamChunkKind::ErrorChunk { .. } => "error",
         }
     }
@@ -153,6 +168,12 @@ impl StreamChunk {
                 let nested = tool_call.to_value(ctx);
                 if !nested.is_null() {
                     result.insert("toolCall".to_string(), nested);
+                }
+            }
+            StreamChunkKind::UsageChunk { usage, .. } => {
+                let nested = usage.to_value(ctx);
+                if !nested.is_null() {
+                    result.insert("usage".to_string(), nested);
                 }
             }
             StreamChunkKind::ErrorChunk { message, .. } => {

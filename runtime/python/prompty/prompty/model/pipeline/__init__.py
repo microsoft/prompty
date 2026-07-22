@@ -6,10 +6,18 @@
 ##########################################
 from ._CheckpointStore import CheckpointStore
 from ._CompactionConfig import CompactionConfig
+from ._DelegatedStateReference import DelegatedStateReference
 from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
 from ._HostToolExecutor import HostToolExecutor
+from ._InvocationContextDecision import InvocationContextDecision
+from ._InvocationContextState import InvocationContextState
+from ._ModelInvocationContextSnapshot import ModelInvocationContextSnapshot
+from ._ModelInvocationRequest import ModelInvocationRequest
+from ._ModelInvocationResponse import ModelInvocationResponse
+from ._ModelToolRequest import ModelToolRequest
+from ._ModelToolResult import ModelToolResult
 from ._Parser import Parser
 from ._PermissionResolver import PermissionResolver
 from ._Processor import Processor
@@ -25,6 +33,14 @@ from ._TurnModelResponse import TurnModelResponse
 from ._TurnOptions import TurnOptions
 
 __all__ = [
+    "DelegatedStateReference",
+    "InvocationContextState",
+    "InvocationContextDecision",
+    "ModelInvocationContextSnapshot",
+    "ModelInvocationRequest",
+    "ModelToolRequest",
+    "ModelToolResult",
+    "ModelInvocationResponse",
     "CompactionConfig",
     "TurnOptions",
     "TurnModelRequest",

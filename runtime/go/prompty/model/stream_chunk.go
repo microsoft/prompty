@@ -32,6 +32,8 @@ func LoadStreamChunk(data interface{}, ctx *LoadContext) (interface{}, error) {
 				return LoadThinkingChunk(data, ctx)
 			case "tool":
 				return LoadToolChunk(data, ctx)
+			case "usage":
+				return LoadUsageChunk(data, ctx)
 			case "error":
 				return LoadErrorChunk(data, ctx)
 			}
@@ -310,6 +312,81 @@ func ToolChunkFromYAML(yamlStr string) (ToolChunk, error) {
 	}
 	ctx := NewLoadContext()
 	return LoadToolChunk(data, ctx)
+}
+
+// UsageChunk represents Cumulative token usage emitted once after provider content and tool chunks.
+
+type UsageChunk struct {
+	Kind  string          `json:"kind" yaml:"kind"`
+	Usage InvocationUsage `json:"usage" yaml:"usage"`
+}
+
+// LoadUsageChunk creates a UsageChunk from a map[string]interface{}
+func LoadUsageChunk(data interface{}, ctx *LoadContext) (UsageChunk, error) {
+	result := UsageChunk{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["usage"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, _ := LoadInvocationUsage(m, ctx)
+				result.Usage = loaded
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes UsageChunk to map[string]interface{}
+func (obj UsageChunk) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+
+	result["usage"] = obj.Usage.Save(ctx)
+
+	return result
+}
+
+// ToJSON serializes UsageChunk to JSON string
+func (obj *UsageChunk) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes UsageChunk to YAML string
+func (obj *UsageChunk) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates UsageChunk from JSON string
+func UsageChunkFromJSON(jsonStr string) (UsageChunk, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return UsageChunk{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadUsageChunk(data, ctx)
+}
+
+// FromYAML creates UsageChunk from YAML string
+func UsageChunkFromYAML(yamlStr string) (UsageChunk, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return UsageChunk{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadUsageChunk(data, ctx)
 }
 
 // ErrorChunk represents An error chunk from the LLM response stream.

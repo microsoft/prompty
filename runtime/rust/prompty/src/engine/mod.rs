@@ -3,6 +3,7 @@
 pub mod cancellation;
 pub mod context;
 pub mod event;
+pub mod generated;
 pub mod ports;
 pub mod turn;
 
@@ -13,6 +14,7 @@ pub use context::{
     ContextSource, ContextTransform, DelegatedStateReference, ModelInvocationContextSnapshot,
 };
 pub use event::{EngineEvent, EngineEventKind};
+pub use generated::{GeneratedModelPort, GeneratedModelPortAdapter};
 pub use ports::{
     AllowAllPermissions, Clock, ConversationPort, DefaultConversationPort, DurabilityPort,
     EngineCheckpoint, EnginePermissionDecision, EngineToolRequest, EngineToolResult,

@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelToolRequest.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: Provider-stable tool request identifier
+  name:
+    type: string
+    description: Name of the requested tool
+  arguments:
+    description: Provider-normalized tool arguments
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque provider-specific tool request metadata
+required:
+  - id
+  - name
+description: |-
+  A normalized tool request returned by a model provider.
+
+  Arguments remain JSON-shaped because providers may return a parsed object or
+  a serialized JSON value before the host's tool binding is selected.

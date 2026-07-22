@@ -21,9 +21,16 @@ config:
 classDiagram
     class TurnModelResponse {
         +unknown output
+        +InvocationUsage usage
         +HostToolRequest[] toolRequests
         +dictionary checkpointState
     }
+    class InvocationUsage {
+        +int64 inputTokens
+        +int64 outputTokens
+        +int64 totalTokens
+    }
+    TurnModelResponse *-- InvocationUsage
     class HostToolRequest {
         +string requestId
         +string toolCallId
@@ -39,6 +46,7 @@ classDiagram
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | output | unknown | Provider-neutral final model output for the turn when no more tools are requested |
+| usage | [InvocationUsage](../invocationusage/) | Complete cumulative token usage reported for this model invocation, when available |
 | toolRequests | [HostToolRequest[]](../hosttoolrequest/) | Host tool execution requests emitted by the model callback |
 | checkpointState | dictionary | Additional deterministic state to merge into the iteration checkpoint |
 
@@ -46,4 +54,5 @@ classDiagram
 
 The following types are composed within `TurnModelResponse`:
 
+- [InvocationUsage](../invocationusage/)
 - [HostToolRequest](../hosttoolrequest/)

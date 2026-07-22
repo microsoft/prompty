@@ -10,6 +10,14 @@
 )]
 
 mod compaction_config_test;
+mod delegated_state_reference_test;
+mod invocation_context_decision_test;
+mod invocation_context_state_test;
+mod model_invocation_context_snapshot_test;
+mod model_invocation_request_test;
+mod model_invocation_response_test;
+mod model_tool_request_test;
+mod model_tool_result_test;
 mod replay_journal_record_test;
 mod replay_mismatch_test;
 mod replay_verification_request_test;

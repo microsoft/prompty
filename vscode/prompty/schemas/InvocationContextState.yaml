@@ -1,0 +1,23 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: InvocationContextState.yaml
+type: object
+properties:
+  portability:
+    anyOf:
+      - type: string
+        const: portable
+      - type: string
+        const: delegated
+      - type: string
+        const: opaque
+    default: portable
+    description: Whether the model-visible context is portable across providers
+  delegatedState:
+    type: array
+    items:
+      $ref: DelegatedStateReference.yaml
+    default: []
+    description: Explicit references to provider-held context state
+required:
+  - portability
+description: Provider-context state carried into or out of an invocation.

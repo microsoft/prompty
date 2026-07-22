@@ -30,3 +30,8 @@ using Prompty;
 @@knownAs(TokenUsage.promptTokens, "openai", "prompt_tokens");
 @@knownAs(TokenUsage.completionTokens, "openai", "completion_tokens");
 @@knownAs(TokenUsage.totalTokens, "openai", "total_tokens");
+
+// InvocationUsage → OpenAI terminal streaming usage field names
+@@knownAs(InvocationUsage.inputTokens, "openai", "prompt_tokens");
+@@knownAs(InvocationUsage.outputTokens, "openai", "completion_tokens");
+@@knownAs(InvocationUsage.totalTokens, "openai", "total_tokens");

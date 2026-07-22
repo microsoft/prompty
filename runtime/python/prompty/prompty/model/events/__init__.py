@@ -40,6 +40,7 @@ from ._StreamChunk import (
     TextChunk,
     ThinkingChunk,
     ToolChunk,
+    UsageChunk,
 )
 from ._ThinkingEventPayload import ThinkingEventPayload
 from ._TokenEventPayload import TokenEventPayload
@@ -103,5 +104,6 @@ __all__ = [
     "TextChunk",
     "ThinkingChunk",
     "ToolChunk",
+    "UsageChunk",
     "ErrorChunk",
 ]

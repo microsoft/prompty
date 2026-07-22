@@ -58,6 +58,7 @@
         "Connection",
         "ContentPart",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
         "ErrorChunk",
         "ErrorEventPayload",
@@ -77,6 +78,9 @@
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
@@ -86,7 +90,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelOptions",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenApiTool",
@@ -155,6 +164,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -671,6 +681,20 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "events/StreamChunk.cs",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "model/InvocationUsage.cs",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -713,6 +737,13 @@
           "protocol": false
         },
         {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/DelegatedStateReference.cs",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -739,6 +770,55 @@
           "group": "pipeline",
           "source": "pipeline/HostToolExecutor.cs",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/InvocationContextDecision.cs",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/InvocationContextState.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationContextSnapshot.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationResponse.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelToolRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelToolResult.cs",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -1138,7 +1218,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "Checkpoint.cs",
@@ -1190,12 +1271,14 @@
         {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
+            "InvocationUsage.cs",
             "Model.cs",
             "ModelInfo.cs",
             "ModelOptions.cs",
@@ -1207,10 +1290,18 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "DelegatedStateReference",
             "EventJournalWriter",
             "EventSink",
             "Executor",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -1228,10 +1319,18 @@
           "modules": [
             "CheckpointStore.cs",
             "CompactionConfig.cs",
+            "DelegatedStateReference.cs",
             "EventJournalWriter.cs",
             "EventSink.cs",
             "Executor.cs",
             "HostToolExecutor.cs",
+            "InvocationContextDecision.cs",
+            "InvocationContextState.cs",
+            "ModelInvocationContextSnapshot.cs",
+            "ModelInvocationRequest.cs",
+            "ModelInvocationResponse.cs",
+            "ModelToolRequest.cs",
+            "ModelToolResult.cs",
             "Parser.cs",
             "PermissionResolver.cs",
             "Processor.cs",
@@ -1637,16 +1736,25 @@
         "events/TurnStartPayload.cs",
         "events/TurnSummary.cs",
         "events/TurnTrace.cs",
+        "model/InvocationUsage.cs",
         "model/Model.cs",
         "model/ModelInfo.cs",
         "model/ModelOptions.cs",
         "model/TokenUsage.cs",
         "pipeline/CheckpointStore.cs",
         "pipeline/CompactionConfig.cs",
+        "pipeline/DelegatedStateReference.cs",
         "pipeline/EventJournalWriter.cs",
         "pipeline/EventSink.cs",
         "pipeline/Executor.cs",
         "pipeline/HostToolExecutor.cs",
+        "pipeline/InvocationContextDecision.cs",
+        "pipeline/InvocationContextState.cs",
+        "pipeline/ModelInvocationContextSnapshot.cs",
+        "pipeline/ModelInvocationRequest.cs",
+        "pipeline/ModelInvocationResponse.cs",
+        "pipeline/ModelToolRequest.cs",
+        "pipeline/ModelToolResult.cs",
         "pipeline/Parser.cs",
         "pipeline/PermissionResolver.cs",
         "pipeline/Processor.cs",
@@ -1713,6 +1821,7 @@
         "Connection",
         "ContentPart",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
         "ErrorChunk",
         "ErrorEventPayload",
@@ -1732,6 +1841,9 @@
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
@@ -1741,7 +1853,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelOptions",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenApiTool",
@@ -1810,6 +1927,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -2326,6 +2444,20 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "stream_chunk.go",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "invocation_usage.go",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -2368,6 +2500,13 @@
           "protocol": false
         },
         {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "delegated_state_reference.go",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -2394,6 +2533,55 @@
           "group": "pipeline",
           "source": "host_tool_executor.go",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "invocation_context_decision.go",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "invocation_context_state.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_context_snapshot.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_request.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_response.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_tool_request.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_tool_result.go",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -2793,7 +2981,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -2845,12 +3034,14 @@
         {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
+            "invocation_usage",
             "model",
             "model_info",
             "model_options",
@@ -2862,10 +3053,18 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "DelegatedStateReference",
             "EventJournalWriter",
             "EventSink",
             "Executor",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -2883,10 +3082,18 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "delegated_state_reference",
             "event_journal_writer",
             "event_sink",
             "executor",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -3254,6 +3461,7 @@
         "compaction_start_payload.go",
         "connection.go",
         "content_part.go",
+        "delegated_state_reference.go",
         "done_event_payload.go",
         "error_event_payload.go",
         "event_journal_writer.go",
@@ -3268,6 +3476,9 @@
         "host_tool_executor.go",
         "host_tool_request.go",
         "host_tool_result.go",
+        "invocation_context_decision.go",
+        "invocation_context_state.go",
+        "invocation_usage.go",
         "invoker_error.go",
         "llm_complete_payload.go",
         "llm_start_payload.go",
@@ -3276,7 +3487,12 @@
         "messages_updated_payload.go",
         "model.go",
         "model_info.go",
+        "model_invocation_context_snapshot.go",
+        "model_invocation_request.go",
+        "model_invocation_response.go",
         "model_options.go",
+        "model_tool_request.go",
+        "model_tool_result.go",
         "parser.go",
         "parser_config.go",
         "permission_completed_payload.go",
@@ -3367,6 +3583,7 @@
         "Connection",
         "ContentPart",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
         "ErrorChunk",
         "ErrorEventPayload",
@@ -3386,6 +3603,9 @@
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
@@ -3395,7 +3615,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelOptions",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenApiTool",
@@ -3464,6 +3689,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -3980,6 +4206,20 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "InvocationUsage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -4022,6 +4262,13 @@
           "protocol": false
         },
         {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "DelegatedStateReference",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -4048,6 +4295,55 @@
           "group": "pipeline",
           "source": "HostToolExecutor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "InvocationContextDecision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "InvocationContextState",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationContextSnapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationRequest",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationResponse",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelToolRequest",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelToolResult",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -4447,7 +4743,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -4499,12 +4796,14 @@
         {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
+            "invocation_usage",
             "model",
             "model_info",
             "model_options",
@@ -4516,10 +4815,18 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "DelegatedStateReference",
             "EventJournalWriter",
             "EventSink",
             "Executor",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -4537,10 +4844,18 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "delegated_state_reference",
             "event_journal_writer",
             "event_sink",
             "executor",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -4908,6 +5223,7 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "DelegatedStateReference",
         "DoneEventPayload",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -4922,6 +5238,9 @@
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
@@ -4930,7 +5249,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelOptions",
+        "ModelToolRequest",
+        "ModelToolResult",
         "Parser",
         "ParserConfig",
         "PermissionCompletedPayload",
@@ -5022,6 +5346,7 @@
         "Connection",
         "ContentPart",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
         "ErrorChunk",
         "ErrorEventPayload",
@@ -5041,6 +5366,9 @@
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
@@ -5050,7 +5378,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelOptions",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenApiTool",
@@ -5119,6 +5452,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -5635,6 +5969,20 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": ".events",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -5677,6 +6025,13 @@
           "protocol": false
         },
         {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -5703,6 +6058,55 @@
           "group": "pipeline",
           "source": ".pipeline",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -6102,7 +6506,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "_Checkpoint",
@@ -6154,12 +6559,14 @@
         {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
+            "_InvocationUsage",
             "_Model",
             "_ModelInfo",
             "_ModelOptions",
@@ -6171,10 +6578,18 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "DelegatedStateReference",
             "EventJournalWriter",
             "EventSink",
             "Executor",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -6192,10 +6607,18 @@
           "modules": [
             "_CheckpointStore",
             "_CompactionConfig",
+            "_DelegatedStateReference",
             "_EventJournalWriter",
             "_EventSink",
             "_Executor",
             "_HostToolExecutor",
+            "_InvocationContextDecision",
+            "_InvocationContextState",
+            "_ModelInvocationContextSnapshot",
+            "_ModelInvocationRequest",
+            "_ModelInvocationResponse",
+            "_ModelToolRequest",
+            "_ModelToolResult",
             "_Parser",
             "_PermissionResolver",
             "_Processor",
@@ -6586,6 +7009,7 @@
         "Connection",
         "ContentPart",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
         "ErrorChunk",
         "ErrorEventPayload",
@@ -6605,6 +7029,9 @@
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
@@ -6614,7 +7041,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelOptions",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenApiTool",
@@ -6683,6 +7115,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -7199,6 +7632,20 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "events::stream_chunk",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "model::invocation_usage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -7241,6 +7688,13 @@
           "protocol": false
         },
         {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::delegated_state_reference",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -7267,6 +7721,55 @@
           "group": "pipeline",
           "source": "pipeline::host_tool_executor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::invocation_context_decision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::invocation_context_state",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_context_snapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_request",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_response",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_tool_request",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_tool_result",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -7666,7 +8169,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -7718,12 +8222,14 @@
         {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
+            "invocation_usage",
             "model",
             "model_info",
             "model_options",
@@ -7735,10 +8241,18 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "DelegatedStateReference",
             "EventJournalWriter",
             "EventSink",
             "Executor",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -7756,10 +8270,18 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "delegated_state_reference",
             "event_journal_writer",
             "event_sink",
             "executor",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -8152,6 +8674,7 @@
         "Connection",
         "ContentPart",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
         "ErrorChunk",
         "ErrorEventPayload",
@@ -8171,6 +8694,9 @@
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
@@ -8180,7 +8706,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelOptions",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenApiTool",
@@ -8249,6 +8780,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -8765,6 +9297,20 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "./events/stream-chunk",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/invocation-usage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -8807,6 +9353,13 @@
           "protocol": false
         },
         {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/delegated-state-reference",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -8833,6 +9386,55 @@
           "group": "pipeline",
           "source": "./pipeline/host-tool-executor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/invocation-context-decision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/invocation-context-state",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-context-snapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-request",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-response",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-tool-request",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-tool-result",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -9232,7 +9834,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -9284,12 +9887,14 @@
         {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
+            "invocation-usage",
             "model",
             "model-info",
             "model-options",
@@ -9301,10 +9906,18 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "DelegatedStateReference",
             "EventJournalWriter",
             "EventSink",
             "Executor",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -9322,10 +9935,18 @@
           "modules": [
             "checkpoint-store",
             "compaction-config",
+            "delegated-state-reference",
             "event-journal-writer",
             "event-sink",
             "executor",
             "host-tool-executor",
+            "invocation-context-decision",
+            "invocation-context-state",
+            "model-invocation-context-snapshot",
+            "model-invocation-request",
+            "model-invocation-response",
+            "model-tool-request",
+            "model-tool-result",
             "parser",
             "permission-resolver",
             "processor",
@@ -9731,16 +10352,25 @@
         "./events/turn-start-payload",
         "./events/turn-summary",
         "./events/turn-trace",
+        "./model/invocation-usage",
         "./model/model",
         "./model/model-info",
         "./model/model-options",
         "./model/token-usage",
         "./pipeline/checkpoint-store",
         "./pipeline/compaction-config",
+        "./pipeline/delegated-state-reference",
         "./pipeline/event-journal-writer",
         "./pipeline/event-sink",
         "./pipeline/executor",
         "./pipeline/host-tool-executor",
+        "./pipeline/invocation-context-decision",
+        "./pipeline/invocation-context-state",
+        "./pipeline/model-invocation-context-snapshot",
+        "./pipeline/model-invocation-request",
+        "./pipeline/model-invocation-response",
+        "./pipeline/model-tool-request",
+        "./pipeline/model-tool-result",
         "./pipeline/parser",
         "./pipeline/permission-resolver",
         "./pipeline/processor",

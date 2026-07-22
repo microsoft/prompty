@@ -4,17 +4,22 @@
 
 import { LoadContext, SaveContext } from "../context";
 import { HostToolRequest } from "../events/host-tool-request";
+import { InvocationUsage } from "../model/invocation-usage";
 
 export class TurnModelResponse {
   static readonly shorthandProperty: string | undefined = undefined;
 
   output?: unknown | undefined;
+  usage?: InvocationUsage | undefined;
   toolRequests?: HostToolRequest[] = [];
   checkpointState?: Record<string, unknown> | undefined;
 
   constructor(init?: Partial<TurnModelResponse>) {
     if (init?.output !== undefined) {
       this.output = init.output;
+    }
+    if (init?.usage !== undefined) {
+      this.usage = init.usage;
     }
     if (init?.toolRequests !== undefined) {
       this.toolRequests = init.toolRequests;
@@ -38,6 +43,12 @@ export class TurnModelResponse {
 
     if (data["output"] !== undefined && data["output"] !== null) {
       instance.output = data["output"] as unknown;
+    }
+    if (data["usage"] !== undefined && data["usage"] !== null) {
+      instance.usage = InvocationUsage.load(
+        data["usage"] as Record<string, unknown>,
+        context,
+      );
     }
     if (data["toolRequests"] !== undefined && data["toolRequests"] !== null) {
       instance.toolRequests = TurnModelResponse.loadToolRequests(
@@ -108,6 +119,9 @@ export class TurnModelResponse {
 
     if (obj.output !== undefined && obj.output !== null) {
       result["output"] = obj.output;
+    }
+    if (obj.usage !== undefined && obj.usage !== null) {
+      result["usage"] = obj.usage.save(context);
     }
     if (obj.toolRequests !== undefined && obj.toolRequests !== null) {
       result["toolRequests"] = TurnModelResponse.saveToolRequests(

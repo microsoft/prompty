@@ -1,0 +1,22 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DelegatedStateReference.yaml
+type: object
+properties:
+  provider:
+    type: string
+    description: Provider that owns the retained state
+  kind:
+    type: string
+    description: Provider-defined kind of retained state
+  id:
+    type: string
+    description: Provider-defined identifier for the retained state
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque provider-specific state reference metadata
+required:
+  - provider
+  - kind
+  - id
+description: A reference to model-visible state retained by a provider.

@@ -81,6 +81,7 @@ public abstract partial class StreamChunk
                 "text" => TextChunk.Load(data, context),
                 "thinking" => ThinkingChunk.Load(data, context),
                 "tool" => ToolChunk.Load(data, context),
+                "usage" => UsageChunk.Load(data, context),
                 "error" => ErrorChunk.Load(data, context),
                 _ => throw new ArgumentException($"Unknown StreamChunk discriminator value: {discriminator}"),
             };

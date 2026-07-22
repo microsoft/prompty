@@ -16,15 +16,19 @@ use crate::engine::{
     AppendContextPackingStrategy, CancellationToken, Clock, ContextPipeline, ConversationPort,
     DurabilityPort, EngineCheckpoint, EngineEvent, EngineEventKind, EnginePermissionDecision,
     EngineToolRequest, EngineToolResult, FinalOutputPolicyRequest, FinalOutputPolicyResult,
-    HostPolicyError, HostPolicyPort, HostPolicyRequest, HostPolicyResult, IdGenerator,
-    ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelStreamChunk, ModelStreamPort,
+    GeneratedModelPort, GeneratedModelPortAdapter, HostPolicyError, HostPolicyPort,
+    HostPolicyRequest, HostPolicyResult, IdGenerator,
+    ModelInvocationResponse as EngineModelInvocationResponse, ModelStreamChunk, ModelStreamPort,
     NoopPostCommitPort, PermissionPort, PortError, RetryPolicyError, RetryPolicyPort,
     RetryPolicyRequest, ToolOutcome, ToolPort, TurnEngine, TurnEngineEffects, TurnEngineError,
     TurnEngineRequest, TurnStatus,
 };
 use crate::guardrails::Guardrails;
 use crate::interfaces::{ExecuteError, InvokerError};
-use crate::model::Prompty;
+use crate::model::{
+    InvocationUsage, ModelInvocationRequest, ModelInvocationResponse as GeneratedModelInvocationResponse,
+    ModelToolRequest, Prompty,
+};
 use crate::registry;
 use crate::steering::Steering;
 use crate::structured::unwrap_structured;
@@ -263,14 +267,15 @@ struct LiveModelPort {
 }
 
 impl LiveModelPort {
-    fn normalize_tool_requests(tool_calls: Vec<ToolCall>) -> Vec<EngineToolRequest> {
+    fn normalize_tool_requests(tool_calls: Vec<ToolCall>) -> Vec<ModelToolRequest> {
         tool_calls
             .into_iter()
-            .map(|tool_call| EngineToolRequest {
+            .map(|tool_call| ModelToolRequest {
                 id: tool_call.id,
                 name: tool_call.name,
-                arguments: serde_json::from_str(&tool_call.arguments)
+                arguments: Some(serde_json::from_str(&tool_call.arguments)
                     .unwrap_or_else(|_| Value::String(tool_call.arguments.clone())),
+                ),
                 metadata: json!({ "argumentsText": tool_call.arguments }),
             })
             .collect()
@@ -292,13 +297,13 @@ impl LiveModelPort {
 }
 
 #[async_trait]
-impl ModelPort for LiveModelPort {
+impl GeneratedModelPort for LiveModelPort {
     async fn invoke(
         &self,
         request: &ModelInvocationRequest,
         cancellation: &CancellationToken,
         stream: &dyn ModelStreamPort,
-    ) -> Result<ModelInvocationResponse, PortError> {
+    ) -> Result<GeneratedModelInvocationResponse, PortError> {
         if cancellation.is_cancelled() {
             return Err(PortError::new("Operation cancelled"));
         }
@@ -398,13 +403,26 @@ impl ModelPort for LiveModelPort {
             None
         };
 
-        Ok(ModelInvocationResponse {
+        Ok(GeneratedModelInvocationResponse {
             output,
-            usage,
+            usage: usage
+                .map(|usage| {
+                    Ok(InvocationUsage {
+                        input_tokens: i64::try_from(usage.input_tokens).map_err(|_| {
+                            PortError::configuration("usage input token count exceeds Int64 range")
+                        })?,
+                        output_tokens: i64::try_from(usage.output_tokens).map_err(|_| {
+                            PortError::configuration("usage output token count exceeds Int64 range")
+                        })?,
+                        total_tokens: i64::try_from(usage.total_tokens).map_err(|_| {
+                            PortError::configuration("usage total token count exceeds Int64 range")
+                        })?,
+                    })
+                })
+                .transpose()?,
             assistant_messages: Vec::new(),
             tool_requests,
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: json!({
                 "rawResponse": raw_response,
                 "rawChunks": raw_chunks,
@@ -438,7 +456,7 @@ struct LiveConversationPort {
 impl ConversationPort for LiveConversationPort {
     fn format_tool_exchange(
         &self,
-        response: &ModelInvocationResponse,
+        response: &EngineModelInvocationResponse,
         results: &[EngineToolResult],
     ) -> Result<Vec<Message>, PortError> {
         if response.tool_requests.is_empty() || results.is_empty() {
@@ -926,7 +944,7 @@ pub(super) async fn turn(
     let engine = TurnEngine::new(
         ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
         TurnEngineEffects {
-            model: Arc::new(LiveModelPort {
+            model: Arc::new(GeneratedModelPortAdapter::new(Arc::new(LiveModelPort {
                 agent: agent.clone(),
                 provider: provider.clone(),
                 streaming,
@@ -934,7 +952,7 @@ pub(super) async fn turn(
                 agent_mode,
                 skip_output_guardrail: skip_output_guardrail.clone(),
                 failures: failures.clone(),
-            }),
+            }))),
             stream: Arc::new(LiveStreamPort {
                 events: events.clone(),
             }),

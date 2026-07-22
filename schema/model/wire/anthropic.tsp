@@ -20,3 +20,7 @@ using Prompty;
 // TokenUsage → Anthropic usage field names
 @@knownAs(TokenUsage.promptTokens, "anthropic", "input_tokens");
 @@knownAs(TokenUsage.completionTokens, "anthropic", "output_tokens");
+
+// InvocationUsage → Anthropic terminal streaming usage field names
+@@knownAs(InvocationUsage.inputTokens, "anthropic", "input_tokens");
+@@knownAs(InvocationUsage.outputTokens, "anthropic", "output_tokens");

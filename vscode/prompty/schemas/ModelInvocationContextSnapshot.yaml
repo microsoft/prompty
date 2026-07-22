@@ -1,0 +1,59 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelInvocationContextSnapshot.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: Stable identifier for this context snapshot
+  sessionId:
+    type: string
+    description: Stable session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier
+  invocationId:
+    type: string
+    description: Stable model invocation identifier
+  iteration:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based model loop iteration
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    default: []
+    description: Canonical messages visible to the model
+  decisions:
+    type: array
+    items:
+      $ref: InvocationContextDecision.yaml
+    default: []
+    description: Context-planning decisions used to assemble the snapshot
+  stablePrefixMessages:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 0
+    description: Number of leading messages eligible for provider prefix-cache reuse
+  contextState:
+    $ref: InvocationContextState.yaml
+    description: Provider-context state carried into this invocation
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific snapshot metadata
+required:
+  - id
+  - sessionId
+  - turnId
+  - invocationId
+  - iteration
+  - messages
+  - stablePrefixMessages
+  - contextState
+description: |-
+  Immutable model-visible context for a single provider invocation.
+
+  Retries of the same invocation MUST reuse the same snapshot.

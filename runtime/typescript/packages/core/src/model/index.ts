@@ -83,14 +83,24 @@ export {
   TextChunk,
   ThinkingChunk,
   ToolChunk,
+  UsageChunk,
   ErrorChunk,
 } from "./events/stream-chunk";
 
 export { ModelOptions } from "./model/model-options";
 export { Model } from "./model/model";
 export { TokenUsage } from "./model/token-usage";
+export { InvocationUsage } from "./model/invocation-usage";
 export { ModelInfo } from "./model/model-info";
 
+export { DelegatedStateReference } from "./pipeline/delegated-state-reference";
+export { InvocationContextState } from "./pipeline/invocation-context-state";
+export { InvocationContextDecision } from "./pipeline/invocation-context-decision";
+export { ModelInvocationContextSnapshot } from "./pipeline/model-invocation-context-snapshot";
+export { ModelInvocationRequest } from "./pipeline/model-invocation-request";
+export { ModelToolRequest } from "./pipeline/model-tool-request";
+export { ModelToolResult } from "./pipeline/model-tool-result";
+export { ModelInvocationResponse } from "./pipeline/model-invocation-response";
 export { CompactionConfig } from "./pipeline/compaction-config";
 export { TurnOptions } from "./pipeline/turn-options";
 export { TurnModelRequest } from "./pipeline/turn-model-request";

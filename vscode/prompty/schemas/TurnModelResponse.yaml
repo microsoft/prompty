@@ -4,6 +4,9 @@ type: object
 properties:
   output:
     description: Provider-neutral final model output for the turn when no more tools are requested
+  usage:
+    $ref: InvocationUsage.yaml
+    description: Complete cumulative token usage reported for this model invocation, when available
   toolRequests:
     type: array
     items:

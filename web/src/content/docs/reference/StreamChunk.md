@@ -39,6 +39,11 @@ classDiagram
         +ToolCall toolCall
     }
     StreamChunk <|-- ToolChunk
+    class UsageChunk {
+        +string kind
+        +InvocationUsage usage
+    }
+    StreamChunk <|-- UsageChunk
     class ErrorChunk {
         +string kind
         +string message
@@ -59,4 +64,5 @@ The following types extend `StreamChunk`:
 - [TextChunk](../textchunk/)
 - [ThinkingChunk](../thinkingchunk/)
 - [ToolChunk](../toolchunk/)
+- [UsageChunk](../usagechunk/)
 - [ErrorChunk](../errorchunk/)
