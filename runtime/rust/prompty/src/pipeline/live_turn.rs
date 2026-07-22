@@ -107,6 +107,8 @@ struct LivePolicy {
     agent: Arc<Prompty>,
     inputs: Value,
     guardrails: Option<Arc<Guardrails>>,
+    #[allow(clippy::type_complexity)]
+    validator: Option<Box<dyn Fn(&Value) -> Result<(), String> + Send + Sync>>,
     steering: Option<Steering>,
     context_budget: Option<usize>,
     compaction: Option<Arc<Compaction>>,
@@ -207,6 +209,16 @@ impl HostPolicyPort for LivePolicy {
             if let Some(rewrite) = result.rewrite {
                 output = Some(rewrite);
             }
+        }
+        output = output.map(|value| unwrap_structured(&value));
+        if let Some(validator) = &self.validator {
+            let output = output.as_ref().unwrap_or(&Value::Null);
+            validator(output).map_err(|message| {
+                HostPolicyError::new(
+                    "output_validation_failed",
+                    format!("Output validation failed: {message}"),
+                )
+            })?;
         }
         Ok(FinalOutputPolicyResult {
             output,
@@ -321,7 +333,7 @@ impl LiveModelPort {
             self.skip_output_guardrail.store(true, Ordering::Release);
             response.output = Some(raw_response.clone());
             response.tool_requests.clear();
-        } else if self.agent_mode && response.tool_requests.is_empty() {
+        } else if response.tool_requests.is_empty() {
             response.output = response.output.map(|output| unwrap_structured(&output));
         }
         Ok((response, raw_response))
@@ -466,6 +478,9 @@ impl GeneratedModelPort for LiveModelPort {
             )
             .await
             .map_err(|error| self.failures.record_invoker(error))?;
+            if response.tool_requests.is_empty() {
+                response.output = response.output.map(|output| unwrap_structured(&output));
+            }
             let provider_metadata = std::mem::take(&mut response.metadata);
             response.metadata = json!({
                 "rawResponse": completed_response,
@@ -482,10 +497,8 @@ impl GeneratedModelPort for LiveModelPort {
         let output = if tool_requests.is_empty() {
             Some(if self.raw_final && !streamed {
                 raw_response.clone()
-            } else if self.agent_mode {
-                unwrap_structured(&processed)
             } else {
-                processed.clone()
+                unwrap_structured(&processed)
             })
         } else {
             None
@@ -996,7 +1009,7 @@ pub(super) async fn turn_with_engine_request(
         guardrails,
         steering,
         parallel_tool_calls,
-        validator: _,
+        validator,
         max_llm_retries,
         compaction,
         durability: persistence,
@@ -1082,6 +1095,7 @@ pub(super) async fn turn_with_engine_request(
                 agent: agent.clone(),
                 inputs: inputs.clone(),
                 guardrails: guardrails.clone(),
+                validator,
                 steering,
                 context_budget,
                 compaction,
@@ -1125,11 +1139,7 @@ pub(super) async fn turn_with_engine_request(
     } else {
         max_iterations.max(1)
     };
-    request.max_model_attempts = if agent_mode {
-        max_llm_retries.max(1)
-    } else {
-        1
-    };
+    request.max_model_attempts = max_llm_retries.max(1);
 
     let result = engine.run(request, cancellation).await;
     let mapped = match result {
@@ -1155,18 +1165,14 @@ pub(super) async fn turn_with_engine_request(
                     "prepare_error" => Err(failures
                         .take_invoker()
                         .unwrap_or_else(|| InvokerError::Other(message.clone()))),
-                    "model_error" if agent_mode => {
-                        Err(InvokerError::ExecuteRetryExhausted(ExecuteError {
-                            message: format!(
-                                "LLM call failed after {} retries: {}",
-                                max_llm_retries, message
-                            ),
-                            messages: result.commit.messages,
-                        }))
-                    }
-                    "model_error" => Err(failures
-                        .take_invoker()
-                        .unwrap_or_else(|| InvokerError::Execute(message.clone().into()))),
+                    "output_validation_failed" => Err(InvokerError::Validation(message)),
+                    "model_error" => Err(InvokerError::ExecuteRetryExhausted(ExecuteError {
+                        message: format!(
+                            "LLM call failed after {} retries: {}",
+                            max_llm_retries, message
+                        ),
+                        messages: result.commit.messages,
+                    })),
                     "model_outcome_unknown" => Err(failures
                         .take_invoker()
                         .unwrap_or_else(|| InvokerError::Execute(message.clone().into()))),

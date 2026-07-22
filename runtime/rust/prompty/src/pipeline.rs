@@ -712,10 +712,18 @@ pub struct TurnOptions {
     /// error turn lifecycle. The canonical engine executes tool effects
     /// sequentially so durable result ordering is deterministic.
     pub parallel_tool_calls: bool,
-    /// Optional validator for structured output (called via cast after processing).
+    /// Optional validator for the final processed output.
+    ///
+    /// The canonical turn engine invokes this after output guardrail rewrites and
+    /// structured-result unwrapping, immediately before its durable success commit.
+    /// A rejection commits an `output_validation_failed` turn lifecycle and returns
+    /// [`InvokerError::Validation`].
     #[allow(clippy::type_complexity)]
     pub validator: Option<Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>>,
-    /// Maximum retries for LLM calls with exponential backoff (§9.10, default: 3).
+    /// Maximum model attempts for each LLM invocation with exponential backoff (§9.10, default: 3).
+    ///
+    /// This applies to simple public turns and tool-calling turns alike. Values below
+    /// one are normalized to one attempt.
     pub max_llm_retries: usize,
     /// Context compaction strategy. When set and messages are trimmed, replaces
     /// the default `summarize_dropped()` summary with a higher-quality one.

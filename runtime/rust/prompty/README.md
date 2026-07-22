@@ -35,6 +35,11 @@ The runtime provides 5 public functions:
 | `invoke_from_path()` | One-shot: load → prepare → execute → process |
 | `turn()` | Conversation round with optional tool-calling agent loop |
 
+`turn()` returns the same unwrapped payload as `run()` and `invoke_from_path()` for
+structured output. `TurnOptions::validator` runs on that final payload after any output
+guardrail rewrite and before the durable success commit; rejection records a failed turn.
+`max_llm_retries` controls model attempts for both simple and tool-calling turns.
+
 ## Providers
 
 LLM providers are separate crates — register them before calling pipeline functions:

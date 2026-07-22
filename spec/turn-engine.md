@@ -73,6 +73,12 @@ Cancellation MUST be checked:
 
 Cancellation does not erase already committed effects.
 
+Before a final success commit, the host final-output policy MAY validate or rewrite the
+processed output. A validation rejection is a typed, durable failed turn rather than an
+uncommitted adapter error. Public turn adapters return the resulting unwrapped structured
+payload on success. Their configured model-attempt limit applies equally to simple and
+tool-calling turns.
+
 An indeterminate model or tool outcome MUST NOT be retried automatically. The turn commits
 `reconciliation_required` so a host can query provider or tool state using the stable request
 identity before deciding whether to continue.

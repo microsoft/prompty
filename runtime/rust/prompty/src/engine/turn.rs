@@ -1259,6 +1259,9 @@ impl TurnEngine {
         mut state: TurnState,
         cancellation: &CancellationToken,
     ) -> Result<TurnEngineResult, TurnEngineError> {
+        if cancellation.is_cancelled() {
+            return self.commit_cancelled(state, cancellation).await;
+        }
         let request = FinalOutputPolicyRequest {
             session_id: state.session_id.clone(),
             turn_id: state.turn_id.clone(),
