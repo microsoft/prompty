@@ -197,6 +197,27 @@ pub async fn invoke_executor(
     executor.execute(agent, messages).await
 }
 
+/// Execute using the registered executor and generated invocation context.
+///
+/// Legacy executors are supported by the trait's default implementation.
+pub async fn invoke_executor_with_context(
+    key: &str,
+    agent: &crate::model::Prompty,
+    request: &crate::model::ModelInvocationRequest,
+    cancellation: &crate::engine::CancellationToken,
+) -> Result<serde_json::Value, InvokerError> {
+    let executor = {
+        let guard = executors().read().expect("executors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "executor".into(),
+            key: key.into(),
+        })?)
+    };
+    executor
+        .execute_with_context(agent, request, cancellation)
+        .await
+}
+
 /// Execute using the registered executor in streaming mode.
 ///
 /// Returns a `Stream<Item = Value>` of raw SSE chunks from the provider.
@@ -221,6 +242,28 @@ pub async fn invoke_executor_stream(
     executor.execute_stream(agent, messages).await
 }
 
+/// Execute a streaming request using the registered executor and generated context.
+///
+/// Legacy executors are supported by the trait's default implementation.
+pub async fn invoke_executor_stream_with_context(
+    key: &str,
+    agent: &crate::model::Prompty,
+    request: &crate::model::ModelInvocationRequest,
+    cancellation: &crate::engine::CancellationToken,
+) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError>
+{
+    let executor = {
+        let guard = executors().read().expect("executors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "executor".into(),
+            key: key.into(),
+        })?)
+    };
+    executor
+        .execute_stream_with_context(agent, request, cancellation)
+        .await
+}
+
 /// Process using the registered processor for the given key.
 ///
 /// # Errors
@@ -239,6 +282,46 @@ pub async fn invoke_processor(
         })?)
     };
     processor.process(agent, response).await
+}
+
+/// Process a raw response into the generated live-invocation contract.
+///
+/// Legacy processors receive a portable state mapping from the trait default.
+pub async fn invoke_processor_with_context(
+    key: &str,
+    agent: &crate::model::Prompty,
+    response: serde_json::Value,
+    request: &crate::model::ModelInvocationRequest,
+) -> Result<crate::model::ModelInvocationResponse, InvokerError> {
+    let processor = {
+        let guard = processors().read().expect("processors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "processor".into(),
+            key: key.into(),
+        })?)
+    };
+    processor
+        .process_with_context(agent, response, request)
+        .await
+}
+
+/// Map a raw response while preserving the legacy raw execution boundary.
+pub async fn invoke_processor_raw_with_context(
+    key: &str,
+    agent: &crate::model::Prompty,
+    response: serde_json::Value,
+    request: &crate::model::ModelInvocationRequest,
+) -> Result<crate::model::ModelInvocationResponse, InvokerError> {
+    let processor = {
+        let guard = processors().read().expect("processors lock poisoned");
+        Arc::clone(guard.get(key).ok_or_else(|| InvokerError::NotFound {
+            group: "processor".into(),
+            key: key.into(),
+        })?)
+    };
+    processor
+        .process_raw_with_context(agent, response, request)
+        .await
 }
 
 /// Process a streaming response using the registered processor.

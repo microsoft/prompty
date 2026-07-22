@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use serde_json::Value;
 
 use prompty::interfaces::{InvokerError, Processor};
-use prompty::model::Prompty;
+use prompty::model::{ModelInvocationRequest, ModelInvocationResponse, Prompty};
 
 /// Foundry/Azure OpenAI processor implementing the `Processor` trait.
 ///
@@ -19,6 +19,31 @@ pub struct FoundryProcessor;
 impl Processor for FoundryProcessor {
     async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
         prompty_openai::process_response(agent, &response)
+    }
+
+    async fn process_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        _request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        // Azure OpenAI's supported endpoints do not expose a continuation handle
+        // that can recreate model-visible state, so retain the canonical
+        // conversation as explicitly portable context.
+        prompty_openai::process_invocation_response(agent, &response, "foundry", false)
+    }
+
+    async fn process_raw_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        _request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        let mut mapped =
+            prompty_openai::process_invocation_response(agent, &response, "foundry", false)?;
+        mapped.output = Some(response);
+        mapped.tool_requests.clear();
+        Ok(mapped)
     }
 
     fn process_stream(
@@ -85,5 +110,31 @@ mod tests {
 
         let result = FoundryProcessor.process(&agent, response).await.unwrap();
         assert!(result.is_array());
+    }
+
+    #[tokio::test]
+    async fn test_context_response_is_portable_without_native_continuation() {
+        let agent = make_agent();
+        let response = json!({
+            "object": "response",
+            "id": "resp_not_reusable_by_foundry",
+            "output_text": "Hello"
+        });
+
+        let result = FoundryProcessor
+            .process_with_context(
+                &agent,
+                response,
+                &ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default()),
+            )
+            .await
+            .unwrap();
+
+        let state = result.next_context_state.expect("context state");
+        assert_eq!(
+            state.portability,
+            prompty::model::InvocationContextPortability::Portable
+        );
+        assert!(state.delegated_state.is_empty());
     }
 }

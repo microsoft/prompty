@@ -26,8 +26,8 @@ use crate::engine::{
 use crate::guardrails::Guardrails;
 use crate::interfaces::{ExecuteError, InvokerError};
 use crate::model::{
-    InvocationUsage, ModelInvocationRequest, ModelInvocationResponse as GeneratedModelInvocationResponse,
-    ModelToolRequest, Prompty,
+    InvocationContextPortability, InvocationContextState, InvocationUsage, ModelInvocationRequest,
+    ModelInvocationResponse as GeneratedModelInvocationResponse, ModelToolRequest, Prompty,
 };
 use crate::registry;
 use crate::steering::Steering;
@@ -274,8 +274,7 @@ impl LiveModelPort {
                 id: tool_call.id,
                 name: tool_call.name,
                 arguments: Some(serde_json::from_str(&tool_call.arguments)
-                    .unwrap_or_else(|_| Value::String(tool_call.arguments.clone())),
-                ),
+                    .unwrap_or_else(|_| Value::String(tool_call.arguments.clone()))),
                 metadata: json!({ "argumentsText": tool_call.arguments }),
             })
             .collect()
@@ -283,16 +282,41 @@ impl LiveModelPort {
 
     async fn execute_non_streaming(
         &self,
-        messages: &[Message],
-    ) -> Result<(Vec<ToolCall>, Value, Value), InvokerError> {
-        let raw_response = registry::invoke_executor(&self.provider, &self.agent, messages).await?;
+        request: &ModelInvocationRequest,
+        cancellation: &CancellationToken,
+    ) -> Result<(GeneratedModelInvocationResponse, Value), InvokerError> {
+        let raw_response = registry::invoke_executor_with_context(
+            &self.provider,
+            &self.agent,
+            request,
+            cancellation,
+        )
+        .await?;
+        let mut response = if self.raw_final && !self.agent_mode {
+            registry::invoke_processor_raw_with_context(
+                &self.provider,
+                &self.agent,
+                raw_response.clone(),
+                request,
+            )
+            .await?
+        } else {
+            registry::invoke_processor_with_context(
+                &self.provider,
+                &self.agent,
+                raw_response.clone(),
+                request,
+            )
+            .await?
+        };
         if self.raw_final && !self.agent_mode {
             self.skip_output_guardrail.store(true, Ordering::Release);
-            return Ok((Vec::new(), raw_response.clone(), raw_response));
+            response.output = Some(raw_response.clone());
+            response.tool_requests.clear();
+        } else if self.agent_mode && response.tool_requests.is_empty() {
+            response.output = response.output.map(|output| unwrap_structured(&output));
         }
-        let processed = super::process(&self.agent, raw_response.clone()).await?;
-        let tool_calls = super::extract_tool_calls_from_processed(&processed);
-        Ok((tool_calls, processed, raw_response))
+        Ok((response, raw_response))
     }
 }
 
@@ -308,11 +332,29 @@ impl GeneratedModelPort for LiveModelPort {
             return Err(PortError::new("Operation cancelled"));
         }
 
-        let (tool_calls, processed, raw_response, raw_chunks, streamed, usage) = if self.streaming {
-            match registry::invoke_executor_stream(
+        if !self.streaming {
+            let (mut response, raw_response) =
+                match self.execute_non_streaming(request, cancellation).await {
+                    Ok(response) => response,
+                    Err(error) => return Err(self.failures.record_invoker(error)),
+                };
+            let provider_metadata = std::mem::take(&mut response.metadata);
+            response.metadata = json!({
+                "rawResponse": raw_response,
+                "rawChunks": [],
+                "textContent": response.output.as_ref().and_then(Value::as_str),
+                "streamed": false,
+                "providerMetadata": provider_metadata,
+            });
+            return Ok(response);
+        }
+
+        let (tool_calls, processed, raw_response, raw_chunks, streamed, usage) =
+            match registry::invoke_executor_stream_with_context(
                 &self.provider,
                 &self.agent,
-                &request.context.messages,
+                request,
+                cancellation,
             )
             .await
             {
@@ -367,9 +409,18 @@ impl GeneratedModelPort for LiveModelPort {
                     )
                 }
                 Err(stream_error) => {
-                    match self.execute_non_streaming(&request.context.messages).await {
-                        Ok((tool_calls, processed, raw_response)) => {
-                            (tool_calls, processed, raw_response, Vec::new(), false, None)
+                    match self.execute_non_streaming(request, cancellation).await {
+                        Ok((mut response, raw_response)) => {
+                            let provider_metadata = std::mem::take(&mut response.metadata);
+                            response.metadata = json!({
+                                "rawResponse": raw_response,
+                                "rawChunks": [],
+                                "textContent": response.output.as_ref().and_then(Value::as_str),
+                                "streamed": false,
+                                "providerMetadata": provider_metadata,
+                                "streamError": stream_error.to_string(),
+                            });
+                            return Ok(response);
                         }
                         Err(error) => {
                             return Err(self.failures.record_invoker(InvokerError::Execute(
@@ -379,15 +430,7 @@ impl GeneratedModelPort for LiveModelPort {
                         }
                     }
                 }
-            }
-        } else {
-            match self.execute_non_streaming(&request.context.messages).await {
-                Ok((tool_calls, processed, raw_response)) => {
-                    (tool_calls, processed, raw_response, Vec::new(), false, None)
-                }
-                Err(error) => return Err(self.failures.record_invoker(error)),
-            }
-        };
+            };
 
         let text_content = super::extract_text_from_processed(&processed);
         let tool_requests = Self::normalize_tool_requests(tool_calls);
@@ -422,7 +465,10 @@ impl GeneratedModelPort for LiveModelPort {
                 .transpose()?,
             assistant_messages: Vec::new(),
             tool_requests,
-            next_context_state: None,
+            next_context_state: Some(InvocationContextState {
+                portability: InvocationContextPortability::Portable,
+                delegated_state: Vec::new(),
+            }),
             metadata: json!({
                 "rawResponse": raw_response,
                 "rawChunks": raw_chunks,

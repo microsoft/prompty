@@ -12,7 +12,10 @@ use async_trait::async_trait;
 use futures::StreamExt;
 
 use crate::engine::CancellationToken;
-use crate::model::Prompty;
+use crate::model::{
+    InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+    ModelInvocationResponse, ModelToolRequest, Prompty,
+};
 use crate::types::Message;
 
 /// Errors returned by pipeline stages.
@@ -137,6 +140,31 @@ pub trait Executor: Send + Sync {
         messages: &[Message],
     ) -> Result<serde_json::Value, InvokerError>;
 
+    /// Execute an LLM call using the generated invocation context.
+    ///
+    /// Legacy executors remain compatible: the default forwards the generated
+    /// snapshot's messages to [`Self::execute`]. Context-aware providers can
+    /// override this to consume delegated provider state.
+    async fn execute_with_context(
+        &self,
+        agent: &Prompty,
+        request: &ModelInvocationRequest,
+        cancellation: &CancellationToken,
+    ) -> Result<serde_json::Value, InvokerError> {
+        if cancellation.is_cancelled() {
+            return Err(InvokerError::Cancelled(
+                "execution cancelled before provider invocation".to_string(),
+            ));
+        }
+
+        tokio::select! {
+            result = self.execute(agent, &request.context.messages) => result,
+            _ = cancellation.cancelled() => Err(InvokerError::Cancelled(
+                "execution cancelled during provider invocation".to_string(),
+            )),
+        }
+    }
+
     /// Execute an LLM call and return a stream of raw SSE chunks.
     ///
     /// Not all providers support streaming. Default returns an error.
@@ -185,6 +213,20 @@ pub trait Executor: Send + Sync {
                 }
             },
         )))
+    }
+
+    /// Execute a streaming LLM call using the generated invocation context.
+    ///
+    /// Legacy executors retain streaming compatibility through
+    /// [`Self::execute_stream_cancellable`].
+    async fn execute_stream_with_context(
+        &self,
+        agent: &Prompty,
+        request: &ModelInvocationRequest,
+        cancellation: &CancellationToken,
+    ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
+        self.execute_stream_cancellable(agent, &request.context.messages, cancellation.clone())
+            .await
     }
 
     /// Format tool-call results into messages for the next iteration of the
@@ -271,6 +313,57 @@ pub trait Processor: Send + Sync {
         response: serde_json::Value,
     ) -> Result<serde_json::Value, InvokerError>;
 
+    /// Map a raw provider response into the generated live-invocation contract.
+    ///
+    /// Legacy processors remain compatible by returning portable state and
+    /// recognizing the established `{id, name, arguments}` tool-call shape.
+    /// Providers with native continuation support should override this method
+    /// and return a typed delegated state reference.
+    async fn process_with_context(
+        &self,
+        agent: &Prompty,
+        response: serde_json::Value,
+        _request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        let output = self.process(agent, response).await?;
+        let tool_requests = legacy_tool_requests(&output);
+        Ok(ModelInvocationResponse {
+            output: tool_requests.is_empty().then_some(output),
+            usage: None,
+            assistant_messages: Vec::new(),
+            tool_requests,
+            next_context_state: Some(InvocationContextState {
+                portability: InvocationContextPortability::Portable,
+                delegated_state: Vec::new(),
+            }),
+            metadata: serde_json::Value::Null,
+        })
+    }
+
+    /// Map a raw response without invoking legacy response processing.
+    ///
+    /// This preserves `raw` execution semantics for existing processors while
+    /// allowing providers to override the method when they can derive typed
+    /// continuation state from an otherwise raw response.
+    async fn process_raw_with_context(
+        &self,
+        _agent: &Prompty,
+        response: serde_json::Value,
+        _request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        Ok(ModelInvocationResponse {
+            output: Some(response),
+            usage: None,
+            assistant_messages: Vec::new(),
+            tool_requests: Vec::new(),
+            next_context_state: Some(InvocationContextState {
+                portability: InvocationContextPortability::Portable,
+                delegated_state: Vec::new(),
+            }),
+            metadata: serde_json::Value::Null,
+        })
+    }
+
     /// Process a streaming response into a stream of `StreamChunk` items.
     ///
     /// Takes a raw SSE chunk stream from the executor and yields processed
@@ -288,6 +381,25 @@ pub trait Processor: Send + Sync {
                 .into(),
         ))
     }
+}
+
+fn legacy_tool_requests(output: &serde_json::Value) -> Vec<ModelToolRequest> {
+    output
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|tool| {
+            let id = tool.get("id")?.as_str()?.to_string();
+            let name = tool.get("name")?.as_str()?.to_string();
+            let arguments = tool.get("arguments").cloned();
+            Some(ModelToolRequest {
+                id,
+                name,
+                arguments,
+                metadata: serde_json::Value::Null,
+            })
+        })
+        .collect()
 }
 
 #[cfg(test)]

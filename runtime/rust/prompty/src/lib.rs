@@ -94,12 +94,15 @@ pub use model::Prompty;
 pub use pipeline::{
     AgentEvent, AsyncToolFn, Compaction, CompactionFn, EventCallback, ToolFn, ToolHandler,
     TurnOptions, TurnOptionsBuilder, invoke as invoke_agent, invoke_from_path, prepare, process,
-    register_defaults, render, run, turn, turn_from_path, turn_with_engine_request, validate_inputs,
+    register_defaults, render, run, turn, turn_from_path, turn_with_engine_request,
+    validate_inputs,
 };
 pub use registry::{
     clear_cache, has_executor, has_parser, has_processor, has_renderer, invoke_executor,
-    invoke_format_tool_messages, invoke_parser, invoke_pre_render, invoke_processor,
-    invoke_renderer, register_executor, register_parser, register_processor, register_renderer,
+    invoke_executor_stream_with_context, invoke_executor_with_context, invoke_format_tool_messages,
+    invoke_parser, invoke_pre_render, invoke_processor, invoke_processor_raw_with_context,
+    invoke_processor_with_context, invoke_renderer, register_executor, register_parser,
+    register_processor, register_renderer,
 };
 pub use steering::Steering;
 pub use structured::{

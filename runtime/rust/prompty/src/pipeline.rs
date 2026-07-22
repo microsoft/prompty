@@ -24,8 +24,10 @@ use crate::registry;
 use crate::renderers::prepare_render_inputs;
 use crate::structured::{create_structured_result, to_structured_value, unwrap_structured};
 use crate::tracing::{Tracer, sanitize_value};
+#[cfg(test)]
+use crate::types::ToolCall;
 use crate::types::{
-    ContentPart, ContentPartKind, Message, PromptyStream, Role, ToolCall, consume_stream_chunks,
+    ContentPart, ContentPartKind, Message, PromptyStream, Role, consume_stream_chunks,
 };
 
 mod live_turn;
@@ -992,6 +994,7 @@ pub async fn turn_from_path(
 ///
 /// Works with both OpenAI-style and Anthropic-style processed results:
 /// both return `Value::Array([{id, name, arguments}])` for tool calls.
+#[cfg(test)]
 fn extract_tool_calls_from_processed(processed: &serde_json::Value) -> Vec<ToolCall> {
     let arr = match processed.as_array() {
         Some(a) => a,
@@ -1135,10 +1138,15 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
 
-    use async_trait::async_trait;
-    use crate::engine::{EngineCheckpoint, EngineEvent, PortError};
-    use crate::model::Prompty;
+    use crate::engine::{
+        ContextPortability, DelegatedStateReference, EngineCheckpoint, EngineEvent, PortError,
+    };
     use crate::model::context::LoadContext;
+    use crate::model::{
+        InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+        ModelInvocationResponse, ModelToolRequest, Prompty,
+    };
+    use async_trait::async_trait;
     use serial_test::serial;
 
     fn make_agent_with_inputs() -> Prompty {
@@ -1208,6 +1216,33 @@ mod tests {
             self.recording.append_with_checkpoint(events, checkpoint).await?;
             if !self.failed.swap(true, Ordering::SeqCst) {
                 return Err(PortError::new("injected durability failure"));
+            }
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    struct FailOnSecondCheckpointDurability {
+        recording: RecordingDurability,
+        checkpoint_count: AtomicUsize,
+    }
+
+    #[async_trait]
+    impl DurabilityPort for FailOnSecondCheckpointDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.recording.append(event).await
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.recording
+                .append_with_checkpoint(events, checkpoint)
+                .await?;
+            if self.checkpoint_count.fetch_add(1, Ordering::SeqCst) == 1 {
+                return Err(PortError::new("injected model response durability failure"));
             }
             Ok(())
         }
@@ -1632,6 +1667,97 @@ mod tests {
         }
     }
 
+    struct ContextAwareExecutor {
+        received_state_ids: Arc<Mutex<Vec<String>>>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for ContextAwareExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<serde_json::Value, InvokerError> {
+            Err(InvokerError::Execute(
+                "live turns must call execute_with_context".into(),
+            ))
+        }
+
+        async fn execute_with_context(
+            &self,
+            _agent: &Prompty,
+            request: &ModelInvocationRequest,
+            _cancellation: &crate::engine::CancellationToken,
+        ) -> Result<serde_json::Value, InvokerError> {
+            self.received_state_ids.lock().unwrap().push(
+                request
+                    .context
+                    .context_state
+                    .delegated_state
+                    .first()
+                    .map(|state| state.id.clone())
+                    .unwrap_or_default(),
+            );
+            Ok(json!({ "contextAware": true }))
+        }
+    }
+
+    struct ContextAwareProcessor {
+        calls: Arc<AtomicUsize>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Processor for ContextAwareProcessor {
+        async fn process(
+            &self,
+            _agent: &Prompty,
+            _response: serde_json::Value,
+        ) -> Result<serde_json::Value, InvokerError> {
+            Err(InvokerError::Process(
+                "live turns must call process_with_context".into(),
+            ))
+        }
+
+        async fn process_with_context(
+            &self,
+            _agent: &Prompty,
+            _response: serde_json::Value,
+            _request: &ModelInvocationRequest,
+        ) -> Result<ModelInvocationResponse, InvokerError> {
+            let call = self.calls.fetch_add(1, Ordering::SeqCst);
+            let next_context_state = Some(InvocationContextState {
+                portability: InvocationContextPortability::Delegated,
+                delegated_state: vec![crate::model::DelegatedStateReference {
+                    provider: "context-test".to_string(),
+                    kind: "continuation".to_string(),
+                    id: if call == 0 {
+                        "provider-state-1".to_string()
+                    } else {
+                        "provider-state-2".to_string()
+                    },
+                    metadata: Value::Null,
+                }],
+            });
+            Ok(ModelInvocationResponse {
+                output: (call != 0).then(|| json!("resumed")),
+                usage: None,
+                assistant_messages: Vec::new(),
+                tool_requests: (call == 0)
+                    .then(|| {
+                        vec![ModelToolRequest {
+                            id: "context-tool".to_string(),
+                            name: "acknowledge".to_string(),
+                            arguments: Some(json!({})),
+                            metadata: Value::Null,
+                        }]
+                    })
+                    .unwrap_or_default(),
+                next_context_state,
+                metadata: Value::Null,
+            })
+        }
+    }
+
     fn make_simple_agent(provider: &str) -> Prompty {
         let data = serde_json::json!({
             "kind": "prompt",
@@ -1807,6 +1933,105 @@ mod tests {
             2,
             "resume must commit the retained model response without another provider invocation"
         );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_context_aware_provider_state_reaches_checkpoint_and_resume() {
+        ensure_defaults();
+        let key = "turn_context_state_resume";
+        let received_state_ids = Arc::new(Mutex::new(Vec::new()));
+        let processor_calls = Arc::new(AtomicUsize::new(0));
+        registry::register_executor(
+            key,
+            ContextAwareExecutor {
+                received_state_ids: received_state_ids.clone(),
+            },
+        );
+        registry::register_processor(
+            key,
+            ContextAwareProcessor {
+                calls: processor_calls.clone(),
+            },
+        );
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(FailOnSecondCheckpointDurability::default());
+        let mut request = TurnEngineRequest::new("context-session", "context-turn", Vec::new());
+        request.inputs = json!({});
+        request.portability = ContextPortability::Delegated;
+        request.delegated_state = vec![DelegatedStateReference {
+            provider: "context-test".to_string(),
+            kind: "continuation".to_string(),
+            id: "incoming-state".to_string(),
+            metadata: Value::Null,
+        }];
+
+        let mut first_tools = HashMap::new();
+        first_tools.insert(
+            "acknowledge".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("acknowledged".to_string()))),
+        );
+        let failure = turn_with_engine_request(
+            &agent,
+            request,
+            Some(
+                TurnOptions::builder()
+                    .tools(first_tools)
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        )
+        .await
+        .expect_err("the injected durability failure must leave a resumable checkpoint");
+        assert!(
+            failure
+                .to_string()
+                .contains("injected model response durability failure")
+        );
+
+        let checkpoint = durability
+            .recording
+            .checkpoints
+            .lock()
+            .unwrap()
+            .last()
+            .cloned()
+            .expect("model response checkpoint must be retained");
+        assert_eq!(checkpoint.portability, ContextPortability::Delegated);
+        assert_eq!(
+            checkpoint.delegated_state[0].id, "provider-state-1",
+            "checkpoint: {checkpoint:?}"
+        );
+        assert_eq!(
+            received_state_ids.lock().unwrap().as_slice(),
+            ["incoming-state"]
+        );
+
+        let resume = TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence);
+        let mut resumed_tools = HashMap::new();
+        resumed_tools.insert(
+            "acknowledge".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("acknowledged".to_string()))),
+        );
+        let result = turn_with_engine_request(
+            &agent,
+            resume,
+            Some(
+                TurnOptions::builder()
+                    .tools(resumed_tools)
+                    .durability(durability)
+                    .build(),
+            ),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "resumed");
+        assert_eq!(
+            received_state_ids.lock().unwrap().as_slice(),
+            ["incoming-state", "provider-state-1"]
+        );
+        assert_eq!(processor_calls.load(Ordering::SeqCst), 2);
     }
 
     #[tokio::test]

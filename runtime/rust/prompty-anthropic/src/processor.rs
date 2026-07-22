@@ -11,7 +11,10 @@ use async_trait::async_trait;
 use serde_json::{Value, json};
 
 use prompty::interfaces::{InvokerError, Processor};
-use prompty::model::Prompty;
+use prompty::model::{
+    InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+    ModelInvocationResponse, ModelToolRequest, Prompty,
+};
 use prompty::types::ToolCall;
 
 /// Anthropic processor implementing the `Processor` trait.
@@ -21,6 +24,53 @@ pub struct AnthropicProcessor;
 impl Processor for AnthropicProcessor {
     async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
         process_response(agent, &response)
+    }
+
+    async fn process_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        _request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        let output = process_response(agent, &response)?;
+        let tool_requests = extract_tool_calls(&response)
+            .into_iter()
+            .map(|call| ModelToolRequest {
+                id: call.id,
+                name: call.name,
+                arguments: serde_json::from_str(&call.arguments)
+                    .ok()
+                    .or_else(|| Some(Value::String(call.arguments))),
+                metadata: Value::Null,
+            })
+            .collect::<Vec<_>>();
+        // Anthropic Messages API has no continuation handle that can restore
+        // the complete provider-visible context, so do not fabricate one.
+        Ok(ModelInvocationResponse {
+            output: tool_requests.is_empty().then_some(output),
+            usage: None,
+            assistant_messages: Vec::new(),
+            tool_requests,
+            next_context_state: Some(InvocationContextState {
+                portability: InvocationContextPortability::Portable,
+                delegated_state: Vec::new(),
+            }),
+            metadata: Value::Null,
+        })
+    }
+
+    async fn process_raw_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        let mut mapped = self
+            .process_with_context(agent, response.clone(), request)
+            .await?;
+        mapped.output = Some(response);
+        mapped.tool_requests.clear();
+        Ok(mapped)
     }
 
     fn process_stream(
@@ -437,6 +487,29 @@ mod tests {
 
         let result = AnthropicProcessor.process(&agent, response).await.unwrap();
         assert_eq!(result, "Hello!");
+    }
+
+    #[tokio::test]
+    async fn test_context_response_is_portable_without_native_continuation() {
+        let agent = make_agent();
+        let response = json!({
+            "id": "msg_01",
+            "type": "message",
+            "content": [{"type": "text", "text": "Hello!"}]
+        });
+
+        let result = AnthropicProcessor
+            .process_with_context(
+                &agent,
+                response,
+                &ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default()),
+            )
+            .await
+            .unwrap();
+
+        let state = result.next_context_state.expect("context state");
+        assert_eq!(state.portability, InvocationContextPortability::Portable);
+        assert!(state.delegated_state.is_empty());
     }
 
     #[tokio::test]

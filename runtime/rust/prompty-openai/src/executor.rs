@@ -7,8 +7,9 @@ use async_trait::async_trait;
 use serde_json::Value;
 use std::sync::LazyLock;
 
+use prompty::engine::CancellationToken;
 use prompty::interfaces::{Executor, InvokerError};
-use prompty::model::Prompty;
+use prompty::model::{ModelInvocationRequest, Prompty};
 use prompty::types::Message;
 
 use crate::wire;
@@ -22,6 +23,95 @@ pub struct OpenAIExecutor;
 #[async_trait]
 impl Executor for OpenAIExecutor {
     async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+        Self::execute_request(agent, messages, None).await
+    }
+
+    async fn execute_with_context(
+        &self,
+        agent: &Prompty,
+        request: &ModelInvocationRequest,
+        cancellation: &CancellationToken,
+    ) -> Result<Value, InvokerError> {
+        if cancellation.is_cancelled() {
+            return Err(InvokerError::Cancelled(
+                "execution cancelled before OpenAI provider invocation".to_string(),
+            ));
+        }
+        tokio::select! {
+            result = Self::execute_request(agent, &request.context.messages, Some(request)) => result,
+            _ = cancellation.cancelled() => Err(InvokerError::Cancelled(
+                "execution cancelled during OpenAI provider invocation".to_string(),
+            )),
+        }
+    }
+
+    fn format_tool_messages(
+        &self,
+        raw_response: &serde_json::Value,
+        tool_calls: &[prompty::types::ToolCall],
+        tool_results: &[String],
+        _text_content: Option<&str>,
+    ) -> Vec<Message> {
+        if raw_response.get("object").and_then(Value::as_str) == Some("response") {
+            wire::format_responses_tool_messages(raw_response, tool_calls, tool_results)
+        } else {
+            wire::format_tool_messages(tool_calls, tool_results)
+        }
+    }
+
+    fn format_stream_tool_messages(
+        &self,
+        raw_chunks: &[Value],
+        tool_calls: &[prompty::types::ToolCall],
+        tool_results: &[String],
+        _text_content: Option<&str>,
+    ) -> Vec<Message> {
+        if raw_chunks.iter().any(|chunk| {
+            chunk
+                .get("type")
+                .and_then(Value::as_str)
+                .is_some_and(|event_type| event_type.starts_with("response."))
+        }) {
+            wire::format_stream_responses_tool_messages(raw_chunks, tool_calls, tool_results)
+        } else {
+            wire::format_tool_messages(tool_calls, tool_results)
+        }
+    }
+
+    async fn execute_stream(
+        &self,
+        agent: &Prompty,
+        messages: &[Message],
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
+        Self::execute_stream_request(agent, messages, None).await
+    }
+
+    async fn execute_stream_with_context(
+        &self,
+        agent: &Prompty,
+        request: &ModelInvocationRequest,
+        cancellation: &CancellationToken,
+    ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
+        if cancellation.is_cancelled() {
+            return Err(InvokerError::Cancelled(
+                "streaming execution cancelled before OpenAI provider invocation".to_string(),
+            ));
+        }
+        tokio::select! {
+            result = Self::execute_stream_request(agent, &request.context.messages, Some(request)) => result,
+            _ = cancellation.cancelled() => Err(InvokerError::Cancelled(
+                "streaming execution cancelled during OpenAI provider invocation".to_string(),
+            )),
+        }
+    }
+}
+
+impl OpenAIExecutor {
+    async fn execute_request(
+        agent: &Prompty,
+        messages: &[Message],
+        request: Option<&ModelInvocationRequest>,
+    ) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
             .api_type
@@ -36,7 +126,10 @@ impl Executor for OpenAIExecutor {
                 (url, args)
             }
             "responses" => {
-                let args = wire::build_responses_args(agent, messages);
+                let mut args = wire::build_responses_args(agent, messages);
+                if let Some(response_id) = request.and_then(openai_response_id) {
+                    args["previous_response_id"] = Value::String(response_id.to_string());
+                }
                 let url = build_url(agent, "/v1/responses")?;
                 (url, args)
             }
@@ -87,43 +180,10 @@ impl Executor for OpenAIExecutor {
         Ok(result)
     }
 
-    fn format_tool_messages(
-        &self,
-        raw_response: &serde_json::Value,
-        tool_calls: &[prompty::types::ToolCall],
-        tool_results: &[String],
-        _text_content: Option<&str>,
-    ) -> Vec<Message> {
-        if raw_response.get("object").and_then(Value::as_str) == Some("response") {
-            wire::format_responses_tool_messages(raw_response, tool_calls, tool_results)
-        } else {
-            wire::format_tool_messages(tool_calls, tool_results)
-        }
-    }
-
-    fn format_stream_tool_messages(
-        &self,
-        raw_chunks: &[Value],
-        tool_calls: &[prompty::types::ToolCall],
-        tool_results: &[String],
-        _text_content: Option<&str>,
-    ) -> Vec<Message> {
-        if raw_chunks.iter().any(|chunk| {
-            chunk
-                .get("type")
-                .and_then(Value::as_str)
-                .is_some_and(|event_type| event_type.starts_with("response."))
-        }) {
-            wire::format_stream_responses_tool_messages(raw_chunks, tool_calls, tool_results)
-        } else {
-            wire::format_tool_messages(tool_calls, tool_results)
-        }
-    }
-
-    async fn execute_stream(
-        &self,
+    async fn execute_stream_request(
         agent: &Prompty,
         messages: &[Message],
+        request: Option<&ModelInvocationRequest>,
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
         let api_type = agent
             .model
@@ -139,7 +199,10 @@ impl Executor for OpenAIExecutor {
                 (url, args)
             }
             "responses" => {
-                let args = wire::build_responses_args(agent, messages);
+                let mut args = wire::build_responses_args(agent, messages);
+                if let Some(response_id) = request.and_then(openai_response_id) {
+                    args["previous_response_id"] = Value::String(response_id.to_string());
+                }
                 let url = build_url(agent, "/v1/responses")?;
                 (url, args)
             }
@@ -186,9 +249,7 @@ impl Executor for OpenAIExecutor {
         let byte_stream = response.bytes_stream();
         Ok(Box::pin(SseParser::new(byte_stream)))
     }
-}
 
-impl OpenAIExecutor {
     /// Build the request args without sending — useful for testing wire format.
     pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent
@@ -213,6 +274,17 @@ impl OpenAIExecutor {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+fn openai_response_id(request: &ModelInvocationRequest) -> Option<&str> {
+    request
+        .context
+        .context_state
+        .delegated_state
+        .iter()
+        .find(|state| state.provider == "openai" && state.kind == "response")
+        .map(|state| state.id.as_str())
+        .filter(|id| !id.is_empty())
+}
 
 /// Resolve the effective connection — if `kind == "reference"`, look up the
 /// named connection from the registry. Otherwise return the connection as-is.
@@ -507,6 +579,27 @@ mod tests {
         let args = OpenAIExecutor::build_args(&agent, &messages).unwrap();
         assert_eq!(args["model"], "text-embedding-3-small");
         assert!(args.get("input").is_some());
+    }
+
+    #[test]
+    fn test_reads_openai_delegated_response_state() {
+        let request = ModelInvocationRequest::load_from_value(
+            &json!({
+                "context": {
+                    "contextState": {
+                        "portability": "delegated",
+                        "delegatedState": [{
+                            "provider": "openai",
+                            "kind": "response",
+                            "id": "resp_123"
+                        }]
+                    }
+                }
+            }),
+            &LoadContext::default(),
+        );
+
+        assert_eq!(openai_response_id(&request), Some("resp_123"));
     }
 
     #[tokio::test]

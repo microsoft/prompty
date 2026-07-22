@@ -6,7 +6,10 @@ use async_trait::async_trait;
 use serde_json::Value;
 
 use prompty::interfaces::{InvokerError, Processor};
-use prompty::model::Prompty;
+use prompty::model::{
+    DelegatedStateReference, InvocationContextPortability, InvocationContextState, InvocationUsage,
+    ModelInvocationRequest, ModelInvocationResponse, ModelToolRequest, Prompty,
+};
 use prompty::types::ToolCall;
 
 /// OpenAI processor implementing the `Processor` trait.
@@ -18,6 +21,27 @@ impl Processor for OpenAIProcessor {
         process_response(agent, &response)
     }
 
+    async fn process_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        _request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        process_invocation_response(agent, &response, "openai", true)
+    }
+
+    async fn process_raw_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        _request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        let mut mapped = process_invocation_response(agent, &response, "openai", true)?;
+        mapped.output = Some(response);
+        mapped.tool_requests.clear();
+        Ok(mapped)
+    }
+
     fn process_stream(
         &self,
         inner: std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
@@ -27,6 +51,85 @@ impl Processor for OpenAIProcessor {
     > {
         Ok(process_stream(inner))
     }
+}
+
+/// Map an OpenAI-compatible response into the generated provider contract.
+///
+/// Only the OpenAI Responses API exposes a reusable `previous_response_id`
+/// continuation. Chat completions remain explicitly portable because their
+/// response IDs cannot restore provider-side context.
+pub fn process_invocation_response(
+    agent: &Prompty,
+    response: &Value,
+    provider: &str,
+    supports_responses_continuation: bool,
+) -> Result<ModelInvocationResponse, InvokerError> {
+    let output = process_response(agent, response)?;
+    let tool_requests = extract_tool_calls(&output)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|call| ModelToolRequest {
+            id: call.id,
+            name: call.name,
+            arguments: serde_json::from_str(&call.arguments)
+                .ok()
+                .or_else(|| Some(Value::String(call.arguments))),
+            metadata: Value::Null,
+        })
+        .collect::<Vec<_>>();
+    let next_context_state = Some(
+        response
+            .get("object")
+            .and_then(Value::as_str)
+            .filter(|object| *object == "response")
+            .filter(|_| supports_responses_continuation)
+            .and_then(|_| response.get("id"))
+            .and_then(Value::as_str)
+            .filter(|id| !id.is_empty())
+            .map(|id| InvocationContextState {
+                portability: InvocationContextPortability::Delegated,
+                delegated_state: vec![DelegatedStateReference {
+                    provider: provider.to_string(),
+                    kind: "response".to_string(),
+                    id: id.to_string(),
+                    metadata: Value::Null,
+                }],
+            })
+            .unwrap_or(InvocationContextState {
+                portability: InvocationContextPortability::Portable,
+                delegated_state: Vec::new(),
+            }),
+    );
+
+    Ok(ModelInvocationResponse {
+        output: tool_requests.is_empty().then_some(output),
+        usage: invocation_usage(response),
+        assistant_messages: Vec::new(),
+        tool_requests,
+        next_context_state,
+        metadata: Value::Null,
+    })
+}
+
+fn invocation_usage(response: &Value) -> Option<InvocationUsage> {
+    let usage = response.get("usage")?;
+    let input_tokens = usage
+        .get("input_tokens")
+        .or_else(|| usage.get("prompt_tokens"))
+        .and_then(Value::as_i64)?;
+    let output_tokens = usage
+        .get("output_tokens")
+        .or_else(|| usage.get("completion_tokens"))
+        .and_then(Value::as_i64)?;
+    let total_tokens = usage
+        .get("total_tokens")
+        .and_then(Value::as_i64)
+        .unwrap_or(input_tokens + output_tokens);
+    Some(InvocationUsage {
+        input_tokens,
+        output_tokens,
+        total_tokens,
+    })
 }
 
 /// Process an OpenAI API response, dispatching by response shape.
@@ -580,6 +683,42 @@ mod tests {
         });
         let result = process_response(&agent, &response).unwrap();
         assert_eq!(result, json!("Hello!"));
+    }
+
+    #[test]
+    fn test_responses_api_maps_delegated_continuation_state() {
+        let agent = make_agent(Value::Null);
+        let response = json!({
+            "object": "response",
+            "id": "resp_123",
+            "output_text": "Hello from Responses"
+        });
+
+        let result = process_invocation_response(&agent, &response, "openai", true).unwrap();
+
+        let state = result
+            .next_context_state
+            .expect("Responses API response should carry a continuation reference");
+        assert_eq!(state.portability, InvocationContextPortability::Delegated);
+        assert_eq!(state.delegated_state[0].provider, "openai");
+        assert_eq!(state.delegated_state[0].kind, "response");
+        assert_eq!(state.delegated_state[0].id, "resp_123");
+        assert_eq!(result.output, Some(json!("Hello from Responses")));
+    }
+
+    #[test]
+    fn test_chat_completion_remains_portable() {
+        let agent = make_agent(Value::Null);
+        let response = json!({
+            "id": "chatcmpl_123",
+            "choices": [{"message": {"content": "Hello"}}]
+        });
+
+        let result = process_invocation_response(&agent, &response, "openai", true).unwrap();
+
+        let state = result.next_context_state.expect("context state");
+        assert_eq!(state.portability, InvocationContextPortability::Portable);
+        assert!(state.delegated_state.is_empty());
     }
 
     #[test]
