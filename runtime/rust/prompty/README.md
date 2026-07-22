@@ -95,9 +95,11 @@ support continuation can continue the same conversation.
 Register a `TracerFactory` with `Tracer::add()` to observe the pipeline. Live turns add
 a focused `turn.engine` span with compact, durable lifecycle milestones: model attempts
 and retries, checkpoint commits, permission decisions, tool outcomes, reconciliation,
-terminal status, and post-commit status. It does not duplicate streamed deltas, model
-bodies, or callback payloads. Panics from tracer factories or backends are isolated and
-cannot alter turn execution.
+terminal status, and post-commit status. Lifecycle projection is bounded and best-effort:
+slow, failed, or saturated trace backends drop lifecycle telemetry rather than affecting
+turn execution. It includes stable reason codes, not streamed deltas, model bodies,
+provider error bodies, or callback payloads. Panics from tracer factories or backends are
+isolated and cannot alter turn execution.
 
 ## Providers
 

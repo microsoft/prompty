@@ -32,7 +32,7 @@ use crate::model::{
 use crate::registry;
 use crate::steering::Steering;
 use crate::structured::unwrap_structured;
-use crate::tracing::{SpanEmitter, Tracer};
+use crate::tracing::{LifecycleTelemetrySpan, Tracer, start_lifecycle_telemetry};
 use crate::types::{Message, PromptyStream, StreamChunk, ToolCall};
 
 use super::{AgentEvent, Compaction, EventCallback, ToolHandler, TurnOptions};
@@ -65,38 +65,35 @@ impl LiveEvents {
 /// Projects durable engine milestones into the enclosing Prompty trace.
 ///
 /// This intentionally reports compact lifecycle metadata rather than duplicating
-/// request bodies, model responses, or live callback events. Trace backend
-/// failures are isolated by `SpanEmitter`; a poisoned local lock is also ignored
-/// so observability cannot change turn execution.
+/// request bodies, model responses, provider error bodies, or live callback
+/// events. Projection is queued through a bounded best-effort dispatcher so a
+/// slow or failed trace backend cannot change turn execution.
 struct TurnLifecycleTrace {
-    span: Mutex<Option<SpanEmitter>>,
+    span: LifecycleTelemetrySpan,
 }
 
 impl TurnLifecycleTrace {
     fn new(request: &TurnEngineRequest) -> Self {
-        let span = Tracer::start("turn.engine");
-        span.emit("signature", &json!("prompty.turn.engine"));
-        span.emit(
-            "context",
-            &json!({
-                "session_id": request.session_id,
-                "turn_id": request.turn_id,
-                "start_iteration": request.start_iteration,
-                "max_iterations": request.max_iterations,
-                "max_model_attempts": request.max_model_attempts,
-            }),
-        );
+        let context = json!({
+            "session_id": request.session_id,
+            "turn_id": request.turn_id,
+            "start_iteration": request.start_iteration,
+            "max_iterations": request.max_iterations,
+            "max_model_attempts": request.max_model_attempts,
+        });
         Self {
-            span: Mutex::new(Some(span)),
+            span: start_lifecycle_telemetry(
+                "turn.engine",
+                vec![
+                    ("signature".to_string(), json!("prompty.turn.engine")),
+                    ("context".to_string(), context),
+                ],
+            ),
         }
     }
 
     fn emit(&self, key: &str, value: Value) {
-        if let Ok(guard) = self.span.lock() {
-            if let Some(span) = guard.as_ref() {
-                span.emit(key, &value);
-            }
-        }
+        self.span.emit(key, value);
     }
 
     fn project(&self, event: &EngineEvent) {
@@ -121,7 +118,7 @@ impl TurnLifecycleTrace {
                     "attempt": event.payload["attempt"],
                     "exhausted": event.payload["exhausted"],
                     "outcome_unknown": event.payload["outcomeUnknown"],
-                    "error": event.payload["message"],
+                    "reason_code": "model_invocation_failed",
                 }),
             ),
             EngineEventKind::CheckpointCreated => self.emit(
@@ -216,17 +213,13 @@ impl TurnLifecycleTrace {
                 "failed_attempts": request.failed_attempts,
                 "next_attempt": request.next_attempt,
                 "max_attempts": request.max_attempts,
-                "reason": request.reason,
+                "reason_code": "model_invocation_failed",
             }),
         );
     }
 
     fn finish(&self) {
-        if let Ok(mut guard) = self.span.lock() {
-            if let Some(span) = guard.take() {
-                span.end();
-            }
-        }
+        self.span.finish();
     }
 }
 
@@ -1381,7 +1374,11 @@ fn map_engine_error(error: TurnEngineError) -> InvokerError {
 #[cfg(test)]
 mod tests {
     use std::pin::Pin;
-    use std::sync::{Arc, Mutex, atomic::Ordering};
+    use std::sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    };
+    use std::time::{Duration, Instant};
 
     use async_trait::async_trait;
     use futures::{Stream, StreamExt};
@@ -1426,6 +1423,22 @@ mod tests {
                 }) as Box<dyn TracerBackend>
             })
         }
+    }
+
+    fn wait_for_trace_key(events: &Arc<Mutex<Vec<(String, Value)>>>, expected_key: &str) {
+        let deadline = Instant::now() + Duration::from_secs(1);
+        while Instant::now() < deadline {
+            if events
+                .lock()
+                .expect("trace memory lock poisoned")
+                .iter()
+                .any(|(key, _)| key == expected_key)
+            {
+                return;
+            }
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        panic!("timed out waiting for trace event {expected_key}");
     }
 
     fn lifecycle_event(kind: EngineEventKind, payload: Value) -> EngineEvent {
@@ -1513,6 +1526,7 @@ mod tests {
             json!({"status": "reconciliation_required"}),
         ));
         trace.finish();
+        wait_for_trace_key(&events, "__end__");
 
         let keys = events
             .lock()
@@ -1542,6 +1556,238 @@ mod tests {
                 "missing trace event: {key}"
             );
         }
+        let attempt_failed = events
+            .lock()
+            .expect("trace memory lock poisoned")
+            .iter()
+            .find(|(key, _)| key == "engine.attempt_failed")
+            .expect("attempt failure should be traced")
+            .1
+            .clone();
+        assert_eq!(attempt_failed["reason_code"], "model_invocation_failed");
+        assert!(attempt_failed.get("error").is_none());
+        Tracer::clear();
+    }
+
+    #[test]
+    #[serial]
+    fn lifecycle_trace_does_not_leak_simulated_provider_error_bodies() {
+        Tracer::clear();
+        let events = Arc::new(Mutex::new(Vec::new()));
+        Tracer::add(
+            "sensitive-lifecycle-test",
+            TraceMemoryFactory {
+                events: events.clone(),
+            },
+        );
+        let trace =
+            TurnLifecycleTrace::new(&TurnEngineRequest::new("session-1", "turn-1", Vec::new()));
+        let sensitive_error = "HTTP 401 provider body: {\"api_key\":\"super-secret\",\"model\":\"private-model-body\"}";
+
+        trace.project(&lifecycle_event(
+            EngineEventKind::ModelInvocationFailed,
+            json!({
+                "attempt": 0,
+                "exhausted": false,
+                "outcomeUnknown": false,
+                "message": sensitive_error,
+            }),
+        ));
+        trace.retry(&RetryPolicyRequest {
+            failed_attempts: 1,
+            next_attempt: 2,
+            max_attempts: 3,
+            reason: sensitive_error.to_string(),
+        });
+        trace.finish();
+        wait_for_trace_key(&events, "__end__");
+
+        let events = events.lock().expect("trace memory lock poisoned");
+        for (key, value) in events
+            .iter()
+            .filter(|(key, _)| key == "engine.attempt_failed" || key == "engine.retry")
+        {
+            assert_eq!(value["reason_code"], "model_invocation_failed", "{key}");
+            assert!(
+                !value.to_string().contains("super-secret"),
+                "{key} leaked a provider error body"
+            );
+            assert!(
+                !value.to_string().contains("private-model-body"),
+                "{key} leaked a model body"
+            );
+        }
+        Tracer::clear();
+    }
+
+    struct BlockingLifecycleBackend {
+        entered: Arc<AtomicBool>,
+        release: Arc<AtomicBool>,
+    }
+
+    impl TracerBackend for BlockingLifecycleBackend {
+        fn emit(&self, key: &str, _value: &Value) {
+            if key == "engine.attempt" {
+                self.entered.store(true, Ordering::SeqCst);
+                while !self.release.load(Ordering::SeqCst) {
+                    std::thread::sleep(Duration::from_millis(1));
+                }
+            }
+        }
+    }
+
+    struct BlockingLifecycleFactory {
+        entered: Arc<AtomicBool>,
+        release: Arc<AtomicBool>,
+    }
+
+    impl TracerFactory for BlockingLifecycleFactory {
+        fn create(&self, signature: &str) -> Option<Box<dyn TracerBackend>> {
+            (signature == "turn.engine").then(|| {
+                Box::new(BlockingLifecycleBackend {
+                    entered: self.entered.clone(),
+                    release: self.release.clone(),
+                }) as Box<dyn TracerBackend>
+            })
+        }
+    }
+
+    struct BlockingAwareExecutor {
+        lifecycle_backend_entered: Arc<AtomicBool>,
+    }
+
+    #[async_trait]
+    impl Executor for BlockingAwareExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            while !self.lifecycle_backend_entered.load(Ordering::SeqCst) {
+                tokio::time::sleep(Duration::from_millis(1)).await;
+            }
+            Ok(json!("turn completed despite blocked lifecycle tracing"))
+        }
+    }
+
+    struct EchoProcessor;
+
+    #[async_trait]
+    impl Processor for EchoProcessor {
+        async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+            Ok(response)
+        }
+    }
+
+    struct SensitiveErrorExecutor;
+
+    #[async_trait]
+    impl Executor for SensitiveErrorExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            Err(InvokerError::Execute(
+                "HTTP 401 provider body: {\"api_key\":\"super-secret\",\"model\":\"private-model-body\"}"
+                    .to_string()
+                    .into(),
+            ))
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn failed_provider_attempt_trace_excludes_sensitive_error_body() {
+        Tracer::clear();
+        let events = Arc::new(Mutex::new(Vec::new()));
+        Tracer::add(
+            "sensitive-provider-error-test",
+            TraceMemoryFactory {
+                events: events.clone(),
+            },
+        );
+
+        const PROVIDER: &str = "sensitive-provider-error";
+        crate::pipeline::register_defaults();
+        registry::register_executor(PROVIDER, SensitiveErrorExecutor);
+        let agent = Prompty::load_from_value(
+            &json!({
+                "kind": "prompt",
+                "name": "sensitive-provider-error",
+                "instructions": "system:\nYou are a test assistant.\n\nuser:\nHello",
+                "model": { "id": "test-model", "provider": PROVIDER },
+            }),
+            &LoadContext::default(),
+        );
+
+        let error = turn(
+            &agent,
+            None,
+            Some(TurnOptions::builder().max_llm_retries(1).build()),
+        )
+        .await
+        .expect_err("simulated provider error should fail the turn");
+        assert!(error.to_string().contains("super-secret"));
+        wait_for_trace_key(&events, "__end__");
+
+        let attempt_failed = events
+            .lock()
+            .expect("trace memory lock poisoned")
+            .iter()
+            .find(|(key, _)| key == "engine.attempt_failed")
+            .expect("failed provider attempt should be traced")
+            .1
+            .clone();
+        assert_eq!(attempt_failed["reason_code"], "model_invocation_failed");
+        assert!(!attempt_failed.to_string().contains("super-secret"));
+        assert!(!attempt_failed.to_string().contains("private-model-body"));
+        Tracer::clear();
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn turn_completes_when_lifecycle_trace_backend_blocks() {
+        Tracer::clear();
+        let entered = Arc::new(AtomicBool::new(false));
+        let release = Arc::new(AtomicBool::new(false));
+        Tracer::add(
+            "blocking-lifecycle-test",
+            BlockingLifecycleFactory {
+                entered: entered.clone(),
+                release: release.clone(),
+            },
+        );
+
+        const PROVIDER: &str = "blocking-lifecycle-telemetry";
+        crate::pipeline::register_defaults();
+        registry::register_executor(
+            PROVIDER,
+            BlockingAwareExecutor {
+                lifecycle_backend_entered: entered.clone(),
+            },
+        );
+        registry::register_processor(PROVIDER, EchoProcessor);
+        let agent = Prompty::load_from_value(
+            &json!({
+                "kind": "prompt",
+                "name": "blocking-lifecycle-telemetry",
+                "instructions": "system:\nYou are a test assistant.\n\nuser:\nHello",
+                "model": { "id": "test-model", "provider": PROVIDER },
+            }),
+            &LoadContext::default(),
+        );
+
+        let result = tokio::time::timeout(Duration::from_millis(500), turn(&agent, None, None))
+            .await
+            .expect("a blocked trace backend must not block the turn")
+            .expect("turn should still succeed");
+        assert_eq!(
+            result,
+            json!("turn completed despite blocked lifecycle tracing")
+        );
+
+        release.store(true, Ordering::SeqCst);
         Tracer::clear();
     }
 

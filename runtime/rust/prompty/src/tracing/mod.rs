@@ -14,6 +14,7 @@ pub use console::console_tracer;
 #[cfg(feature = "otel")]
 pub use otel::{init_otel_stdout, otel_tracer};
 pub use prompty_tracer::PromptyTracer;
+pub(crate) use tracer::{LifecycleTelemetrySpan, start_lifecycle_telemetry};
 pub use tracer::{
     SpanEmitter, Tracer, TracerBackend, TracerFactory, sanitize_value, trace, trace_async,
     trace_span, trace_span_async,
