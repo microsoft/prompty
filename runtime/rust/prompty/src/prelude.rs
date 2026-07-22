@@ -18,3 +18,4 @@ pub use crate::tracing::{Tracer, console_tracer, trace, trace_async};
 pub use crate::types::{
     ContentPart, ContentPartKind, Message, PromptyStream, Role, StreamChunk, ToolCall,
 };
+pub use crate::{PermissionPort, PostCommitPort};

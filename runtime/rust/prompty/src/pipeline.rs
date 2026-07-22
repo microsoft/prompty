@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use serde_json::{Value, json};
 
-use crate::engine::{DurabilityPort, TurnEngineRequest};
+use crate::engine::{DurabilityPort, PermissionPort, PostCommitPort, TurnEngineRequest};
 use crate::interfaces::InvokerError;
 use crate::model::Prompty;
 use crate::parsers::parse_chat;
@@ -726,6 +726,18 @@ pub struct TurnOptions {
     /// the callback. Hosts can resume with [`turn_with_engine_request`] and a
     /// request created from [`TurnEngineRequest::resume_from`].
     pub durability: Option<Arc<dyn DurabilityPort>>,
+    /// Optional host authorization port for tool requests.
+    ///
+    /// When omitted, live turns retain their existing behavior: tool guardrails
+    /// authorize requests when configured and all requests are otherwise allowed.
+    /// When supplied, this port owns the authorization decision.
+    pub permission: Option<Arc<dyn PermissionPort>>,
+    /// Optional non-fatal effect invoked after a successful turn is committed.
+    ///
+    /// The hook receives the committed [`crate::engine::TurnCommit`] and the
+    /// turn cancellation token. Hook failures are recorded by the canonical
+    /// engine but never revoke an already committed successful turn.
+    pub post_commit: Option<Arc<dyn PostCommitPort>>,
 }
 
 impl Default for TurnOptions {
@@ -744,6 +756,8 @@ impl Default for TurnOptions {
             max_llm_retries: 3,
             compaction: None,
             durability: None,
+            permission: None,
+            post_commit: None,
         }
     }
 }
@@ -875,6 +889,20 @@ impl TurnOptionsBuilder {
         self
     }
 
+    /// Use a host-owned authorization port for tool requests.
+    ///
+    /// This replaces the default tool-guardrail/allow-all authorization path.
+    pub fn permission(mut self, permission: Arc<dyn PermissionPort>) -> Self {
+        self.opts.permission = Some(permission);
+        self
+    }
+
+    /// Run a host-owned non-fatal hook after a successful turn commit.
+    pub fn post_commit(mut self, post_commit: Arc<dyn PostCommitPort>) -> Self {
+        self.opts.post_commit = Some(post_commit);
+        self
+    }
+
     /// Consume the builder and return the configured [`TurnOptions`].
     pub fn build(self) -> TurnOptions {
         self.opts
@@ -968,7 +996,10 @@ pub async fn turn(
 /// This is the durable/resumable counterpart to [`turn`]. Supply a request
 /// created with [`TurnEngineRequest::new`] for a named turn or
 /// [`TurnEngineRequest::resume_from`] after restoring a durable checkpoint.
-/// Configure the corresponding [`DurabilityPort`] through [`TurnOptions`].
+/// Configure durable events, host tool authorization, and post-commit effects
+/// through [`TurnOptions`]. Supplied ports are passed unchanged to the
+/// canonical engine, preserving its durable event ordering and non-fatal
+/// post-commit semantics.
 pub async fn turn_with_engine_request(
     agent: &Prompty,
     request: TurnEngineRequest,

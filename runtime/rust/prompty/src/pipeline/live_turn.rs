@@ -1000,6 +1000,8 @@ pub(super) async fn turn_with_engine_request(
         max_llm_retries,
         compaction,
         durability: persistence,
+        permission,
+        post_commit,
     } = options.unwrap_or_default();
 
     let span = Tracer::start("turn");
@@ -1099,9 +1101,11 @@ pub(super) async fn turn_with_engine_request(
                 provider,
                 failures: failures.clone(),
             }),
-            permission: Arc::new(LivePermissionPort {
-                agent: agent.clone(),
-                guardrails,
+            permission: permission.unwrap_or_else(|| {
+                Arc::new(LivePermissionPort {
+                    agent: agent.clone(),
+                    guardrails,
+                })
             }),
             tools: Arc::new(LiveToolPort {
                 agent,
@@ -1110,7 +1114,7 @@ pub(super) async fn turn_with_engine_request(
                 events,
             }),
             durability: durability.clone(),
-            post_commit: Arc::new(NoopPostCommitPort),
+            post_commit: post_commit.unwrap_or_else(|| Arc::new(NoopPostCommitPort)),
             clock: Arc::new(LiveClock),
             ids: Arc::new(LiveIds::default()),
         },
