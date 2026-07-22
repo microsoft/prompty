@@ -4,7 +4,7 @@
 //! `chat`, `embedding`, or `image`.
 
 use async_trait::async_trait;
-use serde_json::Value;
+use serde_json::{Value, json};
 use std::sync::LazyLock;
 
 use prompty::engine::CancellationToken;
@@ -159,7 +159,7 @@ impl OpenAIExecutor {
             .json(&body)
             .send()
             .await
-            .map_err(|e| InvokerError::Execute(format!("HTTP request failed: {e}").into()))?;
+            .map_err(classify_transport_failure)?;
 
         if !response.status().is_success() {
             let status = response.status();
@@ -172,10 +172,12 @@ impl OpenAIExecutor {
             ));
         }
 
-        let result: Value = response
-            .json()
-            .await
-            .map_err(|e| InvokerError::Execute(format!("Failed to parse response: {e}").into()))?;
+        let result: Value = response.json().await.map_err(|error| {
+            InvokerError::indeterminate_execution(
+                format!("Failed to parse response after provider dispatch: {error}"),
+                json!({ "provider": "openai", "phase": "response_body" }),
+            )
+        })?;
 
         Ok(result)
     }
@@ -233,7 +235,7 @@ impl OpenAIExecutor {
             .json(&body)
             .send()
             .await
-            .map_err(|e| InvokerError::Execute(format!("HTTP request failed: {e}").into()))?;
+            .map_err(classify_transport_failure)?;
 
         if !response.status().is_success() {
             let status = response.status();
@@ -274,6 +276,18 @@ impl OpenAIExecutor {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+fn classify_transport_failure(error: reqwest::Error) -> InvokerError {
+    let message = format!("HTTP request failed: {error}");
+    if error.is_connect() || error.is_builder() {
+        InvokerError::Execute(message.into())
+    } else {
+        InvokerError::indeterminate_execution(
+            message,
+            json!({ "provider": "openai", "phase": "request_dispatch" }),
+        )
+    }
+}
 
 fn openai_response_id(request: &ModelInvocationRequest) -> Option<&str> {
     request
@@ -521,6 +535,50 @@ mod tests {
         });
         data["instructions"] = json!("test");
         Prompty::load_from_value(&data, &LoadContext::default())
+    }
+
+    #[tokio::test]
+    async fn test_transport_timeout_after_dispatch_is_indeterminate() {
+        use std::time::Duration;
+
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            let (_socket, _) = listener.accept().await.unwrap();
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        });
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_millis(10))
+            .build()
+            .unwrap();
+        let error = client
+            .post(format!("http://{address}"))
+            .send()
+            .await
+            .expect_err("server must not send a response before the client timeout");
+
+        assert!(matches!(
+            classify_transport_failure(error),
+            InvokerError::ExecuteIndeterminate { .. }
+        ));
+        server.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_connection_failure_remains_retryable() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        drop(listener);
+        let error = reqwest::Client::new()
+            .post(format!("http://{address}"))
+            .send()
+            .await
+            .expect_err("closed port must reject connection before dispatch");
+
+        assert!(matches!(
+            classify_transport_failure(error),
+            InvokerError::Execute(_)
+        ));
     }
 
     #[test]

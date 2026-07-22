@@ -10,7 +10,7 @@ use prompty::model::{
     DelegatedStateReference, InvocationContextPortability, InvocationContextState, InvocationUsage,
     ModelInvocationRequest, ModelInvocationResponse, ModelToolRequest, Prompty,
 };
-use prompty::types::ToolCall;
+use prompty::types::{Message, Role, ToolCall};
 
 /// OpenAI processor implementing the `Processor` trait.
 pub struct OpenAIProcessor;
@@ -73,7 +73,7 @@ pub fn process_invocation_response(
             name: call.name,
             arguments: serde_json::from_str(&call.arguments)
                 .ok()
-                .or_else(|| Some(Value::String(call.arguments))),
+                .or(Some(Value::String(call.arguments))),
             metadata: Value::Null,
         })
         .collect::<Vec<_>>();
@@ -100,15 +100,69 @@ pub fn process_invocation_response(
                 delegated_state: Vec::new(),
             }),
     );
+    let assistant_messages = next_context_state
+        .as_ref()
+        .filter(|state| state.portability == InvocationContextPortability::Portable)
+        .map(|_| portable_assistant_messages(response))
+        .unwrap_or_default();
 
     Ok(ModelInvocationResponse {
         output: tool_requests.is_empty().then_some(output),
         usage: invocation_usage(response),
-        assistant_messages: Vec::new(),
+        assistant_messages,
         tool_requests,
         next_context_state,
         metadata: Value::Null,
     })
+}
+
+fn portable_assistant_messages(response: &Value) -> Vec<Message> {
+    if response.get("object").and_then(Value::as_str) == Some("response") {
+        let function_calls = response
+            .get("output")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter(|item| item.get("type").and_then(Value::as_str) == Some("function_call"))
+            .cloned()
+            .map(|function_call| {
+                let mut message = Message::with_text(Role::Assistant, "");
+                message
+                    .metadata_mut()
+                    .insert("responses_function_call".to_string(), function_call);
+                message
+            })
+            .collect::<Vec<_>>();
+        if !function_calls.is_empty() {
+            return function_calls;
+        }
+        return vec![Message::with_text(
+            Role::Assistant,
+            response
+                .get("output_text")
+                .and_then(Value::as_str)
+                .unwrap_or(""),
+        )];
+    }
+
+    let Some(message) = response
+        .get("choices")
+        .and_then(Value::as_array)
+        .and_then(|choices| choices.first())
+        .and_then(|choice| choice.get("message"))
+    else {
+        return Vec::new();
+    };
+    let mut assistant = Message::with_text(
+        Role::Assistant,
+        message.get("content").and_then(Value::as_str).unwrap_or(""),
+    );
+    if let Some(tool_calls) = message.get("tool_calls").and_then(Value::as_array) {
+        assistant
+            .metadata_mut()
+            .insert("tool_calls".to_string(), Value::Array(tool_calls.clone()));
+    }
+    vec![assistant]
 }
 
 fn invocation_usage(response: &Value) -> Option<InvocationUsage> {
@@ -711,7 +765,15 @@ mod tests {
         let agent = make_agent(Value::Null);
         let response = json!({
             "id": "chatcmpl_123",
-            "choices": [{"message": {"content": "Hello"}}]
+            "choices": [{"message": {
+                "role": "assistant",
+                "content": "Hello",
+                "tool_calls": [{
+                    "id": "call_1",
+                    "type": "function",
+                    "function": {"name": "weather", "arguments": "{\"city\":\"Paris\"}"}
+                }]
+            }}]
         });
 
         let result = process_invocation_response(&agent, &response, "openai", true).unwrap();
@@ -719,6 +781,12 @@ mod tests {
         let state = result.next_context_state.expect("context state");
         assert_eq!(state.portability, InvocationContextPortability::Portable);
         assert!(state.delegated_state.is_empty());
+        assert_eq!(result.assistant_messages.len(), 1);
+        assert_eq!(result.assistant_messages[0].text_content(), "Hello");
+        assert_eq!(
+            result.assistant_messages[0].metadata["tool_calls"][0]["id"],
+            "call_1"
+        );
     }
 
     #[test]

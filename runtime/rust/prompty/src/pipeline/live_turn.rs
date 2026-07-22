@@ -71,8 +71,14 @@ struct LiveFailureState {
 impl LiveFailureState {
     fn record_invoker(&self, error: InvokerError) -> PortError {
         let message = error.to_string();
+        let port_error = match &error {
+            InvokerError::ExecuteIndeterminate { metadata, .. } => {
+                PortError::indeterminate_with_metadata(message.clone(), metadata.clone())
+            }
+            _ => PortError::new(message),
+        };
         *self.invoker.lock().expect("live failure lock poisoned") = Some(error);
-        PortError::new(message)
+        port_error
     }
 
     fn take_invoker(&self) -> Option<InvokerError> {
@@ -273,8 +279,10 @@ impl LiveModelPort {
             .map(|tool_call| ModelToolRequest {
                 id: tool_call.id,
                 name: tool_call.name,
-                arguments: Some(serde_json::from_str(&tool_call.arguments)
-                    .unwrap_or_else(|_| Value::String(tool_call.arguments.clone()))),
+                arguments: Some(
+                    serde_json::from_str(&tool_call.arguments)
+                        .unwrap_or_else(|_| Value::String(tool_call.arguments.clone())),
+                ),
                 metadata: json!({ "argumentsText": tool_call.arguments }),
             })
             .collect()
@@ -431,6 +439,31 @@ impl GeneratedModelPort for LiveModelPort {
                     }
                 }
             };
+
+        let completed_response = raw_chunks.iter().rev().find_map(|chunk| {
+            (chunk.get("type").and_then(Value::as_str) == Some("response.completed"))
+                .then(|| chunk.get("response").cloned())
+                .flatten()
+        });
+        if let Some(completed_response) = completed_response {
+            let mut response = registry::invoke_processor_with_context(
+                &self.provider,
+                &self.agent,
+                completed_response.clone(),
+                request,
+            )
+            .await
+            .map_err(|error| self.failures.record_invoker(error))?;
+            let provider_metadata = std::mem::take(&mut response.metadata);
+            response.metadata = json!({
+                "rawResponse": completed_response,
+                "rawChunks": raw_chunks,
+                "textContent": response.output.as_ref().and_then(Value::as_str),
+                "streamed": true,
+                "providerMetadata": provider_metadata,
+            });
+            return Ok(response);
+        }
 
         let text_content = super::extract_text_from_processed(&processed);
         let tool_requests = Self::normalize_tool_requests(tool_calls);
@@ -876,7 +909,9 @@ impl DurabilityPort for LiveDurabilityPort {
         checkpoint: &EngineCheckpoint,
     ) -> Result<(), PortError> {
         if let Some(persistence) = &self.persistence {
-            persistence.append_with_checkpoint(events, checkpoint).await?;
+            persistence
+                .append_with_checkpoint(events, checkpoint)
+                .await?;
         }
         self.update_checkpoint(checkpoint);
         for event in events {
@@ -1141,4 +1176,169 @@ pub(super) async fn turn_with_engine_request(
 
 fn map_engine_error(error: TurnEngineError) -> InvokerError {
     InvokerError::Execute(error.to_string().into())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::pin::Pin;
+
+    use async_trait::async_trait;
+    use futures::{Stream, StreamExt};
+    use serde_json::json;
+
+    use super::*;
+    use crate::interfaces::{Executor, Processor};
+    use crate::model::context::LoadContext;
+
+    const RESPONSES_STREAM_PROVIDER: &str = "live-responses-stream-test";
+
+    struct ResponsesStreamExecutor;
+
+    #[async_trait]
+    impl Executor for ResponsesStreamExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            unreachable!("the test exercises the streaming path")
+        }
+
+        async fn execute_stream_with_context(
+            &self,
+            _agent: &Prompty,
+            _request: &ModelInvocationRequest,
+            _cancellation: &CancellationToken,
+        ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
+            Ok(Box::pin(futures::stream::iter(vec![json!({
+                "type": "response.completed",
+                "response": {
+                    "object": "response",
+                    "id": "resp_streamed_tool_round",
+                    "output": [{
+                        "type": "function_call",
+                        "call_id": "call_weather",
+                        "name": "weather",
+                        "arguments": "{\"city\":\"Paris\"}"
+                    }]
+                }
+            })])))
+        }
+    }
+
+    struct ResponsesStreamProcessor;
+
+    #[async_trait]
+    impl Processor for ResponsesStreamProcessor {
+        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+            unreachable!("the test exercises the context-aware streaming completion path")
+        }
+
+        async fn process_with_context(
+            &self,
+            _agent: &Prompty,
+            response: Value,
+            _request: &ModelInvocationRequest,
+        ) -> Result<GeneratedModelInvocationResponse, InvokerError> {
+            assert_eq!(response["id"], "resp_streamed_tool_round");
+            Ok(GeneratedModelInvocationResponse {
+                output: None,
+                usage: None,
+                assistant_messages: Vec::new(),
+                tool_requests: vec![ModelToolRequest {
+                    id: "call_weather".to_string(),
+                    name: "weather".to_string(),
+                    arguments: Some(json!({"city": "Paris"})),
+                    metadata: Value::Null,
+                }],
+                next_context_state: Some(InvocationContextState {
+                    portability: InvocationContextPortability::Delegated,
+                    delegated_state: vec![crate::model::DelegatedStateReference {
+                        provider: "openai".to_string(),
+                        kind: "response".to_string(),
+                        id: "resp_streamed_tool_round".to_string(),
+                        metadata: Value::Null,
+                    }],
+                }),
+                metadata: Value::Null,
+            })
+        }
+
+        fn process_stream(
+            &self,
+            inner: Pin<Box<dyn Stream<Item = Value> + Send>>,
+        ) -> Result<Pin<Box<dyn Stream<Item = crate::types::StreamChunk> + Send>>, InvokerError>
+        {
+            Ok(Box::pin(inner.map(|_| {
+                StreamChunk::Tool(ToolCall {
+                    id: "call_weather".to_string(),
+                    name: "weather".to_string(),
+                    arguments: "{\"city\":\"Paris\"}".to_string(),
+                })
+            })))
+        }
+    }
+
+    fn responses_agent() -> Prompty {
+        Prompty::load_from_value(
+            &json!({
+                "kind": "prompt",
+                "name": "streamed-responses",
+                "instructions": "test",
+                "model": {"id": "gpt-test", "provider": RESPONSES_STREAM_PROVIDER}
+            }),
+            &LoadContext::default(),
+        )
+    }
+
+    #[tokio::test]
+    async fn streamed_responses_tool_round_preserves_delegated_continuation() {
+        registry::register_executor(RESPONSES_STREAM_PROVIDER, ResponsesStreamExecutor);
+        registry::register_processor(RESPONSES_STREAM_PROVIDER, ResponsesStreamProcessor);
+        let port = LiveModelPort {
+            agent: Arc::new(responses_agent()),
+            provider: RESPONSES_STREAM_PROVIDER.to_string(),
+            streaming: true,
+            raw_final: false,
+            agent_mode: true,
+            skip_output_guardrail: Arc::new(AtomicBool::new(false)),
+            failures: Arc::new(LiveFailureState::default()),
+        };
+        let request = ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default());
+
+        let response = port
+            .invoke(
+                &request,
+                &CancellationToken::new(),
+                &crate::engine::NoopModelStreamPort,
+            )
+            .await
+            .expect("streamed Responses completion should map through the context-aware processor");
+
+        let context = response
+            .next_context_state
+            .expect("the next invocation must receive a context state");
+        assert_eq!(context.portability, InvocationContextPortability::Delegated);
+        assert_eq!(context.delegated_state.len(), 1);
+        assert_eq!(context.delegated_state[0].provider, "openai");
+        assert_eq!(context.delegated_state[0].kind, "response");
+        assert_eq!(context.delegated_state[0].id, "resp_streamed_tool_round");
+        assert_eq!(response.tool_requests[0].id, "call_weather");
+    }
+
+    #[test]
+    fn indeterminate_invoker_failure_maps_to_model_reconciliation_error() {
+        let failures = LiveFailureState::default();
+        let error = failures.record_invoker(InvokerError::indeterminate_execution(
+            "request timed out after dispatch",
+            json!({"provider": "openai", "phase": "request_dispatch"}),
+        ));
+
+        assert!(error.outcome_unknown);
+        assert_eq!(error.metadata["provider"], "openai");
+        assert!(matches!(
+            failures.take_invoker(),
+            Some(InvokerError::ExecuteIndeterminate { .. })
+        ));
+    }
 }

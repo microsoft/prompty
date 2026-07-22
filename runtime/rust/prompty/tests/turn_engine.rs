@@ -432,6 +432,99 @@ async fn model_stream_chunks_use_the_ephemeral_stream_port() {
 }
 
 #[tokio::test]
+async fn portable_assistant_history_is_checkpointed_and_reused_after_tool_round() {
+    let mut assistant = Message::with_text(Role::Assistant, "");
+    assistant.metadata_mut().insert(
+        "tool_calls".to_string(),
+        serde_json::json!([{
+            "id": "call_1",
+            "type": "function",
+            "function": {"name": "weather", "arguments": "{\"city\":\"Paris\"}"},
+        }]),
+    );
+    let model = Arc::new(ScriptedModel {
+        responses: Mutex::new(VecDeque::from([
+            ModelInvocationResponse {
+                output: None,
+                usage: None,
+                assistant_messages: vec![assistant],
+                tool_requests: vec![EngineToolRequest {
+                    id: "call_1".to_string(),
+                    name: "weather".to_string(),
+                    arguments: serde_json::json!({"city": "Paris"}),
+                    metadata: Value::Null,
+                }],
+                next_portability: Some(ContextPortability::Portable),
+                delegated_state: Some(Vec::new()),
+                metadata: Value::Null,
+            },
+            ModelInvocationResponse {
+                output: Some(Value::String("sunny".to_string())),
+                usage: None,
+                assistant_messages: vec![Message::with_text(Role::Assistant, "sunny")],
+                tool_requests: Vec::new(),
+                next_portability: Some(ContextPortability::Portable),
+                delegated_state: Some(Vec::new()),
+                metadata: Value::Null,
+            },
+        ])),
+        requests: Mutex::new(Vec::new()),
+    });
+    let checkpoints = Arc::new(RecordingCheckpoints::default());
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        effects(
+            model.clone(),
+            Arc::new(VectorTools {
+                outputs: HashMap::from([("call_1".to_string(), "22C".to_string())]),
+                calls: Mutex::new(Vec::new()),
+            }),
+            Arc::new(RecordingEvents::default()),
+            checkpoints.clone(),
+            Arc::new(RecordingPostCommit::default()),
+        ),
+    );
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                "portable-history-session",
+                "portable-history-turn",
+                vec![Message::with_text(Role::User, "weather in Paris")],
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(result.commit.status, TurnStatus::Success);
+    let checkpoint = checkpoints
+        .0
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|checkpoint| {
+            checkpoint.completed_model_iterations == 1
+                && checkpoint.pending_model_response.is_none()
+                && checkpoint.messages.len() == 3
+        })
+        .cloned()
+        .expect("tool exchange must checkpoint portable assistant and result messages");
+    let requests = model.requests.lock().unwrap();
+    assert_eq!(requests.len(), 2);
+    assert_eq!(requests[1].context.messages, checkpoint.messages);
+    assert_eq!(requests[1].context.messages[1].role, Role::Assistant);
+    assert_eq!(
+        requests[1].context.messages[1].metadata["tool_calls"][0]["id"],
+        "call_1"
+    );
+    assert_eq!(
+        requests[1].context.messages[2].metadata["tool_call_id"],
+        "call_1"
+    );
+}
+
+#[tokio::test]
 async fn cancellation_after_model_completion_prevents_tool_execution() {
     let tools = Arc::new(VectorTools {
         outputs: HashMap::new(),

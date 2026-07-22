@@ -3188,7 +3188,11 @@ mod tests {
                 _ => None,
             })
             .unwrap();
-        assert_eq!(done_messages, sent);
+        assert_eq!(&done_messages[..sent.len()], sent.as_slice());
+        assert_eq!(
+            done_messages.last().map(Message::text_content).as_deref(),
+            Some("captured")
+        );
     }
 
     #[tokio::test]

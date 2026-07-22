@@ -37,6 +37,13 @@ pub enum InvokerError {
     #[error("execute error: {0}")]
     Execute(Box<dyn std::error::Error + Send + Sync>),
 
+    /// The provider request may have been dispatched, so its outcome requires reconciliation.
+    #[error("indeterminate execution: {message}")]
+    ExecuteIndeterminate {
+        message: String,
+        metadata: serde_json::Value,
+    },
+
     /// The processor failed.
     #[error("process error: {0}")]
     Process(Box<dyn std::error::Error + Send + Sync>),
@@ -60,6 +67,23 @@ pub enum InvokerError {
     /// A generic retryable/other error.
     #[error("{0}")]
     Other(String),
+}
+
+impl InvokerError {
+    /// Mark an execution failure as requiring model-outcome reconciliation.
+    ///
+    /// Executors should only use this after request dispatch becomes ambiguous.
+    /// Configuration, validation, and connection-establishment failures remain
+    /// ordinary retryable execution errors.
+    pub fn indeterminate_execution(
+        message: impl Into<String>,
+        metadata: serde_json::Value,
+    ) -> Self {
+        Self::ExecuteIndeterminate {
+            message: message.into(),
+            metadata,
+        }
+    }
 }
 
 /// Error from the agent loop that includes accumulated conversation state (§9.10).
@@ -327,10 +351,11 @@ pub trait Processor: Send + Sync {
     ) -> Result<ModelInvocationResponse, InvokerError> {
         let output = self.process(agent, response).await?;
         let tool_requests = legacy_tool_requests(&output);
+        let assistant_messages = legacy_assistant_messages(&output, &tool_requests);
         Ok(ModelInvocationResponse {
             output: tool_requests.is_empty().then_some(output),
             usage: None,
-            assistant_messages: Vec::new(),
+            assistant_messages,
             tool_requests,
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
@@ -351,10 +376,11 @@ pub trait Processor: Send + Sync {
         response: serde_json::Value,
         _request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
+        let assistant_messages = legacy_assistant_messages(&response, &[]);
         Ok(ModelInvocationResponse {
             output: Some(response),
             usage: None,
-            assistant_messages: Vec::new(),
+            assistant_messages,
             tool_requests: Vec::new(),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
@@ -400,6 +426,48 @@ fn legacy_tool_requests(output: &serde_json::Value) -> Vec<ModelToolRequest> {
             })
         })
         .collect()
+}
+
+fn legacy_assistant_messages(
+    output: &serde_json::Value,
+    tool_requests: &[ModelToolRequest],
+) -> Vec<Message> {
+    let content = output.as_str().map(str::to_string).unwrap_or_else(|| {
+        (!tool_requests.is_empty())
+            .then(String::new)
+            .unwrap_or_else(|| output.to_string())
+    });
+    let mut assistant = Message::with_text(crate::types::Role::Assistant, content);
+    if !tool_requests.is_empty() {
+        let tool_calls = tool_requests
+            .iter()
+            .map(|request| {
+                let arguments = request
+                    .arguments
+                    .as_ref()
+                    .map(|value| {
+                        value
+                            .as_str()
+                            .map(str::to_string)
+                            .unwrap_or_else(|| value.to_string())
+                    })
+                    .unwrap_or_else(|| "{}".to_string());
+                serde_json::json!({
+                    "id": request.id,
+                    "type": "function",
+                    "function": {
+                        "name": request.name,
+                        "arguments": arguments,
+                    },
+                })
+            })
+            .collect();
+        assistant.metadata_mut().insert(
+            "tool_calls".to_string(),
+            serde_json::Value::Array(tool_calls),
+        );
+    }
+    vec![assistant]
 }
 
 #[cfg(test)]

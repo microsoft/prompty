@@ -15,7 +15,7 @@ use prompty::model::{
     InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
     ModelInvocationResponse, ModelToolRequest, Prompty,
 };
-use prompty::types::ToolCall;
+use prompty::types::{Message, Role, ToolCall};
 
 /// Anthropic processor implementing the `Processor` trait.
 pub struct AnthropicProcessor;
@@ -40,7 +40,7 @@ impl Processor for AnthropicProcessor {
                 name: call.name,
                 arguments: serde_json::from_str(&call.arguments)
                     .ok()
-                    .or_else(|| Some(Value::String(call.arguments))),
+                    .or(Some(Value::String(call.arguments))),
                 metadata: Value::Null,
             })
             .collect::<Vec<_>>();
@@ -49,7 +49,7 @@ impl Processor for AnthropicProcessor {
         Ok(ModelInvocationResponse {
             output: tool_requests.is_empty().then_some(output),
             usage: None,
-            assistant_messages: Vec::new(),
+            assistant_messages: portable_assistant_messages(&response),
             tool_requests,
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
@@ -82,6 +82,27 @@ impl Processor for AnthropicProcessor {
     > {
         Ok(Box::pin(AnthropicStreamProcessor::new(inner)))
     }
+}
+
+fn portable_assistant_messages(response: &Value) -> Vec<Message> {
+    let content = response
+        .get("content")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    let text = content
+        .iter()
+        .filter(|block| block.get("type").and_then(Value::as_str) == Some("text"))
+        .filter_map(|block| block.get("text").and_then(Value::as_str))
+        .collect::<Vec<_>>()
+        .join("");
+    let mut assistant = Message::with_text(Role::Assistant, text);
+    if !content.is_empty() {
+        assistant
+            .metadata_mut()
+            .insert("content".to_string(), Value::Array(content));
+    }
+    vec![assistant]
 }
 
 /// Process an Anthropic Messages API response.
@@ -495,7 +516,10 @@ mod tests {
         let response = json!({
             "id": "msg_01",
             "type": "message",
-            "content": [{"type": "text", "text": "Hello!"}]
+            "content": [
+                {"type": "text", "text": "Hello!"},
+                {"type": "tool_use", "id": "toolu_1", "name": "weather", "input": {"city": "Paris"}}
+            ]
         });
 
         let result = AnthropicProcessor
@@ -510,6 +534,12 @@ mod tests {
         let state = result.next_context_state.expect("context state");
         assert_eq!(state.portability, InvocationContextPortability::Portable);
         assert!(state.delegated_state.is_empty());
+        assert_eq!(result.assistant_messages.len(), 1);
+        assert_eq!(result.assistant_messages[0].text_content(), "Hello!");
+        assert_eq!(
+            result.assistant_messages[0].metadata["content"][1]["type"],
+            "tool_use"
+        );
     }
 
     #[tokio::test]
