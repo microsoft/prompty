@@ -1180,6 +1180,39 @@ mod tests {
         }
     }
 
+    struct FailOnceDurability {
+        recording: RecordingDurability,
+        failed: AtomicBool,
+    }
+
+    impl Default for FailOnceDurability {
+        fn default() -> Self {
+            Self {
+                recording: RecordingDurability::default(),
+                failed: AtomicBool::new(false),
+            }
+        }
+    }
+
+    #[async_trait]
+    impl DurabilityPort for FailOnceDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.recording.append(event).await
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.recording.append_with_checkpoint(events, checkpoint).await?;
+            if !self.failed.swap(true, Ordering::SeqCst) {
+                return Err(PortError::new("injected durability failure"));
+            }
+            Ok(())
+        }
+    }
+
     #[test]
     fn test_validate_inputs_fills_defaults() {
         let agent = make_agent_with_inputs();
@@ -1722,6 +1755,58 @@ mod tests {
             checkpoint.session_id == "durable-session" && checkpoint.turn_id == "durable-turn"
         }));
         assert!(checkpoints.iter().any(|checkpoint| checkpoint.final_output_ready));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_with_engine_request_resumes_after_durability_failure() {
+        ensure_defaults();
+        let key = "turn_durable_resume";
+        let calls = Arc::new(AtomicUsize::new(1));
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: calls.clone(),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(FailOnceDurability::default());
+        let mut request = TurnEngineRequest::new("resume-session", "resume-turn", Vec::new());
+        request.inputs = json!({});
+
+        let failure = turn_with_engine_request(
+            &agent,
+            request,
+            Some(TurnOptions::builder().durability(durability.clone()).build()),
+        )
+        .await
+        .expect_err("injected persistence failure must stop the live turn");
+        assert!(failure.to_string().contains("injected durability failure"));
+
+        let checkpoint = durability
+            .recording
+            .checkpoints
+            .lock()
+            .unwrap()
+            .last()
+            .cloned()
+            .expect("the failing durability sink must retain the checkpoint");
+        let resume = TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence);
+        let result = turn_with_engine_request(
+            &agent,
+            resume,
+            Some(TurnOptions::builder().durability(durability).build()),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            2,
+            "resume must commit the retained model response without another provider invocation"
+        );
     }
 
     #[tokio::test]
