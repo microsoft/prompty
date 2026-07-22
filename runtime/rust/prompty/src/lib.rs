@@ -94,7 +94,7 @@ pub use model::Prompty;
 pub use pipeline::{
     AgentEvent, AsyncToolFn, Compaction, CompactionFn, EventCallback, ToolFn, ToolHandler,
     TurnOptions, TurnOptionsBuilder, invoke as invoke_agent, invoke_from_path, prepare, process,
-    register_defaults, render, run, turn, turn_from_path, validate_inputs,
+    register_defaults, render, run, turn, turn_from_path, turn_with_engine_request, validate_inputs,
 };
 pub use registry::{
     clear_cache, has_executor, has_parser, has_processor, has_renderer, invoke_executor,

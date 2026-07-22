@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use serde_json::{Value, json};
 
+use crate::engine::{DurabilityPort, TurnEngineRequest};
 use crate::interfaces::InvokerError;
 use crate::model::Prompty;
 use crate::parsers::parse_chat;
@@ -717,6 +718,12 @@ pub struct TurnOptions {
     /// Context compaction strategy. When set and messages are trimmed, replaces
     /// the default `summarize_dropped()` summary with a higher-quality one.
     pub compaction: Option<Compaction>,
+    /// Optional durable event/checkpoint sink for the canonical turn engine.
+    ///
+    /// When supplied, the sink is called before live events are projected to
+    /// the callback. Hosts can resume with [`turn_with_engine_request`] and a
+    /// request created from [`TurnEngineRequest::resume_from`].
+    pub durability: Option<Arc<dyn DurabilityPort>>,
 }
 
 impl Default for TurnOptions {
@@ -734,6 +741,7 @@ impl Default for TurnOptions {
             validator: None,
             max_llm_retries: 3,
             compaction: None,
+            durability: None,
         }
     }
 }
@@ -859,6 +867,12 @@ impl TurnOptionsBuilder {
         self
     }
 
+    /// Persist canonical engine events and checkpoints through the supplied sink.
+    pub fn durability(mut self, durability: Arc<dyn DurabilityPort>) -> Self {
+        self.opts.durability = Some(durability);
+        self
+    }
+
     /// Consume the builder and return the configured [`TurnOptions`].
     pub fn build(self) -> TurnOptions {
         self.opts
@@ -945,6 +959,20 @@ pub async fn turn(
     options: Option<TurnOptions>,
 ) -> Result<serde_json::Value, InvokerError> {
     live_turn::turn(agent, inputs, options).await
+}
+
+/// Run a live turn using a caller-owned canonical engine request.
+///
+/// This is the durable/resumable counterpart to [`turn`]. Supply a request
+/// created with [`TurnEngineRequest::new`] for a named turn or
+/// [`TurnEngineRequest::resume_from`] after restoring a durable checkpoint.
+/// Configure the corresponding [`DurabilityPort`] through [`TurnOptions`].
+pub async fn turn_with_engine_request(
+    agent: &Prompty,
+    request: TurnEngineRequest,
+    options: Option<TurnOptions>,
+) -> Result<serde_json::Value, InvokerError> {
+    live_turn::turn_with_engine_request(agent, request, options).await
 }
 
 /// Convenience wrapper: load a `.prompty` file and run `turn()` on it.
@@ -1107,6 +1135,8 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
 
+    use async_trait::async_trait;
+    use crate::engine::{EngineCheckpoint, EngineEvent, PortError};
     use crate::model::Prompty;
     use crate::model::context::LoadContext;
     use serial_test::serial;
@@ -1124,6 +1154,30 @@ mod tests {
             "instructions": "system:\nHello {{ firstName }} {{ lastName }}\n\nuser:\n{{ question }}"
         });
         Prompty::load_from_value(&data, &LoadContext::default())
+    }
+
+    #[derive(Default)]
+    struct RecordingDurability {
+        events: Mutex<Vec<EngineEvent>>,
+        checkpoints: Mutex<Vec<EngineCheckpoint>>,
+    }
+
+    #[async_trait]
+    impl DurabilityPort for RecordingDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.events.lock().unwrap().push(event.clone());
+            Ok(())
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.events.lock().unwrap().extend_from_slice(events);
+            self.checkpoints.lock().unwrap().push(checkpoint.clone());
+            Ok(())
+        }
     }
 
     #[test]
@@ -1627,6 +1681,47 @@ mod tests {
                 > engine_runs,
             "pipeline::turn must route through the canonical TurnEngine live bundle"
         );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_with_engine_request_persists_canonical_checkpoint() {
+        ensure_defaults();
+        let key = "turn_durable_request";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(RecordingDurability::default());
+        let mut request = TurnEngineRequest::new("durable-session", "durable-turn", Vec::new());
+        request.inputs = json!({});
+
+        let result = turn_with_engine_request(
+            &agent,
+            request,
+            Some(TurnOptions::builder().durability(durability.clone()).build()),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert!(
+            !durability.events.lock().unwrap().is_empty(),
+            "live turns must write canonical events through the caller durability port"
+        );
+        let checkpoints = durability.checkpoints.lock().unwrap();
+        assert!(
+            checkpoints.len() >= 2,
+            "the live request should persist both the model and terminal checkpoints"
+        );
+        assert!(checkpoints.iter().all(|checkpoint| {
+            checkpoint.session_id == "durable-session" && checkpoint.turn_id == "durable-turn"
+        }));
+        assert!(checkpoints.iter().any(|checkpoint| checkpoint.final_output_ready));
     }
 
     #[tokio::test]

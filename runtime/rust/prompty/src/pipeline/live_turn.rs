@@ -644,6 +644,7 @@ struct LiveDurabilityPort {
     model_id: Option<String>,
     configured_max_iterations: usize,
     agent_mode: bool,
+    persistence: Option<Arc<dyn DurabilityPort>>,
     state: Mutex<ProjectionState>,
 }
 
@@ -816,6 +817,9 @@ impl LiveDurabilityPort {
 #[async_trait]
 impl DurabilityPort for LiveDurabilityPort {
     async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+        if let Some(persistence) = &self.persistence {
+            persistence.append(event).await?;
+        }
         self.project(event);
         Ok(())
     }
@@ -825,6 +829,9 @@ impl DurabilityPort for LiveDurabilityPort {
         events: &[EngineEvent],
         checkpoint: &EngineCheckpoint,
     ) -> Result<(), PortError> {
+        if let Some(persistence) = &self.persistence {
+            persistence.append_with_checkpoint(events, checkpoint).await?;
+        }
         self.update_checkpoint(checkpoint);
         for event in events {
             self.project(event);
@@ -871,6 +878,21 @@ pub(super) async fn turn(
     inputs: Option<&Value>,
     options: Option<TurnOptions>,
 ) -> Result<Value, InvokerError> {
+    let turn_number = LIVE_TURN_IDS.fetch_add(1, Ordering::Relaxed) + 1;
+    let mut request = TurnEngineRequest::new(
+        format!("legacy-session-{turn_number}"),
+        format!("legacy-turn-{turn_number}"),
+        Vec::new(),
+    );
+    request.inputs = inputs.cloned().unwrap_or_else(|| json!({}));
+    turn_with_engine_request(agent, request, options).await
+}
+
+pub(super) async fn turn_with_engine_request(
+    agent: &Prompty,
+    mut request: TurnEngineRequest,
+    options: Option<TurnOptions>,
+) -> Result<Value, InvokerError> {
     let TurnOptions {
         max_iterations,
         raw,
@@ -884,6 +906,7 @@ pub(super) async fn turn(
         validator: _,
         max_llm_retries,
         compaction,
+        durability: persistence,
     } = options.unwrap_or_default();
 
     let span = Tracer::start("turn");
@@ -892,7 +915,12 @@ pub(super) async fn turn(
         "description",
         &json!("Canonical TurnEngine live effect bundle"),
     );
-    let inputs = inputs.cloned().unwrap_or_else(|| json!({}));
+    let inputs = if request.inputs.is_null() {
+        json!({})
+    } else {
+        request.inputs.clone()
+    };
+    request.inputs = inputs.clone();
     span.emit("inputs", &inputs);
     let events = LiveEvents::new(on_event);
 
@@ -934,13 +962,12 @@ pub(super) async fn turn(
         model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
         configured_max_iterations: max_iterations,
         agent_mode,
+        persistence,
         state: Mutex::new(ProjectionState::default()),
     });
     let cancellation = cancelled
         .map(CancellationToken::from_shared)
         .unwrap_or_default();
-    let turn_number = LIVE_TURN_IDS.fetch_add(1, Ordering::Relaxed) + 1;
-
     let engine = TurnEngine::new(
         ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
         TurnEngineEffects {
@@ -963,7 +990,11 @@ pub(super) async fn turn(
                 steering,
                 context_budget,
                 compaction,
-                prepared: AtomicBool::new(false),
+                prepared: AtomicBool::new(
+                    request.start_iteration > 0
+                        || request.policy_applied_for_iteration
+                        || !request.messages.is_empty(),
+                ),
                 skip_output_guardrail,
                 failures: failures.clone(),
             }),
@@ -992,12 +1023,6 @@ pub(super) async fn turn(
         },
     );
 
-    let mut request = TurnEngineRequest::new(
-        format!("legacy-session-{turn_number}"),
-        format!("legacy-turn-{turn_number}"),
-        Vec::new(),
-    );
-    request.inputs = inputs;
     request.max_iterations = if agent_mode {
         max_iterations
     } else {
