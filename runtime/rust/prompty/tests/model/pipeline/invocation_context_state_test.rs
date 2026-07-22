@@ -9,6 +9,6 @@
     clippy::all
 )]
 
-use prompty::model::context::{LoadContext, SaveContext};
 use prompty::model::InvocationContextPortability;
 use prompty::model::InvocationContextState;
+use prompty::model::context::{LoadContext, SaveContext};

@@ -509,65 +509,74 @@ impl futures::Stream for OpenAIStreamProcessor {
                         let event_type = chunk.get("type").and_then(Value::as_str);
                         match event_type {
                             Some("response.output_text.delta") => {
-                                if let Some(text) = chunk.get("delta").and_then(Value::as_str)
-                                    && !text.is_empty()
-                                {
-                                    return std::task::Poll::Ready(Some(StreamChunk::Text(
-                                        text.to_string(),
-                                    )));
+                                if let Some(text) = chunk.get("delta").and_then(Value::as_str) {
+                                    if !text.is_empty() {
+                                        return std::task::Poll::Ready(Some(StreamChunk::Text(
+                                            text.to_string(),
+                                        )));
+                                    }
                                 }
                             }
                             Some("response.output_item.added" | "response.output_item.done") => {
-                                if let Some(item) = chunk.get("item")
-                                    && item.get("type").and_then(Value::as_str)
+                                if let Some(item) = chunk.get("item") {
+                                    if item.get("type").and_then(Value::as_str)
                                         == Some("function_call")
-                                {
-                                    let index = chunk
-                                        .get("output_index")
-                                        .and_then(Value::as_u64)
-                                        .unwrap_or(this.tool_call_acc.len() as u64)
-                                        as usize;
-                                    this.tool_call_acc.insert(
-                                        index,
-                                        (
-                                            item.get("call_id")
-                                                .and_then(Value::as_str)
-                                                .unwrap_or("")
-                                                .to_string(),
-                                            item.get("name")
-                                                .and_then(Value::as_str)
-                                                .unwrap_or("")
-                                                .to_string(),
-                                            item.get("arguments")
-                                                .and_then(Value::as_str)
-                                                .unwrap_or("")
-                                                .to_string(),
-                                        ),
-                                    );
+                                    {
+                                        let index = chunk
+                                            .get("output_index")
+                                            .and_then(Value::as_u64)
+                                            .unwrap_or(this.tool_call_acc.len() as u64)
+                                            as usize;
+                                        this.tool_call_acc.insert(
+                                            index,
+                                            (
+                                                item.get("call_id")
+                                                    .and_then(Value::as_str)
+                                                    .unwrap_or("")
+                                                    .to_string(),
+                                                item.get("name")
+                                                    .and_then(Value::as_str)
+                                                    .unwrap_or("")
+                                                    .to_string(),
+                                                item.get("arguments")
+                                                    .and_then(Value::as_str)
+                                                    .unwrap_or("")
+                                                    .to_string(),
+                                            ),
+                                        );
+                                    }
                                 }
                             }
                             Some("response.function_call_arguments.delta") => {
                                 if let Some(call_id) = chunk.get("call_id").and_then(Value::as_str)
-                                    && let Some(arguments) =
-                                        chunk.get("delta").and_then(Value::as_str)
-                                    && let Some(entry) = this
-                                        .tool_call_acc
-                                        .values_mut()
-                                        .find(|entry| entry.0 == call_id)
                                 {
-                                    entry.2.push_str(arguments);
+                                    if let Some(arguments) =
+                                        chunk.get("delta").and_then(Value::as_str)
+                                    {
+                                        if let Some(entry) = this
+                                            .tool_call_acc
+                                            .values_mut()
+                                            .find(|entry| entry.0 == call_id)
+                                        {
+                                            entry.2.push_str(arguments);
+                                        }
+                                    }
                                 }
                             }
                             Some("response.function_call_arguments.done") => {
                                 if let Some(call_id) = chunk.get("call_id").and_then(Value::as_str)
-                                    && let Some(arguments) =
-                                        chunk.get("arguments").and_then(Value::as_str)
-                                    && let Some(entry) = this
-                                        .tool_call_acc
-                                        .values_mut()
-                                        .find(|entry| entry.0 == call_id)
                                 {
-                                    entry.2 = arguments.to_string();
+                                    if let Some(arguments) =
+                                        chunk.get("arguments").and_then(Value::as_str)
+                                    {
+                                        if let Some(entry) = this
+                                            .tool_call_acc
+                                            .values_mut()
+                                            .find(|entry| entry.0 == call_id)
+                                        {
+                                            entry.2 = arguments.to_string();
+                                        }
+                                    }
                                 }
                             }
                             Some("response.completed") => {
@@ -605,15 +614,15 @@ impl futures::Stream for OpenAIStreamProcessor {
                                 }
                             }
                             Some("response.refusal.delta") => {
-                                if let Some(refusal) = chunk.get("delta").and_then(Value::as_str)
-                                    && !refusal.is_empty()
-                                {
-                                    this.phase = StreamPhase::Done;
-                                    return std::task::Poll::Ready(Some(StreamChunk::Error(
-                                        StreamFailure::Determinate(format!(
-                                            "Model refused: {refusal}"
-                                        )),
-                                    )));
+                                if let Some(refusal) = chunk.get("delta").and_then(Value::as_str) {
+                                    if !refusal.is_empty() {
+                                        this.phase = StreamPhase::Done;
+                                        return std::task::Poll::Ready(Some(StreamChunk::Error(
+                                            StreamFailure::Determinate(format!(
+                                                "Model refused: {refusal}"
+                                            )),
+                                        )));
+                                    }
                                 }
                             }
                             _ => {}

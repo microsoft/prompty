@@ -697,38 +697,44 @@ pub fn format_stream_responses_tool_messages(
     let mut originals = BTreeMap::<usize, Value>::new();
     for chunk in raw_chunks {
         let event_type = chunk.get("type").and_then(Value::as_str);
-        if event_type == Some("response.completed")
-            && let Some(output) = chunk
+        if event_type == Some("response.completed") {
+            if let Some(output) = chunk
                 .get("response")
                 .and_then(|response| response.get("output"))
                 .and_then(Value::as_array)
-        {
-            for (index, item) in output.iter().enumerate() {
-                if item.get("type").and_then(Value::as_str) == Some("function_call") {
-                    originals.insert(index, item.clone());
+            {
+                for (index, item) in output.iter().enumerate() {
+                    if item.get("type").and_then(Value::as_str) == Some("function_call") {
+                        originals.insert(index, item.clone());
+                    }
                 }
             }
         }
         if matches!(
             event_type,
             Some("response.output_item.added" | "response.output_item.done")
-        ) && let Some(item) = chunk.get("item")
-            && item.get("type").and_then(Value::as_str) == Some("function_call")
-        {
-            let index = chunk
-                .get("output_index")
-                .and_then(Value::as_u64)
-                .unwrap_or(originals.len() as u64) as usize;
-            originals.insert(index, item.clone());
+        ) {
+            if let Some(item) = chunk.get("item") {
+                if item.get("type").and_then(Value::as_str) == Some("function_call") {
+                    let index = chunk
+                        .get("output_index")
+                        .and_then(Value::as_u64)
+                        .unwrap_or(originals.len() as u64) as usize;
+                    originals.insert(index, item.clone());
+                }
+            }
         }
-        if event_type == Some("response.function_call_arguments.done")
-            && let Some(call_id) = chunk.get("call_id").and_then(Value::as_str)
-            && let Some(arguments) = chunk.get("arguments").and_then(Value::as_str)
-            && let Some(item) = originals
-                .values_mut()
-                .find(|item| item.get("call_id").and_then(Value::as_str) == Some(call_id))
-        {
-            item["arguments"] = Value::String(arguments.to_string());
+        if event_type == Some("response.function_call_arguments.done") {
+            if let Some(call_id) = chunk.get("call_id").and_then(Value::as_str) {
+                if let Some(arguments) = chunk.get("arguments").and_then(Value::as_str) {
+                    if let Some(item) = originals
+                        .values_mut()
+                        .find(|item| item.get("call_id").and_then(Value::as_str) == Some(call_id))
+                    {
+                        item["arguments"] = Value::String(arguments.to_string());
+                    }
+                }
+            }
         }
     }
 

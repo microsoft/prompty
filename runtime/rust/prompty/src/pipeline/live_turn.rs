@@ -32,7 +32,7 @@ use crate::model::{
 use crate::registry;
 use crate::steering::Steering;
 use crate::structured::unwrap_structured;
-use crate::tracing::Tracer;
+use crate::tracing::{SpanEmitter, Tracer};
 use crate::types::{Message, PromptyStream, StreamChunk, ToolCall};
 
 use super::{AgentEvent, Compaction, EventCallback, ToolHandler, TurnOptions};
@@ -57,6 +57,174 @@ impl LiveEvents {
                 std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| callback(event)))
             {
                 eprintln!("[prompty] Event callback panicked: {error:?}");
+            }
+        }
+    }
+}
+
+/// Projects durable engine milestones into the enclosing Prompty trace.
+///
+/// This intentionally reports compact lifecycle metadata rather than duplicating
+/// request bodies, model responses, or live callback events. Trace backend
+/// failures are isolated by `SpanEmitter`; a poisoned local lock is also ignored
+/// so observability cannot change turn execution.
+struct TurnLifecycleTrace {
+    span: Mutex<Option<SpanEmitter>>,
+}
+
+impl TurnLifecycleTrace {
+    fn new(request: &TurnEngineRequest) -> Self {
+        let span = Tracer::start("turn.engine");
+        span.emit("signature", &json!("prompty.turn.engine"));
+        span.emit(
+            "context",
+            &json!({
+                "session_id": request.session_id,
+                "turn_id": request.turn_id,
+                "start_iteration": request.start_iteration,
+                "max_iterations": request.max_iterations,
+                "max_model_attempts": request.max_model_attempts,
+            }),
+        );
+        Self {
+            span: Mutex::new(Some(span)),
+        }
+    }
+
+    fn emit(&self, key: &str, value: Value) {
+        if let Ok(guard) = self.span.lock() {
+            if let Some(span) = guard.as_ref() {
+                span.emit(key, &value);
+            }
+        }
+    }
+
+    fn project(&self, event: &EngineEvent) {
+        let identity = json!({
+            "sequence": event.sequence,
+            "invocation_id": event.invocation_id,
+            "iteration": event.iteration,
+        });
+        match event.kind {
+            EngineEventKind::ModelInvocationStarted => self.emit(
+                "engine.attempt",
+                json!({
+                    "identity": identity,
+                    "attempt": event.payload["attempt"],
+                    "message_count": event.payload["messageCount"],
+                }),
+            ),
+            EngineEventKind::ModelInvocationFailed => self.emit(
+                "engine.attempt_failed",
+                json!({
+                    "identity": identity,
+                    "attempt": event.payload["attempt"],
+                    "exhausted": event.payload["exhausted"],
+                    "outcome_unknown": event.payload["outcomeUnknown"],
+                    "error": event.payload["message"],
+                }),
+            ),
+            EngineEventKind::CheckpointCreated => self.emit(
+                "engine.checkpoint_committed",
+                json!({
+                    "identity": identity,
+                    "checkpoint_id": event.payload["checkpointId"],
+                    "included_through_sequence": event.payload["includedThroughSequence"],
+                }),
+            ),
+            EngineEventKind::PermissionResolved => self.emit(
+                "engine.permission",
+                json!({
+                    "identity": identity,
+                    "tool_request_id": event.payload["toolRequestId"],
+                    "approved": event.payload["decision"]["approved"],
+                    "reason": event.payload["decision"]["reason"],
+                }),
+            ),
+            EngineEventKind::ToolExecutionCompleted => {
+                self.emit(
+                    "engine.tool_outcome",
+                    json!({
+                        "identity": identity,
+                        "request_id": event.payload["toolResult"]["request_id"],
+                        "name": event.payload["toolResult"]["name"],
+                        "outcome": event.payload["toolResult"]["outcome"],
+                        "error_kind": event.payload["toolResult"]["error_kind"],
+                    }),
+                );
+            }
+            EngineEventKind::ModelReconciliationRequired
+            | EngineEventKind::ModelInvocationReconciled
+            | EngineEventKind::ToolResultReconciled => self.emit(
+                "engine.reconciliation",
+                json!({
+                    "identity": identity,
+                    "event": format!("{:?}", event.kind),
+                    "model_reconciliation": matches!(
+                        event.kind,
+                        EngineEventKind::ModelReconciliationRequired
+                            | EngineEventKind::ModelInvocationReconciled
+                    ),
+                }),
+            ),
+            EngineEventKind::TurnReconciliationRequired => {
+                self.emit(
+                    "engine.reconciliation",
+                    json!({
+                        "identity": identity,
+                        "event": format!("{:?}", event.kind),
+                        "model_reconciliation": false,
+                    }),
+                );
+                self.emit(
+                    "engine.terminal",
+                    json!({
+                        "identity": identity,
+                        "status": event.payload["status"],
+                        "event": format!("{:?}", event.kind),
+                    }),
+                );
+            }
+            EngineEventKind::TurnCommitted
+            | EngineEventKind::TurnCancelled
+            | EngineEventKind::TurnFailed => self.emit(
+                "engine.terminal",
+                json!({
+                    "identity": identity,
+                    "status": event.payload["status"],
+                    "event": format!("{:?}", event.kind),
+                }),
+            ),
+            EngineEventKind::PostCommitStarted
+            | EngineEventKind::PostCommitCompleted
+            | EngineEventKind::PostCommitFailed => self.emit(
+                "engine.post_commit",
+                json!({
+                    "identity": identity,
+                    "event": format!("{:?}", event.kind),
+                    "effect_id": event.payload["effectId"],
+                }),
+            ),
+            _ => {}
+        }
+    }
+
+    fn retry(&self, request: &RetryPolicyRequest) {
+        self.emit(
+            "engine.retry",
+            json!({
+                "failed_attempts": request.failed_attempts,
+                "next_attempt": request.next_attempt,
+                "max_attempts": request.max_attempts,
+                "reason": request.reason,
+            }),
+        );
+    }
+
+    fn finish(&self) {
+        if let Ok(mut guard) = self.span.lock() {
+            if let Some(span) = guard.take() {
+                span.end();
             }
         }
     }
@@ -194,20 +362,20 @@ impl HostPolicyPort for LivePolicy {
         _cancellation: &CancellationToken,
     ) -> Result<FinalOutputPolicyResult, HostPolicyError> {
         let mut output = request.output;
-        if let Some(guardrails) = &self.guardrails
-            && !self.skip_output_guardrail.load(Ordering::Acquire)
-        {
-            let guardrail_output = output.as_ref().unwrap_or(&Value::Null);
-            let result = guardrails.check_output(guardrail_output, &self.agent).await;
-            if !result.allowed {
-                let reason = result.reason.unwrap_or_else(|| "Output denied".to_string());
-                return Err(HostPolicyError::new(
-                    "output_guardrail_denied",
-                    format!("Output guardrail denied: {reason}"),
-                ));
-            }
-            if let Some(rewrite) = result.rewrite {
-                output = Some(rewrite);
+        if let Some(guardrails) = &self.guardrails {
+            if !self.skip_output_guardrail.load(Ordering::Acquire) {
+                let guardrail_output = output.as_ref().unwrap_or(&Value::Null);
+                let result = guardrails.check_output(guardrail_output, &self.agent).await;
+                if !result.allowed {
+                    let reason = result.reason.unwrap_or_else(|| "Output denied".to_string());
+                    return Err(HostPolicyError::new(
+                        "output_guardrail_denied",
+                        format!("Output guardrail denied: {reason}"),
+                    ));
+                }
+                if let Some(rewrite) = result.rewrite {
+                    output = Some(rewrite);
+                }
             }
         }
         output = output.map(|value| unwrap_structured(&value));
@@ -237,6 +405,7 @@ fn common_prefix_len(left: &[Message], right: &[Message]) -> usize {
 struct LiveRetryPolicy {
     events: LiveEvents,
     failures: Arc<LiveFailureState>,
+    trace: Arc<TurnLifecycleTrace>,
 }
 
 #[async_trait]
@@ -246,6 +415,7 @@ impl RetryPolicyPort for LiveRetryPolicy {
         request: &RetryPolicyRequest,
         cancellation: &CancellationToken,
     ) -> Result<(), RetryPolicyError> {
+        self.trace.retry(request);
         self.events.emit(AgentEvent::Status(format!(
             "LLM call failed, retrying (attempt {}/{})...",
             request.next_attempt, request.max_attempts
@@ -749,6 +919,7 @@ struct LiveDurabilityPort {
     configured_max_iterations: usize,
     agent_mode: bool,
     persistence: Option<Arc<dyn DurabilityPort>>,
+    trace: Arc<TurnLifecycleTrace>,
     state: Mutex<ProjectionState>,
 }
 
@@ -760,6 +931,7 @@ impl LiveDurabilityPort {
     }
 
     fn project(&self, event: &EngineEvent) {
+        self.trace.project(event);
         match event.kind {
             EngineEventKind::TurnStarted => self.events.emit(AgentEvent::TurnStart {
                 agent: self.agent_name.clone(),
@@ -1063,6 +1235,13 @@ pub(super) async fn turn_with_engine_request(
     let tools = Arc::new(tools);
     let compaction = compaction.map(Arc::new);
     let skip_output_guardrail = Arc::new(AtomicBool::new(false));
+    request.max_iterations = if agent_mode {
+        max_iterations
+    } else {
+        max_iterations.max(1)
+    };
+    request.max_model_attempts = max_llm_retries.max(1);
+    let lifecycle = Arc::new(TurnLifecycleTrace::new(&request));
     let durability = Arc::new(LiveDurabilityPort {
         events: events.clone(),
         agent_name: Some(agent.name.clone()),
@@ -1071,6 +1250,7 @@ pub(super) async fn turn_with_engine_request(
         configured_max_iterations: max_iterations,
         agent_mode,
         persistence,
+        trace: lifecycle.clone(),
         state: Mutex::new(ProjectionState::default()),
     });
     let cancellation = cancelled
@@ -1110,6 +1290,7 @@ pub(super) async fn turn_with_engine_request(
             retry: Arc::new(LiveRetryPolicy {
                 events: events.clone(),
                 failures: failures.clone(),
+                trace: lifecycle.clone(),
             }),
             conversation: Arc::new(LiveConversationPort {
                 provider,
@@ -1134,14 +1315,8 @@ pub(super) async fn turn_with_engine_request(
         },
     );
 
-    request.max_iterations = if agent_mode {
-        max_iterations
-    } else {
-        max_iterations.max(1)
-    };
-    request.max_model_attempts = max_llm_retries.max(1);
-
     let result = engine.run(request, cancellation).await;
+    lifecycle.finish();
     let mapped = match result {
         Ok(result) => match result.commit.status {
             TurnStatus::Success => Ok(result.commit.output.unwrap_or(Value::Null)),
@@ -1206,15 +1381,17 @@ fn map_engine_error(error: TurnEngineError) -> InvokerError {
 #[cfg(test)]
 mod tests {
     use std::pin::Pin;
-    use std::sync::atomic::Ordering;
+    use std::sync::{Arc, Mutex, atomic::Ordering};
 
     use async_trait::async_trait;
     use futures::{Stream, StreamExt};
     use serde_json::json;
+    use serial_test::serial;
 
     use super::*;
     use crate::interfaces::{Executor, Processor};
     use crate::model::context::LoadContext;
+    use crate::tracing::{TracerBackend, TracerFactory};
     use crate::types::StreamFailure;
 
     const RESPONSES_STREAM_PROVIDER: &str = "live-responses-stream-test";
@@ -1223,6 +1400,150 @@ mod tests {
         "live-post-open-indeterminate-stream-test";
     static INDETERMINATE_STREAM_OPEN_CALLS: AtomicU64 = AtomicU64::new(0);
     static INDETERMINATE_NON_STREAM_CALLS: AtomicU64 = AtomicU64::new(0);
+
+    struct TraceMemoryBackend {
+        events: Arc<Mutex<Vec<(String, Value)>>>,
+    }
+
+    impl TracerBackend for TraceMemoryBackend {
+        fn emit(&self, key: &str, value: &Value) {
+            self.events
+                .lock()
+                .expect("trace memory lock poisoned")
+                .push((key.to_string(), value.clone()));
+        }
+    }
+
+    struct TraceMemoryFactory {
+        events: Arc<Mutex<Vec<(String, Value)>>>,
+    }
+
+    impl TracerFactory for TraceMemoryFactory {
+        fn create(&self, signature: &str) -> Option<Box<dyn TracerBackend>> {
+            (signature == "turn.engine").then(|| {
+                Box::new(TraceMemoryBackend {
+                    events: self.events.clone(),
+                }) as Box<dyn TracerBackend>
+            })
+        }
+    }
+
+    fn lifecycle_event(kind: EngineEventKind, payload: Value) -> EngineEvent {
+        EngineEvent {
+            sequence: 7,
+            id: "event-7".to_string(),
+            timestamp: "2026-01-01T00:00:00Z".to_string(),
+            session_id: "session-1".to_string(),
+            turn_id: "turn-1".to_string(),
+            invocation_id: Some("invocation-1".to_string()),
+            iteration: Some(2),
+            kind,
+            payload,
+        }
+    }
+
+    #[test]
+    #[serial]
+    fn lifecycle_trace_projects_durable_turn_milestones_once() {
+        Tracer::clear();
+        let events = Arc::new(Mutex::new(Vec::new()));
+        Tracer::add(
+            "lifecycle-test",
+            TraceMemoryFactory {
+                events: events.clone(),
+            },
+        );
+        let trace =
+            TurnLifecycleTrace::new(&TurnEngineRequest::new("session-1", "turn-1", Vec::new()));
+
+        trace.project(&lifecycle_event(
+            EngineEventKind::ModelInvocationStarted,
+            json!({"attempt": 0, "messageCount": 2}),
+        ));
+        trace.project(&lifecycle_event(
+            EngineEventKind::ModelInvocationFailed,
+            json!({
+                "attempt": 0,
+                "exhausted": false,
+                "outcomeUnknown": false,
+                "message": "temporary failure",
+            }),
+        ));
+        trace.retry(&RetryPolicyRequest {
+            failed_attempts: 1,
+            next_attempt: 2,
+            max_attempts: 3,
+            reason: "temporary failure".to_string(),
+        });
+        trace.project(&lifecycle_event(
+            EngineEventKind::CheckpointCreated,
+            json!({"checkpointId": "checkpoint-1", "includedThroughSequence": 7}),
+        ));
+        trace.project(&lifecycle_event(
+            EngineEventKind::PermissionResolved,
+            json!({
+                "toolRequestId": "tool-1",
+                "decision": {"approved": true, "reason": null},
+            }),
+        ));
+        trace.project(&lifecycle_event(
+            EngineEventKind::ToolExecutionCompleted,
+            json!({
+                "toolResult": {
+                    "request_id": "tool-1",
+                    "name": "weather",
+                    "outcome": "success",
+                    "error_kind": null,
+                },
+            }),
+        ));
+        trace.project(&lifecycle_event(
+            EngineEventKind::ToolResultCommitted,
+            json!({
+                "toolResult": {
+                    "request_id": "tool-1",
+                    "name": "weather",
+                    "outcome": "success",
+                    "error_kind": null,
+                },
+            }),
+        ));
+        trace.project(&lifecycle_event(
+            EngineEventKind::TurnReconciliationRequired,
+            json!({"status": "reconciliation_required"}),
+        ));
+        trace.finish();
+
+        let keys = events
+            .lock()
+            .expect("trace memory lock poisoned")
+            .iter()
+            .map(|(key, _)| key.clone())
+            .collect::<Vec<_>>();
+        assert_eq!(
+            keys.iter()
+                .filter(|key| key.as_str() == "engine.tool_outcome")
+                .count(),
+            1
+        );
+        for key in [
+            "engine.attempt",
+            "engine.attempt_failed",
+            "engine.retry",
+            "engine.checkpoint_committed",
+            "engine.permission",
+            "engine.reconciliation",
+            "engine.terminal",
+            "duration_ms",
+            "__end__",
+        ] {
+            assert!(
+                keys.contains(&key.to_string()),
+                "missing trace event: {key}"
+            );
+        }
+        Tracer::clear();
+    }
 
     struct ResponsesStreamExecutor;
 

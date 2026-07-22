@@ -9,9 +9,9 @@
     clippy::all
 )]
 
-use prompty::model::context::{LoadContext, SaveContext};
 use prompty::model::InvocationContextDecision;
 use prompty::model::InvocationContextDisposition;
+use prompty::model::context::{LoadContext, SaveContext};
 
 #[test]
 fn test_invocation_context_decision_load_json() {

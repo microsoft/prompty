@@ -9,8 +9,8 @@
     clippy::all
 )]
 
-use prompty::model::context::{LoadContext, SaveContext};
 use prompty::model::DelegatedStateReference;
+use prompty::model::context::{LoadContext, SaveContext};
 
 #[test]
 fn test_delegated_state_reference_load_json() {

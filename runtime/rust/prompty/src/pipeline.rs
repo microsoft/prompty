@@ -1252,7 +1252,9 @@ mod tests {
             events: &[EngineEvent],
             checkpoint: &EngineCheckpoint,
         ) -> Result<(), PortError> {
-            self.recording.append_with_checkpoint(events, checkpoint).await?;
+            self.recording
+                .append_with_checkpoint(events, checkpoint)
+                .await?;
             if !self.failed.swap(true, Ordering::SeqCst) {
                 return Err(PortError::new("injected durability failure"));
             }
@@ -1901,7 +1903,11 @@ mod tests {
         let result = turn_with_engine_request(
             &agent,
             request,
-            Some(TurnOptions::builder().durability(durability.clone()).build()),
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .build(),
+            ),
         )
         .await
         .unwrap();
@@ -1919,7 +1925,11 @@ mod tests {
         assert!(checkpoints.iter().all(|checkpoint| {
             checkpoint.session_id == "durable-session" && checkpoint.turn_id == "durable-turn"
         }));
-        assert!(checkpoints.iter().any(|checkpoint| checkpoint.final_output_ready));
+        assert!(
+            checkpoints
+                .iter()
+                .any(|checkpoint| checkpoint.final_output_ready)
+        );
     }
 
     #[tokio::test]
@@ -1943,7 +1953,11 @@ mod tests {
         let failure = turn_with_engine_request(
             &agent,
             request,
-            Some(TurnOptions::builder().durability(durability.clone()).build()),
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .build(),
+            ),
         )
         .await
         .expect_err("injected persistence failure must stop the live turn");

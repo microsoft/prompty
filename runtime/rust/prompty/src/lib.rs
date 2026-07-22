@@ -115,8 +115,8 @@ pub use tool_dispatch::{
     register_tool_handler,
 };
 pub use tracing::{
-    PromptyTracer, Tracer, console_tracer, sanitize_value, trace, trace_async, trace_span,
-    trace_span_async,
+    PromptyTracer, Tracer, TracerBackend, TracerFactory, console_tracer, sanitize_value, trace,
+    trace_async, trace_span, trace_span_async,
 };
 #[cfg(feature = "otel")]
 pub use tracing::{init_otel_stdout, otel_tracer};

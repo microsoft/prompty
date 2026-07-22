@@ -9,8 +9,8 @@
     clippy::all
 )]
 
-use prompty::model::context::{LoadContext, SaveContext};
 use prompty::model::ModelInvocationContextSnapshot;
+use prompty::model::context::{LoadContext, SaveContext};
 
 #[test]
 fn test_model_invocation_context_snapshot_load_json() {

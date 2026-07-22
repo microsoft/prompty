@@ -16,8 +16,8 @@ use crate::model::{
     DelegatedStateReference as GeneratedDelegatedStateReference,
     InvocationContextDecision as GeneratedInvocationContextDecision,
     InvocationContextDisposition as GeneratedInvocationContextDisposition,
-    InvocationContextPortability as GeneratedInvocationContextPortability,
-    InvocationContextState, InvocationUsage, ModelInvocationContextSnapshot as GeneratedSnapshot,
+    InvocationContextPortability as GeneratedInvocationContextPortability, InvocationContextState,
+    InvocationUsage, ModelInvocationContextSnapshot as GeneratedSnapshot,
     ModelInvocationRequest as GeneratedRequest, ModelInvocationResponse as GeneratedResponse,
     ModelToolRequest,
 };
@@ -114,8 +114,9 @@ fn generated_decision(
         rank: decision
             .rank
             .map(|rank| {
-                i32::try_from(rank)
-                    .map_err(|_| PortError::configuration("context decision rank exceeds Int32 range"))
+                i32::try_from(rank).map_err(|_| {
+                    PortError::configuration("context decision rank exceeds Int32 range")
+                })
             })
             .transpose()?,
         estimated_tokens: decision
@@ -138,9 +139,7 @@ fn generated_portability(portability: ContextPortability) -> GeneratedInvocation
     }
 }
 
-fn generated_delegated_state(
-    state: &DelegatedStateReference,
-) -> GeneratedDelegatedStateReference {
+fn generated_delegated_state(state: &DelegatedStateReference) -> GeneratedDelegatedStateReference {
     GeneratedDelegatedStateReference {
         provider: state.provider.clone(),
         kind: state.kind.clone(),
@@ -177,10 +176,7 @@ fn engine_response(response: GeneratedResponse) -> Result<ModelInvocationRespons
         output,
         usage: usage.map(engine_usage).transpose()?,
         assistant_messages,
-        tool_requests: tool_requests
-            .into_iter()
-            .map(engine_tool_request)
-            .collect(),
+        tool_requests: tool_requests.into_iter().map(engine_tool_request).collect(),
         next_portability,
         delegated_state,
         metadata,
@@ -262,7 +258,10 @@ mod tests {
 
         assert_eq!(converted.usage.expect("usage").total_tokens, 15);
         assert_eq!(converted.tool_requests[0].arguments["path"], "src");
-        assert_eq!(converted.next_portability, Some(ContextPortability::Delegated));
+        assert_eq!(
+            converted.next_portability,
+            Some(ContextPortability::Delegated)
+        );
         assert_eq!(
             converted.delegated_state.expect("delegated state")[0].id,
             "resp_1"

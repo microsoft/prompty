@@ -77,21 +77,21 @@ struct ToolCallProcessor;
 impl Processor for ToolCallProcessor {
     async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
         let message = &response["choices"][0]["message"];
-        if let Some(tool_calls) = message.get("tool_calls").and_then(Value::as_array)
-            && !tool_calls.is_empty()
-        {
-            return Ok(Value::Array(
-                tool_calls
-                    .iter()
-                    .map(|tool_call| {
-                        json!({
-                            "id": tool_call["id"],
-                            "name": tool_call["function"]["name"],
-                            "arguments": tool_call["function"]["arguments"],
+        if let Some(tool_calls) = message.get("tool_calls").and_then(Value::as_array) {
+            if !tool_calls.is_empty() {
+                return Ok(Value::Array(
+                    tool_calls
+                        .iter()
+                        .map(|tool_call| {
+                            json!({
+                                "id": tool_call["id"],
+                                "name": tool_call["function"]["name"],
+                                "arguments": tool_call["function"]["arguments"],
+                            })
                         })
-                    })
-                    .collect(),
-            ));
+                        .collect(),
+                ));
+            }
         }
 
         Ok(message["content"].clone())

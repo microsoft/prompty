@@ -9,9 +9,9 @@
     clippy::all
 )]
 
-use prompty::model::context::{LoadContext, SaveContext};
 use prompty::model::ModelToolOutcome;
 use prompty::model::ModelToolResult;
+use prompty::model::context::{LoadContext, SaveContext};
 
 #[test]
 fn test_model_tool_result_load_json() {

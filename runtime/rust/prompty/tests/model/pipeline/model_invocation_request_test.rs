@@ -9,5 +9,5 @@
     clippy::all
 )]
 
-use prompty::model::context::{LoadContext, SaveContext};
 use prompty::model::ModelInvocationRequest;
+use prompty::model::context::{LoadContext, SaveContext};

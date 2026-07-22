@@ -514,10 +514,10 @@ pub fn format_stream_tool_messages(
     }
 
     for (index, input) in partial_inputs {
-        if let Some(block) = blocks.get_mut(&index)
-            && !input.is_empty()
-        {
-            block["input"] = serde_json::from_str(&input).unwrap_or_else(|_| json!({}));
+        if let Some(block) = blocks.get_mut(&index) {
+            if !input.is_empty() {
+                block["input"] = serde_json::from_str(&input).unwrap_or_else(|_| json!({}));
+            }
         }
     }
 

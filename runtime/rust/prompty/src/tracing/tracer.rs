@@ -94,7 +94,14 @@ impl Tracer {
         let map = registry().read().unwrap();
         let mut backends = Vec::new();
         for factory in map.values() {
-            if let Some(backend) = factory.create(signature) {
+            // A telemetry backend must never prevent the prompt runtime from
+            // progressing, including while a backend opts into a new span.
+            let backend = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                factory.create(signature)
+            }))
+            .ok()
+            .flatten();
+            if let Some(backend) = backend {
                 backends.push(backend);
             }
         }
@@ -309,6 +316,14 @@ mod tests {
         }
     }
 
+    struct PanickingFactory;
+
+    impl TracerFactory for PanickingFactory {
+        fn create(&self, _signature: &str) -> Option<Box<dyn TracerBackend>> {
+            panic!("tracer factory failed");
+        }
+    }
+
     fn setup_memory_tracer() -> Arc<Mutex<Vec<(String, Value)>>> {
         Tracer::clear();
         let events = Arc::new(Mutex::new(Vec::new()));
@@ -400,6 +415,27 @@ mod tests {
         span.emit("x", &json!(2));
         span.end();
         assert!(events.lock().unwrap().is_empty());
+        Tracer::clear();
+    }
+
+    #[test]
+    #[serial]
+    fn test_panicking_factory_is_isolated() {
+        Tracer::clear();
+        Tracer::add("panicking", PanickingFactory);
+        let events = Arc::new(Mutex::new(Vec::new()));
+        Tracer::add(
+            "healthy",
+            MemoryFactory {
+                events: events.clone(),
+            },
+        );
+
+        let span = Tracer::start("still-runs");
+        span.emit("value", &json!(42));
+        span.end();
+
+        assert_eq!(events.lock().unwrap()[0], ("value".to_string(), json!(42)));
         Tracer::clear();
     }
 
