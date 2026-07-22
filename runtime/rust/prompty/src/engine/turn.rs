@@ -1278,6 +1278,9 @@ impl TurnEngine {
         {
             Ok(result) => result,
             Err(error) => {
+                if cancellation.is_cancelled() {
+                    return self.commit_cancelled(state, cancellation).await;
+                }
                 return self
                     .commit_failed(state, &error.error_kind, &error.message, cancellation)
                     .await;

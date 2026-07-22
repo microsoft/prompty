@@ -2445,6 +2445,100 @@ impl HostPolicyPort for DenyingPolicy {
     }
 }
 
+struct CancellingFinalPolicy;
+
+#[async_trait]
+impl HostPolicyPort for CancellingFinalPolicy {
+    async fn before_model(
+        &self,
+        request: HostPolicyRequest,
+        _cancellation: &CancellationToken,
+    ) -> Result<HostPolicyResult, HostPolicyError> {
+        Ok(HostPolicyResult {
+            messages: request.messages,
+            stable_prefix_messages: request.stable_prefix_messages,
+            metadata: Value::Null,
+        })
+    }
+
+    async fn before_commit(
+        &self,
+        _request: FinalOutputPolicyRequest,
+        cancellation: &CancellationToken,
+    ) -> Result<FinalOutputPolicyResult, HostPolicyError> {
+        cancellation.cancel();
+        tokio::task::yield_now().await;
+        Err(HostPolicyError::new(
+            "output_guardrail_denied",
+            "Output guardrail denied: blocked",
+        ))
+    }
+}
+
+#[tokio::test]
+async fn cancellation_during_failing_final_policy_commits_cancelled() {
+    let events = Arc::new(RecordingEvents::default());
+    let mut engine_effects = effects(
+        Arc::new(ScriptedModel {
+            responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
+                output: Some(Value::String("model output".to_string())),
+                usage: None,
+                assistant_messages: Vec::new(),
+                tool_requests: Vec::new(),
+                next_portability: None,
+                delegated_state: None,
+                metadata: Value::Null,
+            }])),
+            requests: Mutex::new(Vec::new()),
+        }),
+        Arc::new(VectorTools {
+            outputs: HashMap::new(),
+            calls: Mutex::new(Vec::new()),
+        }),
+        events.clone(),
+        Arc::new(RecordingCheckpoints::default()),
+        Arc::new(RecordingPostCommit::default()),
+    );
+    engine_effects.policy = Arc::new(CancellingFinalPolicy);
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        engine_effects,
+    );
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                "session-policy-cancel",
+                "turn-policy-cancel",
+                vec![Message::with_text(Role::User, "cancel")],
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(result.commit.status, TurnStatus::Cancelled);
+    let events = events.0.lock().unwrap();
+    let terminal_events = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                event.kind,
+                EngineEventKind::TurnCommitted
+                    | EngineEventKind::TurnCancelled
+                    | EngineEventKind::TurnFailed
+                    | EngineEventKind::TurnReconciliationRequired
+            )
+        })
+        .map(|event| event.kind)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        terminal_events,
+        vec![EngineEventKind::TurnCancelled],
+        "cancellation is the only terminal lifecycle event"
+    );
+}
+
 #[tokio::test]
 async fn policy_failure_is_typed_and_never_retried_as_a_model_failure() {
     let model = Arc::new(ScriptedModel {
