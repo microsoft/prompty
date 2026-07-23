@@ -12,9 +12,6 @@ public class UnionPropertyConversionTests
     public void LoadYamlInput()
     {
         string yamlData = """
-oneOf:
-  - kind: string
-  - kind: integer
 anyOf:
   - kind: string
   - kind: boolean
@@ -31,14 +28,6 @@ anyOf:
     {
         string jsonData = """
 {
-  "oneOf": [
-    {
-      "kind": "string"
-    },
-    {
-      "kind": "integer"
-    }
-  ],
   "anyOf": [
     {
       "kind": "string"
@@ -60,14 +49,6 @@ anyOf:
         // Test that FromJson -> ToJson -> FromJson produces equivalent data
         string jsonData = """
 {
-  "oneOf": [
-    {
-      "kind": "string"
-    },
-    {
-      "kind": "integer"
-    }
-  ],
   "anyOf": [
     {
       "kind": "string"
@@ -94,9 +75,6 @@ anyOf:
     {
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
-oneOf:
-  - kind: string
-  - kind: integer
 anyOf:
   - kind: string
   - kind: boolean
@@ -118,14 +96,6 @@ anyOf:
     {
         string jsonData = """
 {
-  "oneOf": [
-    {
-      "kind": "string"
-    },
-    {
-      "kind": "integer"
-    }
-  ],
   "anyOf": [
     {
       "kind": "string"
@@ -149,9 +119,6 @@ anyOf:
     public void ToYamlProducesValidYaml()
     {
         string yamlData = """
-oneOf:
-  - kind: string
-  - kind: integer
 anyOf:
   - kind: string
   - kind: boolean

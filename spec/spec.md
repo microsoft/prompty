@@ -1520,11 +1520,15 @@ properties. Object `required` arrays MUST contain only children whose
 `Property.required` is true. For a concrete property with `nullable: true`,
 the JSON Schema `type` MUST include both the concrete type and `"null"`.
 
-`kind: "union"` represents a portable union property. Its `oneOf` and `anyOf`
-arrays contain full `Property` branches and MUST be emitted as the matching
-JSON Schema composition keywords. A provider MUST NOT emit an empty JSON
-Schema `type`; unsupported or extension kinds may omit `type`, which is a
-valid unconstrained JSON Schema.
+`kind: "union"` represents a portable union property. Exactly one of its
+`oneOf` and `anyOf` arrays MUST be nonempty; implementations MUST reject
+neither-composition and both-composition shapes rather than emitting an
+ambiguous schema. The selected array contains full `Property` branches and
+MUST be emitted as the matching JSON Schema composition keyword. A nullable
+union appends a JSON Schema null branch to that selected composition. A
+provider MUST NOT emit an empty JSON Schema `type`; unsupported or extension
+kinds may omit `type` and, when nullable, MUST remain unconstrained rather
+than becoming null-only.
 
 **Kind → JSON Schema type mapping.** Implementations MUST use this table:
 

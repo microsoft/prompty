@@ -494,7 +494,7 @@
                                   "namespace": "Prompty",
                                   "name": "UnionProperty"
                                 },
-                                "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. The alternatives are full Prompty properties so unions\nremain portable across generated runtimes.",
+                                "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
                                 "base": {
                                   "namespace": "Prompty",
                                   "name": "Property"
@@ -533,22 +533,7 @@
                                       "name": "Property"
                                     },
                                     "description": "Alternative property schemas where exactly one branch must match",
-                                    "samples": [
-                                      {
-                                        "sample": {
-                                          "oneOf": [
-                                            {
-                                              "kind": "string"
-                                            },
-                                            {
-                                              "kind": "integer"
-                                            }
-                                          ]
-                                        },
-                                        "title": "",
-                                        "description": ""
-                                      }
-                                    ],
+                                    "samples": [],
                                     "knownAs": [],
                                     "defaultFor": [],
                                     "isScalar": false,
@@ -1384,7 +1369,7 @@
                         "namespace": "Prompty",
                         "name": "UnionProperty"
                       },
-                      "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. The alternatives are full Prompty properties so unions\nremain portable across generated runtimes.",
+                      "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
                       "base": {
                         "namespace": "Prompty",
                         "name": "Property"
@@ -1423,22 +1408,7 @@
                             "name": "Property"
                           },
                           "description": "Alternative property schemas where exactly one branch must match",
-                          "samples": [
-                            {
-                              "sample": {
-                                "oneOf": [
-                                  {
-                                    "kind": "string"
-                                  },
-                                  {
-                                    "kind": "integer"
-                                  }
-                                ]
-                              },
-                              "title": "",
-                              "description": ""
-                            }
-                          ],
+                          "samples": [],
                           "knownAs": [],
                           "defaultFor": [],
                           "isScalar": false,
@@ -2320,7 +2290,7 @@
               "namespace": "Prompty",
               "name": "UnionProperty"
             },
-            "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. The alternatives are full Prompty properties so unions\nremain portable across generated runtimes.",
+            "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
             "base": {
               "namespace": "Prompty",
               "name": "Property"
@@ -2359,22 +2329,7 @@
                   "name": "Property"
                 },
                 "description": "Alternative property schemas where exactly one branch must match",
-                "samples": [
-                  {
-                    "sample": {
-                      "oneOf": [
-                        {
-                          "kind": "string"
-                        },
-                        {
-                          "kind": "integer"
-                        }
-                      ]
-                    },
-                    "title": "",
-                    "description": ""
-                  }
-                ],
+                "samples": [],
                 "knownAs": [],
                 "defaultFor": [],
                 "isScalar": false,

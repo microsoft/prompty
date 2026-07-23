@@ -9,6 +9,34 @@ use prompty::model::{
 use prompty::types::{ContentPart, ContentPartKind, Message};
 use serde_json::{Map, Value, json};
 
+/// Error raised when a portable Property schema cannot be represented safely
+/// by the OpenAI JSON Schema subset.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchemaError(String);
+
+impl SchemaError {
+    fn invalid_union() -> Self {
+        Self(
+            "UnionProperty must contain exactly one non-empty `oneOf` or `anyOf` array".to_string(),
+        )
+    }
+
+    fn unsupported_one_of() -> Self {
+        Self(
+            "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition"
+                .to_string(),
+        )
+    }
+}
+
+impl std::fmt::Display for SchemaError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for SchemaError {}
+
 // ---------------------------------------------------------------------------
 // Message → OpenAI wire format
 // ---------------------------------------------------------------------------
@@ -98,7 +126,7 @@ fn mime_to_audio_format(mime: &str) -> String {
 // ---------------------------------------------------------------------------
 
 /// Build the full request body for a chat completions call.
-pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
+pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
     let mut args = Map::new();
 
     // Model ID
@@ -112,17 +140,17 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
     apply_options(&mut args, &agent.model.options);
 
     // Tools
-    let tools = tools_to_wire(agent);
+    let tools = tools_to_wire(agent)?;
     if !tools.is_empty() {
         args.insert("tools".to_string(), Value::Array(tools));
     }
 
     // Structured output (response_format)
-    if let Some(rf) = output_schema_to_wire(agent) {
+    if let Some(rf) = output_schema_to_wire(agent)? {
         args.insert("response_format".to_string(), rf);
     }
 
-    Value::Object(args)
+    Ok(Value::Object(args))
 }
 
 /// Build the request body for an embedding call.
@@ -247,9 +275,9 @@ fn apply_options(args: &mut Map<String, Value>, opts: &Option<ModelOptions>) {
 // ---------------------------------------------------------------------------
 
 /// Convert agent's tools to OpenAI wire format.
-pub fn tools_to_wire(agent: &Prompty) -> Vec<Value> {
+pub fn tools_to_wire(agent: &Prompty) -> Result<Vec<Value>, SchemaError> {
     let Some(tools) = agent.as_tools() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
 
     tools
@@ -259,10 +287,10 @@ pub fn tools_to_wire(agent: &Prompty) -> Vec<Value> {
         .collect()
 }
 
-fn function_tool_to_wire(tool: &Tool) -> Value {
+fn function_tool_to_wire(tool: &Tool) -> Result<Value, SchemaError> {
     let (parameters, strict) = match &tool.kind {
         ToolKind::Function { parameters, strict } => (parameters, strict),
-        _ => return json!({}),
+        _ => return Ok(json!({})),
     };
 
     let mut func_def = Map::new();
@@ -282,7 +310,7 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
             .iter()
             .filter(|p| !bound_names.contains(&p.name))
             .collect();
-        let schema = parameters_to_json_schema(&typed_params, strict.unwrap_or(false));
+        let schema = parameters_to_json_schema(&typed_params, strict.unwrap_or(false))?;
         func_def.insert("parameters".to_string(), schema);
     }
 
@@ -295,14 +323,14 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
         }
     }
 
-    json!({
+    Ok(json!({
         "type": "function",
         "function": Value::Object(func_def),
-    })
+    }))
 }
 
 /// Convert a single Property to a recursive JSON Schema definition.
-fn property_to_json_schema(prop: &Property, strict: bool) -> Value {
+fn property_to_json_schema(prop: &Property, strict: bool) -> Result<Value, SchemaError> {
     let mut schema = Map::new();
     if let Some(json_type) = kind_to_json_type(prop.kind_str()) {
         schema.insert("type".to_string(), Value::String(json_type.to_string()));
@@ -319,7 +347,10 @@ fn property_to_json_schema(prop: &Property, strict: bool) -> Value {
         PropertyKind::Array { items } if !items.is_null() => {
             let ctx = prompty::model::context::LoadContext::default();
             let item_prop = Property::load_from_value(items, &ctx);
-            schema.insert("items".to_string(), property_to_json_schema(&item_prop, strict));
+            schema.insert(
+                "items".to_string(),
+                property_to_json_schema(&item_prop, strict)?,
+            );
         }
         PropertyKind::Array { .. } => {
             // bare {"type": "array"} when items is null/unspecified
@@ -333,9 +364,9 @@ fn property_to_json_schema(prop: &Property, strict: bool) -> Value {
                 }
                 nested.insert(
                     p.name.clone(),
-                    property_to_json_schema_with_optional(p, !p.required.unwrap_or(false), strict),
+                    property_to_json_schema_with_optional(p, !p.required.unwrap_or(false), strict)?,
                 );
-                if strict || p.required.unwrap_or(false) {
+                if p.required.unwrap_or(false) {
                     req.push(Value::String(p.name.clone()));
                 }
             }
@@ -348,24 +379,17 @@ fn property_to_json_schema(prop: &Property, strict: bool) -> Value {
         PropertyKind::Object { .. } => {
             // bare {"type": "object"} when properties is empty or absent
         }
-        PropertyKind::Union { one_of, any_of } => {
-            if !one_of.is_empty() {
-                panic!(
-                    "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition"
-                );
+        PropertyKind::Union { one_of, any_of } => match (!one_of.is_empty(), !any_of.is_empty()) {
+            (true, false) => return Err(SchemaError::unsupported_one_of()),
+            (false, true) => {
+                let branches = any_of
+                    .iter()
+                    .map(|branch| property_to_json_schema(branch, strict))
+                    .collect::<Result<Vec<_>, _>>()?;
+                schema.insert("anyOf".to_string(), Value::Array(branches));
             }
-            if !any_of.is_empty() {
-                schema.insert(
-                    "anyOf".to_string(),
-                    Value::Array(
-                        any_of
-                            .iter()
-                            .map(|branch| property_to_json_schema(branch, strict))
-                            .collect(),
-                    ),
-                );
-            }
-        }
+            _ => return Err(SchemaError::invalid_union()),
+        },
         _ => {}
     }
 
@@ -373,15 +397,24 @@ fn property_to_json_schema(prop: &Property, strict: bool) -> Value {
         add_nullability(&mut schema);
     }
 
-    Value::Object(schema)
+    Ok(Value::Object(schema))
 }
 
-fn property_to_json_schema_with_optional(prop: &Property, optional: bool, strict: bool) -> Value {
-    let mut schema = property_to_json_schema(prop, strict);
+fn property_to_json_schema_with_optional(
+    prop: &Property,
+    optional: bool,
+    strict: bool,
+) -> Result<Value, SchemaError> {
+    let mut schema = property_to_json_schema(prop, strict)?;
     if strict && optional && !prop.nullable.unwrap_or(false) {
-        add_nullability(schema.as_object_mut().expect("property schema must be an object"));
+        let Some(schema) = schema.as_object_mut() else {
+            return Err(SchemaError(
+                "Property schema conversion must produce a JSON object".to_string(),
+            ));
+        };
+        add_nullability(schema);
     }
-    schema
+    Ok(schema)
 }
 
 fn add_nullability(schema: &mut Map<String, Value>) {
@@ -398,7 +431,10 @@ fn add_nullability(schema: &mut Map<String, Value>) {
     } else if !schema.is_empty() {
         schema.insert(
             "anyOf".to_string(),
-            Value::Array(vec![Value::Object(schema.clone()), json!({ "type": "null" })]),
+            Value::Array(vec![
+                Value::Object(schema.clone()),
+                json!({ "type": "null" }),
+            ]),
         );
     }
 
@@ -409,14 +445,14 @@ fn add_nullability(schema: &mut Map<String, Value>) {
     }
 }
 
-fn parameters_to_json_schema(params: &[&Property], strict: bool) -> Value {
+fn parameters_to_json_schema(params: &[&Property], strict: bool) -> Result<Value, SchemaError> {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
     for param in params {
         properties.insert(
             param.name.clone(),
-            property_to_json_schema_with_optional(param, !param.required.unwrap_or(false), strict),
+            property_to_json_schema_with_optional(param, !param.required.unwrap_or(false), strict)?,
         );
         if strict || param.required.unwrap_or(false) {
             required.push(Value::String(param.name.clone()));
@@ -429,7 +465,7 @@ fn parameters_to_json_schema(params: &[&Property], strict: bool) -> Value {
     if !required.is_empty() {
         schema.insert("required".to_string(), Value::Array(required));
     }
-    Value::Object(schema)
+    Ok(Value::Object(schema))
 }
 
 fn kind_to_json_type(kind: &str) -> Option<&'static str> {
@@ -448,10 +484,12 @@ fn kind_to_json_type(kind: &str) -> Option<&'static str> {
 // Structured output (outputs → response_format)
 // ---------------------------------------------------------------------------
 
-fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
-    let outputs = agent.as_outputs()?;
+fn output_schema_to_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+    let Some(outputs) = agent.as_outputs() else {
+        return Ok(None);
+    };
     if outputs.is_empty() {
-        return None;
+        return Ok(None);
     }
 
     let mut properties = Map::new();
@@ -460,7 +498,7 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     for prop in outputs {
         properties.insert(
             prop.name.clone(),
-            property_to_json_schema_with_optional(prop, !prop.required.unwrap_or(false), true),
+            property_to_json_schema_with_optional(prop, !prop.required.unwrap_or(false), true)?,
         );
         required.push(Value::String(prop.name.clone()));
     }
@@ -473,14 +511,14 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     }
     schema.insert("additionalProperties".to_string(), Value::Bool(false));
 
-    Some(json!({
+    Ok(Some(json!({
         "type": "json_schema",
         "json_schema": {
             "name": "structured_output",
             "strict": true,
             "schema": Value::Object(schema),
         },
-    }))
+    })))
 }
 
 // ---------------------------------------------------------------------------
@@ -490,7 +528,7 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
 /// Build the request body for the OpenAI Responses API.
 ///
 /// System/developer messages become `instructions`; other messages become `input` items.
-pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Value {
+pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
     let model = if agent.model.id.is_empty() {
         "gpt-4o".to_string()
     } else {
@@ -524,17 +562,17 @@ pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Value {
     apply_responses_options(&mut args, &agent.model.options);
 
     // Tools (flat format — no nested "function" key)
-    let tools = responses_tools_to_wire(agent);
+    let tools = responses_tools_to_wire(agent)?;
     if !tools.is_empty() {
         args.insert("tools".to_string(), Value::Array(tools));
     }
 
     // Structured output via text.format
-    if let Some(text_config) = output_schema_to_responses_wire(agent) {
+    if let Some(text_config) = output_schema_to_responses_wire(agent)? {
         args.insert("text".to_string(), text_config);
     }
 
-    Value::Object(args)
+    Ok(Value::Object(args))
 }
 
 fn message_to_responses_input(msg: &Message) -> Value {
@@ -601,9 +639,9 @@ fn apply_responses_options(args: &mut Map<String, Value>, opts: &Option<ModelOpt
     }
 }
 
-fn responses_tools_to_wire(agent: &Prompty) -> Vec<Value> {
+fn responses_tools_to_wire(agent: &Prompty) -> Result<Vec<Value>, SchemaError> {
     let Some(tools) = agent.as_tools() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
 
     tools
@@ -613,10 +651,10 @@ fn responses_tools_to_wire(agent: &Prompty) -> Vec<Value> {
         .collect()
 }
 
-fn responses_function_tool_to_wire(tool: &Tool) -> Value {
+fn responses_function_tool_to_wire(tool: &Tool) -> Result<Value, SchemaError> {
     let (parameters, strict) = match &tool.kind {
         ToolKind::Function { parameters, strict } => (parameters, strict),
-        _ => return json!({}),
+        _ => return Ok(json!({})),
     };
 
     // Responses API uses flat format: { type, name, description, parameters }
@@ -637,7 +675,7 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Value {
             .iter()
             .filter(|p| !bound_names.contains(&p.name))
             .collect();
-        let schema = parameters_to_json_schema(&typed_params, strict.unwrap_or(false));
+        let schema = parameters_to_json_schema(&typed_params, strict.unwrap_or(false))?;
         obj.insert("parameters".to_string(), schema);
     }
 
@@ -648,13 +686,15 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Value {
         }
     }
 
-    Value::Object(obj)
+    Ok(Value::Object(obj))
 }
 
-fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
-    let outputs = agent.as_outputs()?;
+fn output_schema_to_responses_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+    let Some(outputs) = agent.as_outputs() else {
+        return Ok(None);
+    };
     if outputs.is_empty() {
-        return None;
+        return Ok(None);
     }
 
     let mut properties = Map::new();
@@ -663,7 +703,7 @@ fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
     for prop in outputs {
         properties.insert(
             prop.name.clone(),
-            property_to_json_schema_with_optional(prop, !prop.required.unwrap_or(false), true),
+            property_to_json_schema_with_optional(prop, !prop.required.unwrap_or(false), true)?,
         );
         required.push(Value::String(prop.name.clone()));
     }
@@ -674,14 +714,14 @@ fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
     schema.insert("required".to_string(), Value::Array(required));
     schema.insert("additionalProperties".to_string(), Value::Bool(false));
 
-    Some(json!({
+    Ok(Some(json!({
         "format": {
             "type": "json_schema",
             "name": "structured_output",
             "schema": Value::Object(schema),
             "strict": true,
         },
-    }))
+    })))
 }
 
 // ---------------------------------------------------------------------------
@@ -1056,10 +1096,11 @@ mod tests {
             &["result".to_string()],
         ));
 
-        let input = build_responses_args(&agent, &messages)["input"]
-            .as_array()
-            .unwrap()
-            .clone();
+        let input =
+            build_responses_args(&agent, &messages).expect("valid Responses schema")["input"]
+                .as_array()
+                .unwrap()
+                .clone();
 
         assert_eq!(input[1]["type"], "function_call");
         assert_eq!(input[1]["id"], "fc_original");

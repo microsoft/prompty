@@ -131,9 +131,12 @@ func ToolFromYAML(yamlStr string) (interface{}, error) {
 // FunctionTool represents Represents a local function tool.
 
 type FunctionTool struct {
-	Kind       string        `json:"kind" yaml:"kind"`
-	Parameters []interface{} `json:"parameters" yaml:"parameters"`
-	Strict     *bool         `json:"strict,omitempty" yaml:"strict,omitempty"`
+	Name        string        `json:"name" yaml:"name"`
+	Kind        string        `json:"kind" yaml:"kind"`
+	Description *string       `json:"description,omitempty" yaml:"description,omitempty"`
+	Bindings    []Binding     `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Parameters  []interface{} `json:"parameters" yaml:"parameters"`
+	Strict      *bool         `json:"strict,omitempty" yaml:"strict,omitempty"`
 }
 
 // LoadFunctionTool creates a FunctionTool from a map[string]interface{}
@@ -142,8 +145,26 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["name"]; ok && val != nil {
+			result.Name = string(val.(string))
+		}
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["description"]; ok && val != nil {
+			v := string(val.(string))
+			result.Description = &v
+		}
+		if val, ok := m["bindings"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.Bindings = make([]Binding, len(arr))
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := LoadBinding(item, ctx)
+						result.Bindings[i] = loaded
+					}
+				}
+			}
 		}
 		if val, ok := m["parameters"]; ok && val != nil {
 			if arr, ok := val.([]interface{}); ok {
@@ -169,7 +190,18 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 // Save serializes FunctionTool to map[string]interface{}
 func (obj FunctionTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	result["name"] = obj.Name
 	result["kind"] = obj.Kind
+	if obj.Description != nil {
+		result["description"] = *obj.Description
+	}
+	if obj.Bindings != nil {
+		arr := make([]interface{}, len(obj.Bindings))
+		for i, item := range obj.Bindings {
+			arr[i] = item.Save(ctx)
+		}
+		result["bindings"] = arr
+	}
 	if obj.Parameters != nil {
 		arr := make([]interface{}, len(obj.Parameters))
 		for i, item := range obj.Parameters {
@@ -237,9 +269,12 @@ func FunctionToolFromYAML(yamlStr string) (FunctionTool, error) {
 // Server tools can be used to offload heavy processing from client applications
 
 type CustomTool struct {
-	Kind       string                 `json:"kind" yaml:"kind"`
-	Connection interface{}            `json:"connection" yaml:"connection"`
-	Options    map[string]interface{} `json:"options" yaml:"options"`
+	Name        string                 `json:"name" yaml:"name"`
+	Kind        string                 `json:"kind" yaml:"kind"`
+	Description *string                `json:"description,omitempty" yaml:"description,omitempty"`
+	Bindings    []Binding              `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Connection  interface{}            `json:"connection" yaml:"connection"`
+	Options     map[string]interface{} `json:"options" yaml:"options"`
 }
 
 // LoadCustomTool creates a CustomTool from a map[string]interface{}
@@ -248,8 +283,26 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["name"]; ok && val != nil {
+			result.Name = string(val.(string))
+		}
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["description"]; ok && val != nil {
+			v := string(val.(string))
+			result.Description = &v
+		}
+		if val, ok := m["bindings"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.Bindings = make([]Binding, len(arr))
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := LoadBinding(item, ctx)
+						result.Bindings[i] = loaded
+					}
+				}
+			}
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -271,7 +324,18 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 // Save serializes CustomTool to map[string]interface{}
 func (obj CustomTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	result["name"] = obj.Name
 	result["kind"] = obj.Kind
+	if obj.Description != nil {
+		result["description"] = *obj.Description
+	}
+	if obj.Bindings != nil {
+		arr := make([]interface{}, len(obj.Bindings))
+		for i, item := range obj.Bindings {
+			arr[i] = item.Save(ctx)
+		}
+		result["bindings"] = arr
+	}
 
 	// Handle polymorphic type via type switch
 	switch v := obj.Connection.(type) {
@@ -328,7 +392,10 @@ func CustomToolFromYAML(yamlStr string) (CustomTool, error) {
 // McpTool represents The MCP Server tool.
 
 type McpTool struct {
+	Name              string          `json:"name" yaml:"name"`
 	Kind              string          `json:"kind" yaml:"kind"`
+	Description       *string         `json:"description,omitempty" yaml:"description,omitempty"`
+	Bindings          []Binding       `json:"bindings,omitempty" yaml:"bindings,omitempty"`
 	Connection        interface{}     `json:"connection" yaml:"connection"`
 	ServerName        string          `json:"serverName" yaml:"serverName"`
 	ServerDescription *string         `json:"serverDescription,omitempty" yaml:"serverDescription,omitempty"`
@@ -342,8 +409,26 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["name"]; ok && val != nil {
+			result.Name = string(val.(string))
+		}
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["description"]; ok && val != nil {
+			v := string(val.(string))
+			result.Description = &v
+		}
+		if val, ok := m["bindings"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.Bindings = make([]Binding, len(arr))
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := LoadBinding(item, ctx)
+						result.Bindings[i] = loaded
+					}
+				}
+			}
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -387,7 +472,18 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 // Save serializes McpTool to map[string]interface{}
 func (obj McpTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	result["name"] = obj.Name
 	result["kind"] = obj.Kind
+	if obj.Description != nil {
+		result["description"] = *obj.Description
+	}
+	if obj.Bindings != nil {
+		arr := make([]interface{}, len(obj.Bindings))
+		for i, item := range obj.Bindings {
+			arr[i] = item.Save(ctx)
+		}
+		result["bindings"] = arr
+	}
 
 	// Handle polymorphic type via type switch
 	switch v := obj.Connection.(type) {
@@ -449,7 +545,10 @@ func McpToolFromYAML(yamlStr string) (McpTool, error) {
 
 // OpenApiTool represents a schema type
 type OpenApiTool struct {
+	Name          string      `json:"name" yaml:"name"`
 	Kind          string      `json:"kind" yaml:"kind"`
+	Description   *string     `json:"description,omitempty" yaml:"description,omitempty"`
+	Bindings      []Binding   `json:"bindings,omitempty" yaml:"bindings,omitempty"`
 	Connection    interface{} `json:"connection" yaml:"connection"`
 	Specification string      `json:"specification" yaml:"specification"`
 }
@@ -460,8 +559,26 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["name"]; ok && val != nil {
+			result.Name = string(val.(string))
+		}
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["description"]; ok && val != nil {
+			v := string(val.(string))
+			result.Description = &v
+		}
+		if val, ok := m["bindings"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.Bindings = make([]Binding, len(arr))
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := LoadBinding(item, ctx)
+						result.Bindings[i] = loaded
+					}
+				}
+			}
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
@@ -481,7 +598,18 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 // Save serializes OpenApiTool to map[string]interface{}
 func (obj OpenApiTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	result["name"] = obj.Name
 	result["kind"] = obj.Kind
+	if obj.Description != nil {
+		result["description"] = *obj.Description
+	}
+	if obj.Bindings != nil {
+		arr := make([]interface{}, len(obj.Bindings))
+		for i, item := range obj.Bindings {
+			arr[i] = item.Save(ctx)
+		}
+		result["bindings"] = arr
+	}
 
 	// Handle polymorphic type via type switch
 	switch v := obj.Connection.(type) {
@@ -541,9 +669,12 @@ func OpenApiToolFromYAML(yamlStr string) (OpenApiTool, error) {
 // loops are intentionally not started from PromptyTool.
 
 type PromptyTool struct {
-	Kind string `json:"kind" yaml:"kind"`
-	Path string `json:"path" yaml:"path"`
-	Mode string `json:"mode" yaml:"mode"`
+	Name        string    `json:"name" yaml:"name"`
+	Kind        string    `json:"kind" yaml:"kind"`
+	Description *string   `json:"description,omitempty" yaml:"description,omitempty"`
+	Bindings    []Binding `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Path        string    `json:"path" yaml:"path"`
+	Mode        string    `json:"mode" yaml:"mode"`
 }
 
 // LoadPromptyTool creates a PromptyTool from a map[string]interface{}
@@ -552,8 +683,26 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["name"]; ok && val != nil {
+			result.Name = string(val.(string))
+		}
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["description"]; ok && val != nil {
+			v := string(val.(string))
+			result.Description = &v
+		}
+		if val, ok := m["bindings"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.Bindings = make([]Binding, len(arr))
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := LoadBinding(item, ctx)
+						result.Bindings[i] = loaded
+					}
+				}
+			}
 		}
 		if val, ok := m["path"]; ok && val != nil {
 			result.Path = string(val.(string))
@@ -569,7 +718,18 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 // Save serializes PromptyTool to map[string]interface{}
 func (obj PromptyTool) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	result["name"] = obj.Name
 	result["kind"] = obj.Kind
+	if obj.Description != nil {
+		result["description"] = *obj.Description
+	}
+	if obj.Bindings != nil {
+		arr := make([]interface{}, len(obj.Bindings))
+		for i, item := range obj.Bindings {
+			arr[i] = item.Save(ctx)
+		}
+		result["bindings"] = arr
+	}
 	result["path"] = obj.Path
 	result["mode"] = obj.Mode
 

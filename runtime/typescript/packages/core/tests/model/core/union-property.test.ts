@@ -19,13 +19,13 @@ describe("UnionProperty", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "oneOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "integer"\n    }\n  ],\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`;
+      const json = `{\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`;
       const instance = UnionProperty.fromJson(json);
       expect(instance).toBeDefined();
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "oneOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "integer"\n    }\n  ],\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`;
+      const json = `{\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`;
       const instance = UnionProperty.fromJson(json);
       const output = instance.toJson();
       const reloaded = UnionProperty.fromJson(output);
@@ -34,13 +34,13 @@ describe("UnionProperty", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `oneOf:\n  - kind: string\n  - kind: integer\nanyOf:\n  - kind: string\n  - kind: boolean\n`;
+      const yaml = `anyOf:\n  - kind: string\n  - kind: boolean\n`;
       const instance = UnionProperty.fromYaml(yaml);
       expect(instance).toBeDefined();
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `oneOf:\n  - kind: string\n  - kind: integer\nanyOf:\n  - kind: string\n  - kind: boolean\n`;
+      const yaml = `anyOf:\n  - kind: string\n  - kind: boolean\n`;
       const instance = UnionProperty.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = UnionProperty.fromYaml(output);

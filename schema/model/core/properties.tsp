@@ -104,14 +104,15 @@ model ObjectProperty extends Property {
  * Represents a JSON Schema union property.
  *
  * Use `oneOf` when exactly one branch must match, or `anyOf` when one or more
- * branches may match. The alternatives are full Prompty properties so unions
- * remain portable across generated runtimes.
+ * branches may match. Exactly one composition field MUST be provided with at
+ * least one branch; `oneOf` and `anyOf` MUST NOT both be populated. The
+ * alternatives are full Prompty properties so unions remain portable across
+ * generated runtimes.
  */
 model UnionProperty extends Property {
   kind: "union";
 
   @doc("Alternative property schemas where exactly one branch must match")
-  @sample(#{ oneOf: #[#{ kind: "string" }, #{ kind: "integer" }] })
   @minItems(1)
   oneOf?: Property[] = #[];
 

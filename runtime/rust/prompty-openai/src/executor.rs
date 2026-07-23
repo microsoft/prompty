@@ -246,7 +246,8 @@ impl OpenAIExecutor {
             .map(|t| t.as_str())
             .unwrap_or("chat");
         Ok(match api_type {
-            "chat" | "agent" => wire::build_chat_args(agent, messages),
+            "chat" | "agent" => wire::build_chat_args(agent, messages)
+                .map_err(|error| InvokerError::Validation(error.to_string()))?,
             "responses" => {
                 let continuation = request.map(responses_continuation).transpose()?.flatten();
                 let input_messages = continuation
@@ -262,7 +263,8 @@ impl OpenAIExecutor {
                 } else {
                     input_messages.to_vec()
                 };
-                let mut args = wire::build_responses_args(agent, &input_messages);
+                let mut args = wire::build_responses_args(agent, &input_messages)
+                    .map_err(|error| InvokerError::Validation(error.to_string()))?;
                 if let Some(continuation) = continuation {
                     args["previous_response_id"] = Value::String(continuation.response_id);
                 }

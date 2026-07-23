@@ -9,14 +9,6 @@ from prompty.model import UnionProperty
 def test_load_json_unionproperty():
     json_data = r"""
     {
-      "oneOf": [
-        {
-          "kind": "string"
-        },
-        {
-          "kind": "integer"
-        }
-      ],
       "anyOf": [
         {
           "kind": "string"
@@ -34,9 +26,6 @@ def test_load_json_unionproperty():
 
 def test_load_yaml_unionproperty():
     yaml_data = r"""
-    oneOf:
-      - kind: string
-      - kind: integer
     anyOf:
       - kind: string
       - kind: boolean
@@ -51,14 +40,6 @@ def test_roundtrip_json_unionproperty():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
-      "oneOf": [
-        {
-          "kind": "string"
-        },
-        {
-          "kind": "integer"
-        }
-      ],
       "anyOf": [
         {
           "kind": "string"
@@ -80,14 +61,6 @@ def test_to_json_unionproperty():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
-      "oneOf": [
-        {
-          "kind": "string"
-        },
-        {
-          "kind": "integer"
-        }
-      ],
       "anyOf": [
         {
           "kind": "string"
@@ -110,14 +83,6 @@ def test_to_yaml_unionproperty():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
-      "oneOf": [
-        {
-          "kind": "string"
-        },
-        {
-          "kind": "integer"
-        }
-      ],
       "anyOf": [
         {
           "kind": "string"

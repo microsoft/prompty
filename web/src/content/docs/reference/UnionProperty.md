@@ -8,8 +8,10 @@ slug: "reference/unionproperty"
 Represents a JSON Schema union property.
 
 Use `oneOf` when exactly one branch must match, or `anyOf` when one or more
-branches may match. The alternatives are full Prompty properties so unions
-remain portable across generated runtimes.
+branches may match. Exactly one composition field MUST be provided with at
+least one branch; `oneOf` and `anyOf` MUST NOT both be populated. The
+alternatives are full Prompty properties so unions remain portable across
+generated runtimes.
 
 ## Class Diagram
 
@@ -64,9 +66,6 @@ classDiagram
 ## Yaml Example
 
 ```yaml
-oneOf:
-  - kind: string
-  - kind: integer
 anyOf:
   - kind: string
   - kind: boolean

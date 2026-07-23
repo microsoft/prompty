@@ -22,7 +22,7 @@ pub use processor::{
     process_invocation_response_with_context, process_response,
 };
 pub use wire::{
-    build_chat_args, build_embedding_args, build_image_args, build_responses_args,
+    SchemaError, build_chat_args, build_embedding_args, build_image_args, build_responses_args,
     format_tool_messages, message_to_wire, tools_to_wire,
 };
 

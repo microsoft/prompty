@@ -5,7 +5,7 @@
 
 use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
-use prompty::types::{ContentPart, ContentPartKind, Message, Role};
+use prompty::types::{ContentPart, Message, Role};
 use prompty_anthropic::wire;
 use serde_json::{Value, json};
 
@@ -190,7 +190,8 @@ macro_rules! wire_test {
 
             let agent = build_agent(input);
             let messages = build_messages(input);
-            let actual = wire::build_chat_args(&agent, &messages);
+            let actual = wire::build_chat_args(&agent, &messages)
+                .unwrap_or_else(|error| panic!("Vector '{test_name}' schema error: {error}"));
             let expected = &vector["expected"]["request_body"];
 
             assert!(

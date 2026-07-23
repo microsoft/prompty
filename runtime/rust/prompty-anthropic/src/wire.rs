@@ -15,6 +15,26 @@ use prompty::model::{Prompty, Property, PropertyKind, Tool, ToolKind};
 use prompty::types::{ContentPart, ContentPartKind, Message, Role, ToolCall};
 use serde_json::{Map, Value, json};
 
+/// Error raised when a portable Property schema violates its union contract.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchemaError(String);
+
+impl SchemaError {
+    fn invalid_union() -> Self {
+        Self(
+            "UnionProperty must contain exactly one non-empty `oneOf` or `anyOf` array".to_string(),
+        )
+    }
+}
+
+impl std::fmt::Display for SchemaError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for SchemaError {}
+
 /// Default max_tokens when not specified (Anthropic requires this field).
 const DEFAULT_MAX_TOKENS: i64 = 4096;
 
@@ -26,7 +46,7 @@ pub const ANTHROPIC_VERSION: &str = "2023-06-01";
 // ---------------------------------------------------------------------------
 
 /// Build the full request body for `POST /v1/messages`.
-pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
+pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
     let mut body = Map::new();
 
     // Model ID
@@ -52,17 +72,20 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
     // Tools
     if let Some(tools) = agent.as_tools() {
         if !tools.is_empty() {
-            let wire_tools: Vec<Value> = tools.iter().map(tool_to_wire).collect();
+            let wire_tools = tools
+                .iter()
+                .map(tool_to_wire)
+                .collect::<Result<Vec<_>, _>>()?;
             body.insert("tools".into(), json!(wire_tools));
         }
     }
 
     // Structured output (outputs → output_config)
-    if let Some(output_config) = output_schema_to_wire(agent) {
+    if let Some(output_config) = output_schema_to_wire(agent)? {
         body.insert("output_config".into(), output_config);
     }
 
-    Value::Object(body)
+    Ok(Value::Object(body))
 }
 
 // ---------------------------------------------------------------------------
@@ -249,17 +272,19 @@ fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
 /// Convert `agent.outputs` to Anthropic's `output_config` format.
 ///
 /// Anthropic uses: `output_config: { format: { type: "json_schema", schema: {...} } }`
-fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
-    let outputs = agent.as_outputs()?;
+fn output_schema_to_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+    let Some(outputs) = agent.as_outputs() else {
+        return Ok(None);
+    };
     if outputs.is_empty() {
-        return None;
+        return Ok(None);
     }
 
     let mut properties = Map::new();
     let mut required = Vec::new();
 
     for prop in outputs {
-        properties.insert(prop.name.clone(), property_to_json_schema(prop));
+        properties.insert(prop.name.clone(), property_to_json_schema(prop)?);
         if prop.required.unwrap_or(false) {
             required.push(json!(prop.name));
         }
@@ -273,12 +298,12 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     }
     schema.insert("additionalProperties".into(), Value::Bool(false));
 
-    Some(json!({
+    Ok(Some(json!({
         "format": {
             "type": "json_schema",
             "schema": Value::Object(schema),
         }
-    }))
+    })))
 }
 
 // ---------------------------------------------------------------------------
@@ -289,7 +314,7 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
 ///
 /// Anthropic uses `{ name, description, input_schema }` at the top level,
 /// unlike OpenAI's `{ type: "function", function: { name, description, parameters } }`.
-fn tool_to_wire(tool: &Tool) -> Value {
+fn tool_to_wire(tool: &Tool) -> Result<Value, SchemaError> {
     let mut wire = Map::new();
     wire.insert("name".into(), json!(tool.name));
 
@@ -299,7 +324,7 @@ fn tool_to_wire(tool: &Tool) -> Value {
 
     match &tool.kind {
         ToolKind::Function { parameters, .. } => {
-            let schema = parameters_to_json_schema(parameters);
+            let schema = parameters_to_json_schema(parameters)?;
             wire.insert("input_schema".into(), schema);
         }
         _ => {
@@ -311,11 +336,11 @@ fn tool_to_wire(tool: &Tool) -> Value {
         }
     }
 
-    Value::Object(wire)
+    Ok(Value::Object(wire))
 }
 
 /// Convert a single Property to a recursive JSON Schema definition.
-fn property_to_json_schema(prop: &Property) -> Value {
+fn property_to_json_schema(prop: &Property) -> Result<Value, SchemaError> {
     let mut schema = Map::new();
     if let Some(json_type) = kind_to_json_type(prop.kind_str()) {
         schema.insert("type".into(), json!(json_type));
@@ -333,7 +358,7 @@ fn property_to_json_schema(prop: &Property) -> Value {
             if !items.is_null() {
                 let ctx = prompty::model::context::LoadContext::default();
                 let item_prop = Property::load_from_value(items, &ctx);
-                schema.insert("items".into(), property_to_json_schema(&item_prop));
+                schema.insert("items".into(), property_to_json_schema(&item_prop)?);
             } else {
                 schema.insert("items".into(), json!({"type": "string"}));
             }
@@ -346,7 +371,7 @@ fn property_to_json_schema(prop: &Property) -> Value {
                     if p.name.is_empty() {
                         continue;
                     }
-                    nested.insert(p.name.clone(), property_to_json_schema(p));
+                    nested.insert(p.name.clone(), property_to_json_schema(p)?);
                     if p.required.unwrap_or(false) {
                         req.push(json!(p.name));
                     }
@@ -360,20 +385,23 @@ fn property_to_json_schema(prop: &Property) -> Value {
             }
             schema.insert("additionalProperties".into(), Value::Bool(false));
         }
-        PropertyKind::Union { one_of, any_of } => {
-            if !one_of.is_empty() {
-                schema.insert(
-                    "oneOf".into(),
-                    Value::Array(one_of.iter().map(property_to_json_schema).collect()),
-                );
+        PropertyKind::Union { one_of, any_of } => match (!one_of.is_empty(), !any_of.is_empty()) {
+            (true, false) => {
+                let branches = one_of
+                    .iter()
+                    .map(property_to_json_schema)
+                    .collect::<Result<Vec<_>, _>>()?;
+                schema.insert("oneOf".into(), Value::Array(branches));
             }
-            if !any_of.is_empty() {
-                schema.insert(
-                    "anyOf".into(),
-                    Value::Array(any_of.iter().map(property_to_json_schema).collect()),
-                );
+            (false, true) => {
+                let branches = any_of
+                    .iter()
+                    .map(property_to_json_schema)
+                    .collect::<Result<Vec<_>, _>>()?;
+                schema.insert("anyOf".into(), Value::Array(branches));
             }
-        }
+            _ => return Err(SchemaError::invalid_union()),
+        },
         _ => {}
     }
 
@@ -381,7 +409,7 @@ fn property_to_json_schema(prop: &Property) -> Value {
         add_nullability(&mut schema);
     }
 
-    Value::Object(schema)
+    Ok(Value::Object(schema))
 }
 
 fn add_nullability(schema: &mut Map<String, Value>) {
@@ -394,8 +422,20 @@ fn add_nullability(schema: &mut Map<String, Value>) {
         branches.push(json!({ "type": "null" }));
     } else if let Some(Value::Array(branches)) = schema.get_mut("oneOf") {
         branches.push(json!({ "type": "null" }));
-    } else {
-        schema.insert("type".into(), json!("null"));
+    } else if !schema.is_empty() {
+        schema.insert(
+            "anyOf".into(),
+            Value::Array(vec![
+                Value::Object(schema.clone()),
+                json!({ "type": "null" }),
+            ]),
+        );
+    }
+
+    if let Some(Value::Array(enum_values)) = schema.get_mut("enum") {
+        if !enum_values.iter().any(Value::is_null) {
+            enum_values.push(Value::Null);
+        }
     }
 }
 
@@ -412,12 +452,12 @@ fn kind_to_json_type(kind: &str) -> Option<&'static str> {
 }
 
 /// Convert tool parameters to JSON Schema for `input_schema`.
-fn parameters_to_json_schema(params: &[Property]) -> Value {
+fn parameters_to_json_schema(params: &[Property]) -> Result<Value, SchemaError> {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
     for param in params {
-        properties.insert(param.name.clone(), property_to_json_schema(param));
+        properties.insert(param.name.clone(), property_to_json_schema(param)?);
         if param.required.unwrap_or(false) {
             required.push(json!(param.name));
         }
@@ -430,7 +470,7 @@ fn parameters_to_json_schema(params: &[Property]) -> Value {
     if !required.is_empty() {
         schema["required"] = json!(required);
     }
-    schema
+    Ok(schema)
 }
 
 // ---------------------------------------------------------------------------
@@ -621,7 +661,7 @@ mod tests {
             Message::with_text(Role::System, "Be helpful"),
             Message::with_text(Role::User, "Hello"),
         ];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         assert_eq!(args["system"], "Be helpful");
         // Messages should not contain system
         let msgs = args["messages"].as_array().unwrap();
@@ -633,7 +673,7 @@ mod tests {
     fn test_max_tokens_default() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
         let messages = vec![Message::with_text(Role::User, "Hello")];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         assert_eq!(args["max_tokens"], 4096);
     }
 
@@ -645,7 +685,7 @@ mod tests {
             "options": {"maxOutputTokens": 2000}
         }));
         let messages = vec![Message::with_text(Role::User, "Hello")];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         assert_eq!(args["max_tokens"], 2000);
     }
 
@@ -653,7 +693,7 @@ mod tests {
     fn test_content_block_format() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
         let messages = vec![Message::with_text(Role::User, "Hello")];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         let content = &args["messages"][0]["content"];
         assert!(content.is_array());
         assert_eq!(content[0]["type"], "text");
@@ -708,13 +748,69 @@ mod tests {
             }]),
         );
         let messages = vec![Message::with_text(Role::User, "Weather?")];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         let tools = args["tools"].as_array().unwrap();
         assert_eq!(tools.len(), 1);
         assert_eq!(tools[0]["name"], "get_weather");
         assert_eq!(tools[0]["description"], "Get weather");
         assert!(tools[0]["input_schema"]["properties"]["city"].is_object());
         assert_eq!(tools[0]["input_schema"]["required"][0], "city");
+    }
+
+    #[test]
+    fn test_schema_safety_for_nullable_extensions_enums_and_unions() {
+        let agent = make_agent_with_tools(
+            json!({"id": "claude-3", "provider": "anthropic"}),
+            json!([{
+                "name": "set_row_visual",
+                "kind": "function",
+                "parameters": [
+                    {
+                        "name": "extension",
+                        "kind": "custom-extension",
+                        "nullable": true
+                    },
+                    {
+                        "name": "choice",
+                        "kind": "string",
+                        "nullable": true,
+                        "enumValues": ["thin", "thick"]
+                    },
+                    {
+                        "name": "fill",
+                        "kind": "union",
+                        "nullable": true,
+                        "anyOf": [{"kind": "string"}, {"kind": "integer"}]
+                    }
+                ]
+            }]),
+        );
+
+        let args = build_chat_args(&agent, &[]).expect("valid provider schema");
+        let properties = &args["tools"][0]["input_schema"]["properties"];
+        assert_eq!(properties["extension"], json!({}));
+        assert_eq!(properties["choice"]["enum"], json!(["thin", "thick", null]));
+        assert_eq!(properties["fill"]["anyOf"][2], json!({ "type": "null" }));
+        assert!(properties["fill"].get("oneOf").is_none());
+    }
+
+    #[test]
+    fn test_schema_safety_rejects_ambiguous_union() {
+        let agent = make_agent_with_tools(
+            json!({"id": "claude-3", "provider": "anthropic"}),
+            json!([{
+                "name": "invalid_union",
+                "kind": "function",
+                "parameters": [{
+                    "name": "choice",
+                    "kind": "union",
+                    "oneOf": [{"kind": "string"}],
+                    "anyOf": [{"kind": "integer"}]
+                }]
+            }]),
+        );
+
+        assert!(build_chat_args(&agent, &[]).is_err());
     }
 
     #[test]
@@ -731,7 +827,7 @@ mod tests {
             }
         }));
         let messages = vec![Message::with_text(Role::User, "Hi")];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         assert_eq!(args["temperature"], 0.5);
         assert_eq!(args["top_p"], 0.9);
         assert_eq!(args["top_k"], 40);
@@ -939,7 +1035,7 @@ mod tests {
     fn test_no_system_when_none() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
         let messages = vec![Message::with_text(Role::User, "Hello")];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         assert!(args.get("system").is_none());
     }
 
@@ -951,7 +1047,7 @@ mod tests {
             Message::with_text(Role::System, "Rule 2"),
             Message::with_text(Role::User, "Hello"),
         ];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         assert_eq!(args["system"], "Rule 1\n\nRule 2");
     }
 
@@ -969,7 +1065,7 @@ mod tests {
         data["instructions"] = json!("test");
         let agent = Prompty::load_from_value(&data, &LoadContext::default());
         let messages = vec![Message::with_text(Role::User, "Weather?")];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
 
         let oc = &args["output_config"];
         assert_eq!(oc["format"]["type"], "json_schema");
@@ -985,7 +1081,7 @@ mod tests {
     fn test_no_output_config_without_outputs() {
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
         let messages = vec![Message::with_text(Role::User, "Hello")];
-        let args = build_chat_args(&agent, &messages);
+        let args = build_chat_args(&agent, &messages).expect("valid request schema");
         assert!(args.get("output_config").is_none());
     }
 }

@@ -12,9 +12,13 @@ namespace Prompty.Core;
     ///
     /// Use `oneOf` when exactly one branch must match, or `anyOf` when one or more
     ///
-    /// branches may match. The alternatives are full Prompty properties so unions
+    /// branches may match. Exactly one composition field MUST be provided with at
     ///
-    /// remain portable across generated runtimes.
+    /// least one branch; `oneOf` and `anyOf` MUST NOT both be populated. The
+    ///
+    /// alternatives are full Prompty properties so unions remain portable across
+    ///
+    /// generated runtimes.
     /// </summary>
 public partial class UnionProperty : Property
 {
