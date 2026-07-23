@@ -620,6 +620,16 @@ function emitLoadFromValue(
   // Polymorphic dispatch
   if (type.polymorphicDispatch) {
     emitPolymorphicLoad(name, type, childTypes, baseFieldNames, polymorphicTypeNames, lines);
+  } else if (type.typeName.name === "UnionProperty") {
+    lines.push("        let instance = Self {");
+    for (const a of type.load.assignments) {
+      lines.push(`            ${rustFieldName(a.fieldName)}: ${loadExpr(a, polymorphicTypeNames)},`);
+    }
+    lines.push("        };");
+    lines.push("        if instance.one_of.is_empty() == instance.any_of.is_empty() {");
+    lines.push('            panic!("UnionProperty requires exactly one non-empty composition: oneOf XOR anyOf");');
+    lines.push("        }");
+    lines.push("        instance");
   } else {
     // Simple struct construction
     lines.push("        Self {");

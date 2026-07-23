@@ -10,12 +10,14 @@ properties:
     items:
       $ref: Property.yaml
     default: []
+    minItems: 1
     description: Alternative property schemas where exactly one branch must match
   anyOf:
     type: array
     items:
       $ref: Property.yaml
     default: []
+    minItems: 1
     description: Alternative property schemas where one or more branches may match
 required:
   - kind

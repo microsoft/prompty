@@ -336,6 +336,43 @@ class TestSchemaToWire:
         assert item_schema["properties"]["tags"]["type"] == "array"
         assert item_schema["properties"]["tags"]["items"]["type"] == "string"
 
+    def test_strict_schema_uses_nullable_required_optionals_and_rejects_one_of(self):
+        agent = _make_agent(
+            tools=[
+                {
+                    "name": "strict",
+                    "kind": "function",
+                    "strict": True,
+                    "parameters": [
+                        {
+                            "name": "choice",
+                            "kind": "string",
+                            "enumValues": ["a", "b"],
+                        },
+                        {"name": "extension", "kind": "extension", "nullable": True},
+                    ],
+                }
+            ]
+        )
+        tools = _tools_to_wire(agent)
+        assert tools is not None
+        schema = tools[0]["function"]["parameters"]
+        assert schema["required"] == ["choice", "extension"]
+        assert schema["properties"]["choice"] == {"type": ["string", "null"], "enum": ["a", "b", None]}
+        assert schema["properties"]["extension"] == {}
+
+        invalid = _make_agent(
+            outputs=[
+                {
+                    "name": "choice",
+                    "kind": "union",
+                    "oneOf": [{"kind": "string"}, {"kind": "integer"}],
+                }
+            ]
+        )
+        with pytest.raises(ValueError, match="oneOf"):
+            _output_schema_to_wire(invalid)
+
 
 # ---------------------------------------------------------------------------
 # OpenAIExecutor
@@ -590,10 +627,10 @@ class TestOutputSchemaToWire:
         schema = result["json_schema"]["schema"]
         assert schema["type"] == "object"
         assert "answer" in schema["properties"]
-        assert schema["properties"]["answer"]["type"] == "string"
+        assert schema["properties"]["answer"]["type"] == ["string", "null"]
         assert schema["properties"]["answer"]["description"] == "The answer"
         assert schema["properties"]["confidence"]["type"] == "number"
-        assert schema["required"] == ["confidence"]
+        assert schema["required"] == ["answer", "confidence"]
         assert schema["additionalProperties"] is False
 
     def test_no_output_schema(self):
@@ -618,7 +655,7 @@ class TestOutputSchemaToWire:
         assert result is not None
         schema = result["json_schema"]["schema"]
         person = schema["properties"]["person"]
-        assert person["type"] == "object"
+        assert person["type"] == ["object", "null"]
         assert "name" in person["properties"]
         assert person["additionalProperties"] is False
 
@@ -636,7 +673,7 @@ class TestOutputSchemaToWire:
         assert result is not None
         schema = result["json_schema"]["schema"]
         items_prop = schema["properties"]["items"]
-        assert items_prop["type"] == "array"
+        assert items_prop["type"] == ["array", "null"]
         assert items_prop["items"]["type"] == "string"
 
     def test_name_is_fixed(self):

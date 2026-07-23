@@ -607,12 +607,21 @@ function emitLoadMethod(type: TypeDecl, lines: string[]): void {
     lines.push(`            ${emitLoadAssignment(a)}`);
   }
 
+  emitUnionCompositionValidation(type, lines);
+
   // Context post-processing
   lines.push("        if context is not None:");
   lines.push("            instance = context.process_output(instance)");
   lines.push("        return instance");
   lines.push("");
   lines.push("");
+}
+
+/** Emit the portable XOR/non-empty contract for the wire-shaped UnionProperty. */
+function emitUnionCompositionValidation(type: TypeDecl, lines: string[]): void {
+  if (type.typeName.name !== "UnionProperty") return;
+  lines.push("        if bool(instance.one_of) == bool(instance.any_of):");
+  lines.push('            raise ValueError("UnionProperty requires exactly one non-empty composition: oneOf XOR anyOf")');
 }
 
 function emitLoadAssignment(a: LoadAssignment): string {
@@ -824,7 +833,11 @@ function emitSaveMethod(type: TypeDecl, lines: string[]): void {
   lines.push("");
   for (const a of type.save.assignments) {
     const snake = toSnakeCase(a.fieldName);
-    lines.push(`        if obj.${snake} is not None:`);
+    const condition =
+      type.typeName.name === "UnionProperty" && (a.fieldName === "oneOf" || a.fieldName === "anyOf")
+        ? `obj.${snake}`
+        : `obj.${snake} is not None`;
+    lines.push(`        if ${condition}:`);
     lines.push(`            ${emitSaveAssignment(a)}`);
   }
 

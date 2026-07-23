@@ -216,6 +216,7 @@ fn function_parameters_schema(parameters: Value) -> Value {
             "tools": [{
                 "name": "set_row_visual",
                 "kind": "function",
+                "strict": true,
                 "parameters": parameters,
             }],
         }),
@@ -266,7 +267,7 @@ fn set_row_visual_schema_supports_nullable_unions_and_nested_optionality() {
                 {
                     "name": "border",
                     "kind": "union",
-                    "oneOf": [
+                    "anyOf": [
                         { "kind": "string", "enumValues": ["thin"] },
                         { "kind": "string", "enumValues": ["thick"] }
                     ],
@@ -294,18 +295,18 @@ fn set_row_visual_schema_supports_nullable_unions_and_nested_optionality() {
     assert_eq!(schema["properties"]["row"]["type"], "object");
     assert_eq!(
         schema["properties"]["row"]["required"],
-        json!(["color", "fill"])
+        json!(["color", "border", "fill"])
     );
     assert_eq!(
         schema["properties"]["row"]["properties"]["color"]["type"],
         json!(["string", "null"])
     );
     assert_eq!(
-        schema["properties"]["row"]["properties"]["border"]["oneOf"][0]["type"],
+        schema["properties"]["row"]["properties"]["border"]["anyOf"][0]["type"],
         "string"
     );
     assert_eq!(
-        schema["properties"]["row"]["properties"]["border"]["oneOf"][1]["type"],
+        schema["properties"]["row"]["properties"]["border"]["anyOf"][1]["type"],
         "string"
     );
     assert_eq!(
@@ -318,7 +319,44 @@ fn set_row_visual_schema_supports_nullable_unions_and_nested_optionality() {
     );
     assert_eq!(
         schema["properties"]["row"]["properties"]["fill"]["anyOf"][1]["required"],
-        json!(["theme"])
+        json!(["theme", "tint"])
     );
     assert_no_empty_type(&schema);
+}
+
+#[test]
+fn strict_openai_schemas_use_required_nullable_optionals_and_nullable_enums() {
+    let schema = function_parameters_schema(json!([
+        {
+            "name": "choice",
+            "kind": "string",
+            "required": false,
+            "nullable": true,
+            "enumValues": ["yes", "no"]
+        },
+        {
+            "name": "extension",
+            "kind": "my-extension",
+            "required": false,
+            "nullable": true
+        }
+    ]));
+
+    assert_eq!(schema["required"], json!(["choice", "extension"]));
+    assert_eq!(schema["properties"]["choice"]["type"], json!(["string", "null"]));
+    assert_eq!(schema["properties"]["choice"]["enum"], json!(["yes", "no", null]));
+    assert_eq!(schema["properties"]["extension"], json!({}));
+}
+
+#[test]
+fn strict_openai_schemas_reject_one_of_unions() {
+    let result = std::panic::catch_unwind(|| {
+        function_parameters_schema(json!([{
+            "name": "invalid",
+            "kind": "union",
+            "oneOf": [{"kind": "string"}, {"kind": "integer"}]
+        }]))
+    });
+
+    assert!(result.is_err(), "oneOf must not be sent to OpenAI");
 }

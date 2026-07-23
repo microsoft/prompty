@@ -524,6 +524,8 @@ function emitLoadMethod(
     emitLoadAssignment(assign, findType, lines);
   }
 
+  emitUnionCompositionValidation(type, lines);
+
   // ProcessOutput
   lines.push("        if (context is not null)");
   lines.push("        {");
@@ -531,6 +533,16 @@ function emitLoadMethod(
   lines.push("        }");
   lines.push("        return instance;");
   lines.push("    }");
+  lines.push("");
+}
+
+/** Emit the portable XOR/non-empty contract for the wire-shaped UnionProperty. */
+function emitUnionCompositionValidation(type: TypeDecl, lines: string[]): void {
+  if (type.typeName.name !== "UnionProperty") return;
+  lines.push("        if ((instance.OneOf?.Count > 0) == (instance.AnyOf?.Count > 0))");
+  lines.push("        {");
+  lines.push('            throw new ArgumentException("UnionProperty requires exactly one non-empty composition: oneOf XOR anyOf");');
+  lines.push("        }");
   lines.push("");
 }
 

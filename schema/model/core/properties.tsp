@@ -112,10 +112,12 @@ model UnionProperty extends Property {
 
   @doc("Alternative property schemas where exactly one branch must match")
   @sample(#{ oneOf: #[#{ kind: "string" }, #{ kind: "integer" }] })
+  @minItems(1)
   oneOf?: Property[] = #[];
 
   @doc("Alternative property schemas where one or more branches may match")
   @sample(#{ anyOf: #[#{ kind: "string" }, #{ kind: "boolean" }] })
+  @minItems(1)
   anyOf?: Property[] = #[];
 }
 

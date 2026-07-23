@@ -282,7 +282,7 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
             .iter()
             .filter(|p| !bound_names.contains(&p.name))
             .collect();
-        let schema = parameters_to_json_schema(&typed_params);
+        let schema = parameters_to_json_schema(&typed_params, strict.unwrap_or(false));
         func_def.insert("parameters".to_string(), schema);
     }
 
@@ -302,7 +302,7 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
 }
 
 /// Convert a single Property to a recursive JSON Schema definition.
-fn property_to_json_schema(prop: &Property) -> Value {
+fn property_to_json_schema(prop: &Property, strict: bool) -> Value {
     let mut schema = Map::new();
     if let Some(json_type) = kind_to_json_type(prop.kind_str()) {
         schema.insert("type".to_string(), Value::String(json_type.to_string()));
@@ -319,7 +319,7 @@ fn property_to_json_schema(prop: &Property) -> Value {
         PropertyKind::Array { items } if !items.is_null() => {
             let ctx = prompty::model::context::LoadContext::default();
             let item_prop = Property::load_from_value(items, &ctx);
-            schema.insert("items".to_string(), property_to_json_schema(&item_prop));
+            schema.insert("items".to_string(), property_to_json_schema(&item_prop, strict));
         }
         PropertyKind::Array { .. } => {
             // bare {"type": "array"} when items is null/unspecified
@@ -331,8 +331,11 @@ fn property_to_json_schema(prop: &Property) -> Value {
                 if p.name.is_empty() {
                     continue;
                 }
-                nested.insert(p.name.clone(), property_to_json_schema(p));
-                if p.required.unwrap_or(false) {
+                nested.insert(
+                    p.name.clone(),
+                    property_to_json_schema_with_optional(p, !p.required.unwrap_or(false), strict),
+                );
+                if strict || p.required.unwrap_or(false) {
                     req.push(Value::String(p.name.clone()));
                 }
             }
@@ -347,15 +350,19 @@ fn property_to_json_schema(prop: &Property) -> Value {
         }
         PropertyKind::Union { one_of, any_of } => {
             if !one_of.is_empty() {
-                schema.insert(
-                    "oneOf".to_string(),
-                    Value::Array(one_of.iter().map(property_to_json_schema).collect()),
+                panic!(
+                    "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition"
                 );
             }
             if !any_of.is_empty() {
                 schema.insert(
                     "anyOf".to_string(),
-                    Value::Array(any_of.iter().map(property_to_json_schema).collect()),
+                    Value::Array(
+                        any_of
+                            .iter()
+                            .map(|branch| property_to_json_schema(branch, strict))
+                            .collect(),
+                    ),
                 );
             }
         }
@@ -369,6 +376,14 @@ fn property_to_json_schema(prop: &Property) -> Value {
     Value::Object(schema)
 }
 
+fn property_to_json_schema_with_optional(prop: &Property, optional: bool, strict: bool) -> Value {
+    let mut schema = property_to_json_schema(prop, strict);
+    if strict && optional && !prop.nullable.unwrap_or(false) {
+        add_nullability(schema.as_object_mut().expect("property schema must be an object"));
+    }
+    schema
+}
+
 fn add_nullability(schema: &mut Map<String, Value>) {
     if let Some(Value::String(json_type)) = schema.remove("type") {
         schema.insert(
@@ -380,21 +395,30 @@ fn add_nullability(schema: &mut Map<String, Value>) {
         );
     } else if let Some(Value::Array(branches)) = schema.get_mut("anyOf") {
         branches.push(json!({ "type": "null" }));
-    } else if let Some(Value::Array(branches)) = schema.get_mut("oneOf") {
-        branches.push(json!({ "type": "null" }));
-    } else {
-        schema.insert("type".to_string(), Value::String("null".to_string()));
+    } else if !schema.is_empty() {
+        schema.insert(
+            "anyOf".to_string(),
+            Value::Array(vec![Value::Object(schema.clone()), json!({ "type": "null" })]),
+        );
+    }
+
+    if let Some(Value::Array(enum_values)) = schema.get_mut("enum") {
+        if !enum_values.iter().any(Value::is_null) {
+            enum_values.push(Value::Null);
+        }
     }
 }
 
-fn parameters_to_json_schema(params: &[&Property]) -> Value {
+fn parameters_to_json_schema(params: &[&Property], strict: bool) -> Value {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
     for param in params {
-        properties.insert(param.name.clone(), property_to_json_schema(param));
-
-        if param.required.unwrap_or(false) {
+        properties.insert(
+            param.name.clone(),
+            property_to_json_schema_with_optional(param, !param.required.unwrap_or(false), strict),
+        );
+        if strict || param.required.unwrap_or(false) {
             required.push(Value::String(param.name.clone()));
         }
     }
@@ -434,10 +458,11 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     let mut required = Vec::new();
 
     for prop in outputs {
-        properties.insert(prop.name.clone(), property_to_json_schema(prop));
-        if prop.required.unwrap_or(false) {
-            required.push(Value::String(prop.name.clone()));
-        }
+        properties.insert(
+            prop.name.clone(),
+            property_to_json_schema_with_optional(prop, !prop.required.unwrap_or(false), true),
+        );
+        required.push(Value::String(prop.name.clone()));
     }
 
     let mut schema = Map::new();
@@ -612,7 +637,7 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Value {
             .iter()
             .filter(|p| !bound_names.contains(&p.name))
             .collect();
-        let schema = parameters_to_json_schema(&typed_params);
+        let schema = parameters_to_json_schema(&typed_params, strict.unwrap_or(false));
         obj.insert("parameters".to_string(), schema);
     }
 
@@ -636,7 +661,10 @@ fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
     let mut required = Vec::new();
 
     for prop in outputs {
-        properties.insert(prop.name.clone(), property_to_json_schema(prop));
+        properties.insert(
+            prop.name.clone(),
+            property_to_json_schema_with_optional(prop, !prop.required.unwrap_or(false), true),
+        );
         required.push(Value::String(prop.name.clone()));
     }
 

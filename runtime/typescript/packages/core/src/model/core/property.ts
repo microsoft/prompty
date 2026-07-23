@@ -462,6 +462,9 @@ export class UnionProperty extends Property {
         context,
       );
     }
+    if (((instance.oneOf?.length ?? 0) === 0) === ((instance.anyOf?.length ?? 0) === 0)) {
+      throw new Error("UnionProperty requires exactly one non-empty composition: oneOf XOR anyOf");
+    }
 
     if (context) {
       return context.processOutput(instance) as UnionProperty;
@@ -551,10 +554,10 @@ export class UnionProperty extends Property {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-    if (obj.oneOf !== undefined && obj.oneOf !== null) {
+    if (obj.oneOf !== undefined && obj.oneOf !== null && obj.oneOf.length > 0) {
       result["oneOf"] = UnionProperty.saveOneOf(obj.oneOf, context);
     }
-    if (obj.anyOf !== undefined && obj.anyOf !== null) {
+    if (obj.anyOf !== undefined && obj.anyOf !== null && obj.anyOf.length > 0) {
       result["anyOf"] = UnionProperty.saveAnyOf(obj.anyOf, context);
     }
     return result;

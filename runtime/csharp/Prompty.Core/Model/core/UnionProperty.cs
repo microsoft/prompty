@@ -83,6 +83,10 @@ public partial class UnionProperty : Property
         {
             instance.AnyOf = LoadAnyOf(anyOfValue, context);
         }
+        if ((instance.OneOf?.Count > 0) == (instance.AnyOf?.Count > 0))
+        {
+            throw new ArgumentException("UnionProperty requires exactly one non-empty composition: oneOf XOR anyOf");
+        }
 
         if (context is not null)
         {

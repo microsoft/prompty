@@ -277,13 +277,13 @@ describe("buildChatArgs structured output", () => {
   it("maps kind correctly to JSON Schema types", () => {
     const agent = makeAgent({
       outputs: [
-        new Property({ name: "a", kind: "string" }),
-        new Property({ name: "b", kind: "integer" }),
-        new Property({ name: "c", kind: "float" }),
-        new Property({ name: "d", kind: "number" }),
-        new Property({ name: "e", kind: "boolean" }),
-        new Property({ name: "f", kind: "array" }),
-        new Property({ name: "g", kind: "object" }),
+        new Property({ name: "a", kind: "string", required: true }),
+        new Property({ name: "b", kind: "integer", required: true }),
+        new Property({ name: "c", kind: "float", required: true }),
+        new Property({ name: "d", kind: "number", required: true }),
+        new Property({ name: "e", kind: "boolean", required: true }),
+        new Property({ name: "f", kind: "array", required: true }),
+        new Property({ name: "g", kind: "object", required: true }),
       ],
     });
     const args = buildChatArgs(agent, []);
@@ -304,6 +304,66 @@ describe("buildChatArgs structured output", () => {
     const agent = makeAgent();
     const args = buildChatArgs(agent, []);
     expect(args.response_format).toBeUndefined();
+  });
+
+  it("uses provider-valid strict optional and nullable schemas recursively", () => {
+    const agent = makeAgent({
+      outputs: [
+        Property.load({
+          name: "record",
+          kind: "object",
+          properties: [
+            { name: "optionalText", kind: "string" },
+            { name: "nullableEnum", kind: "string", nullable: true, enumValues: ["a", "b"] },
+            { name: "extension", kind: "my_extension", nullable: true },
+          ],
+        }),
+      ],
+    });
+
+    const args = buildChatArgs(agent, []);
+    const schema = ((args.response_format as Record<string, unknown>).json_schema as Record<string, unknown>)
+      .schema as Record<string, unknown>;
+    const record = (schema.properties as Record<string, Record<string, unknown>>).record;
+    const properties = record.properties as Record<string, Record<string, unknown>>;
+
+    expect(record.required).toEqual(["optionalText", "nullableEnum", "extension"]);
+    expect(properties.optionalText.type).toEqual(["string", "null"]);
+    expect(properties.nullableEnum.type).toEqual(["string", "null"]);
+    expect(properties.nullableEnum.enum).toEqual(["a", "b", null]);
+    expect(properties.extension).toEqual({});
+  });
+
+  it("uses anyOf and rejects unsupported oneOf unions before sending a request", () => {
+    const anyOfAgent = makeAgent({
+      outputs: [
+        Property.load({
+          name: "choice",
+          kind: "union",
+          required: true,
+          anyOf: [{ kind: "string" }, { kind: "integer" }],
+        }),
+      ],
+    });
+    const anyOfArgs = buildChatArgs(anyOfAgent, []);
+    const schema = ((anyOfArgs.response_format as Record<string, unknown>).json_schema as Record<string, unknown>)
+      .schema as Record<string, unknown>;
+    expect((schema.properties as Record<string, Record<string, unknown>>).choice.anyOf).toEqual([
+      { type: "string" },
+      { type: "integer" },
+    ]);
+
+    const oneOfAgent = makeAgent({
+      outputs: [
+        Property.load({
+          name: "choice",
+          kind: "union",
+          required: true,
+          oneOf: [{ kind: "string" }, { kind: "integer" }],
+        }),
+      ],
+    });
+    expect(() => buildChatArgs(oneOfAgent, [])).toThrow("do not support UnionProperty.oneOf");
   });
 });
 
