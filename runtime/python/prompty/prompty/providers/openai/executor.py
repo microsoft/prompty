@@ -236,12 +236,15 @@ def _property_to_json_schema(prop: Any, *, optional: bool = False, strict: bool 
         schema["additionalProperties"] = False
 
     if prop.kind == "union":
-        if prop.one_of:
+        has_one_of = isinstance(prop.one_of, list) and bool(prop.one_of)
+        has_any_of = isinstance(prop.any_of, list) and bool(prop.any_of)
+        if has_one_of == has_any_of:
+            raise ValueError("UnionProperty must specify exactly one non-empty composition: oneOf or anyOf")
+        if has_one_of:
             raise ValueError(
                 "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition"
             )
-        if prop.any_of:
-            schema["anyOf"] = [_property_to_json_schema(branch, strict=strict) for branch in prop.any_of]
+        schema["anyOf"] = [_property_to_json_schema(branch, strict=strict) for branch in prop.any_of]
 
     if getattr(prop, "nullable", False) or optional:
         _add_nullability(schema)

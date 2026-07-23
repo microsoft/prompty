@@ -314,16 +314,21 @@ function propertyToJsonSchema(prop: {
   }
 
   if (prop.kind === "union") {
-    if (prop.oneOf?.length) {
+    const hasOneOf = Array.isArray(prop.oneOf) && prop.oneOf.length > 0;
+    const hasAnyOf = Array.isArray(prop.anyOf) && prop.anyOf.length > 0;
+    if (hasOneOf === hasAnyOf) {
+      throw new Error(
+        "UnionProperty must specify exactly one non-empty composition: oneOf or anyOf",
+      );
+    }
+    if (hasOneOf) {
       throw new Error(
         "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition",
       );
     }
-    if (prop.anyOf?.length) {
-      schema.anyOf = prop.anyOf.map((branch) =>
-        propertyToJsonSchema(branch as typeof prop, false, strict),
-      );
-    }
+    schema.anyOf = prop.anyOf!.map((branch) =>
+      propertyToJsonSchema(branch as typeof prop, false, strict),
+    );
   }
 
   if (prop.nullable || (strict && optional)) addNullability(schema);

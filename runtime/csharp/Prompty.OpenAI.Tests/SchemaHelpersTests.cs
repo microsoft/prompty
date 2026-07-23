@@ -167,7 +167,7 @@ public class SchemaHelpersTests
         var result = SchemaHelpers.PropertiesToJsonSchema(props, strict: true);
         var properties = Assert.IsType<Dictionary<string, object?>>(result["properties"]);
         var encounters = Assert.IsType<Dictionary<string, object?>>(properties["encounters"]);
-        Assert.Equal("array", encounters["type"]);
+        Assert.Equal(["array", "null"], Assert.IsType<List<string>>(encounters["type"]));
 
         var items = Assert.IsType<Dictionary<string, object?>>(encounters["items"]);
         Assert.Equal("object", items["type"]);
@@ -252,6 +252,107 @@ public class SchemaHelpersTests
 
         var tagItems = Assert.IsType<Dictionary<string, object?>>(tags["items"]);
         Assert.Equal("string", tagItems["type"]);
+    }
+
+    [Fact]
+    public void PropertiesToJsonSchema_StrictMode_PreservesOptionalityAndNestedRequiredness()
+    {
+        var props = new List<Property>
+        {
+            new UnionProperty
+            {
+                Name = "set_row_visual",
+                Nullable = true,
+                AnyOf =
+                [
+                    new Property { Kind = "string" },
+                    new Property { Kind = "boolean" },
+                ],
+            },
+            new ObjectProperty
+            {
+                Name = "style",
+                Required = true,
+                Properties =
+                [
+                    new Property { Name = "border", Kind = "string", Required = false },
+                    new Property { Name = "color", Kind = "string", Required = true },
+                ],
+            },
+        };
+
+        var result = SchemaHelpers.PropertiesToJsonSchema(props, strict: true, supportsOneOf: false);
+        var properties = Assert.IsType<Dictionary<string, object?>>(result["properties"]);
+        Assert.Equal(["set_row_visual", "style"], Assert.IsType<List<string>>(result["required"]));
+
+        var visual = Assert.IsType<Dictionary<string, object?>>(properties["set_row_visual"]);
+        var anyOf = Assert.IsAssignableFrom<IList<Dictionary<string, object?>>>(visual["anyOf"]);
+        Assert.Equal(3, anyOf.Count);
+        Assert.Equal("null", anyOf[^1]["type"]);
+
+        var style = Assert.IsType<Dictionary<string, object?>>(properties["style"]);
+        var nested = Assert.IsType<Dictionary<string, object?>>(style["properties"]);
+        Assert.Equal(["border", "color"], Assert.IsType<List<string>>(style["required"]));
+        Assert.Equal(["string", "null"], Assert.IsType<List<string>>(
+            Assert.IsType<Dictionary<string, object?>>(nested["border"])["type"]));
+        Assert.Equal("string", Assert.IsType<Dictionary<string, object?>>(nested["color"])["type"]);
+    }
+
+    [Fact]
+    public void PropertiesToJsonSchema_NonStrictNestedRequiredness_UsesPropertyFlags()
+    {
+        var result = SchemaHelpers.PropertiesToJsonSchema(
+        [
+            new ObjectProperty
+            {
+                Name = "style",
+                Properties =
+                [
+                    new Property { Name = "border", Kind = "string", Required = false },
+                    new Property { Name = "color", Kind = "string", Required = true },
+                ],
+            },
+        ]);
+
+        var style = Assert.IsType<Dictionary<string, object?>>(
+            Assert.IsType<Dictionary<string, object?>>(result["properties"])["style"]);
+        Assert.Equal(["color"], Assert.IsType<List<string>>(style["required"]));
+    }
+
+    [Fact]
+    public void PropertyToJsonSchema_NullableEnumAndCustomExtensionRemainValid()
+    {
+        var nullableEnum = SchemaHelpers.PropertyToJsonSchema(
+            new Property { Kind = "string", Nullable = true, EnumValues = ["red", "green"] });
+        Assert.Equal(["string", "null"], Assert.IsType<List<string>>(nullableEnum["type"]));
+        Assert.Equal(["red", "green", null], Assert.IsType<List<object?>>(nullableEnum["enum"]));
+
+        var nullableCustom = SchemaHelpers.PropertyToJsonSchema(
+            new Property { Kind = "color-token", Nullable = true });
+        Assert.False(nullableCustom.ContainsKey("type"));
+        Assert.False(nullableCustom.ContainsKey("anyOf"));
+        Assert.False(nullableCustom.ContainsKey("oneOf"));
+    }
+
+    [Fact]
+    public void PropertyToJsonSchema_RejectsAmbiguousAndUnsupportedUnions()
+    {
+        Assert.Throws<InvalidOperationException>(() => SchemaHelpers.PropertyToJsonSchema(
+            new UnionProperty { Kind = "union" }));
+        Assert.Throws<InvalidOperationException>(() => SchemaHelpers.PropertyToJsonSchema(
+            new UnionProperty
+            {
+                Kind = "union",
+                OneOf = [new Property { Kind = "string" }],
+                AnyOf = [new Property { Kind = "integer" }],
+            }));
+        Assert.Throws<InvalidOperationException>(() => SchemaHelpers.PropertyToJsonSchema(
+            new UnionProperty
+            {
+                Kind = "union",
+                OneOf = [new Property { Kind = "string" }],
+            },
+            supportsOneOf: false));
     }
 
     [Theory]

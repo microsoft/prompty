@@ -610,6 +610,23 @@ class TestPropertyToJsonSchema:
         assert result["required"] == ["age"]
         assert result["additionalProperties"] is False
 
+    @pytest.mark.parametrize(
+        "union",
+        [
+            {"kind": "union"},
+            {
+                "kind": "union",
+                "oneOf": [{"kind": "string"}],
+                "anyOf": [{"kind": "integer"}],
+            },
+        ],
+    )
+    def test_invalid_union_is_rejected(self, union):
+        from prompty.model import Property
+
+        with pytest.raises(ValueError, match="exactly one non-empty composition"):
+            _property_to_json_schema(Property.load({"name": "choice", **union}))
+
 
 class TestOutputSchemaToWire:
     def test_simple_schema(self):

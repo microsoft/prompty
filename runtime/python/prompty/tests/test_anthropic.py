@@ -323,6 +323,54 @@ class TestOutputSchemaToWire:
         agent = _make_agent()
         assert _output_schema_to_wire(agent) is None
 
+    def test_nullable_union_and_enum_preserve_null_without_constraining_extensions(self):
+        agent = _make_agent(
+            outputs=[
+                {
+                    "name": "set_row_visual",
+                    "kind": "union",
+                    "nullable": True,
+                    "anyOf": [{"kind": "string"}, {"kind": "integer"}],
+                },
+                {
+                    "name": "palette",
+                    "kind": "string",
+                    "nullable": True,
+                    "enumValues": ["light", "dark"],
+                },
+                {"name": "extension", "kind": "visual-token", "nullable": True},
+            ]
+        )
+
+        schema = _output_schema_to_wire(agent)["format"]["schema"]["properties"]
+        assert schema["set_row_visual"]["anyOf"] == [
+            {"type": "string"},
+            {"type": "integer"},
+            {"type": "null"},
+        ]
+        assert schema["palette"] == {
+            "type": ["string", "null"],
+            "enum": ["light", "dark", None],
+        }
+        assert schema["extension"] == {}
+
+    @pytest.mark.parametrize(
+        "union",
+        [
+            {"kind": "union"},
+            {
+                "kind": "union",
+                "oneOf": [{"kind": "string"}],
+                "anyOf": [{"kind": "integer"}],
+            },
+        ],
+    )
+    def test_invalid_unions_raise_clear_error(self, union):
+        agent = _make_agent(outputs=[{"name": "choice", **union}])
+
+        with pytest.raises(ValueError, match="exactly one non-empty composition"):
+            _output_schema_to_wire(agent)
+
 
 class TestBuildChatArgs:
     def test_basic_args(self):

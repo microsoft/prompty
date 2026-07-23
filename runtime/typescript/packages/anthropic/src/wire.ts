@@ -284,13 +284,19 @@ function propertyToJsonSchema(prop: {
   }
 
   if (prop.kind === "union") {
-    if (prop.oneOf?.length) {
-      schema.oneOf = prop.oneOf.map((branch) =>
-        propertyToJsonSchema(branch as typeof prop),
+    const hasOneOf = Array.isArray(prop.oneOf) && prop.oneOf.length > 0;
+    const hasAnyOf = Array.isArray(prop.anyOf) && prop.anyOf.length > 0;
+    if (hasOneOf === hasAnyOf) {
+      throw new Error(
+        "UnionProperty must specify exactly one non-empty composition: oneOf or anyOf",
       );
     }
-    if (prop.anyOf?.length) {
-      schema.anyOf = prop.anyOf.map((branch) =>
+    if (hasOneOf) {
+      schema.oneOf = prop.oneOf!.map((branch) =>
+        propertyToJsonSchema(branch as typeof prop),
+      );
+    } else {
+      schema.anyOf = prop.anyOf!.map((branch) =>
         propertyToJsonSchema(branch as typeof prop),
       );
     }
@@ -301,14 +307,15 @@ function propertyToJsonSchema(prop: {
 }
 
 function addNullability(schema: Record<string, unknown>): void {
+  if (Array.isArray(schema.enum) && !schema.enum.includes(null)) {
+    schema.enum.push(null);
+  }
   if (typeof schema.type === "string") {
     schema.type = [schema.type, "null"];
   } else if (Array.isArray(schema.anyOf)) {
     schema.anyOf.push({ type: "null" });
   } else if (Array.isArray(schema.oneOf)) {
     schema.oneOf.push({ type: "null" });
-  } else {
-    schema.type = "null";
   }
 }
 
@@ -366,7 +373,7 @@ export function outputsToWire(agent: Prompty): Record<string, unknown> | null {
     properties[prop.name] = propertyToJsonSchema(
       prop as Parameters<typeof propertyToJsonSchema>[0],
     );
-    if (prop.required) required.push(prop.name);
+    required.push(prop.name);
   }
 
   return {

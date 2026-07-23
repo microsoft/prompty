@@ -364,6 +364,19 @@ describe("buildChatArgs structured output", () => {
       ],
     });
     expect(() => buildChatArgs(oneOfAgent, [])).toThrow("do not support UnionProperty.oneOf");
+
+    const invalidUnionAgent = makeAgent({
+      outputs: [
+        Property.load({
+          name: "choice",
+          kind: "union",
+          required: true,
+        }),
+      ],
+    });
+    expect(() => buildChatArgs(invalidUnionAgent, [])).toThrow(
+      "exactly one non-empty composition",
+    );
   });
 });
 

@@ -236,6 +236,53 @@ describe("wire format", () => {
     });
   });
 
+  it("preserves nullable union and enum semantics without constraining custom extensions", () => {
+    const config = outputsToWire({
+      outputs: [
+        {
+          name: "set_row_visual",
+          kind: "union",
+          nullable: true,
+          anyOf: [{ kind: "string" }, { kind: "integer" }],
+        },
+        {
+          name: "palette",
+          kind: "string",
+          nullable: true,
+          enumValues: ["light", "dark"],
+        },
+        { name: "extension", kind: "visual-token", nullable: true },
+      ],
+    } as any);
+    const properties = ((config as Record<string, any>).format.schema.properties) as Record<string, any>;
+
+    expect(properties.set_row_visual.anyOf).toEqual([
+      { type: "string" },
+      { type: "integer" },
+      { type: "null" },
+    ]);
+    expect(properties.palette).toEqual({
+      type: ["string", "null"],
+      enum: ["light", "dark", null],
+    });
+    expect(properties.extension).toEqual({});
+  });
+
+  it("rejects union schemas with both or neither composition", () => {
+    for (const union of [
+      { kind: "union" },
+      {
+        kind: "union",
+        oneOf: [{ kind: "string" }],
+        anyOf: [{ kind: "integer" }],
+      },
+    ]) {
+      expect(() =>
+        outputsToWire({ outputs: [{ name: "choice", ...union }] } as any),
+      ).toThrow("exactly one non-empty composition");
+    }
+  });
+
   it("returns null for empty outputs", () => {
     expect(outputsToWire({ outputs: [] } as any)).toBeNull();
     expect(outputsToWire({ outputs: undefined } as any)).toBeNull();

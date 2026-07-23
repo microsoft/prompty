@@ -189,9 +189,15 @@ def _property_to_json_schema(prop: Any) -> dict[str, Any]:
         schema["additionalProperties"] = False
 
     if getattr(prop, "kind", None) == "union":
-        if getattr(prop, "one_of", None):
+        one_of = getattr(prop, "one_of", None)
+        any_of = getattr(prop, "any_of", None)
+        has_one_of = isinstance(one_of, list) and bool(one_of)
+        has_any_of = isinstance(any_of, list) and bool(any_of)
+        if has_one_of == has_any_of:
+            raise ValueError("UnionProperty must specify exactly one non-empty composition: oneOf or anyOf")
+        if has_one_of:
             schema["oneOf"] = [_property_to_json_schema(branch) for branch in prop.one_of]
-        if getattr(prop, "any_of", None):
+        else:
             schema["anyOf"] = [_property_to_json_schema(branch) for branch in prop.any_of]
 
     if getattr(prop, "nullable", False):
@@ -202,14 +208,14 @@ def _property_to_json_schema(prop: Any) -> dict[str, Any]:
 
 def _add_nullability(schema: dict[str, Any]) -> None:
     """Add JSON Schema null support without emitting an invalid empty type."""
+    if isinstance(schema.get("enum"), list) and None not in schema["enum"]:
+        schema["enum"].append(None)
     if isinstance(schema.get("type"), str):
         schema["type"] = [schema["type"], "null"]
     elif isinstance(schema.get("anyOf"), list):
         schema["anyOf"].append({"type": "null"})
     elif isinstance(schema.get("oneOf"), list):
         schema["oneOf"].append({"type": "null"})
-    else:
-        schema["type"] = "null"
 
 
 def _schema_to_wire(properties: list[Any]) -> dict[str, Any]:
