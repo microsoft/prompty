@@ -1,0 +1,31 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FinalOutputPolicyRequest.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier
+  iteration:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based model loop iteration
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    default: []
+    description: Canonical messages at commit time
+  output:
+    description: Proposed final output
+  inputs:
+    description: Turn inputs
+required:
+  - sessionId
+  - turnId
+  - iteration
+  - messages
+description: Final output supplied to the host policy immediately before a success commit.

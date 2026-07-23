@@ -20,6 +20,7 @@ import "./model/discovery.tsp";
 
 // Pipeline (turn options + protocol contracts)
 import "./pipeline/invocation.tsp";
+import "./pipeline/engine.tsp";
 import "./pipeline/turn.tsp";
 import "./pipeline/renderer.tsp";
 import "./pipeline/parser.tsp";

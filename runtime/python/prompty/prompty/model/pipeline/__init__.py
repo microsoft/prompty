@@ -6,16 +6,26 @@
 ##########################################
 from ._CheckpointStore import CheckpointStore
 from ._CompactionConfig import CompactionConfig
+from ._ContextCandidate import ContextCandidate
+from ._ContextRequest import ContextRequest
 from ._DelegatedStateReference import DelegatedStateReference
+from ._EngineCheckpoint import EngineCheckpoint
+from ._EngineEvent import EngineEvent
+from ._EnginePermissionDecision import EnginePermissionDecision
 from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
+from ._FinalOutputPolicyRequest import FinalOutputPolicyRequest
+from ._FinalOutputPolicyResult import FinalOutputPolicyResult
+from ._HostPolicyRequest import HostPolicyRequest
+from ._HostPolicyResult import HostPolicyResult
 from ._HostToolExecutor import HostToolExecutor
 from ._InvocationContextDecision import InvocationContextDecision
 from ._InvocationContextState import InvocationContextState
 from ._ModelInvocationContextSnapshot import ModelInvocationContextSnapshot
 from ._ModelInvocationRequest import ModelInvocationRequest
 from ._ModelInvocationResponse import ModelInvocationResponse
+from ._ModelReconciliationState import ModelReconciliationState
 from ._ModelToolRequest import ModelToolRequest
 from ._ModelToolResult import ModelToolResult
 from ._Parser import Parser
@@ -26,8 +36,12 @@ from ._ReplayJournalRecord import ReplayJournalRecord
 from ._ReplayMismatch import ReplayMismatch
 from ._ReplayVerificationRequest import ReplayVerificationRequest
 from ._ReplayVerificationResult import ReplayVerificationResult
+from ._ResumeContext import ResumeContext
+from ._RetryPolicyRequest import RetryPolicyRequest
 from ._RunTurnRequest import RunTurnRequest
 from ._RunTurnResult import RunTurnResult
+from ._TurnCommit import TurnCommit
+from ._TurnEngineResult import TurnEngineResult
 from ._TurnModelRequest import TurnModelRequest
 from ._TurnModelResponse import TurnModelResponse
 from ._TurnOptions import TurnOptions
@@ -41,6 +55,20 @@ __all__ = [
     "ModelToolRequest",
     "ModelToolResult",
     "ModelInvocationResponse",
+    "EngineEvent",
+    "ModelReconciliationState",
+    "EnginePermissionDecision",
+    "EngineCheckpoint",
+    "ResumeContext",
+    "TurnCommit",
+    "TurnEngineResult",
+    "HostPolicyRequest",
+    "HostPolicyResult",
+    "FinalOutputPolicyRequest",
+    "FinalOutputPolicyResult",
+    "RetryPolicyRequest",
+    "ContextRequest",
+    "ContextCandidate",
     "CompactionConfig",
     "TurnOptions",
     "TurnModelRequest",

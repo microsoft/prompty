@@ -1,0 +1,121 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EngineCheckpoint.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: Stable unique identifier for this checkpoint
+  sessionId:
+    type: string
+    description: Stable session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier
+  runId:
+    type: string
+    description: Stable identifier of this engine run
+  parentRunId:
+    type: string
+    description: Run identifier of the parent run when this run was delegated
+  delegationDepth:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 0
+    description: Zero-based delegation nesting depth; 0 for a top-level run
+  iteration:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based model loop iteration captured by this checkpoint
+  lastSequence:
+    type: string
+    description: Last committed event sequence included in this checkpoint
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    default: []
+    description: Canonical conversation messages at checkpoint time
+  stablePrefixMessages:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 0
+    description: Number of leading messages eligible for provider prefix-cache reuse
+  inputs:
+    description: Turn inputs captured for deterministic resume
+  activeInvocationId:
+    type: string
+    description: Active model invocation identifier, when one is in flight
+  pendingToolRequests:
+    type: array
+    items:
+      $ref: ModelToolRequest.yaml
+    default: []
+    description: Tool requests awaiting execution or commitment
+  completedToolResults:
+    type: array
+    items:
+      $ref: ModelToolResult.yaml
+    default: []
+    description: Tool results already executed in this round
+  completedModelIterations:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 0
+    description: Number of fully completed model iterations
+  reconciliationRequired:
+    type: boolean
+    default: false
+    description: Whether the turn is blocked pending model outcome reconciliation
+  modelReconciliation:
+    $ref: ModelReconciliationState.yaml
+    description: Typed provider state when model outcome reconciliation is required
+  pendingOutput:
+    description: Final output pending commit, when computed
+  finalOutputReady:
+    type: boolean
+    default: false
+    description: Whether the final output is ready to commit
+  pendingModelResponse:
+    $ref: ModelInvocationResponse.yaml
+    description: Model response retained until all tool results form one conversation batch
+  resumeSameIteration:
+    type: boolean
+    default: false
+    description: Resume this exact iteration because the checkpoint precedes an external model effect
+  policyAppliedForIteration:
+    type: boolean
+    default: false
+    description: Whether the host policy rewrite is already durable for this iteration
+  contextState:
+    $ref: InvocationContextState.yaml
+    description: Provider-context state carried by this checkpoint
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific checkpoint metadata
+required:
+  - id
+  - sessionId
+  - turnId
+  - runId
+  - delegationDepth
+  - iteration
+  - lastSequence
+  - messages
+  - stablePrefixMessages
+  - completedModelIterations
+  - reconciliationRequired
+  - finalOutputReady
+  - resumeSameIteration
+  - policyAppliedForIteration
+  - contextState
+description: |-
+  Portable durable checkpoint emitted after a committed model/tool round.
+
+  A resumed run rebuilt from a checkpoint MUST NOT duplicate a model or tool
+  effect that the checkpoint already records as committed. Run identity is
+  carried so delegated runs checkpoint independently under their own run.

@@ -1,0 +1,52 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnCommit.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier
+  status:
+    anyOf:
+      - type: string
+        const: success
+      - type: string
+        const: failed
+      - type: string
+        const: cancelled
+      - type: string
+        const: reconciliation_required
+    description: Terminal status of the turn
+  output:
+    description: Final output when the turn succeeded
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    default: []
+    description: Canonical conversation messages at commit time
+  iterations:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of model loop iterations executed
+  lastSequence:
+    type: string
+    description: Last committed event sequence for the turn
+  contextState:
+    $ref: InvocationContextState.yaml
+    description: Provider-context state carried out of the turn
+  modelReconciliation:
+    $ref: ModelReconciliationState.yaml
+    description: Typed provider state when the commit requires model reconciliation
+required:
+  - sessionId
+  - turnId
+  - status
+  - messages
+  - iterations
+  - lastSequence
+  - contextState
+description: The committed outcome of a turn handed to post-commit consumers.

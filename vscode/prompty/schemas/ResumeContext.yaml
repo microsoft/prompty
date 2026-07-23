@@ -1,0 +1,30 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ResumeContext.yaml
+type: object
+properties:
+  checkpoint:
+    $ref: EngineCheckpoint.yaml
+    description: Checkpoint to resume from
+  maxIterations:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Maximum model loop iterations permitted for the resumed run
+  maxModelAttempts:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Maximum model attempts permitted per invocation in the resumed run
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific resume metadata
+required:
+  - checkpoint
+  - maxIterations
+  - maxModelAttempts
+description: |-
+  Input that drives resuming a turn from a durable checkpoint.
+
+  A host supplies this to restart an interrupted turn without duplicating a
+  committed model or tool effect.

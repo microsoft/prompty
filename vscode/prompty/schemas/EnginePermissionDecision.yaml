@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EnginePermissionDecision.yaml
+type: object
+properties:
+  approved:
+    type: boolean
+    description: Whether the tool request is authorized to execute
+  reason:
+    type: string
+    description: Human-readable reason for the decision
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific permission metadata
+required:
+  - approved
+description: A permission decision for one tool request.

@@ -1,0 +1,32 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelReconciliationState.yaml
+type: object
+properties:
+  invocationId:
+    type: string
+    description: Model invocation identifier awaiting reconciliation
+  request:
+    $ref: ModelInvocationRequest.yaml
+    description: The request whose outcome must be reconciled
+  failedAttempt:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based attempt number that failed with an unknown outcome
+  message:
+    type: string
+    description: Human-readable reason the outcome is indeterminate
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific reconciliation metadata
+required:
+  - invocationId
+  - request
+  - failedAttempt
+  - message
+description: |-
+  Durable state required to reconcile one indeterminate model invocation.
+
+  Retained when a model effect completed with an unknown outcome so a resumed
+  run can determine success or failure without re-invoking the provider.

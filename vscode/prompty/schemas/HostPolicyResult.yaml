@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: HostPolicyResult.yaml
+type: object
+properties:
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    default: []
+    description: Canonical messages to use for the invocation
+  stablePrefixMessages:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 0
+    description: Number of leading messages eligible for provider prefix-cache reuse
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific policy metadata
+required:
+  - messages
+  - stablePrefixMessages
+description: State rewrite produced by the host policy before a model invocation.

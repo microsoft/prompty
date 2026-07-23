@@ -10,20 +10,34 @@
 )]
 
 mod compaction_config_test;
+mod context_candidate_test;
+mod context_request_test;
 mod delegated_state_reference_test;
+mod engine_checkpoint_test;
+mod engine_event_test;
+mod engine_permission_decision_test;
+mod final_output_policy_request_test;
+mod final_output_policy_result_test;
+mod host_policy_request_test;
+mod host_policy_result_test;
 mod invocation_context_decision_test;
 mod invocation_context_state_test;
 mod model_invocation_context_snapshot_test;
 mod model_invocation_request_test;
 mod model_invocation_response_test;
+mod model_reconciliation_state_test;
 mod model_tool_request_test;
 mod model_tool_result_test;
 mod replay_journal_record_test;
 mod replay_mismatch_test;
 mod replay_verification_request_test;
 mod replay_verification_result_test;
+mod resume_context_test;
+mod retry_policy_request_test;
 mod run_turn_request_test;
 mod run_turn_result_test;
+mod turn_commit_test;
+mod turn_engine_result_test;
 mod turn_model_request_test;
 mod turn_model_response_test;
 mod turn_options_test;
