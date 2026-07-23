@@ -29,6 +29,7 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +boolean nullable
         +unknown default
         +unknown example
         +unknown[] enumValues
@@ -43,6 +44,12 @@ classDiagram
         +Property[] properties
     }
     Property <|-- ObjectProperty
+    class UnionProperty {
+        +string kind
+        +Property[] oneOf
+        +Property[] anyOf
+    }
+    Property <|-- UnionProperty
 ```
 
 ## Yaml Example
@@ -52,6 +59,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:
@@ -68,6 +76,7 @@ enumValues:
 | kind | string | The data type of the input property |
 | description | string | A short description of the input property |
 | required | boolean | Whether the property is required |
+| nullable | boolean | Whether the property also accepts a JSON null value |
 | default | unknown | The default value of the property - this represents the default value if none is provided |
 | example | unknown | Example value used for either initialization or tooling |
 | enumValues | unknown[] | Allowed enumeration values for the property |
@@ -78,6 +87,7 @@ The following types extend `Property`:
 
 - [ArrayProperty](../arrayproperty/)
 - [ObjectProperty](../objectproperty/)
+- [UnionProperty](../unionproperty/)
 
 ## Alternate Constructions
 

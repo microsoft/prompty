@@ -30,6 +30,8 @@ class Property:
         A short description of the input property
     required : Optional[bool]
         Whether the property is required
+    nullable : Optional[bool]
+        Whether the property also accepts a JSON null value
     default : Optional[Any]
         The default value of the property - this represents the default value if none is provided
     example : Optional[Any]
@@ -44,6 +46,7 @@ class Property:
     kind: str = field(default="")
     description: str | None = None
     required: bool | None = None
+    nullable: bool | None = None
     default: Any | None = None
     example: Any | None = None
     enum_values: list[Any] = field(default_factory=list)
@@ -106,6 +109,8 @@ class Property:
             instance.description = data["description"]
         if data is not None and "required" in data:
             instance.required = data["required"]
+        if data is not None and "nullable" in data:
+            instance.nullable = data["nullable"]
         if data is not None and "default" in data:
             instance.default = data["default"]
         if data is not None and "example" in data:
@@ -125,6 +130,8 @@ class Property:
                 return ArrayProperty.load(data, context)
             elif discriminator_value == "object":
                 return ObjectProperty.load(data, context)
+            elif discriminator_value == "union":
+                return UnionProperty.load(data, context)
 
             else:
                 # create new instance (stop recursion)
@@ -155,6 +162,8 @@ class Property:
             result["description"] = obj.description
         if obj.required is not None:
             result["required"] = obj.required
+        if obj.nullable is not None:
+            result["nullable"] = obj.nullable
         if obj.default is not None:
             result["default"] = obj.default
         if obj.example is not None:
@@ -389,6 +398,155 @@ class ObjectProperty(Property):
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ObjectProperty instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class UnionProperty(Property):
+    """Represents a JSON Schema union property.
+
+    Use `oneOf` when exactly one branch must match, or `anyOf` when one or more
+    branches may match. The alternatives are full Prompty properties so unions
+    remain portable across generated runtimes.
+
+    Attributes
+    ----------
+    kind : str
+
+    one_of : Optional[list[Property]]
+        Alternative property schemas where exactly one branch must match
+    any_of : Optional[list[Property]]
+        Alternative property schemas where one or more branches may match
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="union")
+    one_of: list[Property] = field(default_factory=list)
+    any_of: list[Property] = field(default_factory=list)
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "UnionProperty":
+        """Load a UnionProperty instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            UnionProperty: The loaded UnionProperty instance.
+
+        """
+
+        if context is not None:
+            data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for UnionProperty: {data}")
+
+        # create new instance
+        instance = UnionProperty()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "oneOf" in data:
+            instance.one_of = UnionProperty.load_one_of(data["oneOf"], context)
+        if data is not None and "anyOf" in data:
+            instance.any_of = UnionProperty.load_any_of(data["anyOf"], context)
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    @staticmethod
+    def load_one_of(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if isinstance(data, dict):
+            # convert simple named oneOf to list of Property
+            result = []
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
+                else:
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "kind": v})
+            data = result
+        return [Property.load(item, context) for item in data]
+
+    @staticmethod
+    def save_one_of(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+        if context is None:
+            context = SaveContext()
+
+        # This type doesn't have a 'name' property, so always use array format
+        return [item.save(context) for item in items]
+
+    @staticmethod
+    def load_any_of(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if isinstance(data, dict):
+            # convert simple named anyOf to list of Property
+            result = []
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    # value is an object, spread its properties
+                    result.append({"name": k, **v})
+                else:
+                    # value is a scalar, use it as the primary property
+                    result.append({"name": k, "kind": v})
+            data = result
+        return [Property.load(item, context) for item in data]
+
+    @staticmethod
+    def save_any_of(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+        if context is None:
+            context = SaveContext()
+
+        # This type doesn't have a 'name' property, so always use array format
+        return [item.save(context) for item in items]
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the UnionProperty instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        if obj.one_of is not None:
+            result["oneOf"] = UnionProperty.save_one_of(obj.one_of, context)
+        if obj.any_of is not None:
+            result["anyOf"] = UnionProperty.save_any_of(obj.any_of, context)
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the UnionProperty instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the UnionProperty instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

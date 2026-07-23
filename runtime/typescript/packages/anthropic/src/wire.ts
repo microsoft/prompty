@@ -245,14 +245,17 @@ function schemaToWire(properties: unknown[]): Record<string, unknown> {
 /** Convert a single Property to a JSON Schema definition. */
 function propertyToJsonSchema(prop: {
   kind?: string;
+  required?: boolean;
   description?: string;
   enumValues?: unknown[];
   items?: unknown;
   properties?: unknown[];
+  nullable?: boolean;
+  oneOf?: unknown[];
+  anyOf?: unknown[];
 }): Record<string, unknown> {
-  const schema: Record<string, unknown> = {
-    type: KIND_TO_JSON_TYPE[prop.kind ?? "string"] ?? "string",
-  };
+  const jsonType = KIND_TO_JSON_TYPE[prop.kind ?? ""];
+  const schema: Record<string, unknown> = jsonType ? { type: jsonType } : {};
 
   if (prop.description) schema.description = prop.description;
   if (prop.enumValues && prop.enumValues.length > 0) schema.enum = prop.enumValues;
@@ -270,18 +273,43 @@ function propertyToJsonSchema(prop: {
       for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
         if (!p.name) continue;
         nested[p.name] = propertyToJsonSchema(p);
-        req.push(p.name);
+        if (p.required) req.push(p.name);
       }
       schema.properties = nested;
-      schema.required = req;
+      if (req.length > 0) schema.required = req;
     } else {
       schema.properties = {};
-      schema.required = [];
     }
     schema.additionalProperties = false;
   }
 
+  if (prop.kind === "union") {
+    if (prop.oneOf?.length) {
+      schema.oneOf = prop.oneOf.map((branch) =>
+        propertyToJsonSchema(branch as typeof prop),
+      );
+    }
+    if (prop.anyOf?.length) {
+      schema.anyOf = prop.anyOf.map((branch) =>
+        propertyToJsonSchema(branch as typeof prop),
+      );
+    }
+  }
+
+  if (prop.nullable) addNullability(schema);
   return schema;
+}
+
+function addNullability(schema: Record<string, unknown>): void {
+  if (typeof schema.type === "string") {
+    schema.type = [schema.type, "null"];
+  } else if (Array.isArray(schema.anyOf)) {
+    schema.anyOf.push({ type: "null" });
+  } else if (Array.isArray(schema.oneOf)) {
+    schema.oneOf.push({ type: "null" });
+  } else {
+    schema.type = "null";
+  }
 }
 
 /**
@@ -338,7 +366,7 @@ export function outputsToWire(agent: Prompty): Record<string, unknown> | null {
     properties[prop.name] = propertyToJsonSchema(
       prop as Parameters<typeof propertyToJsonSchema>[0],
     );
-    required.push(prop.name);
+    if (prop.required) required.push(prop.name);
   }
 
   return {
@@ -347,7 +375,7 @@ export function outputsToWire(agent: Prompty): Record<string, unknown> | null {
       schema: {
         type: "object",
         properties,
-        required,
+        ...(required.length > 0 ? { required } : {}),
         additionalProperties: false,
       },
     },

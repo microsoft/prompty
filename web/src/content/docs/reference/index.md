@@ -57,6 +57,7 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +boolean nullable
         +unknown default
         +unknown example
         +unknown[] enumValues
@@ -81,6 +82,7 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +boolean nullable
         +unknown default
         +unknown example
         +unknown[] enumValues
@@ -230,6 +232,7 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +boolean nullable
         +unknown default
         +unknown example
         +unknown[] enumValues

@@ -164,6 +164,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
         "UsageChunk",
         "ValidationError",
         "ValidationResult"
@@ -325,6 +326,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "core/Property.cs",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "core/Property.cs",
@@ -1157,6 +1165,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -1927,6 +1936,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
         "UsageChunk",
         "ValidationError",
         "ValidationResult"
@@ -2088,6 +2098,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "property.go",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "property.go",
@@ -2920,6 +2937,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -3689,6 +3707,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
         "UsageChunk",
         "ValidationError",
         "ValidationResult"
@@ -3850,6 +3869,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "Property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "Property",
@@ -4682,6 +4708,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -5452,6 +5479,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
         "UsageChunk",
         "ValidationError",
         "ValidationResult"
@@ -5613,6 +5641,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": ".core",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": ".core",
@@ -6445,6 +6480,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -7115,6 +7151,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
         "UsageChunk",
         "ValidationError",
         "ValidationResult"
@@ -7276,6 +7313,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "core::property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "core::property",
@@ -8108,6 +8152,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -8780,6 +8825,7 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
         "UsageChunk",
         "ValidationError",
         "ValidationResult"
@@ -8941,6 +8987,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "./core/property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "./core/property",
@@ -9773,6 +9826,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],

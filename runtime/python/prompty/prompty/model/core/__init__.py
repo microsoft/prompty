@@ -10,6 +10,7 @@ from ._Property import (
     ArrayProperty,
     ObjectProperty,
     Property,
+    UnionProperty,
 )
 from ._ValidationError import ValidationError
 from ._ValidationResult import ValidationResult
@@ -18,6 +19,7 @@ __all__ = [
     "Property",
     "ArrayProperty",
     "ObjectProperty",
+    "UnionProperty",
     "InvokerError",
     "ValidationError",
     "FileNotFoundError",

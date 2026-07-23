@@ -55,6 +55,11 @@ public partial class Property
     public bool? Required { get; set; }
 
     /// <summary>
+    /// Whether the property also accepts a JSON null value
+    /// </summary>
+    public bool? Nullable { get; set; }
+
+    /// <summary>
     /// The default value of the property - this represents the default value if none is provided
     /// </summary>
     public object? Default { get; set; }
@@ -112,6 +117,11 @@ public partial class Property
             instance.Required = Convert.ToBoolean(requiredValue);
         }
 
+        if (data.TryGetValue("nullable", out var nullableValue) && nullableValue is not null)
+        {
+            instance.Nullable = Convert.ToBoolean(nullableValue);
+        }
+
         if (data.TryGetValue("default", out var defaultValue) && defaultValue is not null)
         {
             instance.Default = defaultValue;
@@ -147,6 +157,7 @@ public partial class Property
             {
                 "array" => ArrayProperty.Load(data, context),
                 "object" => ObjectProperty.Load(data, context),
+                "union" => UnionProperty.Load(data, context),
                 _ => new Property(),
             };
         }
@@ -192,6 +203,12 @@ public partial class Property
         if (obj.Required is not null)
         {
             result["required"] = obj.Required;
+        }
+
+
+        if (obj.Nullable is not null)
+        {
+            result["nullable"] = obj.Nullable;
         }
 
 

@@ -570,8 +570,7 @@ class TestPropertyToJsonSchema:
         assert "name" in result["properties"]
         assert "age" in result["properties"]
         assert result["properties"]["age"]["type"] == "integer"
-        # strict mode: ALL properties must be in required
-        assert result["required"] == ["name", "age"]
+        assert result["required"] == ["age"]
         assert result["additionalProperties"] is False
 
 
@@ -594,8 +593,7 @@ class TestOutputSchemaToWire:
         assert schema["properties"]["answer"]["type"] == "string"
         assert schema["properties"]["answer"]["description"] == "The answer"
         assert schema["properties"]["confidence"]["type"] == "number"
-        # strict mode: ALL properties must be in required
-        assert schema["required"] == ["answer", "confidence"]
+        assert schema["required"] == ["confidence"]
         assert schema["additionalProperties"] is False
 
     def test_no_output_schema(self):

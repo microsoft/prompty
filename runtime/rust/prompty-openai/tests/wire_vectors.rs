@@ -5,7 +5,7 @@
 
 use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
-use prompty::types::{ContentPart, ContentPartKind, Message, Role};
+use prompty::types::{ContentPart, Message, Role};
 use prompty_openai::wire;
 use serde_json::{Value, json};
 
@@ -205,3 +205,120 @@ wire_test!(chat_image_base64);
 wire_test!(responses_simple);
 wire_test!(responses_with_tools);
 wire_test!(responses_structured_output);
+
+fn function_parameters_schema(parameters: Value) -> Value {
+    let agent = Prompty::load_from_value(
+        &json!({
+            "name": "set-row-visual-test",
+            "kind": "prompt",
+            "model": { "id": "gpt-4", "provider": "openai" },
+            "instructions": "test",
+            "tools": [{
+                "name": "set_row_visual",
+                "kind": "function",
+                "parameters": parameters,
+            }],
+        }),
+        &LoadContext::default(),
+    );
+
+    wire::build_chat_args(&agent, &[])
+        .pointer("/tools/0/function/parameters")
+        .cloned()
+        .expect("function parameters schema")
+}
+
+fn assert_no_empty_type(schema: &Value) {
+    match schema {
+        Value::Object(values) => {
+            assert_ne!(
+                values.get("type"),
+                Some(&Value::String(String::new())),
+                "schemas must not emit an empty JSON Schema type: {schema}"
+            );
+            for value in values.values() {
+                assert_no_empty_type(value);
+            }
+        }
+        Value::Array(values) => {
+            for value in values {
+                assert_no_empty_type(value);
+            }
+        }
+        _ => {}
+    }
+}
+
+#[test]
+fn set_row_visual_schema_supports_nullable_unions_and_nested_optionality() {
+    let schema = function_parameters_schema(json!([
+        {
+            "name": "row",
+            "kind": "object",
+            "required": true,
+            "properties": [
+                {
+                    "name": "color",
+                    "kind": "string",
+                    "nullable": true,
+                    "required": true
+                },
+                {
+                    "name": "border",
+                    "kind": "union",
+                    "oneOf": [
+                        { "kind": "string", "enumValues": ["thin"] },
+                        { "kind": "string", "enumValues": ["thick"] }
+                    ],
+                    "required": false
+                },
+                {
+                    "name": "fill",
+                    "kind": "union",
+                    "anyOf": [
+                        { "kind": "string" },
+                        {
+                            "kind": "object",
+                            "properties": [
+                                { "name": "theme", "kind": "string", "required": true },
+                                { "name": "tint", "kind": "float", "required": false }
+                            ]
+                        }
+                    ],
+                    "required": true
+                }
+            ]
+        }
+    ]));
+
+    assert_eq!(schema["properties"]["row"]["type"], "object");
+    assert_eq!(
+        schema["properties"]["row"]["required"],
+        json!(["color", "fill"])
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["color"]["type"],
+        json!(["string", "null"])
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["border"]["oneOf"][0]["type"],
+        "string"
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["border"]["oneOf"][1]["type"],
+        "string"
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["fill"]["anyOf"][0]["type"],
+        "string"
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["fill"]["anyOf"][1]["type"],
+        "object"
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["fill"]["anyOf"][1]["required"],
+        json!(["theme"])
+    );
+    assert_no_empty_type(&schema);
+}

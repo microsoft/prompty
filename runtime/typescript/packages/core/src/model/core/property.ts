@@ -11,6 +11,7 @@ export class Property {
   kind: string = "";
   description?: string | undefined;
   required?: boolean | undefined;
+  nullable?: boolean | undefined;
   default?: unknown | undefined;
   example?: unknown | undefined;
   enumValues?: unknown[] = [];
@@ -23,6 +24,9 @@ export class Property {
     }
     if (init?.required !== undefined) {
       this.required = init.required;
+    }
+    if (init?.nullable !== undefined) {
+      this.nullable = init.nullable;
     }
     if (init?.default !== undefined) {
       this.default = init.default;
@@ -96,6 +100,9 @@ export class Property {
     if (data["required"] !== undefined && data["required"] !== null) {
       instance.required = Boolean(data["required"]);
     }
+    if (data["nullable"] !== undefined && data["nullable"] !== null) {
+      instance.nullable = Boolean(data["nullable"]);
+    }
     if (data["default"] !== undefined && data["default"] !== null) {
       instance.default = data["default"] as unknown;
     }
@@ -124,6 +131,8 @@ export class Property {
           return ArrayProperty.load(data, context);
         case "object":
           return ObjectProperty.load(data, context);
+        case "union":
+          return UnionProperty.load(data, context);
         default:
           return new Property();
       }
@@ -154,6 +163,9 @@ export class Property {
     }
     if (obj.required !== undefined && obj.required !== null) {
       result["required"] = obj.required;
+    }
+    if (obj.nullable !== undefined && obj.nullable !== null) {
+      result["nullable"] = obj.nullable;
     }
     if (obj.default !== undefined && obj.default !== null) {
       result["default"] = obj.default;
@@ -400,6 +412,173 @@ export class ObjectProperty extends Property {
     const { parse } = require("yaml");
     const data = parse(yaml);
     return ObjectProperty.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class UnionProperty extends Property {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  kind: string = "union";
+  oneOf?: Property[] = [];
+  anyOf?: Property[] = [];
+
+  constructor(init?: Partial<UnionProperty>) {
+    super(init);
+    this.kind = init?.kind ?? "union";
+    if (init?.oneOf !== undefined) {
+      this.oneOf = init.oneOf;
+    }
+    if (init?.anyOf !== undefined) {
+      this.anyOf = init.anyOf;
+    }
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): UnionProperty {
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new UnionProperty();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+    if (data["oneOf"] !== undefined && data["oneOf"] !== null) {
+      instance.oneOf = UnionProperty.loadOneOf(
+        data["oneOf"] as unknown[],
+        context,
+      );
+    }
+    if (data["anyOf"] !== undefined && data["anyOf"] !== null) {
+      instance.anyOf = UnionProperty.loadAnyOf(
+        data["anyOf"] as unknown[],
+        context,
+      );
+    }
+
+    if (context) {
+      return context.processOutput(instance) as UnionProperty;
+    }
+    return instance;
+  }
+
+  static loadOneOf(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Property[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, kind: v });
+        }
+      }
+      data = result;
+    }
+    return data.map((item) =>
+      Property.load(item as Record<string, unknown>, context),
+    );
+  }
+
+  static saveOneOf(
+    items: Property[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
+    }
+
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map((item) => item.save(context));
+  }
+
+  static loadAnyOf(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Property[] {
+    if (!Array.isArray(data)) {
+      // Convert dict/object format to array format
+      const result: Record<string, unknown>[] = [];
+      for (const [k, v] of Object.entries(data)) {
+        if (typeof v === "object" && v !== null && !Array.isArray(v)) {
+          result.push({ name: k, ...(v as Record<string, unknown>) });
+        } else {
+          result.push({ name: k, kind: v });
+        }
+      }
+      data = result;
+    }
+    return data.map((item) =>
+      Property.load(item as Record<string, unknown>, context),
+    );
+  }
+
+  static saveAnyOf(
+    items: Property[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
+    if (!context) {
+      context = new SaveContext();
+    }
+
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map((item) => item.save(context));
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+    if (obj.oneOf !== undefined && obj.oneOf !== null) {
+      result["oneOf"] = UnionProperty.saveOneOf(obj.oneOf, context);
+    }
+    if (obj.anyOf !== undefined && obj.anyOf !== null) {
+      result["anyOf"] = UnionProperty.saveAnyOf(obj.anyOf, context);
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): UnionProperty {
+    const data = JSON.parse(json);
+    return UnionProperty.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): UnionProperty {
+    const { parse } = require("yaml");
+    const data = parse(yaml);
+    return UnionProperty.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

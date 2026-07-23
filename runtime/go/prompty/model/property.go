@@ -22,6 +22,7 @@ type Property struct {
 	Kind        string        `json:"kind" yaml:"kind"`
 	Description *string       `json:"description,omitempty" yaml:"description,omitempty"`
 	Required    *bool         `json:"required,omitempty" yaml:"required,omitempty"`
+	Nullable    *bool         `json:"nullable,omitempty" yaml:"nullable,omitempty"`
 	Default     *interface{}  `json:"default,omitempty" yaml:"default,omitempty"`
 	Example     *interface{}  `json:"example,omitempty" yaml:"example,omitempty"`
 	EnumValues  []interface{} `json:"enumValues,omitempty" yaml:"enumValues,omitempty"`
@@ -40,6 +41,8 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 				return LoadArrayProperty(data, ctx)
 			case "object":
 				return LoadObjectProperty(data, ctx)
+			case "union":
+				return LoadUnionProperty(data, ctx)
 			}
 		}
 	}
@@ -78,6 +81,10 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 			v := val.(bool)
 			result.Required = &v
 		}
+		if val, ok := m["nullable"]; ok && val != nil {
+			v := val.(bool)
+			result.Nullable = &v
+		}
 		if val, ok := m["default"]; ok && val != nil {
 			result.Default = &val
 		}
@@ -105,6 +112,9 @@ func (obj Property) Save(ctx *SaveContext) map[string]interface{} {
 	}
 	if obj.Required != nil {
 		result["required"] = *obj.Required
+	}
+	if obj.Nullable != nil {
+		result["nullable"] = *obj.Nullable
 	}
 	if obj.Default != nil {
 		result["default"] = *obj.Default
@@ -338,4 +348,130 @@ func ObjectPropertyFromYAML(yamlStr string) (ObjectProperty, error) {
 	}
 	ctx := NewLoadContext()
 	return LoadObjectProperty(data, ctx)
+}
+
+// UnionProperty represents Represents a JSON Schema union property.
+//
+// Use `oneOf` when exactly one branch must match, or `anyOf` when one or more
+// branches may match. The alternatives are full Prompty properties so unions
+// remain portable across generated runtimes.
+
+type UnionProperty struct {
+	Kind  string        `json:"kind" yaml:"kind"`
+	OneOf []interface{} `json:"oneOf,omitempty" yaml:"oneOf,omitempty"`
+	AnyOf []interface{} `json:"anyOf,omitempty" yaml:"anyOf,omitempty"`
+}
+
+// LoadUnionProperty creates a UnionProperty from a map[string]interface{}
+func LoadUnionProperty(data interface{}, ctx *LoadContext) (UnionProperty, error) {
+	result := UnionProperty{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["oneOf"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.OneOf = make([]interface{}, len(arr))
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := LoadProperty(item, ctx)
+						// Polymorphic type - store as interface{}
+						result.OneOf[i] = loaded
+					}
+				}
+			}
+		}
+		if val, ok := m["anyOf"]; ok && val != nil {
+			if arr, ok := val.([]interface{}); ok {
+				result.AnyOf = make([]interface{}, len(arr))
+				for i, v := range arr {
+					if item, ok := v.(map[string]interface{}); ok {
+						loaded, _ := LoadProperty(item, ctx)
+						// Polymorphic type - store as interface{}
+						result.AnyOf[i] = loaded
+					}
+				}
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes UnionProperty to map[string]interface{}
+func (obj UnionProperty) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+	if obj.OneOf != nil {
+		arr := make([]interface{}, len(obj.OneOf))
+		for i, item := range obj.OneOf {
+			// Handle polymorphic type via type switch
+			switch v := item.(type) {
+			case interface {
+				Save(*SaveContext) map[string]interface{}
+			}:
+				arr[i] = v.Save(ctx)
+			default:
+				arr[i] = item
+			}
+		}
+		result["oneOf"] = arr
+	}
+	if obj.AnyOf != nil {
+		arr := make([]interface{}, len(obj.AnyOf))
+		for i, item := range obj.AnyOf {
+			// Handle polymorphic type via type switch
+			switch v := item.(type) {
+			case interface {
+				Save(*SaveContext) map[string]interface{}
+			}:
+				arr[i] = v.Save(ctx)
+			default:
+				arr[i] = item
+			}
+		}
+		result["anyOf"] = arr
+	}
+
+	return result
+}
+
+// ToJSON serializes UnionProperty to JSON string
+func (obj *UnionProperty) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes UnionProperty to YAML string
+func (obj *UnionProperty) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates UnionProperty from JSON string
+func UnionPropertyFromJSON(jsonStr string) (UnionProperty, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return UnionProperty{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadUnionProperty(data, ctx)
+}
+
+// FromYAML creates UnionProperty from YAML string
+func UnionPropertyFromYAML(yamlStr string) (UnionProperty, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return UnionProperty{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadUnionProperty(data, ctx)
 }

@@ -259,31 +259,24 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     let mut required = Vec::new();
 
     for prop in outputs {
-        let kind_str = prop.kind_str();
-        let json_type = match kind_str {
-            "float" | "number" => "number",
-            other => other,
-        };
-
-        let mut prop_schema = Map::new();
-        prop_schema.insert("type".into(), json!(json_type));
-        if let Some(ref desc) = prop.description {
-            prop_schema.insert("description".into(), json!(desc));
+        properties.insert(prop.name.clone(), property_to_json_schema(prop));
+        if prop.required.unwrap_or(false) {
+            required.push(json!(prop.name));
         }
-
-        properties.insert(prop.name.clone(), Value::Object(prop_schema));
-        required.push(json!(prop.name));
     }
+
+    let mut schema = Map::new();
+    schema.insert("type".into(), json!("object"));
+    schema.insert("properties".into(), Value::Object(properties));
+    if !required.is_empty() {
+        schema.insert("required".into(), Value::Array(required));
+    }
+    schema.insert("additionalProperties".into(), Value::Bool(false));
 
     Some(json!({
         "format": {
             "type": "json_schema",
-            "schema": {
-                "type": "object",
-                "properties": properties,
-                "required": required,
-                "additionalProperties": false,
-            }
+            "schema": Value::Object(schema),
         }
     }))
 }
@@ -324,16 +317,9 @@ fn tool_to_wire(tool: &Tool) -> Value {
 /// Convert a single Property to a recursive JSON Schema definition.
 fn property_to_json_schema(prop: &Property) -> Value {
     let mut schema = Map::new();
-    let json_type = match prop.kind_str() {
-        "string" => "string",
-        "integer" => "integer",
-        "float" | "number" => "number",
-        "boolean" => "boolean",
-        "array" => "array",
-        "object" => "object",
-        other => other,
-    };
-    schema.insert("type".into(), json!(json_type));
+    if let Some(json_type) = kind_to_json_type(prop.kind_str()) {
+        schema.insert("type".into(), json!(json_type));
+    }
 
     if let Some(ref desc) = prop.description {
         schema.insert("description".into(), json!(desc));
@@ -361,20 +347,68 @@ fn property_to_json_schema(prop: &Property) -> Value {
                         continue;
                     }
                     nested.insert(p.name.clone(), property_to_json_schema(p));
-                    req.push(json!(p.name));
+                    if p.required.unwrap_or(false) {
+                        req.push(json!(p.name));
+                    }
                 }
                 schema.insert("properties".into(), Value::Object(nested));
-                schema.insert("required".into(), Value::Array(req));
+                if !req.is_empty() {
+                    schema.insert("required".into(), Value::Array(req));
+                }
             } else {
                 schema.insert("properties".into(), json!({}));
-                schema.insert("required".into(), json!([]));
             }
             schema.insert("additionalProperties".into(), Value::Bool(false));
+        }
+        PropertyKind::Union { one_of, any_of } => {
+            if !one_of.is_empty() {
+                schema.insert(
+                    "oneOf".into(),
+                    Value::Array(one_of.iter().map(property_to_json_schema).collect()),
+                );
+            }
+            if !any_of.is_empty() {
+                schema.insert(
+                    "anyOf".into(),
+                    Value::Array(any_of.iter().map(property_to_json_schema).collect()),
+                );
+            }
         }
         _ => {}
     }
 
+    if prop.nullable.unwrap_or(false) {
+        add_nullability(&mut schema);
+    }
+
     Value::Object(schema)
+}
+
+fn add_nullability(schema: &mut Map<String, Value>) {
+    if let Some(Value::String(json_type)) = schema.remove("type") {
+        schema.insert(
+            "type".into(),
+            Value::Array(vec![Value::String(json_type), Value::String("null".into())]),
+        );
+    } else if let Some(Value::Array(branches)) = schema.get_mut("anyOf") {
+        branches.push(json!({ "type": "null" }));
+    } else if let Some(Value::Array(branches)) = schema.get_mut("oneOf") {
+        branches.push(json!({ "type": "null" }));
+    } else {
+        schema.insert("type".into(), json!("null"));
+    }
+}
+
+fn kind_to_json_type(kind: &str) -> Option<&'static str> {
+    match kind {
+        "string" => Some("string"),
+        "integer" => Some("integer"),
+        "float" | "number" => Some("number"),
+        "boolean" => Some("boolean"),
+        "array" => Some("array"),
+        "object" => Some("object"),
+        _ => None,
+    }
 }
 
 /// Convert tool parameters to JSON Schema for `input_schema`.

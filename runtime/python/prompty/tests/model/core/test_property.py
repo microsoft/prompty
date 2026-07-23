@@ -13,6 +13,7 @@ def test_load_json_property():
       "kind": "string",
       "description": "A description of the input property",
       "required": true,
+      "nullable": true,
       "default": "default value",
       "example": "example value",
       "enumValues": [
@@ -29,6 +30,7 @@ def test_load_json_property():
     assert instance.kind == "string"
     assert instance.description == "A description of the input property"
     assert instance.required
+    assert instance.nullable
     assert instance.default == "default value"
     assert instance.example == "example value"
 
@@ -39,6 +41,7 @@ def test_load_yaml_property():
     kind: string
     description: A description of the input property
     required: true
+    nullable: true
     default: default value
     example: example value
     enumValues:
@@ -54,6 +57,7 @@ def test_load_yaml_property():
     assert instance.kind == "string"
     assert instance.description == "A description of the input property"
     assert instance.required
+    assert instance.nullable
     assert instance.default == "default value"
     assert instance.example == "example value"
 
@@ -66,6 +70,7 @@ def test_roundtrip_json_property():
       "kind": "string",
       "description": "A description of the input property",
       "required": true,
+      "nullable": true,
       "default": "default value",
       "example": "example value",
       "enumValues": [
@@ -84,6 +89,7 @@ def test_roundtrip_json_property():
     assert reloaded.kind == "string"
     assert reloaded.description == "A description of the input property"
     assert reloaded.required
+    assert reloaded.nullable
     assert reloaded.default == "default value"
     assert reloaded.example == "example value"
 
@@ -96,6 +102,7 @@ def test_to_json_property():
       "kind": "string",
       "description": "A description of the input property",
       "required": true,
+      "nullable": true,
       "default": "default value",
       "example": "example value",
       "enumValues": [
@@ -121,6 +128,7 @@ def test_to_yaml_property():
       "kind": "string",
       "description": "A description of the input property",
       "required": true,
+      "nullable": true,
       "default": "default value",
       "example": "example value",
       "enumValues": [

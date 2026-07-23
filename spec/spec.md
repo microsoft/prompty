@@ -1500,7 +1500,7 @@ function schema_to_wire(properties: list[Property]) → dict:
   schema = { type: "object", properties: {}, required: [] }
 
   for prop in properties:
-    prop_schema = { type: map_kind_to_json_type(prop.kind) }
+    prop_schema = property_to_json_schema(prop)
     if prop.description:
       prop_schema.description = prop.description
     if prop.enumValues:
@@ -1515,6 +1515,17 @@ function schema_to_wire(properties: list[Property]) → dict:
   return schema
 ```
 
+`property_to_json_schema` MUST recursively convert array items and object
+properties. Object `required` arrays MUST contain only children whose
+`Property.required` is true. For a concrete property with `nullable: true`,
+the JSON Schema `type` MUST include both the concrete type and `"null"`.
+
+`kind: "union"` represents a portable union property. Its `oneOf` and `anyOf`
+arrays contain full `Property` branches and MUST be emitted as the matching
+JSON Schema composition keywords. A provider MUST NOT emit an empty JSON
+Schema `type`; unsupported or extension kinds may omit `type`, which is a
+valid unconstrained JSON Schema.
+
 **Kind → JSON Schema type mapping.** Implementations MUST use this table:
 
 | Property `kind` | JSON Schema `type` |
@@ -1525,6 +1536,7 @@ function schema_to_wire(properties: list[Property]) → dict:
 | `boolean`       | `boolean`          |
 | `array`         | `array`            |
 | `object`        | `object`           |
+| `union`         | composition only (`oneOf` / `anyOf`) |
 
 #### §7.1.5 Options Mapping
 

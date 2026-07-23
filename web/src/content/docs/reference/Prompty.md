@@ -47,6 +47,7 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +boolean nullable
         +unknown default
         +unknown example
         +unknown[] enumValues
@@ -206,7 +207,7 @@ instructions: |-
 | displayName | string | Display name for UI purposes |
 | description | string | Description of the prompt's purpose |
 | metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties |
-| inputs | [Property[]](../property/) | Input parameters that participate in template rendering(Related Types: [ArrayProperty](../arrayproperty/), [ObjectProperty](../objectproperty/)) |
+| inputs | [Property[]](../property/) | Input parameters that participate in template rendering(Related Types: [ArrayProperty](../arrayproperty/), [ObjectProperty](../objectproperty/), [UnionProperty](../unionproperty/)) |
 | outputs | [Property[]](../property/) | Expected output format and structure |
 | model | [Model](../model/) | AI model configuration |
 | tools | [Tool[]](../tool/) | Tools available for extended functionality(Related Types: [FunctionTool](../functiontool/), [CustomTool](../customtool/), [McpTool](../mcptool/), [OpenApiTool](../openapitool/), [PromptyTool](../promptytool/)) |

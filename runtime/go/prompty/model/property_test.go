@@ -20,6 +20,7 @@ func TestPropertyLoadJSON(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -51,6 +52,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:
@@ -82,6 +84,7 @@ func TestPropertyFromJSON(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -108,6 +111,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:
@@ -134,6 +138,7 @@ func TestPropertyRoundtrip(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -166,6 +171,7 @@ func TestPropertyToJSON(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -198,6 +204,7 @@ func TestPropertyToYAML(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [

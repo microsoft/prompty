@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: UnionProperty.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: union
+  oneOf:
+    type: array
+    items:
+      $ref: Property.yaml
+    default: []
+    description: Alternative property schemas where exactly one branch must match
+  anyOf:
+    type: array
+    items:
+      $ref: Property.yaml
+    default: []
+    description: Alternative property schemas where one or more branches may match
+required:
+  - kind
+allOf:
+  - $ref: Property.yaml
+description: |-
+  Represents a JSON Schema union property.
+
+  Use `oneOf` when exactly one branch must match, or `anyOf` when one or more
+  branches may match. The alternatives are full Prompty properties so unions
+  remain portable across generated runtimes.

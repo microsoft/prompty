@@ -29,7 +29,12 @@ export { ToolResult } from "./conversation/tool-result";
 export { ToolCall } from "./conversation/tool-call";
 export { ThreadMarker } from "./conversation/thread-marker";
 
-export { Property, ArrayProperty, ObjectProperty } from "./core/property";
+export {
+  Property,
+  ArrayProperty,
+  ObjectProperty,
+  UnionProperty,
+} from "./core/property";
 export { InvokerError } from "./core/invoker-error";
 export { ValidationError } from "./core/validation-error";
 export { FileNotFoundError } from "./core/file-not-found-error";

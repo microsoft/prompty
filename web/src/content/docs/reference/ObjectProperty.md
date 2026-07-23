@@ -25,6 +25,7 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +boolean nullable
         +unknown default
         +unknown example
         +unknown[] enumValues
@@ -39,6 +40,7 @@ classDiagram
         +string kind
         +string description
         +boolean required
+        +boolean nullable
         +unknown default
         +unknown example
         +unknown[] enumValues
@@ -61,7 +63,7 @@ properties:
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | kind | string |  |
-| properties | [Property[]](../property/) | The properties contained in the object |
+| properties | [Property[]](../property/) | The properties contained in the object(Related Types: [UnionProperty](../unionproperty/)) |
 
 ## Composed Types
 

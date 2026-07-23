@@ -304,10 +304,9 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
 /// Convert a single Property to a recursive JSON Schema definition.
 fn property_to_json_schema(prop: &Property) -> Value {
     let mut schema = Map::new();
-    schema.insert(
-        "type".to_string(),
-        Value::String(kind_to_json_type(prop.kind_str())),
-    );
+    if let Some(json_type) = kind_to_json_type(prop.kind_str()) {
+        schema.insert("type".to_string(), Value::String(json_type.to_string()));
+    }
 
     if let Some(ref desc) = prop.description {
         schema.insert("description".to_string(), Value::String(desc.clone()));
@@ -333,19 +332,59 @@ fn property_to_json_schema(prop: &Property) -> Value {
                     continue;
                 }
                 nested.insert(p.name.clone(), property_to_json_schema(p));
-                req.push(Value::String(p.name.clone()));
+                if p.required.unwrap_or(false) {
+                    req.push(Value::String(p.name.clone()));
+                }
             }
             schema.insert("properties".to_string(), Value::Object(nested));
-            schema.insert("required".to_string(), Value::Array(req));
+            if !req.is_empty() {
+                schema.insert("required".to_string(), Value::Array(req));
+            }
             schema.insert("additionalProperties".to_string(), Value::Bool(false));
         }
         PropertyKind::Object { .. } => {
             // bare {"type": "object"} when properties is empty or absent
         }
+        PropertyKind::Union { one_of, any_of } => {
+            if !one_of.is_empty() {
+                schema.insert(
+                    "oneOf".to_string(),
+                    Value::Array(one_of.iter().map(property_to_json_schema).collect()),
+                );
+            }
+            if !any_of.is_empty() {
+                schema.insert(
+                    "anyOf".to_string(),
+                    Value::Array(any_of.iter().map(property_to_json_schema).collect()),
+                );
+            }
+        }
         _ => {}
     }
 
+    if prop.nullable.unwrap_or(false) {
+        add_nullability(&mut schema);
+    }
+
     Value::Object(schema)
+}
+
+fn add_nullability(schema: &mut Map<String, Value>) {
+    if let Some(Value::String(json_type)) = schema.remove("type") {
+        schema.insert(
+            "type".to_string(),
+            Value::Array(vec![
+                Value::String(json_type),
+                Value::String("null".to_string()),
+            ]),
+        );
+    } else if let Some(Value::Array(branches)) = schema.get_mut("anyOf") {
+        branches.push(json!({ "type": "null" }));
+    } else if let Some(Value::Array(branches)) = schema.get_mut("oneOf") {
+        branches.push(json!({ "type": "null" }));
+    } else {
+        schema.insert("type".to_string(), Value::String("null".to_string()));
+    }
 }
 
 fn parameters_to_json_schema(params: &[&Property]) -> Value {
@@ -369,15 +408,15 @@ fn parameters_to_json_schema(params: &[&Property]) -> Value {
     Value::Object(schema)
 }
 
-fn kind_to_json_type(kind: &str) -> String {
+fn kind_to_json_type(kind: &str) -> Option<&'static str> {
     match kind {
-        "string" => "string".to_string(),
-        "integer" => "integer".to_string(),
-        "float" | "number" => "number".to_string(),
-        "boolean" => "boolean".to_string(),
-        "array" => "array".to_string(),
-        "object" => "object".to_string(),
-        other => other.to_string(),
+        "string" => Some("string"),
+        "integer" => Some("integer"),
+        "float" | "number" => Some("number"),
+        "boolean" => Some("boolean"),
+        "array" => Some("array"),
+        "object" => Some("object"),
+        _ => None,
     }
 }
 
@@ -837,13 +876,15 @@ mod tests {
 
     #[test]
     fn test_kind_to_json_type() {
-        assert_eq!(kind_to_json_type("string"), "string");
-        assert_eq!(kind_to_json_type("integer"), "integer");
-        assert_eq!(kind_to_json_type("float"), "number");
-        assert_eq!(kind_to_json_type("number"), "number");
-        assert_eq!(kind_to_json_type("boolean"), "boolean");
-        assert_eq!(kind_to_json_type("array"), "array");
-        assert_eq!(kind_to_json_type("object"), "object");
+        assert_eq!(kind_to_json_type("string"), Some("string"));
+        assert_eq!(kind_to_json_type("integer"), Some("integer"));
+        assert_eq!(kind_to_json_type("float"), Some("number"));
+        assert_eq!(kind_to_json_type("number"), Some("number"));
+        assert_eq!(kind_to_json_type("boolean"), Some("boolean"));
+        assert_eq!(kind_to_json_type("array"), Some("array"));
+        assert_eq!(kind_to_json_type("object"), Some("object"));
+        assert_eq!(kind_to_json_type("union"), None);
+        assert_eq!(kind_to_json_type(""), None);
     }
 
     #[test]

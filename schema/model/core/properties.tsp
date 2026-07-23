@@ -50,6 +50,10 @@ model Property {
   @sample(#{ required: true })
   required?: boolean = false;
 
+  @doc("Whether the property also accepts a JSON null value")
+  @sample(#{ nullable: true })
+  nullable?: boolean = false;
+
   @doc("The default value of the property - this represents the default value if none is provided")
   @sample(#{ default: "default value" })
   default?: unknown = null;
@@ -94,6 +98,25 @@ model ObjectProperty extends Property {
     },
   })
   properties: Properties = #[];
+}
+
+/**
+ * Represents a JSON Schema union property.
+ *
+ * Use `oneOf` when exactly one branch must match, or `anyOf` when one or more
+ * branches may match. The alternatives are full Prompty properties so unions
+ * remain portable across generated runtimes.
+ */
+model UnionProperty extends Property {
+  kind: "union";
+
+  @doc("Alternative property schemas where exactly one branch must match")
+  @sample(#{ oneOf: #[#{ kind: "string" }, #{ kind: "integer" }] })
+  oneOf?: Property[] = #[];
+
+  @doc("Alternative property schemas where one or more branches may match")
+  @sample(#{ anyOf: #[#{ kind: "string" }, #{ kind: "boolean" }] })
+  anyOf?: Property[] = #[];
 }
 
 alias Properties = Record<Property> | Named<

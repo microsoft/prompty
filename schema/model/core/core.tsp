@@ -33,6 +33,7 @@ alias SimpleTypes =
   | "boolean"
   | "array"
   | "object"
+  | "union"
   | "thread"
   | "image"
   | "audio"

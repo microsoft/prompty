@@ -37,6 +37,7 @@ from .core import (
     InvokerError,
     ObjectProperty,
     Property,
+    UnionProperty,
     ValidationError,
     ValidationResult,
 )
@@ -169,6 +170,7 @@ __all__ = [
     "LoadContext",
     "SaveContext",
     "Property",
+    "UnionProperty",
     "ObjectProperty",
     "ArrayProperty",
     "Connection",
