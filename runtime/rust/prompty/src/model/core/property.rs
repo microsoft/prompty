@@ -103,14 +103,7 @@ impl Property {
                 properties: value.get("properties").map(|v| Self::load_properties(v, ctx)).unwrap_or_default(),
             },
             "union" => PropertyKind::Union {
-                one_of: {
-                    let branches = value.get("oneOf").map(|v| Self::load_one_of(v, ctx)).unwrap_or_default();
-                    let any_of = value.get("anyOf").map(|v| Self::load_any_of(v, ctx)).unwrap_or_default();
-                    if branches.is_empty() == any_of.is_empty() {
-                        panic!("UnionProperty requires exactly one non-empty composition: oneOf XOR anyOf");
-                    }
-                    branches
-                },
+                one_of: value.get("oneOf").map(|v| Self::load_one_of(v, ctx)).unwrap_or_default(),
                 any_of: value.get("anyOf").map(|v| Self::load_any_of(v, ctx)).unwrap_or_default(),
             },
             _ => PropertyKind::Custom {

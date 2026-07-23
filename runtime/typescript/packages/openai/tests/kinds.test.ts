@@ -760,6 +760,25 @@ describe("buildResponsesArgs", () => {
     expect(format.schema).toBeDefined();
   });
 
+  it("makes optional outputs nullable while retaining strict required fields", () => {
+    const agent = makeAgent({
+      apiType: "responses",
+      outputs: [
+        new Property({ name: "requiredValue", kind: "string", required: true }),
+        new Property({ name: "optionalValue", kind: "string" }),
+      ],
+    });
+
+    const args = buildResponsesArgs(agent, []);
+    const format = (args.text as Record<string, unknown>).format as Record<string, unknown>;
+    const schema = format.schema as Record<string, unknown>;
+    const properties = schema.properties as Record<string, Record<string, unknown>>;
+
+    expect(schema.required).toEqual(["requiredValue", "optionalValue"]);
+    expect(properties.requiredValue.type).toBe("string");
+    expect(properties.optionalValue.type).toEqual(["string", "null"]);
+  });
+
   it("combines multiple system messages", () => {
     const agent = makeAgent({ apiType: "responses" });
     const msgs = [

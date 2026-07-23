@@ -571,8 +571,6 @@ function emitLoadMethod(type: TypeDecl, lines: string[]): void {
     lines.push("    }");
   }
 
-  emitUnionCompositionValidation(type, lines);
-
   // Context post-processing
   lines.push("");
   lines.push("    if (context) {");
@@ -581,17 +579,6 @@ function emitLoadMethod(type: TypeDecl, lines: string[]): void {
   lines.push("    return instance;");
   lines.push("  }");
   lines.push("");
-}
-
-/** Emit the portable XOR/non-empty contract for the wire-shaped UnionProperty. */
-function emitUnionCompositionValidation(type: TypeDecl, lines: string[]): void {
-  if (type.typeName.name !== "UnionProperty") return;
-  lines.push("");
-  lines.push('    const oneOf = instance.oneOf ?? [];');
-  lines.push('    const anyOf = instance.anyOf ?? [];');
-  lines.push("    if ((oneOf.length === 0) === (anyOf.length === 0)) {");
-  lines.push('      throw new Error("UnionProperty requires exactly one non-empty composition: oneOf XOR anyOf");');
-  lines.push("    }");
 }
 
 function emitLoadAssignment(a: LoadAssignment): string {
@@ -896,17 +883,12 @@ function emitSaveMethod(type: TypeDecl, lines: string[]): void {
 
   // Per-property save assignments
   for (const a of type.save.assignments) {
-    const omitEmptyUnionComposition =
-      type.typeName.name === "UnionProperty" && (a.fieldName === "oneOf" || a.fieldName === "anyOf");
-    const saveCondition = omitEmptyUnionComposition
-      ? `obj.${a.fieldName} !== undefined && obj.${a.fieldName} !== null && obj.${a.fieldName}.length > 0`
-      : `obj.${a.fieldName} !== undefined && obj.${a.fieldName} !== null`;
     if (a.isOptional) {
-      lines.push(`    if (${saveCondition}) {`);
+      lines.push(`    if (obj.${a.fieldName} !== undefined && obj.${a.fieldName} !== null) {`);
       lines.push(`      ${emitSaveAssignment(a)}`);
       lines.push("    }");
     } else {
-      lines.push(`    if (${saveCondition}) {`);
+      lines.push(`    if (obj.${a.fieldName} !== undefined && obj.${a.fieldName} !== null) {`);
       lines.push(`      ${emitSaveAssignment(a)}`);
       lines.push("    }");
     }

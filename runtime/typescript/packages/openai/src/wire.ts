@@ -636,6 +636,7 @@ function outputsToResponsesWire(agent: Prompty): Record<string, unknown> | null 
     properties[prop.name] = propertyToJsonSchema(
       prop as Parameters<typeof propertyToJsonSchema>[0],
       !prop.required,
+      true,
     );
     required.push(prop.name);
   }

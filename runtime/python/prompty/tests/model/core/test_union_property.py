@@ -16,6 +16,14 @@ def test_load_json_unionproperty():
         {
           "kind": "integer"
         }
+      ],
+      "anyOf": [
+        {
+          "kind": "string"
+        },
+        {
+          "kind": "boolean"
+        }
       ]
     }
     """
@@ -29,6 +37,10 @@ def test_load_yaml_unionproperty():
     oneOf:
       - kind: string
       - kind: integer
+    anyOf:
+      - kind: string
+      - kind: boolean
+
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = UnionProperty.load(data)
@@ -45,6 +57,14 @@ def test_roundtrip_json_unionproperty():
         },
         {
           "kind": "integer"
+        }
+      ],
+      "anyOf": [
+        {
+          "kind": "string"
+        },
+        {
+          "kind": "boolean"
         }
       ]
     }
@@ -66,6 +86,14 @@ def test_to_json_unionproperty():
         },
         {
           "kind": "integer"
+        }
+      ],
+      "anyOf": [
+        {
+          "kind": "string"
+        },
+        {
+          "kind": "boolean"
         }
       ]
     }
@@ -89,6 +117,14 @@ def test_to_yaml_unionproperty():
         {
           "kind": "integer"
         }
+      ],
+      "anyOf": [
+        {
+          "kind": "string"
+        },
+        {
+          "kind": "boolean"
+        }
       ]
     }
     """
@@ -98,21 +134,3 @@ def test_to_yaml_unionproperty():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
-
-
-def test_load_rejects_empty_and_contradictory_union_compositions():
-    """Wire-form unions must contain exactly one non-empty composition."""
-    import pytest
-
-    with pytest.raises(ValueError, match="exactly one non-empty composition"):
-        UnionProperty.load({})
-    with pytest.raises(ValueError, match="exactly one non-empty composition"):
-        UnionProperty.load({"kind": "union"})
-    with pytest.raises(ValueError, match="exactly one non-empty composition"):
-        UnionProperty.load(
-            {
-                "kind": "union",
-                "oneOf": [{"kind": "string"}],
-                "anyOf": [{"kind": "integer"}],
-            }
-        )

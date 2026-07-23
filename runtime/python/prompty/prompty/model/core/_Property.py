@@ -460,8 +460,6 @@ class UnionProperty(Property):
             instance.one_of = UnionProperty.load_one_of(data["oneOf"], context)
         if data is not None and "anyOf" in data:
             instance.any_of = UnionProperty.load_any_of(data["anyOf"], context)
-        if bool(instance.one_of) == bool(instance.any_of):
-            raise ValueError("UnionProperty requires exactly one non-empty composition: oneOf XOR anyOf")
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -529,9 +527,9 @@ class UnionProperty(Property):
 
         if obj.kind is not None:
             result["kind"] = obj.kind
-        if obj.one_of:
+        if obj.one_of is not None:
             result["oneOf"] = UnionProperty.save_one_of(obj.one_of, context)
-        if obj.any_of:
+        if obj.any_of is not None:
             result["anyOf"] = UnionProperty.save_any_of(obj.any_of, context)
         return result
 

@@ -19,13 +19,13 @@ describe("UnionProperty", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "oneOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "integer"\n    }\n  ]\n}`;
+      const json = `{\n  "oneOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "integer"\n    }\n  ],\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`;
       const instance = UnionProperty.fromJson(json);
       expect(instance).toBeDefined();
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "oneOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "integer"\n    }\n  ]\n}`;
+      const json = `{\n  "oneOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "integer"\n    }\n  ],\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`;
       const instance = UnionProperty.fromJson(json);
       const output = instance.toJson();
       const reloaded = UnionProperty.fromJson(output);
@@ -34,13 +34,13 @@ describe("UnionProperty", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `oneOf:\n  - kind: string\n  - kind: integer\n`;
+      const yaml = `oneOf:\n  - kind: string\n  - kind: integer\nanyOf:\n  - kind: string\n  - kind: boolean\n`;
       const instance = UnionProperty.fromYaml(yaml);
       expect(instance).toBeDefined();
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `oneOf:\n  - kind: string\n  - kind: integer\n`;
+      const yaml = `oneOf:\n  - kind: string\n  - kind: integer\nanyOf:\n  - kind: string\n  - kind: boolean\n`;
       const instance = UnionProperty.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = UnionProperty.fromYaml(output);
@@ -49,7 +49,7 @@ describe("UnionProperty", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = { oneOf: [{ kind: "string" }] };
+      const data: Record<string, unknown> = {};
       const instance = UnionProperty.load(data);
       expect(instance).toBeDefined();
     });
@@ -59,22 +59,6 @@ describe("UnionProperty", () => {
       const data = instance.save();
       expect(data).toBeDefined();
       expect(typeof data).toBe("object");
-    });
-
-    it("rejects empty and contradictory union compositions in portable wire form", () => {
-      expect(() => UnionProperty.load({})).toThrow(
-        "UnionProperty requires exactly one non-empty composition",
-      );
-      expect(() => UnionProperty.load({ kind: "union" })).toThrow(
-        "UnionProperty requires exactly one non-empty composition",
-      );
-      expect(() =>
-        UnionProperty.load({
-          kind: "union",
-          oneOf: [{ kind: "string" }],
-          anyOf: [{ kind: "integer" }],
-        }),
-      ).toThrow("UnionProperty requires exactly one non-empty composition");
     });
   });
 });

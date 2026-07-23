@@ -24,6 +24,14 @@ func TestUnionPropertyLoadJSON(t *testing.T) {
     {
       "kind": "integer"
     }
+  ],
+  "anyOf": [
+    {
+      "kind": "string"
+    },
+    {
+      "kind": "boolean"
+    }
   ]
 }
 `
@@ -43,6 +51,11 @@ func TestUnionPropertyLoadJSON(t *testing.T) {
 	}
 	assertUnionPropertyStringField(t, instance.OneOf[0], "Kind", "string", "OneOf[0].Kind")
 	assertUnionPropertyStringField(t, instance.OneOf[1], "Kind", "integer", "OneOf[1].Kind")
+	if len(instance.AnyOf) != 2 {
+		t.Fatalf("Expected AnyOf length to be 2, got %d", len(instance.AnyOf))
+	}
+	assertUnionPropertyStringField(t, instance.AnyOf[0], "Kind", "string", "AnyOf[0].Kind")
+	assertUnionPropertyStringField(t, instance.AnyOf[1], "Kind", "boolean", "AnyOf[1].Kind")
 }
 
 // TestUnionPropertyLoadYAML tests loading UnionProperty from YAML
@@ -51,6 +64,9 @@ func TestUnionPropertyLoadYAML(t *testing.T) {
 oneOf:
   - kind: string
   - kind: integer
+anyOf:
+  - kind: string
+  - kind: boolean
 
 `
 	var data map[string]interface{}
@@ -69,6 +85,11 @@ oneOf:
 	}
 	assertUnionPropertyStringField(t, instance.OneOf[0], "Kind", "string", "OneOf[0].Kind")
 	assertUnionPropertyStringField(t, instance.OneOf[1], "Kind", "integer", "OneOf[1].Kind")
+	if len(instance.AnyOf) != 2 {
+		t.Fatalf("Expected AnyOf length to be 2, got %d", len(instance.AnyOf))
+	}
+	assertUnionPropertyStringField(t, instance.AnyOf[0], "Kind", "string", "AnyOf[0].Kind")
+	assertUnionPropertyStringField(t, instance.AnyOf[1], "Kind", "boolean", "AnyOf[1].Kind")
 }
 
 // TestUnionPropertyFromJSON tests loading UnionProperty through the generated JSON helper
@@ -81,6 +102,14 @@ func TestUnionPropertyFromJSON(t *testing.T) {
     },
     {
       "kind": "integer"
+    }
+  ],
+  "anyOf": [
+    {
+      "kind": "string"
+    },
+    {
+      "kind": "boolean"
     }
   ]
 }
@@ -96,6 +125,11 @@ func TestUnionPropertyFromJSON(t *testing.T) {
 	}
 	assertUnionPropertyStringField(t, instance.OneOf[0], "Kind", "string", "OneOf[0].Kind")
 	assertUnionPropertyStringField(t, instance.OneOf[1], "Kind", "integer", "OneOf[1].Kind")
+	if len(instance.AnyOf) != 2 {
+		t.Fatalf("Expected AnyOf length to be 2, got %d", len(instance.AnyOf))
+	}
+	assertUnionPropertyStringField(t, instance.AnyOf[0], "Kind", "string", "AnyOf[0].Kind")
+	assertUnionPropertyStringField(t, instance.AnyOf[1], "Kind", "boolean", "AnyOf[1].Kind")
 }
 
 // TestUnionPropertyFromYAML tests loading UnionProperty through the generated YAML helper
@@ -104,6 +138,9 @@ func TestUnionPropertyFromYAML(t *testing.T) {
 oneOf:
   - kind: string
   - kind: integer
+anyOf:
+  - kind: string
+  - kind: boolean
 
 `
 
@@ -117,6 +154,11 @@ oneOf:
 	}
 	assertUnionPropertyStringField(t, instance.OneOf[0], "Kind", "string", "OneOf[0].Kind")
 	assertUnionPropertyStringField(t, instance.OneOf[1], "Kind", "integer", "OneOf[1].Kind")
+	if len(instance.AnyOf) != 2 {
+		t.Fatalf("Expected AnyOf length to be 2, got %d", len(instance.AnyOf))
+	}
+	assertUnionPropertyStringField(t, instance.AnyOf[0], "Kind", "string", "AnyOf[0].Kind")
+	assertUnionPropertyStringField(t, instance.AnyOf[1], "Kind", "boolean", "AnyOf[1].Kind")
 }
 
 // TestUnionPropertyRoundtrip tests load -> save -> load produces equivalent data
@@ -129,6 +171,14 @@ func TestUnionPropertyRoundtrip(t *testing.T) {
     },
     {
       "kind": "integer"
+    }
+  ],
+  "anyOf": [
+    {
+      "kind": "string"
+    },
+    {
+      "kind": "boolean"
     }
   ]
 }
@@ -156,6 +206,11 @@ func TestUnionPropertyRoundtrip(t *testing.T) {
 	}
 	assertUnionPropertyStringField(t, reloaded.OneOf[0], "Kind", "string", "OneOf[0].Kind")
 	assertUnionPropertyStringField(t, reloaded.OneOf[1], "Kind", "integer", "OneOf[1].Kind")
+	if len(reloaded.AnyOf) != 2 {
+		t.Fatalf("Expected AnyOf length to be 2, got %d", len(reloaded.AnyOf))
+	}
+	assertUnionPropertyStringField(t, reloaded.AnyOf[0], "Kind", "string", "AnyOf[0].Kind")
+	assertUnionPropertyStringField(t, reloaded.AnyOf[1], "Kind", "boolean", "AnyOf[1].Kind")
 }
 
 // TestUnionPropertyToJSON tests that ToJSON produces valid JSON
@@ -168,6 +223,14 @@ func TestUnionPropertyToJSON(t *testing.T) {
     },
     {
       "kind": "integer"
+    }
+  ],
+  "anyOf": [
+    {
+      "kind": "string"
+    },
+    {
+      "kind": "boolean"
     }
   ]
 }
@@ -202,6 +265,11 @@ func TestUnionPropertyToJSON(t *testing.T) {
 	}
 	assertUnionPropertyStringField(t, reloaded.OneOf[0], "Kind", "string", "OneOf[0].Kind")
 	assertUnionPropertyStringField(t, reloaded.OneOf[1], "Kind", "integer", "OneOf[1].Kind")
+	if len(reloaded.AnyOf) != 2 {
+		t.Fatalf("Expected AnyOf length to be 2, got %d", len(reloaded.AnyOf))
+	}
+	assertUnionPropertyStringField(t, reloaded.AnyOf[0], "Kind", "string", "AnyOf[0].Kind")
+	assertUnionPropertyStringField(t, reloaded.AnyOf[1], "Kind", "boolean", "AnyOf[1].Kind")
 }
 
 // TestUnionPropertyToYAML tests that ToYAML produces valid YAML
@@ -214,6 +282,14 @@ func TestUnionPropertyToYAML(t *testing.T) {
     },
     {
       "kind": "integer"
+    }
+  ],
+  "anyOf": [
+    {
+      "kind": "string"
+    },
+    {
+      "kind": "boolean"
     }
   ]
 }
@@ -248,6 +324,11 @@ func TestUnionPropertyToYAML(t *testing.T) {
 	}
 	assertUnionPropertyStringField(t, reloaded.OneOf[0], "Kind", "string", "OneOf[0].Kind")
 	assertUnionPropertyStringField(t, reloaded.OneOf[1], "Kind", "integer", "OneOf[1].Kind")
+	if len(reloaded.AnyOf) != 2 {
+		t.Fatalf("Expected AnyOf length to be 2, got %d", len(reloaded.AnyOf))
+	}
+	assertUnionPropertyStringField(t, reloaded.AnyOf[0], "Kind", "string", "AnyOf[0].Kind")
+	assertUnionPropertyStringField(t, reloaded.AnyOf[1], "Kind", "boolean", "AnyOf[1].Kind")
 }
 
 // TestUnionPropertyFromJSONInvalid rejects malformed JSON instead of silently defaulting

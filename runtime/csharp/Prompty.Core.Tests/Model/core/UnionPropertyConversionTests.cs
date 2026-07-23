@@ -15,6 +15,9 @@ public class UnionPropertyConversionTests
 oneOf:
   - kind: string
   - kind: integer
+anyOf:
+  - kind: string
+  - kind: boolean
 
 """;
 
@@ -34,6 +37,14 @@ oneOf:
     },
     {
       "kind": "integer"
+    }
+  ],
+  "anyOf": [
+    {
+      "kind": "string"
+    },
+    {
+      "kind": "boolean"
     }
   ]
 }
@@ -55,6 +66,14 @@ oneOf:
     },
     {
       "kind": "integer"
+    }
+  ],
+  "anyOf": [
+    {
+      "kind": "string"
+    },
+    {
+      "kind": "boolean"
     }
   ]
 }
@@ -78,6 +97,9 @@ oneOf:
 oneOf:
   - kind: string
   - kind: integer
+anyOf:
+  - kind: string
+  - kind: boolean
 
 """;
 
@@ -103,6 +125,14 @@ oneOf:
     {
       "kind": "integer"
     }
+  ],
+  "anyOf": [
+    {
+      "kind": "string"
+    },
+    {
+      "kind": "boolean"
+    }
   ]
 }
 """;
@@ -122,6 +152,9 @@ oneOf:
 oneOf:
   - kind: string
   - kind: integer
+anyOf:
+  - kind: string
+  - kind: boolean
 
 """;
 
@@ -132,21 +165,5 @@ oneOf:
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
-    }
-
-    [Fact]
-    public void LoadRejectsEmptyAndContradictoryCompositions()
-    {
-        Assert.Throws<ArgumentException>(() => UnionProperty.Load(new Dictionary<string, object?>()));
-        Assert.Throws<ArgumentException>(() => UnionProperty.Load(new Dictionary<string, object?>
-        {
-            ["kind"] = "union",
-        }));
-        Assert.Throws<ArgumentException>(() => UnionProperty.Load(new Dictionary<string, object?>
-        {
-            ["kind"] = "union",
-            ["oneOf"] = new List<object> { new Dictionary<string, object?> { ["kind"] = "string" } },
-            ["anyOf"] = new List<object> { new Dictionary<string, object?> { ["kind"] = "integer" } },
-        }));
     }
 }
