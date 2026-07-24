@@ -8,6 +8,13 @@ use serde_json::Value;
 
 use crate::types::Message;
 
+// Adopt the generated cross-runtime contracts directly instead of maintaining
+// engine-local twins. Variant names and wire form are identical.
+pub use crate::model::{
+    DelegatedStateReference, InvocationContextDisposition as ContextDisposition,
+    InvocationContextPortability as ContextPortability,
+};
+
 /// Errors raised while assembling context for a model invocation.
 #[derive(Debug, thiserror::Error)]
 #[non_exhaustive]
@@ -24,32 +31,6 @@ pub enum ContextError {
     /// A packing strategy produced an invalid snapshot.
     #[error("invalid context snapshot: {0}")]
     InvalidSnapshot(String),
-}
-
-/// Describes how completely a model invocation can be reconstructed outside its provider.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[non_exhaustive]
-pub enum ContextPortability {
-    /// All model-visible context is materialized in the snapshot.
-    Portable,
-    /// Some model-visible state is retained by the provider but referenced explicitly.
-    Delegated,
-    /// The provider cannot expose enough state to reconstruct the invocation.
-    ///
-    /// Opaque snapshots may include a provider handle when one is available, but
-    /// the handle is not sufficient to reproduce the model-visible state.
-    Opaque,
-}
-
-/// A reference to state retained by a model provider.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct DelegatedStateReference {
-    pub provider: String,
-    pub kind: String,
-    pub id: String,
-    #[serde(default)]
-    pub metadata: Value,
 }
 
 /// Input supplied to context sources for one model invocation.
@@ -78,15 +59,6 @@ pub struct ContextCandidate {
     pub messages: Vec<Message>,
     #[serde(default)]
     pub metadata: Value,
-}
-
-/// The disposition of a context candidate during planning.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[non_exhaustive]
-pub enum ContextDisposition {
-    Included,
-    Excluded,
 }
 
 /// An auditable decision made while assembling a context snapshot.

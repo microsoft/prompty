@@ -8,15 +8,11 @@ use std::sync::Arc;
 use async_trait::async_trait;
 
 use super::{
-    CancellationToken, ContextDecision, ContextDisposition, ContextPortability,
-    DelegatedStateReference, ModelInvocationContextSnapshot, ModelInvocationRequest,
+    CancellationToken, ContextDecision, ModelInvocationContextSnapshot, ModelInvocationRequest,
     ModelInvocationResponse, ModelPort, ModelStreamPort, PortError,
 };
 use crate::model::{
-    DelegatedStateReference as GeneratedDelegatedStateReference,
-    InvocationContextDecision as GeneratedInvocationContextDecision,
-    InvocationContextDisposition as GeneratedInvocationContextDisposition,
-    InvocationContextPortability as GeneratedInvocationContextPortability, InvocationContextState,
+    InvocationContextDecision as GeneratedInvocationContextDecision, InvocationContextState,
     InvocationUsage, ModelInvocationContextSnapshot as GeneratedSnapshot,
     ModelInvocationRequest as GeneratedRequest, ModelInvocationResponse as GeneratedResponse,
     ModelToolRequest,
@@ -90,12 +86,8 @@ fn generated_snapshot(
             PortError::configuration("stable prefix message count exceeds Int32 range")
         })?,
         context_state: InvocationContextState {
-            portability: generated_portability(snapshot.portability),
-            delegated_state: snapshot
-                .delegated_state
-                .iter()
-                .map(generated_delegated_state)
-                .collect(),
+            portability: snapshot.portability,
+            delegated_state: snapshot.delegated_state.clone(),
         },
         metadata: snapshot.metadata.clone(),
     })
@@ -106,10 +98,7 @@ fn generated_decision(
 ) -> Result<GeneratedInvocationContextDecision, PortError> {
     Ok(GeneratedInvocationContextDecision {
         candidate_id: decision.candidate_id.clone(),
-        disposition: match decision.disposition {
-            ContextDisposition::Included => GeneratedInvocationContextDisposition::Included,
-            ContextDisposition::Excluded => GeneratedInvocationContextDisposition::Excluded,
-        },
+        disposition: decision.disposition,
         reason: decision.reason.clone(),
         rank: decision
             .rank
@@ -131,23 +120,6 @@ fn generated_decision(
     })
 }
 
-fn generated_portability(portability: ContextPortability) -> GeneratedInvocationContextPortability {
-    match portability {
-        ContextPortability::Portable => GeneratedInvocationContextPortability::Portable,
-        ContextPortability::Delegated => GeneratedInvocationContextPortability::Delegated,
-        ContextPortability::Opaque => GeneratedInvocationContextPortability::Opaque,
-    }
-}
-
-fn generated_delegated_state(state: &DelegatedStateReference) -> GeneratedDelegatedStateReference {
-    GeneratedDelegatedStateReference {
-        provider: state.provider.clone(),
-        kind: state.kind.clone(),
-        id: state.id.clone(),
-        metadata: state.metadata.clone(),
-    }
-}
-
 fn engine_response(response: GeneratedResponse) -> Result<ModelInvocationResponse, PortError> {
     let GeneratedResponse {
         output,
@@ -160,14 +132,8 @@ fn engine_response(response: GeneratedResponse) -> Result<ModelInvocationRespons
     let (next_portability, delegated_state) = next_context_state
         .map(|state| {
             (
-                Some(engine_portability(state.portability)),
-                Some(
-                    state
-                        .delegated_state
-                        .into_iter()
-                        .map(engine_delegated_state)
-                        .collect(),
-                ),
+                Some(state.portability),
+                Some(state.delegated_state),
             )
         })
         .unwrap_or((None, None));
@@ -203,23 +169,6 @@ fn engine_tool_request(request: ModelToolRequest) -> super::EngineToolRequest {
     }
 }
 
-fn engine_portability(portability: GeneratedInvocationContextPortability) -> ContextPortability {
-    match portability {
-        GeneratedInvocationContextPortability::Portable => ContextPortability::Portable,
-        GeneratedInvocationContextPortability::Delegated => ContextPortability::Delegated,
-        GeneratedInvocationContextPortability::Opaque => ContextPortability::Opaque,
-    }
-}
-
-fn engine_delegated_state(state: GeneratedDelegatedStateReference) -> DelegatedStateReference {
-    DelegatedStateReference {
-        provider: state.provider,
-        kind: state.kind,
-        id: state.id,
-        metadata: state.metadata,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use serde_json::json;
@@ -243,8 +192,8 @@ mod tests {
                 metadata: json!({ "provider": "test" }),
             }],
             next_context_state: Some(InvocationContextState {
-                portability: GeneratedInvocationContextPortability::Delegated,
-                delegated_state: vec![GeneratedDelegatedStateReference {
+                portability: crate::model::InvocationContextPortability::Delegated,
+                delegated_state: vec![crate::model::DelegatedStateReference {
                     provider: "openai".to_string(),
                     kind: "response".to_string(),
                     id: "resp_1".to_string(),
@@ -260,7 +209,7 @@ mod tests {
         assert_eq!(converted.tool_requests[0].arguments["path"], "src");
         assert_eq!(
             converted.next_portability,
-            Some(ContextPortability::Delegated)
+            Some(crate::model::InvocationContextPortability::Delegated)
         );
         assert_eq!(
             converted.delegated_state.expect("delegated state")[0].id,
