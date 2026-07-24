@@ -12,8 +12,7 @@ use super::{
     PortError,
 };
 use crate::model::{
-    InvocationUsage, ModelInvocationRequest as GeneratedRequest,
-    ModelInvocationResponse as GeneratedResponse, ModelToolRequest,
+    InvocationUsage, ModelInvocationResponse as GeneratedResponse, ModelToolRequest,
 };
 use crate::types::Usage;
 
@@ -23,7 +22,7 @@ pub trait GeneratedModelPort: Send + Sync {
     /// Invoke the provider using the cross-runtime live-invocation contract.
     async fn invoke(
         &self,
-        request: &GeneratedRequest,
+        request: &ModelInvocationRequest,
         cancellation: &CancellationToken,
         stream: &dyn ModelStreamPort,
     ) -> Result<GeneratedResponse, PortError>;
@@ -52,13 +51,9 @@ where
         cancellation: &CancellationToken,
         stream: &dyn ModelStreamPort,
     ) -> Result<ModelInvocationResponse, PortError> {
-        // The engine's invocation context snapshot is now the generated
-        // cross-runtime contract, so the request crosses the provider boundary
-        // without a field-by-field bridge.
-        let request = GeneratedRequest {
-            context: request.context.clone(),
-        };
-        let response = self.inner.invoke(&request, cancellation, stream).await?;
+        // The engine's invocation request is now the generated cross-runtime
+        // contract, so it crosses the provider boundary without a bridge.
+        let response = self.inner.invoke(request, cancellation, stream).await?;
         engine_response(response)
     }
 }

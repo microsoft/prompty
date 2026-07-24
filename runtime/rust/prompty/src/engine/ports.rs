@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{CancellationToken, EngineEvent, ModelInvocationContextSnapshot, TurnCommit};
+use super::{CancellationToken, EngineEvent, TurnCommit};
 use crate::types::Message;
 
 /// Error returned by a runtime-local effect port.
@@ -59,10 +59,10 @@ impl PortError {
 }
 
 /// Normalized request for one model invocation.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ModelInvocationRequest {
-    pub context: ModelInvocationContextSnapshot,
-}
+///
+/// This is the generated cross-runtime contract; the engine consumes it directly
+/// rather than maintaining a structurally identical twin.
+pub use crate::model::ModelInvocationRequest;
 
 /// Normalized tool request produced by a provider adapter.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
