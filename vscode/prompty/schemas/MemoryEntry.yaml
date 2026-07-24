@@ -7,32 +7,34 @@ properties:
     default: ""
     description: The memory content
   category:
-    $ref: MemoryCategory.yaml
-    description: The classification of the memory
+    anyOf:
+      - type: string
+        const: core
+      - type: string
+        const: archival
+      - type: string
+        const: insight
+    default: core
+    description: The general tier of the memory
   createdAt:
     type: string
-    description: ISO 8601 UTC timestamp when the memory was created; consumed as a recency input by recall
+    description: ISO 8601 UTC timestamp recording when the memory was formed; intrinsic, portable data
   tags:
     type: array
     items:
       type: string
-    description: General labels for the memory; consumed as keyword inputs by recall
-  importance:
-    type: number
-    description: Optional salience weight in the range 0..1; consumed as a ranking input by recall
-  metadata:
-    $ref: RecordUnknown.yaml
-    default: {}
-    description: Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)
+    description: General labels for the memory; used for keyword recall, grouping, and core deduplication
 required:
   - content
   - category
 description: |-
-  A single agent memory.
+  A single agent memory — the canonical, host-neutral unit of agent memory.
 
-  The canonical, host-neutral unit of agent memory. `content` is the memory
-  text; `category` classifies it; `createdAt`, `tags`, and `importance` are
-  intrinsic scoring inputs consumed by deterministic recall. Any host-specific
-  bookkeeping (source, session association, application taxonomy, a stored
-  embedding vector for host-side vector recall, or a stable per-entry
-  identifier) lives in `metadata`, never as a canonical field.
+  `content` is the memory text, `category` places it in a general tier,
+  `createdAt` records when the memory was formed (intrinsic, portable data), and
+  `tags` are general labels used for keyword recall, grouping, and core
+  deduplication. Host-specific associations (for example a session association)
+  are expressed through the general `tags` field by convention — e.g. a
+  `session:{id}` tag — never as a canonical field. A host needing per-entry
+  bookkeeping, a stable id, or a stored embedding vector layers it in host
+  storage; those are not canonical fields.

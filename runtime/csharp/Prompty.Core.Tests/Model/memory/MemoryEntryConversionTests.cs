@@ -13,13 +13,11 @@ public class MemoryEntryConversionTests
     {
         string yamlData = """
 content: The user prefers concise answers.
-category:
-  kind: preference
+category: core
 createdAt: "2026-06-09T20:00:00Z"
 tags:
   - preference
   - tone
-importance: 0.8
 
 """;
 
@@ -27,8 +25,8 @@ importance: 0.8
 
         Assert.NotNull(instance);
         Assert.Equal("The user prefers concise answers.", instance.Content);
+        Assert.Equal(MemoryCategory.Core, instance.Category);
         Assert.Equal("2026-06-09T20:00:00Z", instance.CreatedAt);
-        Assert.Equal(0.8f, instance.Importance);
     }
 
     [Fact]
@@ -37,23 +35,20 @@ importance: 0.8
         string jsonData = """
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 """;
 
         var instance = MemoryEntry.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("The user prefers concise answers.", instance.Content);
+        Assert.Equal(MemoryCategory.Core, instance.Category);
         Assert.Equal("2026-06-09T20:00:00Z", instance.CreatedAt);
-        Assert.Equal(0.8f, instance.Importance);
     }
 
     [Fact]
@@ -63,15 +58,12 @@ importance: 0.8
         string jsonData = """
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 """;
 
@@ -84,8 +76,8 @@ importance: 0.8
         var reloaded = MemoryEntry.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("The user prefers concise answers.", reloaded.Content);
+        Assert.Equal(MemoryCategory.Core, reloaded.Category);
         Assert.Equal("2026-06-09T20:00:00Z", reloaded.CreatedAt);
-        Assert.Equal(0.8f, reloaded.Importance);
     }
 
     [Fact]
@@ -94,13 +86,11 @@ importance: 0.8
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
 content: The user prefers concise answers.
-category:
-  kind: preference
+category: core
 createdAt: "2026-06-09T20:00:00Z"
 tags:
   - preference
   - tone
-importance: 0.8
 
 """;
 
@@ -113,8 +103,8 @@ importance: 0.8
         var reloaded = MemoryEntry.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("The user prefers concise answers.", reloaded.Content);
+        Assert.Equal(MemoryCategory.Core, reloaded.Category);
         Assert.Equal("2026-06-09T20:00:00Z", reloaded.CreatedAt);
-        Assert.Equal(0.8f, reloaded.Importance);
     }
 
     [Fact]
@@ -123,15 +113,12 @@ importance: 0.8
         string jsonData = """
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 """;
 
@@ -148,13 +135,11 @@ importance: 0.8
     {
         string yamlData = """
 content: The user prefers concise answers.
-category:
-  kind: preference
+category: core
 createdAt: "2026-06-09T20:00:00Z"
 tags:
   - preference
   - tone
-importance: 0.8
 
 """;
 

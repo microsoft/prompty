@@ -4,62 +4,56 @@ import "../core/core.tsp";
 namespace Prompty;
 
 /**
- * The classification of an agent memory.
+ * The tier of an agent memory in a general, host-neutral tiered-memory model.
  *
- * `kind` is an open, host-defined classifier: canonical Prompty does not dictate
- * a fixed taxonomy, so every host expresses its own vocabulary losslessly.
- * Conventional kinds a host may adopt include `semantic` (facts and durable
- * knowledge), `episodic` (specific events or interactions), `procedural`
- * (skills or how-to), and `preference` (user or agent preferences), but any
- * string is valid. `label` carries an optional finer-grained classification
- * within a kind. A memory's category is descriptive only — the engine assigns
- * it no behavioral meaning; any injection/eviction/priority policy keyed on a
- * particular kind is host policy layered on top of these types.
+ * This taxonomy is behavioral, not application-specific: each tier carries a
+ * canonical meaning that the engine's deterministic recall, system-prompt
+ * injection, and eviction logic act on. It is a general agent-memory
+ * architecture (the same tiering popularized by MemGPT-style memory), not any
+ * host's domain vocabulary.
+ *
+ * - `core`: persistent, always-injected facts about the user or project. Core
+ *   memories are injected into every system prompt, deduplicated by identical
+ *   tags on write, and given a small relevance boost during recall.
+ * - `archival`: compressed summaries of past sessions or episodes. Archival
+ *   memories surface only through recall and are the preferred eviction target
+ *   when the store exceeds its configured cap.
+ * - `insight`: explicitly saved reflections or insights. Surfaced through recall.
+ *
+ * A host maps its own application categories onto these three general tiers; the
+ * three behavioral semantics (always-inject / evictable-summary / explicit) are
+ * what the engine relies on.
  */
-@coerce(string, #{ kind: "{value}" }, "kind", "Memory Category", "semantic")
-model MemoryCategory {
-  @doc("The open, host-defined memory kind (e.g. 'semantic', 'episodic', 'procedural', 'preference', or any host-specific value)")
-  @sample(#{ kind: "semantic" })
-  kind: string = "";
-
-  @doc("Optional finer-grained or host-specific classification within the kind")
-  @sample(#{ label: "project-fact" })
-  label?: string;
-}
+alias MemoryCategory = "core" | "archival" | "insight";
 
 /**
- * A single agent memory.
+ * A single agent memory — the canonical, host-neutral unit of agent memory.
  *
- * The canonical, host-neutral unit of agent memory. `content` is the memory
- * text; `category` classifies it; `createdAt`, `tags`, and `importance` are
- * intrinsic scoring inputs consumed by deterministic recall. Any host-specific
- * bookkeeping (source, session association, application taxonomy, a stored
- * embedding vector for host-side vector recall, or a stable per-entry
- * identifier) lives in `metadata`, never as a canonical field.
+ * `content` is the memory text, `category` places it in a general tier,
+ * `createdAt` records when the memory was formed (intrinsic, portable data), and
+ * `tags` are general labels used for keyword recall, grouping, and core
+ * deduplication. Host-specific associations (for example a session association)
+ * are expressed through the general `tags` field by convention — e.g. a
+ * `session:{id}` tag — never as a canonical field. A host needing per-entry
+ * bookkeeping, a stable id, or a stored embedding vector layers it in host
+ * storage; those are not canonical fields.
  */
 model MemoryEntry {
   @doc("The memory content")
   @sample(#{ content: "The user prefers concise answers." })
   content: string = "";
 
-  @doc("The classification of the memory")
-  @sample(#{ category: #{ kind: "preference" } })
-  category: MemoryCategory;
+  @doc("The general tier of the memory")
+  @sample(#{ category: "core" })
+  category: MemoryCategory = "core";
 
-  @doc("ISO 8601 UTC timestamp when the memory was created; consumed as a recency input by recall")
+  @doc("ISO 8601 UTC timestamp recording when the memory was formed; intrinsic, portable data")
   @sample(#{ createdAt: "2026-06-09T20:00:00Z" })
   createdAt?: string;
 
-  @doc("General labels for the memory; consumed as keyword inputs by recall")
+  @doc("General labels for the memory; used for keyword recall, grouping, and core deduplication")
   @sample(#{ tags: #["preference", "tone"] })
   tags?: string[];
-
-  @doc("Optional salience weight in the range 0..1; consumed as a ranking input by recall")
-  @sample(#{ importance: 0.8 })
-  importance?: float32;
-
-  @doc("Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)")
-  metadata?: Record<unknown> = #{};
 }
 
 /**
@@ -67,13 +61,11 @@ model MemoryEntry {
  *
  * The canonical persisted shape a host loads and saves as one unit. A host
  * backend implements only load/save of this snapshot; the engine owns the
- * deterministic recall, formatting, and entry-mutation logic on top of it.
+ * deterministic recall, formatting, tiered injection, eviction, and
+ * entry-mutation logic on top of it.
  */
 model MemoryStore {
   @doc("The memories held in the store, in insertion order")
   @sample(#{ entries: #[] })
   entries: MemoryEntry[];
-
-  @doc("Opaque host-specific store metadata")
-  metadata?: Record<unknown> = #{};
 }

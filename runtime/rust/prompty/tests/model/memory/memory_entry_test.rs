@@ -9,6 +9,7 @@
     clippy::all
 )]
 
+use prompty::model::MemoryCategory;
 use prompty::model::MemoryEntry;
 use prompty::model::context::{LoadContext, SaveContext};
 
@@ -17,15 +18,12 @@ fn test_memory_entry_load_json() {
     let json = r####"
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 "####;
     let ctx = LoadContext::default();
@@ -37,6 +35,7 @@ fn test_memory_entry_load_json() {
     );
     let instance = result.unwrap();
     assert_eq!(instance.content, "The user prefers concise answers.");
+    assert_eq!(instance.category, MemoryCategory::Core);
     assert!(
         instance.created_at.is_some(),
         "Expected created_at to be Some"
@@ -45,24 +44,17 @@ fn test_memory_entry_load_json() {
         instance.created_at.as_ref().unwrap(),
         &"2026-06-09T20:00:00Z"
     );
-    assert!(
-        instance.importance.is_some(),
-        "Expected importance to be Some"
-    );
-    assert_eq!(instance.importance.as_ref().unwrap(), &0.8);
 }
 
 #[test]
 fn test_memory_entry_load_yaml() {
     let yaml = r####"
 content: The user prefers concise answers.
-category:
-  kind: preference
+category: core
 createdAt: "2026-06-09T20:00:00Z"
 tags:
   - preference
   - tone
-importance: 0.8
 
 "####;
     let ctx = LoadContext::default();
@@ -74,13 +66,10 @@ importance: 0.8
     );
     let instance = result.unwrap();
     assert_eq!(instance.content, "The user prefers concise answers.");
+    assert_eq!(instance.category, MemoryCategory::Core);
     assert!(
         instance.created_at.is_some(),
         "Expected created_at to be Some"
-    );
-    assert!(
-        instance.importance.is_some(),
-        "Expected importance to be Some"
     );
 }
 
@@ -89,15 +78,12 @@ fn test_memory_entry_roundtrip() {
     let json = r####"
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -118,15 +104,12 @@ fn test_memory_entry_serde_roundtrip() {
     let json = r####"
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 "####;
     let instance: MemoryEntry =
@@ -142,6 +125,10 @@ fn test_memory_entry_serde_roundtrip() {
         instance,
         MemoryEntry::load_from_value(&canonical, &LoadContext::default()),
         "serde deserialize must equal canonical load_from_value"
+    );
+    assert_eq!(
+        value, canonical,
+        "serde must serialize to byte-identical canonical wire (empty-omission preserved; no plain-derive divergence)"
     );
     let reparsed: MemoryEntry = serde_json::from_value(value).expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");

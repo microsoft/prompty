@@ -17,15 +17,12 @@ func TestMemoryEntryLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 `
 	var data map[string]interface{}
@@ -41,14 +38,11 @@ func TestMemoryEntryLoadJSON(t *testing.T) {
 	if instance.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, instance.Content)
 	}
+	if instance.Category != "core" {
+		t.Errorf(`Expected Category to be "core", got %v`, instance.Category)
+	}
 	if instance.CreatedAt == nil || *instance.CreatedAt != "2026-06-09T20:00:00Z" {
 		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, instance.CreatedAt)
-	}
-	if instance.Importance == nil || *instance.Importance != 0.8 {
-		t.Errorf(`Expected Importance to be 0.8, got %v`, instance.Importance)
-	}
-	if instance.Category.Kind != "preference" {
-		t.Errorf(`Expected Category.Kind to be "preference", got %v`, instance.Category.Kind)
 	}
 	if len(instance.Tags) != 2 {
 		t.Fatalf("Expected Tags length to be 2, got %d", len(instance.Tags))
@@ -65,13 +59,11 @@ func TestMemoryEntryLoadJSON(t *testing.T) {
 func TestMemoryEntryLoadYAML(t *testing.T) {
 	yamlData := `
 content: The user prefers concise answers.
-category:
-  kind: preference
+category: core
 createdAt: "2026-06-09T20:00:00Z"
 tags:
   - preference
   - tone
-importance: 0.8
 
 `
 	var data map[string]interface{}
@@ -87,14 +79,11 @@ importance: 0.8
 	if instance.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, instance.Content)
 	}
+	if instance.Category != "core" {
+		t.Errorf(`Expected Category to be "core", got %v`, instance.Category)
+	}
 	if instance.CreatedAt == nil || *instance.CreatedAt != "2026-06-09T20:00:00Z" {
 		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, instance.CreatedAt)
-	}
-	if instance.Importance == nil || *instance.Importance != 0.8 {
-		t.Errorf(`Expected Importance to be 0.8, got %v`, instance.Importance)
-	}
-	if instance.Category.Kind != "preference" {
-		t.Errorf(`Expected Category.Kind to be "preference", got %v`, instance.Category.Kind)
 	}
 	if len(instance.Tags) != 2 {
 		t.Fatalf("Expected Tags length to be 2, got %d", len(instance.Tags))
@@ -112,15 +101,12 @@ func TestMemoryEntryFromJSON(t *testing.T) {
 	jsonData := `
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 `
 
@@ -131,14 +117,11 @@ func TestMemoryEntryFromJSON(t *testing.T) {
 	if instance.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, instance.Content)
 	}
+	if instance.Category != "core" {
+		t.Errorf(`Expected Category to be "core", got %v`, instance.Category)
+	}
 	if instance.CreatedAt == nil || *instance.CreatedAt != "2026-06-09T20:00:00Z" {
 		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, instance.CreatedAt)
-	}
-	if instance.Importance == nil || *instance.Importance != 0.8 {
-		t.Errorf(`Expected Importance to be 0.8, got %v`, instance.Importance)
-	}
-	if instance.Category.Kind != "preference" {
-		t.Errorf(`Expected Category.Kind to be "preference", got %v`, instance.Category.Kind)
 	}
 	if len(instance.Tags) != 2 {
 		t.Fatalf("Expected Tags length to be 2, got %d", len(instance.Tags))
@@ -155,13 +138,11 @@ func TestMemoryEntryFromJSON(t *testing.T) {
 func TestMemoryEntryFromYAML(t *testing.T) {
 	yamlData := `
 content: The user prefers concise answers.
-category:
-  kind: preference
+category: core
 createdAt: "2026-06-09T20:00:00Z"
 tags:
   - preference
   - tone
-importance: 0.8
 
 `
 
@@ -172,14 +153,11 @@ importance: 0.8
 	if instance.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, instance.Content)
 	}
+	if instance.Category != "core" {
+		t.Errorf(`Expected Category to be "core", got %v`, instance.Category)
+	}
 	if instance.CreatedAt == nil || *instance.CreatedAt != "2026-06-09T20:00:00Z" {
 		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, instance.CreatedAt)
-	}
-	if instance.Importance == nil || *instance.Importance != 0.8 {
-		t.Errorf(`Expected Importance to be 0.8, got %v`, instance.Importance)
-	}
-	if instance.Category.Kind != "preference" {
-		t.Errorf(`Expected Category.Kind to be "preference", got %v`, instance.Category.Kind)
 	}
 	if len(instance.Tags) != 2 {
 		t.Fatalf("Expected Tags length to be 2, got %d", len(instance.Tags))
@@ -197,15 +175,12 @@ func TestMemoryEntryRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 `
 	var data map[string]interface{}
@@ -228,14 +203,11 @@ func TestMemoryEntryRoundtrip(t *testing.T) {
 	if reloaded.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, reloaded.Content)
 	}
+	if reloaded.Category != "core" {
+		t.Errorf(`Expected Category to be "core", got %v`, reloaded.Category)
+	}
 	if reloaded.CreatedAt == nil || *reloaded.CreatedAt != "2026-06-09T20:00:00Z" {
 		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.CreatedAt)
-	}
-	if reloaded.Importance == nil || *reloaded.Importance != 0.8 {
-		t.Errorf(`Expected Importance to be 0.8, got %v`, reloaded.Importance)
-	}
-	if reloaded.Category.Kind != "preference" {
-		t.Errorf(`Expected Category.Kind to be "preference", got %v`, reloaded.Category.Kind)
 	}
 	if len(reloaded.Tags) != 2 {
 		t.Fatalf("Expected Tags length to be 2, got %d", len(reloaded.Tags))
@@ -253,15 +225,12 @@ func TestMemoryEntryToJSON(t *testing.T) {
 	jsonData := `
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 `
 	var data map[string]interface{}
@@ -291,14 +260,11 @@ func TestMemoryEntryToJSON(t *testing.T) {
 	if reloaded.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, reloaded.Content)
 	}
+	if reloaded.Category != "core" {
+		t.Errorf(`Expected Category to be "core", got %v`, reloaded.Category)
+	}
 	if reloaded.CreatedAt == nil || *reloaded.CreatedAt != "2026-06-09T20:00:00Z" {
 		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.CreatedAt)
-	}
-	if reloaded.Importance == nil || *reloaded.Importance != 0.8 {
-		t.Errorf(`Expected Importance to be 0.8, got %v`, reloaded.Importance)
-	}
-	if reloaded.Category.Kind != "preference" {
-		t.Errorf(`Expected Category.Kind to be "preference", got %v`, reloaded.Category.Kind)
 	}
 	if len(reloaded.Tags) != 2 {
 		t.Fatalf("Expected Tags length to be 2, got %d", len(reloaded.Tags))
@@ -316,15 +282,12 @@ func TestMemoryEntryToYAML(t *testing.T) {
 	jsonData := `
 {
   "content": "The user prefers concise answers.",
-  "category": {
-    "kind": "preference"
-  },
+  "category": "core",
   "createdAt": "2026-06-09T20:00:00Z",
   "tags": [
     "preference",
     "tone"
-  ],
-  "importance": 0.8
+  ]
 }
 `
 	var data map[string]interface{}
@@ -354,14 +317,11 @@ func TestMemoryEntryToYAML(t *testing.T) {
 	if reloaded.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, reloaded.Content)
 	}
+	if reloaded.Category != "core" {
+		t.Errorf(`Expected Category to be "core", got %v`, reloaded.Category)
+	}
 	if reloaded.CreatedAt == nil || *reloaded.CreatedAt != "2026-06-09T20:00:00Z" {
 		t.Errorf(`Expected CreatedAt to be "2026-06-09T20:00:00Z", got %v`, reloaded.CreatedAt)
-	}
-	if reloaded.Importance == nil || *reloaded.Importance != 0.8 {
-		t.Errorf(`Expected Importance to be 0.8, got %v`, reloaded.Importance)
-	}
-	if reloaded.Category.Kind != "preference" {
-		t.Errorf(`Expected Category.Kind to be "preference", got %v`, reloaded.Category.Kind)
 	}
 	if len(reloaded.Tags) != 2 {
 		t.Fatalf("Expected Tags length to be 2, got %d", len(reloaded.Tags))

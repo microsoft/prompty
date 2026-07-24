@@ -6,47 +6,44 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from .._context import LoadContext, SaveContext
-from ._MemoryCategory import MemoryCategory
+
+MemoryCategory = Literal["core", "archival", "insight"]
 
 
 @dataclass
 class MemoryEntry:
-    """A single agent memory.
+    """A single agent memory — the canonical, host-neutral unit of agent memory.
 
-    The canonical, host-neutral unit of agent memory. `content` is the memory
-    text; `category` classifies it; `createdAt`, `tags`, and `importance` are
-    intrinsic scoring inputs consumed by deterministic recall. Any host-specific
-    bookkeeping (source, session association, application taxonomy, a stored
-    embedding vector for host-side vector recall, or a stable per-entry
-    identifier) lives in `metadata`, never as a canonical field.
+    `content` is the memory text, `category` places it in a general tier,
+    `createdAt` records when the memory was formed (intrinsic, portable data), and
+    `tags` are general labels used for keyword recall, grouping, and core
+    deduplication. Host-specific associations (for example a session association)
+    are expressed through the general `tags` field by convention — e.g. a
+    `session:{id}` tag — never as a canonical field. A host needing per-entry
+    bookkeeping, a stable id, or a stored embedding vector layers it in host
+    storage; those are not canonical fields.
 
     Attributes
     ----------
     content : str
         The memory content
-    category : MemoryCategory
-        The classification of the memory
+    category : str
+        The general tier of the memory
     created_at : Optional[str]
-        ISO 8601 UTC timestamp when the memory was created; consumed as a recency input by recall
+        ISO 8601 UTC timestamp recording when the memory was formed; intrinsic, portable data
     tags : Optional[list[str]]
-        General labels for the memory; consumed as keyword inputs by recall
-    importance : Optional[float]
-        Optional salience weight in the range 0..1; consumed as a ranking input by recall
-    metadata : Optional[dict[str, Any]]
-        Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)
+        General labels for the memory; used for keyword recall, grouping, and core deduplication
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     content: str = field(default="")
-    category: MemoryCategory = field(default_factory=MemoryCategory)
+    category: MemoryCategory = field(default="core")
     created_at: str | None = None
     tags: list[str] = field(default_factory=list)
-    importance: float | None = None
-    metadata: dict[str, Any] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "MemoryEntry":
@@ -71,15 +68,11 @@ class MemoryEntry:
         if data is not None and "content" in data:
             instance.content = data["content"]
         if data is not None and "category" in data:
-            instance.category = MemoryCategory.load(data["category"], context)
+            instance.category = data["category"]
         if data is not None and "createdAt" in data:
             instance.created_at = data["createdAt"]
         if data is not None and "tags" in data:
             instance.tags = data["tags"]
-        if data is not None and "importance" in data:
-            instance.importance = data["importance"]
-        if data is not None and "metadata" in data:
-            instance.metadata = data["metadata"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -101,15 +94,11 @@ class MemoryEntry:
         if obj.content is not None:
             result["content"] = obj.content
         if obj.category is not None:
-            result["category"] = obj.category.save(context)
+            result["category"] = obj.category
         if obj.created_at is not None:
             result["createdAt"] = obj.created_at
         if obj.tags is not None:
             result["tags"] = obj.tags
-        if obj.importance is not None:
-            result["importance"] = obj.importance
-        if obj.metadata is not None:
-            result["metadata"] = obj.metadata
 
         if context is not None:
             result = context.process_dict(result)

@@ -8,19 +8,23 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
     /// <summary>
-    /// A single agent memory.
+    /// A single agent memory — the canonical, host-neutral unit of agent memory.
     ///
-    /// The canonical, host-neutral unit of agent memory. `content` is the memory
+    /// `content` is the memory text, `category` places it in a general tier,
     ///
-    /// text; `category` classifies it; `createdAt`, `tags`, and `importance` are
+    /// `createdAt` records when the memory was formed (intrinsic, portable data), and
     ///
-    /// intrinsic scoring inputs consumed by deterministic recall. Any host-specific
+    /// `tags` are general labels used for keyword recall, grouping, and core
     ///
-    /// bookkeeping (source, session association, application taxonomy, a stored
+    /// deduplication. Host-specific associations (for example a session association)
     ///
-    /// embedding vector for host-side vector recall, or a stable per-entry
+    /// are expressed through the general `tags` field by convention — e.g. a
     ///
-    /// identifier) lives in `metadata`, never as a canonical field.
+    /// `session:{id}` tag — never as a canonical field. A host needing per-entry
+    ///
+    /// bookkeeping, a stable id, or a stored embedding vector layers it in host
+    ///
+    /// storage; those are not canonical fields.
     /// </summary>
 public partial class MemoryEntry
 {
@@ -44,29 +48,19 @@ public partial class MemoryEntry
     public string Content { get; set; } = string.Empty;
 
     /// <summary>
-    /// The classification of the memory
+    /// The general tier of the memory
     /// </summary>
-    public MemoryCategory Category { get; set; }
+    public MemoryCategory Category { get; set; } = MemoryCategory.Core;
 
     /// <summary>
-    /// ISO 8601 UTC timestamp when the memory was created; consumed as a recency input by recall
+    /// ISO 8601 UTC timestamp recording when the memory was formed; intrinsic, portable data
     /// </summary>
     public string? CreatedAt { get; set; }
 
     /// <summary>
-    /// General labels for the memory; consumed as keyword inputs by recall
+    /// General labels for the memory; used for keyword recall, grouping, and core deduplication
     /// </summary>
     public IList<string>? Tags { get; set; }
-
-    /// <summary>
-    /// Optional salience weight in the range 0..1; consumed as a ranking input by recall
-    /// </summary>
-    public float? Importance { get; set; }
-
-    /// <summary>
-    /// Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)
-    /// </summary>
-    public IDictionary<string, object>? Metadata { get; set; }
 
 
 
@@ -97,7 +91,7 @@ public partial class MemoryEntry
 
         if (data.TryGetValue("category", out var categoryValue) && categoryValue is not null)
         {
-            instance.Category = MemoryCategory.Load(categoryValue.GetDictionary(MemoryCategory.ShorthandProperty), context);
+            instance.Category = MemoryCategoryParser.Parse(categoryValue?.ToString()!);
         }
 
         if (data.TryGetValue("createdAt", out var createdAtValue) && createdAtValue is not null)
@@ -108,16 +102,6 @@ public partial class MemoryEntry
         if (data.TryGetValue("tags", out var tagsValue) && tagsValue is not null)
         {
             instance.Tags = (tagsValue as IEnumerable<object>)?.Select(x => x?.ToString()!).ToList() ?? [];
-        }
-
-        if (data.TryGetValue("importance", out var importanceValue) && importanceValue is not null)
-        {
-            instance.Importance = Convert.ToSingle(importanceValue);
-        }
-
-        if (data.TryGetValue("metadata", out var metadataValue) && metadataValue is not null)
-        {
-            instance.Metadata = metadataValue.GetDictionary()!;
         }
 
         if (context is not null)
@@ -152,7 +136,7 @@ public partial class MemoryEntry
         result["content"] = obj.Content;
 
 
-        result["category"] = obj.Category?.Save(context);
+        result["category"] = MemoryCategoryParser.ToValue(obj.Category);
 
 
         if (obj.CreatedAt is not null)
@@ -164,18 +148,6 @@ public partial class MemoryEntry
         if (obj.Tags is not null)
         {
             result["tags"] = obj.Tags;
-        }
-
-
-        if (obj.Importance is not null)
-        {
-            result["importance"] = obj.Importance;
-        }
-
-
-        if (obj.Metadata is not null)
-        {
-            result["metadata"] = obj.Metadata;
         }
 
 

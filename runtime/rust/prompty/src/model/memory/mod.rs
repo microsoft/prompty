@@ -9,9 +9,6 @@
     clippy::all
 )]
 
-pub mod memory_category;
-pub use memory_category::*;
-
 pub mod memory_entry;
 pub use memory_entry::*;
 

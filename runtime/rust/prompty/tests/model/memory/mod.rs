@@ -9,6 +9,5 @@
     clippy::all
 )]
 
-mod memory_category_test;
 mod memory_entry_test;
 mod memory_store_test;

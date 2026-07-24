@@ -92,7 +92,6 @@ export {
   ErrorChunk,
 } from "./events/stream-chunk";
 
-export { MemoryCategory } from "./memory/memory-category";
 export { MemoryEntry } from "./memory/memory-entry";
 export { MemoryStore } from "./memory/memory-store";
 

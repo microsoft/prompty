@@ -10,43 +10,38 @@ def test_load_json_memoryentry():
     json_data = r"""
     {
       "content": "The user prefers concise answers.",
-      "category": {
-        "kind": "preference"
-      },
+      "category": "core",
       "createdAt": "2026-06-09T20:00:00Z",
       "tags": [
         "preference",
         "tone"
-      ],
-      "importance": 0.8
+      ]
     }
     """
     data = json.loads(json_data, strict=False)
     instance = MemoryEntry.load(data)
     assert instance is not None
     assert instance.content == "The user prefers concise answers."
+    assert instance.category == "core"
     assert instance.created_at == "2026-06-09T20:00:00Z"
-    assert instance.importance == 0.8
 
 
 def test_load_yaml_memoryentry():
     yaml_data = r"""
     content: The user prefers concise answers.
-    category:
-      kind: preference
+    category: core
     createdAt: "2026-06-09T20:00:00Z"
     tags:
       - preference
       - tone
-    importance: 0.8
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = MemoryEntry.load(data)
     assert instance is not None
     assert instance.content == "The user prefers concise answers."
+    assert instance.category == "core"
     assert instance.created_at == "2026-06-09T20:00:00Z"
-    assert instance.importance == 0.8
 
 
 def test_roundtrip_json_memoryentry():
@@ -54,15 +49,12 @@ def test_roundtrip_json_memoryentry():
     json_data = r"""
     {
       "content": "The user prefers concise answers.",
-      "category": {
-        "kind": "preference"
-      },
+      "category": "core",
       "createdAt": "2026-06-09T20:00:00Z",
       "tags": [
         "preference",
         "tone"
-      ],
-      "importance": 0.8
+      ]
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -71,8 +63,8 @@ def test_roundtrip_json_memoryentry():
     reloaded = MemoryEntry.load(saved_data)
     assert reloaded is not None
     assert reloaded.content == "The user prefers concise answers."
+    assert reloaded.category == "core"
     assert reloaded.created_at == "2026-06-09T20:00:00Z"
-    assert reloaded.importance == 0.8
 
 
 def test_to_json_memoryentry():
@@ -80,15 +72,12 @@ def test_to_json_memoryentry():
     json_data = r"""
     {
       "content": "The user prefers concise answers.",
-      "category": {
-        "kind": "preference"
-      },
+      "category": "core",
       "createdAt": "2026-06-09T20:00:00Z",
       "tags": [
         "preference",
         "tone"
-      ],
-      "importance": 0.8
+      ]
     }
     """
     data = json.loads(json_data, strict=False)
@@ -104,15 +93,12 @@ def test_to_yaml_memoryentry():
     json_data = r"""
     {
       "content": "The user prefers concise answers.",
-      "category": {
-        "kind": "preference"
-      },
+      "category": "core",
       "createdAt": "2026-06-09T20:00:00Z",
       "tags": [
         "preference",
         "tone"
-      ],
-      "importance": 0.8
+      ]
     }
     """
     data = json.loads(json_data, strict=False)

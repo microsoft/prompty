@@ -14,11 +14,11 @@ import (
 //
 // The canonical persisted shape a host loads and saves as one unit. A host
 // backend implements only load/save of this snapshot; the engine owns the
-// deterministic recall, formatting, and entry-mutation logic on top of it.
+// deterministic recall, formatting, tiered injection, eviction, and
+// entry-mutation logic on top of it.
 
 type MemoryStore struct {
-	Entries  []MemoryEntry          `json:"entries" yaml:"entries"`
-	Metadata map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Entries []MemoryEntry `json:"entries" yaml:"entries"`
 }
 
 // LoadMemoryStore creates a MemoryStore from a map[string]interface{}
@@ -41,11 +41,6 @@ func LoadMemoryStore(data interface{}, ctx *LoadContext) (MemoryStore, error) {
 				}
 			}
 		}
-		if val, ok := m["metadata"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				result.Metadata = m
-			}
-		}
 	}
 
 	return result, nil
@@ -60,9 +55,6 @@ func (obj MemoryStore) Save(ctx *SaveContext) map[string]interface{} {
 			arr[i] = item.Save(ctx)
 		}
 		result["entries"] = arr
-	}
-	if obj.Metadata != nil {
-		result["metadata"] = obj.Metadata
 	}
 
 	return result

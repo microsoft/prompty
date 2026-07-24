@@ -13,13 +13,11 @@ use super::super::context::{LoadContext, SaveContext};
 
 use super::memory_entry::MemoryEntry;
 
-/// A whole-store snapshot of agent memory. The canonical persisted shape a host loads and saves as one unit. A host backend implements only load/save of this snapshot; the engine owns the deterministic recall, formatting, and entry-mutation logic on top of it.
+/// A whole-store snapshot of agent memory. The canonical persisted shape a host loads and saves as one unit. A host backend implements only load/save of this snapshot; the engine owns the deterministic recall, formatting, tiered injection, eviction, and entry-mutation logic on top of it.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct MemoryStore {
     /// The memories held in the store, in insertion order
     pub entries: Vec<MemoryEntry>,
-    /// Opaque host-specific store metadata
-    pub metadata: serde_json::Value,
 }
 
 impl MemoryStore {
@@ -50,10 +48,6 @@ impl MemoryStore {
                 .get("entries")
                 .map(|v| Self::load_entries(v, ctx))
                 .unwrap_or_default(),
-            metadata: value
-                .get("metadata")
-                .cloned()
-                .unwrap_or(serde_json::Value::Null),
         }
     }
 
@@ -69,9 +63,6 @@ impl MemoryStore {
                 Self::save_entries(&self.entries, ctx),
             );
         }
-        if !self.metadata.is_null() {
-            result.insert("metadata".to_string(), self.metadata.clone());
-        }
         ctx.process_dict(serde_json::Value::Object(result))
     }
 
@@ -83,11 +74,6 @@ impl MemoryStore {
     /// Serialize MemoryStore to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
-    }
-    /// Returns typed reference to the map if the field is an object.
-    /// Returns `None` if the field is null or not an object.
-    pub fn as_metadata_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
-        self.metadata.as_object()
     }
 
     /// Load a collection of MemoryEntry from a JSON value.

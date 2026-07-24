@@ -11,23 +11,86 @@
 
 use super::super::context::{LoadContext, SaveContext};
 
-use super::memory_category::MemoryCategory;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum MemoryCategory {
+    Core,
+    Archival,
+    Insight,
+}
 
-/// A single agent memory. The canonical, host-neutral unit of agent memory. `content` is the memory text; `category` classifies it; `createdAt`, `tags`, and `importance` are intrinsic scoring inputs consumed by deterministic recall. Any host-specific bookkeeping (source, session association, application taxonomy, a stored embedding vector for host-side vector recall, or a stable per-entry identifier) lives in `metadata`, never as a canonical field.
+impl Default for MemoryCategory {
+    fn default() -> Self {
+        Self::Core
+    }
+}
+
+impl std::fmt::Display for MemoryCategory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Core => write!(f, "core"),
+            Self::Archival => write!(f, "archival"),
+            Self::Insight => write!(f, "insight"),
+        }
+    }
+}
+
+impl MemoryCategory {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "core" => Some(Self::Core),
+            "archival" => Some(Self::Archival),
+            "insight" => Some(Self::Insight),
+            _ => None,
+        }
+    }
+
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("core") {
+            return Some(Self::Core);
+        }
+        if s.eq_ignore_ascii_case("archival") {
+            return Some(Self::Archival);
+        }
+        if s.eq_ignore_ascii_case("insight") {
+            return Some(Self::Insight);
+        }
+        None
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Core => "core",
+            Self::Archival => "archival",
+            Self::Insight => "insight",
+        }
+    }
+}
+
+impl serde::Serialize for MemoryCategory {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for MemoryCategory {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s)
+            .ok_or_else(|| serde::de::Error::custom(format!("invalid MemoryCategory value: {}", s)))
+    }
+}
+
+/// A single agent memory — the canonical, host-neutral unit of agent memory. `content` is the memory text, `category` places it in a general tier, `createdAt` records when the memory was formed (intrinsic, portable data), and `tags` are general labels used for keyword recall, grouping, and core deduplication. Host-specific associations (for example a session association) are expressed through the general `tags` field by convention — e.g. a `session:{id}` tag — never as a canonical field. A host needing per-entry bookkeeping, a stable id, or a stored embedding vector layers it in host storage; those are not canonical fields.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct MemoryEntry {
     /// The memory content
     pub content: String,
-    /// The classification of the memory
+    /// The general tier of the memory
     pub category: MemoryCategory,
-    /// ISO 8601 UTC timestamp when the memory was created; consumed as a recency input by recall
+    /// ISO 8601 UTC timestamp recording when the memory was formed; intrinsic, portable data
     pub created_at: Option<String>,
-    /// General labels for the memory; consumed as keyword inputs by recall
+    /// General labels for the memory; used for keyword recall, grouping, and core deduplication
     pub tags: Option<Vec<String>>,
-    /// Optional salience weight in the range 0..1; consumed as a ranking input by recall
-    pub importance: Option<f32>,
-    /// Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)
-    pub metadata: serde_json::Value,
 }
 
 impl MemoryEntry {
@@ -61,9 +124,9 @@ impl MemoryEntry {
                 .to_string(),
             category: value
                 .get("category")
-                .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                .map(|v| MemoryCategory::load_from_value(v, ctx))
-                .unwrap_or_default(),
+                .and_then(|v| v.as_str())
+                .and_then(|s| MemoryCategory::from_str_opt(s))
+                .unwrap_or(MemoryCategory::Core),
             created_at: value
                 .get("createdAt")
                 .and_then(|v| v.as_str())
@@ -73,14 +136,6 @@ impl MemoryEntry {
                     .filter_map(|v| v.as_str().map(|s| s.to_string()))
                     .collect()
             }),
-            importance: value
-                .get("importance")
-                .and_then(|v| v.as_f64())
-                .map(|v| v as f32),
-            metadata: value
-                .get("metadata")
-                .cloned()
-                .unwrap_or(serde_json::Value::Null),
         }
     }
 
@@ -96,12 +151,10 @@ impl MemoryEntry {
                 serde_json::Value::String(self.content.clone()),
             );
         }
-        {
-            let nested = self.category.to_value(ctx);
-            if !nested.is_null() {
-                result.insert("category".to_string(), nested);
-            }
-        }
+        result.insert(
+            "category".to_string(),
+            serde_json::Value::String(self.category.to_string()),
+        );
         if let Some(ref val) = self.created_at {
             result.insert(
                 "createdAt".to_string(),
@@ -114,17 +167,6 @@ impl MemoryEntry {
                 serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
             );
         }
-        if let Some(val) = self.importance {
-            result.insert(
-                "importance".to_string(),
-                serde_json::Number::from_f64(val as f64)
-                    .map(serde_json::Value::Number)
-                    .unwrap_or(serde_json::Value::Null),
-            );
-        }
-        if !self.metadata.is_null() {
-            result.insert("metadata".to_string(), self.metadata.clone());
-        }
         ctx.process_dict(serde_json::Value::Object(result))
     }
 
@@ -136,11 +178,6 @@ impl MemoryEntry {
     /// Serialize MemoryEntry to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
-    }
-    /// Returns typed reference to the map if the field is an object.
-    /// Returns `None` if the field is null or not an object.
-    pub fn as_metadata_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
-        self.metadata.as_object()
     }
 }
 

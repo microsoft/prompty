@@ -95,7 +95,6 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
-        "MemoryCategory",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -710,13 +709,6 @@
           "kind": "value",
           "group": "events",
           "source": "events/StreamChunk.cs",
-          "protocol": false
-        },
-        {
-          "name": "MemoryCategory",
-          "kind": "value",
-          "group": "memory",
-          "source": "memory/MemoryCategory.cs",
           "protocol": false
         },
         {
@@ -1416,12 +1408,10 @@
         {
           "name": "memory",
           "exports": [
-            "MemoryCategory",
             "MemoryEntry",
             "MemoryStore"
           ],
           "modules": [
-            "MemoryCategory.cs",
             "MemoryEntry.cs",
             "MemoryStore.cs"
           ]
@@ -1922,7 +1912,6 @@
         "events/TurnStartPayload.cs",
         "events/TurnSummary.cs",
         "events/TurnTrace.cs",
-        "memory/MemoryCategory.cs",
         "memory/MemoryEntry.cs",
         "memory/MemoryStore.cs",
         "model/InvocationUsage.cs",
@@ -2061,7 +2050,6 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
-        "MemoryCategory",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -2676,13 +2664,6 @@
           "kind": "value",
           "group": "events",
           "source": "stream_chunk.go",
-          "protocol": false
-        },
-        {
-          "name": "MemoryCategory",
-          "kind": "value",
-          "group": "memory",
-          "source": "memory_category.go",
           "protocol": false
         },
         {
@@ -3382,12 +3363,10 @@
         {
           "name": "memory",
           "exports": [
-            "MemoryCategory",
             "MemoryEntry",
             "MemoryStore"
           ],
           "modules": [
-            "memory_category",
             "memory_entry",
             "memory_store"
           ]
@@ -3881,7 +3860,6 @@
         "llm_complete_payload.go",
         "llm_start_payload.go",
         "mcp_approval_mode.go",
-        "memory_category.go",
         "memory_entry.go",
         "memory_store.go",
         "message.go",
@@ -4026,7 +4004,6 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
-        "MemoryCategory",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -4641,13 +4618,6 @@
           "kind": "value",
           "group": "events",
           "source": "StreamChunk",
-          "protocol": false
-        },
-        {
-          "name": "MemoryCategory",
-          "kind": "value",
-          "group": "memory",
-          "source": "MemoryCategory",
           "protocol": false
         },
         {
@@ -5347,12 +5317,10 @@
         {
           "name": "memory",
           "exports": [
-            "MemoryCategory",
             "MemoryEntry",
             "MemoryStore"
           ],
           "modules": [
-            "memory_category",
             "memory_entry",
             "memory_store"
           ]
@@ -5846,7 +5814,6 @@
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
-        "MemoryCategory",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -5992,7 +5959,6 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
-        "MemoryCategory",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -6607,13 +6573,6 @@
           "kind": "value",
           "group": "events",
           "source": ".events",
-          "protocol": false
-        },
-        {
-          "name": "MemoryCategory",
-          "kind": "value",
-          "group": "memory",
-          "source": ".memory",
           "protocol": false
         },
         {
@@ -7313,12 +7272,10 @@
         {
           "name": "memory",
           "exports": [
-            "MemoryCategory",
             "MemoryEntry",
             "MemoryStore"
           ],
           "modules": [
-            "_MemoryCategory",
             "_MemoryEntry",
             "_MemoryStore"
           ]
@@ -7842,7 +7799,6 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
-        "MemoryCategory",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -8457,13 +8413,6 @@
           "kind": "value",
           "group": "events",
           "source": "events::stream_chunk",
-          "protocol": false
-        },
-        {
-          "name": "MemoryCategory",
-          "kind": "value",
-          "group": "memory",
-          "source": "memory::memory_category",
           "protocol": false
         },
         {
@@ -9163,12 +9112,10 @@
         {
           "name": "memory",
           "exports": [
-            "MemoryCategory",
             "MemoryEntry",
             "MemoryStore"
           ],
           "modules": [
-            "memory_category",
             "memory_entry",
             "memory_store"
           ]
@@ -9694,7 +9641,6 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
-        "MemoryCategory",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -10309,13 +10255,6 @@
           "kind": "value",
           "group": "events",
           "source": "./events/stream-chunk",
-          "protocol": false
-        },
-        {
-          "name": "MemoryCategory",
-          "kind": "value",
-          "group": "memory",
-          "source": "./memory/memory-category",
           "protocol": false
         },
         {
@@ -11015,12 +10954,10 @@
         {
           "name": "memory",
           "exports": [
-            "MemoryCategory",
             "MemoryEntry",
             "MemoryStore"
           ],
           "modules": [
-            "memory-category",
             "memory-entry",
             "memory-store"
           ]
@@ -11521,7 +11458,6 @@
         "./events/turn-start-payload",
         "./events/turn-summary",
         "./events/turn-trace",
-        "./memory/memory-category",
         "./memory/memory-entry",
         "./memory/memory-store",
         "./model/invocation-usage",

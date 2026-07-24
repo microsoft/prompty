@@ -10,22 +10,31 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// MemoryEntry represents A single agent memory.
+// MemoryCategory represents the allowed values for MemoryCategory.
+type MemoryCategory string
+
+const (
+	MemoryCategoryCore     MemoryCategory = "core"
+	MemoryCategoryArchival MemoryCategory = "archival"
+	MemoryCategoryInsight  MemoryCategory = "insight"
+)
+
+// MemoryEntry represents A single agent memory — the canonical, host-neutral unit of agent memory.
 //
-// The canonical, host-neutral unit of agent memory. `content` is the memory
-// text; `category` classifies it; `createdAt`, `tags`, and `importance` are
-// intrinsic scoring inputs consumed by deterministic recall. Any host-specific
-// bookkeeping (source, session association, application taxonomy, a stored
-// embedding vector for host-side vector recall, or a stable per-entry
-// identifier) lives in `metadata`, never as a canonical field.
+// `content` is the memory text, `category` places it in a general tier,
+// `createdAt` records when the memory was formed (intrinsic, portable data), and
+// `tags` are general labels used for keyword recall, grouping, and core
+// deduplication. Host-specific associations (for example a session association)
+// are expressed through the general `tags` field by convention — e.g. a
+// `session:{id}` tag — never as a canonical field. A host needing per-entry
+// bookkeeping, a stable id, or a stored embedding vector layers it in host
+// storage; those are not canonical fields.
 
 type MemoryEntry struct {
-	Content    string                 `json:"content" yaml:"content"`
-	Category   MemoryCategory         `json:"category" yaml:"category"`
-	CreatedAt  *string                `json:"createdAt,omitempty" yaml:"createdAt,omitempty"`
-	Tags       []string               `json:"tags,omitempty" yaml:"tags,omitempty"`
-	Importance *float32               `json:"importance,omitempty" yaml:"importance,omitempty"`
-	Metadata   map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Content   string         `json:"content" yaml:"content"`
+	Category  MemoryCategory `json:"category" yaml:"category"`
+	CreatedAt *string        `json:"createdAt,omitempty" yaml:"createdAt,omitempty"`
+	Tags      []string       `json:"tags,omitempty" yaml:"tags,omitempty"`
 }
 
 // LoadMemoryEntry creates a MemoryEntry from a map[string]interface{}
@@ -38,19 +47,7 @@ func LoadMemoryEntry(data interface{}, ctx *LoadContext) (MemoryEntry, error) {
 			result.Content = string(val.(string))
 		}
 		if val, ok := m["category"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadMemoryCategory(m, ctx)
-				if err != nil {
-					return result, err
-				}
-				result.Category = loaded
-			} else {
-				loaded, err := LoadMemoryCategory(val, ctx)
-				if err != nil {
-					return result, err
-				}
-				result.Category = loaded
-			}
+			result.Category = MemoryCategory(val.(string))
 		}
 		if val, ok := m["createdAt"]; ok && val != nil {
 			v := string(val.(string))
@@ -67,27 +64,6 @@ func LoadMemoryEntry(data interface{}, ctx *LoadContext) (MemoryEntry, error) {
 				result.Tags = arr
 			}
 		}
-		if val, ok := m["importance"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip
-			var v float32
-			switch n := val.(type) {
-			case int:
-				v = float32(n)
-			case int32:
-				v = float32(n)
-			case int64:
-				v = float32(n)
-			case float32:
-				v = n
-			case float64:
-				v = float32(n)
-			}
-			result.Importance = &v
-		}
-		if val, ok := m["metadata"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				result.Metadata = m
-			}
-		}
 	}
 
 	return result, nil
@@ -97,18 +73,11 @@ func LoadMemoryEntry(data interface{}, ctx *LoadContext) (MemoryEntry, error) {
 func (obj MemoryEntry) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["content"] = obj.Content
-
-	result["category"] = obj.Category.Save(ctx)
+	result["category"] = string(obj.Category)
 	if obj.CreatedAt != nil {
 		result["createdAt"] = *obj.CreatedAt
 	}
 	result["tags"] = obj.Tags
-	if obj.Importance != nil {
-		result["importance"] = *obj.Importance
-	}
-	if obj.Metadata != nil {
-		result["metadata"] = obj.Metadata
-	}
 
 	return result
 }

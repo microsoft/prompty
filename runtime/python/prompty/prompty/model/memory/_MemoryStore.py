@@ -18,20 +18,18 @@ class MemoryStore:
 
     The canonical persisted shape a host loads and saves as one unit. A host
     backend implements only load/save of this snapshot; the engine owns the
-    deterministic recall, formatting, and entry-mutation logic on top of it.
+    deterministic recall, formatting, tiered injection, eviction, and
+    entry-mutation logic on top of it.
 
     Attributes
     ----------
     entries : list[MemoryEntry]
         The memories held in the store, in insertion order
-    metadata : Optional[dict[str, Any]]
-        Opaque host-specific store metadata
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     entries: list[MemoryEntry] = field(default_factory=list)
-    metadata: dict[str, Any] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "MemoryStore":
@@ -55,8 +53,6 @@ class MemoryStore:
 
         if data is not None and "entries" in data:
             instance.entries = MemoryStore.load_entries(data["entries"], context)
-        if data is not None and "metadata" in data:
-            instance.metadata = data["metadata"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -100,8 +96,6 @@ class MemoryStore:
 
         if obj.entries is not None:
             result["entries"] = MemoryStore.save_entries(obj.entries, context)
-        if obj.metadata is not None:
-            result["metadata"] = obj.metadata
 
         if context is not None:
             result = context.process_dict(result)

@@ -9,7 +9,8 @@ A whole-store snapshot of agent memory.
 
 The canonical persisted shape a host loads and saves as one unit. A host
 backend implements only load/save of this snapshot; the engine owns the
-deterministic recall, formatting, and entry-mutation logic on top of it.
+deterministic recall, formatting, tiered injection, eviction, and
+entry-mutation logic on top of it.
 
 ## Class Diagram
 
@@ -25,15 +26,12 @@ config:
 classDiagram
     class MemoryStore {
         +MemoryEntry[] entries
-        +dictionary metadata
     }
     class MemoryEntry {
         +string content
-        +MemoryCategory category
+        +string category
         +string createdAt
         +string[] tags
-        +float32 importance
-        +dictionary metadata
     }
     MemoryStore *-- MemoryEntry
 ```
@@ -49,7 +47,6 @@ entries: []
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | entries | [MemoryEntry[]](../memoryentry/) | The memories held in the store, in insertion order |
-| metadata | dictionary | Opaque host-specific store metadata |
 
 ## Composed Types
 

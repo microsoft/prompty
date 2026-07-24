@@ -93,7 +93,6 @@ from .events import (
     UsageChunk,
 )
 from .memory import (
-    MemoryCategory,
     MemoryEntry,
     MemoryStore,
 )
@@ -234,7 +233,6 @@ __all__ = [
     "TokenUsage",
     "InvocationUsage",
     "ModelInfo",
-    "MemoryCategory",
     "MemoryEntry",
     "MemoryStore",
     "DelegatedStateReference",

@@ -9,13 +9,9 @@ export class MemoryStore {
   static readonly shorthandProperty: string | undefined = undefined;
 
   entries: MemoryEntry[] = [];
-  metadata?: Record<string, unknown> | undefined;
 
   constructor(init?: Partial<MemoryStore>) {
     this.entries = init?.entries ?? [];
-    if (init?.metadata !== undefined) {
-      this.metadata = init.metadata;
-    }
   }
 
   //#region Load Methods
@@ -35,9 +31,6 @@ export class MemoryStore {
         data["entries"] as unknown[],
         context,
       );
-    }
-    if (data["metadata"] !== undefined && data["metadata"] !== null) {
-      instance.metadata = data["metadata"] as Record<string, unknown>;
     }
 
     if (context) {
@@ -93,9 +86,6 @@ export class MemoryStore {
 
     if (obj.entries !== undefined && obj.entries !== null) {
       result["entries"] = MemoryStore.saveEntries(obj.entries, context);
-    }
-    if (obj.metadata !== undefined && obj.metadata !== null) {
-      result["metadata"] = obj.metadata;
     }
 
     if (context) {

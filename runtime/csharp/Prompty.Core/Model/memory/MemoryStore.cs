@@ -14,7 +14,9 @@ namespace Prompty.Core;
     ///
     /// backend implements only load/save of this snapshot; the engine owns the
     ///
-    /// deterministic recall, formatting, and entry-mutation logic on top of it.
+    /// deterministic recall, formatting, tiered injection, eviction, and
+    ///
+    /// entry-mutation logic on top of it.
     /// </summary>
 public partial class MemoryStore
 {
@@ -36,11 +38,6 @@ public partial class MemoryStore
     /// The memories held in the store, in insertion order
     /// </summary>
     public IList<MemoryEntry> Entries { get; set; } = [];
-
-    /// <summary>
-    /// Opaque host-specific store metadata
-    /// </summary>
-    public IDictionary<string, object>? Metadata { get; set; }
 
 
 
@@ -67,11 +64,6 @@ public partial class MemoryStore
         if (data.TryGetValue("entries", out var entriesValue) && entriesValue is not null)
         {
             instance.Entries = LoadEntries(entriesValue, context);
-        }
-
-        if (data.TryGetValue("metadata", out var metadataValue) && metadataValue is not null)
-        {
-            instance.Metadata = metadataValue.GetDictionary()!;
         }
 
         if (context is not null)
@@ -158,12 +150,6 @@ public partial class MemoryStore
 
 
         result["entries"] = SaveEntries(obj.Entries, context);
-
-
-        if (obj.Metadata is not null)
-        {
-            result["metadata"] = obj.Metadata;
-        }
 
 
         if (context is not null)
