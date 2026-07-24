@@ -3141,6 +3141,37 @@ fn resume_context_bridge_threads_budgets_and_journal_tail() {
     assert_eq!(at_checkpoint_back, at_checkpoint);
 }
 
+#[test]
+fn resume_context_preserves_independent_session_and_run_identity() {
+    // A delegated child keeps the parent's session_id (the shared tree/journal
+    // key) while carrying its own run_id and parentRunId. ResumeContext must NOT
+    // conflate session_id with run_id: all identity fields round-trip
+    // independently through the durable record and the resume bridge.
+    let mut checkpoint = resume_fixture_checkpoint(7);
+    checkpoint.session_id = "session-tree".to_string();
+    checkpoint.run_id = "run-child".to_string();
+    checkpoint.parent_run_id = Some("run-parent".to_string());
+    checkpoint.delegation_depth = 1;
+
+    let resume = ResumeContext::resuming(checkpoint, 3, 3);
+
+    // Durable JSON carries the four identity fields on the embedded checkpoint in
+    // canonical camelCase, with session_id and run_id kept distinct.
+    let json = serde_json::to_value(&resume).unwrap();
+    assert_eq!(json["checkpoint"]["sessionId"], "session-tree");
+    assert_eq!(json["checkpoint"]["runId"], "run-child");
+    assert_eq!(json["checkpoint"]["parentRunId"], "run-parent");
+    assert_eq!(json["checkpoint"]["delegationDepth"], 1);
+    let resume: ResumeContext = serde_json::from_value(json).unwrap();
+
+    // The resume bridge rebuilds the request preserving each field independently.
+    let request = TurnEngineRequest::from_resume(&resume);
+    assert_eq!(request.session_id, "session-tree");
+    assert_eq!(request.run_id, "run-child");
+    assert_eq!(request.parent_run_id.as_deref(), Some("run-parent"));
+    assert_eq!(request.delegation_depth, 1);
+}
+
 #[tokio::test]
 async fn resume_via_generated_resume_context_avoids_duplicate_effects() {
     // Produce a real checkpoint with a committed final model response.
