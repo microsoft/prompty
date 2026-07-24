@@ -190,13 +190,17 @@ async fn public_turn_validates_unwrapped_output_and_commits_rejection() {
     assert_eq!(calls.load(Ordering::SeqCst), 1);
     let events = durability.events.lock().expect("event lock poisoned");
     assert!(events.iter().any(|event| {
-        event.kind == EngineEventKind::TurnFailed
-            && event.payload["output"]["errorKind"] == "output_validation_failed"
+        event.kind == EngineEventKind::Turn_failed
+            && event
+                .payload
+                .as_ref()
+                .map(|p| p["output"]["errorKind"] == "output_validation_failed")
+                .unwrap_or(false)
     }));
     assert!(
         !events
             .iter()
-            .any(|event| event.kind == EngineEventKind::TurnCommitted)
+            .any(|event| event.kind == EngineEventKind::Turn_committed)
     );
 }
 
@@ -334,7 +338,7 @@ async fn public_streaming_turn_cancels_after_open_and_persists_terminal_event() 
             .lock()
             .expect("event lock poisoned")
             .iter()
-            .any(|event| event.kind == EngineEventKind::TurnCancelled),
+            .any(|event| event.kind == EngineEventKind::Turn_cancelled),
         "durability must record the TurnCancelled terminal state"
     );
 }

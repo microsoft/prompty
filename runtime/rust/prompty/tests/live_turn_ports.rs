@@ -232,12 +232,12 @@ async fn turn_with_engine_request_uses_host_permission_and_persists_denial() {
 
     let events = durability.events.lock().expect("events lock poisoned");
     assert!(
-        event_position(&events, EngineEventKind::PermissionRequested)
-            < event_position(&events, EngineEventKind::PermissionResolved)
+        event_position(&events, EngineEventKind::Permission_requested)
+            < event_position(&events, EngineEventKind::Permission_resolved)
     );
     assert!(
-        event_position(&events, EngineEventKind::PermissionResolved)
-            < event_position(&events, EngineEventKind::ToolExecutionCompleted)
+        event_position(&events, EngineEventKind::Permission_resolved)
+            < event_position(&events, EngineEventKind::Tool_execution_completed)
     );
     drop(events);
 
@@ -249,7 +249,7 @@ async fn turn_with_engine_request_uses_host_permission_and_persists_denial() {
         checkpoint.completed_tool_results.iter().any(|tool_result| {
             tool_result.outcome == ToolOutcome::Failed
                 && tool_result.error_kind.as_deref() == Some("host_policy_denied")
-                && tool_result.output == json!("host policy denied weather access")
+                && tool_result.output == Some(json!("host policy denied weather access"))
         })
     }));
 }
@@ -303,21 +303,21 @@ async fn assert_post_commit_hook(fail: bool, expected_terminal_event: EngineEven
 
     let events = durability.events.lock().expect("events lock poisoned");
     assert!(
-        event_position(&events, EngineEventKind::TurnCommitted)
-            < event_position(&events, EngineEventKind::PostCommitStarted)
+        event_position(&events, EngineEventKind::Turn_committed)
+            < event_position(&events, EngineEventKind::Post_commit_started)
     );
     assert!(
-        event_position(&events, EngineEventKind::PostCommitStarted)
+        event_position(&events, EngineEventKind::Post_commit_started)
             < event_position(&events, expected_terminal_event)
     );
 }
 
 #[tokio::test]
 async fn turn_with_engine_request_runs_supplied_post_commit_hook() {
-    assert_post_commit_hook(false, EngineEventKind::PostCommitCompleted).await;
+    assert_post_commit_hook(false, EngineEventKind::Post_commit_completed).await;
 }
 
 #[tokio::test]
 async fn turn_with_engine_request_keeps_success_after_post_commit_failure() {
-    assert_post_commit_hook(true, EngineEventKind::PostCommitFailed).await;
+    assert_post_commit_hook(true, EngineEventKind::Post_commit_failed).await;
 }

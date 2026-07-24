@@ -16,12 +16,11 @@ use crate::engine::{
     AppendContextPackingStrategy, CancellationToken, Clock, ContextPipeline, ConversationPort,
     DurabilityPort, EngineCheckpoint, EngineEvent, EngineEventKind, EnginePermissionDecision,
     EngineToolRequest, EngineToolResult, FinalOutputPolicyRequest, FinalOutputPolicyResult,
-    GeneratedModelPort, GeneratedModelPortAdapter, HostPolicyError, HostPolicyPort,
-    HostPolicyRequest, HostPolicyResult, IdGenerator,
-    ModelInvocationResponse as EngineModelInvocationResponse, ModelStreamChunk, ModelStreamPort,
-    NoopPostCommitPort, PermissionPort, PortError, RetryPolicyError, RetryPolicyPort,
-    RetryPolicyRequest, ToolOutcome, ToolPort, TurnEngine, TurnEngineEffects, TurnEngineError,
-    TurnEngineRequest, TurnStatus,
+    HostPolicyError, HostPolicyPort, HostPolicyRequest, HostPolicyResult, IdGenerator,
+    ModelInvocationResponse as EngineModelInvocationResponse, ModelPort, ModelStreamChunk,
+    ModelStreamPort, NoopPostCommitPort, PermissionPort, PortError, RetryPolicyError,
+    RetryPolicyPort, RetryPolicyRequest, ToolOutcome, ToolPort, TurnEngine, TurnEngineEffects,
+    TurnEngineError, TurnEngineRequest, TurnStatus,
 };
 use crate::guardrails::Guardrails;
 use crate::interfaces::{ExecuteError, InvokerError};
@@ -102,69 +101,70 @@ impl TurnLifecycleTrace {
             "invocation_id": event.invocation_id,
             "iteration": event.iteration,
         });
+        let event_payload = event.payload.clone().unwrap_or_else(|| json!({}));
         match event.kind {
-            EngineEventKind::ModelInvocationStarted => self.emit(
+            EngineEventKind::Model_invocation_started => self.emit(
                 "engine.attempt",
                 json!({
                     "identity": identity,
-                    "attempt": event.payload["attempt"],
-                    "message_count": event.payload["messageCount"],
+                    "attempt": event_payload["attempt"],
+                    "message_count": event_payload["messageCount"],
                 }),
             ),
-            EngineEventKind::ModelInvocationFailed => self.emit(
+            EngineEventKind::Model_invocation_failed => self.emit(
                 "engine.attempt_failed",
                 json!({
                     "identity": identity,
-                    "attempt": event.payload["attempt"],
-                    "exhausted": event.payload["exhausted"],
-                    "outcome_unknown": event.payload["outcomeUnknown"],
+                    "attempt": event_payload["attempt"],
+                    "exhausted": event_payload["exhausted"],
+                    "outcome_unknown": event_payload["outcomeUnknown"],
                     "reason_code": "model_invocation_failed",
                 }),
             ),
-            EngineEventKind::CheckpointCreated => self.emit(
+            EngineEventKind::Checkpoint_created => self.emit(
                 "engine.checkpoint_committed",
                 json!({
                     "identity": identity,
-                    "checkpoint_id": event.payload["checkpointId"],
-                    "included_through_sequence": event.payload["includedThroughSequence"],
+                    "checkpoint_id": event_payload["checkpointId"],
+                    "included_through_sequence": event_payload["includedThroughSequence"],
                 }),
             ),
-            EngineEventKind::PermissionResolved => self.emit(
+            EngineEventKind::Permission_resolved => self.emit(
                 "engine.permission",
                 json!({
                     "identity": identity,
-                    "tool_request_id": event.payload["toolRequestId"],
-                    "approved": event.payload["decision"]["approved"],
-                    "reason": event.payload["decision"]["reason"],
+                    "tool_request_id": event_payload["toolRequestId"],
+                    "approved": event_payload["decision"]["approved"],
+                    "reason": event_payload["decision"]["reason"],
                 }),
             ),
-            EngineEventKind::ToolExecutionCompleted => {
+            EngineEventKind::Tool_execution_completed => {
                 self.emit(
                     "engine.tool_outcome",
                     json!({
                         "identity": identity,
-                        "request_id": event.payload["toolResult"]["request_id"],
-                        "name": event.payload["toolResult"]["name"],
-                        "outcome": event.payload["toolResult"]["outcome"],
-                        "error_kind": event.payload["toolResult"]["error_kind"],
+                        "request_id": event_payload["toolResult"]["request_id"],
+                        "name": event_payload["toolResult"]["name"],
+                        "outcome": event_payload["toolResult"]["outcome"],
+                        "error_kind": event_payload["toolResult"]["error_kind"],
                     }),
                 );
             }
-            EngineEventKind::ModelReconciliationRequired
-            | EngineEventKind::ModelInvocationReconciled
-            | EngineEventKind::ToolResultReconciled => self.emit(
+            EngineEventKind::Model_reconciliation_required
+            | EngineEventKind::Model_invocation_reconciled
+            | EngineEventKind::Tool_result_reconciled => self.emit(
                 "engine.reconciliation",
                 json!({
                     "identity": identity,
                     "event": format!("{:?}", event.kind),
                     "model_reconciliation": matches!(
                         event.kind,
-                        EngineEventKind::ModelReconciliationRequired
-                            | EngineEventKind::ModelInvocationReconciled
+                        EngineEventKind::Model_reconciliation_required
+                            | EngineEventKind::Model_invocation_reconciled
                     ),
                 }),
             ),
-            EngineEventKind::TurnReconciliationRequired => {
+            EngineEventKind::Turn_reconciliation_required => {
                 self.emit(
                     "engine.reconciliation",
                     json!({
@@ -177,29 +177,29 @@ impl TurnLifecycleTrace {
                     "engine.terminal",
                     json!({
                         "identity": identity,
-                        "status": event.payload["status"],
+                        "status": event_payload["status"],
                         "event": format!("{:?}", event.kind),
                     }),
                 );
             }
-            EngineEventKind::TurnCommitted
-            | EngineEventKind::TurnCancelled
-            | EngineEventKind::TurnFailed => self.emit(
+            EngineEventKind::Turn_committed
+            | EngineEventKind::Turn_cancelled
+            | EngineEventKind::Turn_failed => self.emit(
                 "engine.terminal",
                 json!({
                     "identity": identity,
-                    "status": event.payload["status"],
+                    "status": event_payload["status"],
                     "event": format!("{:?}", event.kind),
                 }),
             ),
-            EngineEventKind::PostCommitStarted
-            | EngineEventKind::PostCommitCompleted
-            | EngineEventKind::PostCommitFailed => self.emit(
+            EngineEventKind::Post_commit_started
+            | EngineEventKind::Post_commit_completed
+            | EngineEventKind::Post_commit_failed => self.emit(
                 "engine.post_commit",
                 json!({
                     "identity": identity,
                     "event": format!("{:?}", event.kind),
-                    "effect_id": event.payload["effectId"],
+                    "effect_id": event_payload["effectId"],
                 }),
             ),
             _ => {}
@@ -504,7 +504,7 @@ impl LiveModelPort {
 }
 
 #[async_trait]
-impl GeneratedModelPort for LiveModelPort {
+impl ModelPort for LiveModelPort {
     async fn invoke(
         &self,
         request: &ModelInvocationRequest,
@@ -737,9 +737,10 @@ fn tool_request_arguments_text(request: &EngineToolRequest) -> String {
         .get("argumentsText")
         .and_then(Value::as_str)
         .map(str::to_string)
-        .unwrap_or_else(|| match &request.arguments {
-            Value::String(arguments) => arguments.clone(),
-            arguments => arguments.to_string(),
+        .unwrap_or_else(|| match request.arguments.as_ref() {
+            Some(Value::String(arguments)) => arguments.clone(),
+            Some(arguments) => arguments.to_string(),
+            None => String::new(),
         })
 }
 
@@ -903,7 +904,7 @@ impl ToolPort for LiveToolPort {
             } else {
                 ToolOutcome::Success
             },
-            output: Value::String(output),
+            output: Some(Value::String(output)),
             error_kind: failed.then(|| "tool_error".to_string()),
             metadata: Value::Null,
         })
@@ -933,18 +934,19 @@ impl LiveDurabilityPort {
     fn update_checkpoint(&self, checkpoint: &EngineCheckpoint) {
         let mut state = self.state.lock().expect("live projection lock poisoned");
         state.messages = checkpoint.messages.clone();
-        state.completed_model_iterations = checkpoint.completed_model_iterations;
+        state.completed_model_iterations = checkpoint.completed_model_iterations as usize;
     }
 
     fn project(&self, event: &EngineEvent) {
         self.trace.project(event);
+        let event_payload = event.payload.clone().unwrap_or_else(|| json!({}));
         match event.kind {
-            EngineEventKind::TurnStarted => self.events.emit(AgentEvent::TurnStart {
+            EngineEventKind::Turn_started => self.events.emit(AgentEvent::TurnStart {
                 agent: self.agent_name.clone(),
                 max_iterations: self.configured_max_iterations,
             }),
-            EngineEventKind::PolicyApplied => {
-                let metadata = &event.payload["metadata"];
+            EngineEventKind::Policy_applied => {
+                let metadata = &event_payload["metadata"];
                 let steering_count = metadata
                     .get("steeringCount")
                     .and_then(Value::as_u64)
@@ -968,27 +970,26 @@ impl LiveDurabilityPort {
                     self.events.emit(AgentEvent::MessagesUpdated { messages });
                 }
             }
-            EngineEventKind::ModelInvocationStarted => {
+            EngineEventKind::Model_invocation_started => {
                 self.events.emit(AgentEvent::LlmStart {
                     provider: self.provider.clone(),
                     model_id: self.model_id.clone(),
-                    message_count: event
-                        .payload
+                    message_count: event_payload
                         .get("messageCount")
                         .and_then(Value::as_u64)
                         .unwrap_or(0) as usize,
-                    iteration: event.iteration.unwrap_or_default(),
+                    iteration: event.iteration.unwrap_or_default() as usize,
                 });
             }
-            EngineEventKind::ModelInvocationCompleted
-            | EngineEventKind::ModelInvocationReconciled => {
+            EngineEventKind::Model_invocation_completed
+            | EngineEventKind::Model_invocation_reconciled => {
                 self.events.emit(AgentEvent::LlmComplete {
-                    iteration: event.iteration.unwrap_or_default(),
+                    iteration: event.iteration.unwrap_or_default() as usize,
                 });
             }
-            EngineEventKind::ToolExecutionStarted => {
+            EngineEventKind::Tool_execution_started => {
                 if let Ok(request) = serde_json::from_value::<EngineToolRequest>(
-                    event.payload["toolRequest"].clone(),
+                    event_payload["toolRequest"].clone(),
                 ) {
                     let arguments = tool_request_arguments_text(&request);
                     self.events.emit(AgentEvent::ToolCallStart {
@@ -997,9 +998,9 @@ impl LiveDurabilityPort {
                     });
                 }
             }
-            EngineEventKind::ToolExecutionCompleted | EngineEventKind::ToolResultCommitted => {
+            EngineEventKind::Tool_execution_completed | EngineEventKind::Tool_result_committed => {
                 if let Ok(result) =
-                    serde_json::from_value::<EngineToolResult>(event.payload["toolResult"].clone())
+                    serde_json::from_value::<EngineToolResult>(event_payload["toolResult"].clone())
                 {
                     let output = result.model_text();
                     self.events.emit(AgentEvent::ToolResult {
@@ -1014,7 +1015,7 @@ impl LiveDurabilityPort {
                     });
                 }
             }
-            EngineEventKind::ConversationUpdated => {
+            EngineEventKind::Conversation_updated => {
                 let messages = self
                     .state
                     .lock()
@@ -1023,13 +1024,13 @@ impl LiveDurabilityPort {
                     .clone();
                 self.events.emit(AgentEvent::MessagesUpdated { messages });
             }
-            EngineEventKind::TurnCommitted => self.project_terminal(event, "success"),
-            EngineEventKind::TurnCancelled => {
+            EngineEventKind::Turn_committed => self.project_terminal(event, "success"),
+            EngineEventKind::Turn_cancelled => {
                 self.events.emit(AgentEvent::Cancelled);
                 self.project_terminal(event, "cancelled");
             }
-            EngineEventKind::TurnFailed | EngineEventKind::TurnReconciliationRequired => {
-                if event.payload["output"]
+            EngineEventKind::Turn_failed | EngineEventKind::Turn_reconciliation_required => {
+                if event_payload["output"]
                     .get("errorKind")
                     .and_then(Value::as_str)
                     == Some("max_iterations")
@@ -1046,6 +1047,7 @@ impl LiveDurabilityPort {
     }
 
     fn project_terminal(&self, event: &EngineEvent, status: &str) {
+        let event_payload = event.payload.clone().unwrap_or_else(|| json!({}));
         let mut state = self.state.lock().expect("live projection lock poisoned");
         if state.terminal_emitted {
             return;
@@ -1057,7 +1059,7 @@ impl LiveDurabilityPort {
             0
         };
         let response = if status == "success" {
-            event.payload["output"].clone()
+            event_payload["output"].clone()
         } else {
             Value::Null
         };
@@ -1119,7 +1121,7 @@ impl DurabilityPort for LiveDurabilityPort {
         if events.iter().any(|event| {
             matches!(
                 event.kind,
-                EngineEventKind::ToolExecutionCompleted | EngineEventKind::ToolResultCommitted
+                EngineEventKind::Tool_execution_completed | EngineEventKind::Tool_result_committed
             )
         }) && checkpoint.pending_tool_requests.is_empty()
             && checkpoint.pending_model_response.is_none()
@@ -1261,7 +1263,7 @@ pub(super) async fn turn_with_engine_request(
     let engine = TurnEngine::new(
         ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
         TurnEngineEffects {
-            model: Arc::new(GeneratedModelPortAdapter::new(Arc::new(LiveModelPort {
+            model: Arc::new(LiveModelPort {
                 agent: agent.clone(),
                 provider: provider.clone(),
                 streaming,
@@ -1269,7 +1271,7 @@ pub(super) async fn turn_with_engine_request(
                 agent_mode,
                 skip_output_guardrail: skip_output_guardrail.clone(),
                 failures: failures.clone(),
-            }))),
+            }),
             stream: Arc::new(LiveStreamPort {
                 events: events.clone(),
             }),
@@ -1327,7 +1329,7 @@ pub(super) async fn turn_with_engine_request(
                     .take_cancellation_reason()
                     .unwrap_or_else(|| "Operation cancelled".to_string()),
             )),
-            TurnStatus::Failed | TurnStatus::ReconciliationRequired => {
+            TurnStatus::Failed | TurnStatus::Reconciliation_required => {
                 let output = result.commit.output.unwrap_or(Value::Null);
                 let error_kind = output
                     .get("errorKind")
@@ -1457,10 +1459,13 @@ mod tests {
             timestamp: "2026-01-01T00:00:00Z".to_string(),
             session_id: "session-1".to_string(),
             turn_id: "turn-1".to_string(),
+            run_id: "run-1".to_string(),
+            parent_run_id: None,
+            delegation_depth: 0,
             invocation_id: Some("invocation-1".to_string()),
             iteration: Some(2),
             kind,
-            payload,
+            payload: Some(payload),
         }
     }
 
@@ -1469,7 +1474,7 @@ mod tests {
         let request = EngineToolRequest {
             id: "call_1".to_string(),
             name: "get_weather".to_string(),
-            arguments: json!("{\"city\":\"Paris\"}"),
+            arguments: Some(json!("{\"city\":\"Paris\"}")),
             metadata: Value::Null,
         };
 
@@ -1481,7 +1486,7 @@ mod tests {
         let request = EngineToolRequest {
             id: "call_1".to_string(),
             name: "get_weather".to_string(),
-            arguments: json!({ "city": "Paris" }),
+            arguments: Some(json!({ "city": "Paris" })),
             metadata: Value::Null,
         };
 
@@ -1503,11 +1508,11 @@ mod tests {
             TurnLifecycleTrace::new(&TurnEngineRequest::new("session-1", "turn-1", Vec::new()));
 
         trace.project(&lifecycle_event(
-            EngineEventKind::ModelInvocationStarted,
+            EngineEventKind::Model_invocation_started,
             json!({"attempt": 0, "messageCount": 2}),
         ));
         trace.project(&lifecycle_event(
-            EngineEventKind::ModelInvocationFailed,
+            EngineEventKind::Model_invocation_failed,
             json!({
                 "attempt": 0,
                 "exhausted": false,
@@ -1522,18 +1527,18 @@ mod tests {
             reason: "temporary failure".to_string(),
         });
         trace.project(&lifecycle_event(
-            EngineEventKind::CheckpointCreated,
+            EngineEventKind::Checkpoint_created,
             json!({"checkpointId": "checkpoint-1", "includedThroughSequence": 7}),
         ));
         trace.project(&lifecycle_event(
-            EngineEventKind::PermissionResolved,
+            EngineEventKind::Permission_resolved,
             json!({
                 "toolRequestId": "tool-1",
                 "decision": {"approved": true, "reason": null},
             }),
         ));
         trace.project(&lifecycle_event(
-            EngineEventKind::ToolExecutionCompleted,
+            EngineEventKind::Tool_execution_completed,
             json!({
                 "toolResult": {
                     "request_id": "tool-1",
@@ -1544,7 +1549,7 @@ mod tests {
             }),
         ));
         trace.project(&lifecycle_event(
-            EngineEventKind::ToolResultCommitted,
+            EngineEventKind::Tool_result_committed,
             json!({
                 "toolResult": {
                     "request_id": "tool-1",
@@ -1555,7 +1560,7 @@ mod tests {
             }),
         ));
         trace.project(&lifecycle_event(
-            EngineEventKind::TurnReconciliationRequired,
+            EngineEventKind::Turn_reconciliation_required,
             json!({"status": "reconciliation_required"}),
         ));
         trace.finish();
@@ -1618,7 +1623,7 @@ mod tests {
         let sensitive_error = "HTTP 401 provider body: {\"api_key\":\"super-secret\",\"model\":\"private-model-body\"}";
 
         trace.project(&lifecycle_event(
-            EngineEventKind::ModelInvocationFailed,
+            EngineEventKind::Model_invocation_failed,
             json!({
                 "attempt": 0,
                 "exhausted": false,
@@ -2096,16 +2101,18 @@ mod tests {
             tool_requests: vec![EngineToolRequest {
                 id: "call_weather".to_string(),
                 name: "weather".to_string(),
-                arguments: json!({"city": "Paris"}),
+                arguments: Some(json!({"city": "Paris"})),
                 metadata: Value::Null,
             }],
-            next_portability: Some(crate::engine::ContextPortability::Delegated),
-            delegated_state: Some(vec![crate::engine::DelegatedStateReference {
-                provider: RESPONSES_STREAM_PROVIDER.to_string(),
-                kind: "response".to_string(),
-                id: "resp_123".to_string(),
-                metadata: Value::Null,
-            }]),
+            next_context_state: Some(InvocationContextState {
+                portability: InvocationContextPortability::Delegated,
+                delegated_state: vec![crate::model::DelegatedStateReference {
+                    provider: RESPONSES_STREAM_PROVIDER.to_string(),
+                    kind: "response".to_string(),
+                    id: "resp_123".to_string(),
+                    metadata: Value::Null,
+                }],
+            }),
             metadata: Value::Null,
         };
         let messages = port
@@ -2115,7 +2122,7 @@ mod tests {
                     request_id: "call_weather".to_string(),
                     name: "weather".to_string(),
                     outcome: ToolOutcome::Success,
-                    output: json!("72F and sunny"),
+                    output: Some(json!("72F and sunny")),
                     error_kind: None,
                     metadata: Value::Null,
                 }],

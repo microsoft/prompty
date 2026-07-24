@@ -1971,7 +1971,8 @@ mod tests {
             .last()
             .cloned()
             .expect("the failing durability sink must retain the checkpoint");
-        let resume = TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence);
+        let resume =
+            TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence as u64);
         let result = turn_with_engine_request(
             &agent,
             resume,
@@ -2050,9 +2051,12 @@ mod tests {
             .last()
             .cloned()
             .expect("model response checkpoint must be retained");
-        assert_eq!(checkpoint.portability, ContextPortability::Delegated);
         assert_eq!(
-            checkpoint.delegated_state[0].id, "provider-state-1",
+            checkpoint.context_state.portability,
+            ContextPortability::Delegated
+        );
+        assert_eq!(
+            checkpoint.context_state.delegated_state[0].id, "provider-state-1",
             "checkpoint: {checkpoint:?}"
         );
         assert_eq!(
@@ -2060,7 +2064,8 @@ mod tests {
             ["incoming-state"]
         );
 
-        let resume = TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence);
+        let resume =
+            TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence as u64);
         let mut resumed_tools = HashMap::new();
         resumed_tools.insert(
             "acknowledge".to_string(),

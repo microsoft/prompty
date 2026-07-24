@@ -3,7 +3,6 @@
 pub mod cancellation;
 pub mod context;
 pub mod event;
-pub mod generated;
 pub mod ports;
 pub mod turn;
 
@@ -15,18 +14,18 @@ pub use context::{
     ModelInvocationContextSnapshot,
 };
 pub use event::{EngineEvent, EngineEventKind};
-pub use generated::{GeneratedModelPort, GeneratedModelPortAdapter};
 pub use ports::{
     AllowAllPermissions, Clock, ConversationPort, DefaultConversationPort, DurabilityPort,
     EngineCheckpoint, EnginePermissionDecision, EngineToolRequest, EngineToolResult,
     FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyError, HostPolicyPort,
     HostPolicyRequest, HostPolicyResult, IdGenerator, ModelInvocationRequest,
     ModelInvocationResponse, ModelPort, ModelReconciliationState, ModelStreamChunk,
-    ModelStreamPort, NoopDurabilityPort, NoopHostPolicyPort, NoopModelStreamPort,
-    NoopPostCommitPort, NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort,
-    RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, ToolOutcome, ToolPort,
+    ModelStreamPort, ModelToolOutcome, ModelToolRequest, ModelToolResult, NoopDurabilityPort,
+    NoopHostPolicyPort, NoopModelStreamPort, NoopPostCommitPort, NoopRetryPolicyPort,
+    PermissionPort, PortError, PostCommitPort, RetryPolicyError, RetryPolicyPort,
+    RetryPolicyRequest, ToolOutcome, ToolPort,
 };
 pub use turn::{
-    TurnCommit, TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest,
-    TurnEngineResult, TurnStatus,
+    EngineTurnStatus, TurnCommit, TurnEngine, TurnEngineEffects, TurnEngineError,
+    TurnEngineRequest, TurnEngineResult, TurnStatus,
 };

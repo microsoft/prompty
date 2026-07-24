@@ -494,7 +494,7 @@ impl ModelPort for ReferenceModelPort {
                 EngineToolRequest {
                     id: request_id,
                     name: host.tool_name.clone(),
-                    arguments: host.arguments.clone(),
+                    arguments: Some(host.arguments.clone()),
                     metadata: json!({
                         "hostToolRequest": host.to_value(&SaveContext::new()),
                     }),
@@ -507,8 +507,7 @@ impl ModelPort for ReferenceModelPort {
             usage: None,
             assistant_messages: Vec::new(),
             tool_requests,
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: json!({
                 "referenceResponse": response_value,
             }),
@@ -640,7 +639,7 @@ fn engine_tool_result(request: &EngineToolRequest, result: &HostToolResult) -> E
         } else {
             ToolOutcome::Failed
         },
-        output: result.result.clone().unwrap_or(Value::Null),
+        output: result.result.clone(),
         error_kind: result.error_kind.clone(),
         metadata: json!({
             "hostToolResult": result.to_value(&SaveContext::new()),
@@ -721,8 +720,9 @@ where
 
     async fn save_model_checkpoint(&self, event: &EngineEvent) -> Result<Checkpoint, PortError> {
         let iteration = event.iteration.unwrap_or_default();
+        let event_payload = event.payload.clone().unwrap_or_else(|| json!({}));
         let response = TurnModelResponse::load_from_value(
-            &event.payload["metadata"]["referenceResponse"],
+            &event_payload["metadata"]["referenceResponse"],
             &crate::model::context::LoadContext::new(),
         );
         let mut state = json!({
@@ -745,7 +745,7 @@ where
             id: Some(format!("{}-checkpoint-{iteration}", event.turn_id)),
             session_id: Some(event.session_id.clone()),
             turn_id: Some(event.turn_id.clone()),
-            checkpoint_number: Some(iteration as i32 + 1),
+            checkpoint_number: Some(iteration + 1),
             title: format!("Turn {} iteration {iteration}", event.turn_id),
             state,
             created_at: Some((self.now)()),
@@ -773,9 +773,10 @@ where
     }
 
     fn project_event(&self, event: &EngineEvent) -> Result<(), PortError> {
-        let iteration = event.iteration.unwrap_or_default();
+        let iteration = event.iteration.unwrap_or_default() as usize;
+        let event_payload = event.payload.clone().unwrap_or_else(|| json!({}));
         match event.kind {
-            EngineEventKind::TurnStarted => {
+            EngineEventKind::Turn_started => {
                 self.record_session(
                     SessionEventType::Session_start,
                     &event.session_id,
@@ -787,27 +788,27 @@ where
                     &event.turn_id,
                     0,
                     json!({
-                        "inputs": event.payload.get("inputs").cloned().unwrap_or_else(|| json!({})),
-                        "maxIterations": event.payload["maxIterations"],
+                        "inputs": event_payload.get("inputs").cloned().unwrap_or_else(|| json!({})),
+                        "maxIterations": event_payload["maxIterations"],
                     }),
                 );
             }
-            EngineEventKind::ModelInvocationStarted => self.record_turn(
+            EngineEventKind::Model_invocation_started => self.record_turn(
                 TurnEventType::Llm_start,
                 &event.turn_id,
                 iteration,
-                json!({ "attempt": event.payload["attempt"] }),
+                json!({ "attempt": event_payload["attempt"] }),
             ),
-            EngineEventKind::ModelInvocationCompleted
-            | EngineEventKind::ModelInvocationReconciled => self.record_turn(
+            EngineEventKind::Model_invocation_completed
+            | EngineEventKind::Model_invocation_reconciled => self.record_turn(
                 TurnEventType::Llm_complete,
                 &event.turn_id,
                 iteration,
                 json!({}),
             ),
-            EngineEventKind::PermissionRequested => {
+            EngineEventKind::Permission_requested => {
                 let engine_request: EngineToolRequest =
-                    serde_json::from_value(event.payload["toolRequest"].clone())
+                    serde_json::from_value(event_payload["toolRequest"].clone())
                         .map_err(|error| port_error("reference permission event", error))?;
                 let host = host_request(&engine_request)?;
                 let permission = build_permission_request(&host, self.next_id.as_ref());
@@ -822,8 +823,8 @@ where
                     permission.to_value(&SaveContext::new()),
                 );
             }
-            EngineEventKind::PermissionResolved => {
-                let decision = event.payload["decision"]["metadata"]["permissionDecision"].clone();
+            EngineEventKind::Permission_resolved => {
+                let decision = event_payload["decision"]["metadata"]["permissionDecision"].clone();
                 self.record_turn(
                     TurnEventType::Permission_completed,
                     &event.turn_id,
@@ -831,9 +832,9 @@ where
                     decision,
                 );
             }
-            EngineEventKind::ToolExecutionStarted => {
+            EngineEventKind::Tool_execution_started => {
                 let engine_request: EngineToolRequest =
-                    serde_json::from_value(event.payload["toolRequest"].clone())
+                    serde_json::from_value(event_payload["toolRequest"].clone())
                         .map_err(|error| port_error("reference tool event", error))?;
                 self.record_turn(
                     TurnEventType::Tool_execution_start,
@@ -842,9 +843,9 @@ where
                     host_request(&engine_request)?.to_value(&SaveContext::new()),
                 );
             }
-            EngineEventKind::ToolExecutionCompleted => {
+            EngineEventKind::Tool_execution_completed => {
                 let engine_result: EngineToolResult =
-                    serde_json::from_value(event.payload["toolResult"].clone())
+                    serde_json::from_value(event_payload["toolResult"].clone())
                         .map_err(|error| port_error("reference tool result event", error))?;
                 let Ok(result) = host_result(&engine_result) else {
                     return Ok(());
@@ -857,9 +858,9 @@ where
                     payload.clone(),
                 );
             }
-            EngineEventKind::ToolResultCommitted => {
+            EngineEventKind::Tool_result_committed => {
                 let engine_result: EngineToolResult =
-                    serde_json::from_value(event.payload["toolResult"].clone())
+                    serde_json::from_value(event_payload["toolResult"].clone())
                         .map_err(|error| port_error("reference tool result event", error))?;
                 let result = self.host_result(&engine_result)?;
                 let payload = result.to_value(&SaveContext::new());
@@ -870,10 +871,10 @@ where
                     payload,
                 );
             }
-            EngineEventKind::TurnCommitted
-            | EngineEventKind::TurnFailed
-            | EngineEventKind::TurnCancelled
-            | EngineEventKind::TurnReconciliationRequired => {
+            EngineEventKind::Turn_committed
+            | EngineEventKind::Turn_failed
+            | EngineEventKind::Turn_cancelled
+            | EngineEventKind::Turn_reconciliation_required => {
                 if self
                     .adapter_failure
                     .lock()
@@ -888,11 +889,11 @@ where
                     .expect("reference checkpoints lock poisoned")
                     .len();
                 let status = match event.kind {
-                    EngineEventKind::TurnCommitted => RunTurnStatus::Success,
-                    EngineEventKind::TurnCancelled => RunTurnStatus::Cancelled,
+                    EngineEventKind::Turn_committed => RunTurnStatus::Success,
+                    EngineEventKind::Turn_cancelled => RunTurnStatus::Cancelled,
                     _ => RunTurnStatus::Error,
                 };
-                let mut output = event.payload["output"].clone();
+                let mut output = event_payload["output"].clone();
                 let mut error_payload = output.clone();
                 if output.get("errorKind").and_then(Value::as_str) == Some("max_iterations") {
                     error_payload = json!({
@@ -901,7 +902,7 @@ where
                     });
                     output = json!({ "message": "Maximum turn iterations reached" });
                 }
-                if event.kind == EngineEventKind::TurnFailed {
+                if event.kind == EngineEventKind::Turn_failed {
                     self.record_turn(
                         TurnEventType::Error,
                         &event.turn_id,
@@ -972,19 +973,20 @@ where
             self.project_event(event)?;
             if matches!(
                 event.kind,
-                EngineEventKind::ModelInvocationCompleted
-                    | EngineEventKind::ModelInvocationReconciled
+                EngineEventKind::Model_invocation_completed
+                    | EngineEventKind::Model_invocation_reconciled
             ) {
                 self.save_model_checkpoint(event).await?;
             }
         }
         if events
             .iter()
-            .any(|event| event.kind == EngineEventKind::ConversationUpdated)
+            .any(|event| event.kind == EngineEventKind::Conversation_updated)
             || (events.iter().any(|event| {
                 matches!(
                     event.kind,
-                    EngineEventKind::ToolExecutionCompleted | EngineEventKind::ToolResultCommitted
+                    EngineEventKind::Tool_execution_completed
+                        | EngineEventKind::Tool_result_committed
                 )
             }) && checkpoint.pending_tool_requests.is_empty()
                 && checkpoint.pending_model_response.is_none())
@@ -999,7 +1001,7 @@ where
             self.record_turn(
                 TurnEventType::Messages_updated,
                 &checkpoint.turn_id,
-                checkpoint.iteration,
+                checkpoint.iteration as usize,
                 json!({ "toolResults": results }),
             );
         }
@@ -1141,7 +1143,7 @@ where
         let status = match result.commit.status {
             TurnStatus::Success => RunTurnStatus::Success,
             TurnStatus::Cancelled => RunTurnStatus::Cancelled,
-            TurnStatus::Failed | TurnStatus::ReconciliationRequired => RunTurnStatus::Error,
+            TurnStatus::Failed | TurnStatus::Reconciliation_required => RunTurnStatus::Error,
         };
         let output = if status == RunTurnStatus::Error
             && result

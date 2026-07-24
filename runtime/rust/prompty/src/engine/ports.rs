@@ -64,78 +64,28 @@ impl PortError {
 /// rather than maintaining a structurally identical twin.
 pub use crate::model::ModelInvocationRequest;
 
-/// Normalized tool request produced by a provider adapter.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct EngineToolRequest {
-    pub id: String,
-    pub name: String,
-    #[serde(default)]
-    pub arguments: Value,
-    #[serde(default)]
-    pub metadata: Value,
-}
+/// Normalized tool request/result and semantic outcome are the generated
+/// cross-runtime contracts. The engine consumes them directly; the historical
+/// `Engine*`/`ToolOutcome` names are kept as thin aliases so the durable wire is
+/// the canonical Typra projection with no hand-written twin.
+pub use crate::model::{
+    ModelToolOutcome, ModelToolOutcome as ToolOutcome, ModelToolRequest,
+    ModelToolRequest as EngineToolRequest, ModelToolResult, ModelToolResult as EngineToolResult,
+};
 
-/// Normalized result of one tool request.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct EngineToolResult {
-    pub request_id: String,
-    pub name: String,
-    pub outcome: ToolOutcome,
-    #[serde(default)]
-    pub output: Value,
-    pub error_kind: Option<String>,
-    #[serde(default)]
-    pub metadata: Value,
-}
+/// Provider-neutral model response and durable reconciliation state are the
+/// generated cross-runtime contracts, consumed directly by the engine.
+pub use crate::model::{ModelInvocationResponse, ModelReconciliationState};
 
-/// Semantic outcome of an external tool effect.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[non_exhaustive]
-pub enum ToolOutcome {
-    Success,
-    Failed,
-    /// The host cannot determine whether the external effect occurred.
-    Indeterminate,
-}
-
-impl EngineToolResult {
+impl ModelToolResult {
+    /// Render the tool output as model-visible text, tolerating an absent output.
     pub fn model_text(&self) -> String {
         match &self.output {
-            Value::String(value) => value.clone(),
-            value => value.to_string(),
+            Some(Value::String(value)) => value.clone(),
+            Some(value) => value.to_string(),
+            None => String::new(),
         }
     }
-}
-
-/// Provider-neutral response from a model invocation.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ModelInvocationResponse {
-    pub output: Option<Value>,
-    /// Cumulative token usage for this invocation when the provider reports it.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub usage: Option<crate::types::Usage>,
-    #[serde(default)]
-    pub assistant_messages: Vec<Message>,
-    #[serde(default)]
-    pub tool_requests: Vec<EngineToolRequest>,
-    /// Portability classification to use for the next invocation.
-    pub next_portability: Option<super::ContextPortability>,
-    /// Provider-held state to use for the next invocation.
-    pub delegated_state: Option<Vec<super::DelegatedStateReference>>,
-    #[serde(default)]
-    pub metadata: Value,
-}
-
-/// Durable state required to reconcile one indeterminate model invocation.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ModelReconciliationState {
-    pub invocation_id: String,
-    pub request: ModelInvocationRequest,
-    pub failed_attempt: usize,
-    pub message: String,
-    #[serde(default)]
-    pub metadata: Value,
 }
 
 /// Host-owned deterministic state supplied before one model invocation.
@@ -227,57 +177,15 @@ pub enum ModelStreamChunk {
     Provider(Value),
 }
 
-/// Permission decision for a tool request.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct EnginePermissionDecision {
-    pub approved: bool,
-    pub reason: Option<String>,
-    #[serde(default)]
-    pub metadata: Value,
-}
+/// Permission decision for a tool request. The generated cross-runtime contract
+/// is consumed directly.
+pub use crate::model::EnginePermissionDecision;
 
-/// Portable checkpoint data emitted after a committed model/tool round.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct EngineCheckpoint {
-    pub id: String,
-    pub session_id: String,
-    pub turn_id: String,
-    pub iteration: usize,
-    pub last_sequence: u64,
-    pub messages: Vec<Message>,
-    /// Exact cache-stable prefix boundary. Missing legacy values conservatively decode as zero.
-    #[serde(default)]
-    pub stable_prefix_messages: usize,
-    #[serde(default)]
-    pub inputs: Value,
-    pub active_invocation_id: Option<String>,
-    #[serde(default)]
-    pub pending_tool_requests: Vec<EngineToolRequest>,
-    #[serde(default)]
-    pub completed_tool_results: Vec<EngineToolResult>,
-    #[serde(default)]
-    pub completed_model_iterations: usize,
-    #[serde(default)]
-    pub reconciliation_required: bool,
-    /// Typed provider invocation state when model outcome reconciliation is required.
-    #[serde(default)]
-    pub model_reconciliation: Option<ModelReconciliationState>,
-    pub pending_output: Option<Value>,
-    #[serde(default)]
-    pub final_output_ready: bool,
-    /// Model response retained until all tool results can be formatted as one conversation batch.
-    pub pending_model_response: Option<ModelInvocationResponse>,
-    /// Resume this exact iteration because the checkpoint precedes the external model effect.
-    #[serde(default)]
-    pub resume_same_iteration: bool,
-    /// The host policy rewrite is already durable for this iteration and must not be repeated.
-    #[serde(default)]
-    pub policy_applied_for_iteration: bool,
-    pub portability: super::ContextPortability,
-    pub delegated_state: Vec<super::DelegatedStateReference>,
-    #[serde(default)]
-    pub metadata: Value,
-}
+/// Portable checkpoint data emitted after a committed model/tool round. The
+/// generated cross-runtime contract is consumed directly; run identity
+/// (`runId`/`parentRunId`/`delegationDepth`) and the nested `contextState` are
+/// native to the durable projection.
+pub use crate::model::EngineCheckpoint;
 
 #[async_trait]
 pub trait ModelPort: Send + Sync {
