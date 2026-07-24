@@ -10,28 +10,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// memoryCategoryKind represents the allowed values for memoryCategoryKind.
-type memoryCategoryKind string
-
-const (
-	memoryCategoryKindSemantic   memoryCategoryKind = "semantic"
-	memoryCategoryKindEpisodic   memoryCategoryKind = "episodic"
-	memoryCategoryKindProcedural memoryCategoryKind = "procedural"
-	memoryCategoryKindPreference memoryCategoryKind = "preference"
-)
-
 // MemoryCategory represents The classification of an agent memory.
 //
-// `kind` is a general, host-neutral taxonomy: `semantic` (facts and durable
+// `kind` is an open, host-defined classifier: canonical Prompty does not dictate
+// a fixed taxonomy, so every host expresses its own vocabulary losslessly.
+// Conventional kinds a host may adopt include `semantic` (facts and durable
 // knowledge), `episodic` (specific events or interactions), `procedural`
-// (skills or how-to), and `preference` (user or agent preferences). A host with
-// a finer-grained or application-specific taxonomy maps it onto one of these
-// general kinds and carries the raw label in `label` (or in entry metadata),
-// rather than introducing an application-specific canonical variant.
+// (skills or how-to), and `preference` (user or agent preferences), but any
+// string is valid. `label` carries an optional finer-grained classification
+// within a kind. A memory's category is descriptive only — the engine assigns
+// it no behavioral meaning; any injection/eviction/priority policy keyed on a
+// particular kind is host policy layered on top of these types.
 
 type MemoryCategory struct {
-	Kind  memoryCategoryKind `json:"kind" yaml:"kind"`
-	Label *string            `json:"label,omitempty" yaml:"label,omitempty"`
+	Kind  string  `json:"kind" yaml:"kind"`
+	Label *string `json:"label,omitempty" yaml:"label,omitempty"`
 }
 
 // LoadMemoryCategory creates a MemoryCategory from a map[string]interface{}
@@ -48,7 +41,7 @@ func LoadMemoryCategory(data interface{}, ctx *LoadContext) (MemoryCategory, err
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = memoryCategoryKind(val.(string))
+			result.Kind = string(val.(string))
 		}
 		if val, ok := m["label"]; ok && val != nil {
 			v := string(val.(string))
@@ -62,7 +55,7 @@ func LoadMemoryCategory(data interface{}, ctx *LoadContext) (MemoryCategory, err
 // Save serializes MemoryCategory to map[string]interface{}
 func (obj MemoryCategory) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
-	result["kind"] = string(obj.Kind)
+	result["kind"] = obj.Kind
 	if obj.Label != nil {
 		result["label"] = *obj.Label
 	}

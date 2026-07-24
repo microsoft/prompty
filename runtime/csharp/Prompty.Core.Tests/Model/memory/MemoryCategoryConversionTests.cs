@@ -20,7 +20,7 @@ label: project-fact
         var instance = MemoryCategory.FromYaml(yamlData);
 
         Assert.NotNull(instance);
-        Assert.Equal(MemoryCategoryKind.Semantic, instance.Kind);
+        Assert.Equal("semantic", instance.Kind);
         Assert.Equal("project-fact", instance.Label);
     }
 
@@ -36,7 +36,7 @@ label: project-fact
 
         var instance = MemoryCategory.FromJson(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal(MemoryCategoryKind.Semantic, instance.Kind);
+        Assert.Equal("semantic", instance.Kind);
         Assert.Equal("project-fact", instance.Label);
     }
 
@@ -59,7 +59,7 @@ label: project-fact
 
         var reloaded = MemoryCategory.FromJson(json);
         Assert.NotNull(reloaded);
-        Assert.Equal(MemoryCategoryKind.Semantic, reloaded.Kind);
+        Assert.Equal("semantic", reloaded.Kind);
         Assert.Equal("project-fact", reloaded.Label);
     }
 
@@ -81,7 +81,7 @@ label: project-fact
 
         var reloaded = MemoryCategory.FromYaml(yaml);
         Assert.NotNull(reloaded);
-        Assert.Equal(MemoryCategoryKind.Semantic, reloaded.Kind);
+        Assert.Equal("semantic", reloaded.Kind);
         Assert.Equal("project-fact", reloaded.Label);
     }
 
@@ -128,7 +128,7 @@ label: project-fact
         var data = "\"semantic\"";
         var instance = MemoryCategory.FromJson(data);
         Assert.NotNull(instance);
-        Assert.Equal(MemoryCategoryKind.Semantic, instance.Kind);
+        Assert.Equal("semantic", instance.Kind);
     }
 
     [Fact]
@@ -139,6 +139,6 @@ label: project-fact
         var instance = MemoryCategory.FromYaml(data);
         Assert.NotNull(instance);
 
-        Assert.Equal(MemoryCategoryKind.Semantic, instance.Kind);
+        Assert.Equal("semantic", instance.Kind);
     }
 }

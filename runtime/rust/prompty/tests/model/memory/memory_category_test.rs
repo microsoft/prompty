@@ -11,7 +11,6 @@
 
 use prompty::model::MemoryCategory;
 use prompty::model::context::{LoadContext, SaveContext};
-use prompty::model::memoryCategoryKind;
 
 #[test]
 fn test_memory_category_load_json() {
@@ -29,7 +28,7 @@ fn test_memory_category_load_json() {
         result.err()
     );
     let instance = result.unwrap();
-    assert_eq!(instance.kind, memoryCategoryKind::Semantic);
+    assert_eq!(instance.kind, "semantic");
     assert!(instance.label.is_some(), "Expected label to be Some");
     assert_eq!(instance.label.as_ref().unwrap(), &"project-fact");
 }
@@ -49,7 +48,7 @@ label: project-fact
         result.err()
     );
     let instance = result.unwrap();
-    assert_eq!(instance.kind, memoryCategoryKind::Semantic);
+    assert_eq!(instance.kind, "semantic");
     assert!(instance.label.is_some(), "Expected label to be Some");
 }
 
@@ -106,5 +105,5 @@ fn test_memory_category_from_kind() {
     let value = serde_json::json!("semantic");
     let ctx = LoadContext::default();
     let instance = MemoryCategory::load_from_value(&value, &ctx);
-    assert_eq!(instance.kind, memoryCategoryKind::Semantic);
+    assert_eq!(instance.kind, "semantic");
 }

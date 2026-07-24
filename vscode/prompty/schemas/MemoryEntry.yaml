@@ -2,10 +2,6 @@ $schema: https://json-schema.org/draft/2020-12/schema
 $id: MemoryEntry.yaml
 type: object
 properties:
-  id:
-    type: string
-    default: ""
-    description: Stable unique identifier for the memory
   content:
     type: string
     default: ""
@@ -27,9 +23,8 @@ properties:
   metadata:
     $ref: RecordUnknown.yaml
     default: {}
-    description: Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, or a stored embedding vector for host-side vector recall)
+    description: Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)
 required:
-  - id
   - content
   - category
 description: |-
@@ -38,6 +33,6 @@ description: |-
   The canonical, host-neutral unit of agent memory. `content` is the memory
   text; `category` classifies it; `createdAt`, `tags`, and `importance` are
   intrinsic scoring inputs consumed by deterministic recall. Any host-specific
-  bookkeeping (source, session association, application taxonomy, or a stored
-  embedding vector for host-side vector recall) lives in `metadata`, never as a
-  canonical field.
+  bookkeeping (source, session association, application taxonomy, a stored
+  embedding vector for host-side vector recall, or a stable per-entry
+  identifier) lives in `metadata`, never as a canonical field.

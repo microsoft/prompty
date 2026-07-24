@@ -93,7 +93,6 @@ pub use loader::{
 };
 pub use memory::{
     MemoryCategory, MemoryEntry, MemoryPort, MemoryStore, ScoredMemory, format_recall_results,
-    memoryCategoryKind,
 };
 pub use model::Prompty;
 pub use pipeline::{

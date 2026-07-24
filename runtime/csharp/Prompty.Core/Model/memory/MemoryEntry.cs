@@ -16,11 +16,11 @@ namespace Prompty.Core;
     ///
     /// intrinsic scoring inputs consumed by deterministic recall. Any host-specific
     ///
-    /// bookkeeping (source, session association, application taxonomy, or a stored
+    /// bookkeeping (source, session association, application taxonomy, a stored
     ///
-    /// embedding vector for host-side vector recall) lives in `metadata`, never as a
+    /// embedding vector for host-side vector recall, or a stable per-entry
     ///
-    /// canonical field.
+    /// identifier) lives in `metadata`, never as a canonical field.
     /// </summary>
 public partial class MemoryEntry
 {
@@ -37,11 +37,6 @@ public partial class MemoryEntry
     {
     }
 #pragma warning restore CS8618
-
-    /// <summary>
-    /// Stable unique identifier for the memory
-    /// </summary>
-    public string Id { get; set; } = string.Empty;
 
     /// <summary>
     /// The memory content
@@ -69,7 +64,7 @@ public partial class MemoryEntry
     public float? Importance { get; set; }
 
     /// <summary>
-    /// Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, or a stored embedding vector for host-side vector recall)
+    /// Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)
     /// </summary>
     public IDictionary<string, object>? Metadata { get; set; }
 
@@ -94,11 +89,6 @@ public partial class MemoryEntry
         // Create new instance
         var instance = new MemoryEntry();
 
-
-        if (data.TryGetValue("id", out var idValue) && idValue is not null)
-        {
-            instance.Id = idValue?.ToString()!;
-        }
 
         if (data.TryGetValue("content", out var contentValue) && contentValue is not null)
         {
@@ -157,9 +147,6 @@ public partial class MemoryEntry
 
 
         var result = new Dictionary<string, object?>();
-
-
-        result["id"] = obj.Id;
 
 
         result["content"] = obj.Content;

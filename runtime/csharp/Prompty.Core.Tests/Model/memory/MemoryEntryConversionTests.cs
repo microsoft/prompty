@@ -12,7 +12,6 @@ public class MemoryEntryConversionTests
     public void LoadYamlInput()
     {
         string yamlData = """
-id: mem-0001
 content: The user prefers concise answers.
 category:
   kind: preference
@@ -27,7 +26,6 @@ importance: 0.8
         var instance = MemoryEntry.FromYaml(yamlData);
 
         Assert.NotNull(instance);
-        Assert.Equal("mem-0001", instance.Id);
         Assert.Equal("The user prefers concise answers.", instance.Content);
         Assert.Equal("2026-06-09T20:00:00Z", instance.CreatedAt);
         Assert.Equal(0.8f, instance.Importance);
@@ -38,7 +36,6 @@ importance: 0.8
     {
         string jsonData = """
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -54,7 +51,6 @@ importance: 0.8
 
         var instance = MemoryEntry.FromJson(jsonData);
         Assert.NotNull(instance);
-        Assert.Equal("mem-0001", instance.Id);
         Assert.Equal("The user prefers concise answers.", instance.Content);
         Assert.Equal("2026-06-09T20:00:00Z", instance.CreatedAt);
         Assert.Equal(0.8f, instance.Importance);
@@ -66,7 +62,6 @@ importance: 0.8
         // Test that FromJson -> ToJson -> FromJson produces equivalent data
         string jsonData = """
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -88,7 +83,6 @@ importance: 0.8
 
         var reloaded = MemoryEntry.FromJson(json);
         Assert.NotNull(reloaded);
-        Assert.Equal("mem-0001", reloaded.Id);
         Assert.Equal("The user prefers concise answers.", reloaded.Content);
         Assert.Equal("2026-06-09T20:00:00Z", reloaded.CreatedAt);
         Assert.Equal(0.8f, reloaded.Importance);
@@ -99,7 +93,6 @@ importance: 0.8
     {
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
-id: mem-0001
 content: The user prefers concise answers.
 category:
   kind: preference
@@ -119,7 +112,6 @@ importance: 0.8
 
         var reloaded = MemoryEntry.FromYaml(yaml);
         Assert.NotNull(reloaded);
-        Assert.Equal("mem-0001", reloaded.Id);
         Assert.Equal("The user prefers concise answers.", reloaded.Content);
         Assert.Equal("2026-06-09T20:00:00Z", reloaded.CreatedAt);
         Assert.Equal(0.8f, reloaded.Importance);
@@ -130,7 +122,6 @@ importance: 0.8
     {
         string jsonData = """
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -156,7 +147,6 @@ importance: 0.8
     public void ToYamlProducesValidYaml()
     {
         string yamlData = """
-id: mem-0001
 content: The user prefers concise answers.
 category:
   kind: preference

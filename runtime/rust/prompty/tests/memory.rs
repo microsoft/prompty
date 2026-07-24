@@ -3,18 +3,20 @@
 
 use prompty::{
     MemoryCategory, MemoryEntry, MemoryPort, MemoryStore, ScoredMemory, format_recall_results,
-    memoryCategoryKind,
 };
 use std::sync::Mutex;
 
-fn entry(id: &str, content: &str, importance: f32, created_at: &str, tags: &[&str]) -> MemoryEntry {
+fn cat(kind: &str) -> MemoryCategory {
+    MemoryCategory {
+        kind: kind.to_string(),
+        label: None,
+    }
+}
+
+fn entry(content: &str, importance: f32, created_at: &str, tags: &[&str]) -> MemoryEntry {
     MemoryEntry {
-        id: id.to_string(),
         content: content.to_string(),
-        category: MemoryCategory {
-            kind: memoryCategoryKind::Semantic,
-            label: None,
-        },
+        category: cat("semantic"),
         created_at: Some(created_at.to_string()),
         tags: if tags.is_empty() {
             None
@@ -33,14 +35,19 @@ fn store_of(entries: Vec<MemoryEntry>) -> MemoryStore {
     }
 }
 
+fn contents(results: &[ScoredMemory]) -> Vec<String> {
+    results.iter().map(|s| s.entry.content.clone()).collect()
+}
+
 // --- Recall ranking -------------------------------------------------------
 
 #[test]
-fn recall_ranks_keyword_matches_above_importance() {
+fn recall_ranks_weighted_score_above_importance() {
     let store = store_of(vec![
-        entry("a", "the sky is clear", 0.9, "2024-01-01T00:00:00Z", &[]),
+        // matches only "sky" in content -> weighted 2.0, importance high
+        entry("the sky is clear", 0.9, "2024-01-01T00:00:00Z", &[]),
+        // matches "blue" and "sky" in content -> weighted 4.0, importance low
         entry(
-            "b",
             "favorite color is blue sky",
             0.1,
             "2024-01-02T00:00:00Z",
@@ -49,30 +56,44 @@ fn recall_ranks_keyword_matches_above_importance() {
     ]);
 
     let results = store.recall("blue sky", 0);
-    // "b" matches both keywords, "a" matches only one — keyword count wins over
-    // the higher importance of "a".
-    assert_eq!(results[0].entry.id, "b");
+    assert_eq!(results[0].entry.content, "favorite color is blue sky");
     assert_eq!(results[0].keyword_matches, 2);
-    assert_eq!(results[1].entry.id, "a");
+    assert_eq!(results[0].score, 4.0);
+    assert_eq!(results[1].entry.content, "the sky is clear");
     assert_eq!(results[1].keyword_matches, 1);
+    assert_eq!(results[1].score, 2.0);
+}
+
+#[test]
+fn recall_weights_tag_matches_higher_than_content() {
+    let store = store_of(vec![
+        // "space" in content -> 2.0
+        entry("all about space", 0.5, "2024-01-01T00:00:00Z", &[]),
+        // "space" in tags -> 3.0
+        entry("unrelated text", 0.5, "2024-01-02T00:00:00Z", &["space"]),
+    ]);
+
+    let results = store.recall("space", 0);
+    assert_eq!(results[0].entry.content, "unrelated text");
+    assert_eq!(results[0].score, 3.0);
+    assert_eq!(results[1].score, 2.0);
 }
 
 #[test]
 fn recall_filters_out_non_matches_for_a_query() {
     let store = store_of(vec![
-        entry("a", "cats are great", 0.5, "2024-01-01T00:00:00Z", &[]),
-        entry("b", "dogs are loyal", 0.5, "2024-01-02T00:00:00Z", &[]),
+        entry("cats are great", 0.5, "2024-01-01T00:00:00Z", &[]),
+        entry("dogs are loyal", 0.5, "2024-01-02T00:00:00Z", &[]),
     ]);
 
     let results = store.recall("dogs", 0);
     assert_eq!(results.len(), 1);
-    assert_eq!(results[0].entry.id, "b");
+    assert_eq!(results[0].entry.content, "dogs are loyal");
 }
 
 #[test]
 fn recall_matches_tags_as_well_as_content() {
     let store = store_of(vec![entry(
-        "a",
         "no relevant words here",
         0.5,
         "2024-01-01T00:00:00Z",
@@ -82,12 +103,12 @@ fn recall_matches_tags_as_well_as_content() {
     let results = store.recall("astronomy", 0);
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].keyword_matches, 1);
+    assert_eq!(results[0].score, 3.0);
 }
 
 #[test]
 fn recall_is_case_and_punctuation_insensitive() {
     let store = store_of(vec![entry(
-        "a",
         "The Sky Is Blue.",
         0.5,
         "2024-01-01T00:00:00Z",
@@ -97,45 +118,44 @@ fn recall_is_case_and_punctuation_insensitive() {
     let results = store.recall("SKY, blue!", 0);
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].keyword_matches, 2);
+    assert_eq!(results[0].score, 4.0);
 }
 
 #[test]
 fn recall_empty_query_ranks_all_by_importance_then_recency() {
     let store = store_of(vec![
-        entry("a", "one", 0.2, "2024-01-03T00:00:00Z", &[]),
-        entry("b", "two", 0.8, "2024-01-01T00:00:00Z", &[]),
-        entry("c", "three", 0.8, "2024-01-02T00:00:00Z", &[]),
+        entry("low", 0.2, "2024-01-03T00:00:00Z", &[]),
+        entry("older-high", 0.8, "2024-01-01T00:00:00Z", &[]),
+        entry("newer-high", 0.8, "2024-01-02T00:00:00Z", &[]),
     ]);
 
     let results = store.recall("", 0);
     assert_eq!(results.len(), 3);
-    // b and c tie on importance (0.8) -> more recent createdAt wins (c > b);
-    // a has lowest importance -> last.
-    assert_eq!(results[0].entry.id, "c");
-    assert_eq!(results[1].entry.id, "b");
-    assert_eq!(results[2].entry.id, "a");
+    // 0.8 entries tie on importance -> more recent createdAt wins;
+    // 0.2 entry has lowest importance -> last.
+    assert_eq!(contents(&results), vec!["newer-high", "older-high", "low"]);
 }
 
 #[test]
 fn recall_uses_insertion_order_as_stable_final_tiebreak() {
-    // Identical importance + createdAt -> original order preserved.
+    // Identical importance + createdAt, empty query so content is not a ranking
+    // signal -> original insertion order preserved.
     let store = store_of(vec![
-        entry("a", "x", 0.5, "2024-01-01T00:00:00Z", &[]),
-        entry("b", "x", 0.5, "2024-01-01T00:00:00Z", &[]),
-        entry("c", "x", 0.5, "2024-01-01T00:00:00Z", &[]),
+        entry("first", 0.5, "2024-01-01T00:00:00Z", &[]),
+        entry("second", 0.5, "2024-01-01T00:00:00Z", &[]),
+        entry("third", 0.5, "2024-01-01T00:00:00Z", &[]),
     ]);
 
     let results = store.recall("", 0);
-    let ids: Vec<&str> = results.iter().map(|s| s.entry.id.as_str()).collect();
-    assert_eq!(ids, vec!["a", "b", "c"]);
+    assert_eq!(contents(&results), vec!["first", "second", "third"]);
 }
 
 #[test]
 fn recall_respects_limit_and_zero_means_unlimited() {
     let store = store_of(vec![
-        entry("a", "x", 0.9, "2024-01-01T00:00:00Z", &[]),
-        entry("b", "x", 0.8, "2024-01-01T00:00:00Z", &[]),
-        entry("c", "x", 0.7, "2024-01-01T00:00:00Z", &[]),
+        entry("a", 0.9, "2024-01-01T00:00:00Z", &[]),
+        entry("b", 0.8, "2024-01-01T00:00:00Z", &[]),
+        entry("c", 0.7, "2024-01-01T00:00:00Z", &[]),
     ]);
 
     assert_eq!(store.recall("", 2).len(), 2);
@@ -146,9 +166,9 @@ fn recall_respects_limit_and_zero_means_unlimited() {
 #[test]
 fn recall_is_deterministic_across_repeated_calls() {
     let store = store_of(vec![
-        entry("a", "alpha beta", 0.5, "2024-01-01T00:00:00Z", &[]),
-        entry("b", "beta gamma", 0.5, "2024-01-02T00:00:00Z", &[]),
-        entry("c", "gamma delta", 0.5, "2024-01-03T00:00:00Z", &[]),
+        entry("alpha beta", 0.5, "2024-01-01T00:00:00Z", &[]),
+        entry("beta gamma", 0.5, "2024-01-02T00:00:00Z", &[]),
+        entry("gamma delta", 0.5, "2024-01-03T00:00:00Z", &[]),
     ]);
 
     let first = store.recall("beta gamma", 0);
@@ -161,38 +181,32 @@ fn recall_is_deterministic_across_repeated_calls() {
 
 #[test]
 fn add_appends_to_the_end() {
-    let mut store = store_of(vec![entry("a", "x", 0.5, "t", &[])]);
-    store.add(entry("b", "y", 0.5, "t", &[]));
+    let mut store = store_of(vec![entry("x", 0.5, "t", &[])]);
+    store.add(entry("y", 0.5, "t", &[]));
     assert_eq!(store.len(), 2);
-    assert_eq!(store.entries[1].id, "b");
+    assert_eq!(store.entries[1].content, "y");
 }
 
 #[test]
 fn update_replaces_in_place_and_bounds_checks() {
-    let mut store = store_of(vec![
-        entry("a", "x", 0.5, "t", &[]),
-        entry("b", "y", 0.5, "t", &[]),
-    ]);
-    store.update(0, entry("a2", "z", 0.5, "t", &[])).unwrap();
-    assert_eq!(store.entries[0].id, "a2");
-    assert!(store.update(5, entry("c", "c", 0.5, "t", &[])).is_err());
+    let mut store = store_of(vec![entry("x", 0.5, "t", &[]), entry("y", 0.5, "t", &[])]);
+    store.update(0, entry("z", 0.5, "t", &[])).unwrap();
+    assert_eq!(store.entries[0].content, "z");
+    assert!(store.update(5, entry("c", 0.5, "t", &[])).is_err());
 }
 
 #[test]
 fn remove_returns_entry_and_bounds_checks() {
-    let mut store = store_of(vec![
-        entry("a", "x", 0.5, "t", &[]),
-        entry("b", "y", 0.5, "t", &[]),
-    ]);
+    let mut store = store_of(vec![entry("x", 0.5, "t", &[]), entry("y", 0.5, "t", &[])]);
     let removed = store.remove(0).unwrap();
-    assert_eq!(removed.id, "a");
+    assert_eq!(removed.content, "x");
     assert_eq!(store.len(), 1);
     assert!(store.remove(5).is_err());
 }
 
 #[test]
 fn clear_empties_the_store() {
-    let mut store = store_of(vec![entry("a", "x", 0.5, "t", &[])]);
+    let mut store = store_of(vec![entry("x", 0.5, "t", &[])]);
     assert!(!store.is_empty());
     store.clear();
     assert!(store.is_empty());
@@ -209,9 +223,9 @@ fn format_for_system_prompt_is_empty_when_no_memories() {
 
 #[test]
 fn format_for_system_prompt_lists_entries_with_category() {
-    let mut e = entry("a", "user prefers dark mode", 0.5, "t", &[]);
+    let mut e = entry("user prefers dark mode", 0.5, "t", &[]);
     e.category = MemoryCategory {
-        kind: memoryCategoryKind::Preference,
+        kind: "preference".to_string(),
         label: Some("ui".to_string()),
     };
     let store = store_of(vec![e]);
@@ -228,7 +242,6 @@ fn format_recall_results_is_empty_for_no_results() {
 #[test]
 fn format_recall_results_lists_recalled_entries() {
     let store = store_of(vec![entry(
-        "a",
         "the sky is blue",
         0.5,
         "2024-01-01T00:00:00Z",
@@ -243,7 +256,7 @@ fn format_recall_results_lists_recalled_entries() {
 
 #[test]
 fn entry_round_trips_through_canonical_camelcase_json() {
-    let e = entry("a", "hello", 0.75, "2024-01-01T00:00:00Z", &["greeting"]);
+    let e = entry("hello", 0.75, "2024-01-01T00:00:00Z", &["greeting"]);
     let json = serde_json::to_value(&e).unwrap();
 
     // Canonical camelCase key; snake_case absent.
@@ -260,9 +273,8 @@ fn entry_round_trips_through_canonical_camelcase_json() {
 #[test]
 fn entry_conditional_emit_omits_absent_optionals() {
     let e = MemoryEntry {
-        id: "a".to_string(),
         content: "hi".to_string(),
-        category: MemoryCategory::default(),
+        category: cat("semantic"),
         created_at: None,
         tags: None,
         importance: None,
@@ -276,15 +288,25 @@ fn entry_conditional_emit_omits_absent_optionals() {
 }
 
 #[test]
-fn category_coerces_bare_string_and_object_forms() {
-    // Bare string coerces to { kind, label: None }.
-    let from_str: MemoryCategory = serde_json::from_value(serde_json::json!("episodic")).unwrap();
-    assert_eq!(from_str.kind, memoryCategoryKind::Episodic);
+fn category_coerces_a_bare_string_the_way_a_host_persists_it() {
+    // A host that persists `category` as a bare string (e.g. "core") loads
+    // losslessly into the open kind, without any host-specific enum.
+    let from_str: MemoryCategory = serde_json::from_value(serde_json::json!("core")).unwrap();
+    assert_eq!(from_str.kind, "core");
     assert_eq!(from_str.label, None);
 
-    // Object form round-trips.
+    // On save it canonicalizes to the object form (consistent with all coerce
+    // types), which still round-trips back to the same value.
+    let json = serde_json::to_value(&from_str).unwrap();
+    assert_eq!(json, serde_json::json!({ "kind": "core" }));
+    let back: MemoryCategory = serde_json::from_value(json).unwrap();
+    assert_eq!(back, from_str);
+}
+
+#[test]
+fn category_object_form_with_label_round_trips() {
     let obj = MemoryCategory {
-        kind: memoryCategoryKind::Procedural,
+        kind: "procedural".to_string(),
         label: Some("how-to".to_string()),
     };
     let json = serde_json::to_value(&obj).unwrap();
@@ -295,10 +317,25 @@ fn category_coerces_bare_string_and_object_forms() {
 }
 
 #[test]
+fn entry_with_bare_string_category_round_trips_like_a_host_row() {
+    // Mirrors a host row: { content, category: "core", createdAt, tags }.
+    let row = serde_json::json!({
+        "content": "remember the deploy step",
+        "category": "core",
+        "createdAt": "2024-01-01T00:00:00Z",
+        "tags": ["deploy"]
+    });
+    let e: MemoryEntry = serde_json::from_value(row).unwrap();
+    assert_eq!(e.category.kind, "core");
+    assert_eq!(e.content, "remember the deploy step");
+    assert_eq!(e.tags.as_deref(), Some(&["deploy".to_string()][..]));
+}
+
+#[test]
 fn store_round_trips_through_json() {
     let store = store_of(vec![
-        entry("a", "one", 0.5, "2024-01-01T00:00:00Z", &["t1"]),
-        entry("b", "two", 0.6, "2024-01-02T00:00:00Z", &[]),
+        entry("one", 0.5, "2024-01-01T00:00:00Z", &["t1"]),
+        entry("two", 0.6, "2024-01-02T00:00:00Z", &[]),
     ]);
     let json = serde_json::to_value(&store).unwrap();
     let back: MemoryStore = serde_json::from_value(json).unwrap();
@@ -330,11 +367,14 @@ fn memory_port_load_save_snapshot_round_trip() {
 
     // Host loads, engine mutates, host persists.
     let mut store = port.load();
-    store.add(entry("a", "remember this", 0.5, "t", &[]));
+    store.add(entry("remember this", 0.5, "t", &[]));
     port.save(&store).unwrap();
 
     // A subsequent load observes the persisted snapshot and recall works on it.
     let reloaded = port.load();
     assert_eq!(reloaded.len(), 1);
-    assert_eq!(reloaded.recall("remember", 0)[0].entry.id, "a");
+    assert_eq!(
+        reloaded.recall("remember", 0)[0].entry.content,
+        "remember this"
+    );
 }

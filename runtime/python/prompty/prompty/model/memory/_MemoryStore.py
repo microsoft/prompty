@@ -72,7 +72,7 @@ class MemoryStore:
                     result.append({"name": k, **v})
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
+                    result.append({"name": k, "content": v})
             data = result
         return [MemoryEntry.load(item, context) for item in data]
 

@@ -16,7 +16,6 @@ use prompty::model::context::{LoadContext, SaveContext};
 fn test_memory_entry_load_json() {
     let json = r####"
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -37,7 +36,6 @@ fn test_memory_entry_load_json() {
         result.err()
     );
     let instance = result.unwrap();
-    assert_eq!(instance.id, "mem-0001");
     assert_eq!(instance.content, "The user prefers concise answers.");
     assert!(
         instance.created_at.is_some(),
@@ -57,7 +55,6 @@ fn test_memory_entry_load_json() {
 #[test]
 fn test_memory_entry_load_yaml() {
     let yaml = r####"
-id: mem-0001
 content: The user prefers concise answers.
 category:
   kind: preference
@@ -76,7 +73,6 @@ importance: 0.8
         result.err()
     );
     let instance = result.unwrap();
-    assert_eq!(instance.id, "mem-0001");
     assert_eq!(instance.content, "The user prefers concise answers.");
     assert!(
         instance.created_at.is_some(),
@@ -92,7 +88,6 @@ importance: 0.8
 fn test_memory_entry_roundtrip() {
     let json = r####"
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -122,7 +117,6 @@ fn test_memory_entry_roundtrip() {
 fn test_memory_entry_serde_roundtrip() {
     let json = r####"
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"

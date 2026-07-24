@@ -10,17 +10,23 @@ namespace Prompty.Core;
     /// <summary>
     /// The classification of an agent memory.
     ///
-    /// `kind` is a general, host-neutral taxonomy: `semantic` (facts and durable
+    /// `kind` is an open, host-defined classifier: canonical Prompty does not dictate
+    ///
+    /// a fixed taxonomy, so every host expresses its own vocabulary losslessly.
+    ///
+    /// Conventional kinds a host may adopt include `semantic` (facts and durable
     ///
     /// knowledge), `episodic` (specific events or interactions), `procedural`
     ///
-    /// (skills or how-to), and `preference` (user or agent preferences). A host with
+    /// (skills or how-to), and `preference` (user or agent preferences), but any
     ///
-    /// a finer-grained or application-specific taxonomy maps it onto one of these
+    /// string is valid. `label` carries an optional finer-grained classification
     ///
-    /// general kinds and carries the raw label in `label` (or in entry metadata),
+    /// within a kind. A memory's category is descriptive only — the engine assigns
     ///
-    /// rather than introducing an application-specific canonical variant.
+    /// it no behavioral meaning; any injection/eviction/priority policy keyed on a
+    ///
+    /// particular kind is host policy layered on top of these types.
     /// </summary>
 public partial class MemoryCategory
 {
@@ -39,12 +45,12 @@ public partial class MemoryCategory
 #pragma warning restore CS8618
 
     /// <summary>
-    /// The general memory category: 'semantic', 'episodic', 'procedural', or 'preference'
+    /// The open, host-defined memory kind (e.g. 'semantic', 'episodic', 'procedural', 'preference', or any host-specific value)
     /// </summary>
-    public MemoryCategoryKind Kind { get; set; } = MemoryCategoryKind.Semantic;
+    public string Kind { get; set; } = string.Empty;
 
     /// <summary>
-    /// Optional finer-grained or host-specific classification within the general kind
+    /// Optional finer-grained or host-specific classification within the kind
     /// </summary>
     public string? Label { get; set; }
 
@@ -73,7 +79,7 @@ public partial class MemoryCategory
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
         {
-            instance.Kind = MemoryCategoryKindParser.Parse(kindValue?.ToString()!);
+            instance.Kind = kindValue?.ToString()!;
         }
 
         if (data.TryGetValue("label", out var labelValue) && labelValue is not null)
@@ -110,7 +116,7 @@ public partial class MemoryCategory
         var result = new Dictionary<string, object?>();
 
 
-        result["kind"] = MemoryCategoryKindParser.ToValue(obj.Kind);
+        result["kind"] = obj.Kind;
 
 
         if (obj.Label is not null)

@@ -9,7 +9,6 @@ from prompty.model import MemoryEntry
 def test_load_json_memoryentry():
     json_data = r"""
     {
-      "id": "mem-0001",
       "content": "The user prefers concise answers.",
       "category": {
         "kind": "preference"
@@ -25,7 +24,6 @@ def test_load_json_memoryentry():
     data = json.loads(json_data, strict=False)
     instance = MemoryEntry.load(data)
     assert instance is not None
-    assert instance.id == "mem-0001"
     assert instance.content == "The user prefers concise answers."
     assert instance.created_at == "2026-06-09T20:00:00Z"
     assert instance.importance == 0.8
@@ -33,7 +31,6 @@ def test_load_json_memoryentry():
 
 def test_load_yaml_memoryentry():
     yaml_data = r"""
-    id: mem-0001
     content: The user prefers concise answers.
     category:
       kind: preference
@@ -47,7 +44,6 @@ def test_load_yaml_memoryentry():
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = MemoryEntry.load(data)
     assert instance is not None
-    assert instance.id == "mem-0001"
     assert instance.content == "The user prefers concise answers."
     assert instance.created_at == "2026-06-09T20:00:00Z"
     assert instance.importance == 0.8
@@ -57,7 +53,6 @@ def test_roundtrip_json_memoryentry():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
-      "id": "mem-0001",
       "content": "The user prefers concise answers.",
       "category": {
         "kind": "preference"
@@ -75,7 +70,6 @@ def test_roundtrip_json_memoryentry():
     saved_data = instance.save()
     reloaded = MemoryEntry.load(saved_data)
     assert reloaded is not None
-    assert reloaded.id == "mem-0001"
     assert reloaded.content == "The user prefers concise answers."
     assert reloaded.created_at == "2026-06-09T20:00:00Z"
     assert reloaded.importance == 0.8
@@ -85,7 +79,6 @@ def test_to_json_memoryentry():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
-      "id": "mem-0001",
       "content": "The user prefers concise answers.",
       "category": {
         "kind": "preference"
@@ -110,7 +103,6 @@ def test_to_yaml_memoryentry():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
-      "id": "mem-0001",
       "content": "The user prefers concise answers.",
       "category": {
         "kind": "preference"

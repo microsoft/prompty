@@ -10,9 +10,9 @@ A single agent memory.
 The canonical, host-neutral unit of agent memory. `content` is the memory
 text; `category` classifies it; `createdAt`, `tags`, and `importance` are
 intrinsic scoring inputs consumed by deterministic recall. Any host-specific
-bookkeeping (source, session association, application taxonomy, or a stored
-embedding vector for host-side vector recall) lives in `metadata`, never as a
-canonical field.
+bookkeeping (source, session association, application taxonomy, a stored
+embedding vector for host-side vector recall, or a stable per-entry
+identifier) lives in `metadata`, never as a canonical field.
 
 ## Class Diagram
 
@@ -27,7 +27,6 @@ config:
 ---
 classDiagram
     class MemoryEntry {
-        +string id
         +string content
         +MemoryCategory category
         +string createdAt
@@ -45,7 +44,6 @@ classDiagram
 ## Yaml Example
 
 ```yaml
-id: mem-0001
 content: The user prefers concise answers.
 category:
   kind: preference
@@ -60,13 +58,12 @@ importance: 0.8
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| id | string | Stable unique identifier for the memory |
 | content | string | The memory content |
 | category | [MemoryCategory](../memorycategory/) | The classification of the memory |
 | createdAt | string | ISO 8601 UTC timestamp when the memory was created; consumed as a recency input by recall |
 | tags | string[] | General labels for the memory; consumed as keyword inputs by recall |
 | importance | float32 | Optional salience weight in the range 0..1; consumed as a ranking input by recall |
-| metadata | dictionary | Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, or a stored embedding vector for host-side vector recall) |
+| metadata | dictionary | Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall) |
 
 ## Composed Types
 

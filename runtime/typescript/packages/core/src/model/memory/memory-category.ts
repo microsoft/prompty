@@ -4,20 +4,14 @@
 
 import { LoadContext, SaveContext } from "../context";
 
-export type memoryCategoryKind =
-  | "semantic"
-  | "episodic"
-  | "procedural"
-  | "preference";
-
 export class MemoryCategory {
   static readonly shorthandProperty: string | undefined = "kind";
 
-  kind: memoryCategoryKind = "semantic";
+  kind: string = "";
   label?: string | undefined;
 
   constructor(init?: Partial<MemoryCategory>) {
-    this.kind = init?.kind ?? "semantic";
+    this.kind = init?.kind ?? "";
     if (init?.label !== undefined) {
       this.label = init.label;
     }
@@ -36,7 +30,7 @@ export class MemoryCategory {
     // Handle alternate representations
     if (typeof data === "string") {
       const instance = new MemoryCategory();
-      instance.kind = data as memoryCategoryKind;
+      instance.kind = data as string;
       if (context) {
         return context.processOutput(instance) as MemoryCategory;
       }
@@ -46,7 +40,7 @@ export class MemoryCategory {
     const instance = new MemoryCategory();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
-      instance.kind = String(data["kind"]) as memoryCategoryKind;
+      instance.kind = String(data["kind"]);
     }
     if (data["label"] !== undefined && data["label"] !== null) {
       instance.label = String(data["label"]);

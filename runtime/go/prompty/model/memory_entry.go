@@ -15,12 +15,11 @@ import (
 // The canonical, host-neutral unit of agent memory. `content` is the memory
 // text; `category` classifies it; `createdAt`, `tags`, and `importance` are
 // intrinsic scoring inputs consumed by deterministic recall. Any host-specific
-// bookkeeping (source, session association, application taxonomy, or a stored
-// embedding vector for host-side vector recall) lives in `metadata`, never as a
-// canonical field.
+// bookkeeping (source, session association, application taxonomy, a stored
+// embedding vector for host-side vector recall, or a stable per-entry
+// identifier) lives in `metadata`, never as a canonical field.
 
 type MemoryEntry struct {
-	Id         string                 `json:"id" yaml:"id"`
 	Content    string                 `json:"content" yaml:"content"`
 	Category   MemoryCategory         `json:"category" yaml:"category"`
 	CreatedAt  *string                `json:"createdAt,omitempty" yaml:"createdAt,omitempty"`
@@ -35,9 +34,6 @@ func LoadMemoryEntry(data interface{}, ctx *LoadContext) (MemoryEntry, error) {
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["id"]; ok && val != nil {
-			result.Id = string(val.(string))
-		}
 		if val, ok := m["content"]; ok && val != nil {
 			result.Content = string(val.(string))
 		}
@@ -100,7 +96,6 @@ func LoadMemoryEntry(data interface{}, ctx *LoadContext) (MemoryEntry, error) {
 // Save serializes MemoryEntry to map[string]interface{}
 func (obj MemoryEntry) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
-	result["id"] = obj.Id
 	result["content"] = obj.Content
 
 	result["category"] = obj.Category.Save(ctx)

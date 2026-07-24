@@ -114,7 +114,7 @@ public partial class MemoryStore
                     var newDict = new Dictionary<string, object?>
                     {
                         ["name"] = kvp.Key,
-                        ["id"] = kvp.Value
+                        ["content"] = kvp.Value
                     };
                     result.Add(MemoryEntry.Load(newDict, context));
                 }

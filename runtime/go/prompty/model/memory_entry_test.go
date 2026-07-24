@@ -16,7 +16,6 @@ import (
 func TestMemoryEntryLoadJSON(t *testing.T) {
 	jsonData := `
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -38,9 +37,6 @@ func TestMemoryEntryLoadJSON(t *testing.T) {
 	instance, err := prompty.LoadMemoryEntry(data, ctx)
 	if err != nil {
 		t.Fatalf("Failed to load MemoryEntry: %v", err)
-	}
-	if instance.Id != "mem-0001" {
-		t.Errorf(`Expected Id to be "mem-0001", got %v`, instance.Id)
 	}
 	if instance.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, instance.Content)
@@ -68,7 +64,6 @@ func TestMemoryEntryLoadJSON(t *testing.T) {
 // TestMemoryEntryLoadYAML tests loading MemoryEntry from YAML
 func TestMemoryEntryLoadYAML(t *testing.T) {
 	yamlData := `
-id: mem-0001
 content: The user prefers concise answers.
 category:
   kind: preference
@@ -88,9 +83,6 @@ importance: 0.8
 	instance, err := prompty.LoadMemoryEntry(data, ctx)
 	if err != nil {
 		t.Fatalf("Failed to load MemoryEntry: %v", err)
-	}
-	if instance.Id != "mem-0001" {
-		t.Errorf(`Expected Id to be "mem-0001", got %v`, instance.Id)
 	}
 	if instance.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, instance.Content)
@@ -119,7 +111,6 @@ importance: 0.8
 func TestMemoryEntryFromJSON(t *testing.T) {
 	jsonData := `
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -136,9 +127,6 @@ func TestMemoryEntryFromJSON(t *testing.T) {
 	instance, err := prompty.MemoryEntryFromJSON(jsonData)
 	if err != nil {
 		t.Fatalf("Failed to load MemoryEntry from JSON helper: %v", err)
-	}
-	if instance.Id != "mem-0001" {
-		t.Errorf(`Expected Id to be "mem-0001", got %v`, instance.Id)
 	}
 	if instance.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, instance.Content)
@@ -166,7 +154,6 @@ func TestMemoryEntryFromJSON(t *testing.T) {
 // TestMemoryEntryFromYAML tests loading MemoryEntry through the generated YAML helper
 func TestMemoryEntryFromYAML(t *testing.T) {
 	yamlData := `
-id: mem-0001
 content: The user prefers concise answers.
 category:
   kind: preference
@@ -181,9 +168,6 @@ importance: 0.8
 	instance, err := prompty.MemoryEntryFromYAML(yamlData)
 	if err != nil {
 		t.Fatalf("Failed to load MemoryEntry from YAML helper: %v", err)
-	}
-	if instance.Id != "mem-0001" {
-		t.Errorf(`Expected Id to be "mem-0001", got %v`, instance.Id)
 	}
 	if instance.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, instance.Content)
@@ -212,7 +196,6 @@ importance: 0.8
 func TestMemoryEntryRoundtrip(t *testing.T) {
 	jsonData := `
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -242,9 +225,6 @@ func TestMemoryEntryRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload MemoryEntry: %v", err)
 	}
-	if reloaded.Id != "mem-0001" {
-		t.Errorf(`Expected Id to be "mem-0001", got %v`, reloaded.Id)
-	}
 	if reloaded.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, reloaded.Content)
 	}
@@ -272,7 +252,6 @@ func TestMemoryEntryRoundtrip(t *testing.T) {
 func TestMemoryEntryToJSON(t *testing.T) {
 	jsonData := `
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -309,9 +288,6 @@ func TestMemoryEntryToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
-	if reloaded.Id != "mem-0001" {
-		t.Errorf(`Expected Id to be "mem-0001", got %v`, reloaded.Id)
-	}
 	if reloaded.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, reloaded.Content)
 	}
@@ -339,7 +315,6 @@ func TestMemoryEntryToJSON(t *testing.T) {
 func TestMemoryEntryToYAML(t *testing.T) {
 	jsonData := `
 {
-  "id": "mem-0001",
   "content": "The user prefers concise answers.",
   "category": {
     "kind": "preference"
@@ -375,9 +350,6 @@ func TestMemoryEntryToYAML(t *testing.T) {
 	reloaded, err := prompty.LoadMemoryEntry(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
-	}
-	if reloaded.Id != "mem-0001" {
-		t.Errorf(`Expected Id to be "mem-0001", got %v`, reloaded.Id)
 	}
 	if reloaded.Content != "The user prefers concise answers." {
 		t.Errorf(`Expected Content to be "The user prefers concise answers.", got %v`, reloaded.Content)

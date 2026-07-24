@@ -11,7 +11,7 @@
 //! (`load`/`save`); everything else lives here so every runtime and host shares
 //! one canonical recall and formatting contract rather than reimplementing it.
 
-pub use crate::model::{MemoryCategory, MemoryEntry, MemoryStore, memoryCategoryKind};
+pub use crate::model::{MemoryCategory, MemoryEntry, MemoryStore};
 
 /// Host-owned persistence for a whole-store memory snapshot.
 ///
@@ -51,9 +51,16 @@ fn query_tokens(query: &str) -> Vec<String> {
     tokens
 }
 
-fn keyword_matches(entry: &MemoryEntry, tokens: &[String]) -> usize {
+/// Score an entry against the query tokens.
+///
+/// Returns `(weighted_score, distinct_matches)` where a keyword found in the
+/// content contributes `2.0` and a keyword found in the tags contributes `3.0`
+/// (tags are weighted higher because they are curated), and `distinct_matches`
+/// counts how many distinct query keywords matched anywhere. Both are `0` for
+/// an empty query.
+fn score_entry(entry: &MemoryEntry, tokens: &[String]) -> (f64, usize) {
     if tokens.is_empty() {
-        return 0;
+        return (0.0, 0);
     }
     let content = entry.content.to_lowercase();
     let tags: Vec<String> = entry
@@ -61,10 +68,23 @@ fn keyword_matches(entry: &MemoryEntry, tokens: &[String]) -> usize {
         .as_ref()
         .map(|t| t.iter().map(|s| s.to_lowercase()).collect())
         .unwrap_or_default();
-    tokens
-        .iter()
-        .filter(|token| content.contains(*token) || tags.iter().any(|tag| tag.contains(*token)))
-        .count()
+
+    let mut weighted = 0.0;
+    let mut distinct = 0;
+    for token in tokens {
+        let in_content = content.contains(token);
+        let in_tags = tags.iter().any(|tag| tag.contains(token));
+        if in_content || in_tags {
+            distinct += 1;
+        }
+        if in_content {
+            weighted += 2.0;
+        }
+        if in_tags {
+            weighted += 3.0;
+        }
+    }
+    (weighted, distinct)
 }
 
 impl MemoryStore {
@@ -113,13 +133,17 @@ impl MemoryStore {
 
     /// Deterministically recall the most relevant memories for `query`.
     ///
-    /// Ranking is lexical and dependency-free: memories are scored by distinct
-    /// query-keyword matches (across content and tags), then by `importance`,
-    /// then by recency (`createdAt`, compared lexically as ISO 8601), with the
-    /// original insertion order as a stable final tiebreak. When `query` has no
-    /// keywords, all memories are ranked by importance then recency. When
-    /// `limit` is `0`, all matching memories are returned. A host wanting vector
-    /// recall carries embeddings in entry metadata and does so itself.
+    /// Ranking is lexical and dependency-free. Each memory is scored by summing,
+    /// over the distinct query keywords, `2.0` for a keyword found in the
+    /// content and `3.0` for one found in the tags (tags weighted higher because
+    /// they are curated). Ties are broken by `importance` (descending), then by
+    /// recency (`createdAt`, compared lexically as ISO 8601), then by the
+    /// original insertion order as a stable final tiebreak. The engine assigns
+    /// no weight to `category` — any category-based priority is host policy.
+    /// When `query` has no keywords, all memories are ranked by importance then
+    /// recency. When `limit` is `0`, all matching memories are returned. A host
+    /// wanting vector recall carries embeddings in entry metadata and does so
+    /// itself.
     pub fn recall(&self, query: &str, limit: usize) -> Vec<ScoredMemory> {
         let tokens = query_tokens(query);
         let has_query = !tokens.is_empty();
@@ -129,12 +153,10 @@ impl MemoryStore {
             .iter()
             .enumerate()
             .filter_map(|(index, entry)| {
-                let matches = keyword_matches(entry, &tokens);
+                let (score, matches) = score_entry(entry, &tokens);
                 if has_query && matches == 0 {
                     return None;
                 }
-                let importance = entry.importance.unwrap_or(0.0) as f64;
-                let score = matches as f64 + importance;
                 Some((
                     index,
                     ScoredMemory {
@@ -147,8 +169,8 @@ impl MemoryStore {
             .collect();
 
         scored.sort_by(|(a_index, a), (b_index, b)| {
-            b.keyword_matches
-                .cmp(&a.keyword_matches)
+            b.score
+                .total_cmp(&a.score)
                 .then_with(|| {
                     b.entry
                         .importance

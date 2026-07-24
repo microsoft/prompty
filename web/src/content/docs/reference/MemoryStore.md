@@ -28,7 +28,6 @@ classDiagram
         +dictionary metadata
     }
     class MemoryEntry {
-        +string id
         +string content
         +MemoryCategory category
         +string createdAt

@@ -3,29 +3,26 @@ import "../core/core.tsp";
 
 namespace Prompty;
 
-alias memoryCategoryKind =
-  | "semantic"
-  | "episodic"
-  | "procedural"
-  | "preference";
-
 /**
  * The classification of an agent memory.
  *
- * `kind` is a general, host-neutral taxonomy: `semantic` (facts and durable
+ * `kind` is an open, host-defined classifier: canonical Prompty does not dictate
+ * a fixed taxonomy, so every host expresses its own vocabulary losslessly.
+ * Conventional kinds a host may adopt include `semantic` (facts and durable
  * knowledge), `episodic` (specific events or interactions), `procedural`
- * (skills or how-to), and `preference` (user or agent preferences). A host with
- * a finer-grained or application-specific taxonomy maps it onto one of these
- * general kinds and carries the raw label in `label` (or in entry metadata),
- * rather than introducing an application-specific canonical variant.
+ * (skills or how-to), and `preference` (user or agent preferences), but any
+ * string is valid. `label` carries an optional finer-grained classification
+ * within a kind. A memory's category is descriptive only — the engine assigns
+ * it no behavioral meaning; any injection/eviction/priority policy keyed on a
+ * particular kind is host policy layered on top of these types.
  */
 @coerce(string, #{ kind: "{value}" }, "kind", "Memory Category", "semantic")
 model MemoryCategory {
-  @doc("The general memory category: 'semantic', 'episodic', 'procedural', or 'preference'")
+  @doc("The open, host-defined memory kind (e.g. 'semantic', 'episodic', 'procedural', 'preference', or any host-specific value)")
   @sample(#{ kind: "semantic" })
-  kind: memoryCategoryKind;
+  kind: string = "";
 
-  @doc("Optional finer-grained or host-specific classification within the general kind")
+  @doc("Optional finer-grained or host-specific classification within the kind")
   @sample(#{ label: "project-fact" })
   label?: string;
 }
@@ -36,15 +33,11 @@ model MemoryCategory {
  * The canonical, host-neutral unit of agent memory. `content` is the memory
  * text; `category` classifies it; `createdAt`, `tags`, and `importance` are
  * intrinsic scoring inputs consumed by deterministic recall. Any host-specific
- * bookkeeping (source, session association, application taxonomy, or a stored
- * embedding vector for host-side vector recall) lives in `metadata`, never as a
- * canonical field.
+ * bookkeeping (source, session association, application taxonomy, a stored
+ * embedding vector for host-side vector recall, or a stable per-entry
+ * identifier) lives in `metadata`, never as a canonical field.
  */
 model MemoryEntry {
-  @doc("Stable unique identifier for the memory")
-  @sample(#{ id: "mem-0001" })
-  id: string = "";
-
   @doc("The memory content")
   @sample(#{ content: "The user prefers concise answers." })
   content: string = "";
@@ -65,7 +58,7 @@ model MemoryEntry {
   @sample(#{ importance: 0.8 })
   importance?: float32;
 
-  @doc("Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, or a stored embedding vector for host-side vector recall)")
+  @doc("Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)")
   metadata?: Record<unknown> = #{};
 }
 

@@ -57,7 +57,7 @@ export class MemoryStore {
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
           result.push({ name: k, ...(v as Record<string, unknown>) });
         } else {
-          result.push({ name: k, id: v });
+          result.push({ name: k, content: v });
         }
       }
       data = result;

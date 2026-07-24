@@ -3,27 +3,23 @@ $id: MemoryCategory.yaml
 type: object
 properties:
   kind:
-    anyOf:
-      - type: string
-        const: semantic
-      - type: string
-        const: episodic
-      - type: string
-        const: procedural
-      - type: string
-        const: preference
-    description: "The general memory category: 'semantic', 'episodic', 'procedural', or 'preference'"
+    type: string
+    default: ""
+    description: The open, host-defined memory kind (e.g. 'semantic', 'episodic', 'procedural', 'preference', or any host-specific value)
   label:
     type: string
-    description: Optional finer-grained or host-specific classification within the general kind
+    description: Optional finer-grained or host-specific classification within the kind
 required:
   - kind
 description: |-
   The classification of an agent memory.
 
-  `kind` is a general, host-neutral taxonomy: `semantic` (facts and durable
+  `kind` is an open, host-defined classifier: canonical Prompty does not dictate
+  a fixed taxonomy, so every host expresses its own vocabulary losslessly.
+  Conventional kinds a host may adopt include `semantic` (facts and durable
   knowledge), `episodic` (specific events or interactions), `procedural`
-  (skills or how-to), and `preference` (user or agent preferences). A host with
-  a finer-grained or application-specific taxonomy maps it onto one of these
-  general kinds and carries the raw label in `label` (or in entry metadata),
-  rather than introducing an application-specific canonical variant.
+  (skills or how-to), and `preference` (user or agent preferences), but any
+  string is valid. `label` carries an optional finer-grained classification
+  within a kind. A memory's category is descriptive only — the engine assigns
+  it no behavioral meaning; any injection/eviction/priority policy keyed on a
+  particular kind is host policy layered on top of these types.

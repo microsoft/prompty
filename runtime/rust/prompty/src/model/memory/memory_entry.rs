@@ -13,11 +13,9 @@ use super::super::context::{LoadContext, SaveContext};
 
 use super::memory_category::MemoryCategory;
 
-/// A single agent memory. The canonical, host-neutral unit of agent memory. `content` is the memory text; `category` classifies it; `createdAt`, `tags`, and `importance` are intrinsic scoring inputs consumed by deterministic recall. Any host-specific bookkeeping (source, session association, application taxonomy, or a stored embedding vector for host-side vector recall) lives in `metadata`, never as a canonical field.
+/// A single agent memory. The canonical, host-neutral unit of agent memory. `content` is the memory text; `category` classifies it; `createdAt`, `tags`, and `importance` are intrinsic scoring inputs consumed by deterministic recall. Any host-specific bookkeeping (source, session association, application taxonomy, a stored embedding vector for host-side vector recall, or a stable per-entry identifier) lives in `metadata`, never as a canonical field.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct MemoryEntry {
-    /// Stable unique identifier for the memory
-    pub id: String,
     /// The memory content
     pub content: String,
     /// The classification of the memory
@@ -28,7 +26,7 @@ pub struct MemoryEntry {
     pub tags: Option<Vec<String>>,
     /// Optional salience weight in the range 0..1; consumed as a ranking input by recall
     pub importance: Option<f32>,
-    /// Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, or a stored embedding vector for host-side vector recall)
+    /// Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)
     pub metadata: serde_json::Value,
 }
 
@@ -56,11 +54,6 @@ impl MemoryEntry {
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
         Self {
-            id: value
-                .get("id")
-                .and_then(|v| v.as_str())
-                .unwrap_or_default()
-                .to_string(),
             content: value
                 .get("content")
                 .and_then(|v| v.as_str())
@@ -97,9 +90,6 @@ impl MemoryEntry {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if !self.id.is_empty() {
-            result.insert("id".to_string(), serde_json::Value::String(self.id.clone()));
-        }
         if !self.content.is_empty() {
             result.insert(
                 "content".to_string(),

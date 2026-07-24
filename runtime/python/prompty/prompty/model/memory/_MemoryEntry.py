@@ -19,14 +19,12 @@ class MemoryEntry:
     The canonical, host-neutral unit of agent memory. `content` is the memory
     text; `category` classifies it; `createdAt`, `tags`, and `importance` are
     intrinsic scoring inputs consumed by deterministic recall. Any host-specific
-    bookkeeping (source, session association, application taxonomy, or a stored
-    embedding vector for host-side vector recall) lives in `metadata`, never as a
-    canonical field.
+    bookkeeping (source, session association, application taxonomy, a stored
+    embedding vector for host-side vector recall, or a stable per-entry
+    identifier) lives in `metadata`, never as a canonical field.
 
     Attributes
     ----------
-    id : str
-        Stable unique identifier for the memory
     content : str
         The memory content
     category : MemoryCategory
@@ -38,12 +36,11 @@ class MemoryEntry:
     importance : Optional[float]
         Optional salience weight in the range 0..1; consumed as a ranking input by recall
     metadata : Optional[dict[str, Any]]
-        Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, or a stored embedding vector for host-side vector recall)
+        Opaque host-specific memory metadata (e.g. source, session association, raw application taxonomy, stable per-entry id, or a stored embedding vector for host-side vector recall)
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
-    id: str = field(default="")
     content: str = field(default="")
     category: MemoryCategory = field(default_factory=MemoryCategory)
     created_at: str | None = None
@@ -71,8 +68,6 @@ class MemoryEntry:
         # create new instance
         instance = MemoryEntry()
 
-        if data is not None and "id" in data:
-            instance.id = data["id"]
         if data is not None and "content" in data:
             instance.content = data["content"]
         if data is not None and "category" in data:
@@ -103,8 +98,6 @@ class MemoryEntry:
 
         result: dict[str, Any] = {}
 
-        if obj.id is not None:
-            result["id"] = obj.id
         if obj.content is not None:
             result["content"] = obj.content
         if obj.category is not None:

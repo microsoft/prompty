@@ -11,89 +11,12 @@
 
 use super::super::context::{LoadContext, SaveContext};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum memoryCategoryKind {
-    Semantic,
-    Episodic,
-    Procedural,
-    Preference,
-}
-
-impl Default for memoryCategoryKind {
-    fn default() -> Self {
-        Self::Semantic
-    }
-}
-
-impl std::fmt::Display for memoryCategoryKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Semantic => write!(f, "semantic"),
-            Self::Episodic => write!(f, "episodic"),
-            Self::Procedural => write!(f, "procedural"),
-            Self::Preference => write!(f, "preference"),
-        }
-    }
-}
-
-impl memoryCategoryKind {
-    pub fn from_str_opt(s: &str) -> Option<Self> {
-        match s {
-            "semantic" => Some(Self::Semantic),
-            "episodic" => Some(Self::Episodic),
-            "procedural" => Some(Self::Procedural),
-            "preference" => Some(Self::Preference),
-            _ => None,
-        }
-    }
-
-    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
-        if s.eq_ignore_ascii_case("semantic") {
-            return Some(Self::Semantic);
-        }
-        if s.eq_ignore_ascii_case("episodic") {
-            return Some(Self::Episodic);
-        }
-        if s.eq_ignore_ascii_case("procedural") {
-            return Some(Self::Procedural);
-        }
-        if s.eq_ignore_ascii_case("preference") {
-            return Some(Self::Preference);
-        }
-        None
-    }
-
-    pub fn as_str(&self) -> &str {
-        match self {
-            Self::Semantic => "semantic",
-            Self::Episodic => "episodic",
-            Self::Procedural => "procedural",
-            Self::Preference => "preference",
-        }
-    }
-}
-
-impl serde::Serialize for memoryCategoryKind {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serializer.serialize_str(self.as_str())
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for memoryCategoryKind {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
-        Self::from_str_opt(&s).ok_or_else(|| {
-            serde::de::Error::custom(format!("invalid memoryCategoryKind value: {}", s))
-        })
-    }
-}
-
-/// The classification of an agent memory. `kind` is a general, host-neutral taxonomy: `semantic` (facts and durable knowledge), `episodic` (specific events or interactions), `procedural` (skills or how-to), and `preference` (user or agent preferences). A host with a finer-grained or application-specific taxonomy maps it onto one of these general kinds and carries the raw label in `label` (or in entry metadata), rather than introducing an application-specific canonical variant.
+/// The classification of an agent memory. `kind` is an open, host-defined classifier: canonical Prompty does not dictate a fixed taxonomy, so every host expresses its own vocabulary losslessly. Conventional kinds a host may adopt include `semantic` (facts and durable knowledge), `episodic` (specific events or interactions), `procedural` (skills or how-to), and `preference` (user or agent preferences), but any string is valid. `label` carries an optional finer-grained classification within a kind. A memory's category is descriptive only — the engine assigns it no behavioral meaning; any injection/eviction/priority policy keyed on a particular kind is host policy layered on top of these types.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct MemoryCategory {
-    /// The general memory category: 'semantic', 'episodic', 'procedural', or 'preference'
-    pub kind: memoryCategoryKind,
-    /// Optional finer-grained or host-specific classification within the general kind
+    /// The open, host-defined memory kind (e.g. 'semantic', 'episodic', 'procedural', 'preference', or any host-specific value)
+    pub kind: String,
+    /// Optional finer-grained or host-specific classification within the kind
     pub label: Option<String>,
 }
 
@@ -123,8 +46,7 @@ impl MemoryCategory {
         if let Some(s) = value.as_str() {
             let value = s.to_string();
             return MemoryCategory {
-                kind: memoryCategoryKind::from_str_opt(&value)
-                    .unwrap_or(memoryCategoryKind::Semantic),
+                kind: value.into(),
                 ..Default::default()
             };
         }
@@ -132,8 +54,8 @@ impl MemoryCategory {
             kind: value
                 .get("kind")
                 .and_then(|v| v.as_str())
-                .and_then(|s| memoryCategoryKind::from_str_opt(s))
-                .unwrap_or(memoryCategoryKind::Semantic),
+                .unwrap_or_default()
+                .to_string(),
             label: value
                 .get("label")
                 .and_then(|v| v.as_str())
@@ -147,10 +69,12 @@ impl MemoryCategory {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        result.insert(
-            "kind".to_string(),
-            serde_json::Value::String(self.kind.to_string()),
-        );
+        if !self.kind.is_empty() {
+            result.insert(
+                "kind".to_string(),
+                serde_json::Value::String(self.kind.clone()),
+            );
+        }
         if let Some(ref val) = self.label {
             result.insert("label".to_string(), serde_json::Value::String(val.clone()));
         }

@@ -8,7 +8,6 @@ import { MemoryCategory } from "./memory-category";
 export class MemoryEntry {
   static readonly shorthandProperty: string | undefined = undefined;
 
-  id: string = "";
   content: string = "";
   category!: MemoryCategory;
   createdAt?: string | undefined;
@@ -17,7 +16,6 @@ export class MemoryEntry {
   metadata?: Record<string, unknown> | undefined;
 
   constructor(init?: Partial<MemoryEntry>) {
-    this.id = init?.id ?? "";
     this.content = init?.content ?? "";
     if (init?.category !== undefined) {
       this.category = init.category;
@@ -48,9 +46,6 @@ export class MemoryEntry {
 
     const instance = new MemoryEntry();
 
-    if (data["id"] !== undefined && data["id"] !== null) {
-      instance.id = String(data["id"]);
-    }
     if (data["content"] !== undefined && data["content"] !== null) {
       instance.content = String(data["content"]);
     }
@@ -91,9 +86,6 @@ export class MemoryEntry {
 
     const result: Record<string, unknown> = {};
 
-    if (obj.id !== undefined && obj.id !== null) {
-      result["id"] = obj.id;
-    }
     if (obj.content !== undefined && obj.content !== null) {
       result["content"] = obj.content;
     }

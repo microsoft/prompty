@@ -19,21 +19,19 @@ describe("MemoryEntry", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "id": "mem-0001",\n  "content": "The user prefers concise answers.",\n  "category": {\n    "kind": "preference"\n  },\n  "createdAt": "2026-06-09T20:00:00Z",\n  "tags": [\n    "preference",\n    "tone"\n  ],\n  "importance": 0.8\n}`;
+      const json = `{\n  "content": "The user prefers concise answers.",\n  "category": {\n    "kind": "preference"\n  },\n  "createdAt": "2026-06-09T20:00:00Z",\n  "tags": [\n    "preference",\n    "tone"\n  ],\n  "importance": 0.8\n}`;
       const instance = MemoryEntry.fromJson(json);
       expect(instance).toBeDefined();
-      expect(instance.id).toEqual("mem-0001");
       expect(instance.content).toEqual("The user prefers concise answers.");
       expect(instance.createdAt).toEqual("2026-06-09T20:00:00Z");
       expect(instance.importance).toEqual(0.8);
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "id": "mem-0001",\n  "content": "The user prefers concise answers.",\n  "category": {\n    "kind": "preference"\n  },\n  "createdAt": "2026-06-09T20:00:00Z",\n  "tags": [\n    "preference",\n    "tone"\n  ],\n  "importance": 0.8\n}`;
+      const json = `{\n  "content": "The user prefers concise answers.",\n  "category": {\n    "kind": "preference"\n  },\n  "createdAt": "2026-06-09T20:00:00Z",\n  "tags": [\n    "preference",\n    "tone"\n  ],\n  "importance": 0.8\n}`;
       const instance = MemoryEntry.fromJson(json);
       const output = instance.toJson();
       const reloaded = MemoryEntry.fromJson(output);
-      expect(reloaded.id).toEqual(instance.id);
       expect(reloaded.content).toEqual(instance.content);
       expect(reloaded.createdAt).toEqual(instance.createdAt);
       expect(reloaded.importance).toEqual(instance.importance);
@@ -42,21 +40,19 @@ describe("MemoryEntry", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `id: mem-0001\ncontent: The user prefers concise answers.\ncategory:\n  kind: preference\ncreatedAt: "2026-06-09T20:00:00Z"\ntags:\n  - preference\n  - tone\nimportance: 0.8\n`;
+      const yaml = `content: The user prefers concise answers.\ncategory:\n  kind: preference\ncreatedAt: "2026-06-09T20:00:00Z"\ntags:\n  - preference\n  - tone\nimportance: 0.8\n`;
       const instance = MemoryEntry.fromYaml(yaml);
       expect(instance).toBeDefined();
-      expect(instance.id).toEqual("mem-0001");
       expect(instance.content).toEqual("The user prefers concise answers.");
       expect(instance.createdAt).toEqual("2026-06-09T20:00:00Z");
       expect(instance.importance).toEqual(0.8);
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `id: mem-0001\ncontent: The user prefers concise answers.\ncategory:\n  kind: preference\ncreatedAt: "2026-06-09T20:00:00Z"\ntags:\n  - preference\n  - tone\nimportance: 0.8\n`;
+      const yaml = `content: The user prefers concise answers.\ncategory:\n  kind: preference\ncreatedAt: "2026-06-09T20:00:00Z"\ntags:\n  - preference\n  - tone\nimportance: 0.8\n`;
       const instance = MemoryEntry.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = MemoryEntry.fromYaml(output);
-      expect(reloaded.id).toEqual(instance.id);
       expect(reloaded.content).toEqual(instance.content);
       expect(reloaded.createdAt).toEqual(instance.createdAt);
       expect(reloaded.importance).toEqual(instance.importance);

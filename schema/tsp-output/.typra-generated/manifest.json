@@ -1155,11 +1155,6 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryCategoryKind.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryEntry.cs",
       "marker": true
     },
