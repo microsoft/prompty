@@ -9,16 +9,6 @@
     clippy::all
 )]
 
-mod agent;
-mod connection;
-mod conversation;
-mod core;
-mod events;
-mod memory;
-mod model;
-mod pipeline;
-mod streaming;
-mod template;
-mod tools;
-mod tracing;
-mod wire;
+mod memory_category_test;
+mod memory_entry_test;
+mod memory_store_test;

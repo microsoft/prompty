@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MemoryCategory.yaml
+type: object
+properties:
+  kind:
+    anyOf:
+      - type: string
+        const: semantic
+      - type: string
+        const: episodic
+      - type: string
+        const: procedural
+      - type: string
+        const: preference
+    description: "The general memory category: 'semantic', 'episodic', 'procedural', or 'preference'"
+  label:
+    type: string
+    description: Optional finer-grained or host-specific classification within the general kind
+required:
+  - kind
+description: |-
+  The classification of an agent memory.
+
+  `kind` is a general, host-neutral taxonomy: `semantic` (facts and durable
+  knowledge), `episodic` (specific events or interactions), `procedural`
+  (skills or how-to), and `preference` (user or agent preferences). A host with
+  a finer-grained or application-specific taxonomy maps it onto one of these
+  general kinds and carries the raw label in `label` (or in entry metadata),
+  rather than introducing an application-specific canonical variant.

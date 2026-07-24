@@ -380,6 +380,21 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/memory/MemoryCategoryConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/memory/MemoryEntryConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/memory/MemoryStoreConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/model/InvocationUsageConversionTests.cs",
       "marker": true
     },
@@ -1131,6 +1146,26 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/events/UsageChunk.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryCategory.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryCategoryKind.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryEntry.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryStore.cs",
       "marker": true
     },
     {
@@ -2086,6 +2121,36 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/mcp_tool_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_category_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_category.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_entry_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_entry.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_store_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_store.go",
       "marker": true
     },
     {
@@ -3200,6 +3265,26 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/memory/__init__.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/memory/_MemoryCategory.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/memory/_MemoryEntry.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/memory/_MemoryStore.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/model/__init__.py",
       "marker": true
     },
@@ -3935,6 +4020,21 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/memory/test_memory_category.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/memory/test_memory_entry.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/memory/test_memory_store.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/model/test_invocation_usage.py",
       "marker": true
     },
@@ -4486,6 +4586,26 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/events/turn_trace.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/memory/memory_category.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/memory/memory_entry.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/memory/memory_store.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/memory/mod.rs",
       "marker": true
     },
     {
@@ -5185,6 +5305,26 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/memory/memory_category_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/memory/memory_entry_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/memory/memory_store_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/memory/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/model/invocation_usage_test.rs",
       "marker": true
     },
@@ -5836,6 +5976,26 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/index.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/memory/index.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/memory/memory-category.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/memory/memory-entry.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/memory/memory-store.ts",
       "marker": true
     },
     {
@@ -6590,6 +6750,21 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/memory/memory-category.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/memory/memory-entry.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/memory/memory-store.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/model/invocation-usage.test.ts",
       "marker": true
     },
@@ -7216,6 +7391,21 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/McpTool.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/MemoryCategory.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/MemoryEntry.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/MemoryStore.md",
       "marker": true
     },
     {

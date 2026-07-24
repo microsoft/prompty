@@ -95,6 +95,9 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryCategory",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
@@ -707,6 +710,27 @@
           "kind": "value",
           "group": "events",
           "source": "events/StreamChunk.cs",
+          "protocol": false
+        },
+        {
+          "name": "MemoryCategory",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory/MemoryCategory.cs",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory/MemoryEntry.cs",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory/MemoryStore.cs",
           "protocol": false
         },
         {
@@ -1390,6 +1414,19 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryCategory",
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "MemoryCategory.cs",
+            "MemoryEntry.cs",
+            "MemoryStore.cs"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
             "InvocationUsage",
@@ -1885,6 +1922,9 @@
         "events/TurnStartPayload.cs",
         "events/TurnSummary.cs",
         "events/TurnTrace.cs",
+        "memory/MemoryCategory.cs",
+        "memory/MemoryEntry.cs",
+        "memory/MemoryStore.cs",
         "model/InvocationUsage.cs",
         "model/Model.cs",
         "model/ModelInfo.cs",
@@ -2021,6 +2061,9 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryCategory",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
@@ -2633,6 +2676,27 @@
           "kind": "value",
           "group": "events",
           "source": "stream_chunk.go",
+          "protocol": false
+        },
+        {
+          "name": "MemoryCategory",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory_category.go",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory_entry.go",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory_store.go",
           "protocol": false
         },
         {
@@ -3316,6 +3380,19 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryCategory",
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_category",
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
             "InvocationUsage",
@@ -3804,6 +3881,9 @@
         "llm_complete_payload.go",
         "llm_start_payload.go",
         "mcp_approval_mode.go",
+        "memory_category.go",
+        "memory_entry.go",
+        "memory_store.go",
         "message.go",
         "messages_updated_payload.go",
         "model.go",
@@ -3946,6 +4026,9 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryCategory",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
@@ -4558,6 +4641,27 @@
           "kind": "value",
           "group": "events",
           "source": "StreamChunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryCategory",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryCategory",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryEntry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryStore",
           "protocol": false
         },
         {
@@ -5241,6 +5345,19 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryCategory",
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_category",
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
             "InvocationUsage",
@@ -5729,6 +5846,9 @@
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
+        "MemoryCategory",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
@@ -5872,6 +5992,9 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryCategory",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
@@ -6484,6 +6607,27 @@
           "kind": "value",
           "group": "events",
           "source": ".events",
+          "protocol": false
+        },
+        {
+          "name": "MemoryCategory",
+          "kind": "value",
+          "group": "memory",
+          "source": ".memory",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": ".memory",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": ".memory",
           "protocol": false
         },
         {
@@ -7167,6 +7311,19 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryCategory",
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "_MemoryCategory",
+            "_MemoryEntry",
+            "_MemoryStore"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
             "InvocationUsage",
@@ -7610,6 +7767,7 @@
         ".conversation",
         ".core",
         ".events",
+        ".memory",
         ".model",
         ".pipeline",
         ".streaming",
@@ -7684,6 +7842,9 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryCategory",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
@@ -8296,6 +8457,27 @@
           "kind": "value",
           "group": "events",
           "source": "events::stream_chunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryCategory",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory::memory_category",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory::memory_entry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory::memory_store",
           "protocol": false
         },
         {
@@ -8979,6 +9161,19 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryCategory",
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_category",
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
             "InvocationUsage",
@@ -9423,6 +9618,7 @@
         "conversation",
         "core",
         "events",
+        "memory",
         "model",
         "pipeline",
         "streaming",
@@ -9498,6 +9694,9 @@
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryCategory",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
@@ -10110,6 +10309,27 @@
           "kind": "value",
           "group": "events",
           "source": "./events/stream-chunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryCategory",
+          "kind": "value",
+          "group": "memory",
+          "source": "./memory/memory-category",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "./memory/memory-entry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "./memory/memory-store",
           "protocol": false
         },
         {
@@ -10793,6 +11013,19 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryCategory",
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory-category",
+            "memory-entry",
+            "memory-store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
             "InvocationUsage",
@@ -11288,6 +11521,9 @@
         "./events/turn-start-payload",
         "./events/turn-summary",
         "./events/turn-trace",
+        "./memory/memory-category",
+        "./memory/memory-entry",
+        "./memory/memory-store",
         "./model/invocation-usage",
         "./model/model",
         "./model/model-info",

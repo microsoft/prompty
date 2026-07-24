@@ -42,6 +42,7 @@ pub mod guardrails;
 pub mod harness;
 pub mod interfaces;
 pub mod loader;
+pub mod memory;
 pub mod model;
 pub use model::pipeline::{RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse};
 mod model_ext;
@@ -89,6 +90,10 @@ pub use interfaces::{ExecuteError, Executor, InvokerError, Parser, Processor, Re
 pub use loader::{
     LoadError, LoadOptions, load, load_async, load_async_with_options, load_from_string,
     load_from_string_with_options, load_with_options,
+};
+pub use memory::{
+    MemoryCategory, MemoryEntry, MemoryPort, MemoryStore, ScoredMemory, format_recall_results,
+    memoryCategoryKind,
 };
 pub use model::Prompty;
 pub use pipeline::{

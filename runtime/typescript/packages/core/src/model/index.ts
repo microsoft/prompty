@@ -92,6 +92,10 @@ export {
   ErrorChunk,
 } from "./events/stream-chunk";
 
+export { MemoryCategory } from "./memory/memory-category";
+export { MemoryEntry } from "./memory/memory-entry";
+export { MemoryStore } from "./memory/memory-store";
+
 export { ModelOptions } from "./model/model-options";
 export { Model } from "./model/model";
 export { TokenUsage } from "./model/token-usage";

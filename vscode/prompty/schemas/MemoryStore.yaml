@@ -1,0 +1,21 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MemoryStore.yaml
+type: object
+properties:
+  entries:
+    type: array
+    items:
+      $ref: MemoryEntry.yaml
+    description: The memories held in the store, in insertion order
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific store metadata
+required:
+  - entries
+description: |-
+  A whole-store snapshot of agent memory.
+
+  The canonical persisted shape a host loads and saves as one unit. A host
+  backend implements only load/save of this snapshot; the engine owns the
+  deterministic recall, formatting, and entry-mutation logic on top of it.

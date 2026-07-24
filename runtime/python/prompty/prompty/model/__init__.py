@@ -92,6 +92,11 @@ from .events import (
     TurnTrace,
     UsageChunk,
 )
+from .memory import (
+    MemoryCategory,
+    MemoryEntry,
+    MemoryStore,
+)
 from .model import (
     InvocationUsage,
     Model,
@@ -229,6 +234,9 @@ __all__ = [
     "TokenUsage",
     "InvocationUsage",
     "ModelInfo",
+    "MemoryCategory",
+    "MemoryEntry",
+    "MemoryStore",
     "DelegatedStateReference",
     "InvocationContextState",
     "InvocationContextDecision",
