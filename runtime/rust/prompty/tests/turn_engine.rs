@@ -1375,7 +1375,7 @@ async fn canonical_turn_engine_matches_vectors() {
                 result
                     .snapshots
                     .iter()
-                    .map(|snapshot| snapshot.portability)
+                    .map(|snapshot| snapshot.context_state.portability)
                     .collect::<Vec<_>>(),
                 vector.expected.snapshot_portability,
                 "{} portability",
@@ -1387,7 +1387,7 @@ async fn canonical_turn_engine_matches_vectors() {
                 result
                     .snapshots
                     .iter()
-                    .map(|snapshot| snapshot.stable_prefix_messages)
+                    .map(|snapshot| snapshot.stable_prefix_messages as usize)
                     .collect::<Vec<_>>(),
                 vector.expected.snapshot_stable_prefixes,
                 "{} stable prefixes",
@@ -1517,12 +1517,18 @@ impl ContextSource for InputEchoSource {
     }
 
     async fn load(&self, request: &ContextRequest) -> Result<Vec<ContextCandidate>, ContextError> {
+        let tenant = request
+            .inputs
+            .as_ref()
+            .and_then(|inputs| inputs.get("tenant"))
+            .cloned()
+            .unwrap_or(Value::Null);
         Ok(vec![ContextCandidate {
             id: "input-tenant".to_string(),
             source: "inputs".to_string(),
             messages: vec![Message::with_text(
                 Role::System,
-                format!("Tenant: {}", request.inputs["tenant"]),
+                format!("Tenant: {}", tenant),
             )],
             metadata: Value::Null,
         }])

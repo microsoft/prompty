@@ -8,14 +8,12 @@ use std::sync::Arc;
 use async_trait::async_trait;
 
 use super::{
-    CancellationToken, ContextDecision, ModelInvocationContextSnapshot, ModelInvocationRequest,
-    ModelInvocationResponse, ModelPort, ModelStreamPort, PortError,
+    CancellationToken, ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelStreamPort,
+    PortError,
 };
 use crate::model::{
-    InvocationContextDecision as GeneratedInvocationContextDecision, InvocationContextState,
-    InvocationUsage, ModelInvocationContextSnapshot as GeneratedSnapshot,
-    ModelInvocationRequest as GeneratedRequest, ModelInvocationResponse as GeneratedResponse,
-    ModelToolRequest,
+    InvocationUsage, ModelInvocationRequest as GeneratedRequest,
+    ModelInvocationResponse as GeneratedResponse, ModelToolRequest,
 };
 use crate::types::Usage;
 
@@ -54,70 +52,15 @@ where
         cancellation: &CancellationToken,
         stream: &dyn ModelStreamPort,
     ) -> Result<ModelInvocationResponse, PortError> {
-        let request = generated_request(request)?;
+        // The engine's invocation context snapshot is now the generated
+        // cross-runtime contract, so the request crosses the provider boundary
+        // without a field-by-field bridge.
+        let request = GeneratedRequest {
+            context: request.context.clone(),
+        };
         let response = self.inner.invoke(&request, cancellation, stream).await?;
         engine_response(response)
     }
-}
-
-fn generated_request(request: &ModelInvocationRequest) -> Result<GeneratedRequest, PortError> {
-    Ok(GeneratedRequest {
-        context: generated_snapshot(&request.context)?,
-    })
-}
-
-fn generated_snapshot(
-    snapshot: &ModelInvocationContextSnapshot,
-) -> Result<GeneratedSnapshot, PortError> {
-    Ok(GeneratedSnapshot {
-        id: snapshot.id.clone(),
-        session_id: snapshot.session_id.clone(),
-        turn_id: snapshot.turn_id.clone(),
-        invocation_id: snapshot.invocation_id.clone(),
-        iteration: i32::try_from(snapshot.iteration)
-            .map_err(|_| PortError::configuration("invocation iteration exceeds Int32 range"))?,
-        messages: snapshot.messages.clone(),
-        decisions: snapshot
-            .decisions
-            .iter()
-            .map(generated_decision)
-            .collect::<Result<Vec<_>, _>>()?,
-        stable_prefix_messages: i32::try_from(snapshot.stable_prefix_messages).map_err(|_| {
-            PortError::configuration("stable prefix message count exceeds Int32 range")
-        })?,
-        context_state: InvocationContextState {
-            portability: snapshot.portability,
-            delegated_state: snapshot.delegated_state.clone(),
-        },
-        metadata: snapshot.metadata.clone(),
-    })
-}
-
-fn generated_decision(
-    decision: &ContextDecision,
-) -> Result<GeneratedInvocationContextDecision, PortError> {
-    Ok(GeneratedInvocationContextDecision {
-        candidate_id: decision.candidate_id.clone(),
-        disposition: decision.disposition,
-        reason: decision.reason.clone(),
-        rank: decision
-            .rank
-            .map(|rank| {
-                i32::try_from(rank).map_err(|_| {
-                    PortError::configuration("context decision rank exceeds Int32 range")
-                })
-            })
-            .transpose()?,
-        estimated_tokens: decision
-            .estimated_tokens
-            .map(|tokens| {
-                i32::try_from(tokens).map_err(|_| {
-                    PortError::configuration("context decision token estimate exceeds Int32 range")
-                })
-            })
-            .transpose()?,
-        metadata: decision.metadata.clone(),
-    })
 }
 
 fn engine_response(response: GeneratedResponse) -> Result<ModelInvocationResponse, PortError> {
@@ -130,12 +73,7 @@ fn engine_response(response: GeneratedResponse) -> Result<ModelInvocationRespons
         metadata,
     } = response;
     let (next_portability, delegated_state) = next_context_state
-        .map(|state| {
-            (
-                Some(state.portability),
-                Some(state.delegated_state),
-            )
-        })
+        .map(|state| (Some(state.portability), Some(state.delegated_state)))
         .unwrap_or((None, None));
 
     Ok(ModelInvocationResponse {
@@ -191,7 +129,7 @@ mod tests {
                 arguments: Some(json!({ "path": "src" })),
                 metadata: json!({ "provider": "test" }),
             }],
-            next_context_state: Some(InvocationContextState {
+            next_context_state: Some(crate::model::InvocationContextState {
                 portability: crate::model::InvocationContextPortability::Delegated,
                 delegated_state: vec![crate::model::DelegatedStateReference {
                     provider: "openai".to_string(),

@@ -11,7 +11,8 @@ pub use cancellation::CancellationToken;
 pub use context::{
     AppendContextPackingStrategy, ContextCandidate, ContextDecision, ContextDisposition,
     ContextError, ContextPackingStrategy, ContextPipeline, ContextPortability, ContextRequest,
-    ContextSource, ContextTransform, DelegatedStateReference, ModelInvocationContextSnapshot,
+    ContextSource, ContextTransform, DelegatedStateReference, InvocationContextState,
+    ModelInvocationContextSnapshot,
 };
 pub use event::{EngineEvent, EngineEventKind};
 pub use generated::{GeneratedModelPort, GeneratedModelPortAdapter};

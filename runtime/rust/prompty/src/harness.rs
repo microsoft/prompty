@@ -464,7 +464,7 @@ impl ModelPort for ReferenceModelPort {
         let response = (self.callback)(TurnModelRequest {
             session_id: request.context.session_id.clone(),
             turn_id: request.context.turn_id.clone(),
-            iteration: request.context.iteration as i32,
+            iteration: request.context.iteration,
             inputs: self.inputs.clone(),
             options: Some(self.options.clone()),
             tool_results,

@@ -3,16 +3,16 @@
 use std::{collections::HashSet, sync::Arc};
 
 use async_trait::async_trait;
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::types::Message;
-
 // Adopt the generated cross-runtime contracts directly instead of maintaining
-// engine-local twins. Variant names and wire form are identical.
+// engine-local twins. Field layout, variant names, and wire form are identical.
 pub use crate::model::{
-    DelegatedStateReference, InvocationContextDisposition as ContextDisposition,
-    InvocationContextPortability as ContextPortability,
+    ContextCandidate, ContextRequest, DelegatedStateReference,
+    InvocationContextDecision as ContextDecision,
+    InvocationContextDisposition as ContextDisposition,
+    InvocationContextPortability as ContextPortability, InvocationContextState,
+    ModelInvocationContextSnapshot,
 };
 
 /// Errors raised while assembling context for a model invocation.
@@ -33,87 +33,33 @@ pub enum ContextError {
     InvalidSnapshot(String),
 }
 
-/// Input supplied to context sources for one model invocation.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ContextRequest {
-    pub session_id: String,
-    pub turn_id: String,
-    pub invocation_id: String,
-    pub iteration: usize,
-    pub messages: Vec<Message>,
-    /// Number of leading base messages expected to remain cache-stable.
-    pub stable_prefix_messages: usize,
-    /// Portability inherited from provider-held state entering this invocation.
-    pub portability: ContextPortability,
-    /// Provider-held state references entering this invocation.
-    pub delegated_state: Vec<DelegatedStateReference>,
-    #[serde(default)]
-    pub inputs: Value,
-}
-
-/// A context contribution before filtering, ranking, and packing.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ContextCandidate {
-    pub id: String,
-    pub source: String,
-    pub messages: Vec<Message>,
-    #[serde(default)]
-    pub metadata: Value,
-}
-
-/// An auditable decision made while assembling a context snapshot.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ContextDecision {
-    pub candidate_id: String,
-    pub disposition: ContextDisposition,
-    pub reason: String,
-    pub rank: Option<usize>,
-    pub estimated_tokens: Option<usize>,
-    #[serde(default)]
-    pub metadata: Value,
-}
-
-/// Immutable model-visible context for one provider invocation.
+/// Snapshot invariants required for caching, portability, and replay.
 ///
-/// A turn may create several snapshots as tools, steering, or synchronous memory
-/// effects produce new model rounds. Retries of the same invocation reuse the
-/// same snapshot.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ModelInvocationContextSnapshot {
-    pub id: String,
-    pub session_id: String,
-    pub turn_id: String,
-    pub invocation_id: String,
-    pub iteration: usize,
-    pub messages: Vec<Message>,
-    pub decisions: Vec<ContextDecision>,
-    /// Number of leading messages intended for provider prefix-cache reuse.
-    ///
-    /// These messages must remain positionally and content-stable for every
-    /// invocation that shares the same provider cache scope.
-    pub stable_prefix_messages: usize,
-    pub portability: ContextPortability,
-    pub delegated_state: Vec<DelegatedStateReference>,
-    #[serde(default)]
-    pub metadata: Value,
-}
-
+/// `ModelInvocationContextSnapshot` is the generated cross-runtime contract; the
+/// engine adds these same-crate inherent validators to keep the durable-turn
+/// invariants co-located with the pipeline that produces them.
 impl ModelInvocationContextSnapshot {
     /// Validate invariants required for caching, portability, and replay.
     pub fn validate(&self) -> Result<(), ContextError> {
-        if self.stable_prefix_messages > self.messages.len() {
+        if self.stable_prefix_messages < 0
+            || self.stable_prefix_messages as usize > self.messages.len()
+        {
             return Err(ContextError::InvalidSnapshot(format!(
                 "stable prefix contains {} messages but snapshot contains {}",
                 self.stable_prefix_messages,
                 self.messages.len()
             )));
         }
-        if self.portability == ContextPortability::Portable && !self.delegated_state.is_empty() {
+        if self.context_state.portability == ContextPortability::Portable
+            && !self.context_state.delegated_state.is_empty()
+        {
             return Err(ContextError::InvalidSnapshot(
                 "portable snapshots cannot contain delegated provider state".to_string(),
             ));
         }
-        if self.portability == ContextPortability::Delegated && self.delegated_state.is_empty() {
+        if self.context_state.portability == ContextPortability::Delegated
+            && self.context_state.delegated_state.is_empty()
+        {
             return Err(ContextError::InvalidSnapshot(
                 "delegated snapshots must identify provider-held state".to_string(),
             ));
@@ -213,7 +159,7 @@ impl ContextPackingStrategy for AppendContextPackingStrategy {
                 candidate_id: candidate.id,
                 disposition: ContextDisposition::Included,
                 reason: "included by append strategy".to_string(),
-                rank: Some(rank),
+                rank: Some(rank as i32),
                 estimated_tokens: None,
                 metadata: candidate.metadata,
             });
@@ -228,8 +174,10 @@ impl ContextPackingStrategy for AppendContextPackingStrategy {
             messages,
             decisions,
             stable_prefix_messages: request.stable_prefix_messages,
-            portability: request.portability,
-            delegated_state: request.delegated_state.clone(),
+            context_state: InvocationContextState {
+                portability: request.context_state.portability,
+                delegated_state: request.context_state.delegated_state.clone(),
+            },
             metadata: Value::Null,
         })
     }
@@ -351,6 +299,7 @@ impl ContextPipeline {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::types::Message;
 
     struct StaticSource {
         name: &'static str,
@@ -412,7 +361,7 @@ mod tests {
                     candidate_id: candidate.id,
                     disposition: ContextDisposition::Included,
                     reason: "included by test strategy".to_string(),
-                    rank: Some(rank),
+                    rank: Some(rank as i32),
                     estimated_tokens: None,
                     metadata: Value::Null,
                 });
@@ -423,11 +372,13 @@ mod tests {
                 turn_id: request.turn_id.clone(),
                 invocation_id: request.invocation_id.clone(),
                 iteration: request.iteration,
-                stable_prefix_messages: request.messages.len(),
+                stable_prefix_messages: request.messages.len() as i32,
                 messages,
                 decisions,
-                portability: ContextPortability::Portable,
-                delegated_state: Vec::new(),
+                context_state: InvocationContextState {
+                    portability: ContextPortability::Portable,
+                    delegated_state: Vec::new(),
+                },
                 metadata: Value::Null,
             })
         }
@@ -452,11 +403,13 @@ mod tests {
                 turn_id: request.turn_id.clone(),
                 invocation_id: request.invocation_id.clone(),
                 iteration: request.iteration,
-                stable_prefix_messages: request.messages.len(),
+                stable_prefix_messages: request.messages.len() as i32,
                 messages: request.messages.clone(),
                 decisions: Vec::new(),
-                portability: ContextPortability::Portable,
-                delegated_state: Vec::new(),
+                context_state: InvocationContextState {
+                    portability: ContextPortability::Portable,
+                    delegated_state: Vec::new(),
+                },
                 metadata: Value::Null,
             })
         }
@@ -479,9 +432,11 @@ mod tests {
             iteration: 0,
             messages: vec![Message::system("You are helpful.")],
             stable_prefix_messages: 1,
-            portability: ContextPortability::Portable,
-            delegated_state: Vec::new(),
-            inputs: Value::Null,
+            context_state: InvocationContextState {
+                portability: ContextPortability::Portable,
+                delegated_state: Vec::new(),
+            },
+            inputs: None,
         }
     }
 
@@ -562,13 +517,15 @@ mod tests {
             messages: Vec::new(),
             decisions: Vec::new(),
             stable_prefix_messages: 0,
-            portability: ContextPortability::Portable,
-            delegated_state: vec![DelegatedStateReference {
-                provider: "openai".to_string(),
-                kind: "previous_response".to_string(),
-                id: "response-1".to_string(),
-                metadata: Value::Null,
-            }],
+            context_state: InvocationContextState {
+                portability: ContextPortability::Portable,
+                delegated_state: vec![DelegatedStateReference {
+                    provider: "openai".to_string(),
+                    kind: "previous_response".to_string(),
+                    id: "response-1".to_string(),
+                    metadata: Value::Null,
+                }],
+            },
             metadata: Value::Null,
         };
 
@@ -586,8 +543,10 @@ mod tests {
             messages: Vec::new(),
             decisions: Vec::new(),
             stable_prefix_messages: 0,
-            portability: ContextPortability::Delegated,
-            delegated_state: Vec::new(),
+            context_state: InvocationContextState {
+                portability: ContextPortability::Delegated,
+                delegated_state: Vec::new(),
+            },
             metadata: Value::Null,
         };
 
@@ -605,8 +564,10 @@ mod tests {
             messages: Vec::new(),
             decisions: Vec::new(),
             stable_prefix_messages: 1,
-            portability: ContextPortability::Portable,
-            delegated_state: Vec::new(),
+            context_state: InvocationContextState {
+                portability: ContextPortability::Portable,
+                delegated_state: Vec::new(),
+            },
             metadata: Value::Null,
         };
 
@@ -636,9 +597,11 @@ mod tests {
                     iteration: request.iteration,
                     messages: request.messages.clone(),
                     decisions: Vec::new(),
-                    stable_prefix_messages: request.messages.len(),
-                    portability: ContextPortability::Portable,
-                    delegated_state: Vec::new(),
+                    stable_prefix_messages: request.messages.len() as i32,
+                    context_state: InvocationContextState {
+                        portability: ContextPortability::Portable,
+                        delegated_state: Vec::new(),
+                    },
                     metadata: Value::Null,
                 })
             }

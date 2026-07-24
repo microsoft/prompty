@@ -10,9 +10,9 @@ use super::{
     ConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint, EngineEvent,
     EngineEventKind, EnginePermissionDecision, EngineToolRequest, EngineToolResult,
     FinalOutputPolicyRequest, HostPolicyPort, HostPolicyRequest, IdGenerator,
-    ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelReconciliationState,
-    ModelStreamPort, PermissionPort, PortError, PostCommitPort, RetryPolicyError, RetryPolicyPort,
-    RetryPolicyRequest, ToolOutcome, ToolPort,
+    InvocationContextState, ModelInvocationRequest, ModelInvocationResponse, ModelPort,
+    ModelReconciliationState, ModelStreamPort, PermissionPort, PortError, PostCommitPort,
+    RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, ToolOutcome, ToolPort,
 };
 use crate::types::Message;
 
@@ -542,12 +542,15 @@ impl TurnEngine {
                     session_id: state.session_id.clone(),
                     turn_id: state.turn_id.clone(),
                     invocation_id: invocation_id.clone(),
-                    iteration: state.iteration,
+                    iteration: state.iteration as i32,
                     messages: state.messages.clone(),
-                    stable_prefix_messages: state.stable_prefix_messages.min(state.messages.len()),
-                    portability: state.portability,
-                    delegated_state: state.delegated_state.clone(),
-                    inputs: state.inputs.clone(),
+                    stable_prefix_messages: state.stable_prefix_messages.min(state.messages.len())
+                        as i32,
+                    context_state: InvocationContextState {
+                        portability: state.portability,
+                        delegated_state: state.delegated_state.clone(),
+                    },
+                    inputs: Some(state.inputs.clone()),
                 })
                 .await
             {
