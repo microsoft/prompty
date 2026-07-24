@@ -8,4 +8,106 @@ namespace Prompty.Core;
 
 public class ResumeContextConversionTests
 {
+    [Fact]
+    public void LoadYamlInput()
+    {
+        string yamlData = """
+lastJournalSequence: 12
+
+""";
+
+        var instance = ResumeContext.FromYaml(yamlData);
+
+        Assert.NotNull(instance);
+        Assert.Equal(12, instance.LastJournalSequence);
+    }
+
+    [Fact]
+    public void LoadJsonInput()
+    {
+        string jsonData = """
+{
+  "lastJournalSequence": 12
+}
+""";
+
+        var instance = ResumeContext.FromJson(jsonData);
+        Assert.NotNull(instance);
+        Assert.Equal(12, instance.LastJournalSequence);
+    }
+
+    [Fact]
+    public void RoundtripJson()
+    {
+        // Test that FromJson -> ToJson -> FromJson produces equivalent data
+        string jsonData = """
+{
+  "lastJournalSequence": 12
+}
+""";
+
+        var original = ResumeContext.FromJson(jsonData);
+        Assert.NotNull(original);
+
+        var json = original.ToJson();
+        Assert.False(string.IsNullOrEmpty(json));
+
+        var reloaded = ResumeContext.FromJson(json);
+        Assert.NotNull(reloaded);
+        Assert.Equal(12, reloaded.LastJournalSequence);
+    }
+
+    [Fact]
+    public void RoundtripYaml()
+    {
+        // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
+        string yamlData = """
+lastJournalSequence: 12
+
+""";
+
+        var original = ResumeContext.FromYaml(yamlData);
+        Assert.NotNull(original);
+
+        var yaml = original.ToYaml();
+        Assert.False(string.IsNullOrEmpty(yaml));
+
+        var reloaded = ResumeContext.FromYaml(yaml);
+        Assert.NotNull(reloaded);
+        Assert.Equal(12, reloaded.LastJournalSequence);
+    }
+
+    [Fact]
+    public void ToJsonProducesValidJson()
+    {
+        string jsonData = """
+{
+  "lastJournalSequence": 12
+}
+""";
+
+        var instance = ResumeContext.FromJson(jsonData);
+        var json = instance.ToJson();
+
+        // Verify it's valid JSON by parsing it
+        var parsed = System.Text.Json.JsonDocument.Parse(json);
+        Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void ToYamlProducesValidYaml()
+    {
+        string yamlData = """
+lastJournalSequence: 12
+
+""";
+
+        var instance = ResumeContext.FromYaml(yamlData);
+        var yaml = instance.ToYaml();
+
+        // Verify it's valid YAML by parsing it
+        var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
+        var parsed = deserializer.Deserialize<object>(yaml);
+        Assert.NotNull(parsed);
+    }
 }

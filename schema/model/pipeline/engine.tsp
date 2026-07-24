@@ -227,6 +227,10 @@ model ResumeContext {
   @doc("Maximum model attempts permitted per invocation in the resumed run")
   maxModelAttempts: int32;
 
+  @doc("Last durably persisted journal sequence when the journal tail is ahead of the checkpoint; the resumed run continues numbering after this value. Zero resumes from the checkpoint's own lastSequence.")
+  @sample(#{ lastJournalSequence: 12 })
+  lastJournalSequence: int64 = 0;
+
   @doc("Opaque host-specific resume metadata")
   metadata?: Record<unknown> = #{};
 }

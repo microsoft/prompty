@@ -22,7 +22,7 @@ pub use ports::{
     ModelInvocationResponse, ModelPort, ModelReconciliationState, ModelStreamChunk,
     ModelStreamPort, ModelToolOutcome, ModelToolRequest, ModelToolResult, NoopDurabilityPort,
     NoopHostPolicyPort, NoopModelStreamPort, NoopPostCommitPort, NoopRetryPolicyPort,
-    PermissionPort, PortError, PostCommitPort, RetryPolicyError, RetryPolicyPort,
+    PermissionPort, PortError, PostCommitPort, ResumeContext, RetryPolicyError, RetryPolicyPort,
     RetryPolicyRequest, ToolOutcome, ToolPort,
 };
 pub use turn::{

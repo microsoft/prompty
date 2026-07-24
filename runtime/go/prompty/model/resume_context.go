@@ -16,10 +16,11 @@ import (
 // committed model or tool effect.
 
 type ResumeContext struct {
-	Checkpoint       EngineCheckpoint       `json:"checkpoint" yaml:"checkpoint"`
-	MaxIterations    int32                  `json:"maxIterations" yaml:"maxIterations"`
-	MaxModelAttempts int32                  `json:"maxModelAttempts" yaml:"maxModelAttempts"`
-	Metadata         map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Checkpoint          EngineCheckpoint       `json:"checkpoint" yaml:"checkpoint"`
+	MaxIterations       int32                  `json:"maxIterations" yaml:"maxIterations"`
+	MaxModelAttempts    int32                  `json:"maxModelAttempts" yaml:"maxModelAttempts"`
+	LastJournalSequence int64                  `json:"lastJournalSequence" yaml:"lastJournalSequence"`
+	Metadata            map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 }
 
 // LoadResumeContext creates a ResumeContext from a map[string]interface{}
@@ -65,6 +66,20 @@ func LoadResumeContext(data interface{}, ctx *LoadContext) (ResumeContext, error
 			}
 			result.MaxModelAttempts = v
 		}
+		if val, ok := m["lastJournalSequence"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip
+			var v int64
+			switch n := val.(type) {
+			case int:
+				v = int64(n)
+			case int32:
+				v = int64(n)
+			case int64:
+				v = int64(n)
+			case float64:
+				v = int64(n)
+			}
+			result.LastJournalSequence = v
+		}
 		if val, ok := m["metadata"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
 				result.Metadata = m
@@ -82,6 +97,7 @@ func (obj ResumeContext) Save(ctx *SaveContext) map[string]interface{} {
 	result["checkpoint"] = obj.Checkpoint.Save(ctx)
 	result["maxIterations"] = obj.MaxIterations
 	result["maxModelAttempts"] = obj.MaxModelAttempts
+	result["lastJournalSequence"] = obj.LastJournalSequence
 	if obj.Metadata != nil {
 		result["metadata"] = obj.Metadata
 	}

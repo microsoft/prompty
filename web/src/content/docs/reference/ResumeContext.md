@@ -26,6 +26,7 @@ classDiagram
         +EngineCheckpoint checkpoint
         +int32 maxIterations
         +int32 maxModelAttempts
+        +int64 lastJournalSequence
         +dictionary metadata
     }
     class EngineCheckpoint {
@@ -57,6 +58,12 @@ classDiagram
     ResumeContext *-- EngineCheckpoint
 ```
 
+## Yaml Example
+
+```yaml
+lastJournalSequence: 12
+```
+
 ## Properties
 
 | Name | Type | Description |
@@ -64,6 +71,7 @@ classDiagram
 | checkpoint | [EngineCheckpoint](../enginecheckpoint/) | Checkpoint to resume from |
 | maxIterations | int32 | Maximum model loop iterations permitted for the resumed run |
 | maxModelAttempts | int32 | Maximum model attempts permitted per invocation in the resumed run |
+| lastJournalSequence | int64 | Last durably persisted journal sequence when the journal tail is ahead of the checkpoint; the resumed run continues numbering after this value. Zero resumes from the checkpoint's own lastSequence. |
 | metadata | dictionary | Opaque host-specific resume metadata |
 
 ## Composed Types

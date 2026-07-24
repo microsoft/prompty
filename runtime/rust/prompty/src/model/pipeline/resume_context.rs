@@ -22,6 +22,8 @@ pub struct ResumeContext {
     pub max_iterations: i32,
     /// Maximum model attempts permitted per invocation in the resumed run
     pub max_model_attempts: i32,
+    /// Last durably persisted journal sequence when the journal tail is ahead of the checkpoint; the resumed run continues numbering after this value. Zero resumes from the checkpoint's own lastSequence.
+    pub last_journal_sequence: i64,
     /// Opaque host-specific resume metadata
     pub metadata: serde_json::Value,
 }
@@ -63,6 +65,10 @@ impl ResumeContext {
                 .get("maxModelAttempts")
                 .and_then(|v| v.as_i64())
                 .unwrap_or(0) as i32,
+            last_journal_sequence: value
+                .get("lastJournalSequence")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(0),
             metadata: value
                 .get("metadata")
                 .cloned()
@@ -92,6 +98,12 @@ impl ResumeContext {
             result.insert(
                 "maxModelAttempts".to_string(),
                 serde_json::Value::Number(serde_json::Number::from(self.max_model_attempts)),
+            );
+        }
+        if self.last_journal_sequence != 0 {
+            result.insert(
+                "lastJournalSequence".to_string(),
+                serde_json::Value::Number(serde_json::Number::from(self.last_journal_sequence)),
             );
         }
         if !self.metadata.is_null() {

@@ -27,6 +27,8 @@ class ResumeContext:
         Maximum model loop iterations permitted for the resumed run
     max_model_attempts : int
         Maximum model attempts permitted per invocation in the resumed run
+    last_journal_sequence : int
+        Last durably persisted journal sequence when the journal tail is ahead of the checkpoint; the resumed run continues numbering after this value. Zero resumes from the checkpoint's own lastSequence.
     metadata : Optional[dict[str, Any]]
         Opaque host-specific resume metadata
     """
@@ -36,6 +38,7 @@ class ResumeContext:
     checkpoint: EngineCheckpoint = field(default_factory=EngineCheckpoint)
     max_iterations: int = field(default=0)
     max_model_attempts: int = field(default=0)
+    last_journal_sequence: int = field(default=0)
     metadata: dict[str, Any] | None = None
 
     @staticmethod
@@ -64,6 +67,8 @@ class ResumeContext:
             instance.max_iterations = data["maxIterations"]
         if data is not None and "maxModelAttempts" in data:
             instance.max_model_attempts = data["maxModelAttempts"]
+        if data is not None and "lastJournalSequence" in data:
+            instance.last_journal_sequence = data["lastJournalSequence"]
         if data is not None and "metadata" in data:
             instance.metadata = data["metadata"]
         if context is not None:
@@ -90,6 +95,8 @@ class ResumeContext:
             result["maxIterations"] = obj.max_iterations
         if obj.max_model_attempts is not None:
             result["maxModelAttempts"] = obj.max_model_attempts
+        if obj.last_journal_sequence is not None:
+            result["lastJournalSequence"] = obj.last_journal_sequence
         if obj.metadata is not None:
             result["metadata"] = obj.metadata
 

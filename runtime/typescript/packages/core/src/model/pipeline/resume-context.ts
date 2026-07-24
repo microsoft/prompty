@@ -11,6 +11,7 @@ export class ResumeContext {
   checkpoint!: EngineCheckpoint;
   maxIterations: number = 0;
   maxModelAttempts: number = 0;
+  lastJournalSequence: number = 0;
   metadata?: Record<string, unknown> | undefined;
 
   constructor(init?: Partial<ResumeContext>) {
@@ -19,6 +20,7 @@ export class ResumeContext {
     }
     this.maxIterations = init?.maxIterations ?? 0;
     this.maxModelAttempts = init?.maxModelAttempts ?? 0;
+    this.lastJournalSequence = init?.lastJournalSequence ?? 0;
     if (init?.metadata !== undefined) {
       this.metadata = init.metadata;
     }
@@ -51,6 +53,12 @@ export class ResumeContext {
     ) {
       instance.maxModelAttempts = Number(data["maxModelAttempts"]);
     }
+    if (
+      data["lastJournalSequence"] !== undefined &&
+      data["lastJournalSequence"] !== null
+    ) {
+      instance.lastJournalSequence = Number(data["lastJournalSequence"]);
+    }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
     }
@@ -81,6 +89,12 @@ export class ResumeContext {
     }
     if (obj.maxModelAttempts !== undefined && obj.maxModelAttempts !== null) {
       result["maxModelAttempts"] = obj.maxModelAttempts;
+    }
+    if (
+      obj.lastJournalSequence !== undefined &&
+      obj.lastJournalSequence !== null
+    ) {
+      result["lastJournalSequence"] = obj.lastJournalSequence;
     }
     if (obj.metadata !== undefined && obj.metadata !== null) {
       result["metadata"] = obj.metadata;

@@ -11,3 +11,84 @@
 
 use prompty::model::ResumeContext;
 use prompty::model::context::{LoadContext, SaveContext};
+
+#[test]
+fn test_resume_context_load_json() {
+    let json = r####"
+{
+  "lastJournalSequence": 12
+}
+"####;
+    let ctx = LoadContext::default();
+    let result = ResumeContext::from_json(json, &ctx);
+    assert!(
+        result.is_ok(),
+        "Failed to load from JSON: {:?}",
+        result.err()
+    );
+    let instance = result.unwrap();
+    assert_eq!(instance.last_journal_sequence, 12);
+}
+
+#[test]
+fn test_resume_context_load_yaml() {
+    let yaml = r####"
+lastJournalSequence: 12
+
+"####;
+    let ctx = LoadContext::default();
+    let result = ResumeContext::from_yaml(yaml, &ctx);
+    assert!(
+        result.is_ok(),
+        "Failed to load from YAML: {:?}",
+        result.err()
+    );
+    let instance = result.unwrap();
+    assert_eq!(instance.last_journal_sequence, 12);
+}
+
+#[test]
+fn test_resume_context_roundtrip() {
+    let json = r####"
+{
+  "lastJournalSequence": 12
+}
+"####;
+    let load_ctx = LoadContext::default();
+    let result = ResumeContext::from_json(json, &load_ctx);
+    assert!(result.is_ok(), "Failed to load: {:?}", result.err());
+    let instance = result.unwrap();
+    let save_ctx = SaveContext::default();
+    let json_output = instance.to_json(&save_ctx);
+    assert!(
+        json_output.is_ok(),
+        "Failed to serialize to JSON: {:?}",
+        json_output.err()
+    );
+}
+
+#[test]
+fn test_resume_context_serde_roundtrip() {
+    let json = r####"
+{
+  "lastJournalSequence": 12
+}
+"####;
+    let instance: ResumeContext =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        ResumeContext::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    let reparsed: ResumeContext =
+        serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+}

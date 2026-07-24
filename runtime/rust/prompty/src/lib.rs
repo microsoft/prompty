@@ -72,7 +72,7 @@ pub use engine::{
     ModelInvocationContextSnapshot, ModelInvocationRequest, ModelInvocationResponse, ModelPort,
     ModelReconciliationState, ModelStreamChunk, ModelStreamPort, NoopDurabilityPort,
     NoopHostPolicyPort, NoopModelStreamPort, NoopPostCommitPort, NoopRetryPolicyPort,
-    PermissionPort, PortError, PostCommitPort, RetryPolicyError, RetryPolicyPort,
+    PermissionPort, PortError, PostCommitPort, ResumeContext, RetryPolicyError, RetryPolicyPort,
     RetryPolicyRequest, ToolOutcome, ToolPort, TurnCommit, TurnEngine, TurnEngineEffects,
     TurnEngineError, TurnEngineRequest, TurnEngineResult, TurnStatus,
 };

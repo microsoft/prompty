@@ -12,7 +12,7 @@ use super::{
     FinalOutputPolicyRequest, HostPolicyPort, HostPolicyRequest, IdGenerator,
     InvocationContextState, ModelInvocationRequest, ModelInvocationResponse, ModelPort,
     ModelReconciliationState, ModelStreamPort, PermissionPort, PortError, PostCommitPort,
-    RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, ToolOutcome, ToolPort,
+    ResumeContext, RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, ToolOutcome, ToolPort,
 };
 use crate::types::Message;
 
@@ -265,6 +265,63 @@ impl TurnEngineRequest {
         self.delegation_depth = parent_delegation_depth.saturating_add(1);
         self
     }
+
+    /// Build a resume request from the durable generated [`ResumeContext`].
+    ///
+    /// Consumes the checkpoint, the iteration and model-attempt budgets, and the
+    /// journal tail the record carries. Unlike the ad-hoc [`resume_from`] entry,
+    /// this threads `maxModelAttempts` from the durable record rather than
+    /// defaulting it. Use the reconciliation variants when the checkpoint is
+    /// blocked pending a resolved model or tool outcome.
+    ///
+    /// [`resume_from`]: TurnEngineRequest::resume_from
+    pub fn from_resume(resume: &ResumeContext) -> Self {
+        let mut request = Self::resume_from(
+            &resume.checkpoint,
+            resume.max_iterations.max(0) as usize,
+            resume.resume_sequence().max(0) as u64,
+        );
+        request.apply_resume_attempts(resume);
+        request
+    }
+
+    /// Build a resume request from a [`ResumeContext`] after the host resolves an
+    /// indeterminate tool effect recorded in the checkpoint.
+    pub fn from_resume_after_reconciliation(
+        resume: &ResumeContext,
+        resolved_result: EngineToolResult,
+    ) -> Result<Self, TurnEngineError> {
+        let mut request = Self::resume_after_reconciliation(
+            &resume.checkpoint,
+            resume.max_iterations.max(0) as usize,
+            resume.resume_sequence().max(0) as u64,
+            resolved_result,
+        )?;
+        request.apply_resume_attempts(resume);
+        Ok(request)
+    }
+
+    /// Build a resume request from a [`ResumeContext`] after the host resolves an
+    /// indeterminate model invocation recorded in the checkpoint.
+    pub fn from_resume_after_model_reconciliation(
+        resume: &ResumeContext,
+        resolved_response: ModelInvocationResponse,
+    ) -> Result<Self, TurnEngineError> {
+        let mut request = Self::resume_after_model_reconciliation(
+            &resume.checkpoint,
+            resume.max_iterations.max(0) as usize,
+            resume.resume_sequence().max(0) as u64,
+            resolved_response,
+        )?;
+        request.apply_resume_attempts(resume);
+        Ok(request)
+    }
+
+    fn apply_resume_attempts(&mut self, resume: &ResumeContext) {
+        if resume.max_model_attempts > 0 {
+            self.max_model_attempts = resume.max_model_attempts as usize;
+        }
+    }
 }
 
 /// Final committed turn data supplied to post-commit effects. The generated
@@ -330,6 +387,20 @@ pub struct TurnEngine {
 impl TurnEngine {
     pub fn new(context: ContextPipeline, effects: TurnEngineEffects) -> Self {
         Self { context, effects }
+    }
+
+    /// Resume an interrupted turn from the durable generated [`ResumeContext`].
+    ///
+    /// Consumes the record directly so a host round-trips the same persisted
+    /// resume state the engine's checkpoints produce, without duplicating a
+    /// committed model or tool effect.
+    pub async fn resume(
+        &self,
+        resume: ResumeContext,
+        cancellation: CancellationToken,
+    ) -> Result<TurnEngineResult, TurnEngineError> {
+        self.run(TurnEngineRequest::from_resume(&resume), cancellation)
+            .await
     }
 
     pub async fn run(

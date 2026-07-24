@@ -46,6 +46,11 @@ public partial class ResumeContext
     public int MaxModelAttempts { get; set; }
 
     /// <summary>
+    /// Last durably persisted journal sequence when the journal tail is ahead of the checkpoint; the resumed run continues numbering after this value. Zero resumes from the checkpoint's own lastSequence.
+    /// </summary>
+    public long LastJournalSequence { get; set; } = 0;
+
+    /// <summary>
     /// Opaque host-specific resume metadata
     /// </summary>
     public IDictionary<string, object>? Metadata { get; set; }
@@ -85,6 +90,11 @@ public partial class ResumeContext
         if (data.TryGetValue("maxModelAttempts", out var maxModelAttemptsValue) && maxModelAttemptsValue is not null)
         {
             instance.MaxModelAttempts = Convert.ToInt32(maxModelAttemptsValue);
+        }
+
+        if (data.TryGetValue("lastJournalSequence", out var lastJournalSequenceValue) && lastJournalSequenceValue is not null)
+        {
+            instance.LastJournalSequence = Convert.ToInt64(lastJournalSequenceValue);
         }
 
         if (data.TryGetValue("metadata", out var metadataValue) && metadataValue is not null)
@@ -128,6 +138,9 @@ public partial class ResumeContext
 
 
         result["maxModelAttempts"] = obj.MaxModelAttempts;
+
+
+        result["lastJournalSequence"] = obj.LastJournalSequence;
 
 
         if (obj.Metadata is not null)

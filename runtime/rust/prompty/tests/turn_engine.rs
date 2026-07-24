@@ -18,8 +18,9 @@ use prompty::{
     Message, ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelStreamChunk,
     ModelStreamPort, NoopDurabilityPort, NoopHostPolicyPort, NoopModelStreamPort,
     NoopPostCommitPort, NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort,
-    RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, Role, ToolOutcome, ToolPort, TurnCommit,
-    TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest, TurnStatus,
+    ResumeContext, RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, Role, ToolOutcome,
+    ToolPort, TurnCommit, TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest,
+    TurnStatus,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -3068,4 +3069,152 @@ async fn run_identity_round_trips_through_persisted_event_and_checkpoint_json() 
     assert_eq!(checkpoint_back.run_id, "run-child");
     assert_eq!(checkpoint_back.parent_run_id.as_deref(), Some("run-parent"));
     assert_eq!(checkpoint_back.delegation_depth, 3);
+}
+
+fn resume_fixture_checkpoint(last_sequence: i64) -> EngineCheckpoint {
+    EngineCheckpoint {
+        id: "checkpoint-resume".to_string(),
+        session_id: "session-resume".to_string(),
+        turn_id: "turn-resume".to_string(),
+        run_id: "run-resume".to_string(),
+        parent_run_id: None,
+        delegation_depth: 0,
+        iteration: 0,
+        last_sequence,
+        messages: vec![Message::with_text(Role::User, "start")],
+        stable_prefix_messages: 1,
+        inputs: Some(serde_json::json!({ "tenant": "contoso" })),
+        active_invocation_id: None,
+        pending_tool_requests: Vec::new(),
+        completed_tool_results: Vec::new(),
+        completed_model_iterations: 1,
+        reconciliation_required: false,
+        model_reconciliation: None,
+        pending_output: None,
+        final_output_ready: false,
+        pending_model_response: None,
+        resume_same_iteration: false,
+        policy_applied_for_iteration: false,
+        context_state: InvocationContextState {
+            portability: ContextPortability::Portable,
+            delegated_state: Vec::new(),
+        },
+        metadata: Value::Null,
+    }
+}
+
+#[test]
+fn resume_context_bridge_threads_budgets_and_journal_tail() {
+    // Journal tail ahead of the checkpoint: the resumed run must continue after
+    // the durable tail, and the generated ResumeContext must thread both budgets
+    // (unlike the ad-hoc resume_from, which defaults maxModelAttempts).
+    let ahead =
+        ResumeContext::resuming(resume_fixture_checkpoint(12), 7, 5).with_last_journal_sequence(20);
+    assert_eq!(ahead.resume_sequence(), 20);
+    let ahead_request = TurnEngineRequest::from_resume(&ahead);
+    assert_eq!(ahead_request.max_iterations, 7);
+    assert_eq!(ahead_request.max_model_attempts, 5);
+    assert_eq!(ahead_request.initial_sequence, 20);
+
+    // No journal tail recorded: resume falls back to the checkpoint's own
+    // lastSequence and lastJournalSequence is omitted from the durable JSON.
+    let at_checkpoint = ResumeContext::resuming(resume_fixture_checkpoint(30), 4, 2);
+    assert_eq!(at_checkpoint.resume_sequence(), 30);
+    let at_checkpoint_request = TurnEngineRequest::from_resume(&at_checkpoint);
+    assert_eq!(at_checkpoint_request.initial_sequence, 30);
+
+    // Durable JSON is canonical camelCase with conditional-emit, and round-trips.
+    let ahead_json = serde_json::to_value(&ahead).unwrap();
+    assert!(ahead_json.get("checkpoint").is_some());
+    assert_eq!(ahead_json["maxIterations"], 7);
+    assert_eq!(ahead_json["maxModelAttempts"], 5);
+    assert_eq!(ahead_json["lastJournalSequence"], 20);
+    let ahead_back: ResumeContext = serde_json::from_value(ahead_json).unwrap();
+    assert_eq!(ahead_back, ahead);
+
+    let at_checkpoint_json = serde_json::to_value(&at_checkpoint).unwrap();
+    assert!(
+        at_checkpoint_json.get("lastJournalSequence").is_none(),
+        "lastJournalSequence must be omitted when zero (conditional-emit)"
+    );
+    let at_checkpoint_back: ResumeContext = serde_json::from_value(at_checkpoint_json).unwrap();
+    assert_eq!(at_checkpoint_back, at_checkpoint);
+}
+
+#[tokio::test]
+async fn resume_via_generated_resume_context_avoids_duplicate_effects() {
+    // Produce a real checkpoint with a committed final model response.
+    let checkpoints = Arc::new(RecordingCheckpoints::default());
+    let post_commit_ids = Arc::new(RecordingPostCommitIds::default());
+    let initial = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        effects(
+            Arc::new(ScriptedModel {
+                responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
+                    output: Some(Value::String("checkpointed".to_string())),
+                    usage: None,
+                    assistant_messages: Vec::new(),
+                    tool_requests: Vec::new(),
+                    next_context_state: None,
+                    metadata: Value::Null,
+                }])),
+                requests: Mutex::new(Vec::new()),
+            }),
+            Arc::new(VectorTools {
+                outputs: HashMap::new(),
+                calls: Mutex::new(Vec::new()),
+            }),
+            Arc::new(RecordingEvents::default()),
+            checkpoints.clone(),
+            post_commit_ids.clone(),
+        ),
+    );
+    initial
+        .run(
+            TurnEngineRequest::new(
+                "session-resume-context",
+                "turn-resume-context",
+                vec![Message::with_text(Role::User, "finish")],
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+
+    let checkpoint = checkpoints.0.lock().unwrap()[0].clone();
+    assert!(checkpoint.final_output_ready);
+
+    // Round-trip the durable generated ResumeContext exactly as a host persists it.
+    let resume = ResumeContext::resuming(checkpoint.clone(), 3, 3);
+    let persisted = serde_json::to_value(&resume).unwrap();
+    let resume: ResumeContext = serde_json::from_value(persisted).unwrap();
+
+    // Resume through the generated contract: the committed model effect MUST NOT
+    // be re-invoked, and the durable output is committed unchanged.
+    let resumed_model = Arc::new(IndeterminateModel {
+        calls: AtomicU64::new(0),
+    });
+    let resumed = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        effects(
+            resumed_model.clone(),
+            Arc::new(VectorTools {
+                outputs: HashMap::new(),
+                calls: Mutex::new(Vec::new()),
+            }),
+            Arc::new(RecordingEvents::default()),
+            Arc::new(RecordingCheckpoints::default()),
+            post_commit_ids.clone(),
+        ),
+    )
+    .resume(resume, CancellationToken::new())
+    .await
+    .unwrap();
+
+    assert_eq!(resumed.commit.status, TurnStatus::Success);
+    assert_eq!(
+        resumed.commit.output,
+        Some(Value::String("checkpointed".to_string()))
+    );
+    assert_eq!(resumed_model.calls.load(Ordering::SeqCst), 0);
 }

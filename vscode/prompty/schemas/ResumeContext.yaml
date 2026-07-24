@@ -15,6 +15,10 @@ properties:
     minimum: -2147483648
     maximum: 2147483647
     description: Maximum model attempts permitted per invocation in the resumed run
+  lastJournalSequence:
+    type: string
+    default: 0
+    description: Last durably persisted journal sequence when the journal tail is ahead of the checkpoint; the resumed run continues numbering after this value. Zero resumes from the checkpoint's own lastSequence.
   metadata:
     $ref: RecordUnknown.yaml
     default: {}
@@ -23,6 +27,7 @@ required:
   - checkpoint
   - maxIterations
   - maxModelAttempts
+  - lastJournalSequence
 description: |-
   Input that drives resuming a turn from a durable checkpoint.
 

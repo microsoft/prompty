@@ -187,6 +187,47 @@ pub use crate::model::EnginePermissionDecision;
 /// native to the durable projection.
 pub use crate::model::EngineCheckpoint;
 
+/// Durable input that drives resuming a turn from a checkpoint without
+/// duplicating a committed model or tool effect. The generated cross-runtime
+/// contract is consumed directly; hosts persist and round-trip this exact
+/// record as their resume state (camelCase durable keys, conditional-emit).
+pub use crate::model::ResumeContext;
+
+impl ResumeContext {
+    /// Build a resume record for a checkpoint, carrying the iteration and model
+    /// attempt budgets the resumed run must honor. `lastJournalSequence`
+    /// defaults to zero (resume from the checkpoint's own `lastSequence`); use
+    /// [`ResumeContext::with_last_journal_sequence`] when the durable journal
+    /// tail is ahead of the checkpoint.
+    pub fn resuming(
+        checkpoint: EngineCheckpoint,
+        max_iterations: i32,
+        max_model_attempts: i32,
+    ) -> Self {
+        Self {
+            checkpoint,
+            max_iterations,
+            max_model_attempts,
+            last_journal_sequence: 0,
+            metadata: Value::Null,
+        }
+    }
+
+    /// Set the last durably persisted journal sequence so the resumed run
+    /// continues numbering after the journal tail rather than the checkpoint.
+    pub fn with_last_journal_sequence(mut self, last_journal_sequence: i64) -> Self {
+        self.last_journal_sequence = last_journal_sequence;
+        self
+    }
+
+    /// The journal sequence a resumed run must continue after: the larger of the
+    /// recorded journal tail and the checkpoint's own last committed sequence.
+    pub fn resume_sequence(&self) -> i64 {
+        self.last_journal_sequence
+            .max(self.checkpoint.last_sequence)
+    }
+}
+
 #[async_trait]
 pub trait ModelPort: Send + Sync {
     async fn invoke(
