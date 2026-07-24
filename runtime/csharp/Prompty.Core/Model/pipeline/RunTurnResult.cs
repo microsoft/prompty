@@ -95,7 +95,7 @@ public partial class RunTurnResult
 
         if (data.TryGetValue("status", out var statusValue) && statusValue is not null)
         {
-            instance.Status = Enum.Parse<RunTurnStatus>(statusValue?.ToString()!, true);
+            instance.Status = RunTurnStatusParser.Parse(statusValue?.ToString()!);
         }
 
         if (data.TryGetValue("output", out var outputValue) && outputValue is not null)
@@ -261,7 +261,7 @@ public partial class RunTurnResult
         result["turnId"] = obj.TurnId;
 
 
-        result["status"] = obj.Status.ToString().ToLowerInvariant();
+        result["status"] = RunTurnStatusParser.ToValue(obj.Status);
 
 
         if (obj.Output is not null)

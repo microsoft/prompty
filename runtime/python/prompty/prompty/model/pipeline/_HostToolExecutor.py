@@ -17,8 +17,8 @@ class HostToolExecutor(Protocol):
 
     def execute(self, request: HostToolRequest) -> HostToolResult:
         """Execute a concrete host tool request and return its completion payload"""
-        ...
+        raise NotImplementedError
 
     async def execute_async(self, request: HostToolRequest) -> HostToolResult:
         """Execute a concrete host tool request and return its completion payload (async variant)"""
-        ...
+        raise NotImplementedError

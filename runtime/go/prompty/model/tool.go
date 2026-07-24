@@ -27,15 +27,20 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
-			switch discriminator {
-			case "function":
-				return LoadFunctionTool(data, ctx)
-			case "mcp":
-				return LoadMcpTool(data, ctx)
-			case "openapi":
-				return LoadOpenApiTool(data, ctx)
-			case "prompty":
-				return LoadPromptyTool(data, ctx)
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "function":
+					return LoadFunctionTool(data, ctx)
+				case "mcp":
+					return LoadMcpTool(data, ctx)
+				case "openapi":
+					return LoadOpenApiTool(data, ctx)
+				case "prompty":
+					return LoadPromptyTool(data, ctx)
+				default:
+					return LoadCustomTool(data, ctx)
+				}
 			default:
 				return LoadCustomTool(data, ctx)
 			}
@@ -58,7 +63,10 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Bindings[i] = loaded
 					}
 				}
@@ -160,7 +168,10 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Bindings[i] = loaded
 					}
 				}
@@ -171,7 +182,10 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 				result.Parameters = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						// Polymorphic type - store as interface{}
 						result.Parameters[i] = loaded
 					}
@@ -298,7 +312,10 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Bindings[i] = loaded
 					}
 				}
@@ -306,7 +323,10 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadConnection(m, ctx)
+				loaded, err := LoadConnection(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				// Polymorphic type - keep as interface{}
 				result.Connection = loaded
 			}
@@ -424,7 +444,10 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Bindings[i] = loaded
 					}
 				}
@@ -432,7 +455,10 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadConnection(m, ctx)
+				loaded, err := LoadConnection(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				// Polymorphic type - keep as interface{}
 				result.Connection = loaded
 			}
@@ -446,10 +472,16 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 		}
 		if val, ok := m["approvalMode"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadMcpApprovalMode(m, ctx)
+				loaded, err := LoadMcpApprovalMode(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.ApprovalMode = loaded
 			} else {
-				loaded, _ := LoadMcpApprovalMode(val, ctx)
+				loaded, err := LoadMcpApprovalMode(val, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.ApprovalMode = loaded
 			}
 		}
@@ -574,7 +606,10 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Bindings[i] = loaded
 					}
 				}
@@ -582,7 +617,10 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadConnection(m, ctx)
+				loaded, err := LoadConnection(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				// Polymorphic type - keep as interface{}
 				result.Connection = loaded
 			}
@@ -698,7 +736,10 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Bindings[i] = loaded
 					}
 				}

@@ -39,7 +39,10 @@ func LoadToolCallCompletePayload(data interface{}, ctx *LoadContext) (ToolCallCo
 		}
 		if val, ok := m["result"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadToolResult(m, ctx)
+				loaded, err := LoadToolResult(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Result = &loaded
 			}
 		}

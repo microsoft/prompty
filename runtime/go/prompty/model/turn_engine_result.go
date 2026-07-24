@@ -27,7 +27,10 @@ func LoadTurnEngineResult(data interface{}, ctx *LoadContext) (TurnEngineResult,
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["commit"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTurnCommit(m, ctx)
+				loaded, err := LoadTurnCommit(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Commit = loaded
 			}
 		}
@@ -36,7 +39,10 @@ func LoadTurnEngineResult(data interface{}, ctx *LoadContext) (TurnEngineResult,
 				result.Snapshots = make([]ModelInvocationContextSnapshot, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadModelInvocationContextSnapshot(item, ctx)
+						loaded, err := LoadModelInvocationContextSnapshot(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Snapshots[i] = loaded
 					}
 				}
@@ -47,7 +53,10 @@ func LoadTurnEngineResult(data interface{}, ctx *LoadContext) (TurnEngineResult,
 				result.ToolResults = make([]ModelToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadModelToolResult(item, ctx)
+						loaded, err := LoadModelToolResult(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.ToolResults[i] = loaded
 					}
 				}

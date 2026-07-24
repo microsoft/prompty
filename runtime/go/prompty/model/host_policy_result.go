@@ -29,7 +29,10 @@ func LoadHostPolicyResult(data interface{}, ctx *LoadContext) (HostPolicyResult,
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Messages[i] = loaded
 					}
 				}

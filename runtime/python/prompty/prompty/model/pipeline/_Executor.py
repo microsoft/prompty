@@ -18,11 +18,11 @@ class Executor(Protocol):
 
     def execute(self, agent: Prompty, messages: list[Message]) -> Any:
         """Call an LLM provider with messages and return the raw response"""
-        ...
+        raise NotImplementedError
 
     async def execute_async(self, agent: Prompty, messages: list[Message]) -> Any:
         """Call an LLM provider with messages and return the raw response (async variant)"""
-        ...
+        raise NotImplementedError
 
     def execute_stream(self, agent: Prompty, messages: list[Message]) -> Any:
         """Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support."""
@@ -36,4 +36,4 @@ class Executor(Protocol):
         self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None
     ) -> list[Message]:
         """Format tool call results into messages for the next iteration"""
-        ...
+        raise NotImplementedError

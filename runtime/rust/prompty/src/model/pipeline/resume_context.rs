@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::engine_checkpoint::EngineCheckpoint;
 
 /// Input that drives resuming a turn from a durable checkpoint. A host supplies this to restart an interrupted turn without duplicating a committed model or tool effect.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ResumeContext {
     /// Checkpoint to resume from
     pub checkpoint: EngineCheckpoint,
@@ -113,5 +113,21 @@ impl ResumeContext {
     /// Returns `None` if the field is null or not an object.
     pub fn as_metadata_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.metadata.as_object()
+    }
+}
+
+// Serde for `ResumeContext` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ResumeContext {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ResumeContext {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

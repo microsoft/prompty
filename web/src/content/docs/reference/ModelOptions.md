@@ -45,7 +45,7 @@ topK: 40
 topP: 0.9
 stopSequences:
   - |+
-    
+
   - "###"
 allowMultipleToolCalls: true
 additionalProperties:

@@ -33,19 +33,6 @@ type Property struct {
 func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 	result := Property{}
 
-	// Handle polymorphic types based on discriminator
-	if m, ok := data.(map[string]interface{}); ok {
-		if discriminator, ok := m["kind"]; ok {
-			switch discriminator {
-			case "array":
-				return LoadArrayProperty(data, ctx)
-			case "object":
-				return LoadObjectProperty(data, ctx)
-			case "union":
-				return LoadUnionProperty(data, ctx)
-			}
-		}
-	}
 	// Handle alternate scalar representations
 	switch v := data.(type) {
 	case bool:
@@ -64,6 +51,26 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 		// Shorthand: string -> Property
 		expansion := map[string]interface{}{"kind": "string", "example": v}
 		return LoadProperty(expansion, ctx)
+	}
+	// Handle polymorphic types based on discriminator
+	if m, ok := data.(map[string]interface{}); ok {
+		if discriminator, ok := m["kind"]; ok {
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "array":
+					return LoadArrayProperty(data, ctx)
+				case "object":
+					return LoadObjectProperty(data, ctx)
+				case "union":
+					return LoadUnionProperty(data, ctx)
+				default:
+					return result, nil
+				}
+			default:
+				return result, nil
+			}
+		}
 	}
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -148,7 +155,7 @@ func (obj *Property) ToYAML() (string, error) {
 // FromJSON creates Property from JSON string
 // Returns interface{} because this is a polymorphic base type that can resolve to different child types
 func PropertyFromJSON(jsonStr string) (interface{}, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		return nil, err
 	}
@@ -159,7 +166,7 @@ func PropertyFromJSON(jsonStr string) (interface{}, error) {
 // FromYAML creates Property from YAML string
 // Returns interface{} because this is a polymorphic base type that can resolve to different child types
 func PropertyFromYAML(yamlStr string) (interface{}, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
 		return nil, err
 	}
@@ -220,11 +227,17 @@ func LoadArrayProperty(data interface{}, ctx *LoadContext) (ArrayProperty, error
 		}
 		if val, ok := m["items"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadProperty(m, ctx)
+				loaded, err := LoadProperty(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				// Polymorphic type - keep as interface{}
 				result.Items = loaded
 			} else {
-				loaded, _ := LoadProperty(val, ctx)
+				loaded, err := LoadProperty(val, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Items = loaded
 			}
 		}
@@ -362,7 +375,10 @@ func LoadObjectProperty(data interface{}, ctx *LoadContext) (ObjectProperty, err
 				result.Properties = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						// Polymorphic type - store as interface{}
 						result.Properties[i] = loaded
 					}
@@ -514,7 +530,10 @@ func LoadUnionProperty(data interface{}, ctx *LoadContext) (UnionProperty, error
 				result.OneOf = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						// Polymorphic type - store as interface{}
 						result.OneOf[i] = loaded
 					}
@@ -526,7 +545,10 @@ func LoadUnionProperty(data interface{}, ctx *LoadContext) (UnionProperty, error
 				result.AnyOf = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						// Polymorphic type - store as interface{}
 						result.AnyOf[i] = loaded
 					}

@@ -86,7 +86,7 @@ public partial class ToolResult : IToolResultHelpers
 
         if (data.TryGetValue("status", out var statusValue) && statusValue is not null)
         {
-            instance.Status = Enum.Parse<ToolResultStatus>(statusValue?.ToString()!, true);
+            instance.Status = ToolResultStatusParser.Parse(statusValue?.ToString()!);
         }
 
         if (data.TryGetValue("errorKind", out var errorKindValue) && errorKindValue is not null)
@@ -192,7 +192,7 @@ public partial class ToolResult : IToolResultHelpers
 
         if (obj.Status is not null)
         {
-            result["status"] = obj.Status.Value.ToString().ToLowerInvariant();
+            result["status"] = ToolResultStatusParser.ToValue(obj.Status.Value);
         }
 
 

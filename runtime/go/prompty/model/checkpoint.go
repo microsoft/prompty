@@ -85,7 +85,10 @@ func LoadCheckpoint(data interface{}, ctx *LoadContext) (Checkpoint, error) {
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Redaction = &loaded
 			}
 		}

@@ -116,7 +116,7 @@ public partial class ReplayJournalRecord
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
         {
-            instance.Kind = Enum.Parse<ReplayRecordKind>(kindValue?.ToString()!, true);
+            instance.Kind = ReplayRecordKindParser.Parse(kindValue?.ToString()!);
         }
 
         if (data.TryGetValue("type", out var typeValue) && typeValue is not null)
@@ -141,7 +141,7 @@ public partial class ReplayJournalRecord
 
         if (data.TryGetValue("status", out var statusValue) && statusValue is not null)
         {
-            instance.Status = Enum.Parse<ReplayRecordStatus>(statusValue?.ToString()!, true);
+            instance.Status = ReplayRecordStatusParser.Parse(statusValue?.ToString()!);
         }
 
         if (data.TryGetValue("requestId", out var requestIdValue) && requestIdValue is not null)
@@ -203,7 +203,7 @@ public partial class ReplayJournalRecord
         var result = new Dictionary<string, object?>();
 
 
-        result["kind"] = obj.Kind.ToString().ToLowerInvariant();
+        result["kind"] = ReplayRecordKindParser.ToValue(obj.Kind);
 
 
         if (obj.Type is not null)
@@ -232,7 +232,7 @@ public partial class ReplayJournalRecord
 
         if (obj.Status is not null)
         {
-            result["status"] = obj.Status.Value.ToString().ToLowerInvariant();
+            result["status"] = ReplayRecordStatusParser.ToValue(obj.Status.Value);
         }
 
 

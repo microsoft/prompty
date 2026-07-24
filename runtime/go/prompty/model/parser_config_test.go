@@ -190,4 +190,24 @@ func TestParserConfigFromParser(t *testing.T) {
 	// Polymorphic alternate loading requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
+
+	jsonBytes, err := json.Marshal("example")
+	if err != nil {
+		t.Fatalf("Failed to encode string JSON: %v", err)
+	}
+	fromJSON, err := prompty.ParserConfigFromJSON(string(jsonBytes))
+	if err != nil {
+		t.Fatalf("Failed to load ParserConfig from string JSON helper: %v", err)
+	}
+	_ = fromJSON // Load succeeded, exact type depends on discriminator
+
+	yamlBytes, err := yaml.Marshal("example")
+	if err != nil {
+		t.Fatalf("Failed to encode string YAML: %v", err)
+	}
+	fromYAML, err := prompty.ParserConfigFromYAML(string(yamlBytes))
+	if err != nil {
+		t.Fatalf("Failed to load ParserConfig from string YAML helper: %v", err)
+	}
+	_ = fromYAML // Load succeeded, exact type depends on discriminator
 }

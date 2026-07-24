@@ -20,7 +20,7 @@ use super::super::conversation::message::Message;
 use super::model_tool_request::ModelToolRequest;
 
 /// Provider-neutral result of a single model invocation. This is the live provider boundary. It is intentionally distinct from TurnModelResponse, which is the deterministic reference-runner callback.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ModelInvocationResponse {
     /// Provider-neutral final output when no additional tool calls are requested
     pub output: Option<serde_json::Value>,
@@ -218,5 +218,21 @@ impl ModelInvocationResponse {
             }
         }
         serde_json::Value::Object(result)
+    }
+}
+
+// Serde for `ModelInvocationResponse` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ModelInvocationResponse {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ModelInvocationResponse {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// Variant-specific data for [`ContentPart`], discriminated by `kind`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ContentPartKind {
     /// `kind` = `"text"`
     TextPart {
@@ -52,7 +52,7 @@ impl Default for ContentPartKind {
     }
 }
 /// A part of a message's content. Content parts are discriminated on the `kind` field and represent the different modalities that can appear in a message.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ContentPart {
     /// Variant-specific data, discriminated by `kind`.
     pub kind: ContentPartKind,
@@ -229,5 +229,42 @@ impl ContentPart {
     /// Serialize ContentPart to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `ContentPart` delegates to the canonical to_value/load_from_value
+// logic so the `kind` discriminator round-trips to its exact wire value. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ContentPart {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ContentPart {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// Serde for `ContentPartKind` wraps the variant into its parent `ContentPart` and delegates
+// to the canonical to_value/load_from_value logic, so a bare `ContentPartKind`
+// serializes to internally-tagged `{"kind": "<value>", ...}` — the same wire
+// form as its parent — instead of serde's externally-tagged `{"<Variant>": {...}}`.
+impl serde::Serialize for ContentPartKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let parent = ContentPart {
+            kind: self.clone(),
+            ..Default::default()
+        };
+        serde::Serialize::serialize(&parent.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ContentPartKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(ContentPart::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

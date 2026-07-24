@@ -41,7 +41,10 @@ func LoadReplayVerificationResult(data interface{}, ctx *LoadContext) (ReplayVer
 				result.Mismatches = make([]ReplayMismatch, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadReplayMismatch(item, ctx)
+						loaded, err := LoadReplayMismatch(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Mismatches[i] = loaded
 					}
 				}

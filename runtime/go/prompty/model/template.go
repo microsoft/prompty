@@ -32,19 +32,31 @@ func LoadTemplate(data interface{}, ctx *LoadContext) (Template, error) {
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["format"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadFormatConfig(m, ctx)
+				loaded, err := LoadFormatConfig(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Format = loaded
 			} else {
-				loaded, _ := LoadFormatConfig(val, ctx)
+				loaded, err := LoadFormatConfig(val, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Format = loaded
 			}
 		}
 		if val, ok := m["parser"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadParserConfig(m, ctx)
+				loaded, err := LoadParserConfig(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Parser = loaded
 			} else {
-				loaded, _ := LoadParserConfig(val, ctx)
+				loaded, err := LoadParserConfig(val, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Parser = loaded
 			}
 		}

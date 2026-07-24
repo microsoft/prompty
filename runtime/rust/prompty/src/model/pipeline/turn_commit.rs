@@ -53,6 +53,22 @@ impl EngineTurnStatus {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("success") {
+            return Some(Self::Success);
+        }
+        if s.eq_ignore_ascii_case("failed") {
+            return Some(Self::Failed);
+        }
+        if s.eq_ignore_ascii_case("cancelled") {
+            return Some(Self::Cancelled);
+        }
+        if s.eq_ignore_ascii_case("reconciliation_required") {
+            return Some(Self::Reconciliation_required);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Success => "success",
@@ -63,8 +79,23 @@ impl EngineTurnStatus {
     }
 }
 
+impl serde::Serialize for EngineTurnStatus {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for EngineTurnStatus {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid EngineTurnStatus value: {}", s))
+        })
+    }
+}
+
 /// The committed outcome of a turn handed to post-commit consumers.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TurnCommit {
     /// Stable session identifier
     pub session_id: String,
@@ -239,5 +270,21 @@ impl TurnCommit {
                 .map(|item| item.to_value(ctx))
                 .collect::<Vec<_>>(),
         )
+    }
+}
+
+// Serde for `TurnCommit` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for TurnCommit {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TurnCommit {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

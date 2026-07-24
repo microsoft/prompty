@@ -37,8 +37,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     },
     {
       "name": "displayName",
@@ -65,8 +67,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     },
     {
       "name": "description",
@@ -93,8 +97,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     },
     {
       "name": "metadata",
@@ -130,8 +136,10 @@
       "isDict": true,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     },
     {
       "name": "inputs",
@@ -194,8 +202,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
       "isOpenEnum": false,
+      "isNamedCollection": true,
       "type": {
         "typeName": {
           "namespace": "Prompty",
@@ -282,8 +292,10 @@
                 "isDict": false,
                 "defaultValue": "array",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "items",
@@ -312,8 +324,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
                 "isOpenEnum": false,
+                "isNamedCollection": false,
                 "type": {
                   "typeName": {
                     "namespace": "Prompty",
@@ -400,8 +414,10 @@
                           "isDict": false,
                           "defaultValue": "object",
                           "allowedValues": [],
+                          "parseAliases": {},
                           "enumName": null,
-                          "isOpenEnum": false
+                          "isOpenEnum": false,
+                          "isNamedCollection": false
                         },
                         {
                           "name": "properties",
@@ -435,8 +451,10 @@
                           "isDict": false,
                           "defaultValue": "null",
                           "allowedValues": [],
+                          "parseAliases": {},
                           "enumName": null,
                           "isOpenEnum": false,
+                          "isNamedCollection": true,
                           "type": {
                             "typeName": {
                               "namespace": "Prompty",
@@ -523,8 +541,10 @@
                                     "isDict": false,
                                     "defaultValue": "union",
                                     "allowedValues": [],
+                                    "parseAliases": {},
                                     "enumName": null,
-                                    "isOpenEnum": false
+                                    "isOpenEnum": false,
+                                    "isNamedCollection": false
                                   },
                                   {
                                     "name": "oneOf",
@@ -543,8 +563,10 @@
                                     "isDict": false,
                                     "defaultValue": "null",
                                     "allowedValues": [],
+                                    "parseAliases": {},
                                     "enumName": null,
                                     "isOpenEnum": false,
+                                    "isNamedCollection": false,
                                     "type": {
                                       "typeName": {
                                         "namespace": "Prompty",
@@ -635,8 +657,10 @@
                                             "audio",
                                             "file"
                                           ],
+                                          "parseAliases": {},
                                           "enumName": "SimpleTypes",
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "description",
@@ -663,8 +687,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "required",
@@ -691,8 +717,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "nullable",
@@ -719,8 +747,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "default",
@@ -747,8 +777,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "example",
@@ -775,8 +807,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "enumValues",
@@ -807,8 +841,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         }
                                       ]
                                     }
@@ -845,8 +881,10 @@
                                     "isDict": false,
                                     "defaultValue": "null",
                                     "allowedValues": [],
+                                    "parseAliases": {},
                                     "enumName": null,
                                     "isOpenEnum": false,
+                                    "isNamedCollection": false,
                                     "type": {
                                       "typeName": {
                                         "namespace": "Prompty",
@@ -937,8 +975,10 @@
                                             "audio",
                                             "file"
                                           ],
+                                          "parseAliases": {},
                                           "enumName": "SimpleTypes",
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "description",
@@ -965,8 +1005,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "required",
@@ -993,8 +1035,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "nullable",
@@ -1021,8 +1065,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "default",
@@ -1049,8 +1095,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "example",
@@ -1077,8 +1125,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         },
                                         {
                                           "name": "enumValues",
@@ -1109,8 +1159,10 @@
                                           "isDict": false,
                                           "defaultValue": "null",
                                           "allowedValues": [],
+                                          "parseAliases": {},
                                           "enumName": null,
-                                          "isOpenEnum": false
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
                                         }
                                       ]
                                     }
@@ -1144,8 +1196,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "kind",
@@ -1184,8 +1238,10 @@
                                   "audio",
                                   "file"
                                 ],
+                                "parseAliases": {},
                                 "enumName": "SimpleTypes",
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "description",
@@ -1212,8 +1268,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "required",
@@ -1240,8 +1298,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "nullable",
@@ -1268,8 +1328,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "default",
@@ -1296,8 +1358,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "example",
@@ -1324,8 +1388,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "enumValues",
@@ -1356,8 +1422,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               }
                             ]
                           }
@@ -1398,8 +1466,10 @@
                           "isDict": false,
                           "defaultValue": "union",
                           "allowedValues": [],
+                          "parseAliases": {},
                           "enumName": null,
-                          "isOpenEnum": false
+                          "isOpenEnum": false,
+                          "isNamedCollection": false
                         },
                         {
                           "name": "oneOf",
@@ -1418,8 +1488,10 @@
                           "isDict": false,
                           "defaultValue": "null",
                           "allowedValues": [],
+                          "parseAliases": {},
                           "enumName": null,
                           "isOpenEnum": false,
+                          "isNamedCollection": false,
                           "type": {
                             "typeName": {
                               "namespace": "Prompty",
@@ -1510,8 +1582,10 @@
                                   "audio",
                                   "file"
                                 ],
+                                "parseAliases": {},
                                 "enumName": "SimpleTypes",
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "description",
@@ -1538,8 +1612,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "required",
@@ -1566,8 +1642,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "nullable",
@@ -1594,8 +1672,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "default",
@@ -1622,8 +1702,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "example",
@@ -1650,8 +1732,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "enumValues",
@@ -1682,8 +1766,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               }
                             ]
                           }
@@ -1720,8 +1806,10 @@
                           "isDict": false,
                           "defaultValue": "null",
                           "allowedValues": [],
+                          "parseAliases": {},
                           "enumName": null,
                           "isOpenEnum": false,
+                          "isNamedCollection": false,
                           "type": {
                             "typeName": {
                               "namespace": "Prompty",
@@ -1812,8 +1900,10 @@
                                   "audio",
                                   "file"
                                 ],
+                                "parseAliases": {},
                                 "enumName": "SimpleTypes",
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "description",
@@ -1840,8 +1930,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "required",
@@ -1868,8 +1960,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "nullable",
@@ -1896,8 +1990,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "default",
@@ -1924,8 +2020,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "example",
@@ -1952,8 +2050,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "enumValues",
@@ -1984,8 +2084,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               }
                             ]
                           }
@@ -2031,8 +2133,10 @@
                         "audio",
                         "file"
                       ],
+                      "parseAliases": {},
                       "enumName": "SimpleTypes",
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "description",
@@ -2059,8 +2163,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "required",
@@ -2087,8 +2193,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "nullable",
@@ -2115,8 +2223,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "default",
@@ -2143,8 +2253,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "example",
@@ -2171,8 +2283,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "enumValues",
@@ -2203,8 +2317,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 }
@@ -2245,8 +2361,10 @@
                 "isDict": false,
                 "defaultValue": "object",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "properties",
@@ -2280,8 +2398,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": true
               }
             ]
           },
@@ -2319,8 +2439,10 @@
                 "isDict": false,
                 "defaultValue": "union",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "oneOf",
@@ -2339,8 +2461,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
                 "isOpenEnum": false,
+                "isNamedCollection": false,
                 "type": {
                   "typeName": {
                     "namespace": "Prompty",
@@ -2431,8 +2555,10 @@
                         "audio",
                         "file"
                       ],
+                      "parseAliases": {},
                       "enumName": "SimpleTypes",
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "description",
@@ -2459,8 +2585,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "required",
@@ -2487,8 +2615,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "nullable",
@@ -2515,8 +2645,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "default",
@@ -2543,8 +2675,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "example",
@@ -2571,8 +2705,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "enumValues",
@@ -2603,8 +2739,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 }
@@ -2641,8 +2779,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
                 "isOpenEnum": false,
+                "isNamedCollection": false,
                 "type": {
                   "typeName": {
                     "namespace": "Prompty",
@@ -2733,8 +2873,10 @@
                         "audio",
                         "file"
                       ],
+                      "parseAliases": {},
                       "enumName": "SimpleTypes",
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "description",
@@ -2761,8 +2903,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "required",
@@ -2789,8 +2933,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "nullable",
@@ -2817,8 +2963,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "default",
@@ -2845,8 +2993,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "example",
@@ -2873,8 +3023,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "enumValues",
@@ -2905,8 +3057,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 }
@@ -2940,8 +3094,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "kind",
@@ -2980,8 +3136,10 @@
               "audio",
               "file"
             ],
+            "parseAliases": {},
             "enumName": "SimpleTypes",
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "description",
@@ -3008,8 +3166,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "required",
@@ -3036,8 +3196,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "nullable",
@@ -3064,8 +3226,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "default",
@@ -3092,8 +3256,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "example",
@@ -3120,8 +3286,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "enumValues",
@@ -3152,8 +3320,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           }
         ]
       }
@@ -3201,8 +3371,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": true
     },
     {
       "name": "model",
@@ -3236,8 +3408,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
       "isOpenEnum": false,
+      "isNamedCollection": false,
       "type": {
         "typeName": {
           "namespace": "Prompty",
@@ -3286,8 +3460,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "provider",
@@ -3314,8 +3490,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "apiType",
@@ -3347,8 +3525,10 @@
               "image",
               "responses"
             ],
+            "parseAliases": {},
             "enumName": "apiType",
-            "isOpenEnum": true
+            "isOpenEnum": true,
+            "isNamedCollection": false
           },
           {
             "name": "connection",
@@ -3379,8 +3559,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": false,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -3437,8 +3619,10 @@
                       "isDict": false,
                       "defaultValue": "reference",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "name",
@@ -3465,8 +3649,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "target",
@@ -3493,8 +3679,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -3540,8 +3728,10 @@
                       "isDict": false,
                       "defaultValue": "remote",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "name",
@@ -3568,8 +3758,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -3596,8 +3788,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -3643,8 +3837,10 @@
                       "isDict": false,
                       "defaultValue": "key",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -3671,8 +3867,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "apiKey",
@@ -3699,8 +3897,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -3746,8 +3946,10 @@
                       "isDict": false,
                       "defaultValue": "anonymous",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -3774,8 +3976,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -3821,8 +4025,10 @@
                       "isDict": false,
                       "defaultValue": "oauth",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -3849,8 +4055,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "clientId",
@@ -3877,8 +4085,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "clientSecret",
@@ -3905,8 +4115,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "tokenUrl",
@@ -3933,8 +4145,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "scopes",
@@ -3963,8 +4177,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -4010,8 +4226,10 @@
                       "isDict": false,
                       "defaultValue": "foundry",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -4038,8 +4256,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "name",
@@ -4066,8 +4286,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "connectionType",
@@ -4094,8 +4316,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 }
@@ -4133,8 +4357,10 @@
                     "foundry",
                     "oauth"
                   ],
+                  "parseAliases": {},
                   "enumName": "ConnectionType",
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "authenticationMode",
@@ -4164,8 +4390,10 @@
                     "user",
                     "system"
                   ],
+                  "parseAliases": {},
                   "enumName": "AuthenticationMode",
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "usageDescription",
@@ -4192,8 +4420,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -4227,8 +4457,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": false,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -4273,8 +4505,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "maxOutputTokens",
@@ -4314,8 +4548,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "presencePenalty",
@@ -4347,8 +4583,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "seed",
@@ -4380,8 +4618,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "temperature",
@@ -4421,8 +4661,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "topK",
@@ -4458,8 +4700,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "topP",
@@ -4499,8 +4743,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "stopSequences",
@@ -4539,8 +4785,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "allowMultipleToolCalls",
@@ -4572,8 +4820,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "additionalProperties",
@@ -4603,8 +4853,10 @@
                   "isDict": true,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -4675,8 +4927,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
       "isOpenEnum": false,
+      "isNamedCollection": true,
       "type": {
         "typeName": {
           "namespace": "Prompty",
@@ -4733,8 +4987,10 @@
                 "isDict": false,
                 "defaultValue": "function",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "parameters",
@@ -4797,8 +5053,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": true
               },
               {
                 "name": "strict",
@@ -4825,8 +5083,10 @@
                 "isDict": false,
                 "defaultValue": true,
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           },
@@ -4864,8 +5124,10 @@
                 "isDict": false,
                 "defaultValue": "*",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "connection",
@@ -4894,8 +5156,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "options",
@@ -4925,8 +5189,10 @@
                 "isDict": true,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           },
@@ -4972,8 +5238,10 @@
                 "isDict": false,
                 "defaultValue": "mcp",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "connection",
@@ -5002,8 +5270,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "serverName",
@@ -5030,8 +5300,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "serverDescription",
@@ -5058,8 +5330,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "approvalMode",
@@ -5088,8 +5362,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
                 "isOpenEnum": false,
+                "isNamedCollection": false,
                 "type": {
                   "typeName": {
                     "namespace": "Prompty",
@@ -5143,8 +5419,10 @@
                         "never",
                         "specify"
                       ],
+                      "parseAliases": {},
                       "enumName": "mcpApprovalModeKind",
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "alwaysRequireApprovalTools",
@@ -5173,8 +5451,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "neverRequireApprovalTools",
@@ -5203,8 +5483,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 }
@@ -5237,8 +5519,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           },
@@ -5284,8 +5568,10 @@
                 "isDict": false,
                 "defaultValue": "openapi",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "connection",
@@ -5314,8 +5600,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "specification",
@@ -5342,8 +5630,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           },
@@ -5389,8 +5679,10 @@
                 "isDict": false,
                 "defaultValue": "prompty",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "path",
@@ -5417,8 +5709,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "mode",
@@ -5445,8 +5739,10 @@
                 "isDict": false,
                 "defaultValue": "single",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           }
@@ -5477,8 +5773,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "kind",
@@ -5510,8 +5808,10 @@
               "openapi",
               "prompty"
             ],
+            "parseAliases": {},
             "enumName": "ToolTypes",
-            "isOpenEnum": true
+            "isOpenEnum": true,
+            "isNamedCollection": false
           },
           {
             "name": "description",
@@ -5538,8 +5838,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "bindings",
@@ -5568,8 +5870,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": true,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -5618,8 +5922,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "input",
@@ -5646,8 +5952,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -5683,8 +5991,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
       "isOpenEnum": false,
+      "isNamedCollection": false,
       "type": {
         "typeName": {
           "namespace": "Prompty",
@@ -5726,8 +6036,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": false,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -5777,8 +6089,10 @@
                   "isDict": false,
                   "defaultValue": "*",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "strict",
@@ -5805,8 +6119,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "options",
@@ -5835,8 +6151,10 @@
                   "isDict": true,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -5868,8 +6186,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": false,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -5919,8 +6239,10 @@
                   "isDict": false,
                   "defaultValue": "*",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "options",
@@ -5949,8 +6271,10 @@
                   "isDict": true,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -5983,8 +6307,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     }
   ]
 }

@@ -70,7 +70,7 @@ public partial class RedactedField
 
         if (data.TryGetValue("mode", out var modeValue) && modeValue is not null)
         {
-            instance.Mode = Enum.Parse<RedactionMode>(modeValue?.ToString()!, true);
+            instance.Mode = RedactionModeParser.Parse(modeValue?.ToString()!);
         }
 
         if (data.TryGetValue("reason", out var reasonValue) && reasonValue is not null)
@@ -110,7 +110,7 @@ public partial class RedactedField
         result["path"] = obj.Path;
 
 
-        result["mode"] = obj.Mode.ToString().ToLowerInvariant();
+        result["mode"] = RedactionModeParser.ToValue(obj.Mode);
 
 
         if (obj.Reason is not null)

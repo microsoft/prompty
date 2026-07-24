@@ -99,7 +99,7 @@ public partial class TurnEvent
 
         if (data.TryGetValue("type", out var typeValue) && typeValue is not null)
         {
-            instance.Type = Enum.Parse<TurnEventType>(typeValue?.ToString()!, true);
+            instance.Type = TurnEventTypeParser.Parse(typeValue?.ToString()!);
         }
 
         if (data.TryGetValue("timestamp", out var timestampValue) && timestampValue is not null)
@@ -164,7 +164,7 @@ public partial class TurnEvent
         result["id"] = obj.Id;
 
 
-        result["type"] = obj.Type.ToString().ToLowerInvariant();
+        result["type"] = TurnEventTypeParser.ToValue(obj.Type);
 
 
         result["timestamp"] = obj.Timestamp;

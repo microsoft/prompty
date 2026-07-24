@@ -64,7 +64,10 @@ func LoadModelInvocationContextSnapshot(data interface{}, ctx *LoadContext) (Mod
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Messages[i] = loaded
 					}
 				}
@@ -75,7 +78,10 @@ func LoadModelInvocationContextSnapshot(data interface{}, ctx *LoadContext) (Mod
 				result.Decisions = make([]InvocationContextDecision, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadInvocationContextDecision(item, ctx)
+						loaded, err := LoadInvocationContextDecision(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Decisions[i] = loaded
 					}
 				}
@@ -97,7 +103,10 @@ func LoadModelInvocationContextSnapshot(data interface{}, ctx *LoadContext) (Mod
 		}
 		if val, ok := m["contextState"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadInvocationContextState(m, ctx)
+				loaded, err := LoadInvocationContextState(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.ContextState = loaded
 			}
 		}

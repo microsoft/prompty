@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// Configuration for context window compaction. When the message history exceeds the context budget, the compaction strategy is applied to reduce the message list while preserving essential information.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct CompactionConfig {
     /// The compaction strategy identifier. Built-in strategies include 'summarize'. Can also be a path to a .prompty file used as the summarization prompt.
     pub strategy: Option<String>,
@@ -98,5 +98,21 @@ impl CompactionConfig {
     /// Returns `None` if the field is null or not an object.
     pub fn as_options_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.options.as_object()
+    }
+}
+
+// Serde for `CompactionConfig` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for CompactionConfig {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for CompactionConfig {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

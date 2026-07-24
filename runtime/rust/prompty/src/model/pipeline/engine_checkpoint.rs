@@ -24,7 +24,7 @@ use super::model_tool_request::ModelToolRequest;
 use super::model_tool_result::ModelToolResult;
 
 /// Portable durable checkpoint emitted after a committed model/tool round. A resumed run rebuilt from a checkpoint MUST NOT duplicate a model or tool effect that the checkpoint already records as committed. Run identity is carried so delegated runs checkpoint independently under their own run.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct EngineCheckpoint {
     /// Stable unique identifier for this checkpoint
     pub id: String,
@@ -496,5 +496,21 @@ impl EngineCheckpoint {
             }
         }
         serde_json::Value::Object(result)
+    }
+}
+
+// Serde for `EngineCheckpoint` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for EngineCheckpoint {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for EngineCheckpoint {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

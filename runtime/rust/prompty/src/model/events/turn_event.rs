@@ -107,6 +107,82 @@ impl TurnEventType {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("turn_start") {
+            return Some(Self::Turn_start);
+        }
+        if s.eq_ignore_ascii_case("turn_end") {
+            return Some(Self::Turn_end);
+        }
+        if s.eq_ignore_ascii_case("llm_start") {
+            return Some(Self::Llm_start);
+        }
+        if s.eq_ignore_ascii_case("llm_complete") {
+            return Some(Self::Llm_complete);
+        }
+        if s.eq_ignore_ascii_case("retry") {
+            return Some(Self::Retry);
+        }
+        if s.eq_ignore_ascii_case("permission_requested") {
+            return Some(Self::Permission_requested);
+        }
+        if s.eq_ignore_ascii_case("permission_completed") {
+            return Some(Self::Permission_completed);
+        }
+        if s.eq_ignore_ascii_case("token") {
+            return Some(Self::Token);
+        }
+        if s.eq_ignore_ascii_case("thinking") {
+            return Some(Self::Thinking);
+        }
+        if s.eq_ignore_ascii_case("tool_call_start") {
+            return Some(Self::Tool_call_start);
+        }
+        if s.eq_ignore_ascii_case("tool_call_complete") {
+            return Some(Self::Tool_call_complete);
+        }
+        if s.eq_ignore_ascii_case("tool_execution_start") {
+            return Some(Self::Tool_execution_start);
+        }
+        if s.eq_ignore_ascii_case("tool_execution_complete") {
+            return Some(Self::Tool_execution_complete);
+        }
+        if s.eq_ignore_ascii_case("tool_result") {
+            return Some(Self::Tool_result);
+        }
+        if s.eq_ignore_ascii_case("hook_start") {
+            return Some(Self::Hook_start);
+        }
+        if s.eq_ignore_ascii_case("hook_end") {
+            return Some(Self::Hook_end);
+        }
+        if s.eq_ignore_ascii_case("status") {
+            return Some(Self::Status);
+        }
+        if s.eq_ignore_ascii_case("messages_updated") {
+            return Some(Self::Messages_updated);
+        }
+        if s.eq_ignore_ascii_case("done") {
+            return Some(Self::Done);
+        }
+        if s.eq_ignore_ascii_case("error") {
+            return Some(Self::Error);
+        }
+        if s.eq_ignore_ascii_case("cancelled") {
+            return Some(Self::Cancelled);
+        }
+        if s.eq_ignore_ascii_case("compaction_start") {
+            return Some(Self::Compaction_start);
+        }
+        if s.eq_ignore_ascii_case("compaction_complete") {
+            return Some(Self::Compaction_complete);
+        }
+        if s.eq_ignore_ascii_case("compaction_failed") {
+            return Some(Self::Compaction_failed);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Turn_start => "turn_start",
@@ -137,8 +213,22 @@ impl TurnEventType {
     }
 }
 
+impl serde::Serialize for TurnEventType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TurnEventType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s)
+            .ok_or_else(|| serde::de::Error::custom(format!("invalid TurnEventType value: {}", s)))
+    }
+}
+
 /// A canonical event envelope emitted by the turn harness. The payload is kept JSON-shaped so runtimes can load all events even when newer payload types are added; event-specific typed payload models below define the canonical shapes.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TurnEvent {
     /// Unique identifier for this event
     pub id: String,
@@ -276,5 +366,21 @@ impl TurnEvent {
     /// Returns `None` if the field is null or not an object.
     pub fn as_payload_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.payload.as_object()
+    }
+}
+
+// Serde for `TurnEvent` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for TurnEvent {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TurnEvent {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

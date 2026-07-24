@@ -52,6 +52,25 @@ impl Role {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("system") {
+            return Some(Self::System);
+        }
+        if s.eq_ignore_ascii_case("user") {
+            return Some(Self::User);
+        }
+        if s.eq_ignore_ascii_case("assistant") {
+            return Some(Self::Assistant);
+        }
+        if s.eq_ignore_ascii_case("developer") {
+            return Some(Self::Developer);
+        }
+        if s.eq_ignore_ascii_case("tool") {
+            return Some(Self::Tool);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::System => "system",
@@ -63,8 +82,22 @@ impl Role {
     }
 }
 
+impl serde::Serialize for Role {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Role {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s)
+            .ok_or_else(|| serde::de::Error::custom(format!("invalid Role value: {}", s)))
+    }
+}
+
 /// A message in a conversation. Messages have a role and a list of content parts representing the different modalities of the message content.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Message {
     /// The role of the message sender
     pub role: Role,
@@ -202,6 +235,22 @@ impl Message {
             }],
             ..Default::default()
         }
+    }
+}
+
+// Serde for `Message` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for Message {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Message {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
 /// Helpers for [`Message`]. Implement in a separate file.

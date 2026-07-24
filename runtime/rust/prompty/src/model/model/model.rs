@@ -54,6 +54,22 @@ impl apiType {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("chat") {
+            return Some(Self::Chat);
+        }
+        if s.eq_ignore_ascii_case("embedding") {
+            return Some(Self::Embedding);
+        }
+        if s.eq_ignore_ascii_case("image") {
+            return Some(Self::Image);
+        }
+        if s.eq_ignore_ascii_case("responses") {
+            return Some(Self::Responses);
+        }
+        Some(Self::Other(s.to_string()))
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Chat => "chat",
@@ -65,8 +81,22 @@ impl apiType {
     }
 }
 
+impl serde::Serialize for apiType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for apiType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s)
+            .ok_or_else(|| serde::de::Error::custom(format!("invalid apiType value: {}", s)))
+    }
+}
+
 /// Model for defining the structure and behavior of AI agents. This model includes properties for specifying the model's provider, connection details, and various options. It allows for flexible configuration of AI models to suit different use cases and requirements.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Model {
     /// The unique identifier of the model - can be used as the single property shorthand
     pub id: String,
@@ -176,5 +206,21 @@ impl Model {
     /// Serialize Model to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `Model` delegates to the canonical to_value/load_from_value
+// logic so its scalar-coercion shorthand round-trips through the canonical semantics. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for Model {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Model {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

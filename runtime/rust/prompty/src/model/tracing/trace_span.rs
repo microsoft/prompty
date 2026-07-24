@@ -16,7 +16,7 @@ use super::super::model::token_usage::TokenUsage;
 use super::trace_time::TraceTime;
 
 /// A single trace span capturing one pipeline stage or function invocation. Spans nest via the `__frames` field to form a tree representing the full execution (§3.6.1).
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TraceSpan {
     /// The name of this span (typically the function signature)
     pub name: String,
@@ -170,5 +170,21 @@ impl TraceSpan {
     /// Returns `None` if the field is null or not an object.
     pub fn as_attributes_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.attributes.as_object()
+    }
+}
+
+// Serde for `TraceSpan` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for TraceSpan {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TraceSpan {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

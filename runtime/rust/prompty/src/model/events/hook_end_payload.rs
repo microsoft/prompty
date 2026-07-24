@@ -43,6 +43,16 @@ impl HookEndScope {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("turn") {
+            return Some(Self::Turn);
+        }
+        if s.eq_ignore_ascii_case("session") {
+            return Some(Self::Session);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Turn => "turn",
@@ -51,8 +61,22 @@ impl HookEndScope {
     }
 }
 
+impl serde::Serialize for HookEndScope {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for HookEndScope {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s)
+            .ok_or_else(|| serde::de::Error::custom(format!("invalid HookEndScope value: {}", s)))
+    }
+}
+
 /// Payload for "hook_end" events — a host lifecycle hook finished.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct HookEndPayload {
     /// Stable hook invocation identifier
     pub hook_invocation_id: String,
@@ -191,5 +215,21 @@ impl HookEndPayload {
     /// Returns `None` if the field is null or not an object.
     pub fn as_output_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.output.as_object()
+    }
+}
+
+// Serde for `HookEndPayload` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for HookEndPayload {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for HookEndPayload {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -44,6 +44,19 @@ impl ModelToolOutcome {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("success") {
+            return Some(Self::Success);
+        }
+        if s.eq_ignore_ascii_case("failed") {
+            return Some(Self::Failed);
+        }
+        if s.eq_ignore_ascii_case("indeterminate") {
+            return Some(Self::Indeterminate);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Success => "success",
@@ -53,8 +66,23 @@ impl ModelToolOutcome {
     }
 }
 
+impl serde::Serialize for ModelToolOutcome {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ModelToolOutcome {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid ModelToolOutcome value: {}", s))
+        })
+    }
+}
+
 /// Normalized result of executing one model-requested tool.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ModelToolResult {
     /// Identifier of the corresponding model tool request
     pub request_id: String,
@@ -171,5 +199,21 @@ impl ModelToolResult {
     /// Returns `None` if the field is null or not an object.
     pub fn as_metadata_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.metadata.as_object()
+    }
+}
+
+// Serde for `ModelToolResult` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ModelToolResult {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ModelToolResult {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

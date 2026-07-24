@@ -104,6 +104,79 @@ impl EngineEventKind {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("turn_started") {
+            return Some(Self::Turn_started);
+        }
+        if s.eq_ignore_ascii_case("policy_applied") {
+            return Some(Self::Policy_applied);
+        }
+        if s.eq_ignore_ascii_case("context_prepared") {
+            return Some(Self::Context_prepared);
+        }
+        if s.eq_ignore_ascii_case("model_invocation_started") {
+            return Some(Self::Model_invocation_started);
+        }
+        if s.eq_ignore_ascii_case("model_invocation_completed") {
+            return Some(Self::Model_invocation_completed);
+        }
+        if s.eq_ignore_ascii_case("model_invocation_failed") {
+            return Some(Self::Model_invocation_failed);
+        }
+        if s.eq_ignore_ascii_case("model_reconciliation_required") {
+            return Some(Self::Model_reconciliation_required);
+        }
+        if s.eq_ignore_ascii_case("model_invocation_reconciled") {
+            return Some(Self::Model_invocation_reconciled);
+        }
+        if s.eq_ignore_ascii_case("permission_requested") {
+            return Some(Self::Permission_requested);
+        }
+        if s.eq_ignore_ascii_case("permission_resolved") {
+            return Some(Self::Permission_resolved);
+        }
+        if s.eq_ignore_ascii_case("tool_execution_started") {
+            return Some(Self::Tool_execution_started);
+        }
+        if s.eq_ignore_ascii_case("tool_execution_completed") {
+            return Some(Self::Tool_execution_completed);
+        }
+        if s.eq_ignore_ascii_case("tool_result_committed") {
+            return Some(Self::Tool_result_committed);
+        }
+        if s.eq_ignore_ascii_case("tool_result_reconciled") {
+            return Some(Self::Tool_result_reconciled);
+        }
+        if s.eq_ignore_ascii_case("conversation_updated") {
+            return Some(Self::Conversation_updated);
+        }
+        if s.eq_ignore_ascii_case("checkpoint_created") {
+            return Some(Self::Checkpoint_created);
+        }
+        if s.eq_ignore_ascii_case("turn_committed") {
+            return Some(Self::Turn_committed);
+        }
+        if s.eq_ignore_ascii_case("turn_cancelled") {
+            return Some(Self::Turn_cancelled);
+        }
+        if s.eq_ignore_ascii_case("turn_failed") {
+            return Some(Self::Turn_failed);
+        }
+        if s.eq_ignore_ascii_case("turn_reconciliation_required") {
+            return Some(Self::Turn_reconciliation_required);
+        }
+        if s.eq_ignore_ascii_case("post_commit_started") {
+            return Some(Self::Post_commit_started);
+        }
+        if s.eq_ignore_ascii_case("post_commit_completed") {
+            return Some(Self::Post_commit_completed);
+        }
+        if s.eq_ignore_ascii_case("post_commit_failed") {
+            return Some(Self::Post_commit_failed);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Turn_started => "turn_started",
@@ -133,8 +206,23 @@ impl EngineEventKind {
     }
 }
 
+impl serde::Serialize for EngineEventKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for EngineEventKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid EngineEventKind value: {}", s))
+        })
+    }
+}
+
 /// One event in the monotonic semantic event stream of a turn. Events are the durable, replayable record a DurabilityPort persists. Run identity links delegated (nested) engine runs to their parent for cross-run observability.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct EngineEvent {
     /// Monotonic sequence number within the run, starting at one
     pub sequence: i64,
@@ -318,5 +406,21 @@ impl EngineEvent {
     /// Serialize EngineEvent to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `EngineEvent` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for EngineEvent {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for EngineEvent {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

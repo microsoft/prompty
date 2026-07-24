@@ -17,8 +17,8 @@ class PermissionResolver(Protocol):
 
     def request(self, request: PermissionRequest) -> PermissionDecision:
         """Resolve a host permission request"""
-        ...
+        raise NotImplementedError
 
     async def request_async(self, request: PermissionRequest) -> PermissionDecision:
         """Resolve a host permission request (async variant)"""
-        ...
+        raise NotImplementedError

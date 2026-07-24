@@ -40,7 +40,10 @@ func LoadInvocationContextState(data interface{}, ctx *LoadContext) (InvocationC
 				result.DelegatedState = make([]DelegatedStateReference, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadDelegatedStateReference(item, ctx)
+						loaded, err := LoadDelegatedStateReference(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.DelegatedState[i] = loaded
 					}
 				}

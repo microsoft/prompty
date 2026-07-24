@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::model_invocation_request::ModelInvocationRequest;
 
 /// Durable state required to reconcile one indeterminate model invocation. Retained when a model effect completed with an unknown outcome so a resumed run can determine success or failure without re-invoking the provider.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ModelReconciliationState {
     /// Model invocation identifier awaiting reconciliation
     pub invocation_id: String,
@@ -127,5 +127,21 @@ impl ModelReconciliationState {
     /// Returns `None` if the field is null or not an object.
     pub fn as_metadata_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.metadata.as_object()
+    }
+}
+
+// Serde for `ModelReconciliationState` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ModelReconciliationState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ModelReconciliationState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

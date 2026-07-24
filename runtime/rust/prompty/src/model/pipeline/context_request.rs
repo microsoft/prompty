@@ -16,7 +16,7 @@ use super::invocation_context_state::InvocationContextState;
 use super::super::conversation::message::Message;
 
 /// Planning input handed to the context pipeline before one model invocation.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ContextRequest {
     /// Stable session identifier
     pub session_id: String,
@@ -178,5 +178,21 @@ impl ContextRequest {
                 .map(|item| item.to_value(ctx))
                 .collect::<Vec<_>>(),
         )
+    }
+}
+
+// Serde for `ContextRequest` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ContextRequest {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ContextRequest {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -174,4 +174,4 @@ class ToolResultHelpers(Protocol):
     @property
     def text(self) -> str:
         """Concatenate all TextPart values joined by newline"""
-        ...
+        raise NotImplementedError

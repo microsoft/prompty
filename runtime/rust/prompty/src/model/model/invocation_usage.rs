@@ -12,8 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// Complete cumulative token usage for one completed model invocation. Providers emit this value at most once per invocation. `totalTokens` uses the provider total when available; otherwise the provider adapter computes it as `inputTokens + outputTokens`.
-#[derive(Debug, Clone, Default, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct InvocationUsage {
     /// Number of input tokens consumed by the completed invocation
     pub input_tokens: i64,
@@ -134,5 +133,21 @@ impl InvocationUsage {
             }
         }
         serde_json::Value::Object(result)
+    }
+}
+
+// Serde for `InvocationUsage` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for InvocationUsage {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for InvocationUsage {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

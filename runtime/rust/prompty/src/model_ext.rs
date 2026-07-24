@@ -152,88 +152,12 @@ impl ContentPart {
 }
 
 // ---------------------------------------------------------------------------
-// PartialEq for ContentPartKind, ContentPart
+// Eq for ContentPartKind, ContentPart (PartialEq is derived on the generated types)
 // ---------------------------------------------------------------------------
-
-impl PartialEq for ContentPartKind {
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (ContentPartKind::TextPart { value: a }, ContentPartKind::TextPart { value: b }) => {
-                a == b
-            }
-            (
-                ContentPartKind::ImagePart {
-                    source: a,
-                    detail: ad,
-                    media_type: am,
-                },
-                ContentPartKind::ImagePart {
-                    source: b,
-                    detail: bd,
-                    media_type: bm,
-                },
-            ) => a == b && ad == bd && am == bm,
-            (
-                ContentPartKind::FilePart {
-                    source: a,
-                    media_type: am,
-                },
-                ContentPartKind::FilePart {
-                    source: b,
-                    media_type: bm,
-                },
-            ) => a == b && am == bm,
-            (
-                ContentPartKind::AudioPart {
-                    source: a,
-                    media_type: am,
-                },
-                ContentPartKind::AudioPart {
-                    source: b,
-                    media_type: bm,
-                },
-            ) => a == b && am == bm,
-            _ => false,
-        }
-    }
-}
 
 impl Eq for ContentPartKind {}
 
-impl PartialEq for ContentPart {
-    fn eq(&self, other: &Self) -> bool {
-        self.kind == other.kind
-    }
-}
-
 impl Eq for ContentPart {}
-
-// ---------------------------------------------------------------------------
-// Serialize / Deserialize for ContentPart
-// ---------------------------------------------------------------------------
-
-impl serde::Serialize for ContentPartKind {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let part = ContentPart { kind: self.clone() };
-        part.serialize(serializer)
-    }
-}
-
-impl serde::Serialize for ContentPart {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use crate::model::context::SaveContext;
-        let value = self.to_value(&SaveContext::default());
-        value.serialize(serializer)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for ContentPart {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        use crate::model::context::LoadContext;
-        let value = serde_json::Value::deserialize(deserializer)?;
-        Ok(Self::load_from_value(&value, &LoadContext::default()))
-    }
-}
 
 // ---------------------------------------------------------------------------
 // Message convenience methods
@@ -284,32 +208,6 @@ impl Message {
             self.metadata = serde_json::Value::Object(serde_json::Map::new());
         }
         self.metadata.as_object_mut().unwrap()
-    }
-}
-
-// ---------------------------------------------------------------------------
-// PartialEq / Serialize / Deserialize for Message
-// ---------------------------------------------------------------------------
-
-impl PartialEq for Message {
-    fn eq(&self, other: &Self) -> bool {
-        self.role == other.role && self.parts == other.parts && self.metadata == other.metadata
-    }
-}
-
-impl serde::Serialize for Message {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        use crate::model::context::SaveContext;
-        let value = self.to_value(&SaveContext::default());
-        value.serialize(serializer)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for Message {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        use crate::model::context::LoadContext;
-        let value = serde_json::Value::deserialize(deserializer)?;
-        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
 

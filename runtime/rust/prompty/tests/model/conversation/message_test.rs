@@ -92,6 +92,44 @@ fn test_message_roundtrip() {
 }
 
 #[test]
+fn test_message_serde_roundtrip() {
+    let json = r####"
+{
+  "role": "user",
+  "parts": [
+    {
+      "kind": "text",
+      "value": "Hello!"
+    }
+  ],
+  "metadata": {
+    "source": "user-input"
+  }
+}
+"####;
+    let instance: Message =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Message::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert_eq!(
+        value, canonical,
+        "serde must serialize to byte-identical canonical wire (empty-omission preserved; no plain-derive divergence)"
+    );
+    let reparsed: Message = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+}
+
+#[test]
 fn test_message_factory_assistant() {
     let instance = Message::assistant("test".to_string());
 }

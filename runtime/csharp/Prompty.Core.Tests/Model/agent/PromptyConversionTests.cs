@@ -62,14 +62,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -88,11 +88,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -177,11 +177,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -273,11 +273,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -338,14 +338,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -369,11 +369,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -512,14 +512,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -591,14 +591,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -617,11 +617,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -705,11 +705,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -800,11 +800,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -865,14 +865,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -896,11 +896,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -1038,14 +1038,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1117,14 +1117,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1143,11 +1143,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -1233,11 +1233,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -1330,11 +1330,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -1395,14 +1395,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1426,11 +1426,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -1570,14 +1570,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1649,14 +1649,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1675,11 +1675,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -1764,11 +1764,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -1860,11 +1860,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -1925,14 +1925,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1956,11 +1956,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -2099,14 +2099,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -2178,14 +2178,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -2204,11 +2204,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -2296,11 +2296,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -2395,11 +2395,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -2460,14 +2460,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -2491,11 +2491,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -2637,14 +2637,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -2716,14 +2716,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -2742,11 +2742,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -2833,11 +2833,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -2931,11 +2931,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -2996,14 +2996,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -3027,11 +3027,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -3172,14 +3172,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -3251,14 +3251,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -3277,11 +3277,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -3370,11 +3370,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -3470,11 +3470,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -3535,14 +3535,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -3566,11 +3566,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -3713,14 +3713,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -3792,14 +3792,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -3818,11 +3818,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -3910,11 +3910,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), instance.Instructions);
@@ -4009,11 +4009,11 @@ user:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -4074,14 +4074,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -4105,11 +4105,11 @@ instructions: "system:
         Assert.Equal(@"system:
 You are an AI assistant who helps people find information.
 As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some 
+and in a personable manner using markdown and even add some
 personal flair with appropriate emojis.
 
 # Customer
-You are helping {{firstName}} {{lastName}} to find answers to 
+You are helping {{firstName}} {{lastName}} to find answers to
 their questions. Use their name to address them in your responses.
 user:
 {{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
@@ -4251,14 +4251,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 

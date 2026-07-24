@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -25,20 +26,28 @@ func LoadStreamChunk(data interface{}, ctx *LoadContext) (interface{}, error) {
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
-			switch discriminator {
-			case "text":
-				return LoadTextChunk(data, ctx)
-			case "thinking":
-				return LoadThinkingChunk(data, ctx)
-			case "tool":
-				return LoadToolChunk(data, ctx)
-			case "usage":
-				return LoadUsageChunk(data, ctx)
-			case "error":
-				return LoadErrorChunk(data, ctx)
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "text":
+					return LoadTextChunk(data, ctx)
+				case "thinking":
+					return LoadThinkingChunk(data, ctx)
+				case "tool":
+					return LoadToolChunk(data, ctx)
+				case "usage":
+					return LoadUsageChunk(data, ctx)
+				case "error":
+					return LoadErrorChunk(data, ctx)
+				default:
+					return nil, fmt.Errorf("unknown StreamChunk discriminator value: %s", discriminator)
+				}
+			default:
+				return nil, fmt.Errorf("unknown StreamChunk discriminator value: %v", discriminator)
 			}
 		}
 	}
+	return nil, fmt.Errorf("missing StreamChunk discriminator property: kind")
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
@@ -257,7 +266,10 @@ func LoadToolChunk(data interface{}, ctx *LoadContext) (ToolChunk, error) {
 		}
 		if val, ok := m["toolCall"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadToolCall(m, ctx)
+				loaded, err := LoadToolCall(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.ToolCall = loaded
 			}
 		}
@@ -332,7 +344,10 @@ func LoadUsageChunk(data interface{}, ctx *LoadContext) (UsageChunk, error) {
 		}
 		if val, ok := m["usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadInvocationUsage(m, ctx)
+				loaded, err := LoadInvocationUsage(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Usage = loaded
 			}
 		}

@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::super::conversation::tool_result::ToolResult;
 
 /// The result of dispatching a single tool call. Pairs the tool call identifier with the tool's name and result for correlation in the agent loop's message assembly.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ToolDispatchResult {
     /// The tool call ID from the LLM response, used to correlate results
     pub tool_call_id: String,
@@ -101,5 +101,21 @@ impl ToolDispatchResult {
     /// Serialize ToolDispatchResult to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `ToolDispatchResult` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ToolDispatchResult {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ToolDispatchResult {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

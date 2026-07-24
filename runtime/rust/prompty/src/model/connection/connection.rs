@@ -41,6 +41,16 @@ impl AuthenticationMode {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("user") {
+            return Some(Self::User);
+        }
+        if s.eq_ignore_ascii_case("system") {
+            return Some(Self::System);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::User => "user",
@@ -49,8 +59,23 @@ impl AuthenticationMode {
     }
 }
 
+impl serde::Serialize for AuthenticationMode {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for AuthenticationMode {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid AuthenticationMode value: {}", s))
+        })
+    }
+}
+
 /// Variant-specific data for [`Connection`], discriminated by `kind`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ConnectionKind {
     /// `kind` = `"reference"`
     Reference {
@@ -111,7 +136,7 @@ impl Default for ConnectionKind {
     }
 }
 /// Connection configuration for AI agents. `provider`, `kind`, and `endpoint` are required properties here, but this section can accept additional via options.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Connection {
     /// The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')
     pub authentication_mode: Option<AuthenticationMode>,
@@ -398,5 +423,42 @@ impl Connection {
     /// Serialize Connection to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `Connection` delegates to the canonical to_value/load_from_value
+// logic so the `kind` discriminator round-trips to its exact wire value. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for Connection {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Connection {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// Serde for `ConnectionKind` wraps the variant into its parent `Connection` and delegates
+// to the canonical to_value/load_from_value logic, so a bare `ConnectionKind`
+// serializes to internally-tagged `{"kind": "<value>", ...}` — the same wire
+// form as its parent — instead of serde's externally-tagged `{"<Variant>": {...}}`.
+impl serde::Serialize for ConnectionKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let parent = Connection {
+            kind: self.clone(),
+            ..Default::default()
+        };
+        serde::Serialize::serialize(&parent.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ConnectionKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Connection::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

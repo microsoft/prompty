@@ -71,3 +71,30 @@ fn test_anthropic_tool_result_block_roundtrip() {
         json_output.err()
     );
 }
+
+#[test]
+fn test_anthropic_tool_result_block_serde_roundtrip() {
+    let json = r####"
+{
+  "tool_use_id": "toolu_01A09q90qw90lq917835lq9",
+  "content": "72°F and sunny in Paris"
+}
+"####;
+    let instance: AnthropicToolResultBlock =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        AnthropicToolResultBlock::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    let reparsed: AnthropicToolResultBlock =
+        serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+}

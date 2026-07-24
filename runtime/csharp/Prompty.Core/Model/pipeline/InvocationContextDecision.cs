@@ -85,7 +85,7 @@ public partial class InvocationContextDecision
 
         if (data.TryGetValue("disposition", out var dispositionValue) && dispositionValue is not null)
         {
-            instance.Disposition = Enum.Parse<InvocationContextDisposition>(dispositionValue?.ToString()!, true);
+            instance.Disposition = InvocationContextDispositionParser.Parse(dispositionValue?.ToString()!);
         }
 
         if (data.TryGetValue("reason", out var reasonValue) && reasonValue is not null)
@@ -140,7 +140,7 @@ public partial class InvocationContextDecision
         result["candidateId"] = obj.CandidateId;
 
 
-        result["disposition"] = obj.Disposition.ToString().ToLowerInvariant();
+        result["disposition"] = InvocationContextDispositionParser.ToValue(obj.Disposition);
 
 
         result["reason"] = obj.Reason;

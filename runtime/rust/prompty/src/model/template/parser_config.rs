@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// Template parser definition
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ParserConfig {
     /// Parser used to process the rendered template into API-compatible format
     pub kind: String,
@@ -94,5 +94,21 @@ impl ParserConfig {
     /// Returns `None` if the field is null or not an object.
     pub fn as_options_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.options.as_object()
+    }
+}
+
+// Serde for `ParserConfig` delegates to the canonical to_value/load_from_value
+// logic so its scalar-coercion shorthand round-trips through the canonical semantics. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ParserConfig {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ParserConfig {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

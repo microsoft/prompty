@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// The result of a guardrail evaluation. Guardrails are safety checks that run at specific phases of the agent loop and can allow, deny, or rewrite content.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct GuardrailResult {
     /// Whether the content passed the guardrail check
     pub allowed: bool,
@@ -105,5 +105,21 @@ impl GuardrailResult {
             allowed: true,
             ..Default::default()
         }
+    }
+}
+
+// Serde for `GuardrailResult` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for GuardrailResult {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for GuardrailResult {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

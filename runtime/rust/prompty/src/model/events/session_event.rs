@@ -58,6 +58,31 @@ impl SessionEventType {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("session_start") {
+            return Some(Self::Session_start);
+        }
+        if s.eq_ignore_ascii_case("session_end") {
+            return Some(Self::Session_end);
+        }
+        if s.eq_ignore_ascii_case("session_warning") {
+            return Some(Self::Session_warning);
+        }
+        if s.eq_ignore_ascii_case("session_hook_start") {
+            return Some(Self::Session_hook_start);
+        }
+        if s.eq_ignore_ascii_case("session_hook_end") {
+            return Some(Self::Session_hook_end);
+        }
+        if s.eq_ignore_ascii_case("checkpoint_created") {
+            return Some(Self::Checkpoint_created);
+        }
+        if s.eq_ignore_ascii_case("trajectory_event") {
+            return Some(Self::Trajectory_event);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Session_start => "session_start",
@@ -71,8 +96,23 @@ impl SessionEventType {
     }
 }
 
+impl serde::Serialize for SessionEventType {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for SessionEventType {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid SessionEventType value: {}", s))
+        })
+    }
+}
+
 /// A canonical event envelope emitted by an outer harness session.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct SessionEvent {
     /// Unique identifier for this event
     pub id: String,
@@ -222,5 +262,21 @@ impl SessionEvent {
     /// Returns `None` if the field is null or not an object.
     pub fn as_payload_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.payload.as_object()
+    }
+}
+
+// Serde for `SessionEvent` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for SessionEvent {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for SessionEvent {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

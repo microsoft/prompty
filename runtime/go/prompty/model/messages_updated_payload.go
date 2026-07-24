@@ -30,7 +30,10 @@ func LoadMessagesUpdatedPayload(data interface{}, ctx *LoadContext) (MessagesUpd
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Messages[i] = loaded
 					}
 				}
@@ -45,7 +48,10 @@ func LoadMessagesUpdatedPayload(data interface{}, ctx *LoadContext) (MessagesUpd
 				result.Appended = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Appended[i] = loaded
 					}
 				}

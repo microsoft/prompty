@@ -364,8 +364,39 @@ export class ObjectProperty extends Property {
       context = new SaveContext();
     }
 
-    // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    if (context.collectionFormat === "array") {
+      return items.map((item) => item.save(context));
+    }
+
+    // Object format: use name as key
+    const result: Record<string, unknown> = {};
+    for (const item of items) {
+      const itemData = item.save(context) as Record<string, unknown>;
+      const name = itemData["name"] as string | undefined;
+      delete itemData["name"];
+      if (name) {
+        // Check if we can use shorthand (only primary property set)
+        const shorthand = (item.constructor as typeof Property)
+          .shorthandProperty;
+        if (
+          context.useShorthand &&
+          shorthand &&
+          Object.keys(itemData).length === 1 &&
+          shorthand in itemData
+        ) {
+          result[name] = itemData[shorthand];
+          continue;
+        }
+        result[name] = itemData;
+      } else {
+        // No name, fall back to array format for this item
+        if (!result["_unnamed"]) {
+          result["_unnamed"] = [];
+        }
+        (result["_unnamed"] as unknown[]).push(itemData);
+      }
+    }
+    return result;
   }
 
   //#endregion

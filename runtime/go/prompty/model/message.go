@@ -44,7 +44,10 @@ func LoadMessage(data interface{}, ctx *LoadContext) (Message, error) {
 				result.Parts = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadContentPart(item, ctx)
+						loaded, err := LoadContentPart(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						// Polymorphic type - store as interface{}
 						result.Parts[i] = loaded
 					}

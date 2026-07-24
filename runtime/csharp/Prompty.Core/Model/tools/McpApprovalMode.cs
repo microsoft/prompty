@@ -70,7 +70,7 @@ public partial class McpApprovalMode
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
         {
-            instance.Kind = Enum.Parse<McpApprovalModeKind>(kindValue?.ToString()!, true);
+            instance.Kind = McpApprovalModeKindParser.Parse(kindValue?.ToString()!);
         }
 
         if (data.TryGetValue("alwaysRequireApprovalTools", out var alwaysRequireApprovalToolsValue) && alwaysRequireApprovalToolsValue is not null)
@@ -112,7 +112,7 @@ public partial class McpApprovalMode
         var result = new Dictionary<string, object?>();
 
 
-        result["kind"] = obj.Kind.ToString().ToLowerInvariant();
+        result["kind"] = McpApprovalModeKindParser.ToValue(obj.Kind);
 
 
         if (obj.AlwaysRequireApprovalTools is not null)

@@ -54,7 +54,7 @@ top_p: 0.9
 top_k: 40
 stop_sequences:
   - |-
-    
+
 
     Human:
 ```

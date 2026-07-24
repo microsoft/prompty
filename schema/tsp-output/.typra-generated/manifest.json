@@ -3441,7 +3441,7 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/py.typed",
-      "marker": true
+      "marker": false
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
@@ -3630,11 +3630,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/conversation/test_content_part.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/conversation/test_file_part.py",
       "marker": true
     },
@@ -3726,11 +3721,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/events/test_compaction_start_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/events/test_done_event_payload.py",
       "marker": true
     },
     {
@@ -3865,11 +3855,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/events/test_stream_chunk.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/events/test_text_chunk.py",
       "marker": true
     },
@@ -3950,11 +3935,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/events/test_usage_chunk.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/model/test_invocation_usage.py",
       "marker": true
     },
@@ -3990,11 +3970,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_context_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_delegated_state_reference.py",
       "marker": true
     },
@@ -4010,52 +3985,12 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_engine_permission_decision.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_final_output_policy_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_final_output_policy_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_host_policy_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_host_policy_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_invocation_context_decision.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_invocation_context_state.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_model_invocation_context_snapshot.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_model_invocation_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_model_invocation_response.py",
       "marker": true
     },
     {
@@ -4075,36 +4010,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_journal_record.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_mismatch.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_verification_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_verification_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_resume_context.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_retry_policy_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_run_turn_request.py",
       "marker": true
     },
@@ -4120,17 +4025,7 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_engine_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_model_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_model_response.py",
       "marker": true
     },
     {
@@ -4226,11 +4121,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/tracing/test_trace_time.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_image_block.py",
       "marker": true
     },
     {

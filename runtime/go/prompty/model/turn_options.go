@@ -99,7 +99,10 @@ func LoadTurnOptions(data interface{}, ctx *LoadContext) (TurnOptions, error) {
 		}
 		if val, ok := m["compaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadCompactionConfig(m, ctx)
+				loaded, err := LoadCompactionConfig(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Compaction = &loaded
 			}
 		}

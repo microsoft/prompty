@@ -118,6 +118,39 @@ fn test_tool_result_roundtrip() {
 }
 
 #[test]
+fn test_tool_result_serde_roundtrip() {
+    let json = r####"
+{
+  "parts": [
+    {
+      "kind": "text",
+      "value": "72°F and sunny"
+    }
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
+}
+"####;
+    let instance: ToolResult =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        ToolResult::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    let reparsed: ToolResult = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+}
+
+#[test]
 fn test_tool_result_factory_text() {
     let instance = ToolResult::text("test".to_string());
 }

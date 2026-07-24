@@ -57,7 +57,10 @@ func LoadContextRequest(data interface{}, ctx *LoadContext) (ContextRequest, err
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Messages[i] = loaded
 					}
 				}
@@ -79,7 +82,10 @@ func LoadContextRequest(data interface{}, ctx *LoadContext) (ContextRequest, err
 		}
 		if val, ok := m["contextState"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadInvocationContextState(m, ctx)
+				loaded, err := LoadInvocationContextState(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.ContextState = loaded
 			}
 		}

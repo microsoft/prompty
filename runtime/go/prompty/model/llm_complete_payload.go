@@ -35,7 +35,10 @@ func LoadLlmCompletePayload(data interface{}, ctx *LoadContext) (LlmCompletePayl
 		}
 		if val, ok := m["usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTokenUsage(m, ctx)
+				loaded, err := LoadTokenUsage(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Usage = &loaded
 			}
 		}

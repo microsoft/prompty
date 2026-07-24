@@ -41,13 +41,19 @@ func LoadReplayMismatch(data interface{}, ctx *LoadContext) (ReplayMismatch, err
 		}
 		if val, ok := m["expected"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadReplayJournalRecord(m, ctx)
+				loaded, err := LoadReplayJournalRecord(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Expected = &loaded
 			}
 		}
 		if val, ok := m["actual"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadReplayJournalRecord(m, ctx)
+				loaded, err := LoadReplayJournalRecord(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Actual = &loaded
 			}
 		}

@@ -74,7 +74,7 @@ public abstract partial class Connection
 
         if (data.TryGetValue("authenticationMode", out var authenticationModeValue) && authenticationModeValue is not null)
         {
-            instance.AuthenticationMode = Enum.Parse<AuthenticationMode>(authenticationModeValue?.ToString()!, true);
+            instance.AuthenticationMode = AuthenticationModeParser.Parse(authenticationModeValue?.ToString()!);
         }
 
         if (data.TryGetValue("usageDescription", out var usageDescriptionValue) && usageDescriptionValue is not null)
@@ -141,7 +141,7 @@ public abstract partial class Connection
 
         if (obj.AuthenticationMode is not null)
         {
-            result["authenticationMode"] = obj.AuthenticationMode.Value.ToString().ToLowerInvariant();
+            result["authenticationMode"] = AuthenticationModeParser.ToValue(obj.AuthenticationMode.Value);
         }
 
 

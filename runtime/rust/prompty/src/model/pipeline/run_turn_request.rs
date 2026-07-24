@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::turn_options::TurnOptions;
 
 /// Request accepted by a reference turn runner implementation.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct RunTurnRequest {
     /// Stable harness session identifier
     pub session_id: String,
@@ -114,5 +114,21 @@ impl RunTurnRequest {
     /// Returns `None` if the field is null or not an object.
     pub fn as_inputs_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.inputs.as_object()
+    }
+}
+
+// Serde for `RunTurnRequest` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for RunTurnRequest {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for RunTurnRequest {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

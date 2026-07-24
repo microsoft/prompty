@@ -46,6 +46,19 @@ impl InvocationContextPortability {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("portable") {
+            return Some(Self::Portable);
+        }
+        if s.eq_ignore_ascii_case("delegated") {
+            return Some(Self::Delegated);
+        }
+        if s.eq_ignore_ascii_case("opaque") {
+            return Some(Self::Opaque);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Portable => "portable",
@@ -55,8 +68,23 @@ impl InvocationContextPortability {
     }
 }
 
+impl serde::Serialize for InvocationContextPortability {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for InvocationContextPortability {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid InvocationContextPortability value: {}", s))
+        })
+    }
+}
+
 /// Provider-context state carried into or out of an invocation.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct InvocationContextState {
     /// Whether the model-visible context is portable across providers
     pub portability: InvocationContextPortability,
@@ -156,5 +184,21 @@ impl InvocationContextState {
                 .map(|item| item.to_value(ctx))
                 .collect::<Vec<_>>(),
         )
+    }
+}
+
+// Serde for `InvocationContextState` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for InvocationContextState {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for InvocationContextState {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

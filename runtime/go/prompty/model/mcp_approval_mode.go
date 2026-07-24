@@ -102,7 +102,7 @@ func (obj *McpApprovalMode) ToYAML() (string, error) {
 
 // FromJSON creates McpApprovalMode from JSON string
 func McpApprovalModeFromJSON(jsonStr string) (McpApprovalMode, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		return McpApprovalMode{}, err
 	}
@@ -112,7 +112,7 @@ func McpApprovalModeFromJSON(jsonStr string) (McpApprovalMode, error) {
 
 // FromYAML creates McpApprovalMode from YAML string
 func McpApprovalModeFromYAML(yamlStr string) (McpApprovalMode, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
 		return McpApprovalMode{}, err
 	}

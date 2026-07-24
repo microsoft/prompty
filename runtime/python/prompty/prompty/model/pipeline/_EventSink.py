@@ -17,8 +17,8 @@ class EventSink(Protocol):
 
     def emit_turn(self, turn_event: TurnEvent) -> bool:
         """Emit a typed turn event to a host sink"""
-        ...
+        raise NotImplementedError
 
     def emit_session(self, session_event: SessionEvent) -> bool:
         """Emit a typed session event to a host sink"""
-        ...
+        raise NotImplementedError

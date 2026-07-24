@@ -166,7 +166,7 @@ public partial class EngineEvent
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
         {
-            instance.Kind = Enum.Parse<EngineEventKind>(kindValue?.ToString()!, true);
+            instance.Kind = EngineEventKindParser.Parse(kindValue?.ToString()!);
         }
 
         if (data.TryGetValue("payload", out var payloadValue) && payloadValue is not null)
@@ -242,7 +242,7 @@ public partial class EngineEvent
         }
 
 
-        result["kind"] = obj.Kind.ToString().ToLowerInvariant();
+        result["kind"] = EngineEventKindParser.ToValue(obj.Kind);
 
 
         if (obj.Payload is not null)

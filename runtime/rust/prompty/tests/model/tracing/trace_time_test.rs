@@ -76,3 +76,30 @@ fn test_trace_time_roundtrip() {
         json_output.err()
     );
 }
+
+#[test]
+fn test_trace_time_serde_roundtrip() {
+    let json = r####"
+{
+  "start": "2026-04-04T12:00:00Z",
+  "end": "2026-04-04T12:00:01Z",
+  "duration": 1000
+}
+"####;
+    let instance: TraceTime =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        TraceTime::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    let reparsed: TraceTime = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+}

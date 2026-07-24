@@ -70,7 +70,7 @@ public partial class ReplayVerificationResult
 
         if (data.TryGetValue("status", out var statusValue) && statusValue is not null)
         {
-            instance.Status = Enum.Parse<ReplayVerificationStatus>(statusValue?.ToString()!, true);
+            instance.Status = ReplayVerificationStatusParser.Parse(statusValue?.ToString()!);
         }
 
         if (data.TryGetValue("mismatches", out var mismatchesValue) && mismatchesValue is not null)
@@ -171,7 +171,7 @@ public partial class ReplayVerificationResult
         var result = new Dictionary<string, object?>();
 
 
-        result["status"] = obj.Status.ToString().ToLowerInvariant();
+        result["status"] = ReplayVerificationStatusParser.ToValue(obj.Status);
 
 
         if (obj.Mismatches is not null)

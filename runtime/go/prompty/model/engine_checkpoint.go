@@ -112,7 +112,10 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Messages[i] = loaded
 					}
 				}
@@ -144,7 +147,10 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.PendingToolRequests = make([]ModelToolRequest, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadModelToolRequest(item, ctx)
+						loaded, err := LoadModelToolRequest(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.PendingToolRequests[i] = loaded
 					}
 				}
@@ -155,7 +161,10 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.CompletedToolResults = make([]ModelToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadModelToolResult(item, ctx)
+						loaded, err := LoadModelToolResult(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.CompletedToolResults[i] = loaded
 					}
 				}
@@ -180,7 +189,10 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 		}
 		if val, ok := m["modelReconciliation"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadModelReconciliationState(m, ctx)
+				loaded, err := LoadModelReconciliationState(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.ModelReconciliation = &loaded
 			}
 		}
@@ -192,7 +204,10 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 		}
 		if val, ok := m["pendingModelResponse"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadModelInvocationResponse(m, ctx)
+				loaded, err := LoadModelInvocationResponse(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.PendingModelResponse = &loaded
 			}
 		}
@@ -204,7 +219,10 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 		}
 		if val, ok := m["contextState"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadInvocationContextState(m, ctx)
+				loaded, err := LoadInvocationContextState(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.ContextState = loaded
 			}
 		}

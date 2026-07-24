@@ -16,24 +16,24 @@ class CheckpointStore(Protocol):
 
     def save(self, checkpoint: Checkpoint) -> Checkpoint:
         """Persist a session checkpoint and return the stored checkpoint"""
-        ...
+        raise NotImplementedError
 
     async def save_async(self, checkpoint: Checkpoint) -> Checkpoint:
         """Persist a session checkpoint and return the stored checkpoint (async variant)"""
-        ...
+        raise NotImplementedError
 
     def load(self, session_id: str, checkpoint_id: str) -> Checkpoint | None:
         """Load a checkpoint by session and checkpoint identifier"""
-        ...
+        raise NotImplementedError
 
     async def load_async(self, session_id: str, checkpoint_id: str) -> Checkpoint | None:
         """Load a checkpoint by session and checkpoint identifier (async variant)"""
-        ...
+        raise NotImplementedError
 
     def list_checkpoints(self, session_id: str) -> list[Checkpoint]:
         """List checkpoints for a session"""
-        ...
+        raise NotImplementedError
 
     async def list_checkpoints_async(self, session_id: str) -> list[Checkpoint]:
         """List checkpoints for a session (async variant)"""
-        ...
+        raise NotImplementedError

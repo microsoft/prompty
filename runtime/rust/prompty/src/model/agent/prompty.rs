@@ -20,7 +20,7 @@ use super::super::template::template::Template;
 use super::super::tools::tool::Tool;
 
 /// A Prompty is a markdown file format for LLM prompts. The frontmatter defines structured metadata including model configuration, input/output schemas, tools, and template settings. The markdown body becomes the instructions. This is the single root type for the Prompty schema — there is no abstract base class or kind discriminator. A .prompty file always produces a Prompty instance. Runtime loaders may resolve frontmatter references such as `${env:VAR}` and `${file:relative/path}`. File references must be treated as a host-controlled capability: by default they are scoped to the containing .prompty file's directory tree after canonicalization, and any additional allowed roots must be supplied by the host application's load options rather than frontmatter.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Prompty {
     /// Human-readable name of the prompt
     pub name: String,
@@ -248,7 +248,7 @@ impl Prompty {
     }
 
     /// Load a collection of Property from a JSON value.
-    /// Handles both array format `[{...}]`.
+    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
     fn load_outputs(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
         match data {
             serde_json::Value::Array(arr) => arr
@@ -256,18 +256,54 @@ impl Prompty {
                 .map(|v| Property::load_from_value(v, ctx))
                 .collect(),
 
+            serde_json::Value::Object(obj) => obj
+                .iter()
+                .filter_map(|(name, value)| {
+                    if value.is_array() {
+                        return None;
+                    }
+                    let mut v = if value.is_object() {
+                        value.clone()
+                    } else {
+                        serde_json::json!({ "kind": value })
+                    };
+                    if let serde_json::Value::Object(ref mut m) = v {
+                        m.entry("name".to_string())
+                            .or_insert_with(|| serde_json::Value::String(name.clone()));
+                    }
+                    Some(Property::load_from_value(&v, ctx))
+                })
+                .collect(),
             _ => Vec::new(),
         }
     }
 
     /// Save a collection of Property to a JSON value.
     fn save_outputs(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
-        serde_json::Value::Array(
-            items
-                .iter()
-                .map(|item| item.to_value(ctx))
-                .collect::<Vec<_>>(),
-        )
+        if ctx.collection_format == "array" {
+            return serde_json::Value::Array(
+                items
+                    .iter()
+                    .map(|item| item.to_value(ctx))
+                    .collect::<Vec<_>>(),
+            );
+        }
+        // Object format: use name as key
+        let mut result = serde_json::Map::new();
+        for item in items {
+            let mut item_data = match item.to_value(ctx) {
+                serde_json::Value::Object(m) => m,
+                other => {
+                    let mut m = serde_json::Map::new();
+                    m.insert("value".to_string(), other);
+                    m
+                }
+            };
+            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
+                result.insert(name, serde_json::Value::Object(item_data));
+            }
+        }
+        serde_json::Value::Object(result)
     }
 
     /// Load a collection of Tool from a JSON value.
@@ -326,5 +362,21 @@ impl Prompty {
             }
         }
         serde_json::Value::Object(result)
+    }
+}
+
+// Serde for `Prompty` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for Prompty {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Prompty {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -100,7 +100,7 @@ public partial class HookEndPayload
 
         if (data.TryGetValue("scope", out var scopeValue) && scopeValue is not null)
         {
-            instance.Scope = Enum.Parse<HookEndScope>(scopeValue?.ToString()!, true);
+            instance.Scope = HookEndScopeParser.Parse(scopeValue?.ToString()!);
         }
 
         if (data.TryGetValue("success", out var successValue) && successValue is not null)
@@ -165,7 +165,7 @@ public partial class HookEndPayload
 
         if (obj.Scope is not null)
         {
-            result["scope"] = obj.Scope.Value.ToString().ToLowerInvariant();
+            result["scope"] = HookEndScopeParser.ToValue(obj.Scope.Value);
         }
 
 

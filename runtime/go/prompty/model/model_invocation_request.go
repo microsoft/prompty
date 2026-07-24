@@ -24,7 +24,10 @@ func LoadModelInvocationRequest(data interface{}, ctx *LoadContext) (ModelInvoca
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["context"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadModelInvocationContextSnapshot(m, ctx)
+				loaded, err := LoadModelInvocationContextSnapshot(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Context = loaded
 			}
 		}

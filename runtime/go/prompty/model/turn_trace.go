@@ -42,7 +42,10 @@ func LoadTurnTrace(data interface{}, ctx *LoadContext) (TurnTrace, error) {
 				result.Events = make([]TurnEvent, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadTurnEvent(item, ctx)
+						loaded, err := LoadTurnEvent(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Events[i] = loaded
 					}
 				}
@@ -50,7 +53,10 @@ func LoadTurnTrace(data interface{}, ctx *LoadContext) (TurnTrace, error) {
 		}
 		if val, ok := m["summary"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTurnSummary(m, ctx)
+				loaded, err := LoadTurnSummary(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Summary = &loaded
 			}
 		}

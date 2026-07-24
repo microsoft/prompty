@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// A tool use content block returned in an assistant message when the model wants to invoke a tool.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct AnthropicToolUseBlock {
     /// The content block type
     pub r#type: String,
@@ -110,5 +110,21 @@ impl AnthropicToolUseBlock {
     /// Returns `None` if the field is null or not an object.
     pub fn as_input_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.input.as_object()
+    }
+}
+
+// Serde for `AnthropicToolUseBlock` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for AnthropicToolUseBlock {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for AnthropicToolUseBlock {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

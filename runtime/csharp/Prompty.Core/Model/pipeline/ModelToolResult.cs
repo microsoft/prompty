@@ -90,7 +90,7 @@ public partial class ModelToolResult
 
         if (data.TryGetValue("outcome", out var outcomeValue) && outcomeValue is not null)
         {
-            instance.Outcome = Enum.Parse<ModelToolOutcome>(outcomeValue?.ToString()!, true);
+            instance.Outcome = ModelToolOutcomeParser.Parse(outcomeValue?.ToString()!);
         }
 
         if (data.TryGetValue("output", out var outputValue) && outputValue is not null)
@@ -143,7 +143,7 @@ public partial class ModelToolResult
         result["name"] = obj.Name;
 
 
-        result["outcome"] = obj.Outcome.ToString().ToLowerInvariant();
+        result["outcome"] = ModelToolOutcomeParser.ToValue(obj.Outcome);
 
 
         if (obj.Output is not null)

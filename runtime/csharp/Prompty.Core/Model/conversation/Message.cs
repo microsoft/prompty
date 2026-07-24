@@ -67,7 +67,7 @@ public partial class Message : IMessageHelpers
 
         if (data.TryGetValue("role", out var roleValue) && roleValue is not null)
         {
-            instance.Role = Enum.Parse<Role>(roleValue?.ToString()!, true);
+            instance.Role = RoleParser.Parse(roleValue?.ToString()!);
         }
 
         if (data.TryGetValue("parts", out var partsValue) && partsValue is not null)
@@ -163,7 +163,7 @@ public partial class Message : IMessageHelpers
         var result = new Dictionary<string, object?>();
 
 
-        result["role"] = obj.Role.ToString().ToLowerInvariant();
+        result["role"] = RoleParser.ToValue(obj.Role);
 
 
         result["parts"] = SaveParts(obj.Parts, context);

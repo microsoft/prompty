@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -25,18 +26,26 @@ func LoadContentPart(data interface{}, ctx *LoadContext) (interface{}, error) {
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
-			switch discriminator {
-			case "text":
-				return LoadTextPart(data, ctx)
-			case "image":
-				return LoadImagePart(data, ctx)
-			case "file":
-				return LoadFilePart(data, ctx)
-			case "audio":
-				return LoadAudioPart(data, ctx)
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "text":
+					return LoadTextPart(data, ctx)
+				case "image":
+					return LoadImagePart(data, ctx)
+				case "file":
+					return LoadFilePart(data, ctx)
+				case "audio":
+					return LoadAudioPart(data, ctx)
+				default:
+					return nil, fmt.Errorf("unknown ContentPart discriminator value: %s", discriminator)
+				}
+			default:
+				return nil, fmt.Errorf("unknown ContentPart discriminator value: %v", discriminator)
 			}
 		}
 	}
+	return nil, fmt.Errorf("missing ContentPart discriminator property: kind")
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {

@@ -43,6 +43,16 @@ impl ReplayVerificationStatus {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("passed") {
+            return Some(Self::Passed);
+        }
+        if s.eq_ignore_ascii_case("failed") {
+            return Some(Self::Failed);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Passed => "passed",
@@ -51,8 +61,23 @@ impl ReplayVerificationStatus {
     }
 }
 
+impl serde::Serialize for ReplayVerificationStatus {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ReplayVerificationStatus {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid ReplayVerificationStatus value: {}", s))
+        })
+    }
+}
+
 /// Result returned by a replay verifier implementation.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ReplayVerificationResult {
     /// Replay verification status
     pub status: ReplayVerificationStatus,
@@ -170,5 +195,21 @@ impl ReplayVerificationResult {
                 .map(|item| item.to_value(ctx))
                 .collect::<Vec<_>>(),
         )
+    }
+}
+
+// Serde for `ReplayVerificationResult` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ReplayVerificationResult {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ReplayVerificationResult {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

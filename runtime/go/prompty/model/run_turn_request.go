@@ -38,7 +38,10 @@ func LoadRunTurnRequest(data interface{}, ctx *LoadContext) (RunTurnRequest, err
 		}
 		if val, ok := m["options"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTurnOptions(m, ctx)
+				loaded, err := LoadTurnOptions(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Options = &loaded
 			}
 		}

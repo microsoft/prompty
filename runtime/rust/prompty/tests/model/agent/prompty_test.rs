@@ -166,14 +166,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -284,6 +284,204 @@ fn test_prompty_roundtrip() {
         json_output.is_ok(),
         "Failed to serialize to JSON: {:?}",
         json_output.err()
+    );
+}
+
+#[test]
+fn test_prompty_serde_roundtrip() {
+    let json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let instance: Prompty =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Prompty::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert!(
+        value.get("inputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("inputs")
+            .and_then(|v| v.get("firstName"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("outputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value.get("outputs").and_then(|v| v.get("answer")).is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("tools").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("tools")
+            .and_then(|v| v.get("getCurrentWeather"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    let reparsed: Prompty = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+    let map_json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let from_map: Prompty = serde_json::from_str(map_json)
+        .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
+    assert_eq!(
+        from_map, instance,
+        "map-form and array-form inputs must load to equal instances"
+    );
+    let map_value =
+        serde_json::to_value(&from_map).expect("serde should serialize the map-loaded instance");
+    assert!(
+        map_value
+            .get("tools")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
     );
 }
 
@@ -440,14 +638,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -558,6 +756,122 @@ fn test_prompty_roundtrip_1() {
         "Failed to serialize to JSON: {:?}",
         json_output.err()
     );
+}
+
+#[test]
+fn test_prompty_serde_roundtrip_1() {
+    let json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let instance: Prompty =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Prompty::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert!(
+        value.get("inputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("inputs")
+            .and_then(|v| v.get("firstName"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("outputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value.get("outputs").and_then(|v| v.get("answer")).is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("tools").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("tools")
+            .and_then(|v| v.get("getCurrentWeather"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    let reparsed: Prompty = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
 
 #[test]
@@ -715,14 +1029,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -834,6 +1148,212 @@ fn test_prompty_roundtrip_2() {
         json_output.is_ok(),
         "Failed to serialize to JSON: {:?}",
         json_output.err()
+    );
+}
+
+#[test]
+fn test_prompty_serde_roundtrip_2() {
+    let json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let instance: Prompty =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Prompty::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert!(
+        value.get("inputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("inputs")
+            .and_then(|v| v.get("firstName"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("outputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value.get("outputs").and_then(|v| v.get("answer")).is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("tools").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("tools")
+            .and_then(|v| v.get("getCurrentWeather"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    let reparsed: Prompty = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+    let map_json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let from_map: Prompty = serde_json::from_str(map_json)
+        .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
+    assert_eq!(
+        from_map, instance,
+        "map-form and array-form inputs must load to equal instances"
+    );
+    let map_value =
+        serde_json::to_value(&from_map).expect("serde should serialize the map-loaded instance");
+    assert!(
+        map_value
+            .get("outputs")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
+    );
+    assert!(
+        map_value
+            .get("tools")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
     );
 }
 
@@ -991,14 +1511,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1109,6 +1629,204 @@ fn test_prompty_roundtrip_3() {
         json_output.is_ok(),
         "Failed to serialize to JSON: {:?}",
         json_output.err()
+    );
+}
+
+#[test]
+fn test_prompty_serde_roundtrip_3() {
+    let json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let instance: Prompty =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Prompty::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert!(
+        value.get("inputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("inputs")
+            .and_then(|v| v.get("firstName"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("outputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value.get("outputs").and_then(|v| v.get("answer")).is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("tools").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("tools")
+            .and_then(|v| v.get("getCurrentWeather"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    let reparsed: Prompty = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+    let map_json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let from_map: Prompty = serde_json::from_str(map_json)
+        .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
+    assert_eq!(
+        from_map, instance,
+        "map-form and array-form inputs must load to equal instances"
+    );
+    let map_value =
+        serde_json::to_value(&from_map).expect("serde should serialize the map-loaded instance");
+    assert!(
+        map_value
+            .get("outputs")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
     );
 }
 
@@ -1269,14 +1987,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1390,6 +2108,214 @@ fn test_prompty_roundtrip_4() {
         json_output.is_ok(),
         "Failed to serialize to JSON: {:?}",
         json_output.err()
+    );
+}
+
+#[test]
+fn test_prompty_serde_roundtrip_4() {
+    let json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let instance: Prompty =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Prompty::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert!(
+        value.get("inputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("inputs")
+            .and_then(|v| v.get("firstName"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("outputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value.get("outputs").and_then(|v| v.get("answer")).is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("tools").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("tools")
+            .and_then(|v| v.get("getCurrentWeather"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    let reparsed: Prompty = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+    let map_json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let from_map: Prompty = serde_json::from_str(map_json)
+        .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
+    assert_eq!(
+        from_map, instance,
+        "map-form and array-form inputs must load to equal instances"
+    );
+    let map_value =
+        serde_json::to_value(&from_map).expect("serde should serialize the map-loaded instance");
+    assert!(
+        map_value
+            .get("inputs")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
+    );
+    assert!(
+        map_value
+            .get("tools")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
     );
 }
 
@@ -1549,14 +2475,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1669,6 +2595,206 @@ fn test_prompty_roundtrip_5() {
         json_output.is_ok(),
         "Failed to serialize to JSON: {:?}",
         json_output.err()
+    );
+}
+
+#[test]
+fn test_prompty_serde_roundtrip_5() {
+    let json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let instance: Prompty =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Prompty::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert!(
+        value.get("inputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("inputs")
+            .and_then(|v| v.get("firstName"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("outputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value.get("outputs").and_then(|v| v.get("answer")).is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("tools").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("tools")
+            .and_then(|v| v.get("getCurrentWeather"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    let reparsed: Prompty = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+    let map_json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let from_map: Prompty = serde_json::from_str(map_json)
+        .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
+    assert_eq!(
+        from_map, instance,
+        "map-form and array-form inputs must load to equal instances"
+    );
+    let map_value =
+        serde_json::to_value(&from_map).expect("serde should serialize the map-loaded instance");
+    assert!(
+        map_value
+            .get("inputs")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
     );
 }
 
@@ -1830,14 +2956,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -1952,6 +3078,222 @@ fn test_prompty_roundtrip_6() {
         json_output.is_ok(),
         "Failed to serialize to JSON: {:?}",
         json_output.err()
+    );
+}
+
+#[test]
+fn test_prompty_serde_roundtrip_6() {
+    let json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let instance: Prompty =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Prompty::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert!(
+        value.get("inputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("inputs")
+            .and_then(|v| v.get("firstName"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("outputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value.get("outputs").and_then(|v| v.get("answer")).is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("tools").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("tools")
+            .and_then(|v| v.get("getCurrentWeather"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    let reparsed: Prompty = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+    let map_json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let from_map: Prompty = serde_json::from_str(map_json)
+        .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
+    assert_eq!(
+        from_map, instance,
+        "map-form and array-form inputs must load to equal instances"
+    );
+    let map_value =
+        serde_json::to_value(&from_map).expect("serde should serialize the map-loaded instance");
+    assert!(
+        map_value
+            .get("inputs")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
+    );
+    assert!(
+        map_value
+            .get("outputs")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
+    );
+    assert!(
+        map_value
+            .get("tools")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
     );
 }
 
@@ -2112,14 +3454,14 @@ instructions: "system:
 
   As the assistant, you answer questions briefly, succinctly,
 
-  and in a personable manner using markdown and even add some\ 
+  and in a personable manner using markdown and even add some\
 
   personal flair with appropriate emojis.
 
 
   # Customer
 
-  You are helping {{firstName}} {{lastName}} to find answers to\ 
+  You are helping {{firstName}} {{lastName}} to find answers to\
 
   their questions. Use their name to address them in your responses.
 
@@ -2233,5 +3575,213 @@ fn test_prompty_roundtrip_7() {
         json_output.is_ok(),
         "Failed to serialize to JSON: {:?}",
         json_output.err()
+    );
+}
+
+#[test]
+fn test_prompty_serde_roundtrip_7() {
+    let json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let instance: Prompty =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        Prompty::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    assert!(
+        value.get("inputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("inputs")
+            .and_then(|v| v.get("firstName"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("outputs").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value.get("outputs").and_then(|v| v.get("answer")).is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    assert!(
+        value.get("tools").map(|v| v.is_object()).unwrap_or(false),
+        "keyed collection must serialize to canonical name-keyed map, not an array"
+    );
+    assert!(
+        value
+            .get("tools")
+            .and_then(|v| v.get("getCurrentWeather"))
+            .is_some(),
+        "keyed collection map must be keyed by the element name"
+    );
+    let reparsed: Prompty = serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+    let map_json = r####"
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
+        },
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
+      }
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+}
+"####;
+    let from_map: Prompty = serde_json::from_str(map_json)
+        .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
+    assert_eq!(
+        from_map, instance,
+        "map-form and array-form inputs must load to equal instances"
+    );
+    let map_value =
+        serde_json::to_value(&from_map).expect("serde should serialize the map-loaded instance");
+    assert!(
+        map_value
+            .get("inputs")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
+    );
+    assert!(
+        map_value
+            .get("outputs")
+            .map(|v| v.is_object())
+            .unwrap_or(false),
+        "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
     );
 }

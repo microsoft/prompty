@@ -105,7 +105,7 @@ public partial class TurnCommit
 
         if (data.TryGetValue("status", out var statusValue) && statusValue is not null)
         {
-            instance.Status = Enum.Parse<EngineTurnStatus>(statusValue?.ToString()!, true);
+            instance.Status = EngineTurnStatusParser.Parse(statusValue?.ToString()!);
         }
 
         if (data.TryGetValue("output", out var outputValue) && outputValue is not null)
@@ -227,7 +227,7 @@ public partial class TurnCommit
         result["turnId"] = obj.TurnId;
 
 
-        result["status"] = obj.Status.ToString().ToLowerInvariant();
+        result["status"] = EngineTurnStatusParser.ToValue(obj.Status);
 
 
         if (obj.Output is not null)

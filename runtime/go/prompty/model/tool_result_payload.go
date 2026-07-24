@@ -28,7 +28,10 @@ func LoadToolResultPayload(data interface{}, ctx *LoadContext) (ToolResultPayloa
 		}
 		if val, ok := m["result"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadToolResult(m, ctx)
+				loaded, err := LoadToolResult(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Result = loaded
 			}
 		}

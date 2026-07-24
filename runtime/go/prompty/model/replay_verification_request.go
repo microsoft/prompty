@@ -28,7 +28,10 @@ func LoadReplayVerificationRequest(data interface{}, ctx *LoadContext) (ReplayVe
 				result.Expected = make([]ReplayJournalRecord, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadReplayJournalRecord(item, ctx)
+						loaded, err := LoadReplayJournalRecord(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Expected[i] = loaded
 					}
 				}
@@ -39,7 +42,10 @@ func LoadReplayVerificationRequest(data interface{}, ctx *LoadContext) (ReplayVe
 				result.Actual = make([]ReplayJournalRecord, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadReplayJournalRecord(item, ctx)
+						loaded, err := LoadReplayJournalRecord(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Actual[i] = loaded
 					}
 				}

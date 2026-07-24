@@ -37,7 +37,10 @@ func LoadTraceSpan(data interface{}, ctx *LoadContext) (TraceSpan, error) {
 		}
 		if val, ok := m["__time"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTraceTime(m, ctx)
+				loaded, err := LoadTraceTime(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result._Time = loaded
 			}
 		}
@@ -59,7 +62,10 @@ func LoadTraceSpan(data interface{}, ctx *LoadContext) (TraceSpan, error) {
 		}
 		if val, ok := m["__usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTokenUsage(m, ctx)
+				loaded, err := LoadTokenUsage(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result._Usage = &loaded
 			}
 		}

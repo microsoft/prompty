@@ -34,7 +34,10 @@ func LoadModelReconciliationState(data interface{}, ctx *LoadContext) (ModelReco
 		}
 		if val, ok := m["request"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadModelInvocationRequest(m, ctx)
+				loaded, err := LoadModelInvocationRequest(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Request = loaded
 			}
 		}

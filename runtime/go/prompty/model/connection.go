@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -36,22 +37,30 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
-			switch discriminator {
-			case "reference":
-				return LoadReferenceConnection(data, ctx)
-			case "remote":
-				return LoadRemoteConnection(data, ctx)
-			case "key":
-				return LoadApiKeyConnection(data, ctx)
-			case "anonymous":
-				return LoadAnonymousConnection(data, ctx)
-			case "oauth":
-				return LoadOAuthConnection(data, ctx)
-			case "foundry":
-				return LoadFoundryConnection(data, ctx)
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "reference":
+					return LoadReferenceConnection(data, ctx)
+				case "remote":
+					return LoadRemoteConnection(data, ctx)
+				case "key":
+					return LoadApiKeyConnection(data, ctx)
+				case "anonymous":
+					return LoadAnonymousConnection(data, ctx)
+				case "oauth":
+					return LoadOAuthConnection(data, ctx)
+				case "foundry":
+					return LoadFoundryConnection(data, ctx)
+				default:
+					return nil, fmt.Errorf("unknown Connection discriminator value: %s", discriminator)
+				}
+			default:
+				return nil, fmt.Errorf("unknown Connection discriminator value: %v", discriminator)
 			}
 		}
 	}
+	return nil, fmt.Errorf("missing Connection discriminator property: kind")
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {

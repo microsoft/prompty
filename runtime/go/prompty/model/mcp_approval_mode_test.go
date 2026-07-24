@@ -328,4 +328,28 @@ func TestMcpApprovalModeFromKind(t *testing.T) {
 	if instance.Kind != "never" {
 		t.Errorf(`Expected Kind to be "never", got %v`, instance.Kind)
 	}
+
+	jsonBytes, err := json.Marshal("never")
+	if err != nil {
+		t.Fatalf("Failed to encode string JSON: %v", err)
+	}
+	fromJSON, err := prompty.McpApprovalModeFromJSON(string(jsonBytes))
+	if err != nil {
+		t.Fatalf("Failed to load McpApprovalMode from string JSON helper: %v", err)
+	}
+	if fromJSON.Kind != "never" {
+		t.Errorf(`Expected Kind to be "never", got %v`, fromJSON.Kind)
+	}
+
+	yamlBytes, err := yaml.Marshal("never")
+	if err != nil {
+		t.Fatalf("Failed to encode string YAML: %v", err)
+	}
+	fromYAML, err := prompty.McpApprovalModeFromYAML(string(yamlBytes))
+	if err != nil {
+		t.Fatalf("Failed to load McpApprovalMode from string YAML helper: %v", err)
+	}
+	if fromYAML.Kind != "never" {
+		t.Errorf(`Expected Kind to be "never", got %v`, fromYAML.Kind)
+	}
 }

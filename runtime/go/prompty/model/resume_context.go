@@ -30,7 +30,10 @@ func LoadResumeContext(data interface{}, ctx *LoadContext) (ResumeContext, error
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["checkpoint"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadEngineCheckpoint(m, ctx)
+				loaded, err := LoadEngineCheckpoint(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Checkpoint = loaded
 			}
 		}

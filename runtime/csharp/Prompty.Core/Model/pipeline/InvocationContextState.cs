@@ -60,7 +60,7 @@ public partial class InvocationContextState
 
         if (data.TryGetValue("portability", out var portabilityValue) && portabilityValue is not null)
         {
-            instance.Portability = Enum.Parse<InvocationContextPortability>(portabilityValue?.ToString()!, true);
+            instance.Portability = InvocationContextPortabilityParser.Parse(portabilityValue?.ToString()!);
         }
 
         if (data.TryGetValue("delegatedState", out var delegatedStateValue) && delegatedStateValue is not null)
@@ -151,7 +151,7 @@ public partial class InvocationContextState
         var result = new Dictionary<string, object?>();
 
 
-        result["portability"] = obj.Portability.ToString().ToLowerInvariant();
+        result["portability"] = InvocationContextPortabilityParser.ToValue(obj.Portability);
 
 
         if (obj.DelegatedState is not null)
