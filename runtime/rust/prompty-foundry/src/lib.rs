@@ -15,10 +15,12 @@
 
 pub mod executor;
 pub mod models;
+pub mod oauth;
 pub mod processor;
 
 pub use executor::FoundryExecutor;
 pub use models::{list_models, list_models_async};
+pub use oauth::{AuthCodeFlowInit, DeviceCodeResponse, TokenResponse};
 pub use processor::FoundryProcessor;
 
 /// Register the Foundry executor and processor in the global registry.
