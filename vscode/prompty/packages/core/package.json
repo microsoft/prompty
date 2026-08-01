@@ -24,7 +24,7 @@
 		"glob": "^11.1.0",
 		"js-yaml": "^4.1.1",
 		"openai": "^4.80.0",
-		"vscode-languageclient": "^9.0.1"
+		"vscode-languageclient": "^10.1.0"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.98.0",
