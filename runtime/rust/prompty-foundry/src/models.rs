@@ -80,7 +80,7 @@ async fn list_foundry_deployments(connection: &Value) -> Result<Vec<ModelInfo>, 
                     .into(),
             )
         })?;
-    let token = get_ai_token().await?;
+    let token = resolve_foundry_token(connection).await?;
     let url = format!(
         "{}/deployments?api-version=v1",
         endpoint.trim_end_matches('/')
@@ -280,6 +280,28 @@ fn get_string_vec(obj: &Value, keys: &[&str]) -> Option<Vec<String>> {
     })
 }
 
+/// Resolve the bearer token used for Foundry project deployment listing.
+///
+/// Prefers a caller-supplied token on the connection (`apiKey`/`api_key`/
+/// `bearerToken`/`bearer_token`) so hosts that already hold an interactive
+/// Entra token (e.g. browser OAuth/PKCE) can list deployments without the
+/// ambient `DefaultAzureCredential`. Falls back to [`get_ai_token`] when no
+/// caller token is present.
+async fn resolve_foundry_token(connection: &Value) -> Result<String, InvokerError> {
+    let caller_token = connection
+        .get("apiKey")
+        .or_else(|| connection.get("api_key"))
+        .or_else(|| connection.get("bearerToken"))
+        .or_else(|| connection.get("bearer_token"))
+        .and_then(|v| v.as_str())
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+    match caller_token {
+        Some(token) => Ok(token.to_string()),
+        None => get_ai_token().await,
+    }
+}
+
 #[cfg(feature = "entra_id")]
 async fn get_ai_token() -> Result<String, InvokerError> {
     use azure_core::credentials::TokenCredential;
@@ -346,5 +368,27 @@ mod tests {
             Some(vec!["text".to_string(), "json".to_string()])
         );
         assert_eq!(info.additional_properties["name"], "chat-prod");
+    }
+
+    #[tokio::test]
+    async fn resolve_foundry_token_prefers_caller_supplied_token() {
+        let token = resolve_foundry_token(&json!({ "apiKey": "caller-bearer" }))
+            .await
+            .expect("caller token should resolve without ambient credentials");
+        assert_eq!(token, "caller-bearer");
+
+        let token = resolve_foundry_token(&json!({ "api_key": "  snake-bearer  " }))
+            .await
+            .expect("snake_case api_key should resolve and trim");
+        assert_eq!(token, "snake-bearer");
+    }
+
+    #[cfg(not(feature = "entra_id"))]
+    #[tokio::test]
+    async fn resolve_foundry_token_falls_back_when_no_caller_token() {
+        let error = resolve_foundry_token(&json!({ "apiKey": "   " }))
+            .await
+            .expect_err("blank caller token should fall through to ambient credentials");
+        assert!(error.to_string().contains("Entra ID"));
     }
 }
