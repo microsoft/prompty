@@ -112,6 +112,28 @@ func (obj ModelInfo) Save(ctx *SaveContext) map[string]interface{} {
 	return result
 }
 
+// ToWire converts to provider-specific wire format.
+func (obj *ModelInfo) ToWire(provider string) map[string]interface{} {
+	data := obj.Save(nil)
+	result := make(map[string]interface{})
+	wireMap := map[string]map[string]string{
+		"id":               {"openai": "id", "anthropic": "id"},
+		"displayName":      {"anthropic": "display_name"},
+		"ownedBy":          {"openai": "owned_by"},
+		"contextWindow":    {"anthropic": "context_length"},
+		"inputModalities":  {"anthropic": "input_modalities"},
+		"outputModalities": {"anthropic": "output_modalities"},
+	}
+	for key, value := range data {
+		if mapping, ok := wireMap[key]; ok {
+			if wireName, ok := mapping[provider]; ok {
+				result[wireName] = value
+			}
+		}
+	}
+	return result
+}
+
 // ToJSON serializes ModelInfo to JSON string
 func (obj *ModelInfo) ToJSON() (string, error) {
 	ctx := NewSaveContext()

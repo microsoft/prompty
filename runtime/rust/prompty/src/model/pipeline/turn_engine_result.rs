@@ -17,7 +17,7 @@ use super::model_tool_result::ModelToolResult;
 
 use super::turn_commit::TurnCommit;
 
-/// The result returned by the turn engine.
+/// The result returned by the live turn engine.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct TurnEngineResult {
     /// The committed turn outcome

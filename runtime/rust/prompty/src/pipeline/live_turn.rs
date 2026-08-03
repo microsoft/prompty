@@ -286,7 +286,8 @@ impl HostPolicyPort for LivePolicy {
         _cancellation: &CancellationToken,
     ) -> Result<HostPolicyResult, HostPolicyError> {
         let mut messages = request.messages;
-        let mut stable_prefix_messages = request.stable_prefix_messages.min(messages.len());
+        let mut stable_prefix_messages = request.stable_prefix_messages.max(0) as usize;
+        stable_prefix_messages = stable_prefix_messages.min(messages.len());
         let mut prepared_now = false;
         if !self.prepared.load(Ordering::Acquire) {
             messages = match super::prepare(&self.agent, Some(&self.inputs)).await {
@@ -339,7 +340,7 @@ impl HostPolicyPort for LivePolicy {
 
         Ok(HostPolicyResult {
             messages,
-            stable_prefix_messages,
+            stable_prefix_messages: stable_prefix_messages as i32,
             metadata: json!({
                 "prepared": prepared_now,
                 "steeringCount": steering_count,
@@ -415,13 +416,13 @@ impl RetryPolicyPort for LiveRetryPolicy {
         )));
         self.events.emit(AgentEvent::Retry {
             operation: "llm".to_string(),
-            attempt: request.next_attempt,
-            max_attempts: request.max_attempts,
+            attempt: request.next_attempt.max(0) as usize,
+            max_attempts: request.max_attempts.max(0) as usize,
             reason: request.reason.clone(),
         });
 
         let jitter: f64 = rand::rng().random();
-        let seconds = (2.0_f64.powi(request.failed_attempts as i32) + jitter).min(60.0);
+        let seconds = (2.0_f64.powi(request.failed_attempts) + jitter).min(60.0);
         let delay = Duration::from_secs_f64(seconds);
         let started = Instant::now();
         while started.elapsed() < delay {

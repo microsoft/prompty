@@ -16,7 +16,7 @@ from ._TurnCommit import TurnCommit
 
 @dataclass
 class TurnEngineResult:
-    """The result returned by the turn engine.
+    """The result returned by the live turn engine.
 
     Attributes
     ----------

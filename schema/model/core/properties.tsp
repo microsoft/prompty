@@ -114,12 +114,12 @@ model UnionProperty extends Property {
 
   @doc("Alternative property schemas where exactly one branch must match")
   @minItems(1)
-  oneOf?: Property[] = #[];
+  oneOf?: Property[];
 
   @doc("Alternative property schemas where one or more branches may match")
   @sample(#{ anyOf: #[#{ kind: "string" }, #{ kind: "boolean" }] })
   @minItems(1)
-  anyOf?: Property[] = #[];
+  anyOf?: Property[];
 }
 
 alias Properties = Record<Property> | Named<

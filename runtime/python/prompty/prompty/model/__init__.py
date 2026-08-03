@@ -12,9 +12,12 @@ from .agent import (
 from .connection import (
     AnonymousConnection,
     ApiKeyConnection,
+    AuthorizationCodeFlow,
     Connection,
+    DeviceAuthorization,
     FoundryConnection,
     OAuthConnection,
+    OAuthToken,
     ReferenceConnection,
     RemoteConnection,
 )
@@ -97,11 +100,14 @@ from .memory import (
     MemoryStore,
 )
 from .model import (
+    AiResourceInfo,
     InvocationUsage,
     Model,
     ModelInfo,
     ModelLister,
     ModelOptions,
+    ProjectInfo,
+    SubscriptionInfo,
     TokenUsage,
 )
 from .pipeline import (
@@ -177,16 +183,12 @@ from .wire import (
     AnthropicImageSource,
     AnthropicMessagesRequest,
     AnthropicMessagesResponse,
-    AnthropicModelInfo,
-    AnthropicModelsResponse,
     AnthropicTextBlock,
     AnthropicToolDefinition,
     AnthropicToolResultBlock,
     AnthropicToolUseBlock,
     AnthropicUsage,
     AnthropicWireMessage,
-    OpenAIModelInfo,
-    OpenAIModelsResponse,
 )
 
 __all__ = [
@@ -239,6 +241,9 @@ __all__ = [
     "InvocationUsage",
     "ModelLister",
     "ModelInfo",
+    "SubscriptionInfo",
+    "AiResourceInfo",
+    "ProjectInfo",
     "MemoryEntry",
     "MemoryStore",
     "DelegatedStateReference",
@@ -335,10 +340,9 @@ __all__ = [
     "TraceTime",
     "TraceSpan",
     "TraceFile",
-    "OpenAIModelInfo",
-    "OpenAIModelsResponse",
-    "AnthropicModelInfo",
-    "AnthropicModelsResponse",
+    "OAuthToken",
+    "DeviceAuthorization",
+    "AuthorizationCodeFlow",
     "AnthropicTextBlock",
     "AnthropicImageSource",
     "AnthropicImageBlock",

@@ -2363,17 +2363,18 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
             .iter()
             .any(|message| message.text_content() == "persisted steering")
     );
-    let checkpoints = checkpoints.0.lock().unwrap();
-    assert!(checkpoints[0].resume_same_iteration);
-    assert!(checkpoints[0].policy_applied_for_iteration);
-    assert!(
-        checkpoints[0]
-            .messages
-            .iter()
-            .any(|message| message.text_content() == "persisted steering")
-    );
-    let policy_checkpoint = checkpoints[0].clone();
-    drop(checkpoints);
+    let policy_checkpoint = {
+        let checkpoints = checkpoints.0.lock().unwrap();
+        assert!(checkpoints[0].resume_same_iteration);
+        assert!(checkpoints[0].policy_applied_for_iteration);
+        assert!(
+            checkpoints[0]
+                .messages
+                .iter()
+                .any(|message| message.text_content() == "persisted steering")
+        );
+        checkpoints[0].clone()
+    };
     let event_kinds = events
         .0
         .lock()
@@ -2904,29 +2905,30 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
                 .iter()
                 .position(|kind| *kind == EngineEventKind::Conversation_updated)
     );
-    let checkpoints = checkpoints.0.lock().unwrap();
-    assert!(
+    let durable_tool_checkpoint = {
+        let checkpoints = checkpoints.0.lock().unwrap();
+        assert!(
+            checkpoints
+                .iter()
+                .any(|checkpoint| checkpoint.pending_model_response.is_some())
+        );
+        assert!(checkpoints.iter().any(|checkpoint| {
+            checkpoint.pending_model_response.is_none()
+                && checkpoint
+                    .messages
+                    .iter()
+                    .any(|message| message.text_content() == "batched:A,B")
+        }));
         checkpoints
             .iter()
-            .any(|checkpoint| checkpoint.pending_model_response.is_some())
-    );
-    assert!(checkpoints.iter().any(|checkpoint| {
-        checkpoint.pending_model_response.is_none()
-            && checkpoint
-                .messages
-                .iter()
-                .any(|message| message.text_content() == "batched:A,B")
-    }));
-    let durable_tool_checkpoint = checkpoints
-        .iter()
-        .find(|checkpoint| {
-            checkpoint.pending_tool_requests.is_empty()
-                && checkpoint.pending_model_response.is_some()
-                && checkpoint.completed_tool_results.len() == 2
-        })
-        .unwrap()
-        .clone();
-    drop(checkpoints);
+            .find(|checkpoint| {
+                checkpoint.pending_tool_requests.is_empty()
+                    && checkpoint.pending_model_response.is_some()
+                    && checkpoint.completed_tool_results.len() == 2
+            })
+            .unwrap()
+            .clone()
+    };
 
     let resumed_model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {

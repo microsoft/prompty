@@ -151,6 +151,49 @@ impl ModelInfo {
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
     }
+
+    /// Convert to provider-specific wire format.
+    pub fn to_wire(&self, provider: &str) -> serde_json::Value {
+        let data = serde_json::to_value(self).unwrap_or_default();
+        let mut result = serde_json::Map::new();
+        let wire_map: std::collections::HashMap<&str, std::collections::HashMap<&str, &str>> =
+            std::collections::HashMap::from([
+                (
+                    "id",
+                    std::collections::HashMap::from([("openai", "id"), ("anthropic", "id")]),
+                ),
+                (
+                    "displayName",
+                    std::collections::HashMap::from([("anthropic", "display_name")]),
+                ),
+                (
+                    "ownedBy",
+                    std::collections::HashMap::from([("openai", "owned_by")]),
+                ),
+                (
+                    "contextWindow",
+                    std::collections::HashMap::from([("anthropic", "context_length")]),
+                ),
+                (
+                    "inputModalities",
+                    std::collections::HashMap::from([("anthropic", "input_modalities")]),
+                ),
+                (
+                    "outputModalities",
+                    std::collections::HashMap::from([("anthropic", "output_modalities")]),
+                ),
+            ]);
+        if let serde_json::Value::Object(map) = data {
+            for (key, value) in map {
+                if let Some(mapping) = wire_map.get(key.as_str()) {
+                    if let Some(wire_name) = mapping.get(provider) {
+                        result.insert(wire_name.to_string(), value);
+                    }
+                }
+            }
+        }
+        serde_json::Value::Object(result)
+    }
     /// Returns typed reference to the map if the field is an object.
     /// Returns `None` if the field is null or not an object.
     pub fn as_additional_properties_dict(

@@ -584,10 +584,10 @@ impl TurnEngine {
                 let policy_request = HostPolicyRequest {
                     session_id: state.session_id.clone(),
                     turn_id: state.turn_id.clone(),
-                    iteration: state.iteration,
+                    iteration: state.iteration as i32,
                     messages: state.messages.clone(),
-                    stable_prefix_messages: state.stable_prefix_messages,
-                    inputs: state.inputs.clone(),
+                    stable_prefix_messages: state.stable_prefix_messages as i32,
+                    inputs: Some(state.inputs.clone()),
                 };
                 let policy_result = match self
                     .effects
@@ -605,7 +605,9 @@ impl TurnEngine {
                 if cancellation.is_cancelled() {
                     return self.commit_cancelled(state, &cancellation).await;
                 }
-                if policy_result.stable_prefix_messages > policy_result.messages.len() {
+                if policy_result.stable_prefix_messages < 0
+                    || policy_result.stable_prefix_messages as usize > policy_result.messages.len()
+                {
                     return self
                         .commit_failed(
                             state,
@@ -616,10 +618,11 @@ impl TurnEngine {
                         .await;
                 }
                 let policy_changed = state.messages != policy_result.messages
-                    || state.stable_prefix_messages != policy_result.stable_prefix_messages;
+                    || state.stable_prefix_messages
+                        != policy_result.stable_prefix_messages as usize;
                 if policy_changed {
                     state.messages = policy_result.messages;
-                    state.stable_prefix_messages = policy_result.stable_prefix_messages;
+                    state.stable_prefix_messages = policy_result.stable_prefix_messages as usize;
                     self.persist_policy_update(&mut state, &invocation_id, policy_result.metadata)
                         .await?;
                     state.policy_applied_for_iteration = false;
@@ -742,9 +745,9 @@ impl TurnEngine {
                             .retry
                             .backoff(
                                 &RetryPolicyRequest {
-                                    failed_attempts: attempt,
-                                    next_attempt: attempt + 1,
-                                    max_attempts: state.max_model_attempts,
+                                    failed_attempts: attempt as i32,
+                                    next_attempt: (attempt + 1) as i32,
+                                    max_attempts: state.max_model_attempts as i32,
                                     reason,
                                 },
                                 &cancellation,
@@ -1366,10 +1369,10 @@ impl TurnEngine {
         let request = FinalOutputPolicyRequest {
             session_id: state.session_id.clone(),
             turn_id: state.turn_id.clone(),
-            iteration: state.iteration,
+            iteration: state.iteration as i32,
             messages: state.messages.clone(),
             output: state.output.clone(),
-            inputs: state.inputs.clone(),
+            inputs: Some(state.inputs.clone()),
         };
         let result = match self
             .effects

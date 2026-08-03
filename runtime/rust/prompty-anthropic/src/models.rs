@@ -1,14 +1,12 @@
 //! Model discovery for Anthropic.
 //!
-//! Loads each `GET /v1/models` page through Typra-generated wire models,
-//! then converts each entry to the provider-neutral [`ModelInfo`] shape.
+//! Maps each provider page into the Typra-generated, provider-neutral
+//! [`ModelInfo`] contract.
 
 use std::sync::LazyLock;
 
 use prompty::interfaces::InvokerError;
-use prompty::model::{
-    AnthropicModelInfo, AnthropicModelsResponse, LoadContext, ModelInfo, ModelLister, SaveContext,
-};
+use prompty::model::{ModelInfo, ModelLister};
 use serde_json::Value;
 
 /// Shared HTTP client for model discovery requests.
@@ -70,19 +68,54 @@ fn validate_connection_kind(connection: &Value) -> Result<(), InvokerError> {
     ))
 }
 
-/// Convert one typed Anthropic model into a provider-neutral `ModelInfo`.
-fn to_model_info(model: AnthropicModelInfo) -> ModelInfo {
-    let additional_properties = model.to_value(&SaveContext::default());
-
-    ModelInfo {
-        id: model.id,
-        display_name: model.display_name,
+/// Convert one Anthropic model payload into the generated provider-neutral contract.
+///
+/// Anthropic supplies capability fields directly, so enrichment from the shared
+/// `spec/data/model_capabilities.json` dataset is applied only as a
+/// fill-only-missing fallback (provider-supplied fields always win).
+fn to_model_info(model: &Value) -> ModelInfo {
+    let mut info = ModelInfo {
+        id: model
+            .get("id")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_string(),
+        display_name: model
+            .get("display_name")
+            .and_then(Value::as_str)
+            .map(ToString::to_string),
         owned_by: Some("anthropic".to_string()),
-        context_window: model.context_length,
-        input_modalities: model.input_modalities,
-        output_modalities: model.output_modalities,
-        additional_properties,
-    }
+        context_window: model
+            .get("context_length")
+            .and_then(Value::as_i64)
+            .map(|value| value as i32),
+        input_modalities: string_array(model, "input_modalities"),
+        output_modalities: string_array(model, "output_modalities"),
+        additional_properties: model.clone(),
+    };
+
+    prompty::discovery::enrich("anthropic", &mut info);
+    info
+}
+
+fn string_array(model: &Value, field: &str) -> Option<Vec<String>> {
+    model.get(field).and_then(Value::as_array).map(|values| {
+        values
+            .iter()
+            .filter_map(Value::as_str)
+            .map(ToString::to_string)
+            .collect()
+    })
+}
+
+/// Map one raw Anthropic `/v1/models` entry into the provider-neutral
+/// [`ModelInfo`] contract.
+///
+/// This is the single source of truth for the Anthropic wire → `ModelInfo`
+/// mapping and is exercised by the shared `spec/vectors/discovery` vectors so
+/// every runtime converges on the same canonical shape.
+pub fn model_info_from_wire(raw: &Value) -> ModelInfo {
+    to_model_info(raw)
 }
 
 /// List models available from the Anthropic API (async).
@@ -133,14 +166,26 @@ pub async fn list_models_async(connection: &Value) -> Result<Vec<ModelInfo>, Inv
             .await
             .map_err(|e| InvokerError::Execute(format!("Failed to parse response: {e}").into()))?;
 
-        let response = AnthropicModelsResponse::load_from_value(&body, &LoadContext::default());
-        all_models.extend(response.data.into_iter().map(to_model_info));
+        all_models.extend(
+            body.get("data")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .map(to_model_info),
+        );
 
-        if !response.has_more.unwrap_or(false) {
+        if !body
+            .get("has_more")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
             break;
         }
 
-        after_id = response.last_id;
+        after_id = body
+            .get("last_id")
+            .and_then(Value::as_str)
+            .map(ToString::to_string);
         if after_id.is_none() {
             break;
         }
@@ -292,8 +337,7 @@ mod tests {
             "output_modalities": ["text"],
             "type": "model"
         });
-        let model = AnthropicModelInfo::load_from_value(&obj, &LoadContext::default());
-        let info = to_model_info(model);
+        let info = to_model_info(&obj);
         assert_eq!(info.id, "claude-sonnet-4-20250514");
         assert_eq!(info.display_name.as_deref(), Some("Claude Sonnet 4"));
         assert_eq!(info.owned_by.as_deref(), Some("anthropic"));
@@ -307,6 +351,7 @@ mod tests {
             Some(vec!["text".to_string()].as_slice())
         );
         assert_eq!(info.additional_properties["type"], "model");
+        assert_eq!(info.to_wire("anthropic")["display_name"], "Claude Sonnet 4");
     }
 
     #[test]
@@ -315,8 +360,7 @@ mod tests {
             "id": "claude-3-haiku-20240307",
             "type": "model"
         });
-        let model = AnthropicModelInfo::load_from_value(&obj, &LoadContext::default());
-        let info = to_model_info(model);
+        let info = to_model_info(&obj);
         assert_eq!(info.id, "claude-3-haiku-20240307");
         assert_eq!(info.owned_by.as_deref(), Some("anthropic"));
         assert!(info.context_window.is_none());
@@ -326,8 +370,7 @@ mod tests {
     #[test]
     fn test_parse_model_empty() {
         let obj = serde_json::json!({});
-        let model = AnthropicModelInfo::load_from_value(&obj, &LoadContext::default());
-        let info = to_model_info(model);
+        let info = to_model_info(&obj);
         assert_eq!(info.id, "");
         assert!(info.display_name.is_none());
     }

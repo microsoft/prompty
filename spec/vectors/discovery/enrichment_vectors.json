@@ -1,0 +1,120 @@
+{
+  "description": "Cross-runtime enrichment vectors for the shared model-capability dataset (spec/data/model_capabilities.json). Each vector applies the fill-only-missing rule to a base ModelInfo: given a 'provider' and a partial ModelInfo 'input' (canonical camelCase field names), enriching MUST produce 'expected'. The rule is: dataset fields fill ONLY where the input left them empty; provider-supplied fields always win (including a provider-supplied empty array, which wins over a non-empty dataset value); matching is by longest prefix on the model id, applied only at token boundaries (the char after the prefix must be end-of-id or a non-alphanumeric separator, so 'gpt-4' must NOT match 'gpt-45'). Runtimes load their base ModelInfo from 'input', run their enrich() primitive, and MUST equal 'expected'. This validates the enrichment algorithm independently of any provider's wire mapping.",
+  "vectors": [
+    {
+      "name": "openai_enrich_gpt4o",
+      "provider": "openai",
+      "input": {
+        "id": "gpt-4o"
+      },
+      "expected": {
+        "id": "gpt-4o",
+        "contextWindow": 128000,
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["text"]
+      }
+    },
+    {
+      "name": "openai_enrich_gpt4o_mini_longest_prefix",
+      "provider": "openai",
+      "input": {
+        "id": "gpt-4o-mini-2024-07-18"
+      },
+      "expected": {
+        "id": "gpt-4o-mini-2024-07-18",
+        "contextWindow": 128000,
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["text"]
+      }
+    },
+    {
+      "name": "openai_enrich_embedding_empty_output_modalities",
+      "provider": "openai",
+      "input": {
+        "id": "text-embedding-3-small"
+      },
+      "expected": {
+        "id": "text-embedding-3-small",
+        "contextWindow": 8191,
+        "inputModalities": ["text"],
+        "outputModalities": []
+      }
+    },
+    {
+      "name": "openai_enrich_dalle3_no_context_window",
+      "provider": "openai",
+      "input": {
+        "id": "dall-e-3"
+      },
+      "expected": {
+        "id": "dall-e-3",
+        "inputModalities": ["text"],
+        "outputModalities": ["image"]
+      }
+    },
+    {
+      "name": "openai_enrich_provider_context_window_wins",
+      "provider": "openai",
+      "input": {
+        "id": "gpt-4o",
+        "contextWindow": 999
+      },
+      "expected": {
+        "id": "gpt-4o",
+        "contextWindow": 999,
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["text"]
+      }
+    },
+    {
+      "name": "openai_enrich_unknown_id_is_noop",
+      "provider": "openai",
+      "input": {
+        "id": "ft:custom-model:acme::xyz"
+      },
+      "expected": {
+        "id": "ft:custom-model:acme::xyz"
+      }
+    },
+    {
+      "name": "openai_enrich_provider_empty_modalities_win",
+      "provider": "openai",
+      "input": {
+        "id": "gpt-4o",
+        "inputModalities": []
+      },
+      "expected": {
+        "id": "gpt-4o",
+        "contextWindow": 128000,
+        "inputModalities": [],
+        "outputModalities": ["text"]
+      }
+    },
+    {
+      "name": "openai_enrich_prefix_requires_token_boundary",
+      "provider": "openai",
+      "input": {
+        "id": "gpt-45-future"
+      },
+      "expected": {
+        "id": "gpt-45-future"
+      }
+    },
+    {
+      "name": "anthropic_enrich_no_dataset_entry_is_noop",
+      "provider": "anthropic",
+      "input": {
+        "id": "claude-sonnet-4-20250514",
+        "contextWindow": 200000,
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["text"]
+      },
+      "expected": {
+        "id": "claude-sonnet-4-20250514",
+        "contextWindow": 200000,
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["text"]
+      }
+    }
+  ]
+}

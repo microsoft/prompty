@@ -22,4 +22,4 @@ properties:
     description: A non-fatal post-commit failure; the turn itself remains committed
 required:
   - commit
-description: The result returned by the turn engine.
+description: The result returned by the live turn engine.

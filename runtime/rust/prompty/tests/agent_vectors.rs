@@ -647,15 +647,18 @@ async fn test_events_error_logged() {
     // The Rust runtime propagates tool errors — this differs from the spec
     // which expects error strings to be fed back to the LLM. We accept
     // either behavior: an error result, or the continued loop result.
-    if result.is_err() {
-        let err_str = result.unwrap_err().to_string();
-        assert!(
-            err_str.contains("Weather service unavailable") || err_str.contains("get_weather"),
-            "error should mention weather service: {err_str}"
-        );
-    } else {
-        // If the runtime feeds errors back to the LLM (spec behavior)
-        assert!(result.unwrap().as_str().is_some());
+    match result {
+        Err(err) => {
+            let err_str = err.to_string();
+            assert!(
+                err_str.contains("Weather service unavailable") || err_str.contains("get_weather"),
+                "error should mention weather service: {err_str}"
+            );
+        }
+        Ok(value) => {
+            // If the runtime feeds errors back to the LLM (spec behavior)
+            assert!(value.as_str().is_some());
+        }
     }
 
     assert!(

@@ -1353,7 +1353,7 @@ mod tests {
         let nonce = "__PROMPTY_THREAD_abcd1234_conversation__";
         let msgs = vec![
             Message::with_text(Role::System, "You are helpful."),
-            Message::with_text(Role::User, &format!("Before\n{nonce}\nAfter")),
+            Message::with_text(Role::User, format!("Before\n{nonce}\nAfter")),
         ];
         let mut nonces = HashMap::new();
         nonces.insert("conversation".to_string(), nonce.to_string());
@@ -1783,16 +1783,16 @@ mod tests {
                 output: (call != 0).then(|| json!("resumed")),
                 usage: None,
                 assistant_messages: Vec::new(),
-                tool_requests: (call == 0)
-                    .then(|| {
-                        vec![ModelToolRequest {
-                            id: "context-tool".to_string(),
-                            name: "acknowledge".to_string(),
-                            arguments: Some(json!({})),
-                            metadata: Value::Null,
-                        }]
-                    })
-                    .unwrap_or_default(),
+                tool_requests: if call == 0 {
+                    vec![ModelToolRequest {
+                        id: "context-tool".to_string(),
+                        name: "acknowledge".to_string(),
+                        arguments: Some(json!({})),
+                        metadata: Value::Null,
+                    }]
+                } else {
+                    Vec::new()
+                },
                 next_context_state,
                 metadata: Value::Null,
             })

@@ -34,13 +34,12 @@
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "namespace": "Prompty.Core",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
-        "AnthropicModelInfo",
-        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -50,6 +49,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -63,6 +63,7 @@
         "ContextRequest",
         "CustomTool",
         "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -112,9 +113,8 @@
         "ModelToolRequest",
         "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
-        "OpenAIModelInfo",
-        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -124,6 +124,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -152,6 +153,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -220,10 +222,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection/AuthorizationCodeFlow.cs",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "connection/Connection.cs",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection/DeviceAuthorization.cs",
           "protocol": false
         },
         {
@@ -238,6 +254,13 @@
           "kind": "value",
           "group": "connection",
           "source": "connection/Connection.cs",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection/OAuthToken.cs",
           "protocol": false
         },
         {
@@ -731,6 +754,13 @@
           "protocol": false
         },
         {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model/AiResourceInfo.cs",
+          "protocol": false
+        },
+        {
           "name": "InvocationUsage",
           "kind": "value",
           "group": "model",
@@ -763,6 +793,20 @@
           "kind": "value",
           "group": "model",
           "source": "model/ModelOptions.cs",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model/ProjectInfo.cs",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model/SubscriptionInfo.cs",
           "protocol": false
         },
         {
@@ -1207,20 +1251,6 @@
           "protocol": false
         },
         {
-          "name": "AnthropicModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "wire/AnthropicModelInfo.cs",
-          "protocol": false
-        },
-        {
-          "name": "AnthropicModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "wire/AnthropicModelsResponse.cs",
-          "protocol": false
-        },
-        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -1261,20 +1291,6 @@
           "group": "wire",
           "source": "wire/AnthropicWireMessage.cs",
           "protocol": false
-        },
-        {
-          "name": "OpenAIModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "wire/OpenAIModelInfo.cs",
-          "protocol": false
-        },
-        {
-          "name": "OpenAIModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "wire/OpenAIModelsResponse.cs",
-          "protocol": false
         }
       ],
       "groups": [
@@ -1294,14 +1310,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "Connection.cs"
+            "AuthorizationCodeFlow.cs",
+            "Connection.cs",
+            "DeviceAuthorization.cs",
+            "OAuthToken.cs"
           ]
         },
         {
@@ -1459,19 +1481,25 @@
         {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
             "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "AiResourceInfo.cs",
             "InvocationUsage.cs",
             "Model.cs",
             "ModelInfo.cs",
             "ModelLister.cs",
             "ModelOptions.cs",
+            "ProjectInfo.cs",
+            "SubscriptionInfo.cs",
             "TokenUsage.cs"
           ]
         },
@@ -1628,32 +1656,24 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
-            "AnthropicModelInfo",
-            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage",
-            "OpenAIModelInfo",
-            "OpenAIModelsResponse"
+            "AnthropicWireMessage"
           ],
           "modules": [
             "AnthropicImageBlock.cs",
             "AnthropicImageSource.cs",
             "AnthropicMessagesRequest.cs",
             "AnthropicMessagesResponse.cs",
-            "AnthropicModelInfo.cs",
-            "AnthropicModelsResponse.cs",
             "AnthropicTextBlock.cs",
             "AnthropicToolDefinition.cs",
             "AnthropicToolResultBlock.cs",
             "AnthropicToolUseBlock.cs",
             "AnthropicUsage.cs",
-            "AnthropicWireMessage.cs",
-            "OpenAIModelInfo.cs",
-            "OpenAIModelsResponse.cs"
+            "AnthropicWireMessage.cs"
           ]
         }
       ],
@@ -1924,7 +1944,10 @@
       "modules": [
         "agent/GuardrailResult.cs",
         "agent/Prompty.cs",
+        "connection/AuthorizationCodeFlow.cs",
         "connection/Connection.cs",
+        "connection/DeviceAuthorization.cs",
+        "connection/OAuthToken.cs",
         "conversation/ContentPart.cs",
         "conversation/Message.cs",
         "conversation/ThreadMarker.cs",
@@ -1981,11 +2004,14 @@
         "events/TurnTrace.cs",
         "memory/MemoryEntry.cs",
         "memory/MemoryStore.cs",
+        "model/AiResourceInfo.cs",
         "model/InvocationUsage.cs",
         "model/Model.cs",
         "model/ModelInfo.cs",
         "model/ModelLister.cs",
         "model/ModelOptions.cs",
+        "model/ProjectInfo.cs",
+        "model/SubscriptionInfo.cs",
         "model/TokenUsage.cs",
         "pipeline/CheckpointStore.cs",
         "pipeline/CompactionConfig.cs",
@@ -2044,16 +2070,12 @@
         "wire/AnthropicImageSource.cs",
         "wire/AnthropicMessagesRequest.cs",
         "wire/AnthropicMessagesResponse.cs",
-        "wire/AnthropicModelInfo.cs",
-        "wire/AnthropicModelsResponse.cs",
         "wire/AnthropicTextBlock.cs",
         "wire/AnthropicToolDefinition.cs",
         "wire/AnthropicToolResultBlock.cs",
         "wire/AnthropicToolUseBlock.cs",
         "wire/AnthropicUsage.cs",
-        "wire/AnthropicWireMessage.cs",
-        "wire/OpenAIModelInfo.cs",
-        "wire/OpenAIModelsResponse.cs"
+        "wire/AnthropicWireMessage.cs"
       ]
     },
     {
@@ -2061,13 +2083,12 @@
       "outputRoot": "../runtime/go/prompty/model",
       "packageName": "prompty",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
-        "AnthropicModelInfo",
-        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -2077,6 +2098,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -2090,6 +2112,7 @@
         "ContextRequest",
         "CustomTool",
         "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -2139,9 +2162,8 @@
         "ModelToolRequest",
         "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
-        "OpenAIModelInfo",
-        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -2151,6 +2173,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -2179,6 +2202,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -2247,10 +2271,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "authorization_code_flow.go",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "connection.go",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "device_authorization.go",
           "protocol": false
         },
         {
@@ -2265,6 +2303,13 @@
           "kind": "value",
           "group": "connection",
           "source": "connection.go",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "o_auth_token.go",
           "protocol": false
         },
         {
@@ -2758,6 +2803,13 @@
           "protocol": false
         },
         {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "ai_resource_info.go",
+          "protocol": false
+        },
+        {
           "name": "InvocationUsage",
           "kind": "value",
           "group": "model",
@@ -2790,6 +2842,20 @@
           "kind": "value",
           "group": "model",
           "source": "model_options.go",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "project_info.go",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "subscription_info.go",
           "protocol": false
         },
         {
@@ -3234,20 +3300,6 @@
           "protocol": false
         },
         {
-          "name": "AnthropicModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "anthropic_model_info.go",
-          "protocol": false
-        },
-        {
-          "name": "AnthropicModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "anthropic_models_response.go",
-          "protocol": false
-        },
-        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -3288,20 +3340,6 @@
           "group": "wire",
           "source": "anthropic_wire_message.go",
           "protocol": false
-        },
-        {
-          "name": "OpenAIModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "open_ai_model_info.go",
-          "protocol": false
-        },
-        {
-          "name": "OpenAIModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "open_ai_models_response.go",
-          "protocol": false
         }
       ],
       "groups": [
@@ -3321,14 +3359,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "connection"
+            "authorization_code_flow",
+            "connection",
+            "device_authorization",
+            "o_auth_token"
           ]
         },
         {
@@ -3486,19 +3530,25 @@
         {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
             "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "ai_resource_info",
             "invocation_usage",
             "model",
             "model_info",
             "model_lister",
             "model_options",
+            "project_info",
+            "subscription_info",
             "token_usage"
           ]
         },
@@ -3655,32 +3705,24 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
-            "AnthropicModelInfo",
-            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage",
-            "OpenAIModelInfo",
-            "OpenAIModelsResponse"
+            "AnthropicWireMessage"
           ],
           "modules": [
             "anthropic_image_block",
             "anthropic_image_source",
             "anthropic_messages_request",
             "anthropic_messages_response",
-            "anthropic_model_info",
-            "anthropic_models_response",
             "anthropic_text_block",
             "anthropic_tool_definition",
             "anthropic_tool_result_block",
             "anthropic_tool_use_block",
             "anthropic_usage",
-            "anthropic_wire_message",
-            "open_ai_model_info",
-            "open_ai_models_response"
+            "anthropic_wire_message"
           ]
         }
       ],
@@ -3949,18 +3991,18 @@
         }
       ],
       "modules": [
+        "ai_resource_info.go",
         "anthropic_image_block.go",
         "anthropic_image_source.go",
         "anthropic_messages_request.go",
         "anthropic_messages_response.go",
-        "anthropic_model_info.go",
-        "anthropic_models_response.go",
         "anthropic_text_block.go",
         "anthropic_tool_definition.go",
         "anthropic_tool_result_block.go",
         "anthropic_tool_use_block.go",
         "anthropic_usage.go",
         "anthropic_wire_message.go",
+        "authorization_code_flow.go",
         "binding.go",
         "checkpoint.go",
         "checkpoint_store.go",
@@ -3973,6 +4015,7 @@
         "context_candidate.go",
         "context_request.go",
         "delegated_state_reference.go",
+        "device_authorization.go",
         "done_event_payload.go",
         "engine_checkpoint.go",
         "engine_event.go",
@@ -4015,8 +4058,7 @@
         "model_reconciliation_state.go",
         "model_tool_request.go",
         "model_tool_result.go",
-        "open_ai_model_info.go",
-        "open_ai_models_response.go",
+        "o_auth_token.go",
         "parser.go",
         "parser_config.go",
         "permission_completed_payload.go",
@@ -4025,6 +4067,7 @@
         "permission_requested_payload.go",
         "permission_resolver.go",
         "processor.go",
+        "project_info.go",
         "prompty.go",
         "property.go",
         "redacted_field.go",
@@ -4050,6 +4093,7 @@
         "status_event_payload.go",
         "stream_chunk.go",
         "stream_options.go",
+        "subscription_info.go",
         "template.go",
         "thinking_event_payload.go",
         "thread_marker.go",
@@ -4087,13 +4131,12 @@
       "target": "markdown",
       "outputRoot": "../web/src/content/docs/reference",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
-        "AnthropicModelInfo",
-        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -4103,6 +4146,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -4116,6 +4160,7 @@
         "ContextRequest",
         "CustomTool",
         "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -4165,9 +4210,8 @@
         "ModelToolRequest",
         "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
-        "OpenAIModelInfo",
-        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -4177,6 +4221,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -4205,6 +4250,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -4273,10 +4319,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "AuthorizationCodeFlow",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "Connection",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "DeviceAuthorization",
           "protocol": false
         },
         {
@@ -4291,6 +4351,13 @@
           "kind": "value",
           "group": "connection",
           "source": "Connection",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "OAuthToken",
           "protocol": false
         },
         {
@@ -4784,6 +4851,13 @@
           "protocol": false
         },
         {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "AiResourceInfo",
+          "protocol": false
+        },
+        {
           "name": "InvocationUsage",
           "kind": "value",
           "group": "model",
@@ -4816,6 +4890,20 @@
           "kind": "value",
           "group": "model",
           "source": "ModelOptions",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "ProjectInfo",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "SubscriptionInfo",
           "protocol": false
         },
         {
@@ -5260,20 +5348,6 @@
           "protocol": false
         },
         {
-          "name": "AnthropicModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "AnthropicModelInfo",
-          "protocol": false
-        },
-        {
-          "name": "AnthropicModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "AnthropicModelsResponse",
-          "protocol": false
-        },
-        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -5314,20 +5388,6 @@
           "group": "wire",
           "source": "AnthropicWireMessage",
           "protocol": false
-        },
-        {
-          "name": "OpenAIModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "OpenAIModelInfo",
-          "protocol": false
-        },
-        {
-          "name": "OpenAIModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "OpenAIModelsResponse",
-          "protocol": false
         }
       ],
       "groups": [
@@ -5347,14 +5407,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "connection"
+            "authorization_code_flow",
+            "connection",
+            "device_authorization",
+            "o_auth_token"
           ]
         },
         {
@@ -5512,19 +5578,25 @@
         {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
             "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "ai_resource_info",
             "invocation_usage",
             "model",
             "model_info",
             "model_lister",
             "model_options",
+            "project_info",
+            "subscription_info",
             "token_usage"
           ]
         },
@@ -5681,32 +5753,24 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
-            "AnthropicModelInfo",
-            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage",
-            "OpenAIModelInfo",
-            "OpenAIModelsResponse"
+            "AnthropicWireMessage"
           ],
           "modules": [
             "anthropic_image_block",
             "anthropic_image_source",
             "anthropic_messages_request",
             "anthropic_messages_response",
-            "anthropic_model_info",
-            "anthropic_models_response",
             "anthropic_text_block",
             "anthropic_tool_definition",
             "anthropic_tool_result_block",
             "anthropic_tool_use_block",
             "anthropic_usage",
-            "anthropic_wire_message",
-            "open_ai_model_info",
-            "open_ai_models_response"
+            "anthropic_wire_message"
           ]
         }
       ],
@@ -5975,18 +6039,18 @@
         }
       ],
       "modules": [
+        "AiResourceInfo",
         "AnthropicImageBlock",
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
-        "AnthropicModelInfo",
-        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
         "AnthropicToolUseBlock",
         "AnthropicUsage",
         "AnthropicWireMessage",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -5999,6 +6063,7 @@
         "ContextCandidate",
         "ContextRequest",
         "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -6041,8 +6106,7 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
-        "OpenAIModelInfo",
-        "OpenAIModelsResponse",
+        "OAuthToken",
         "Parser",
         "ParserConfig",
         "PermissionCompletedPayload",
@@ -6051,6 +6115,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "Property",
         "RedactedField",
@@ -6076,6 +6141,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "ThinkingEventPayload",
         "ThreadMarker",
@@ -6114,13 +6180,12 @@
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "packageName": "prompty",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
-        "AnthropicModelInfo",
-        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -6130,6 +6195,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -6143,6 +6209,7 @@
         "ContextRequest",
         "CustomTool",
         "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -6192,9 +6259,8 @@
         "ModelToolRequest",
         "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
-        "OpenAIModelInfo",
-        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -6204,6 +6270,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -6232,6 +6299,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -6300,7 +6368,21 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": ".connection",
+          "protocol": false
+        },
+        {
           "name": "Connection",
+          "kind": "value",
+          "group": "connection",
+          "source": ".connection",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
           "kind": "value",
           "group": "connection",
           "source": ".connection",
@@ -6315,6 +6397,13 @@
         },
         {
           "name": "OAuthConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": ".connection",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
           "kind": "value",
           "group": "connection",
           "source": ".connection",
@@ -6811,6 +6900,13 @@
           "protocol": false
         },
         {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
           "name": "InvocationUsage",
           "kind": "value",
           "group": "model",
@@ -6840,6 +6936,20 @@
         },
         {
           "name": "ModelOptions",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
           "kind": "value",
           "group": "model",
           "source": ".model",
@@ -7287,20 +7397,6 @@
           "protocol": false
         },
         {
-          "name": "AnthropicModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": ".wire",
-          "protocol": false
-        },
-        {
-          "name": "AnthropicModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": ".wire",
-          "protocol": false
-        },
-        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -7341,20 +7437,6 @@
           "group": "wire",
           "source": ".wire",
           "protocol": false
-        },
-        {
-          "name": "OpenAIModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": ".wire",
-          "protocol": false
-        },
-        {
-          "name": "OpenAIModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": ".wire",
-          "protocol": false
         }
       ],
       "groups": [
@@ -7374,14 +7456,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "_Connection"
+            "_AuthorizationCodeFlow",
+            "_Connection",
+            "_DeviceAuthorization",
+            "_OAuthToken"
           ]
         },
         {
@@ -7539,19 +7627,25 @@
         {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
             "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "_AiResourceInfo",
             "_InvocationUsage",
             "_Model",
             "_ModelInfo",
             "_ModelLister",
             "_ModelOptions",
+            "_ProjectInfo",
+            "_SubscriptionInfo",
             "_TokenUsage"
           ]
         },
@@ -7708,32 +7802,24 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
-            "AnthropicModelInfo",
-            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage",
-            "OpenAIModelInfo",
-            "OpenAIModelsResponse"
+            "AnthropicWireMessage"
           ],
           "modules": [
             "_AnthropicImageBlock",
             "_AnthropicImageSource",
             "_AnthropicMessagesRequest",
             "_AnthropicMessagesResponse",
-            "_AnthropicModelInfo",
-            "_AnthropicModelsResponse",
             "_AnthropicTextBlock",
             "_AnthropicToolDefinition",
             "_AnthropicToolResultBlock",
             "_AnthropicToolUseBlock",
             "_AnthropicUsage",
-            "_AnthropicWireMessage",
-            "_OpenAIModelInfo",
-            "_OpenAIModelsResponse"
+            "_AnthropicWireMessage"
           ]
         }
       ],
@@ -8021,13 +8107,12 @@
       "target": "rust",
       "outputRoot": "../runtime/rust/prompty/src/model",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
-        "AnthropicModelInfo",
-        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -8037,6 +8122,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -8050,6 +8136,7 @@
         "ContextRequest",
         "CustomTool",
         "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -8099,9 +8186,8 @@
         "ModelToolRequest",
         "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
-        "OpenAIModelInfo",
-        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -8111,6 +8197,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -8139,6 +8226,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -8207,10 +8295,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection::authorization_code_flow",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "connection::connection",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection::device_authorization",
           "protocol": false
         },
         {
@@ -8225,6 +8327,13 @@
           "kind": "value",
           "group": "connection",
           "source": "connection::connection",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection::o_auth_token",
           "protocol": false
         },
         {
@@ -8718,6 +8827,13 @@
           "protocol": false
         },
         {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model::ai_resource_info",
+          "protocol": false
+        },
+        {
           "name": "InvocationUsage",
           "kind": "value",
           "group": "model",
@@ -8750,6 +8866,20 @@
           "kind": "value",
           "group": "model",
           "source": "model::model_options",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model::project_info",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model::subscription_info",
           "protocol": false
         },
         {
@@ -9194,20 +9324,6 @@
           "protocol": false
         },
         {
-          "name": "AnthropicModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "wire::anthropic_model_info",
-          "protocol": false
-        },
-        {
-          "name": "AnthropicModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "wire::anthropic_models_response",
-          "protocol": false
-        },
-        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -9248,20 +9364,6 @@
           "group": "wire",
           "source": "wire::anthropic_wire_message",
           "protocol": false
-        },
-        {
-          "name": "OpenAIModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "wire::open_ai_model_info",
-          "protocol": false
-        },
-        {
-          "name": "OpenAIModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "wire::open_ai_models_response",
-          "protocol": false
         }
       ],
       "groups": [
@@ -9281,14 +9383,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "connection"
+            "authorization_code_flow",
+            "connection",
+            "device_authorization",
+            "o_auth_token"
           ]
         },
         {
@@ -9446,19 +9554,25 @@
         {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
             "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "ai_resource_info",
             "invocation_usage",
             "model",
             "model_info",
             "model_lister",
             "model_options",
+            "project_info",
+            "subscription_info",
             "token_usage"
           ]
         },
@@ -9615,32 +9729,24 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
-            "AnthropicModelInfo",
-            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage",
-            "OpenAIModelInfo",
-            "OpenAIModelsResponse"
+            "AnthropicWireMessage"
           ],
           "modules": [
             "anthropic_image_block",
             "anthropic_image_source",
             "anthropic_messages_request",
             "anthropic_messages_response",
-            "anthropic_model_info",
-            "anthropic_models_response",
             "anthropic_text_block",
             "anthropic_tool_definition",
             "anthropic_tool_result_block",
             "anthropic_tool_use_block",
             "anthropic_usage",
-            "anthropic_wire_message",
-            "open_ai_model_info",
-            "open_ai_models_response"
+            "anthropic_wire_message"
           ]
         }
       ],
@@ -9930,13 +10036,12 @@
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "namespace": "Prompty",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
-        "AnthropicModelInfo",
-        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -9946,6 +10051,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -9959,6 +10065,7 @@
         "ContextRequest",
         "CustomTool",
         "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -10008,9 +10115,8 @@
         "ModelToolRequest",
         "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
-        "OpenAIModelInfo",
-        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -10020,6 +10126,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -10048,6 +10155,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -10116,10 +10224,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "./connection/authorization-code-flow",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "./connection/connection",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "./connection/device-authorization",
           "protocol": false
         },
         {
@@ -10134,6 +10256,13 @@
           "kind": "value",
           "group": "connection",
           "source": "./connection/connection",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "./connection/o-auth-token",
           "protocol": false
         },
         {
@@ -10627,6 +10756,13 @@
           "protocol": false
         },
         {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/ai-resource-info",
+          "protocol": false
+        },
+        {
           "name": "InvocationUsage",
           "kind": "value",
           "group": "model",
@@ -10659,6 +10795,20 @@
           "kind": "value",
           "group": "model",
           "source": "./model/model-options",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/project-info",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/subscription-info",
           "protocol": false
         },
         {
@@ -11103,20 +11253,6 @@
           "protocol": false
         },
         {
-          "name": "AnthropicModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "./wire/anthropic-model-info",
-          "protocol": false
-        },
-        {
-          "name": "AnthropicModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "./wire/anthropic-models-response",
-          "protocol": false
-        },
-        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -11157,20 +11293,6 @@
           "group": "wire",
           "source": "./wire/anthropic-wire-message",
           "protocol": false
-        },
-        {
-          "name": "OpenAIModelInfo",
-          "kind": "value",
-          "group": "wire",
-          "source": "./wire/open-ai-model-info",
-          "protocol": false
-        },
-        {
-          "name": "OpenAIModelsResponse",
-          "kind": "value",
-          "group": "wire",
-          "source": "./wire/open-ai-models-response",
-          "protocol": false
         }
       ],
       "groups": [
@@ -11190,14 +11312,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "connection"
+            "authorization-code-flow",
+            "connection",
+            "device-authorization",
+            "o-auth-token"
           ]
         },
         {
@@ -11355,19 +11483,25 @@
         {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
             "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "ai-resource-info",
             "invocation-usage",
             "model",
             "model-info",
             "model-lister",
             "model-options",
+            "project-info",
+            "subscription-info",
             "token-usage"
           ]
         },
@@ -11524,32 +11658,24 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
-            "AnthropicModelInfo",
-            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage",
-            "OpenAIModelInfo",
-            "OpenAIModelsResponse"
+            "AnthropicWireMessage"
           ],
           "modules": [
             "anthropic-image-block",
             "anthropic-image-source",
             "anthropic-messages-request",
             "anthropic-messages-response",
-            "anthropic-model-info",
-            "anthropic-models-response",
             "anthropic-text-block",
             "anthropic-tool-definition",
             "anthropic-tool-result-block",
             "anthropic-tool-use-block",
             "anthropic-usage",
-            "anthropic-wire-message",
-            "open-ai-model-info",
-            "open-ai-models-response"
+            "anthropic-wire-message"
           ]
         }
       ],
@@ -11820,7 +11946,10 @@
       "modules": [
         "./agent/guardrail-result",
         "./agent/prompty",
+        "./connection/authorization-code-flow",
         "./connection/connection",
+        "./connection/device-authorization",
+        "./connection/o-auth-token",
         "./conversation/content-part",
         "./conversation/message",
         "./conversation/thread-marker",
@@ -11877,11 +12006,14 @@
         "./events/turn-trace",
         "./memory/memory-entry",
         "./memory/memory-store",
+        "./model/ai-resource-info",
         "./model/invocation-usage",
         "./model/model",
         "./model/model-info",
         "./model/model-lister",
         "./model/model-options",
+        "./model/project-info",
+        "./model/subscription-info",
         "./model/token-usage",
         "./pipeline/checkpoint-store",
         "./pipeline/compaction-config",
@@ -11940,16 +12072,12 @@
         "./wire/anthropic-image-source",
         "./wire/anthropic-messages-request",
         "./wire/anthropic-messages-response",
-        "./wire/anthropic-model-info",
-        "./wire/anthropic-models-response",
         "./wire/anthropic-text-block",
         "./wire/anthropic-tool-definition",
         "./wire/anthropic-tool-result-block",
         "./wire/anthropic-tool-use-block",
         "./wire/anthropic-usage",
-        "./wire/anthropic-wire-message",
-        "./wire/open-ai-model-info",
-        "./wire/open-ai-models-response"
+        "./wire/anthropic-wire-message"
       ]
     }
   ]

@@ -10,6 +10,8 @@ use prompty::interfaces::InvokerError;
 use prompty::model::{ModelInfo, ModelLister};
 use serde_json::Value;
 
+use crate::auth::{connection_api_key, connection_bearer_token};
+
 static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
 /// Foundry implementation of the Typra-generated model discovery protocol.
@@ -129,12 +131,7 @@ async fn list_azure_model_catalog(connection: &Value) -> Result<Vec<ModelInfo>, 
                     .into(),
             )
         })?;
-    let api_key = connection
-        .get("apiKey")
-        .or(connection.get("api_key"))
-        .and_then(|v| v.as_str())
-        .filter(|s| !s.is_empty())
-        .map(ToString::to_string)
+    let api_key = connection_api_key(connection)
         .or_else(|| std::env::var("AZURE_OPENAI_API_KEY").ok())
         .ok_or_else(|| {
             InvokerError::Execute(
@@ -176,8 +173,26 @@ async fn list_azure_model_catalog(connection: &Value) -> Result<Vec<ModelInfo>, 
         .unwrap_or_default())
 }
 
+/// Map one raw Foundry data-plane deployment object into the provider-neutral
+/// [`ModelInfo`] contract. Handles both the flat `/deployments?api-version=v1`
+/// shape and the nested ARM management-plane shape.
+///
+/// Exercised by the shared `spec/vectors/discovery` vectors so every runtime
+/// converges on the same canonical mapping.
+pub fn deployment_to_model_info(raw: &Value) -> ModelInfo {
+    parse_deployment_object(raw)
+}
+
+/// Map one raw Azure OpenAI model-catalog entry into the provider-neutral
+/// [`ModelInfo`] contract.
+///
+/// Exercised by the shared `spec/vectors/discovery` vectors.
+pub fn catalog_model_to_model_info(raw: &Value) -> ModelInfo {
+    parse_catalog_model_object(raw)
+}
+
 fn parse_catalog_model_object(obj: &Value) -> ModelInfo {
-    ModelInfo {
+    let mut info = ModelInfo {
         id: obj
             .get("id")
             .and_then(|v| v.as_str())
@@ -195,37 +210,47 @@ fn parse_catalog_model_object(obj: &Value) -> ModelInfo {
         input_modalities: None,
         output_modalities: None,
         additional_properties: obj.clone(),
-    }
+    };
+
+    prompty::discovery::enrich("foundry", &mut info);
+    info
 }
 
 fn parse_deployment_object(obj: &Value) -> ModelInfo {
     let properties = obj.get("properties").unwrap_or(&Value::Null);
     let model = properties.get("model").unwrap_or(&Value::Null);
+    // Foundry's data-plane `/deployments?api-version=v1` returns a flat shape
+    // (`modelName`, `modelPublisher`, top-level `capabilities`), while the ARM
+    // management-plane shape nests these under `properties.model`. Support both.
     let capabilities = properties
         .get("capabilities")
         .or_else(|| model.get("capabilities"))
+        .or_else(|| obj.get("capabilities"))
         .unwrap_or(&Value::Null);
 
-    ModelInfo {
+    let mut info = ModelInfo {
         id: obj
             .get("name")
             .and_then(|v| v.as_str())
             .unwrap_or_default()
             .to_string(),
-        display_name: model
-            .get("name")
+        display_name: obj
+            .get("modelName")
             .and_then(|v| v.as_str())
+            .or_else(|| model.get("name").and_then(|v| v.as_str()))
             .map(ToString::to_string),
-        owned_by: model
-            .get("publisher")
+        owned_by: obj
+            .get("modelPublisher")
             .and_then(|v| v.as_str())
+            .or_else(|| model.get("publisher").and_then(|v| v.as_str()))
             .map(ToString::to_string)
             .or_else(|| Some("azure".to_string())),
         context_window: get_i32(
             capabilities,
             &["maxContextLength", "contextWindow", "context_length"],
         )
-        .or_else(|| get_i32(model, &["maxContextLength"])),
+        .or_else(|| get_i32(model, &["maxContextLength"]))
+        .or_else(|| get_i32(obj, &["maxContextLength"])),
         input_modalities: get_string_vec(
             capabilities,
             &[
@@ -243,7 +268,10 @@ fn parse_deployment_object(obj: &Value) -> ModelInfo {
             ],
         ),
         additional_properties: obj.clone(),
-    }
+    };
+
+    prompty::discovery::enrich("foundry", &mut info);
+    info
 }
 
 fn get_i32(obj: &Value, keys: &[&str]) -> Option<i32> {
@@ -288,16 +316,8 @@ fn get_string_vec(obj: &Value, keys: &[&str]) -> Option<Vec<String>> {
 /// ambient `DefaultAzureCredential`. Falls back to [`get_ai_token`] when no
 /// caller token is present.
 async fn resolve_foundry_token(connection: &Value) -> Result<String, InvokerError> {
-    let caller_token = connection
-        .get("apiKey")
-        .or_else(|| connection.get("api_key"))
-        .or_else(|| connection.get("bearerToken"))
-        .or_else(|| connection.get("bearer_token"))
-        .and_then(|v| v.as_str())
-        .map(str::trim)
-        .filter(|s| !s.is_empty());
-    match caller_token {
-        Some(token) => Ok(token.to_string()),
+    match connection_bearer_token(connection) {
+        Some(token) => Ok(token),
         None => get_ai_token().await,
     }
 }
@@ -368,6 +388,28 @@ mod tests {
             Some(vec!["text".to_string(), "json".to_string()])
         );
         assert_eq!(info.additional_properties["name"], "chat-prod");
+    }
+
+    #[test]
+    fn parse_deployment_maps_flat_data_plane_shape() {
+        // Shape returned by `{project}/deployments?api-version=v1`.
+        let deployment = json!({
+            "name": "gpt-5.2",
+            "type": "ModelDeployment",
+            "modelName": "gpt-5.2",
+            "modelVersion": "2025-12-11",
+            "modelPublisher": "OpenAI",
+            "capabilities": { "chat_completion": "true" },
+            "sku": { "name": "GlobalStandard", "capacity": 1000 }
+        });
+
+        let info = parse_deployment_object(&deployment);
+
+        assert_eq!(info.id, "gpt-5.2");
+        assert_eq!(info.display_name.as_deref(), Some("gpt-5.2"));
+        assert_eq!(info.owned_by.as_deref(), Some("OpenAI"));
+        assert_eq!(info.context_window, None);
+        assert_eq!(info.additional_properties["modelPublisher"], "OpenAI");
     }
 
     #[tokio::test]

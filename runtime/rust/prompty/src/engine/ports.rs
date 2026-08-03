@@ -88,46 +88,12 @@ impl ModelToolResult {
     }
 }
 
-/// Host-owned deterministic state supplied before one model invocation.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct HostPolicyRequest {
-    pub session_id: String,
-    pub turn_id: String,
-    pub iteration: usize,
-    pub messages: Vec<Message>,
-    pub stable_prefix_messages: usize,
-    #[serde(default)]
-    pub inputs: Value,
-}
-
-/// State rewrite produced by the host policy before model invocation.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct HostPolicyResult {
-    pub messages: Vec<Message>,
-    pub stable_prefix_messages: usize,
-    #[serde(default)]
-    pub metadata: Value,
-}
-
-/// Final output supplied to the host policy immediately before a success commit.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct FinalOutputPolicyRequest {
-    pub session_id: String,
-    pub turn_id: String,
-    pub iteration: usize,
-    pub messages: Vec<Message>,
-    pub output: Option<Value>,
-    #[serde(default)]
-    pub inputs: Value,
-}
-
-/// Final output rewrite produced by the host policy.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct FinalOutputPolicyResult {
-    pub output: Option<Value>,
-    #[serde(default)]
-    pub metadata: Value,
-}
+/// Host policy and retry data are generated cross-runtime contracts. The live
+/// engine consumes them directly rather than maintaining Rust-only twins.
+pub use crate::model::{
+    FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyRequest, HostPolicyResult,
+    RetryPolicyRequest,
+};
 
 /// Typed deterministic policy failure committed by the engine.
 #[derive(Debug, thiserror::Error)]
@@ -144,17 +110,6 @@ impl HostPolicyError {
             message: message.into(),
         }
     }
-}
-
-/// Context supplied to the retry policy after a retryable model failure.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct RetryPolicyRequest {
-    /// Number of failures observed for this invocation, starting at one.
-    pub failed_attempts: usize,
-    /// One-based attempt number that will run after backoff.
-    pub next_attempt: usize,
-    pub max_attempts: usize,
-    pub reason: String,
 }
 
 /// Retry-policy failure. Cancellation is semantic; other failures are typed host failures.

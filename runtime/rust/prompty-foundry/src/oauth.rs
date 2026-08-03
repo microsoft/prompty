@@ -36,8 +36,14 @@
 use std::time::{Duration, Instant};
 
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
+use prompty::model::context::LoadContext;
+pub use prompty::model::{
+    AuthorizationCodeFlow as AuthCodeFlowInit, DeviceAuthorization as DeviceCodeResponse,
+    OAuthToken as TokenResponse,
+};
 use rand::Rng;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 /// Default public client id used for interactive sign-in (the Azure CLI public client).
@@ -97,55 +103,6 @@ fn authorize_url_base(tenant: &str) -> String {
     )
 }
 
-/// OAuth 2.0 token response (RFC 6749 §5.1).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TokenResponse {
-    /// The bearer access token.
-    pub access_token: String,
-    /// The token type (typically `"Bearer"`).
-    pub token_type: String,
-    /// Lifetime of the access token in seconds.
-    pub expires_in: u64,
-    /// Refresh token, present when `offline_access` was requested.
-    #[serde(default)]
-    pub refresh_token: Option<String>,
-    /// The scopes actually granted, space-delimited.
-    #[serde(default)]
-    pub scope: Option<String>,
-}
-
-/// Device authorization response (RFC 8628 §3.2).
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DeviceCodeResponse {
-    /// The device verification code (used when polling for the token).
-    pub device_code: String,
-    /// The code the user enters at [`Self::verification_uri`].
-    pub user_code: String,
-    /// The URL the user visits to authorize the device.
-    pub verification_uri: String,
-    /// Lifetime of the device/user codes in seconds.
-    pub expires_in: u64,
-    /// Minimum polling interval in seconds.
-    pub interval: u64,
-    /// Human-readable instruction message from the provider.
-    #[serde(default)]
-    pub message: String,
-}
-
-/// Result of initializing an authorization-code + PKCE flow.
-///
-/// The host must open [`Self::auth_url`] in a browser and retain
-/// [`Self::code_verifier`] to pass to [`exchange_code_for_token`]. Unlike the
-/// legacy shape this carries NO port / listener — binding the loopback redirect
-/// listener is the host's responsibility.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuthCodeFlowInit {
-    /// The authorization URL to open in the user's browser.
-    pub auth_url: String,
-    /// The PKCE code verifier the host must retain for the token exchange.
-    pub code_verifier: String,
-}
-
 /// OAuth 2.0 error response (RFC 6749 §5.2), used by the device-code poll loop.
 #[derive(Debug, Deserialize)]
 struct TokenErrorResponse {
@@ -166,6 +123,76 @@ fn generate_pkce() -> (String, String) {
     let digest = Sha256::digest(verifier.as_bytes());
     let challenge = URL_SAFE_NO_PAD.encode(digest);
     (verifier, challenge)
+}
+
+fn foundry_wire_context() -> LoadContext {
+    LoadContext {
+        pre_process: Some(Box::new(|value| {
+            let Value::Object(mut object) = value else {
+                return value;
+            };
+            for (wire, canonical) in [
+                ("access_token", "accessToken"),
+                ("token_type", "tokenType"),
+                ("expires_in", "expiresIn"),
+                ("refresh_token", "refreshToken"),
+                ("device_code", "deviceCode"),
+                ("user_code", "userCode"),
+                ("verification_uri", "verificationUri"),
+            ] {
+                if let Some(value) = object.remove(wire) {
+                    object.insert(canonical.to_string(), value);
+                }
+            }
+            Value::Object(object)
+        })),
+        post_process: None,
+    }
+}
+
+fn invalid_response(field: &str, expected: &str) -> serde_json::Error {
+    serde_json::Error::io(std::io::Error::new(
+        std::io::ErrorKind::InvalidData,
+        format!("missing or invalid field '{field}'; expected {expected}"),
+    ))
+}
+
+fn require_string(value: &Value, field: &str) -> Result<(), serde_json::Error> {
+    match value.get(field).and_then(Value::as_str) {
+        Some(value) if !value.is_empty() => Ok(()),
+        _ => Err(invalid_response(field, "a non-empty string")),
+    }
+}
+
+fn require_nonnegative_i64(value: &Value, field: &str) -> Result<(), serde_json::Error> {
+    match value.get(field).and_then(Value::as_i64) {
+        Some(value) if value >= 0 => Ok(()),
+        _ => Err(invalid_response(field, "a non-negative integer")),
+    }
+}
+
+fn parse_token_response(text: &str) -> Result<TokenResponse, serde_json::Error> {
+    let value: Value = serde_json::from_str(text)?;
+    require_string(&value, "access_token")?;
+    require_string(&value, "token_type")?;
+    require_nonnegative_i64(&value, "expires_in")?;
+    Ok(TokenResponse::load_from_value(
+        &value,
+        &foundry_wire_context(),
+    ))
+}
+
+fn parse_device_code_response(text: &str) -> Result<DeviceCodeResponse, serde_json::Error> {
+    let value: Value = serde_json::from_str(text)?;
+    require_string(&value, "device_code")?;
+    require_string(&value, "user_code")?;
+    require_string(&value, "verification_uri")?;
+    require_nonnegative_i64(&value, "expires_in")?;
+    require_nonnegative_i64(&value, "interval")?;
+    Ok(DeviceCodeResponse::load_from_value(
+        &value,
+        &foundry_wire_context(),
+    ))
 }
 
 /// Build the authorization URL for an authorization-code + PKCE flow.
@@ -222,7 +249,8 @@ pub async fn request_device_code(
     if !status.is_success() {
         return Err(format!("device code request failed ({status}): {text}"));
     }
-    serde_json::from_str(&text).map_err(|e| format!("failed to parse device code response: {e}"))
+    parse_device_code_response(&text)
+        .map_err(|e| format!("failed to parse device code response: {e}"))
 }
 
 /// Poll the token endpoint until the user authorizes the device or the flow
@@ -266,7 +294,7 @@ pub async fn poll_for_token(
             .map_err(|e| format!("failed to read token poll response: {e}"))?;
 
         if status.is_success() {
-            return serde_json::from_str(&text)
+            return parse_token_response(&text)
                 .map_err(|e| format!("failed to parse token response: {e}"));
         }
 
@@ -344,7 +372,7 @@ async fn post_token(
     if !status.is_success() {
         return Err(format!("token request failed ({status}): {text}"));
     }
-    serde_json::from_str(&text).map_err(|e| format!("failed to parse token response: {e}"))
+    parse_token_response(&text).map_err(|e| format!("failed to parse token response: {e}"))
 }
 
 #[cfg(test)]
@@ -455,7 +483,7 @@ mod tests {
     #[test]
     fn token_response_deserializes_with_optional_fields_absent() {
         let json = r#"{"access_token":"abc","token_type":"Bearer","expires_in":3600}"#;
-        let tok: TokenResponse = serde_json::from_str(json).unwrap();
+        let tok = parse_token_response(json).unwrap();
         assert_eq!(tok.access_token, "abc");
         assert_eq!(tok.token_type, "Bearer");
         assert_eq!(tok.expires_in, 3600);
@@ -464,9 +492,31 @@ mod tests {
     }
 
     #[test]
+    fn parse_token_response_rejects_missing_required_fields() {
+        let error = parse_token_response(r#"{"token_type":"Bearer","expires_in":3600}"#)
+            .expect_err("missing access_token must fail");
+        assert!(error.to_string().contains("access_token"));
+    }
+
+    #[test]
+    fn parse_device_code_response_rejects_invalid_required_fields() {
+        let error = parse_device_code_response(
+            r#"{
+                "device_code": "device",
+                "user_code": "ABCD-EFGH",
+                "verification_uri": "https://example.test",
+                "expires_in": 900,
+                "interval": -1
+            }"#,
+        )
+        .expect_err("negative interval must fail");
+        assert!(error.to_string().contains("interval"));
+    }
+
+    #[test]
     fn token_response_deserializes_with_refresh_and_scope() {
         let json = r#"{"access_token":"abc","token_type":"Bearer","expires_in":3600,"refresh_token":"r","scope":"s"}"#;
-        let tok: TokenResponse = serde_json::from_str(json).unwrap();
+        let tok = parse_token_response(json).unwrap();
         assert_eq!(tok.refresh_token.as_deref(), Some("r"));
         assert_eq!(tok.scope.as_deref(), Some("s"));
     }
@@ -474,7 +524,7 @@ mod tests {
     #[test]
     fn device_code_response_deserializes() {
         let json = r#"{"device_code":"dc","user_code":"UC","verification_uri":"https://aka.ms/devicelogin","expires_in":900,"interval":5,"message":"go here"}"#;
-        let dc: DeviceCodeResponse = serde_json::from_str(json).unwrap();
+        let dc = parse_device_code_response(json).unwrap();
         assert_eq!(dc.device_code, "dc");
         assert_eq!(dc.user_code, "UC");
         assert_eq!(dc.interval, 5);
@@ -484,7 +534,7 @@ mod tests {
     #[test]
     fn device_code_response_message_defaults_when_absent() {
         let json = r#"{"device_code":"dc","user_code":"UC","verification_uri":"u","expires_in":900,"interval":5}"#;
-        let dc: DeviceCodeResponse = serde_json::from_str(json).unwrap();
+        let dc = parse_device_code_response(json).unwrap();
         assert_eq!(dc.message, "");
     }
 

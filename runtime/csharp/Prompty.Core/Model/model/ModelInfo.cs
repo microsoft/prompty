@@ -202,6 +202,32 @@ public partial class ModelInfo
         return result;
     }
 
+    /// <summary>
+    /// Convert this instance to a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <returns>A dictionary with provider-specific field names.</returns>
+    public Dictionary<string, object?> ToWire(string provider)
+    {
+        var data = Save();
+        var result = new Dictionary<string, object?>();
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["id"] = new Dictionary<string, string> { ["openai"] = "id", ["anthropic"] = "id" },
+            ["displayName"] = new Dictionary<string, string> { ["anthropic"] = "display_name" },
+            ["ownedBy"] = new Dictionary<string, string> { ["openai"] = "owned_by" },
+            ["contextWindow"] = new Dictionary<string, string> { ["anthropic"] = "context_length" },
+            ["inputModalities"] = new Dictionary<string, string> { ["anthropic"] = "input_modalities" },
+            ["outputModalities"] = new Dictionary<string, string> { ["anthropic"] = "output_modalities" },
+        };
+        foreach (var (key, value) in data)
+        {
+            if (wireMap.TryGetValue(key, out var mapping) && mapping.TryGetValue(provider, out var wireName))
+                result[wireName] = value;
+        }
+        return result;
+    }
+
 
     /// <summary>
     /// Convert the ModelInfo instance to a YAML string.

@@ -9,8 +9,11 @@
     clippy::all
 )]
 
+mod ai_resource_info_test;
 mod invocation_usage_test;
 mod model_info_test;
 mod model_options_test;
 mod model_test;
+mod project_info_test;
+mod subscription_info_test;
 mod token_usage_test;

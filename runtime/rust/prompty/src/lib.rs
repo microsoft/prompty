@@ -37,6 +37,7 @@
 
 pub mod connections;
 pub mod context;
+pub mod discovery;
 pub mod engine;
 pub mod guardrails;
 pub mod harness;
@@ -61,6 +62,9 @@ pub mod types;
 pub use connections::{clear_connections, has_connection, register_connection, with_connection};
 pub use context::{
     estimate_chars, format_dropped_messages, summarize_dropped, trim_to_context_window,
+};
+pub use discovery::{
+    ModelCapabilities, enrich as enrich_model_info, lookup as lookup_model_capabilities,
 };
 pub use engine::{
     AllowAllPermissions, AppendContextPackingStrategy, CancellationToken, Clock, ContextCandidate,

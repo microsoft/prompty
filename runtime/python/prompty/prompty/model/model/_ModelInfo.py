@@ -119,6 +119,30 @@ class ModelInfo:
             result = context.process_dict(result)
         return result
 
+    def to_wire(self, provider: str) -> dict[str, Any]:
+        """Convert to provider-specific wire format.
+        Args:
+            provider (str): The provider to convert to (e.g., "openai", "anthropic").
+        Returns:
+            dict[str, Any]: The wire-format dictionary with provider-specific field names.
+
+        """
+        data = self.save()
+        result: dict[str, Any] = {}
+        wire_map: dict[str, dict[str, str]] = {
+            "id": {"openai": "id", "anthropic": "id"},
+            "displayName": {"anthropic": "display_name"},
+            "ownedBy": {"openai": "owned_by"},
+            "contextWindow": {"anthropic": "context_length"},
+            "inputModalities": {"anthropic": "input_modalities"},
+            "outputModalities": {"anthropic": "output_modalities"},
+        }
+        for key, value in data.items():
+            mapping = wire_map.get(key)
+            if mapping is not None and provider in mapping:
+                result[mapping[provider]] = value
+        return result
+
     def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ModelInfo instance to a YAML string.
         Args:

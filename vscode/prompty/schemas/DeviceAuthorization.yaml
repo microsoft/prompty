@@ -1,0 +1,31 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: DeviceAuthorization.yaml
+type: object
+properties:
+  deviceCode:
+    type: string
+    description: The device code used when polling the token endpoint
+  userCode:
+    type: string
+    description: The short code the user enters at the verification URI
+  verificationUri:
+    type: string
+    description: The URI where the user authorizes the device
+  expiresIn:
+    type: string
+    description: Lifetime of the device authorization in seconds
+  interval:
+    type: string
+    description: Minimum polling interval in seconds
+  message:
+    type: string
+    default: ""
+    description: Human-readable authorization instructions
+required:
+  - deviceCode
+  - userCode
+  - verificationUri
+  - expiresIn
+  - interval
+  - message
+description: Provider-neutral device authorization challenge shown to a user.

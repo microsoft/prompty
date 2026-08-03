@@ -16,6 +16,9 @@ export {
   OAuthConnection,
   FoundryConnection,
 } from "./connection/connection";
+export { OAuthToken } from "./connection/o-auth-token";
+export { DeviceAuthorization } from "./connection/device-authorization";
+export { AuthorizationCodeFlow } from "./connection/authorization-code-flow";
 
 export {
   ContentPart,
@@ -101,6 +104,9 @@ export { TokenUsage } from "./model/token-usage";
 export { InvocationUsage } from "./model/invocation-usage";
 export type { ModelLister } from "./model/model-lister";
 export { ModelInfo } from "./model/model-info";
+export { SubscriptionInfo } from "./model/subscription-info";
+export { AiResourceInfo } from "./model/ai-resource-info";
+export { ProjectInfo } from "./model/project-info";
 
 export { DelegatedStateReference } from "./pipeline/delegated-state-reference";
 export { InvocationContextState } from "./pipeline/invocation-context-state";
@@ -167,10 +173,6 @@ export { TraceTime } from "./tracing/trace-time";
 export { TraceSpan } from "./tracing/trace-span";
 export { TraceFile } from "./tracing/trace-file";
 
-export { OpenAIModelInfo } from "./wire/open-ai-model-info";
-export { OpenAIModelsResponse } from "./wire/open-ai-models-response";
-export { AnthropicModelInfo } from "./wire/anthropic-model-info";
-export { AnthropicModelsResponse } from "./wire/anthropic-models-response";
 export { AnthropicTextBlock } from "./wire/anthropic-text-block";
 export { AnthropicImageSource } from "./wire/anthropic-image-source";
 export { AnthropicImageBlock } from "./wire/anthropic-image-block";

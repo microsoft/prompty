@@ -8,7 +8,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
     /// <summary>
-    /// The result returned by the turn engine.
+    /// The result returned by the live turn engine.
     /// </summary>
 public partial class TurnEngineResult
 {

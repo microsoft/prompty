@@ -25,7 +25,7 @@ or deployment id and, when available, context-window and modality metadata.
 | Python | `list_models()` / `list_models_async()` | `list_models()` / `list_models_async()` | Not yet exposed |
 | TypeScript | `listModels()` | `listAzureModels()` | Not yet exposed |
 | C# | `OpenAIModels.ListModelsAsync()` | `FoundryModels.ListModelsAsync()` | Not yet exposed |
-| Rust | `list_models()` / `list_models_async()` | Not yet exposed | `list_models()` / `list_models_async()` |
+| Rust | `list_models()` / `list_models_async()` | `list_models()` / `list_models_async()` | `list_models()` / `list_models_async()` |
 
 ## Python
 
@@ -147,7 +147,80 @@ for model in models {
 }
 ```
 
-Anthropic model listing is available through `prompty_anthropic::list_models_async()`.
+Anthropic model listing is available through `prompty_anthropic::list_models_async()`,
+and Foundry/Azure OpenAI deployment listing through `prompty_foundry::list_models_async()`.
+
+Each provider also exposes a `ModelLister` implementation
+(`OpenAIModelLister`, `AnthropicModelLister`, `FoundryModelLister`) for callers
+that prefer uniform dispatch against the `prompty::model::ModelLister` trait. The
+free `list_models_async(&connection)` functions remain the direct entry point and
+share the same connection resolution.
+
+## Cross-runtime mapping contract
+
+Every provider's job in discovery is the same: turn a raw provider response into
+the canonical, Typra-generated [`ModelInfo`](/reference/modelinfo/) shape. That
+mapping is a shared behavioral contract, not a per-runtime detail, so it is
+pinned by fixtures in **`spec/vectors/discovery/discovery_vectors.json`** that
+all runtimes run against:
+
+- Each vector is `{ provider, shape, input, expected }`, where `input` is a raw
+  provider object and `expected` is the canonical `ModelInfo` (camelCase fields,
+  as emitted by `ModelInfo.to_value` / `toValue`).
+- `provider` selects which runtime maps the vector; `shape` disambiguates the
+  Foundry `deployment` (flat v1 or nested ARM) vs Azure OpenAI `catalog` shapes.
+- The field renames themselves (e.g. Anthropic `context_length` →
+  `contextWindow`) come from `@@knownAs` wire mappings in the TypeSpec source, so
+  the vectors validate the *generated* contract rather than hand-maintained
+  aliases.
+
+<Aside type="note">
+  Capability enrichment fills fields a provider's API leaves sparse (e.g.
+  inferring a context window for a bare `gpt-4o` from OpenAI, whose `/v1/models`
+  returns only ids). The `discovery_vectors.json` fixtures deliberately use ids
+  outside the enrichment dataset so they assert the *pure* wire → `ModelInfo`
+  mapping in isolation; enrichment itself is pinned by its own shared vectors
+  (below).
+</Aside>
+
+### Shared capability enrichment
+
+Enrichment data used to be a hardcoded table inside a single runtime. It is now a
+shared, provider-keyed dataset — **`spec/data/model_capabilities.json`** — that
+every runtime embeds and applies with one rule:
+
+> **Provider-supplied fields always win.** Dataset entries only fill fields the
+> provider left empty (*fill-only-missing*, including a provider-supplied empty
+> array, which wins over a non-empty dataset value). Model ids are matched by
+> longest prefix within a provider's list, at token boundaries only — the
+> character after the prefix must be end-of-id or a separator, so `gpt-4` never
+> accidentally matches a future `gpt-45`.
+
+This keeps sparse providers (OpenAI) consistent with rich ones (Anthropic,
+Foundry) without special-casing: a provider that already returns a context
+window or modalities simply never hits the fallback. The dataset is intentionally
+**not** emitted from TypeSpec — it is volatile provider data (context windows,
+modalities, new model families) refreshed as a snapshot, whereas TypeSpec owns
+the structural `ModelInfo` contract.
+
+`spec/data/model_capabilities.json` is the canonical cross-runtime source. Since
+a distributable package (crate, wheel, npm/NuGet tarball) can only bundle files
+inside its own tree, each runtime **vendors a checked-in copy** into its package
+and embeds that copy — the Rust crate keeps its copy at
+`runtime/rust/prompty/data/model_capabilities.json` and a `vendored_copy_matches_spec`
+test fails if the two ever drift. To refresh capability data, edit the `spec/`
+file and re-copy it into each runtime's vendored path.
+
+The algorithm is pinned by **`spec/vectors/discovery/enrichment_vectors.json`**
+(`{ provider, id, input, expected }` — enrich a base `ModelInfo` and assert the
+result), so every runtime's `enrich()` primitive converges. The Rust reference
+implementation is `prompty::discovery::{enrich, lookup}` in
+`runtime/rust/prompty/src/discovery.rs`, exercised by
+`runtime/rust/prompty/tests/enrichment_vectors.rs`.
+
+A new runtime adds discovery by implementing its provider mapper plus a thin
+loader that reads the shared vectors — the Rust reference loaders live at
+`runtime/rust/prompty-{openai,anthropic,foundry}/tests/discovery_vectors.rs`.
 
 ## Using the result
 

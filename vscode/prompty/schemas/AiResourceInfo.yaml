@@ -1,0 +1,29 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AiResourceInfo.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: Provider resource name
+  kind:
+    type: string
+    description: Provider resource kind
+  endpoint:
+    type: string
+    description: Inference endpoint
+  location:
+    type: string
+    description: Provider region or location
+  resourceGroup:
+    type: string
+    description: Provider resource group or equivalent administrative grouping
+  serviceUrl:
+    type: string
+    description: Optional service root used to enumerate projects
+required:
+  - name
+  - kind
+  - endpoint
+  - location
+  - resourceGroup
+description: An AI service resource that can host models or projects.

@@ -25,7 +25,17 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/connection/AuthorizationCodeFlowConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/connection/ConnectionConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/connection/DeviceAuthorizationConversionTests.cs",
       "marker": true
     },
     {
@@ -36,6 +46,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/connection/OAuthConnectionConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/connection/OAuthTokenConversionTests.cs",
       "marker": true
     },
     {
@@ -390,6 +405,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/model/AiResourceInfoConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/model/InvocationUsageConversionTests.cs",
       "marker": true
     },
@@ -406,6 +426,16 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/model/ModelOptionsConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/model/ProjectInfoConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/model/SubscriptionInfoConversionTests.cs",
       "marker": true
     },
     {
@@ -680,16 +710,6 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/wire/AnthropicModelInfoConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/wire/AnthropicModelsResponseConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/wire/AnthropicTextBlockConversionTests.cs",
       "marker": true
     },
@@ -719,16 +739,6 @@
       "marker": true
     },
     {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/wire/OpenAIModelInfoConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/wire/OpenAIModelsResponseConversionTests.cs",
-      "marker": true
-    },
-    {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/agent/GuardrailResult.cs",
       "marker": true
@@ -755,7 +765,17 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/connection/AuthorizationCodeFlow.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/connection/Connection.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/connection/DeviceAuthorization.cs",
       "marker": true
     },
     {
@@ -766,6 +786,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/connection/OAuthConnection.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/connection/OAuthToken.cs",
       "marker": true
     },
     {
@@ -1180,6 +1205,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/model/AiResourceInfo.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/model/InvocationUsage.cs",
       "marker": true
     },
@@ -1201,6 +1231,16 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/model/ModelOptions.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/model/ProjectInfo.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/model/SubscriptionInfo.cs",
       "marker": true
     },
     {
@@ -1575,16 +1615,6 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/wire/AnthropicModelInfo.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/wire/AnthropicModelsResponse.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/wire/AnthropicTextBlock.cs",
       "marker": true
     },
@@ -1614,13 +1644,13 @@
       "marker": true
     },
     {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/wire/OpenAIModelInfo.cs",
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/ai_resource_info_test.go",
       "marker": true
     },
     {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/wire/OpenAIModelsResponse.cs",
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/ai_resource_info.go",
       "marker": true
     },
     {
@@ -1666,26 +1696,6 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/anthropic_messages_response.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_model_info_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_model_info.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_models_response_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_models_response.go",
       "marker": true
     },
     {
@@ -1761,6 +1771,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/audio_part_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/authorization_code_flow_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/authorization_code_flow.go",
       "marker": true
     },
     {
@@ -1886,6 +1906,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/delegated_state_reference.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/device_authorization_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/device_authorization.go",
       "marker": true
     },
     {
@@ -2320,27 +2350,17 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/o_auth_token_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/o_auth_token.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/object_property_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/open_ai_model_info_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/open_ai_model_info.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/open_ai_models_response_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/open_ai_models_response.go",
       "marker": true
     },
     {
@@ -2411,6 +2431,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/processor.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/project_info_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/project_info.go",
       "marker": true
     },
     {
@@ -2671,6 +2701,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/stream_options.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/subscription_info_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/subscription_info.go",
       "marker": true
     },
     {
@@ -3045,7 +3085,22 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/connection/_AuthorizationCodeFlow.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/connection/_Connection.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/connection/_DeviceAuthorization.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/connection/_OAuthToken.py",
       "marker": true
     },
     {
@@ -3355,6 +3410,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/model/_AiResourceInfo.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/model/_InvocationUsage.py",
       "marker": true
     },
@@ -3376,6 +3436,16 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/model/_ModelOptions.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/model/_ProjectInfo.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/model/_SubscriptionInfo.py",
       "marker": true
     },
     {
@@ -3705,16 +3775,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/wire/_AnthropicModelInfo.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/wire/_AnthropicModelsResponse.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/wire/_AnthropicTextBlock.py",
       "marker": true
     },
@@ -3741,16 +3801,6 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/wire/_AnthropicWireMessage.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/wire/_OpenAIModelInfo.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/wire/_OpenAIModelsResponse.py",
       "marker": true
     },
     {
@@ -4375,12 +4425,27 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/connection/authorization_code_flow.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/connection/connection.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/connection/device_authorization.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/connection/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/connection/o_auth_token.rs",
       "marker": true
     },
     {
@@ -4695,6 +4760,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/model/ai_resource_info.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/model/invocation_usage.rs",
       "marker": true
     },
@@ -4721,6 +4791,16 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/model/model.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/model/project_info.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/model/subscription_info.rs",
       "marker": true
     },
     {
@@ -5040,16 +5120,6 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/wire/anthropic_model_info.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/wire/anthropic_models_response.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/wire/anthropic_text_block.rs",
       "marker": true
     },
@@ -5084,16 +5154,6 @@
       "marker": true
     },
     {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/wire/open_ai_model_info.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/wire/open_ai_models_response.rs",
-      "marker": true
-    },
-    {
       "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/agent/guardrail_result_test.rs",
       "marker": true
@@ -5110,12 +5170,27 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/connection/authorization_code_flow_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/connection/connection_test.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/connection/device_authorization_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/connection/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/connection/o_auth_token_test.rs",
       "marker": true
     },
     {
@@ -5425,6 +5500,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/model/ai_resource_info_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/model/invocation_usage_test.rs",
       "marker": true
     },
@@ -5446,6 +5526,16 @@
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/model/model_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/model/project_info_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/model/subscription_info_test.rs",
       "marker": true
     },
     {
@@ -5720,16 +5810,6 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic_model_info_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic_models_response_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/wire/anthropic_text_block_test.rs",
       "marker": true
     },
@@ -5764,16 +5844,6 @@
       "marker": true
     },
     {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/open_ai_model_info_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/open_ai_models_response_test.rs",
-      "marker": true
-    },
-    {
       "outputRoot": "../runtime/typescript/packages/core/src",
       "path": "../runtime/typescript/packages/core/src/eslint.config.js",
       "marker": true
@@ -5795,12 +5865,27 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/connection/authorization-code-flow.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/connection/connection.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/connection/device-authorization.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/connection/index.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/connection/o-auth-token.ts",
       "marker": true
     },
     {
@@ -6115,6 +6200,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/model/ai-resource-info.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/model/index.ts",
       "marker": true
     },
@@ -6141,6 +6231,16 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/model/model.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/model/project-info.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/model/subscription-info.ts",
       "marker": true
     },
     {
@@ -6460,16 +6560,6 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/wire/anthropic-model-info.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/wire/anthropic-models-response.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/wire/anthropic-text-block.ts",
       "marker": true
     },
@@ -6504,16 +6594,6 @@
       "marker": true
     },
     {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/wire/open-ai-model-info.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/wire/open-ai-models-response.ts",
-      "marker": true
-    },
-    {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/agent/guardrail-result.test.ts",
       "marker": true
@@ -6535,7 +6615,17 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/connection/authorization-code-flow.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/connection/connection.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/connection/device-authorization.test.ts",
       "marker": true
     },
     {
@@ -6546,6 +6636,11 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/connection/o-auth-connection.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/connection/o-auth-token.test.ts",
       "marker": true
     },
     {
@@ -6900,6 +6995,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/model/ai-resource-info.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/model/invocation-usage.test.ts",
       "marker": true
     },
@@ -6916,6 +7016,16 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/model/model.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/model/project-info.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/model/subscription-info.test.ts",
       "marker": true
     },
     {
@@ -7190,16 +7300,6 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic-model-info.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic-models-response.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic-text-block.test.ts",
       "marker": true
     },
@@ -7229,13 +7329,8 @@
       "marker": true
     },
     {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/open-ai-model-info.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/open-ai-models-response.test.ts",
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/AiResourceInfo.md",
       "marker": true
     },
     {
@@ -7261,16 +7356,6 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/AnthropicMessagesResponse.md",
-      "marker": true
-    },
-    {
-      "outputRoot": "../web/src/content/docs/reference",
-      "path": "../web/src/content/docs/reference/AnthropicModelInfo.md",
-      "marker": true
-    },
-    {
-      "outputRoot": "../web/src/content/docs/reference",
-      "path": "../web/src/content/docs/reference/AnthropicModelsResponse.md",
       "marker": true
     },
     {
@@ -7316,6 +7401,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/AudioPart.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/AuthorizationCodeFlow.md",
       "marker": true
     },
     {
@@ -7381,6 +7471,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/DelegatedStateReference.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/DeviceAuthorization.md",
       "marker": true
     },
     {
@@ -7635,17 +7730,12 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/OAuthToken.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ObjectProperty.md",
-      "marker": true
-    },
-    {
-      "outputRoot": "../web/src/content/docs/reference",
-      "path": "../web/src/content/docs/reference/OpenAIModelInfo.md",
-      "marker": true
-    },
-    {
-      "outputRoot": "../web/src/content/docs/reference",
-      "path": "../web/src/content/docs/reference/OpenAIModelsResponse.md",
       "marker": true
     },
     {
@@ -7691,6 +7781,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/Processor.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ProjectInfo.md",
       "marker": true
     },
     {
@@ -7831,6 +7926,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/StreamOptions.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/SubscriptionInfo.md",
       "marker": true
     },
     {

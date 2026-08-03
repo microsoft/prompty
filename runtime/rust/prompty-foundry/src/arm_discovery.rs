@@ -9,19 +9,16 @@
 //! This module owns only the ARM protocol. The interactive picker/wizard
 //! (selection state, ordering, UI, persistence) is a host concern.
 //!
-//! # Wire format
-//!
-//! The three public result structs cross a host IPC boundary and are consumed
-//! directly by front-end code that expects snake_case fields. They therefore
-//! use plain serde derives (no `rename_all`) and serialize as snake_case. They
-//! are host-facing result DTOs mapped from ARM responses, not part of the
-//! cross-runtime Prompty model, so they intentionally do not follow the
-//! generated model's camelCase convention.
+//! Public discovery results use the generated, provider-neutral Prompty model.
+//! Hosts that need the legacy Foundry snake_case wire shape can call
+//! `to_wire("foundry")` on those generated values.
 
 use std::sync::LazyLock;
 use std::time::Duration;
 
-use serde::{Deserialize, Serialize};
+pub use prompty::model::{
+    AiResourceInfo as AiResource, ProjectInfo as FoundryProject, SubscriptionInfo as Subscription,
+};
 use serde_json::Value;
 
 static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
@@ -43,36 +40,6 @@ const ENDPOINT_PREFERENCE_KEY: &str = "OpenAI Language Model Instance API";
 
 /// Per-request timeout for ARM calls.
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
-
-/// An Azure subscription the signed-in identity can access.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Subscription {
-    pub subscription_id: String,
-    pub display_name: String,
-    pub state: String,
-}
-
-/// A Cognitive Services account usable for Azure OpenAI / Foundry inference.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AiResource {
-    pub name: String,
-    /// `"AIServices"` or `"OpenAI"`.
-    pub kind: String,
-    pub endpoint: String,
-    pub location: String,
-    pub resource_group: String,
-    /// `Some` for `AIServices` (new Foundry), `None` for `OpenAI`.
-    #[serde(default)]
-    pub foundry_url: Option<String>,
-}
-
-/// A Foundry project hosted under an [`AiResource`].
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FoundryProject {
-    pub name: String,
-    pub display_name: String,
-    pub endpoint: String,
-}
 
 /// List enabled subscriptions for the token's identity.
 ///
@@ -219,7 +186,7 @@ fn parse_ai_resource(v: &Value) -> Option<AiResource> {
         .map(ToString::to_string)?;
 
     let name = string_at(v, "name");
-    let foundry_url = if kind == "AIServices" {
+    let service_url = if kind == "AIServices" {
         Some(format!("https://{name}.services.ai.azure.com"))
     } else {
         None
@@ -229,7 +196,7 @@ fn parse_ai_resource(v: &Value) -> Option<AiResource> {
         resource_group: extract_resource_group(&string_at(v, "id")),
         location: string_at(v, "location"),
         endpoint,
-        foundry_url,
+        service_url,
         kind,
         name,
     })
@@ -333,7 +300,7 @@ mod tests {
         assert_eq!(res.endpoint, "https://preferred.example.com");
         assert_eq!(res.resource_group, "my-rg");
         assert_eq!(
-            res.foundry_url.as_deref(),
+            res.service_url.as_deref(),
             Some("https://myaccount.services.ai.azure.com")
         );
     }
@@ -351,8 +318,8 @@ mod tests {
         assert_eq!(res.endpoint, "https://plain.example.com");
         // resource group extraction is case-insensitive on the id segment.
         assert_eq!(res.resource_group, "lower-rg");
-        // OpenAI kind gets no foundry_url.
-        assert_eq!(res.foundry_url, None);
+        // OpenAI kind gets no project service URL.
+        assert_eq!(res.service_url, None);
     }
 
     #[test]
@@ -423,43 +390,39 @@ mod tests {
     }
 
     #[test]
-    fn structs_serialize_snake_case() {
+    fn generated_contracts_map_to_foundry_wire_names() {
         let res = AiResource {
             name: "a".into(),
             kind: "AIServices".into(),
             endpoint: "https://e".into(),
             location: "eastus".into(),
             resource_group: "rg".into(),
-            foundry_url: Some("https://f".into()),
+            service_url: Some("https://f".into()),
         };
-        let json = serde_json::to_string(&res).unwrap();
-        assert!(json.contains("\"resource_group\""));
-        assert!(json.contains("\"foundry_url\""));
-        assert!(!json.contains("resourceGroup"));
-        assert!(!json.contains("foundryUrl"));
+        let json = res.to_wire("foundry");
+        assert_eq!(json["resource_group"], "rg");
+        assert_eq!(json["foundry_url"], "https://f");
 
         let sub = Subscription {
             subscription_id: "s".into(),
             display_name: "d".into(),
             state: "Enabled".into(),
         };
-        let sub_json = serde_json::to_string(&sub).unwrap();
-        assert!(sub_json.contains("\"subscription_id\""));
-        assert!(sub_json.contains("\"display_name\""));
-        assert!(!sub_json.contains("subscriptionId"));
+        let sub_json = sub.to_wire("foundry");
+        assert_eq!(sub_json["subscription_id"], "s");
+        assert_eq!(sub_json["display_name"], "d");
     }
 
     #[test]
-    fn ai_resource_foundry_url_defaults_when_absent() {
-        // Missing foundry_url deserializes to None via serde(default).
+    fn ai_resource_service_url_defaults_when_absent() {
         let v = json!({
             "name": "a",
             "kind": "OpenAI",
             "endpoint": "https://e",
             "location": "eastus",
-            "resource_group": "rg"
+            "resourceGroup": "rg"
         });
-        let res: AiResource = serde_json::from_value(v).unwrap();
-        assert_eq!(res.foundry_url, None);
+        let res = AiResource::load_from_value(&v, &prompty::model::context::LoadContext::default());
+        assert_eq!(res.service_url, None);
     }
 }

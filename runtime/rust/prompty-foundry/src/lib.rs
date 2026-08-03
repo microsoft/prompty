@@ -14,6 +14,7 @@
 //! ```
 
 pub mod arm_discovery;
+mod auth;
 pub mod executor;
 pub mod models;
 pub mod oauth;

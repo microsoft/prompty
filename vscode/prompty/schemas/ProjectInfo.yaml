@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ProjectInfo.yaml
+type: object
+properties:
+  name:
+    type: string
+    description: Provider project name
+  displayName:
+    type: string
+    description: Human-readable project name
+  endpoint:
+    type: string
+    description: Project-scoped inference endpoint
+required:
+  - name
+  - displayName
+  - endpoint
+description: A project hosted by an AI service resource.

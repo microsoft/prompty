@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// TurnEngineResult represents The result returned by the turn engine.
+// TurnEngineResult represents The result returned by the live turn engine.
 
 type TurnEngineResult struct {
 	Commit          TurnCommit                       `json:"commit" yaml:"commit"`
