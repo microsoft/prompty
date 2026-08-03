@@ -2,7 +2,35 @@ import "@typra/emitter";
 import "../model/model.tsp";
 import "../model/usage.tsp";
 
-using Prompty;
+namespace Prompty;
+
+/**
+ * A model entry returned by OpenAI's model listing API.
+ */
+model OpenAIModelInfo {
+  @doc("The model identifier")
+  id: string;
+
+  @doc("The API object type")
+  object?: string;
+
+  @doc("Unix timestamp when the model was created")
+  created?: int64;
+
+  @doc("The organization or user that owns the model")
+  owned_by?: string;
+}
+
+/**
+ * The response body from OpenAI's model listing API.
+ */
+model OpenAIModelsResponse {
+  @doc("The API object type")
+  object?: string;
+
+  @doc("Models available to the authenticated caller")
+  data: OpenAIModelInfo[];
+}
 
 // ============================================================================
 // OpenAI Chat Completions API wire mappings

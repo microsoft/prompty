@@ -6,6 +6,7 @@
 ##########################################
 from ._Model import Model
 from ._ModelInfo import ModelInfo
+from ._ModelLister import ModelLister
 from ._ModelOptions import ModelOptions
 from ._TokenUsage import TokenUsage
 
@@ -13,5 +14,6 @@ __all__ = [
     "ModelOptions",
     "Model",
     "TokenUsage",
+    "ModelLister",
     "ModelInfo",
 ]

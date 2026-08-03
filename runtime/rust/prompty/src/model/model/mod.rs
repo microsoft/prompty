@@ -18,5 +18,8 @@ pub use model::*;
 pub mod token_usage;
 pub use token_usage::*;
 
+pub mod model_lister;
+pub use model_lister::*;
+
 pub mod model_info;
 pub use model_info::*;

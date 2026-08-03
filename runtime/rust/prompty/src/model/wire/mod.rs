@@ -9,6 +9,18 @@
     clippy::all
 )]
 
+pub mod open_ai_model_info;
+pub use open_ai_model_info::*;
+
+pub mod open_ai_models_response;
+pub use open_ai_models_response::*;
+
+pub mod anthropic_model_info;
+pub use anthropic_model_info::*;
+
+pub mod anthropic_models_response;
+pub use anthropic_models_response::*;
+
 pub mod anthropic_text_block;
 pub use anthropic_text_block::*;
 

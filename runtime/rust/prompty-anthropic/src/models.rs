@@ -1,15 +1,22 @@
-//! Model discovery for Anthropic — calls `GET /v1/models` and maps the
-//! response to `ModelInfo`. Anthropic returns `context_length` and modality
-//! information directly, so no enrichment table is needed.
+//! Model discovery for Anthropic.
+//!
+//! Loads each `GET /v1/models` page through Typra-generated wire models,
+//! then converts each entry to the provider-neutral [`ModelInfo`] shape.
 
 use std::sync::LazyLock;
 
 use prompty::interfaces::InvokerError;
-use prompty::model::ModelInfo;
+use prompty::model::{
+    AnthropicModelInfo, AnthropicModelsResponse, LoadContext, ModelInfo, ModelLister, SaveContext,
+};
 use serde_json::Value;
 
-/// Shared HTTP client — reuses the same pool as the executor.
+/// Shared HTTP client for model discovery requests.
 static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
+
+/// Anthropic implementation of the Typra-generated model discovery protocol.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct AnthropicModelLister;
 
 /// The Anthropic API version header value (matches executor.rs / wire.rs).
 const ANTHROPIC_VERSION: &str = "2023-06-01";
@@ -50,58 +57,31 @@ fn get_api_key(connection: &Value) -> Result<String, InvokerError> {
     ))
 }
 
-/// Convert one Anthropic model object into a `ModelInfo`.
-///
-/// Anthropic's list models response includes `context_length` and modality
-/// information, so we map them directly without a lookup table.
-fn parse_model_object(obj: &Value) -> ModelInfo {
-    let id = obj
-        .get("id")
-        .and_then(|v| v.as_str())
-        .unwrap_or_default()
-        .to_string();
+fn validate_connection_kind(connection: &Value) -> Result<(), InvokerError> {
+    let kind = connection.get("kind").and_then(Value::as_str).unwrap_or("");
+    if kind == "key" {
+        return Ok(());
+    }
+    Err(InvokerError::Execute(
+        format!(
+            "Connection kind '{kind}' is not supported for Anthropic model listing. Use 'key'."
+        )
+        .into(),
+    ))
+}
 
-    let display_name = obj
-        .get("display_name")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string());
-
-    let owned_by = Some("anthropic".to_string());
-
-    // Anthropic returns `context_length` as an integer (not `context_window`)
-    // See: https://docs.anthropic.com/en/api/models-list
-    let context_window = obj
-        .get("context_length")
-        .and_then(|v| v.as_i64())
-        .map(|v| v as i32);
-
-    // Anthropic returns input/output modalities as arrays of strings when available
-    let input_modalities = obj
-        .get("input_modalities")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                .collect()
-        });
-
-    let output_modalities = obj
-        .get("output_modalities")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                .collect()
-        });
+/// Convert one typed Anthropic model into a provider-neutral `ModelInfo`.
+fn to_model_info(model: AnthropicModelInfo) -> ModelInfo {
+    let additional_properties = model.to_value(&SaveContext::default());
 
     ModelInfo {
-        id,
-        display_name,
-        owned_by,
-        context_window,
-        input_modalities,
-        output_modalities,
-        additional_properties: serde_json::Value::Null,
+        id: model.id,
+        display_name: model.display_name,
+        owned_by: Some("anthropic".to_string()),
+        context_window: model.context_length,
+        input_modalities: model.input_modalities,
+        output_modalities: model.output_modalities,
+        additional_properties,
     }
 }
 
@@ -109,6 +89,7 @@ fn parse_model_object(obj: &Value) -> ModelInfo {
 ///
 /// Calls `GET /v1/models` with pagination and aggregates all results.
 pub async fn list_models_async(connection: &Value) -> Result<Vec<ModelInfo>, InvokerError> {
+    validate_connection_kind(connection)?;
     let base_url = build_models_url(connection);
     let api_key = get_api_key(connection)?;
     let client = &*HTTP_CLIENT;
@@ -152,34 +133,32 @@ pub async fn list_models_async(connection: &Value) -> Result<Vec<ModelInfo>, Inv
             .await
             .map_err(|e| InvokerError::Execute(format!("Failed to parse response: {e}").into()))?;
 
-        if let Some(arr) = body.get("data").and_then(|d| d.as_array()) {
-            for obj in arr {
-                all_models.push(parse_model_object(obj));
-            }
-        }
+        let response = AnthropicModelsResponse::load_from_value(&body, &LoadContext::default());
+        all_models.extend(response.data.into_iter().map(to_model_info));
 
-        // Check if there are more pages
-        let has_more = body
-            .get("has_more")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
-
-        if !has_more {
+        if !response.has_more.unwrap_or(false) {
             break;
         }
 
-        // Get the last model ID for pagination cursor
-        after_id = body
-            .get("last_id")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string());
-
+        after_id = response.last_id;
         if after_id.is_none() {
             break;
         }
     }
 
     Ok(all_models)
+}
+
+#[async_trait::async_trait]
+impl ModelLister for AnthropicModelLister {
+    async fn list_models(
+        &self,
+        connection: &Value,
+    ) -> Result<Vec<ModelInfo>, Box<dyn std::error::Error + Send + Sync>> {
+        list_models_async(connection)
+            .await
+            .map_err(|error| Box::new(error) as Box<dyn std::error::Error + Send + Sync>)
+    }
 }
 
 /// List models available from the Anthropic API (blocking).
@@ -206,6 +185,54 @@ pub fn list_models(connection: &Value) -> Result<Vec<ModelInfo>, InvokerError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+    use tokio::sync::oneshot;
+
+    struct RemovedEnv {
+        name: &'static str,
+        previous: Option<String>,
+    }
+
+    impl RemovedEnv {
+        fn new(name: &'static str) -> Self {
+            let previous = std::env::var(name).ok();
+            // SAFETY: Tests that mutate provider environment variables are serialized.
+            unsafe { std::env::remove_var(name) };
+            Self { name, previous }
+        }
+    }
+
+    impl Drop for RemovedEnv {
+        fn drop(&mut self) {
+            if let Some(value) = &self.previous {
+                // SAFETY: Tests that mutate provider environment variables are serialized.
+                unsafe { std::env::set_var(self.name, value) };
+            }
+        }
+    }
+
+    async fn spawn_model_server(body: &'static str) -> (String, oneshot::Receiver<String>) {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (request_tx, request_rx) = oneshot::channel();
+        tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut request = vec![0; 4096];
+            let size = stream.read(&mut request).await.unwrap();
+            request.truncate(size);
+            request_tx
+                .send(String::from_utf8(request).unwrap())
+                .unwrap();
+            let response = format!(
+                "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+                body.len()
+            );
+            stream.write_all(response.as_bytes()).await.unwrap();
+        });
+        (format!("http://{address}"), request_rx)
+    }
 
     #[test]
     fn test_build_models_url_default() {
@@ -233,12 +260,26 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_api_key_missing() {
-        // Safety: test-only env manipulation
-        unsafe { std::env::remove_var("ANTHROPIC_API_KEY") };
+        let _env = RemovedEnv::new("ANTHROPIC_API_KEY");
         let conn = serde_json::json!({});
         let result = get_api_key(&conn);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_validate_connection_kind() {
+        assert!(validate_connection_kind(&serde_json::json!({"kind": "key"})).is_ok());
+        let error =
+            validate_connection_kind(&serde_json::json!({"kind": "reference"})).unwrap_err();
+        assert!(error.to_string().contains("not supported"));
+    }
+
+    #[test]
+    fn test_model_lister_implements_generated_protocol() {
+        fn assert_model_lister<T: ModelLister>() {}
+        assert_model_lister::<AnthropicModelLister>();
     }
 
     #[test]
@@ -251,7 +292,8 @@ mod tests {
             "output_modalities": ["text"],
             "type": "model"
         });
-        let info = parse_model_object(&obj);
+        let model = AnthropicModelInfo::load_from_value(&obj, &LoadContext::default());
+        let info = to_model_info(model);
         assert_eq!(info.id, "claude-sonnet-4-20250514");
         assert_eq!(info.display_name.as_deref(), Some("Claude Sonnet 4"));
         assert_eq!(info.owned_by.as_deref(), Some("anthropic"));
@@ -264,6 +306,7 @@ mod tests {
             info.output_modalities.as_deref(),
             Some(vec!["text".to_string()].as_slice())
         );
+        assert_eq!(info.additional_properties["type"], "model");
     }
 
     #[test]
@@ -272,7 +315,8 @@ mod tests {
             "id": "claude-3-haiku-20240307",
             "type": "model"
         });
-        let info = parse_model_object(&obj);
+        let model = AnthropicModelInfo::load_from_value(&obj, &LoadContext::default());
+        let info = to_model_info(model);
         assert_eq!(info.id, "claude-3-haiku-20240307");
         assert_eq!(info.owned_by.as_deref(), Some("anthropic"));
         assert!(info.context_window.is_none());
@@ -282,8 +326,33 @@ mod tests {
     #[test]
     fn test_parse_model_empty() {
         let obj = serde_json::json!({});
-        let info = parse_model_object(&obj);
+        let model = AnthropicModelInfo::load_from_value(&obj, &LoadContext::default());
+        let info = to_model_info(model);
         assert_eq!(info.id, "");
         assert!(info.display_name.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_list_models_sends_anthropic_headers_and_loads_typed_response() {
+        let body = r#"{"data":[{"id":"claude-sonnet-4-20250514","display_name":"Claude Sonnet 4","created_at":"2025-05-14T00:00:00Z","type":"model"}],"first_id":"claude-sonnet-4-20250514","has_more":false,"last_id":"claude-sonnet-4-20250514"}"#;
+        let (endpoint, request) = spawn_model_server(body).await;
+        let models = list_models_async(&serde_json::json!({
+            "kind": "key",
+            "endpoint": endpoint,
+            "apiKey": "test-anthropic-key"
+        }))
+        .await
+        .unwrap();
+
+        let request = request.await.unwrap().to_ascii_lowercase();
+        assert!(request.starts_with("get /v1/models?limit=100 "));
+        assert!(request.contains("x-api-key: test-anthropic-key"));
+        assert!(request.contains("anthropic-version: 2023-06-01"));
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].display_name.as_deref(), Some("Claude Sonnet 4"));
+        assert_eq!(
+            models[0].additional_properties["created_at"],
+            "2025-05-14T00:00:00Z"
+        );
     }
 }

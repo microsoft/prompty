@@ -39,6 +39,8 @@
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
+        "AnthropicModelInfo",
+        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -86,9 +88,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelLister",
         "ModelOptions",
         "OAuthConnection",
         "ObjectProperty",
+        "OpenAIModelInfo",
+        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -685,6 +690,13 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "model/ModelLister.cs",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
@@ -979,6 +991,20 @@
           "protocol": false
         },
         {
+          "name": "AnthropicModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "wire/AnthropicModelInfo.cs",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "wire/AnthropicModelsResponse.cs",
+          "protocol": false
+        },
+        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -1018,6 +1044,20 @@
           "kind": "value",
           "group": "wire",
           "source": "wire/AnthropicWireMessage.cs",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "wire/OpenAIModelInfo.cs",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "wire/OpenAIModelsResponse.cs",
           "protocol": false
         }
       ],
@@ -1192,12 +1232,14 @@
           "exports": [
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
             "Model.cs",
             "ModelInfo.cs",
+            "ModelLister.cs",
             "ModelOptions.cs",
             "TokenUsage.cs"
           ]
@@ -1311,28 +1353,53 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
+            "AnthropicModelInfo",
+            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage"
+            "AnthropicWireMessage",
+            "OpenAIModelInfo",
+            "OpenAIModelsResponse"
           ],
           "modules": [
             "AnthropicImageBlock.cs",
             "AnthropicImageSource.cs",
             "AnthropicMessagesRequest.cs",
             "AnthropicMessagesResponse.cs",
+            "AnthropicModelInfo.cs",
+            "AnthropicModelsResponse.cs",
             "AnthropicTextBlock.cs",
             "AnthropicToolDefinition.cs",
             "AnthropicToolResultBlock.cs",
             "AnthropicToolUseBlock.cs",
             "AnthropicUsage.cs",
-            "AnthropicWireMessage.cs"
+            "AnthropicWireMessage.cs",
+            "OpenAIModelInfo.cs",
+            "OpenAIModelsResponse.cs"
           ]
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "model/ModelLister.cs",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -1639,6 +1706,7 @@
         "events/TurnTrace.cs",
         "model/Model.cs",
         "model/ModelInfo.cs",
+        "model/ModelLister.cs",
         "model/ModelOptions.cs",
         "model/TokenUsage.cs",
         "pipeline/CheckpointStore.cs",
@@ -1676,12 +1744,16 @@
         "wire/AnthropicImageSource.cs",
         "wire/AnthropicMessagesRequest.cs",
         "wire/AnthropicMessagesResponse.cs",
+        "wire/AnthropicModelInfo.cs",
+        "wire/AnthropicModelsResponse.cs",
         "wire/AnthropicTextBlock.cs",
         "wire/AnthropicToolDefinition.cs",
         "wire/AnthropicToolResultBlock.cs",
         "wire/AnthropicToolUseBlock.cs",
         "wire/AnthropicUsage.cs",
-        "wire/AnthropicWireMessage.cs"
+        "wire/AnthropicWireMessage.cs",
+        "wire/OpenAIModelInfo.cs",
+        "wire/OpenAIModelsResponse.cs"
       ]
     },
     {
@@ -1694,6 +1766,8 @@
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
+        "AnthropicModelInfo",
+        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -1741,9 +1815,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelLister",
         "ModelOptions",
         "OAuthConnection",
         "ObjectProperty",
+        "OpenAIModelInfo",
+        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -2340,6 +2417,13 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "model_lister.go",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
@@ -2634,6 +2718,20 @@
           "protocol": false
         },
         {
+          "name": "AnthropicModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "anthropic_model_info.go",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "anthropic_models_response.go",
+          "protocol": false
+        },
+        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -2673,6 +2771,20 @@
           "kind": "value",
           "group": "wire",
           "source": "anthropic_wire_message.go",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "open_ai_model_info.go",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "open_ai_models_response.go",
           "protocol": false
         }
       ],
@@ -2847,12 +2959,14 @@
           "exports": [
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
             "model",
             "model_info",
+            "model_lister",
             "model_options",
             "token_usage"
           ]
@@ -2966,28 +3080,53 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
+            "AnthropicModelInfo",
+            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage"
+            "AnthropicWireMessage",
+            "OpenAIModelInfo",
+            "OpenAIModelsResponse"
           ],
           "modules": [
             "anthropic_image_block",
             "anthropic_image_source",
             "anthropic_messages_request",
             "anthropic_messages_response",
+            "anthropic_model_info",
+            "anthropic_models_response",
             "anthropic_text_block",
             "anthropic_tool_definition",
             "anthropic_tool_result_block",
             "anthropic_tool_use_block",
             "anthropic_usage",
-            "anthropic_wire_message"
+            "anthropic_wire_message",
+            "open_ai_model_info",
+            "open_ai_models_response"
           ]
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "model_lister.go",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -3239,6 +3378,8 @@
         "anthropic_image_source.go",
         "anthropic_messages_request.go",
         "anthropic_messages_response.go",
+        "anthropic_model_info.go",
+        "anthropic_models_response.go",
         "anthropic_text_block.go",
         "anthropic_tool_definition.go",
         "anthropic_tool_result_block.go",
@@ -3276,7 +3417,10 @@
         "messages_updated_payload.go",
         "model.go",
         "model_info.go",
+        "model_lister.go",
         "model_options.go",
+        "open_ai_model_info.go",
+        "open_ai_models_response.go",
         "parser.go",
         "parser_config.go",
         "permission_completed_payload.go",
@@ -3348,6 +3492,8 @@
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
+        "AnthropicModelInfo",
+        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -3395,9 +3541,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelLister",
         "ModelOptions",
         "OAuthConnection",
         "ObjectProperty",
+        "OpenAIModelInfo",
+        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -3994,6 +4143,13 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "ModelLister",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
@@ -4288,6 +4444,20 @@
           "protocol": false
         },
         {
+          "name": "AnthropicModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicModelInfo",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicModelsResponse",
+          "protocol": false
+        },
+        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -4327,6 +4497,20 @@
           "kind": "value",
           "group": "wire",
           "source": "AnthropicWireMessage",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "OpenAIModelInfo",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "OpenAIModelsResponse",
           "protocol": false
         }
       ],
@@ -4501,12 +4685,14 @@
           "exports": [
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
             "model",
             "model_info",
+            "model_lister",
             "model_options",
             "token_usage"
           ]
@@ -4620,28 +4806,53 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
+            "AnthropicModelInfo",
+            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage"
+            "AnthropicWireMessage",
+            "OpenAIModelInfo",
+            "OpenAIModelsResponse"
           ],
           "modules": [
             "anthropic_image_block",
             "anthropic_image_source",
             "anthropic_messages_request",
             "anthropic_messages_response",
+            "anthropic_model_info",
+            "anthropic_models_response",
             "anthropic_text_block",
             "anthropic_tool_definition",
             "anthropic_tool_result_block",
             "anthropic_tool_use_block",
             "anthropic_usage",
-            "anthropic_wire_message"
+            "anthropic_wire_message",
+            "open_ai_model_info",
+            "open_ai_models_response"
           ]
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "ModelLister",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -4893,6 +5104,8 @@
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
+        "AnthropicModelInfo",
+        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -4930,7 +5143,10 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelLister",
         "ModelOptions",
+        "OpenAIModelInfo",
+        "OpenAIModelsResponse",
         "Parser",
         "ParserConfig",
         "PermissionCompletedPayload",
@@ -5003,6 +5219,8 @@
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
+        "AnthropicModelInfo",
+        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -5050,9 +5268,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelLister",
         "ModelOptions",
         "OAuthConnection",
         "ObjectProperty",
+        "OpenAIModelInfo",
+        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -5649,6 +5870,13 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": ".model",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
@@ -5943,6 +6171,20 @@
           "protocol": false
         },
         {
+          "name": "AnthropicModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": ".wire",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": ".wire",
+          "protocol": false
+        },
+        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -5979,6 +6221,20 @@
         },
         {
           "name": "AnthropicWireMessage",
+          "kind": "value",
+          "group": "wire",
+          "source": ".wire",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": ".wire",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelsResponse",
           "kind": "value",
           "group": "wire",
           "source": ".wire",
@@ -6156,12 +6412,14 @@
           "exports": [
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
             "_Model",
             "_ModelInfo",
+            "_ModelLister",
             "_ModelOptions",
             "_TokenUsage"
           ]
@@ -6275,28 +6533,53 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
+            "AnthropicModelInfo",
+            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage"
+            "AnthropicWireMessage",
+            "OpenAIModelInfo",
+            "OpenAIModelsResponse"
           ],
           "modules": [
             "_AnthropicImageBlock",
             "_AnthropicImageSource",
             "_AnthropicMessagesRequest",
             "_AnthropicMessagesResponse",
+            "_AnthropicModelInfo",
+            "_AnthropicModelsResponse",
             "_AnthropicTextBlock",
             "_AnthropicToolDefinition",
             "_AnthropicToolResultBlock",
             "_AnthropicToolUseBlock",
             "_AnthropicUsage",
-            "_AnthropicWireMessage"
+            "_AnthropicWireMessage",
+            "_OpenAIModelInfo",
+            "_OpenAIModelsResponse"
           ]
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": ".model",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -6567,6 +6850,8 @@
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
+        "AnthropicModelInfo",
+        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -6614,9 +6899,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelLister",
         "ModelOptions",
         "OAuthConnection",
         "ObjectProperty",
+        "OpenAIModelInfo",
+        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -7213,6 +7501,13 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "model::model_lister",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
@@ -7507,6 +7802,20 @@
           "protocol": false
         },
         {
+          "name": "AnthropicModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "wire::anthropic_model_info",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "wire::anthropic_models_response",
+          "protocol": false
+        },
+        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -7546,6 +7855,20 @@
           "kind": "value",
           "group": "wire",
           "source": "wire::anthropic_wire_message",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "wire::open_ai_model_info",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "wire::open_ai_models_response",
           "protocol": false
         }
       ],
@@ -7720,12 +8043,14 @@
           "exports": [
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
             "model",
             "model_info",
+            "model_lister",
             "model_options",
             "token_usage"
           ]
@@ -7839,28 +8164,53 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
+            "AnthropicModelInfo",
+            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage"
+            "AnthropicWireMessage",
+            "OpenAIModelInfo",
+            "OpenAIModelsResponse"
           ],
           "modules": [
             "anthropic_image_block",
             "anthropic_image_source",
             "anthropic_messages_request",
             "anthropic_messages_response",
+            "anthropic_model_info",
+            "anthropic_models_response",
             "anthropic_text_block",
             "anthropic_tool_definition",
             "anthropic_tool_result_block",
             "anthropic_tool_use_block",
             "anthropic_usage",
-            "anthropic_wire_message"
+            "anthropic_wire_message",
+            "open_ai_model_info",
+            "open_ai_models_response"
           ]
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "model::model_lister",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -8133,6 +8483,8 @@
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
         "AnthropicMessagesResponse",
+        "AnthropicModelInfo",
+        "AnthropicModelsResponse",
         "AnthropicTextBlock",
         "AnthropicToolDefinition",
         "AnthropicToolResultBlock",
@@ -8180,9 +8532,12 @@
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelLister",
         "ModelOptions",
         "OAuthConnection",
         "ObjectProperty",
+        "OpenAIModelInfo",
+        "OpenAIModelsResponse",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -8779,6 +9134,13 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "./model/model-lister",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
@@ -9073,6 +9435,20 @@
           "protocol": false
         },
         {
+          "name": "AnthropicModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "./wire/anthropic-model-info",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "./wire/anthropic-models-response",
+          "protocol": false
+        },
+        {
           "name": "AnthropicTextBlock",
           "kind": "value",
           "group": "wire",
@@ -9112,6 +9488,20 @@
           "kind": "value",
           "group": "wire",
           "source": "./wire/anthropic-wire-message",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelInfo",
+          "kind": "value",
+          "group": "wire",
+          "source": "./wire/open-ai-model-info",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModelsResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "./wire/open-ai-models-response",
           "protocol": false
         }
       ],
@@ -9286,12 +9676,14 @@
           "exports": [
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
             "TokenUsage"
           ],
           "modules": [
             "model",
             "model-info",
+            "model-lister",
             "model-options",
             "token-usage"
           ]
@@ -9405,28 +9797,53 @@
             "AnthropicImageSource",
             "AnthropicMessagesRequest",
             "AnthropicMessagesResponse",
+            "AnthropicModelInfo",
+            "AnthropicModelsResponse",
             "AnthropicTextBlock",
             "AnthropicToolDefinition",
             "AnthropicToolResultBlock",
             "AnthropicToolUseBlock",
             "AnthropicUsage",
-            "AnthropicWireMessage"
+            "AnthropicWireMessage",
+            "OpenAIModelInfo",
+            "OpenAIModelsResponse"
           ],
           "modules": [
             "anthropic-image-block",
             "anthropic-image-source",
             "anthropic-messages-request",
             "anthropic-messages-response",
+            "anthropic-model-info",
+            "anthropic-models-response",
             "anthropic-text-block",
             "anthropic-tool-definition",
             "anthropic-tool-result-block",
             "anthropic-tool-use-block",
             "anthropic-usage",
-            "anthropic-wire-message"
+            "anthropic-wire-message",
+            "open-ai-model-info",
+            "open-ai-models-response"
           ]
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "./model/model-lister",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -9733,6 +10150,7 @@
         "./events/turn-trace",
         "./model/model",
         "./model/model-info",
+        "./model/model-lister",
         "./model/model-options",
         "./model/token-usage",
         "./pipeline/checkpoint-store",
@@ -9770,12 +10188,16 @@
         "./wire/anthropic-image-source",
         "./wire/anthropic-messages-request",
         "./wire/anthropic-messages-response",
+        "./wire/anthropic-model-info",
+        "./wire/anthropic-models-response",
         "./wire/anthropic-text-block",
         "./wire/anthropic-tool-definition",
         "./wire/anthropic-tool-result-block",
         "./wire/anthropic-tool-use-block",
         "./wire/anthropic-usage",
-        "./wire/anthropic-wire-message"
+        "./wire/anthropic-wire-message",
+        "./wire/open-ai-model-info",
+        "./wire/open-ai-models-response"
       ]
     }
   ]

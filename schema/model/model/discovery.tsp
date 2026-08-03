@@ -2,6 +2,17 @@ import "@typra/emitter";
 
 namespace Prompty;
 
+@@protocol(ModelLister);
+@@method(ModelLister,
+  "listModels",
+  "ModelInfo[]",
+  "List models available through a provider connection",
+  #{ connection: "unknown" }
+);
+
+/** Lists models available through a provider connection. */
+model ModelLister {}
+
 /**
  * Information about a model available from a provider. Used by provider-level
  * model discovery to report which models are available and their capabilities.

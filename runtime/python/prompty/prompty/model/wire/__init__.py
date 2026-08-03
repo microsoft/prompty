@@ -8,14 +8,22 @@ from ._AnthropicImageBlock import AnthropicImageBlock
 from ._AnthropicImageSource import AnthropicImageSource
 from ._AnthropicMessagesRequest import AnthropicMessagesRequest
 from ._AnthropicMessagesResponse import AnthropicMessagesResponse
+from ._AnthropicModelInfo import AnthropicModelInfo
+from ._AnthropicModelsResponse import AnthropicModelsResponse
 from ._AnthropicTextBlock import AnthropicTextBlock
 from ._AnthropicToolDefinition import AnthropicToolDefinition
 from ._AnthropicToolResultBlock import AnthropicToolResultBlock
 from ._AnthropicToolUseBlock import AnthropicToolUseBlock
 from ._AnthropicUsage import AnthropicUsage
 from ._AnthropicWireMessage import AnthropicWireMessage
+from ._OpenAIModelInfo import OpenAIModelInfo
+from ._OpenAIModelsResponse import OpenAIModelsResponse
 
 __all__ = [
+    "OpenAIModelInfo",
+    "OpenAIModelsResponse",
+    "AnthropicModelInfo",
+    "AnthropicModelsResponse",
     "AnthropicTextBlock",
     "AnthropicImageSource",
     "AnthropicImageBlock",

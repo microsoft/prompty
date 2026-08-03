@@ -3,6 +3,49 @@ import "@typra/emitter";
 namespace Prompty;
 
 /**
+ * A model entry returned by Anthropic's model listing API.
+ */
+model AnthropicModelInfo {
+  @doc("The model identifier")
+  id: string;
+
+  @doc("The human-readable model name")
+  display_name?: string;
+
+  @doc("The RFC 3339 timestamp when the model was created")
+  created_at?: string;
+
+  @doc("The API object type")
+  type?: string;
+
+  @doc("The model context window when supplied by the endpoint")
+  context_length?: int32;
+
+  @doc("Input modalities when supplied by the endpoint")
+  input_modalities?: string[];
+
+  @doc("Output modalities when supplied by the endpoint")
+  output_modalities?: string[];
+}
+
+/**
+ * The response body from Anthropic's model listing API.
+ */
+model AnthropicModelsResponse {
+  @doc("Models available to the authenticated caller")
+  data: AnthropicModelInfo[];
+
+  @doc("The first model identifier in this page")
+  first_id?: string;
+
+  @doc("Whether another page is available")
+  has_more?: boolean;
+
+  @doc("The last model identifier in this page")
+  last_id?: string;
+}
+
+/**
  * A text content block in Anthropic's array-of-blocks message format.
  */
 model AnthropicTextBlock {

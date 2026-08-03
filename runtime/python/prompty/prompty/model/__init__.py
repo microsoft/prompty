@@ -93,6 +93,7 @@ from .events import (
 from .model import (
     Model,
     ModelInfo,
+    ModelLister,
     ModelOptions,
     TokenUsage,
 )
@@ -147,12 +148,16 @@ from .wire import (
     AnthropicImageSource,
     AnthropicMessagesRequest,
     AnthropicMessagesResponse,
+    AnthropicModelInfo,
+    AnthropicModelsResponse,
     AnthropicTextBlock,
     AnthropicToolDefinition,
     AnthropicToolResultBlock,
     AnthropicToolUseBlock,
     AnthropicUsage,
     AnthropicWireMessage,
+    OpenAIModelInfo,
+    OpenAIModelsResponse,
 )
 
 __all__ = [
@@ -201,6 +206,7 @@ __all__ = [
     "FileNotFoundError",
     "ValidationResult",
     "TokenUsage",
+    "ModelLister",
     "ModelInfo",
     "CompactionConfig",
     "TurnOptions",
@@ -273,6 +279,10 @@ __all__ = [
     "TraceTime",
     "TraceSpan",
     "TraceFile",
+    "OpenAIModelInfo",
+    "OpenAIModelsResponse",
+    "AnthropicModelInfo",
+    "AnthropicModelsResponse",
     "AnthropicTextBlock",
     "AnthropicImageSource",
     "AnthropicImageBlock",

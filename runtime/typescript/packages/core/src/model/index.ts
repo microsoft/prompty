@@ -89,6 +89,7 @@ export {
 export { ModelOptions } from "./model/model-options";
 export { Model } from "./model/model";
 export { TokenUsage } from "./model/token-usage";
+export type { ModelLister } from "./model/model-lister";
 export { ModelInfo } from "./model/model-info";
 
 export { CompactionConfig } from "./pipeline/compaction-config";
@@ -134,6 +135,10 @@ export { TraceTime } from "./tracing/trace-time";
 export { TraceSpan } from "./tracing/trace-span";
 export { TraceFile } from "./tracing/trace-file";
 
+export { OpenAIModelInfo } from "./wire/open-ai-model-info";
+export { OpenAIModelsResponse } from "./wire/open-ai-models-response";
+export { AnthropicModelInfo } from "./wire/anthropic-model-info";
+export { AnthropicModelsResponse } from "./wire/anthropic-models-response";
 export { AnthropicTextBlock } from "./wire/anthropic-text-block";
 export { AnthropicImageSource } from "./wire/anthropic-image-source";
 export { AnthropicImageBlock } from "./wire/anthropic-image-block";

@@ -7,10 +7,14 @@
 use std::sync::LazyLock;
 
 use prompty::interfaces::InvokerError;
-use prompty::model::ModelInfo;
+use prompty::model::{ModelInfo, ModelLister};
 use serde_json::Value;
 
 static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
+
+/// Foundry implementation of the Typra-generated model discovery protocol.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct FoundryModelLister;
 
 const DEFAULT_API_VERSION: &str = "2025-04-01-preview";
 
@@ -30,6 +34,18 @@ pub async fn list_models_async(connection: &Value) -> Result<Vec<ModelInfo>, Inv
             )
             .into(),
         )),
+    }
+}
+
+#[async_trait::async_trait]
+impl ModelLister for FoundryModelLister {
+    async fn list_models(
+        &self,
+        connection: &Value,
+    ) -> Result<Vec<ModelInfo>, Box<dyn std::error::Error + Send + Sync>> {
+        list_models_async(connection)
+            .await
+            .map_err(|error| Box::new(error) as Box<dyn std::error::Error + Send + Sync>)
     }
 }
 
@@ -294,6 +310,12 @@ async fn get_ai_token() -> Result<String, InvokerError> {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn model_lister_implements_generated_protocol() {
+        fn assert_model_lister<T: ModelLister>() {}
+        assert_model_lister::<FoundryModelLister>();
+    }
 
     #[test]
     fn parse_deployment_maps_capabilities_and_raw_payload() {
