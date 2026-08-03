@@ -9,6 +9,7 @@
     clippy::all
 )]
 
+mod invocation_usage_test;
 mod model_info_test;
 mod model_options_test;
 mod model_test;

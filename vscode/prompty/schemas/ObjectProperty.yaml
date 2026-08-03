@@ -31,6 +31,8 @@ properties:
                 - type: string
                   const: object
                 - type: string
+                  const: union
+                - type: string
                   const: thread
                 - type: string
                   const: image
@@ -47,6 +49,10 @@ properties:
               type: boolean
               default: false
               description: Whether the property is required
+            nullable:
+              type: boolean
+              default: false
+              description: Whether the property also accepts a JSON null value
             default:
               default: null
               description: The default value of the property - this represents the default value if none is provided

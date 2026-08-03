@@ -47,6 +47,22 @@ impl SessionEndStatus {
         }
     }
 
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("success") {
+            return Some(Self::Success);
+        }
+        if s.eq_ignore_ascii_case("error") {
+            return Some(Self::Error);
+        }
+        if s.eq_ignore_ascii_case("cancelled") {
+            return Some(Self::Cancelled);
+        }
+        if s.eq_ignore_ascii_case("interrupted") {
+            return Some(Self::Interrupted);
+        }
+        None
+    }
+
     pub fn as_str(&self) -> &str {
         match self {
             Self::Success => "success",
@@ -57,8 +73,23 @@ impl SessionEndStatus {
     }
 }
 
+impl serde::Serialize for SessionEndStatus {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for SessionEndStatus {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid SessionEndStatus value: {}", s))
+        })
+    }
+}
+
 /// Payload for "session_end" events.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct SessionEndPayload {
     /// Stable session identifier
     pub session_id: Option<String>,
@@ -150,5 +181,21 @@ impl SessionEndPayload {
     /// Serialize SessionEndPayload to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `SessionEndPayload` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for SessionEndPayload {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for SessionEndPayload {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

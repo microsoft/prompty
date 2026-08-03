@@ -5,5 +5,6 @@
 export { ModelOptions } from "./model-options";
 export { Model } from "./model";
 export { TokenUsage } from "./token-usage";
+export { InvocationUsage } from "./invocation-usage";
 export type { ModelLister } from "./model-lister";
 export { ModelInfo } from "./model-info";

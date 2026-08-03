@@ -12,8 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// Tracks token consumption for a single LLM call. Provider-specific field names (e.g., OpenAI's `prompt_tokens` vs Anthropic's `input_tokens`) are mapped via `knownAs` augments in the wire directory.
-#[derive(Debug, Clone, Default, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TokenUsage {
     /// Number of tokens in the prompt/input sent to the model
     pub prompt_tokens: Option<i32>,
@@ -134,5 +133,21 @@ impl TokenUsage {
             }
         }
         serde_json::Value::Object(result)
+    }
+}
+
+// Serde for `TokenUsage` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for TokenUsage {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TokenUsage {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

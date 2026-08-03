@@ -1,0 +1,10 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelInvocationRequest.yaml
+type: object
+properties:
+  context:
+    $ref: ModelInvocationContextSnapshot.yaml
+    description: Immutable model-visible context for this invocation
+required:
+  - context
+description: Normalized request for a single model-provider invocation.

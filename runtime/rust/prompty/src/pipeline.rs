@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use serde_json::{Value, json};
 
+use crate::engine::{DurabilityPort, PermissionPort, PostCommitPort, TurnEngineRequest};
 use crate::interfaces::InvokerError;
 use crate::model::Prompty;
 use crate::parsers::parse_chat;
@@ -23,8 +24,10 @@ use crate::registry;
 use crate::renderers::prepare_render_inputs;
 use crate::structured::{create_structured_result, to_structured_value, unwrap_structured};
 use crate::tracing::{Tracer, sanitize_value};
+#[cfg(test)]
+use crate::types::ToolCall;
 use crate::types::{
-    ContentPart, ContentPartKind, Message, PromptyStream, Role, ToolCall, consume_stream_chunks,
+    ContentPart, ContentPartKind, Message, PromptyStream, Role, consume_stream_chunks,
 };
 
 mod live_turn;
@@ -709,14 +712,40 @@ pub struct TurnOptions {
     /// error turn lifecycle. The canonical engine executes tool effects
     /// sequentially so durable result ordering is deterministic.
     pub parallel_tool_calls: bool,
-    /// Optional validator for structured output (called via cast after processing).
+    /// Optional validator for the final processed output.
+    ///
+    /// The canonical turn engine invokes this after output guardrail rewrites and
+    /// structured-result unwrapping, immediately before its durable success commit.
+    /// A rejection commits an `output_validation_failed` turn lifecycle and returns
+    /// [`InvokerError::Validation`].
     #[allow(clippy::type_complexity)]
     pub validator: Option<Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>>,
-    /// Maximum retries for LLM calls with exponential backoff (§9.10, default: 3).
+    /// Maximum model attempts for each LLM invocation with exponential backoff (§9.10, default: 3).
+    ///
+    /// This applies to simple public turns and tool-calling turns alike. Values below
+    /// one are normalized to one attempt.
     pub max_llm_retries: usize,
     /// Context compaction strategy. When set and messages are trimmed, replaces
     /// the default `summarize_dropped()` summary with a higher-quality one.
     pub compaction: Option<Compaction>,
+    /// Optional durable event/checkpoint sink for the canonical turn engine.
+    ///
+    /// When supplied, the sink is called before live events are projected to
+    /// the callback. Hosts can resume with [`turn_with_engine_request`] and a
+    /// request created from [`TurnEngineRequest::resume_from`].
+    pub durability: Option<Arc<dyn DurabilityPort>>,
+    /// Optional host authorization port for tool requests.
+    ///
+    /// When omitted, live turns retain their existing behavior: tool guardrails
+    /// authorize requests when configured and all requests are otherwise allowed.
+    /// When supplied, this port owns the authorization decision.
+    pub permission: Option<Arc<dyn PermissionPort>>,
+    /// Optional non-fatal effect invoked after a successful turn is committed.
+    ///
+    /// The hook receives the committed [`crate::engine::TurnCommit`] and the
+    /// turn cancellation token. Hook failures are recorded by the canonical
+    /// engine but never revoke an already committed successful turn.
+    pub post_commit: Option<Arc<dyn PostCommitPort>>,
 }
 
 impl Default for TurnOptions {
@@ -734,6 +763,9 @@ impl Default for TurnOptions {
             validator: None,
             max_llm_retries: 3,
             compaction: None,
+            durability: None,
+            permission: None,
+            post_commit: None,
         }
     }
 }
@@ -859,6 +891,26 @@ impl TurnOptionsBuilder {
         self
     }
 
+    /// Persist canonical engine events and checkpoints through the supplied sink.
+    pub fn durability(mut self, durability: Arc<dyn DurabilityPort>) -> Self {
+        self.opts.durability = Some(durability);
+        self
+    }
+
+    /// Use a host-owned authorization port for tool requests.
+    ///
+    /// This replaces the default tool-guardrail/allow-all authorization path.
+    pub fn permission(mut self, permission: Arc<dyn PermissionPort>) -> Self {
+        self.opts.permission = Some(permission);
+        self
+    }
+
+    /// Run a host-owned non-fatal hook after a successful turn commit.
+    pub fn post_commit(mut self, post_commit: Arc<dyn PostCommitPort>) -> Self {
+        self.opts.post_commit = Some(post_commit);
+        self
+    }
+
     /// Consume the builder and return the configured [`TurnOptions`].
     pub fn build(self) -> TurnOptions {
         self.opts
@@ -947,6 +999,23 @@ pub async fn turn(
     live_turn::turn(agent, inputs, options).await
 }
 
+/// Run a live turn using a caller-owned canonical engine request.
+///
+/// This is the durable/resumable counterpart to [`turn`]. Supply a request
+/// created with [`TurnEngineRequest::new`] for a named turn or
+/// [`TurnEngineRequest::resume_from`] after restoring a durable checkpoint.
+/// Configure durable events, host tool authorization, and post-commit effects
+/// through [`TurnOptions`]. Supplied ports are passed unchanged to the
+/// canonical engine, preserving its durable event ordering and non-fatal
+/// post-commit semantics.
+pub async fn turn_with_engine_request(
+    agent: &Prompty,
+    request: TurnEngineRequest,
+    options: Option<TurnOptions>,
+) -> Result<serde_json::Value, InvokerError> {
+    live_turn::turn_with_engine_request(agent, request, options).await
+}
+
 /// Convenience wrapper: load a `.prompty` file and run `turn()` on it.
 ///
 /// Mirrors the TypeScript API where `turn()` accepts either a loaded agent or a path string.
@@ -964,6 +1033,7 @@ pub async fn turn_from_path(
 ///
 /// Works with both OpenAI-style and Anthropic-style processed results:
 /// both return `Value::Array([{id, name, arguments}])` for tool calls.
+#[cfg(test)]
 fn extract_tool_calls_from_processed(processed: &serde_json::Value) -> Vec<ToolCall> {
     let arr = match processed.as_array() {
         Some(a) => a,
@@ -1107,8 +1177,15 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
 
-    use crate::model::Prompty;
+    use crate::engine::{
+        ContextPortability, DelegatedStateReference, EngineCheckpoint, EngineEvent, PortError,
+    };
     use crate::model::context::LoadContext;
+    use crate::model::{
+        InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+        ModelInvocationResponse, ModelToolRequest, Prompty,
+    };
+    use async_trait::async_trait;
     use serial_test::serial;
 
     fn make_agent_with_inputs() -> Prompty {
@@ -1124,6 +1201,92 @@ mod tests {
             "instructions": "system:\nHello {{ firstName }} {{ lastName }}\n\nuser:\n{{ question }}"
         });
         Prompty::load_from_value(&data, &LoadContext::default())
+    }
+
+    #[derive(Default)]
+    struct RecordingDurability {
+        events: Mutex<Vec<EngineEvent>>,
+        checkpoints: Mutex<Vec<EngineCheckpoint>>,
+    }
+
+    #[async_trait]
+    impl DurabilityPort for RecordingDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.events.lock().unwrap().push(event.clone());
+            Ok(())
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.events.lock().unwrap().extend_from_slice(events);
+            self.checkpoints.lock().unwrap().push(checkpoint.clone());
+            Ok(())
+        }
+    }
+
+    struct FailOnceDurability {
+        recording: RecordingDurability,
+        failed: AtomicBool,
+    }
+
+    impl Default for FailOnceDurability {
+        fn default() -> Self {
+            Self {
+                recording: RecordingDurability::default(),
+                failed: AtomicBool::new(false),
+            }
+        }
+    }
+
+    #[async_trait]
+    impl DurabilityPort for FailOnceDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.recording.append(event).await
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.recording
+                .append_with_checkpoint(events, checkpoint)
+                .await?;
+            if !self.failed.swap(true, Ordering::SeqCst) {
+                return Err(PortError::new("injected durability failure"));
+            }
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    struct FailOnSecondCheckpointDurability {
+        recording: RecordingDurability,
+        checkpoint_count: AtomicUsize,
+    }
+
+    #[async_trait]
+    impl DurabilityPort for FailOnSecondCheckpointDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.recording.append(event).await
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.recording
+                .append_with_checkpoint(events, checkpoint)
+                .await?;
+            if self.checkpoint_count.fetch_add(1, Ordering::SeqCst) == 1 {
+                return Err(PortError::new("injected model response durability failure"));
+            }
+            Ok(())
+        }
     }
 
     #[test]
@@ -1545,6 +1708,97 @@ mod tests {
         }
     }
 
+    struct ContextAwareExecutor {
+        received_state_ids: Arc<Mutex<Vec<String>>>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for ContextAwareExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<serde_json::Value, InvokerError> {
+            Err(InvokerError::Execute(
+                "live turns must call execute_with_context".into(),
+            ))
+        }
+
+        async fn execute_with_context(
+            &self,
+            _agent: &Prompty,
+            request: &ModelInvocationRequest,
+            _cancellation: &crate::engine::CancellationToken,
+        ) -> Result<serde_json::Value, InvokerError> {
+            self.received_state_ids.lock().unwrap().push(
+                request
+                    .context
+                    .context_state
+                    .delegated_state
+                    .first()
+                    .map(|state| state.id.clone())
+                    .unwrap_or_default(),
+            );
+            Ok(json!({ "contextAware": true }))
+        }
+    }
+
+    struct ContextAwareProcessor {
+        calls: Arc<AtomicUsize>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Processor for ContextAwareProcessor {
+        async fn process(
+            &self,
+            _agent: &Prompty,
+            _response: serde_json::Value,
+        ) -> Result<serde_json::Value, InvokerError> {
+            Err(InvokerError::Process(
+                "live turns must call process_with_context".into(),
+            ))
+        }
+
+        async fn process_with_context(
+            &self,
+            _agent: &Prompty,
+            _response: serde_json::Value,
+            _request: &ModelInvocationRequest,
+        ) -> Result<ModelInvocationResponse, InvokerError> {
+            let call = self.calls.fetch_add(1, Ordering::SeqCst);
+            let next_context_state = Some(InvocationContextState {
+                portability: InvocationContextPortability::Delegated,
+                delegated_state: vec![crate::model::DelegatedStateReference {
+                    provider: "context-test".to_string(),
+                    kind: "continuation".to_string(),
+                    id: if call == 0 {
+                        "provider-state-1".to_string()
+                    } else {
+                        "provider-state-2".to_string()
+                    },
+                    metadata: Value::Null,
+                }],
+            });
+            Ok(ModelInvocationResponse {
+                output: (call != 0).then(|| json!("resumed")),
+                usage: None,
+                assistant_messages: Vec::new(),
+                tool_requests: (call == 0)
+                    .then(|| {
+                        vec![ModelToolRequest {
+                            id: "context-tool".to_string(),
+                            name: "acknowledge".to_string(),
+                            arguments: Some(json!({})),
+                            metadata: Value::Null,
+                        }]
+                    })
+                    .unwrap_or_default(),
+                next_context_state,
+                metadata: Value::Null,
+            })
+        }
+    }
+
     fn make_simple_agent(provider: &str) -> Prompty {
         let data = serde_json::json!({
             "kind": "prompt",
@@ -1627,6 +1881,215 @@ mod tests {
                 > engine_runs,
             "pipeline::turn must route through the canonical TurnEngine live bundle"
         );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_with_engine_request_persists_canonical_checkpoint() {
+        ensure_defaults();
+        let key = "turn_durable_request";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(RecordingDurability::default());
+        let mut request = TurnEngineRequest::new("durable-session", "durable-turn", Vec::new());
+        request.inputs = json!({});
+
+        let result = turn_with_engine_request(
+            &agent,
+            request,
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert!(
+            !durability.events.lock().unwrap().is_empty(),
+            "live turns must write canonical events through the caller durability port"
+        );
+        let checkpoints = durability.checkpoints.lock().unwrap();
+        assert!(
+            checkpoints.len() >= 2,
+            "the live request should persist both the model and terminal checkpoints"
+        );
+        assert!(checkpoints.iter().all(|checkpoint| {
+            checkpoint.session_id == "durable-session" && checkpoint.turn_id == "durable-turn"
+        }));
+        assert!(
+            checkpoints
+                .iter()
+                .any(|checkpoint| checkpoint.final_output_ready)
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_with_engine_request_resumes_after_durability_failure() {
+        ensure_defaults();
+        let key = "turn_durable_resume";
+        let calls = Arc::new(AtomicUsize::new(1));
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: calls.clone(),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(FailOnceDurability::default());
+        let mut request = TurnEngineRequest::new("resume-session", "resume-turn", Vec::new());
+        request.inputs = json!({});
+
+        let failure = turn_with_engine_request(
+            &agent,
+            request,
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        )
+        .await
+        .expect_err("injected persistence failure must stop the live turn");
+        assert!(failure.to_string().contains("injected durability failure"));
+
+        let checkpoint = durability
+            .recording
+            .checkpoints
+            .lock()
+            .unwrap()
+            .last()
+            .cloned()
+            .expect("the failing durability sink must retain the checkpoint");
+        let resume =
+            TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence as u64);
+        let result = turn_with_engine_request(
+            &agent,
+            resume,
+            Some(TurnOptions::builder().durability(durability).build()),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            2,
+            "resume must commit the retained model response without another provider invocation"
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_context_aware_provider_state_reaches_checkpoint_and_resume() {
+        ensure_defaults();
+        let key = "turn_context_state_resume";
+        let received_state_ids = Arc::new(Mutex::new(Vec::new()));
+        let processor_calls = Arc::new(AtomicUsize::new(0));
+        registry::register_executor(
+            key,
+            ContextAwareExecutor {
+                received_state_ids: received_state_ids.clone(),
+            },
+        );
+        registry::register_processor(
+            key,
+            ContextAwareProcessor {
+                calls: processor_calls.clone(),
+            },
+        );
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(FailOnSecondCheckpointDurability::default());
+        let mut request = TurnEngineRequest::new("context-session", "context-turn", Vec::new());
+        request.inputs = json!({});
+        request.portability = ContextPortability::Delegated;
+        request.delegated_state = vec![DelegatedStateReference {
+            provider: "context-test".to_string(),
+            kind: "continuation".to_string(),
+            id: "incoming-state".to_string(),
+            metadata: Value::Null,
+        }];
+
+        let mut first_tools = HashMap::new();
+        first_tools.insert(
+            "acknowledge".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("acknowledged".to_string()))),
+        );
+        let failure = turn_with_engine_request(
+            &agent,
+            request,
+            Some(
+                TurnOptions::builder()
+                    .tools(first_tools)
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        )
+        .await
+        .expect_err("the injected durability failure must leave a resumable checkpoint");
+        assert!(
+            failure
+                .to_string()
+                .contains("injected model response durability failure")
+        );
+
+        let checkpoint = durability
+            .recording
+            .checkpoints
+            .lock()
+            .unwrap()
+            .last()
+            .cloned()
+            .expect("model response checkpoint must be retained");
+        assert_eq!(
+            checkpoint.context_state.portability,
+            ContextPortability::Delegated
+        );
+        assert_eq!(
+            checkpoint.context_state.delegated_state[0].id, "provider-state-1",
+            "checkpoint: {checkpoint:?}"
+        );
+        assert_eq!(
+            received_state_ids.lock().unwrap().as_slice(),
+            ["incoming-state"]
+        );
+
+        let resume =
+            TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence as u64);
+        let mut resumed_tools = HashMap::new();
+        resumed_tools.insert(
+            "acknowledge".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("acknowledged".to_string()))),
+        );
+        let result = turn_with_engine_request(
+            &agent,
+            resume,
+            Some(
+                TurnOptions::builder()
+                    .tools(resumed_tools)
+                    .durability(durability)
+                    .build(),
+            ),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "resumed");
+        assert_eq!(
+            received_state_ids.lock().unwrap().as_slice(),
+            ["incoming-state", "provider-state-1"]
+        );
+        assert_eq!(processor_calls.load(Ordering::SeqCst), 2);
     }
 
     #[tokio::test]
@@ -2783,7 +3246,11 @@ mod tests {
                 _ => None,
             })
             .unwrap();
-        assert_eq!(done_messages, sent);
+        assert_eq!(&done_messages[..sent.len()], sent.as_slice());
+        assert_eq!(
+            done_messages.last().map(Message::text_content).as_deref(),
+            Some("captured")
+        );
     }
 
     #[tokio::test]

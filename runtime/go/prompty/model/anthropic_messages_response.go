@@ -51,7 +51,10 @@ func LoadAnthropicMessagesResponse(data interface{}, ctx *LoadContext) (Anthropi
 		}
 		if val, ok := m["usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadAnthropicUsage(m, ctx)
+				loaded, err := LoadAnthropicUsage(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Usage = loaded
 			}
 		}

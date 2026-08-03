@@ -37,8 +37,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     },
     {
       "name": "displayName",
@@ -65,8 +67,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     },
     {
       "name": "description",
@@ -93,8 +97,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     },
     {
       "name": "metadata",
@@ -130,8 +136,10 @@
       "isDict": true,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     },
     {
       "name": "inputs",
@@ -194,8 +202,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
       "isOpenEnum": false,
+      "isNamedCollection": true,
       "type": {
         "typeName": {
           "namespace": "Prompty",
@@ -282,8 +292,10 @@
                 "isDict": false,
                 "defaultValue": "array",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "items",
@@ -312,8 +324,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
                 "isOpenEnum": false,
+                "isNamedCollection": false,
                 "type": {
                   "typeName": {
                     "namespace": "Prompty",
@@ -400,8 +414,10 @@
                           "isDict": false,
                           "defaultValue": "object",
                           "allowedValues": [],
+                          "parseAliases": {},
                           "enumName": null,
-                          "isOpenEnum": false
+                          "isOpenEnum": false,
+                          "isNamedCollection": false
                         },
                         {
                           "name": "properties",
@@ -435,8 +451,1047 @@
                           "isDict": false,
                           "defaultValue": "null",
                           "allowedValues": [],
+                          "parseAliases": {},
                           "enumName": null,
                           "isOpenEnum": false,
+                          "isNamedCollection": true,
+                          "type": {
+                            "typeName": {
+                              "namespace": "Prompty",
+                              "name": "Property"
+                            },
+                            "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+                            "base": {},
+                            "isAbstract": false,
+                            "isProtocol": false,
+                            "discriminator": "kind",
+                            "coercions": [
+                              {
+                                "scalar": "boolean",
+                                "expansion": {
+                                  "kind": "boolean",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of boolean"
+                              },
+                              {
+                                "scalar": "float32",
+                                "expansion": {
+                                  "kind": "float",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of float"
+                              },
+                              {
+                                "scalar": "integer",
+                                "expansion": {
+                                  "kind": "integer",
+                                  "example": "{value}"
+                                },
+                                "example": 4,
+                                "title": "input",
+                                "description": "Simple construction with just a kind of integer"
+                              },
+                              {
+                                "scalar": "string",
+                                "expansion": {
+                                  "kind": "string",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of string"
+                              }
+                            ],
+                            "factories": [],
+                            "methods": [],
+                            "childTypes": [
+                              {
+                                "typeName": {
+                                  "namespace": "Prompty",
+                                  "name": "UnionProperty"
+                                },
+                                "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
+                                "base": {
+                                  "namespace": "Prompty",
+                                  "name": "Property"
+                                },
+                                "isAbstract": false,
+                                "isProtocol": false,
+                                "coercions": [],
+                                "factories": [],
+                                "methods": [],
+                                "childTypes": [],
+                                "properties": [
+                                  {
+                                    "name": "kind",
+                                    "typeName": {
+                                      "namespace": "",
+                                      "name": "string"
+                                    },
+                                    "description": "",
+                                    "samples": [],
+                                    "knownAs": [],
+                                    "defaultFor": [],
+                                    "isScalar": true,
+                                    "isOptional": false,
+                                    "isCollection": false,
+                                    "isAny": false,
+                                    "isDict": false,
+                                    "defaultValue": "union",
+                                    "allowedValues": [],
+                                    "parseAliases": {},
+                                    "enumName": null,
+                                    "isOpenEnum": false,
+                                    "isNamedCollection": false
+                                  },
+                                  {
+                                    "name": "oneOf",
+                                    "typeName": {
+                                      "namespace": "Prompty",
+                                      "name": "Property"
+                                    },
+                                    "description": "Alternative property schemas where exactly one branch must match",
+                                    "samples": [],
+                                    "knownAs": [],
+                                    "defaultFor": [],
+                                    "isScalar": false,
+                                    "isOptional": true,
+                                    "isCollection": true,
+                                    "isAny": false,
+                                    "isDict": false,
+                                    "defaultValue": "null",
+                                    "allowedValues": [],
+                                    "parseAliases": {},
+                                    "enumName": null,
+                                    "isOpenEnum": false,
+                                    "isNamedCollection": false,
+                                    "type": {
+                                      "typeName": {
+                                        "namespace": "Prompty",
+                                        "name": "Property"
+                                      },
+                                      "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+                                      "base": {},
+                                      "isAbstract": false,
+                                      "isProtocol": false,
+                                      "discriminator": "kind",
+                                      "coercions": [
+                                        {
+                                          "scalar": "boolean",
+                                          "expansion": {
+                                            "kind": "boolean",
+                                            "example": "{value}"
+                                          },
+                                          "title": "input",
+                                          "description": "Simple construction with just a kind of boolean"
+                                        },
+                                        {
+                                          "scalar": "float32",
+                                          "expansion": {
+                                            "kind": "float",
+                                            "example": "{value}"
+                                          },
+                                          "title": "input",
+                                          "description": "Simple construction with just a kind of float"
+                                        },
+                                        {
+                                          "scalar": "integer",
+                                          "expansion": {
+                                            "kind": "integer",
+                                            "example": "{value}"
+                                          },
+                                          "example": 4,
+                                          "title": "input",
+                                          "description": "Simple construction with just a kind of integer"
+                                        },
+                                        {
+                                          "scalar": "string",
+                                          "expansion": {
+                                            "kind": "string",
+                                            "example": "{value}"
+                                          },
+                                          "title": "input",
+                                          "description": "Simple construction with just a kind of string"
+                                        }
+                                      ],
+                                      "factories": [],
+                                      "methods": [],
+                                      "childTypes": [],
+                                      "properties": [
+                                        {
+                                          "name": "kind",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "string"
+                                          },
+                                          "description": "The data type of the input property",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "kind": "string"
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": false,
+                                          "isCollection": false,
+                                          "isAny": false,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [
+                                            "string",
+                                            "integer",
+                                            "float",
+                                            "boolean",
+                                            "array",
+                                            "object",
+                                            "union",
+                                            "thread",
+                                            "image",
+                                            "audio",
+                                            "file"
+                                          ],
+                                          "parseAliases": {},
+                                          "enumName": "SimpleTypes",
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "description",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "string"
+                                          },
+                                          "description": "A short description of the input property",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "description": "A description of the input property"
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": false,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "required",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "boolean"
+                                          },
+                                          "description": "Whether the property is required",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "required": true
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": false,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "nullable",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "boolean"
+                                          },
+                                          "description": "Whether the property also accepts a JSON null value",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "nullable": true
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": false,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "default",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "unknown"
+                                          },
+                                          "description": "The default value of the property - this represents the default value if none is provided",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "default": "default value"
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": true,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "example",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "unknown"
+                                          },
+                                          "description": "Example value used for either initialization or tooling",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "example": "example value"
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": true,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "enumValues",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "unknown"
+                                          },
+                                          "description": "Allowed enumeration values for the property",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "enumValues": [
+                                                  "value1",
+                                                  "value2",
+                                                  "value3"
+                                                ]
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": true,
+                                          "isAny": true,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  {
+                                    "name": "anyOf",
+                                    "typeName": {
+                                      "namespace": "Prompty",
+                                      "name": "Property"
+                                    },
+                                    "description": "Alternative property schemas where one or more branches may match",
+                                    "samples": [
+                                      {
+                                        "sample": {
+                                          "anyOf": [
+                                            {
+                                              "kind": "string"
+                                            },
+                                            {
+                                              "kind": "boolean"
+                                            }
+                                          ]
+                                        },
+                                        "title": "",
+                                        "description": ""
+                                      }
+                                    ],
+                                    "knownAs": [],
+                                    "defaultFor": [],
+                                    "isScalar": false,
+                                    "isOptional": true,
+                                    "isCollection": true,
+                                    "isAny": false,
+                                    "isDict": false,
+                                    "defaultValue": "null",
+                                    "allowedValues": [],
+                                    "parseAliases": {},
+                                    "enumName": null,
+                                    "isOpenEnum": false,
+                                    "isNamedCollection": false,
+                                    "type": {
+                                      "typeName": {
+                                        "namespace": "Prompty",
+                                        "name": "Property"
+                                      },
+                                      "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+                                      "base": {},
+                                      "isAbstract": false,
+                                      "isProtocol": false,
+                                      "discriminator": "kind",
+                                      "coercions": [
+                                        {
+                                          "scalar": "boolean",
+                                          "expansion": {
+                                            "kind": "boolean",
+                                            "example": "{value}"
+                                          },
+                                          "title": "input",
+                                          "description": "Simple construction with just a kind of boolean"
+                                        },
+                                        {
+                                          "scalar": "float32",
+                                          "expansion": {
+                                            "kind": "float",
+                                            "example": "{value}"
+                                          },
+                                          "title": "input",
+                                          "description": "Simple construction with just a kind of float"
+                                        },
+                                        {
+                                          "scalar": "integer",
+                                          "expansion": {
+                                            "kind": "integer",
+                                            "example": "{value}"
+                                          },
+                                          "example": 4,
+                                          "title": "input",
+                                          "description": "Simple construction with just a kind of integer"
+                                        },
+                                        {
+                                          "scalar": "string",
+                                          "expansion": {
+                                            "kind": "string",
+                                            "example": "{value}"
+                                          },
+                                          "title": "input",
+                                          "description": "Simple construction with just a kind of string"
+                                        }
+                                      ],
+                                      "factories": [],
+                                      "methods": [],
+                                      "childTypes": [],
+                                      "properties": [
+                                        {
+                                          "name": "kind",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "string"
+                                          },
+                                          "description": "The data type of the input property",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "kind": "string"
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": false,
+                                          "isCollection": false,
+                                          "isAny": false,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [
+                                            "string",
+                                            "integer",
+                                            "float",
+                                            "boolean",
+                                            "array",
+                                            "object",
+                                            "union",
+                                            "thread",
+                                            "image",
+                                            "audio",
+                                            "file"
+                                          ],
+                                          "parseAliases": {},
+                                          "enumName": "SimpleTypes",
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "description",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "string"
+                                          },
+                                          "description": "A short description of the input property",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "description": "A description of the input property"
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": false,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "required",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "boolean"
+                                          },
+                                          "description": "Whether the property is required",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "required": true
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": false,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "nullable",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "boolean"
+                                          },
+                                          "description": "Whether the property also accepts a JSON null value",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "nullable": true
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": false,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "default",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "unknown"
+                                          },
+                                          "description": "The default value of the property - this represents the default value if none is provided",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "default": "default value"
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": true,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "example",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "unknown"
+                                          },
+                                          "description": "Example value used for either initialization or tooling",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "example": "example value"
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": false,
+                                          "isAny": true,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        },
+                                        {
+                                          "name": "enumValues",
+                                          "typeName": {
+                                            "namespace": "",
+                                            "name": "unknown"
+                                          },
+                                          "description": "Allowed enumeration values for the property",
+                                          "samples": [
+                                            {
+                                              "sample": {
+                                                "enumValues": [
+                                                  "value1",
+                                                  "value2",
+                                                  "value3"
+                                                ]
+                                              },
+                                              "title": "",
+                                              "description": ""
+                                            }
+                                          ],
+                                          "knownAs": [],
+                                          "defaultFor": [],
+                                          "isScalar": true,
+                                          "isOptional": true,
+                                          "isCollection": true,
+                                          "isAny": true,
+                                          "isDict": false,
+                                          "defaultValue": "null",
+                                          "allowedValues": [],
+                                          "parseAliases": {},
+                                          "enumName": null,
+                                          "isOpenEnum": false,
+                                          "isNamedCollection": false
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            ],
+                            "properties": [
+                              {
+                                "name": "name",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "string"
+                                },
+                                "description": "Name of the property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "name": "my-input"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": false,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "kind",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "string"
+                                },
+                                "description": "The data type of the input property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "kind": "string"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": false,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [
+                                  "string",
+                                  "integer",
+                                  "float",
+                                  "boolean",
+                                  "array",
+                                  "object",
+                                  "union",
+                                  "thread",
+                                  "image",
+                                  "audio",
+                                  "file"
+                                ],
+                                "parseAliases": {},
+                                "enumName": "SimpleTypes",
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "description",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "string"
+                                },
+                                "description": "A short description of the input property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "description": "A description of the input property"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "required",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "boolean"
+                                },
+                                "description": "Whether the property is required",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "required": true
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "nullable",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "boolean"
+                                },
+                                "description": "Whether the property also accepts a JSON null value",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "nullable": true
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "default",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "The default value of the property - this represents the default value if none is provided",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "default": "default value"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "example",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "Example value used for either initialization or tooling",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "example": "example value"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "enumValues",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "Allowed enumeration values for the property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "enumValues": [
+                                        "value1",
+                                        "value2",
+                                        "value3"
+                                      ]
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": true,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "typeName": {
+                        "namespace": "Prompty",
+                        "name": "UnionProperty"
+                      },
+                      "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
+                      "base": {
+                        "namespace": "Prompty",
+                        "name": "Property"
+                      },
+                      "isAbstract": false,
+                      "isProtocol": false,
+                      "coercions": [],
+                      "factories": [],
+                      "methods": [],
+                      "childTypes": [],
+                      "properties": [
+                        {
+                          "name": "kind",
+                          "typeName": {
+                            "namespace": "",
+                            "name": "string"
+                          },
+                          "description": "",
+                          "samples": [],
+                          "knownAs": [],
+                          "defaultFor": [],
+                          "isScalar": true,
+                          "isOptional": false,
+                          "isCollection": false,
+                          "isAny": false,
+                          "isDict": false,
+                          "defaultValue": "union",
+                          "allowedValues": [],
+                          "parseAliases": {},
+                          "enumName": null,
+                          "isOpenEnum": false,
+                          "isNamedCollection": false
+                        },
+                        {
+                          "name": "oneOf",
+                          "typeName": {
+                            "namespace": "Prompty",
+                            "name": "Property"
+                          },
+                          "description": "Alternative property schemas where exactly one branch must match",
+                          "samples": [],
+                          "knownAs": [],
+                          "defaultFor": [],
+                          "isScalar": false,
+                          "isOptional": true,
+                          "isCollection": true,
+                          "isAny": false,
+                          "isDict": false,
+                          "defaultValue": "null",
+                          "allowedValues": [],
+                          "parseAliases": {},
+                          "enumName": null,
+                          "isOpenEnum": false,
+                          "isNamedCollection": false,
                           "type": {
                             "typeName": {
                               "namespace": "Prompty",
@@ -491,16 +1546,16 @@
                             "childTypes": [],
                             "properties": [
                               {
-                                "name": "name",
+                                "name": "kind",
                                 "typeName": {
                                   "namespace": "",
                                   "name": "string"
                                 },
-                                "description": "Name of the property",
+                                "description": "The data type of the input property",
                                 "samples": [
                                   {
                                     "sample": {
-                                      "name": "my-input"
+                                      "kind": "string"
                                     },
                                     "title": "",
                                     "description": ""
@@ -514,10 +1569,300 @@
                                 "isAny": false,
                                 "isDict": false,
                                 "defaultValue": "null",
-                                "allowedValues": [],
-                                "enumName": null,
-                                "isOpenEnum": false
+                                "allowedValues": [
+                                  "string",
+                                  "integer",
+                                  "float",
+                                  "boolean",
+                                  "array",
+                                  "object",
+                                  "union",
+                                  "thread",
+                                  "image",
+                                  "audio",
+                                  "file"
+                                ],
+                                "parseAliases": {},
+                                "enumName": "SimpleTypes",
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
+                              {
+                                "name": "description",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "string"
+                                },
+                                "description": "A short description of the input property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "description": "A description of the input property"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "required",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "boolean"
+                                },
+                                "description": "Whether the property is required",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "required": true
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "nullable",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "boolean"
+                                },
+                                "description": "Whether the property also accepts a JSON null value",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "nullable": true
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "default",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "The default value of the property - this represents the default value if none is provided",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "default": "default value"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "example",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "Example value used for either initialization or tooling",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "example": "example value"
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "enumValues",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "unknown"
+                                },
+                                "description": "Allowed enumeration values for the property",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "enumValues": [
+                                        "value1",
+                                        "value2",
+                                        "value3"
+                                      ]
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": true,
+                                "isAny": true,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "name": "anyOf",
+                          "typeName": {
+                            "namespace": "Prompty",
+                            "name": "Property"
+                          },
+                          "description": "Alternative property schemas where one or more branches may match",
+                          "samples": [
+                            {
+                              "sample": {
+                                "anyOf": [
+                                  {
+                                    "kind": "string"
+                                  },
+                                  {
+                                    "kind": "boolean"
+                                  }
+                                ]
+                              },
+                              "title": "",
+                              "description": ""
+                            }
+                          ],
+                          "knownAs": [],
+                          "defaultFor": [],
+                          "isScalar": false,
+                          "isOptional": true,
+                          "isCollection": true,
+                          "isAny": false,
+                          "isDict": false,
+                          "defaultValue": "null",
+                          "allowedValues": [],
+                          "parseAliases": {},
+                          "enumName": null,
+                          "isOpenEnum": false,
+                          "isNamedCollection": false,
+                          "type": {
+                            "typeName": {
+                              "namespace": "Prompty",
+                              "name": "Property"
+                            },
+                            "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+                            "base": {},
+                            "isAbstract": false,
+                            "isProtocol": false,
+                            "discriminator": "kind",
+                            "coercions": [
+                              {
+                                "scalar": "boolean",
+                                "expansion": {
+                                  "kind": "boolean",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of boolean"
+                              },
+                              {
+                                "scalar": "float32",
+                                "expansion": {
+                                  "kind": "float",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of float"
+                              },
+                              {
+                                "scalar": "integer",
+                                "expansion": {
+                                  "kind": "integer",
+                                  "example": "{value}"
+                                },
+                                "example": 4,
+                                "title": "input",
+                                "description": "Simple construction with just a kind of integer"
+                              },
+                              {
+                                "scalar": "string",
+                                "expansion": {
+                                  "kind": "string",
+                                  "example": "{value}"
+                                },
+                                "title": "input",
+                                "description": "Simple construction with just a kind of string"
+                              }
+                            ],
+                            "factories": [],
+                            "methods": [],
+                            "childTypes": [],
+                            "properties": [
                               {
                                 "name": "kind",
                                 "typeName": {
@@ -549,13 +1894,16 @@
                                   "boolean",
                                   "array",
                                   "object",
+                                  "union",
                                   "thread",
                                   "image",
                                   "audio",
                                   "file"
                                 ],
+                                "parseAliases": {},
                                 "enumName": "SimpleTypes",
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "description",
@@ -582,8 +1930,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "required",
@@ -610,8 +1960,40 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
+                              },
+                              {
+                                "name": "nullable",
+                                "typeName": {
+                                  "namespace": "",
+                                  "name": "boolean"
+                                },
+                                "description": "Whether the property also accepts a JSON null value",
+                                "samples": [
+                                  {
+                                    "sample": {
+                                      "nullable": true
+                                    },
+                                    "title": "",
+                                    "description": ""
+                                  }
+                                ],
+                                "knownAs": [],
+                                "defaultFor": [],
+                                "isScalar": true,
+                                "isOptional": true,
+                                "isCollection": false,
+                                "isAny": false,
+                                "isDict": false,
+                                "defaultValue": "null",
+                                "allowedValues": [],
+                                "parseAliases": {},
+                                "enumName": null,
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "default",
@@ -638,8 +2020,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "example",
@@ -666,8 +2050,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               },
                               {
                                 "name": "enumValues",
@@ -698,8 +2084,10 @@
                                 "isDict": false,
                                 "defaultValue": "null",
                                 "allowedValues": [],
+                                "parseAliases": {},
                                 "enumName": null,
-                                "isOpenEnum": false
+                                "isOpenEnum": false,
+                                "isNamedCollection": false
                               }
                             ]
                           }
@@ -739,13 +2127,16 @@
                         "boolean",
                         "array",
                         "object",
+                        "union",
                         "thread",
                         "image",
                         "audio",
                         "file"
                       ],
+                      "parseAliases": {},
                       "enumName": "SimpleTypes",
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "description",
@@ -772,8 +2163,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "required",
@@ -800,8 +2193,40 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "nullable",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "boolean"
+                      },
+                      "description": "Whether the property also accepts a JSON null value",
+                      "samples": [
+                        {
+                          "sample": {
+                            "nullable": true
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "default",
@@ -828,8 +2253,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "example",
@@ -856,8 +2283,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "enumValues",
@@ -888,8 +2317,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 }
@@ -930,8 +2361,10 @@
                 "isDict": false,
                 "defaultValue": "object",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "properties",
@@ -965,8 +2398,672 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": true
+              }
+            ]
+          },
+          {
+            "typeName": {
+              "namespace": "Prompty",
+              "name": "UnionProperty"
+            },
+            "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
+            "base": {
+              "namespace": "Prompty",
+              "name": "Property"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "kind",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "",
+                "samples": [],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "union",
+                "allowedValues": [],
+                "parseAliases": {},
+                "enumName": null,
+                "isOpenEnum": false,
+                "isNamedCollection": false
+              },
+              {
+                "name": "oneOf",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "Property"
+                },
+                "description": "Alternative property schemas where exactly one branch must match",
+                "samples": [],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": true,
+                "isCollection": true,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "parseAliases": {},
+                "enumName": null,
+                "isOpenEnum": false,
+                "isNamedCollection": false,
+                "type": {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "Property"
+                  },
+                  "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+                  "base": {},
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "discriminator": "kind",
+                  "coercions": [
+                    {
+                      "scalar": "boolean",
+                      "expansion": {
+                        "kind": "boolean",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of boolean"
+                    },
+                    {
+                      "scalar": "float32",
+                      "expansion": {
+                        "kind": "float",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of float"
+                    },
+                    {
+                      "scalar": "integer",
+                      "expansion": {
+                        "kind": "integer",
+                        "example": "{value}"
+                      },
+                      "example": 4,
+                      "title": "input",
+                      "description": "Simple construction with just a kind of integer"
+                    },
+                    {
+                      "scalar": "string",
+                      "expansion": {
+                        "kind": "string",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of string"
+                    }
+                  ],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The data type of the input property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "string"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [
+                        "string",
+                        "integer",
+                        "float",
+                        "boolean",
+                        "array",
+                        "object",
+                        "union",
+                        "thread",
+                        "image",
+                        "audio",
+                        "file"
+                      ],
+                      "parseAliases": {},
+                      "enumName": "SimpleTypes",
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "description",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "A short description of the input property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "description": "A description of the input property"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "required",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "boolean"
+                      },
+                      "description": "Whether the property is required",
+                      "samples": [
+                        {
+                          "sample": {
+                            "required": true
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "nullable",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "boolean"
+                      },
+                      "description": "Whether the property also accepts a JSON null value",
+                      "samples": [
+                        {
+                          "sample": {
+                            "nullable": true
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "default",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "The default value of the property - this represents the default value if none is provided",
+                      "samples": [
+                        {
+                          "sample": {
+                            "default": "default value"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "example",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "Example value used for either initialization or tooling",
+                      "samples": [
+                        {
+                          "sample": {
+                            "example": "example value"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "enumValues",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "Allowed enumeration values for the property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "enumValues": [
+                              "value1",
+                              "value2",
+                              "value3"
+                            ]
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": true,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    }
+                  ]
+                }
+              },
+              {
+                "name": "anyOf",
+                "typeName": {
+                  "namespace": "Prompty",
+                  "name": "Property"
+                },
+                "description": "Alternative property schemas where one or more branches may match",
+                "samples": [
+                  {
+                    "sample": {
+                      "anyOf": [
+                        {
+                          "kind": "string"
+                        },
+                        {
+                          "kind": "boolean"
+                        }
+                      ]
+                    },
+                    "title": "",
+                    "description": ""
+                  }
+                ],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": false,
+                "isOptional": true,
+                "isCollection": true,
+                "isAny": false,
+                "isDict": false,
+                "defaultValue": "null",
+                "allowedValues": [],
+                "parseAliases": {},
+                "enumName": null,
+                "isOpenEnum": false,
+                "isNamedCollection": false,
+                "type": {
+                  "typeName": {
+                    "namespace": "Prompty",
+                    "name": "Property"
+                  },
+                  "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
+                  "base": {},
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "discriminator": "kind",
+                  "coercions": [
+                    {
+                      "scalar": "boolean",
+                      "expansion": {
+                        "kind": "boolean",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of boolean"
+                    },
+                    {
+                      "scalar": "float32",
+                      "expansion": {
+                        "kind": "float",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of float"
+                    },
+                    {
+                      "scalar": "integer",
+                      "expansion": {
+                        "kind": "integer",
+                        "example": "{value}"
+                      },
+                      "example": 4,
+                      "title": "input",
+                      "description": "Simple construction with just a kind of integer"
+                    },
+                    {
+                      "scalar": "string",
+                      "expansion": {
+                        "kind": "string",
+                        "example": "{value}"
+                      },
+                      "title": "input",
+                      "description": "Simple construction with just a kind of string"
+                    }
+                  ],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The data type of the input property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "kind": "string"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [
+                        "string",
+                        "integer",
+                        "float",
+                        "boolean",
+                        "array",
+                        "object",
+                        "union",
+                        "thread",
+                        "image",
+                        "audio",
+                        "file"
+                      ],
+                      "parseAliases": {},
+                      "enumName": "SimpleTypes",
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "description",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "A short description of the input property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "description": "A description of the input property"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "required",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "boolean"
+                      },
+                      "description": "Whether the property is required",
+                      "samples": [
+                        {
+                          "sample": {
+                            "required": true
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "nullable",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "boolean"
+                      },
+                      "description": "Whether the property also accepts a JSON null value",
+                      "samples": [
+                        {
+                          "sample": {
+                            "nullable": true
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "default",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "The default value of the property - this represents the default value if none is provided",
+                      "samples": [
+                        {
+                          "sample": {
+                            "default": "default value"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "example",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "Example value used for either initialization or tooling",
+                      "samples": [
+                        {
+                          "sample": {
+                            "example": "example value"
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": false,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    },
+                    {
+                      "name": "enumValues",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "unknown"
+                      },
+                      "description": "Allowed enumeration values for the property",
+                      "samples": [
+                        {
+                          "sample": {
+                            "enumValues": [
+                              "value1",
+                              "value2",
+                              "value3"
+                            ]
+                          },
+                          "title": "",
+                          "description": ""
+                        }
+                      ],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": true,
+                      "isCollection": true,
+                      "isAny": true,
+                      "isDict": false,
+                      "defaultValue": "null",
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    }
+                  ]
+                }
               }
             ]
           }
@@ -997,8 +3094,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "kind",
@@ -1031,13 +3130,16 @@
               "boolean",
               "array",
               "object",
+              "union",
               "thread",
               "image",
               "audio",
               "file"
             ],
+            "parseAliases": {},
             "enumName": "SimpleTypes",
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "description",
@@ -1064,8 +3166,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "required",
@@ -1092,8 +3196,40 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
+          },
+          {
+            "name": "nullable",
+            "typeName": {
+              "namespace": "",
+              "name": "boolean"
+            },
+            "description": "Whether the property also accepts a JSON null value",
+            "samples": [
+              {
+                "sample": {
+                  "nullable": true
+                },
+                "title": "",
+                "description": ""
+              }
+            ],
+            "knownAs": [],
+            "defaultFor": [],
+            "isScalar": true,
+            "isOptional": true,
+            "isCollection": false,
+            "isAny": false,
+            "isDict": false,
+            "defaultValue": "null",
+            "allowedValues": [],
+            "parseAliases": {},
+            "enumName": null,
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "default",
@@ -1120,8 +3256,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "example",
@@ -1148,8 +3286,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "enumValues",
@@ -1180,8 +3320,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           }
         ]
       }
@@ -1229,8 +3371,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": true
     },
     {
       "name": "model",
@@ -1264,8 +3408,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
       "isOpenEnum": false,
+      "isNamedCollection": false,
       "type": {
         "typeName": {
           "namespace": "Prompty",
@@ -1314,8 +3460,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "provider",
@@ -1342,8 +3490,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "apiType",
@@ -1375,8 +3525,10 @@
               "image",
               "responses"
             ],
+            "parseAliases": {},
             "enumName": "apiType",
-            "isOpenEnum": true
+            "isOpenEnum": true,
+            "isNamedCollection": false
           },
           {
             "name": "connection",
@@ -1407,8 +3559,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": false,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -1465,8 +3619,10 @@
                       "isDict": false,
                       "defaultValue": "reference",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "name",
@@ -1493,8 +3649,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "target",
@@ -1521,8 +3679,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -1568,8 +3728,10 @@
                       "isDict": false,
                       "defaultValue": "remote",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "name",
@@ -1596,8 +3758,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -1624,8 +3788,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -1671,8 +3837,10 @@
                       "isDict": false,
                       "defaultValue": "key",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -1699,8 +3867,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "apiKey",
@@ -1727,8 +3897,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -1774,8 +3946,10 @@
                       "isDict": false,
                       "defaultValue": "anonymous",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -1802,8 +3976,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -1849,8 +4025,10 @@
                       "isDict": false,
                       "defaultValue": "oauth",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -1877,8 +4055,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "clientId",
@@ -1905,8 +4085,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "clientSecret",
@@ -1933,8 +4115,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "tokenUrl",
@@ -1961,8 +4145,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "scopes",
@@ -1991,8 +4177,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 },
@@ -2038,8 +4226,10 @@
                       "isDict": false,
                       "defaultValue": "foundry",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "endpoint",
@@ -2066,8 +4256,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "name",
@@ -2094,8 +4286,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "connectionType",
@@ -2122,8 +4316,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 }
@@ -2161,8 +4357,10 @@
                     "foundry",
                     "oauth"
                   ],
+                  "parseAliases": {},
                   "enumName": "ConnectionType",
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "authenticationMode",
@@ -2192,8 +4390,10 @@
                     "user",
                     "system"
                   ],
+                  "parseAliases": {},
                   "enumName": "AuthenticationMode",
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "usageDescription",
@@ -2220,8 +4420,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -2255,8 +4457,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": false,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -2301,8 +4505,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "maxOutputTokens",
@@ -2342,8 +4548,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "presencePenalty",
@@ -2375,8 +4583,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "seed",
@@ -2408,8 +4618,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "temperature",
@@ -2449,8 +4661,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "topK",
@@ -2486,8 +4700,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "topP",
@@ -2527,8 +4743,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "stopSequences",
@@ -2567,8 +4785,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "allowMultipleToolCalls",
@@ -2600,8 +4820,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "additionalProperties",
@@ -2631,8 +4853,10 @@
                   "isDict": true,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -2703,8 +4927,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
       "isOpenEnum": false,
+      "isNamedCollection": true,
       "type": {
         "typeName": {
           "namespace": "Prompty",
@@ -2761,8 +4987,10 @@
                 "isDict": false,
                 "defaultValue": "function",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "parameters",
@@ -2825,8 +5053,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": true
               },
               {
                 "name": "strict",
@@ -2853,8 +5083,10 @@
                 "isDict": false,
                 "defaultValue": true,
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           },
@@ -2892,8 +5124,10 @@
                 "isDict": false,
                 "defaultValue": "*",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "connection",
@@ -2922,8 +5156,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "options",
@@ -2953,8 +5189,10 @@
                 "isDict": true,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           },
@@ -3000,8 +5238,10 @@
                 "isDict": false,
                 "defaultValue": "mcp",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "connection",
@@ -3030,8 +5270,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "serverName",
@@ -3058,8 +5300,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "serverDescription",
@@ -3086,8 +5330,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "approvalMode",
@@ -3116,8 +5362,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
                 "isOpenEnum": false,
+                "isNamedCollection": false,
                 "type": {
                   "typeName": {
                     "namespace": "Prompty",
@@ -3171,8 +5419,10 @@
                         "never",
                         "specify"
                       ],
+                      "parseAliases": {},
                       "enumName": "mcpApprovalModeKind",
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "alwaysRequireApprovalTools",
@@ -3201,8 +5451,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     },
                     {
                       "name": "neverRequireApprovalTools",
@@ -3231,8 +5483,10 @@
                       "isDict": false,
                       "defaultValue": "null",
                       "allowedValues": [],
+                      "parseAliases": {},
                       "enumName": null,
-                      "isOpenEnum": false
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
                     }
                   ]
                 }
@@ -3265,8 +5519,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           },
@@ -3312,8 +5568,10 @@
                 "isDict": false,
                 "defaultValue": "openapi",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "connection",
@@ -3342,8 +5600,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "specification",
@@ -3370,8 +5630,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           },
@@ -3417,8 +5679,10 @@
                 "isDict": false,
                 "defaultValue": "prompty",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "path",
@@ -3445,8 +5709,10 @@
                 "isDict": false,
                 "defaultValue": "null",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               },
               {
                 "name": "mode",
@@ -3473,8 +5739,10 @@
                 "isDict": false,
                 "defaultValue": "single",
                 "allowedValues": [],
+                "parseAliases": {},
                 "enumName": null,
-                "isOpenEnum": false
+                "isOpenEnum": false,
+                "isNamedCollection": false
               }
             ]
           }
@@ -3505,8 +5773,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "kind",
@@ -3538,8 +5808,10 @@
               "openapi",
               "prompty"
             ],
+            "parseAliases": {},
             "enumName": "ToolTypes",
-            "isOpenEnum": true
+            "isOpenEnum": true,
+            "isNamedCollection": false
           },
           {
             "name": "description",
@@ -3566,8 +5838,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
-            "isOpenEnum": false
+            "isOpenEnum": false,
+            "isNamedCollection": false
           },
           {
             "name": "bindings",
@@ -3596,8 +5870,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": true,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -3646,8 +5922,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "input",
@@ -3674,8 +5952,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -3711,8 +5991,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
       "isOpenEnum": false,
+      "isNamedCollection": false,
       "type": {
         "typeName": {
           "namespace": "Prompty",
@@ -3754,8 +6036,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": false,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -3805,8 +6089,10 @@
                   "isDict": false,
                   "defaultValue": "*",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "strict",
@@ -3833,8 +6119,10 @@
                   "isDict": false,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "options",
@@ -3863,8 +6151,10 @@
                   "isDict": true,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -3896,8 +6186,10 @@
             "isDict": false,
             "defaultValue": "null",
             "allowedValues": [],
+            "parseAliases": {},
             "enumName": null,
             "isOpenEnum": false,
+            "isNamedCollection": false,
             "type": {
               "typeName": {
                 "namespace": "Prompty",
@@ -3947,8 +6239,10 @@
                   "isDict": false,
                   "defaultValue": "*",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 },
                 {
                   "name": "options",
@@ -3977,8 +6271,10 @@
                   "isDict": true,
                   "defaultValue": "null",
                   "allowedValues": [],
+                  "parseAliases": {},
                   "enumName": null,
-                  "isOpenEnum": false
+                  "isOpenEnum": false,
+                  "isNamedCollection": false
                 }
               ]
             }
@@ -4011,8 +6307,10 @@
       "isDict": false,
       "defaultValue": "null",
       "allowedValues": [],
+      "parseAliases": {},
       "enumName": null,
-      "isOpenEnum": false
+      "isOpenEnum": false,
+      "isNamedCollection": false
     }
   ]
 }

@@ -92,6 +92,33 @@ formats tool results, and repeats until completion or a loop limit is reached.
 | `max_iterations` | Loop limit; implementations should fail rather than loop forever |
 | `raw` | Return raw provider responses when supported |
 
+## Rust host ports
+
+Rust callers can supply canonical engine ports for host-owned tool authorization
+and post-commit work through `TurnOptions`. These are additive to the legacy
+turn API:
+
+```rust
+use std::sync::Arc;
+use prompty::{PermissionPort, PostCommitPort, TurnOptions};
+
+let options = TurnOptions::builder()
+    .permission(Arc::new(host_permission_port))
+    .post_commit(Arc::new(host_post_commit_port))
+    .build();
+```
+
+`permission` replaces the live turn's default tool authorization path. Without
+it, configured tool guardrails still decide authorization and turns without
+guardrails allow tools as before. A denied host decision is durably ordered as
+the canonical permission events and becomes a model-visible failed tool result.
+
+`post_commit` runs only after a successful `TurnCommit`. Its
+`PostCommitPort::after_commit` callback receives that commit and the turn's
+cancellation token. Failures are recorded as non-fatal post-commit failures:
+they never revoke an already successful result returned by `turn` or
+`turn_with_engine_request`.
+
 ## Tool dispatch behavior
 
 Tools are matched by name. Tool arguments are decoded from provider tool-call

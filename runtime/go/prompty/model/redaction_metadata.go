@@ -33,7 +33,10 @@ func LoadRedactionMetadata(data interface{}, ctx *LoadContext) (RedactionMetadat
 				result.Fields = make([]RedactedField, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadRedactedField(item, ctx)
+						loaded, err := LoadRedactedField(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Fields[i] = loaded
 					}
 				}

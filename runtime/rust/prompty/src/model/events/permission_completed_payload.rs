@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::redaction_metadata::RedactionMetadata;
 
 /// Payload for permission completion events — an approval decision was made.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct PermissionCompletedPayload {
     /// Stable permission request identifier
     pub request_id: Option<String>,
@@ -144,5 +144,21 @@ impl PermissionCompletedPayload {
     /// Returns `None` if the field is null or not an object.
     pub fn as_result_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.result.as_object()
+    }
+}
+
+// Serde for `PermissionCompletedPayload` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for PermissionCompletedPayload {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for PermissionCompletedPayload {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

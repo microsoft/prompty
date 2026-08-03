@@ -1,0 +1,44 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ContextRequest.yaml
+type: object
+properties:
+  sessionId:
+    type: string
+    description: Stable session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier
+  invocationId:
+    type: string
+    description: Stable model invocation identifier
+  iteration:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based model loop iteration
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    default: []
+    description: Canonical messages entering context planning
+  stablePrefixMessages:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 0
+    description: Number of leading messages eligible for provider prefix-cache reuse
+  contextState:
+    $ref: InvocationContextState.yaml
+    description: Provider-context state entering this invocation
+  inputs:
+    description: Turn inputs
+required:
+  - sessionId
+  - turnId
+  - invocationId
+  - iteration
+  - messages
+  - stablePrefixMessages
+  - contextState
+description: Planning input handed to the context pipeline before one model invocation.

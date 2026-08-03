@@ -1,0 +1,36 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: InvocationContextDecision.yaml
+type: object
+properties:
+  candidateId:
+    type: string
+    description: Stable identifier of the evaluated context candidate
+  disposition:
+    anyOf:
+      - type: string
+        const: included
+      - type: string
+        const: excluded
+    description: Whether the candidate was included in the invocation context
+  reason:
+    type: string
+    description: Human-readable reason for the disposition
+  rank:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based rank among included candidates, when applicable
+  estimatedTokens:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Estimated token count for the candidate, when available
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific decision metadata
+required:
+  - candidateId
+  - disposition
+  - reason
+description: An auditable decision made while preparing model-visible context.

@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::trace_span::TraceSpan;
 
 /// The top-level .tracy file structure written by the file backend (§3.6.1).
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TraceFile {
     /// Language/runtime name (e.g., 'python', 'csharp', 'javascript')
     pub runtime: String,
@@ -101,5 +101,21 @@ impl TraceFile {
     /// Serialize TraceFile to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `TraceFile` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for TraceFile {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TraceFile {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

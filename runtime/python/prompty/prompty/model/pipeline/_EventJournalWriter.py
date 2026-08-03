@@ -18,12 +18,12 @@ class EventJournalWriter(Protocol):
 
     def append_turn(self, turn_event: TurnEvent) -> bool:
         """Append a turn event to a durable replay journal"""
-        ...
+        raise NotImplementedError
 
     def append_session(self, session_event: SessionEvent) -> bool:
         """Append a session event to a durable replay journal"""
-        ...
+        raise NotImplementedError
 
     def close(self, summary: SessionSummary | None) -> bool:
         """Finalize the journal with an optional session summary"""
-        ...
+        raise NotImplementedError

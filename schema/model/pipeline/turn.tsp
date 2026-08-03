@@ -1,6 +1,7 @@
 import "@typra/emitter";
 import "../events/payloads.tsp";
 import "../events/session.tsp";
+import "../model/usage.tsp";
 
 namespace Prompty;
 
@@ -96,6 +97,9 @@ model TurnModelRequest {
 model TurnModelResponse {
   @doc("Provider-neutral final model output for the turn when no more tools are requested")
   output?: unknown;
+
+  @doc("Complete cumulative token usage reported for this model invocation, when available")
+  usage?: InvocationUsage;
 
   @doc("Host tool execution requests emitted by the model callback")
   toolRequests?: HostToolRequest[] = #[];

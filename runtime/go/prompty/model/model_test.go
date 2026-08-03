@@ -398,4 +398,28 @@ func TestModelFromModel(t *testing.T) {
 	if instance.Id != "example" {
 		t.Errorf(`Expected Id to be "example", got %v`, instance.Id)
 	}
+
+	jsonBytes, err := json.Marshal("example")
+	if err != nil {
+		t.Fatalf("Failed to encode string JSON: %v", err)
+	}
+	fromJSON, err := prompty.ModelFromJSON(string(jsonBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Model from string JSON helper: %v", err)
+	}
+	if fromJSON.Id != "example" {
+		t.Errorf(`Expected Id to be "example", got %v`, fromJSON.Id)
+	}
+
+	yamlBytes, err := yaml.Marshal("example")
+	if err != nil {
+		t.Fatalf("Failed to encode string YAML: %v", err)
+	}
+	fromYAML, err := prompty.ModelFromYAML(string(yamlBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Model from string YAML helper: %v", err)
+	}
+	if fromYAML.Id != "example" {
+		t.Errorf(`Expected Id to be "example", got %v`, fromYAML.Id)
+	}
 }

@@ -3,17 +3,19 @@ on:
   pull_request:
     paths:
       - 'runtime/rust/**'
+      - '.github/workflows/prompty-rust-check.yml'
 
   workflow_call:
 
 jobs:
   rust-tests:
-    name: test rust on ${{ matrix.os }}
+    name: test Rust ${{ matrix.toolchain }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+        toolchain: [stable, "1.85"]
     permissions:
       contents: read
     defaults:
@@ -23,7 +25,10 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          components: rustfmt, clippy
 
       - name: Cache cargo registry & build
         uses: actions/cache@v5
@@ -32,8 +37,8 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             runtime/rust/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('runtime/rust/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+          key: ${{ runner.os }}-${{ matrix.toolchain }}-cargo-${{ hashFiles('runtime/rust/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.toolchain }}-cargo-
 
       - name: Build workspace
         run: cargo build --workspace
@@ -48,7 +53,11 @@ jobs:
       - name: Run tests
         run: cargo test --workspace
 
+      - name: Test OpenTelemetry feature
+        run: cargo test -p prompty --features otel
+
       - name: Check formatting
+        if: matrix.toolchain == '1.85'
         run: cargo fmt --all -- --check
 
       - name: Clippy lints

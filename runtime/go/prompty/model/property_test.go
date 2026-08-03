@@ -20,6 +20,7 @@ func TestPropertyLoadJSON(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -51,6 +52,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:
@@ -82,6 +84,7 @@ func TestPropertyFromJSON(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -108,6 +111,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:
@@ -134,6 +138,7 @@ func TestPropertyRoundtrip(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -166,6 +171,7 @@ func TestPropertyToJSON(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -198,6 +204,7 @@ func TestPropertyToYAML(t *testing.T) {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -239,6 +246,26 @@ func TestPropertyFromInput(t *testing.T) {
 	// Polymorphic alternate loading requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
+
+	jsonBytes, err := json.Marshal(false)
+	if err != nil {
+		t.Fatalf("Failed to encode bool JSON: %v", err)
+	}
+	fromJSON, err := prompty.PropertyFromJSON(string(jsonBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Property from bool JSON helper: %v", err)
+	}
+	_ = fromJSON // Load succeeded, exact type depends on discriminator
+
+	yamlBytes, err := yaml.Marshal(false)
+	if err != nil {
+		t.Fatalf("Failed to encode bool YAML: %v", err)
+	}
+	fromYAML, err := prompty.PropertyFromYAML(string(yamlBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Property from bool YAML helper: %v", err)
+	}
+	_ = fromYAML // Load succeeded, exact type depends on discriminator
 }
 
 // TestPropertyFromInput2 tests loading Property from float32
@@ -251,6 +278,26 @@ func TestPropertyFromInput2(t *testing.T) {
 	// Polymorphic alternate loading requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
+
+	jsonBytes, err := json.Marshal(3.14)
+	if err != nil {
+		t.Fatalf("Failed to encode float32 JSON: %v", err)
+	}
+	fromJSON, err := prompty.PropertyFromJSON(string(jsonBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Property from float32 JSON helper: %v", err)
+	}
+	_ = fromJSON // Load succeeded, exact type depends on discriminator
+
+	yamlBytes, err := yaml.Marshal(3.14)
+	if err != nil {
+		t.Fatalf("Failed to encode float32 YAML: %v", err)
+	}
+	fromYAML, err := prompty.PropertyFromYAML(string(yamlBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Property from float32 YAML helper: %v", err)
+	}
+	_ = fromYAML // Load succeeded, exact type depends on discriminator
 }
 
 // TestPropertyFromInput3 tests loading Property from integer
@@ -263,6 +310,26 @@ func TestPropertyFromInput3(t *testing.T) {
 	// Polymorphic alternate loading requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
+
+	jsonBytes, err := json.Marshal(4)
+	if err != nil {
+		t.Fatalf("Failed to encode integer JSON: %v", err)
+	}
+	fromJSON, err := prompty.PropertyFromJSON(string(jsonBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Property from integer JSON helper: %v", err)
+	}
+	_ = fromJSON // Load succeeded, exact type depends on discriminator
+
+	yamlBytes, err := yaml.Marshal(4)
+	if err != nil {
+		t.Fatalf("Failed to encode integer YAML: %v", err)
+	}
+	fromYAML, err := prompty.PropertyFromYAML(string(yamlBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Property from integer YAML helper: %v", err)
+	}
+	_ = fromYAML // Load succeeded, exact type depends on discriminator
 }
 
 // TestPropertyFromInput4 tests loading Property from string
@@ -275,4 +342,24 @@ func TestPropertyFromInput4(t *testing.T) {
 	// Polymorphic alternate loading requires type-specific handling
 	_ = instance // Load succeeded, exact type depends on discriminator
 	// Note: Validation skipped for polymorphic base types - test child types directly
+
+	jsonBytes, err := json.Marshal("example")
+	if err != nil {
+		t.Fatalf("Failed to encode string JSON: %v", err)
+	}
+	fromJSON, err := prompty.PropertyFromJSON(string(jsonBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Property from string JSON helper: %v", err)
+	}
+	_ = fromJSON // Load succeeded, exact type depends on discriminator
+
+	yamlBytes, err := yaml.Marshal("example")
+	if err != nil {
+		t.Fatalf("Failed to encode string YAML: %v", err)
+	}
+	fromYAML, err := prompty.PropertyFromYAML(string(yamlBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Property from string YAML helper: %v", err)
+	}
+	_ = fromYAML // Load succeeded, exact type depends on discriminator
 }

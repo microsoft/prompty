@@ -10,6 +10,7 @@ from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
 from ..events._HostToolRequest import HostToolRequest
+from ..model._InvocationUsage import InvocationUsage
 
 
 @dataclass
@@ -20,6 +21,8 @@ class TurnModelResponse:
     ----------
     output : Optional[Any]
         Provider-neutral final model output for the turn when no more tools are requested
+    usage : Optional[InvocationUsage]
+        Complete cumulative token usage reported for this model invocation, when available
     tool_requests : Optional[list[HostToolRequest]]
         Host tool execution requests emitted by the model callback
     checkpoint_state : Optional[dict[str, Any]]
@@ -29,6 +32,7 @@ class TurnModelResponse:
     _shorthand_property: ClassVar[str | None] = None
 
     output: Any | None = None
+    usage: InvocationUsage | None = None
     tool_requests: list[HostToolRequest] = field(default_factory=list)
     checkpoint_state: dict[str, Any] | None = None
 
@@ -54,6 +58,8 @@ class TurnModelResponse:
 
         if data is not None and "output" in data:
             instance.output = data["output"]
+        if data is not None and "usage" in data:
+            instance.usage = InvocationUsage.load(data["usage"], context)
         if data is not None and "toolRequests" in data:
             instance.tool_requests = TurnModelResponse.load_tool_requests(data["toolRequests"], context)
         if data is not None and "checkpointState" in data:
@@ -103,6 +109,8 @@ class TurnModelResponse:
 
         if obj.output is not None:
             result["output"] = obj.output
+        if obj.usage is not None:
+            result["usage"] = obj.usage.save(context)
         if obj.tool_requests is not None:
             result["toolRequests"] = TurnModelResponse.save_tool_requests(obj.tool_requests, context)
         if obj.checkpoint_state is not None:

@@ -18,6 +18,9 @@ pub use model::*;
 pub mod token_usage;
 pub use token_usage::*;
 
+pub mod invocation_usage;
+pub use invocation_usage::*;
+
 pub mod model_lister;
 pub use model_lister::*;
 

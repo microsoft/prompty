@@ -1,0 +1,105 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EngineEvent.yaml
+type: object
+properties:
+  sequence:
+    type: string
+    description: Monotonic sequence number within the run, starting at one
+  id:
+    type: string
+    description: Stable unique identifier for this event
+  timestamp:
+    type: string
+    description: RFC 3339 timestamp when the event was emitted
+  sessionId:
+    type: string
+    description: Stable session identifier
+  turnId:
+    type: string
+    description: Stable turn identifier
+  runId:
+    type: string
+    description: Stable identifier of this engine run
+  parentRunId:
+    type: string
+    description: Run identifier of the parent run when this run was delegated
+  delegationDepth:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    default: 0
+    description: Zero-based delegation nesting depth; 0 for a top-level run
+  invocationId:
+    type: string
+    description: Model invocation identifier, when the event belongs to an invocation
+  iteration:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Zero-based model loop iteration, when applicable
+  kind:
+    anyOf:
+      - type: string
+        const: turn_started
+      - type: string
+        const: policy_applied
+      - type: string
+        const: context_prepared
+      - type: string
+        const: model_invocation_started
+      - type: string
+        const: model_invocation_completed
+      - type: string
+        const: model_invocation_failed
+      - type: string
+        const: model_reconciliation_required
+      - type: string
+        const: model_invocation_reconciled
+      - type: string
+        const: permission_requested
+      - type: string
+        const: permission_resolved
+      - type: string
+        const: tool_execution_started
+      - type: string
+        const: tool_execution_completed
+      - type: string
+        const: tool_result_committed
+      - type: string
+        const: tool_result_reconciled
+      - type: string
+        const: conversation_updated
+      - type: string
+        const: checkpoint_created
+      - type: string
+        const: turn_committed
+      - type: string
+        const: turn_cancelled
+      - type: string
+        const: turn_failed
+      - type: string
+        const: turn_reconciliation_required
+      - type: string
+        const: post_commit_started
+      - type: string
+        const: post_commit_completed
+      - type: string
+        const: post_commit_failed
+    description: Semantic kind of this event
+  payload:
+    description: Opaque event-specific payload
+required:
+  - sequence
+  - id
+  - timestamp
+  - sessionId
+  - turnId
+  - runId
+  - delegationDepth
+  - kind
+description: |-
+  One event in the monotonic semantic event stream of a turn.
+
+  Events are the durable, replayable record a DurabilityPort persists. Run
+  identity links delegated (nested) engine runs to their parent for
+  cross-run observability.

@@ -13,11 +13,15 @@ use super::super::context::{LoadContext, SaveContext};
 
 use super::super::events::host_tool_request::HostToolRequest;
 
+use super::super::model::invocation_usage::InvocationUsage;
+
 /// Response returned by the injected model callback to the reference turn runner.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TurnModelResponse {
     /// Provider-neutral final model output for the turn when no more tools are requested
     pub output: Option<serde_json::Value>,
+    /// Complete cumulative token usage reported for this model invocation, when available
+    pub usage: Option<InvocationUsage>,
     /// Host tool execution requests emitted by the model callback
     pub tool_requests: Vec<HostToolRequest>,
     /// Additional deterministic state to merge into the iteration checkpoint
@@ -49,6 +53,10 @@ impl TurnModelResponse {
         let value = ctx.process_input(value.clone());
         Self {
             output: value.get("output").cloned(),
+            usage: value
+                .get("usage")
+                .filter(|v| v.is_object() || v.is_array() || v.is_string())
+                .map(|v| InvocationUsage::load_from_value(v, ctx)),
             tool_requests: value
                 .get("toolRequests")
                 .map(|v| Self::load_tool_requests(v, ctx))
@@ -68,6 +76,12 @@ impl TurnModelResponse {
         // Write base fields
         if let Some(ref val) = self.output {
             result.insert("output".to_string(), val.clone());
+        }
+        if let Some(ref val) = self.usage {
+            let nested = val.to_value(ctx);
+            if !nested.is_null() {
+                result.insert("usage".to_string(), nested);
+            }
         }
         if !self.tool_requests.is_empty() {
             result.insert(
@@ -117,5 +131,21 @@ impl TurnModelResponse {
                 .map(|item| item.to_value(ctx))
                 .collect::<Vec<_>>(),
         )
+    }
+}
+
+// Serde for `TurnModelResponse` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for TurnModelResponse {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TurnModelResponse {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

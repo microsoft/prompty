@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::compaction_config::CompactionConfig;
 
 /// Configuration for the agent loop's turn() function. Controls iteration limits, retry policy, context management, and execution behavior. Runtimes accept these as either a TurnOptions object or individual keyword/named parameters — the TypeSpec model defines the canonical field set.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TurnOptions {
     /// Maximum number of tool-call iterations before the loop terminates
     pub max_iterations: Option<i32>,
@@ -134,5 +134,21 @@ impl TurnOptions {
     /// Serialize TurnOptions to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `TurnOptions` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for TurnOptions {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TurnOptions {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

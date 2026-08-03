@@ -98,7 +98,11 @@ public static class WireFormat
             if (tool is Core.FunctionTool ft)
             {
                 var boundNames = BoundParameterNames(ft);
-                var parameters = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters, ft.Strict == true, boundNames);
+                var parameters = SchemaHelpers.PropertiesToJsonSchema(
+                    ft.Parameters,
+                    ft.Strict == true,
+                    boundNames,
+                    supportsOneOf: false);
                 var chatTool = ChatTool.CreateFunctionTool(
                     ft.Name ?? "",
                     ft.Description,
@@ -119,7 +123,7 @@ public static class WireFormat
         if (agent.Outputs is null || agent.Outputs.Count == 0)
             return null;
 
-        var schema = SchemaHelpers.PropertiesToJsonSchema(agent.Outputs, strict: true);
+        var schema = SchemaHelpers.PropertiesToJsonSchema(agent.Outputs, strict: true, supportsOneOf: false);
 
         return ChatResponseFormat.CreateJsonSchemaFormat(
             "structured_output",
@@ -237,7 +241,7 @@ public static class WireFormat
         // Structured output → text.format (json_schema)
         if (agent.Outputs is not null && agent.Outputs.Count > 0)
         {
-            var schema = SchemaHelpers.PropertiesToJsonSchema(agent.Outputs, strict: true);
+            var schema = SchemaHelpers.PropertiesToJsonSchema(agent.Outputs, strict: true, supportsOneOf: false);
             options.TextOptions ??= new ResponseTextOptions();
             options.TextOptions.TextFormat = ResponseTextFormat.CreateJsonSchemaFormat(
                 "structured_output",
@@ -292,7 +296,11 @@ public static class WireFormat
             if (tool is Core.FunctionTool ft)
             {
                 var boundNames = BoundParameterNames(ft);
-                var parameters = SchemaHelpers.PropertiesToJsonSchema(ft.Parameters, ft.Strict == true, boundNames);
+                var parameters = SchemaHelpers.PropertiesToJsonSchema(
+                    ft.Parameters,
+                    ft.Strict == true,
+                    boundNames,
+                    supportsOneOf: false);
                 var responseTool = ResponseTool.CreateFunctionTool(
                     ft.Name ?? "",
                     BinaryData.FromString(JsonSerializer.Serialize(parameters)),

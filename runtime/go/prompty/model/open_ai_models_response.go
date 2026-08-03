@@ -32,7 +32,10 @@ func LoadOpenAIModelsResponse(data interface{}, ctx *LoadContext) (OpenAIModelsR
 				result.Data = make([]OpenAIModelInfo, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadOpenAIModelInfo(item, ctx)
+						loaded, err := LoadOpenAIModelInfo(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Data[i] = loaded
 					}
 				}

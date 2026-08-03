@@ -1,0 +1,25 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: TurnEngineResult.yaml
+type: object
+properties:
+  commit:
+    $ref: TurnCommit.yaml
+    description: The committed turn outcome
+  snapshots:
+    type: array
+    items:
+      $ref: ModelInvocationContextSnapshot.yaml
+    default: []
+    description: Immutable context snapshots produced during the turn
+  toolResults:
+    type: array
+    items:
+      $ref: ModelToolResult.yaml
+    default: []
+    description: Normalized tool results produced during the turn
+  postCommitError:
+    type: string
+    description: A non-fatal post-commit failure; the turn itself remains committed
+required:
+  - commit
+description: The result returned by the turn engine.

@@ -30,7 +30,10 @@ func LoadAnthropicModelsResponse(data interface{}, ctx *LoadContext) (AnthropicM
 				result.Data = make([]AnthropicModelInfo, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadAnthropicModelInfo(item, ctx)
+						loaded, err := LoadAnthropicModelInfo(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Data[i] = loaded
 					}
 				}

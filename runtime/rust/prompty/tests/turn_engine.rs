@@ -9,16 +9,18 @@ use std::{
 
 use async_trait::async_trait;
 use prompty::{
-    AppendContextPackingStrategy, CancellationToken, Clock, ContextCandidate, ContextError,
-    ContextPipeline, ContextPortability, ContextRequest, ContextSource, ConversationPort,
-    DefaultConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint,
-    EngineEvent, EngineEventKind, EnginePermissionDecision, EngineToolRequest, EngineToolResult,
-    FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyError, HostPolicyPort,
-    HostPolicyRequest, HostPolicyResult, IdGenerator, Message, ModelInvocationRequest,
-    ModelInvocationResponse, ModelPort, ModelStreamChunk, ModelStreamPort, NoopHostPolicyPort,
-    NoopModelStreamPort, NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort,
-    RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, Role, ToolOutcome, ToolPort, TurnCommit,
-    TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest, TurnStatus,
+    AllowAllPermissions, AppendContextPackingStrategy, CancellationToken, Clock, ContextCandidate,
+    ContextError, ContextPipeline, ContextPortability, ContextRequest, ContextSource,
+    ConversationPort, DefaultConversationPort, DelegatedStateReference, DurabilityPort,
+    EngineCheckpoint, EngineEvent, EngineEventKind, EnginePermissionDecision, EngineToolRequest,
+    EngineToolResult, FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyError,
+    HostPolicyPort, HostPolicyRequest, HostPolicyResult, IdGenerator, InvocationContextState,
+    Message, ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelStreamChunk,
+    ModelStreamPort, NoopDurabilityPort, NoopHostPolicyPort, NoopModelStreamPort,
+    NoopPostCommitPort, NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort,
+    ResumeContext, RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, Role, ToolOutcome,
+    ToolPort, TurnCommit, TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest,
+    TurnStatus,
 };
 use serde::Deserialize;
 use serde_json::Value;
@@ -86,10 +88,10 @@ impl ModelPort for StreamingModel {
             .await;
         Ok(ModelInvocationResponse {
             output: Some(Value::String("hello".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         })
     }
@@ -108,15 +110,15 @@ impl ModelPort for CancellingModel {
         cancellation.cancel();
         Ok(ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "should-not-run".to_string(),
                 name: "echo".to_string(),
-                arguments: Value::Null,
+                arguments: Some(Value::Null),
                 metadata: Value::Null,
             }],
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         })
     }
@@ -135,10 +137,10 @@ impl ModelPort for CancellingFinalModel {
         cancellation.cancel();
         Ok(ModelInvocationResponse {
             output: Some(Value::String("must not commit".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         })
     }
@@ -220,15 +222,15 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-unknown".to_string(),
                 name: "external-write".to_string(),
-                arguments: Value::Null,
+                arguments: Some(Value::Null),
                 metadata: Value::Null,
             }],
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -258,7 +260,7 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
         .await
         .unwrap();
 
-    assert_eq!(result.commit.status, TurnStatus::ReconciliationRequired);
+    assert_eq!(result.commit.status, TurnStatus::Reconciliation_required);
     assert_eq!(result.tool_results[0].outcome, ToolOutcome::Indeterminate);
     assert_eq!(model.requests.lock().unwrap().len(), 1);
     assert!(post_commit.0.lock().unwrap().is_empty());
@@ -273,13 +275,13 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
         TurnEngineRequest::resume_after_model_reconciliation(
             &checkpoint,
             3,
-            checkpoint.last_sequence,
+            checkpoint.last_sequence as u64,
             ModelInvocationResponse {
                 output: Some(Value::String("wrong resolution type".to_string())),
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: Vec::new(),
-                next_portability: None,
-                delegated_state: None,
+                next_context_state: None,
                 metadata: Value::Null,
             },
         )
@@ -308,16 +310,16 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
     )
     .await
     .unwrap();
-    assert_eq!(resumed.commit.status, TurnStatus::ReconciliationRequired);
+    assert_eq!(resumed.commit.status, TurnStatus::Reconciliation_required);
     assert_eq!(resumed_model.calls.load(Ordering::SeqCst), 0);
 
     let resolved_model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("reconciled".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -330,7 +332,7 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
             request_id: "call-unknown".to_string(),
             name: "external-write".to_string(),
             outcome: ToolOutcome::Success,
-            output: Value::String("confirmed complete".to_string()),
+            output: Some(Value::String("confirmed complete".to_string())),
             error_kind: None,
             metadata: Value::Null,
         },
@@ -362,7 +364,7 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
             .lock()
             .unwrap()
             .iter()
-            .any(|event| event.kind == EngineEventKind::ToolResultReconciled)
+            .any(|event| event.kind == EngineEventKind::Tool_result_reconciled)
     );
     assert!(
         resolved_model.requests.lock().unwrap()[0]
@@ -421,6 +423,103 @@ async fn model_stream_chunks_use_the_ephemeral_stream_port() {
     assert_eq!(
         stream.0.lock().unwrap().as_slice(),
         &[ModelStreamChunk::Text("hello".to_string())]
+    );
+}
+
+#[tokio::test]
+async fn portable_assistant_history_is_checkpointed_and_reused_after_tool_round() {
+    let mut assistant = Message::with_text(Role::Assistant, "");
+    assistant.metadata_mut().insert(
+        "tool_calls".to_string(),
+        serde_json::json!([{
+            "id": "call_1",
+            "type": "function",
+            "function": {"name": "weather", "arguments": "{\"city\":\"Paris\"}"},
+        }]),
+    );
+    let model = Arc::new(ScriptedModel {
+        responses: Mutex::new(VecDeque::from([
+            ModelInvocationResponse {
+                output: None,
+                usage: None,
+                assistant_messages: vec![assistant],
+                tool_requests: vec![EngineToolRequest {
+                    id: "call_1".to_string(),
+                    name: "weather".to_string(),
+                    arguments: Some(serde_json::json!({"city": "Paris"})),
+                    metadata: Value::Null,
+                }],
+                next_context_state: Some(InvocationContextState {
+                    portability: ContextPortability::Portable,
+                    delegated_state: Vec::new(),
+                }),
+                metadata: Value::Null,
+            },
+            ModelInvocationResponse {
+                output: Some(Value::String("sunny".to_string())),
+                usage: None,
+                assistant_messages: vec![Message::with_text(Role::Assistant, "sunny")],
+                tool_requests: Vec::new(),
+                next_context_state: Some(InvocationContextState {
+                    portability: ContextPortability::Portable,
+                    delegated_state: Vec::new(),
+                }),
+                metadata: Value::Null,
+            },
+        ])),
+        requests: Mutex::new(Vec::new()),
+    });
+    let checkpoints = Arc::new(RecordingCheckpoints::default());
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        effects(
+            model.clone(),
+            Arc::new(VectorTools {
+                outputs: HashMap::from([("call_1".to_string(), "22C".to_string())]),
+                calls: Mutex::new(Vec::new()),
+            }),
+            Arc::new(RecordingEvents::default()),
+            checkpoints.clone(),
+            Arc::new(RecordingPostCommit::default()),
+        ),
+    );
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                "portable-history-session",
+                "portable-history-turn",
+                vec![Message::with_text(Role::User, "weather in Paris")],
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(result.commit.status, TurnStatus::Success);
+    let checkpoint = checkpoints
+        .0
+        .lock()
+        .unwrap()
+        .iter()
+        .find(|checkpoint| {
+            checkpoint.completed_model_iterations == 1
+                && checkpoint.pending_model_response.is_none()
+                && checkpoint.messages.len() == 3
+        })
+        .cloned()
+        .expect("tool exchange must checkpoint portable assistant and result messages");
+    let requests = model.requests.lock().unwrap();
+    assert_eq!(requests.len(), 2);
+    assert_eq!(requests[1].context.messages, checkpoint.messages);
+    assert_eq!(requests[1].context.messages[1].role, Role::Assistant);
+    assert_eq!(
+        requests[1].context.messages[1].metadata["tool_calls"][0]["id"],
+        "call_1"
+    );
+    assert_eq!(
+        requests[1].context.messages[2].metadata["tool_call_id"],
+        "call_1"
     );
 }
 
@@ -523,7 +622,7 @@ async fn indeterminate_model_invocation_is_not_retried() {
         .await
         .unwrap();
 
-    assert_eq!(result.commit.status, TurnStatus::ReconciliationRequired);
+    assert_eq!(result.commit.status, TurnStatus::Reconciliation_required);
     assert_eq!(model.calls.load(Ordering::SeqCst), 1);
     assert_eq!(
         result.commit.output.as_ref().unwrap()["errorKind"],
@@ -547,12 +646,12 @@ async fn indeterminate_model_invocation_is_not_retried() {
         TurnEngineRequest::resume_after_reconciliation(
             &checkpoint,
             3,
-            checkpoint.last_sequence,
+            checkpoint.last_sequence as u64,
             EngineToolResult {
                 request_id: "not-a-tool".to_string(),
                 name: "not-a-tool".to_string(),
                 outcome: ToolOutcome::Success,
-                output: Value::Null,
+                output: Some(Value::Null),
                 error_kind: None,
                 metadata: Value::Null,
             },
@@ -565,7 +664,7 @@ async fn indeterminate_model_invocation_is_not_retried() {
             .lock()
             .unwrap()
             .iter()
-            .any(|event| event.kind == EngineEventKind::ModelReconciliationRequired)
+            .any(|event| event.kind == EngineEventKind::Model_reconciliation_required)
     );
 
     let unresolved_model = Arc::new(IndeterminateModel {
@@ -585,24 +684,27 @@ async fn indeterminate_model_invocation_is_not_retried() {
         ),
     )
     .run(
-        TurnEngineRequest::resume_from(&checkpoint, 3, checkpoint.last_sequence),
+        TurnEngineRequest::resume_from(&checkpoint, 3, checkpoint.last_sequence as u64),
         CancellationToken::new(),
     )
     .await
     .unwrap();
-    assert_eq!(unresolved.commit.status, TurnStatus::ReconciliationRequired);
+    assert_eq!(
+        unresolved.commit.status,
+        TurnStatus::Reconciliation_required
+    );
     assert_eq!(unresolved_model.calls.load(Ordering::SeqCst), 0);
 
     let resolved_request = TurnEngineRequest::resume_after_model_reconciliation(
         &checkpoint,
         3,
-        checkpoint.last_sequence,
+        checkpoint.last_sequence as u64,
         ModelInvocationResponse {
             output: Some(Value::String("provider-confirmed".to_string())),
+            usage: None,
             assistant_messages: vec![Message::with_text(Role::Assistant, "provider-confirmed")],
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: serde_json::json!({"providerResponseId": "resp-confirmed"}),
         },
     )
@@ -640,7 +742,7 @@ async fn indeterminate_model_invocation_is_not_retried() {
             .lock()
             .unwrap()
             .iter()
-            .any(|event| event.kind == EngineEventKind::ModelInvocationReconciled)
+            .any(|event| event.kind == EngineEventKind::Model_invocation_reconciled)
     );
 }
 
@@ -649,15 +751,15 @@ async fn permission_port_failure_commits_a_failed_turn() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-permission".to_string(),
                 name: "restricted".to_string(),
-                arguments: Value::Null,
+                arguments: Some(Value::Null),
                 metadata: Value::Null,
             }],
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -705,7 +807,7 @@ async fn permission_port_failure_commits_a_failed_turn() {
     );
     assert_eq!(
         events.0.lock().unwrap().last().unwrap().kind,
-        EngineEventKind::TurnFailed
+        EngineEventKind::Turn_failed
     );
 }
 
@@ -714,15 +816,15 @@ async fn unknown_tool_is_a_terminal_configuration_failure() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-missing".to_string(),
                 name: "missing".to_string(),
-                arguments: Value::Null,
+                arguments: Some(Value::Null),
                 metadata: Value::Null,
             }],
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -763,15 +865,15 @@ async fn cancellation_after_permission_prevents_tool_execution() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-cancelled".to_string(),
                 name: "write".to_string(),
-                arguments: Value::Null,
+                arguments: Some(Value::Null),
                 metadata: Value::Null,
             }],
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -821,15 +923,15 @@ async fn durability_failure_after_tool_effect_returns_recovery_state() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-durable".to_string(),
                 name: "write".to_string(),
-                arguments: Value::Null,
+                arguments: Some(Value::Null),
                 metadata: Value::Null,
             }],
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -979,12 +1081,11 @@ impl ToolPort for VectorTools {
             request_id: request.id.clone(),
             name: request.name.clone(),
             outcome: ToolOutcome::Success,
-            output: Value::String(
-                self.outputs
-                    .get(&request.id)
-                    .cloned()
-                    .unwrap_or_else(|| request.arguments.to_string()),
-            ),
+            output: Some(Value::String(
+                self.outputs.get(&request.id).cloned().unwrap_or_else(|| {
+                    request.arguments.clone().unwrap_or(Value::Null).to_string()
+                }),
+            )),
             error_kind: None,
             metadata: Value::Null,
         })
@@ -1029,7 +1130,7 @@ struct FailingPostCommitCompletionDurability {
 #[async_trait]
 impl DurabilityPort for FailingPostCommitCompletionDurability {
     async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
-        if event.kind == EngineEventKind::PostCommitCompleted {
+        if event.kind == EngineEventKind::Post_commit_completed {
             return Err(PortError::new("journal unavailable after consolidation"));
         }
         self.events.0.lock().unwrap().push(event.clone());
@@ -1159,16 +1260,23 @@ fn to_message(message: &VectorMessage) -> Message {
 }
 
 fn to_response(response: &VectorModelResponse) -> ModelInvocationResponse {
+    let next_context_state = match (response.next_portability, &response.delegated_state) {
+        (None, None) => None,
+        (portability, delegated) => Some(InvocationContextState {
+            portability: portability.unwrap_or(ContextPortability::Portable),
+            delegated_state: delegated.clone().unwrap_or_default(),
+        }),
+    };
     ModelInvocationResponse {
         output: response.output.clone(),
+        usage: None,
         assistant_messages: response
             .assistant
             .iter()
             .map(|text| Message::with_text(Role::Assistant, text.clone()))
             .collect(),
         tool_requests: response.tools.clone(),
-        next_portability: response.next_portability,
-        delegated_state: response.delegated_state.clone(),
+        next_context_state,
         metadata: Value::Null,
     }
 }
@@ -1238,7 +1346,7 @@ async fn canonical_turn_engine_matches_vectors() {
             vector.name
         );
         assert_eq!(
-            result.commit.iterations, vector.expected.iterations,
+            result.commit.iterations as usize, vector.expected.iterations,
             "{} iterations",
             vector.name
         );
@@ -1269,7 +1377,7 @@ async fn canonical_turn_engine_matches_vectors() {
                 result
                     .snapshots
                     .iter()
-                    .map(|snapshot| snapshot.portability)
+                    .map(|snapshot| snapshot.context_state.portability)
                     .collect::<Vec<_>>(),
                 vector.expected.snapshot_portability,
                 "{} portability",
@@ -1281,7 +1389,7 @@ async fn canonical_turn_engine_matches_vectors() {
                 result
                     .snapshots
                     .iter()
-                    .map(|snapshot| snapshot.stable_prefix_messages)
+                    .map(|snapshot| snapshot.stable_prefix_messages as usize)
                     .collect::<Vec<_>>(),
                 vector.expected.snapshot_stable_prefixes,
                 "{} stable prefixes",
@@ -1290,14 +1398,14 @@ async fn canonical_turn_engine_matches_vectors() {
         }
         if let Some(portability) = vector.expected.commit_portability {
             assert_eq!(
-                result.commit.portability, portability,
+                result.commit.context_state.portability, portability,
                 "{} commit portability",
                 vector.name
             );
         }
         if let Some(count) = vector.expected.delegated_state {
             assert_eq!(
-                result.commit.delegated_state.len(),
+                result.commit.context_state.delegated_state.len(),
                 count,
                 "{} delegated state",
                 vector.name
@@ -1411,12 +1519,18 @@ impl ContextSource for InputEchoSource {
     }
 
     async fn load(&self, request: &ContextRequest) -> Result<Vec<ContextCandidate>, ContextError> {
+        let tenant = request
+            .inputs
+            .as_ref()
+            .and_then(|inputs| inputs.get("tenant"))
+            .cloned()
+            .unwrap_or(Value::Null);
         Ok(vec![ContextCandidate {
             id: "input-tenant".to_string(),
             source: "inputs".to_string(),
             messages: vec![Message::with_text(
                 Role::System,
-                format!("Tenant: {}", request.inputs["tenant"]),
+                format!("Tenant: {}", tenant),
             )],
             metadata: Value::Null,
         }])
@@ -1457,10 +1571,10 @@ async fn retry_reuses_the_same_context_snapshot() {
         snapshot_ids: Mutex::new(Vec::new()),
         response: ModelInvocationResponse {
             output: Some(Value::String("recovered".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         },
     });
@@ -1502,7 +1616,7 @@ async fn retry_reuses_the_same_context_snapshot() {
             .lock()
             .unwrap()
             .iter()
-            .any(|event| event.kind == EngineEventKind::ModelInvocationFailed)
+            .any(|event| event.kind == EngineEventKind::Model_invocation_failed)
     );
 }
 
@@ -1512,23 +1626,23 @@ async fn tool_failure_is_committed_as_a_model_visible_result() {
         responses: Mutex::new(VecDeque::from([
             ModelInvocationResponse {
                 output: None,
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: vec![EngineToolRequest {
                     id: "call-fail".to_string(),
                     name: "failing".to_string(),
-                    arguments: Value::Null,
+                    arguments: Some(Value::Null),
                     metadata: Value::Null,
                 }],
-                next_portability: None,
-                delegated_state: None,
+                next_context_state: None,
                 metadata: Value::Null,
             },
             ModelInvocationResponse {
                 output: Some(Value::String("recovered from tool failure".to_string())),
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: Vec::new(),
-                next_portability: None,
-                delegated_state: None,
+                next_context_state: None,
                 metadata: Value::Null,
             },
         ])),
@@ -1574,14 +1688,87 @@ async fn tool_failure_is_committed_as_a_model_visible_result() {
 }
 
 #[tokio::test]
+async fn no_op_durability_allows_tool_turns_without_a_state_store() {
+    let model = Arc::new(ScriptedModel {
+        responses: Mutex::new(VecDeque::from([
+            ModelInvocationResponse {
+                output: None,
+                usage: None,
+                assistant_messages: Vec::new(),
+                tool_requests: vec![EngineToolRequest {
+                    id: "call-project-files".to_string(),
+                    name: "list_project_files".to_string(),
+                    arguments: Some(Value::Null),
+                    metadata: Value::Null,
+                }],
+                next_context_state: None,
+                metadata: Value::Null,
+            },
+            ModelInvocationResponse {
+                output: Some(Value::String("Project files inspected.".to_string())),
+                usage: None,
+                assistant_messages: Vec::new(),
+                tool_requests: Vec::new(),
+                next_context_state: None,
+                metadata: Value::Null,
+            },
+        ])),
+        requests: Mutex::new(Vec::new()),
+    });
+    let tools = Arc::new(VectorTools {
+        outputs: HashMap::from([("call-project-files".to_string(), "src/main.rs".to_string())]),
+        calls: Mutex::new(Vec::new()),
+    });
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        TurnEngineEffects {
+            model: model.clone(),
+            stream: Arc::new(NoopModelStreamPort),
+            policy: Arc::new(NoopHostPolicyPort),
+            retry: Arc::new(NoopRetryPolicyPort),
+            conversation: Arc::new(DefaultConversationPort),
+            permission: Arc::new(AllowAllPermissions),
+            tools: tools.clone(),
+            durability: Arc::new(NoopDurabilityPort),
+            post_commit: Arc::new(NoopPostCommitPort),
+            clock: Arc::new(FixedClock),
+            ids: Arc::new(SequentialIds::default()),
+        },
+    );
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                "session-no-store",
+                "turn-no-store",
+                vec![Message::with_text(Role::User, "Inspect the project")],
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(result.commit.status, TurnStatus::Success);
+    assert_eq!(
+        result.commit.output,
+        Some(Value::String("Project files inspected.".to_string()))
+    );
+    assert_eq!(
+        tools.calls.lock().unwrap().as_slice(),
+        &["call-project-files"]
+    );
+    assert_eq!(model.requests.lock().unwrap().len(), 2);
+}
+
+#[tokio::test]
 async fn memory_recall_composes_as_a_context_source() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("concise".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -1630,6 +1817,9 @@ async fn resume_continues_after_the_checkpoint_sequence_and_iteration() {
         id: "checkpoint-1".to_string(),
         session_id: "session-resume".to_string(),
         turn_id: "turn-resume".to_string(),
+        run_id: "run-test".to_string(),
+        parent_run_id: None,
+        delegation_depth: 0,
         iteration: 0,
         last_sequence: 12,
         messages: vec![
@@ -1637,7 +1827,7 @@ async fn resume_continues_after_the_checkpoint_sequence_and_iteration() {
             Message::tool_result("call-complete", "already committed"),
         ],
         stable_prefix_messages: 1,
-        inputs: serde_json::json!({ "tenant": "contoso" }),
+        inputs: Some(serde_json::json!({ "tenant": "contoso" })),
         active_invocation_id: None,
         pending_tool_requests: Vec::new(),
         completed_tool_results: Vec::new(),
@@ -1649,17 +1839,19 @@ async fn resume_continues_after_the_checkpoint_sequence_and_iteration() {
         pending_model_response: None,
         resume_same_iteration: false,
         policy_applied_for_iteration: false,
-        portability: ContextPortability::Portable,
-        delegated_state: Vec::new(),
+        context_state: InvocationContextState {
+            portability: ContextPortability::Portable,
+            delegated_state: Vec::new(),
+        },
         metadata: Value::Null,
     };
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("resumed".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -1711,7 +1903,7 @@ async fn resume_continues_after_the_checkpoint_sequence_and_iteration() {
     legacy_value
         .as_object_mut()
         .unwrap()
-        .remove("stable_prefix_messages");
+        .remove("stablePrefixMessages");
     let legacy_checkpoint: EngineCheckpoint = serde_json::from_value(legacy_value).unwrap();
     assert_eq!(legacy_checkpoint.stable_prefix_messages, 0);
 }
@@ -1726,10 +1918,10 @@ async fn resume_commits_checkpointed_final_model_response_without_reinvoking() {
             Arc::new(ScriptedModel {
                 responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
                     output: Some(Value::String("checkpointed".to_string())),
+                    usage: None,
                     assistant_messages: Vec::new(),
                     tool_requests: Vec::new(),
-                    next_portability: None,
-                    delegated_state: None,
+                    next_context_state: None,
                     metadata: Value::Null,
                 }])),
                 requests: Mutex::new(Vec::new()),
@@ -1774,7 +1966,7 @@ async fn resume_commits_checkpointed_final_model_response_without_reinvoking() {
         ),
     )
     .run(
-        TurnEngineRequest::resume_from(&checkpoint, 3, checkpoint.last_sequence),
+        TurnEngineRequest::resume_from(&checkpoint, 3, checkpoint.last_sequence as u64),
         CancellationToken::new(),
     )
     .await
@@ -1797,6 +1989,9 @@ async fn resume_continues_remaining_tools_without_replaying_completed_effects() 
         id: "checkpoint-partial-tools".to_string(),
         session_id: "session-partial-tools".to_string(),
         turn_id: "turn-partial-tools".to_string(),
+        run_id: "run-test".to_string(),
+        parent_run_id: None,
+        delegation_depth: 0,
         iteration: 0,
         last_sequence: 8,
         messages: vec![
@@ -1804,19 +1999,19 @@ async fn resume_continues_remaining_tools_without_replaying_completed_effects() 
             Message::tool_result("call-first", "first complete"),
         ],
         stable_prefix_messages: 1,
-        inputs: Value::Null,
+        inputs: Some(Value::Null),
         active_invocation_id: Some("invocation-original".to_string()),
         pending_tool_requests: vec![EngineToolRequest {
             id: "call-second".to_string(),
             name: "second".to_string(),
-            arguments: Value::Null,
+            arguments: Some(Value::Null),
             metadata: Value::Null,
         }],
         completed_tool_results: vec![EngineToolResult {
             request_id: "call-first".to_string(),
             name: "first".to_string(),
             outcome: ToolOutcome::Success,
-            output: Value::String("first complete".to_string()),
+            output: Some(Value::String("first complete".to_string())),
             error_kind: None,
             metadata: Value::Null,
         }],
@@ -1828,17 +2023,19 @@ async fn resume_continues_remaining_tools_without_replaying_completed_effects() 
         pending_model_response: None,
         resume_same_iteration: false,
         policy_applied_for_iteration: false,
-        portability: ContextPortability::Portable,
-        delegated_state: Vec::new(),
+        context_state: InvocationContextState {
+            portability: ContextPortability::Portable,
+            delegated_state: Vec::new(),
+        },
         metadata: Value::Null,
     };
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("all complete".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -1860,7 +2057,7 @@ async fn resume_continues_remaining_tools_without_replaying_completed_effects() 
 
     let result = engine
         .run(
-            TurnEngineRequest::resume_from(&checkpoint, 3, checkpoint.last_sequence),
+            TurnEngineRequest::resume_from(&checkpoint, 3, checkpoint.last_sequence as u64),
             CancellationToken::new(),
         )
         .await
@@ -1892,6 +2089,9 @@ async fn resume_after_final_iteration_tools_commits_max_iterations_failure() {
         id: "checkpoint-exhausted".to_string(),
         session_id: "session-exhausted".to_string(),
         turn_id: "turn-exhausted".to_string(),
+        run_id: "run-test".to_string(),
+        parent_run_id: None,
+        delegation_depth: 0,
         iteration: 0,
         last_sequence: 10,
         messages: vec![
@@ -1899,14 +2099,14 @@ async fn resume_after_final_iteration_tools_commits_max_iterations_failure() {
             Message::tool_result("call-final", "complete"),
         ],
         stable_prefix_messages: 1,
-        inputs: Value::Null,
+        inputs: Some(Value::Null),
         active_invocation_id: Some("invocation-final".to_string()),
         pending_tool_requests: Vec::new(),
         completed_tool_results: vec![EngineToolResult {
             request_id: "call-final".to_string(),
             name: "final".to_string(),
             outcome: ToolOutcome::Success,
-            output: Value::String("complete".to_string()),
+            output: Some(Value::String("complete".to_string())),
             error_kind: None,
             metadata: Value::Null,
         }],
@@ -1918,8 +2118,10 @@ async fn resume_after_final_iteration_tools_commits_max_iterations_failure() {
         pending_model_response: None,
         resume_same_iteration: false,
         policy_applied_for_iteration: false,
-        portability: ContextPortability::Portable,
-        delegated_state: Vec::new(),
+        context_state: InvocationContextState {
+            portability: ContextPortability::Portable,
+            delegated_state: Vec::new(),
+        },
         metadata: Value::Null,
     };
     let model = Arc::new(IndeterminateModel {
@@ -1941,7 +2143,7 @@ async fn resume_after_final_iteration_tools_commits_max_iterations_failure() {
 
     let result = engine
         .run(
-            TurnEngineRequest::resume_from(&checkpoint, 1, checkpoint.last_sequence),
+            TurnEngineRequest::resume_from(&checkpoint, 1, checkpoint.last_sequence as u64),
             CancellationToken::new(),
         )
         .await
@@ -1960,10 +2162,10 @@ async fn post_commit_failure_does_not_uncommit_the_turn() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("committed".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -2013,7 +2215,7 @@ async fn post_commit_failure_does_not_uncommit_the_turn() {
     );
     assert_eq!(
         events.0.lock().unwrap().last().unwrap().kind,
-        EngineEventKind::PostCommitFailed
+        EngineEventKind::Post_commit_failed
     );
 }
 
@@ -2026,10 +2228,10 @@ async fn post_commit_completion_journal_failure_is_non_fatal() {
             model: Arc::new(ScriptedModel {
                 responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
                     output: Some(Value::String("committed".to_string())),
+                    usage: None,
                     assistant_messages: Vec::new(),
                     tool_requests: Vec::new(),
-                    next_portability: None,
-                    delegated_state: None,
+                    next_context_state: None,
                     metadata: Value::Null,
                 }])),
                 requests: Mutex::new(Vec::new()),
@@ -2112,10 +2314,10 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("model output".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -2182,10 +2384,10 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
     assert!(
         event_kinds
             .iter()
-            .position(|kind| *kind == EngineEventKind::PolicyApplied)
+            .position(|kind| *kind == EngineEventKind::Policy_applied)
             < event_kinds
                 .iter()
-                .position(|kind| *kind == EngineEventKind::ModelInvocationStarted)
+                .position(|kind| *kind == EngineEventKind::Model_invocation_started)
     );
 
     let resumed_model = Arc::new(ScriptedModel {
@@ -2193,10 +2395,10 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
             output: Some(Value::String(
                 "resumed without duplicate policy".to_string(),
             )),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -2217,7 +2419,11 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
         resumed_effects,
     )
     .run(
-        TurnEngineRequest::resume_from(&policy_checkpoint, 10, policy_checkpoint.last_sequence),
+        TurnEngineRequest::resume_from(
+            &policy_checkpoint,
+            10,
+            policy_checkpoint.last_sequence as u64,
+        ),
         CancellationToken::new(),
     )
     .await
@@ -2251,6 +2457,99 @@ impl HostPolicyPort for DenyingPolicy {
             metadata: Value::Null,
         })
     }
+}
+
+struct CancellingFinalPolicy;
+
+#[async_trait]
+impl HostPolicyPort for CancellingFinalPolicy {
+    async fn before_model(
+        &self,
+        request: HostPolicyRequest,
+        _cancellation: &CancellationToken,
+    ) -> Result<HostPolicyResult, HostPolicyError> {
+        Ok(HostPolicyResult {
+            messages: request.messages,
+            stable_prefix_messages: request.stable_prefix_messages,
+            metadata: Value::Null,
+        })
+    }
+
+    async fn before_commit(
+        &self,
+        _request: FinalOutputPolicyRequest,
+        cancellation: &CancellationToken,
+    ) -> Result<FinalOutputPolicyResult, HostPolicyError> {
+        cancellation.cancel();
+        tokio::task::yield_now().await;
+        Err(HostPolicyError::new(
+            "output_guardrail_denied",
+            "Output guardrail denied: blocked",
+        ))
+    }
+}
+
+#[tokio::test]
+async fn cancellation_during_failing_final_policy_commits_cancelled() {
+    let events = Arc::new(RecordingEvents::default());
+    let mut engine_effects = effects(
+        Arc::new(ScriptedModel {
+            responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
+                output: Some(Value::String("model output".to_string())),
+                usage: None,
+                assistant_messages: Vec::new(),
+                tool_requests: Vec::new(),
+                next_context_state: None,
+                metadata: Value::Null,
+            }])),
+            requests: Mutex::new(Vec::new()),
+        }),
+        Arc::new(VectorTools {
+            outputs: HashMap::new(),
+            calls: Mutex::new(Vec::new()),
+        }),
+        events.clone(),
+        Arc::new(RecordingCheckpoints::default()),
+        Arc::new(RecordingPostCommit::default()),
+    );
+    engine_effects.policy = Arc::new(CancellingFinalPolicy);
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        engine_effects,
+    );
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                "session-policy-cancel",
+                "turn-policy-cancel",
+                vec![Message::with_text(Role::User, "cancel")],
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(result.commit.status, TurnStatus::Cancelled);
+    let events = events.0.lock().unwrap();
+    let terminal_events = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                event.kind,
+                EngineEventKind::Turn_committed
+                    | EngineEventKind::Turn_cancelled
+                    | EngineEventKind::Turn_failed
+                    | EngineEventKind::Turn_reconciliation_required
+            )
+        })
+        .map(|event| event.kind)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        terminal_events,
+        vec![EngineEventKind::Turn_cancelled],
+        "cancellation is the only terminal lifecycle event"
+    );
 }
 
 #[tokio::test]
@@ -2300,7 +2599,7 @@ async fn policy_failure_is_typed_and_never_retried_as_a_model_failure() {
             .lock()
             .unwrap()
             .iter()
-            .all(|event| event.kind != EngineEventKind::ModelInvocationFailed)
+            .all(|event| event.kind != EngineEventKind::Model_invocation_failed)
     );
 }
 
@@ -2326,10 +2625,10 @@ async fn retry_policy_runs_between_retryable_model_attempts() {
         snapshot_ids: Mutex::new(Vec::new()),
         response: ModelInvocationResponse {
             output: Some(Value::String("recovered".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         },
     });
@@ -2413,15 +2712,15 @@ async fn conversation_failure_occurs_after_the_tool_result_is_durable() {
     let model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: vec![EngineToolRequest {
                 id: "call-durable-format".to_string(),
                 name: "write".to_string(),
-                arguments: Value::Null,
+                arguments: Some(Value::Null),
                 metadata: Value::Null,
             }],
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -2479,10 +2778,10 @@ async fn conversation_failure_occurs_after_the_tool_result_is_durable() {
     assert!(
         kinds
             .iter()
-            .position(|kind| *kind == EngineEventKind::ToolExecutionCompleted)
+            .position(|kind| *kind == EngineEventKind::Tool_execution_completed)
             < kinds
                 .iter()
-                .position(|kind| *kind == EngineEventKind::TurnFailed)
+                .position(|kind| *kind == EngineEventKind::Turn_failed)
     );
 }
 
@@ -2492,37 +2791,38 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
         responses: Mutex::new(VecDeque::from([
             ModelInvocationResponse {
                 output: None,
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: vec![
                     EngineToolRequest {
                         id: "call-a".to_string(),
                         name: "a".to_string(),
-                        arguments: Value::Null,
+                        arguments: Some(Value::Null),
                         metadata: Value::Null,
                     },
                     EngineToolRequest {
                         id: "call-b".to_string(),
                         name: "b".to_string(),
-                        arguments: Value::Null,
+                        arguments: Some(Value::Null),
                         metadata: Value::Null,
                     },
                 ],
-                next_portability: None,
-                delegated_state: None,
+                next_context_state: None,
                 metadata: Value::Null,
             },
             ModelInvocationResponse {
                 output: Some(Value::String("done".to_string())),
+                usage: None,
                 assistant_messages: Vec::new(),
                 tool_requests: Vec::new(),
-                next_portability: None,
-                delegated_state: None,
+                next_context_state: None,
                 metadata: Value::Null,
             },
         ])),
         requests: Mutex::new(Vec::new()),
     });
     let conversation = Arc::new(RecordingConversation::default());
+    let events = Arc::new(RecordingEvents::default());
     let checkpoints = Arc::new(RecordingCheckpoints::default());
     let mut engine_effects = effects(
         model.clone(),
@@ -2533,7 +2833,7 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
             ]),
             calls: Mutex::new(Vec::new()),
         }),
-        Arc::new(RecordingEvents::default()),
+        events.clone(),
         checkpoints.clone(),
         Arc::new(RecordingPostCommit::default()),
     );
@@ -2567,6 +2867,43 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
             .iter()
             .any(|message| message.text_content() == "batched:A,B")
     );
+    let event_kinds = events
+        .0
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|event| event.kind)
+        .collect::<Vec<_>>();
+    assert_eq!(
+        event_kinds
+            .iter()
+            .filter(|kind| **kind == EngineEventKind::Tool_execution_completed)
+            .count(),
+        2
+    );
+    assert_eq!(
+        event_kinds
+            .iter()
+            .filter(|kind| **kind == EngineEventKind::Tool_result_committed)
+            .count(),
+        2
+    );
+    assert!(
+        event_kinds
+            .iter()
+            .rposition(|kind| *kind == EngineEventKind::Tool_execution_completed)
+            < event_kinds
+                .iter()
+                .position(|kind| *kind == EngineEventKind::Tool_result_committed)
+    );
+    assert!(
+        event_kinds
+            .iter()
+            .rposition(|kind| *kind == EngineEventKind::Tool_result_committed)
+            < event_kinds
+                .iter()
+                .position(|kind| *kind == EngineEventKind::Conversation_updated)
+    );
     let checkpoints = checkpoints.0.lock().unwrap();
     assert!(
         checkpoints
@@ -2594,10 +2931,10 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
     let resumed_model = Arc::new(ScriptedModel {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("resumed".to_string())),
+            usage: None,
             assistant_messages: Vec::new(),
             tool_requests: Vec::new(),
-            next_portability: None,
-            delegated_state: None,
+            next_context_state: None,
             metadata: Value::Null,
         }])),
         requests: Mutex::new(Vec::new()),
@@ -2622,7 +2959,7 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
         TurnEngineRequest::resume_from(
             &durable_tool_checkpoint,
             2,
-            durable_tool_checkpoint.last_sequence,
+            durable_tool_checkpoint.last_sequence as u64,
         ),
         CancellationToken::new(),
     )
@@ -2644,4 +2981,271 @@ fn cancellation_token_can_bridge_an_existing_shared_flag() {
     assert!(!token.is_cancelled());
     shared.store(true, Ordering::Release);
     assert!(token.is_cancelled());
+}
+
+#[test]
+fn delegated_under_nests_one_level_and_carries_parent() {
+    let request = TurnEngineRequest::new(
+        "identity-session",
+        "identity-turn",
+        vec![Message::with_text(Role::User, "hello")],
+    )
+    .with_run_id("run-child")
+    .delegated_under("run-parent", 2);
+
+    assert_eq!(request.run_id, "run-child");
+    assert_eq!(request.parent_run_id.as_deref(), Some("run-parent"));
+    assert_eq!(request.delegation_depth, 3);
+}
+
+#[tokio::test]
+async fn run_identity_round_trips_through_persisted_event_and_checkpoint_json() {
+    let model = Arc::new(ScriptedModel {
+        responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
+            output: Some(Value::String("done".to_string())),
+            usage: None,
+            assistant_messages: vec![Message::with_text(Role::Assistant, "done")],
+            tool_requests: Vec::new(),
+            next_context_state: None,
+            metadata: Value::Null,
+        }])),
+        requests: Mutex::new(Vec::new()),
+    });
+    let events = Arc::new(RecordingEvents::default());
+    let checkpoints = Arc::new(RecordingCheckpoints::default());
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        effects(
+            model,
+            Arc::new(VectorTools {
+                outputs: HashMap::new(),
+                calls: Mutex::new(Vec::new()),
+            }),
+            events.clone(),
+            checkpoints.clone(),
+            Arc::new(RecordingPostCommit::default()),
+        ),
+    );
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                "identity-session",
+                "identity-turn",
+                vec![Message::with_text(Role::User, "hello")],
+            )
+            .with_run_id("run-child")
+            .delegated_under("run-parent", 2),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(result.commit.status, TurnStatus::Success);
+
+    // Persisted event JSON must carry run identity in canonical camelCase.
+    let event = events.0.lock().unwrap().first().cloned().expect("event");
+    let event_json = serde_json::to_value(&event).unwrap();
+    assert_eq!(event_json["runId"], "run-child");
+    assert_eq!(event_json["parentRunId"], "run-parent");
+    assert_eq!(event_json["delegationDepth"], 3);
+    let event_back: EngineEvent = serde_json::from_value(event_json).unwrap();
+    assert_eq!(event_back.run_id, "run-child");
+    assert_eq!(event_back.parent_run_id.as_deref(), Some("run-parent"));
+    assert_eq!(event_back.delegation_depth, 3);
+
+    // Persisted checkpoint JSON must carry the same run identity in camelCase.
+    let checkpoint = checkpoints
+        .0
+        .lock()
+        .unwrap()
+        .first()
+        .cloned()
+        .expect("checkpoint");
+    let checkpoint_json = serde_json::to_value(&checkpoint).unwrap();
+    assert_eq!(checkpoint_json["runId"], "run-child");
+    assert_eq!(checkpoint_json["parentRunId"], "run-parent");
+    assert_eq!(checkpoint_json["delegationDepth"], 3);
+    let checkpoint_back: EngineCheckpoint = serde_json::from_value(checkpoint_json).unwrap();
+    assert_eq!(checkpoint_back.run_id, "run-child");
+    assert_eq!(checkpoint_back.parent_run_id.as_deref(), Some("run-parent"));
+    assert_eq!(checkpoint_back.delegation_depth, 3);
+}
+
+fn resume_fixture_checkpoint(last_sequence: i64) -> EngineCheckpoint {
+    EngineCheckpoint {
+        id: "checkpoint-resume".to_string(),
+        session_id: "session-resume".to_string(),
+        turn_id: "turn-resume".to_string(),
+        run_id: "run-resume".to_string(),
+        parent_run_id: None,
+        delegation_depth: 0,
+        iteration: 0,
+        last_sequence,
+        messages: vec![Message::with_text(Role::User, "start")],
+        stable_prefix_messages: 1,
+        inputs: Some(serde_json::json!({ "tenant": "contoso" })),
+        active_invocation_id: None,
+        pending_tool_requests: Vec::new(),
+        completed_tool_results: Vec::new(),
+        completed_model_iterations: 1,
+        reconciliation_required: false,
+        model_reconciliation: None,
+        pending_output: None,
+        final_output_ready: false,
+        pending_model_response: None,
+        resume_same_iteration: false,
+        policy_applied_for_iteration: false,
+        context_state: InvocationContextState {
+            portability: ContextPortability::Portable,
+            delegated_state: Vec::new(),
+        },
+        metadata: Value::Null,
+    }
+}
+
+#[test]
+fn resume_context_bridge_threads_budgets_and_journal_tail() {
+    // Journal tail ahead of the checkpoint: the resumed run must continue after
+    // the durable tail, and the generated ResumeContext must thread both budgets
+    // (unlike the ad-hoc resume_from, which defaults maxModelAttempts).
+    let ahead =
+        ResumeContext::resuming(resume_fixture_checkpoint(12), 7, 5).with_last_journal_sequence(20);
+    assert_eq!(ahead.resume_sequence(), 20);
+    let ahead_request = TurnEngineRequest::from_resume(&ahead);
+    assert_eq!(ahead_request.max_iterations, 7);
+    assert_eq!(ahead_request.max_model_attempts, 5);
+    assert_eq!(ahead_request.initial_sequence, 20);
+
+    // No journal tail recorded: resume falls back to the checkpoint's own
+    // lastSequence and lastJournalSequence is omitted from the durable JSON.
+    let at_checkpoint = ResumeContext::resuming(resume_fixture_checkpoint(30), 4, 2);
+    assert_eq!(at_checkpoint.resume_sequence(), 30);
+    let at_checkpoint_request = TurnEngineRequest::from_resume(&at_checkpoint);
+    assert_eq!(at_checkpoint_request.initial_sequence, 30);
+
+    // Durable JSON is canonical camelCase with conditional-emit, and round-trips.
+    let ahead_json = serde_json::to_value(&ahead).unwrap();
+    assert!(ahead_json.get("checkpoint").is_some());
+    assert_eq!(ahead_json["maxIterations"], 7);
+    assert_eq!(ahead_json["maxModelAttempts"], 5);
+    assert_eq!(ahead_json["lastJournalSequence"], 20);
+    let ahead_back: ResumeContext = serde_json::from_value(ahead_json).unwrap();
+    assert_eq!(ahead_back, ahead);
+
+    let at_checkpoint_json = serde_json::to_value(&at_checkpoint).unwrap();
+    assert!(
+        at_checkpoint_json.get("lastJournalSequence").is_none(),
+        "lastJournalSequence must be omitted when zero (conditional-emit)"
+    );
+    let at_checkpoint_back: ResumeContext = serde_json::from_value(at_checkpoint_json).unwrap();
+    assert_eq!(at_checkpoint_back, at_checkpoint);
+}
+
+#[test]
+fn resume_context_preserves_independent_session_and_run_identity() {
+    // A delegated child keeps the parent's session_id (the shared tree/journal
+    // key) while carrying its own run_id and parentRunId. ResumeContext must NOT
+    // conflate session_id with run_id: all identity fields round-trip
+    // independently through the durable record and the resume bridge.
+    let mut checkpoint = resume_fixture_checkpoint(7);
+    checkpoint.session_id = "session-tree".to_string();
+    checkpoint.run_id = "run-child".to_string();
+    checkpoint.parent_run_id = Some("run-parent".to_string());
+    checkpoint.delegation_depth = 1;
+
+    let resume = ResumeContext::resuming(checkpoint, 3, 3);
+
+    // Durable JSON carries the four identity fields on the embedded checkpoint in
+    // canonical camelCase, with session_id and run_id kept distinct.
+    let json = serde_json::to_value(&resume).unwrap();
+    assert_eq!(json["checkpoint"]["sessionId"], "session-tree");
+    assert_eq!(json["checkpoint"]["runId"], "run-child");
+    assert_eq!(json["checkpoint"]["parentRunId"], "run-parent");
+    assert_eq!(json["checkpoint"]["delegationDepth"], 1);
+    let resume: ResumeContext = serde_json::from_value(json).unwrap();
+
+    // The resume bridge rebuilds the request preserving each field independently.
+    let request = TurnEngineRequest::from_resume(&resume);
+    assert_eq!(request.session_id, "session-tree");
+    assert_eq!(request.run_id, "run-child");
+    assert_eq!(request.parent_run_id.as_deref(), Some("run-parent"));
+    assert_eq!(request.delegation_depth, 1);
+}
+
+#[tokio::test]
+async fn resume_via_generated_resume_context_avoids_duplicate_effects() {
+    // Produce a real checkpoint with a committed final model response.
+    let checkpoints = Arc::new(RecordingCheckpoints::default());
+    let post_commit_ids = Arc::new(RecordingPostCommitIds::default());
+    let initial = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        effects(
+            Arc::new(ScriptedModel {
+                responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
+                    output: Some(Value::String("checkpointed".to_string())),
+                    usage: None,
+                    assistant_messages: Vec::new(),
+                    tool_requests: Vec::new(),
+                    next_context_state: None,
+                    metadata: Value::Null,
+                }])),
+                requests: Mutex::new(Vec::new()),
+            }),
+            Arc::new(VectorTools {
+                outputs: HashMap::new(),
+                calls: Mutex::new(Vec::new()),
+            }),
+            Arc::new(RecordingEvents::default()),
+            checkpoints.clone(),
+            post_commit_ids.clone(),
+        ),
+    );
+    initial
+        .run(
+            TurnEngineRequest::new(
+                "session-resume-context",
+                "turn-resume-context",
+                vec![Message::with_text(Role::User, "finish")],
+            ),
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+
+    let checkpoint = checkpoints.0.lock().unwrap()[0].clone();
+    assert!(checkpoint.final_output_ready);
+
+    // Round-trip the durable generated ResumeContext exactly as a host persists it.
+    let resume = ResumeContext::resuming(checkpoint.clone(), 3, 3);
+    let persisted = serde_json::to_value(&resume).unwrap();
+    let resume: ResumeContext = serde_json::from_value(persisted).unwrap();
+
+    // Resume through the generated contract: the committed model effect MUST NOT
+    // be re-invoked, and the durable output is committed unchanged.
+    let resumed_model = Arc::new(IndeterminateModel {
+        calls: AtomicU64::new(0),
+    });
+    let resumed = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        effects(
+            resumed_model.clone(),
+            Arc::new(VectorTools {
+                outputs: HashMap::new(),
+                calls: Mutex::new(Vec::new()),
+            }),
+            Arc::new(RecordingEvents::default()),
+            Arc::new(RecordingCheckpoints::default()),
+            post_commit_ids.clone(),
+        ),
+    )
+    .resume(resume, CancellationToken::new())
+    .await
+    .unwrap();
+
+    assert_eq!(resumed.commit.status, TurnStatus::Success);
+    assert_eq!(
+        resumed.commit.output,
+        Some(Value::String("checkpointed".to_string()))
+    );
+    assert_eq!(resumed_model.calls.load(Ordering::SeqCst), 0);
 }

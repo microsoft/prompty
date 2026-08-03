@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// A tool result content block sent back to the API with the tool's output.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct AnthropicToolResultBlock {
     /// The content block type
     pub r#type: String,
@@ -99,5 +99,21 @@ impl AnthropicToolResultBlock {
     /// Serialize AnthropicToolResultBlock to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `AnthropicToolResultBlock` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for AnthropicToolResultBlock {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for AnthropicToolResultBlock {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

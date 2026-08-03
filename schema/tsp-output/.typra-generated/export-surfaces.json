@@ -17,8 +17,8 @@
       },
       {
         "name": "@typra/emitter",
-        "version": "0.3.1",
-        "supportedRange": "0.3.1",
+        "version": "0.4.2",
+        "supportedRange": "0.4.2",
         "supported": true
       }
     ]
@@ -59,8 +59,14 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -68,6 +74,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -75,21 +83,34 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenAIModelInfo",
@@ -115,7 +136,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -152,7 +175,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -160,6 +185,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -320,6 +347,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "core/Property.cs",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "core/Property.cs",
@@ -676,6 +710,34 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "events/StreamChunk.cs",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory/MemoryEntry.cs",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory/MemoryStore.cs",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "model/InvocationUsage.cs",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -725,6 +787,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ContextCandidate.cs",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ContextRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/DelegatedStateReference.cs",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/EngineCheckpoint.cs",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/EngineEvent.cs",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/EnginePermissionDecision.cs",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -746,11 +850,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/FinalOutputPolicyRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/FinalOutputPolicyResult.cs",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/HostPolicyRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/HostPolicyResult.cs",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "pipeline/HostToolExecutor.cs",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/InvocationContextDecision.cs",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/InvocationContextState.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationContextSnapshot.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationResponse.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelReconciliationState.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelToolRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelToolResult.cs",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -809,6 +997,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ResumeContext.cs",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/RetryPolicyRequest.cs",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -820,6 +1022,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "pipeline/RunTurnResult.cs",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/TurnCommit.cs",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/TurnEngineResult.cs",
           "protocol": false
         },
         {
@@ -1117,6 +1333,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -1178,7 +1395,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "Checkpoint.cs",
@@ -1228,8 +1446,20 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "MemoryEntry.cs",
+            "MemoryStore.cs"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
@@ -1237,6 +1467,7 @@
             "TokenUsage"
           ],
           "modules": [
+            "InvocationUsage.cs",
             "Model.cs",
             "ModelInfo.cs",
             "ModelLister.cs",
@@ -1249,10 +1480,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -1261,8 +1510,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -1270,10 +1523,28 @@
           "modules": [
             "CheckpointStore.cs",
             "CompactionConfig.cs",
+            "ContextCandidate.cs",
+            "ContextRequest.cs",
+            "DelegatedStateReference.cs",
+            "EngineCheckpoint.cs",
+            "EngineEvent.cs",
+            "EnginePermissionDecision.cs",
             "EventJournalWriter.cs",
             "EventSink.cs",
             "Executor.cs",
+            "FinalOutputPolicyRequest.cs",
+            "FinalOutputPolicyResult.cs",
+            "HostPolicyRequest.cs",
+            "HostPolicyResult.cs",
             "HostToolExecutor.cs",
+            "InvocationContextDecision.cs",
+            "InvocationContextState.cs",
+            "ModelInvocationContextSnapshot.cs",
+            "ModelInvocationRequest.cs",
+            "ModelInvocationResponse.cs",
+            "ModelReconciliationState.cs",
+            "ModelToolRequest.cs",
+            "ModelToolResult.cs",
             "Parser.cs",
             "PermissionResolver.cs",
             "Processor.cs",
@@ -1282,8 +1553,12 @@
             "ReplayMismatch.cs",
             "ReplayVerificationRequest.cs",
             "ReplayVerificationResult.cs",
+            "ResumeContext.cs",
+            "RetryPolicyRequest.cs",
             "RunTurnRequest.cs",
             "RunTurnResult.cs",
+            "TurnCommit.cs",
+            "TurnEngineResult.cs",
             "TurnModelRequest.cs",
             "TurnModelResponse.cs",
             "TurnOptions.cs"
@@ -1704,6 +1979,9 @@
         "events/TurnStartPayload.cs",
         "events/TurnSummary.cs",
         "events/TurnTrace.cs",
+        "memory/MemoryEntry.cs",
+        "memory/MemoryStore.cs",
+        "model/InvocationUsage.cs",
         "model/Model.cs",
         "model/ModelInfo.cs",
         "model/ModelLister.cs",
@@ -1711,10 +1989,28 @@
         "model/TokenUsage.cs",
         "pipeline/CheckpointStore.cs",
         "pipeline/CompactionConfig.cs",
+        "pipeline/ContextCandidate.cs",
+        "pipeline/ContextRequest.cs",
+        "pipeline/DelegatedStateReference.cs",
+        "pipeline/EngineCheckpoint.cs",
+        "pipeline/EngineEvent.cs",
+        "pipeline/EnginePermissionDecision.cs",
         "pipeline/EventJournalWriter.cs",
         "pipeline/EventSink.cs",
         "pipeline/Executor.cs",
+        "pipeline/FinalOutputPolicyRequest.cs",
+        "pipeline/FinalOutputPolicyResult.cs",
+        "pipeline/HostPolicyRequest.cs",
+        "pipeline/HostPolicyResult.cs",
         "pipeline/HostToolExecutor.cs",
+        "pipeline/InvocationContextDecision.cs",
+        "pipeline/InvocationContextState.cs",
+        "pipeline/ModelInvocationContextSnapshot.cs",
+        "pipeline/ModelInvocationRequest.cs",
+        "pipeline/ModelInvocationResponse.cs",
+        "pipeline/ModelReconciliationState.cs",
+        "pipeline/ModelToolRequest.cs",
+        "pipeline/ModelToolResult.cs",
         "pipeline/Parser.cs",
         "pipeline/PermissionResolver.cs",
         "pipeline/Processor.cs",
@@ -1723,8 +2019,12 @@
         "pipeline/ReplayMismatch.cs",
         "pipeline/ReplayVerificationRequest.cs",
         "pipeline/ReplayVerificationResult.cs",
+        "pipeline/ResumeContext.cs",
+        "pipeline/RetryPolicyRequest.cs",
         "pipeline/RunTurnRequest.cs",
         "pipeline/RunTurnResult.cs",
+        "pipeline/TurnCommit.cs",
+        "pipeline/TurnEngineResult.cs",
         "pipeline/TurnModelRequest.cs",
         "pipeline/TurnModelResponse.cs",
         "pipeline/TurnOptions.cs",
@@ -1786,8 +2086,14 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -1795,6 +2101,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -1802,21 +2110,34 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenAIModelInfo",
@@ -1842,7 +2163,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -1879,7 +2202,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -1887,6 +2212,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -2047,6 +2374,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "property.go",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "property.go",
@@ -2403,6 +2737,34 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "stream_chunk.go",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory_entry.go",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory_store.go",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "invocation_usage.go",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -2452,6 +2814,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "context_candidate.go",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "context_request.go",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "delegated_state_reference.go",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "engine_checkpoint.go",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "engine_event.go",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "engine_permission_decision.go",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -2473,11 +2877,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "final_output_policy_request.go",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "final_output_policy_result.go",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "host_policy_request.go",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "host_policy_result.go",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "host_tool_executor.go",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "invocation_context_decision.go",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "invocation_context_state.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_context_snapshot.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_request.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_response.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_reconciliation_state.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_tool_request.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_tool_result.go",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -2536,6 +3024,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "resume_context.go",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "retry_policy_request.go",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -2547,6 +3049,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "run_turn_result.go",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "turn_commit.go",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "turn_engine_result.go",
           "protocol": false
         },
         {
@@ -2844,6 +3360,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -2905,7 +3422,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -2955,8 +3473,20 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
@@ -2964,6 +3494,7 @@
             "TokenUsage"
           ],
           "modules": [
+            "invocation_usage",
             "model",
             "model_info",
             "model_lister",
@@ -2976,10 +3507,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -2988,8 +3537,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -2997,10 +3550,28 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "context_candidate",
+            "context_request",
+            "delegated_state_reference",
+            "engine_checkpoint",
+            "engine_event",
+            "engine_permission_decision",
             "event_journal_writer",
             "event_sink",
             "executor",
+            "final_output_policy_request",
+            "final_output_policy_result",
+            "host_policy_request",
+            "host_policy_result",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_reconciliation_state",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -3009,8 +3580,12 @@
             "replay_mismatch",
             "replay_verification_request",
             "replay_verification_result",
+            "resume_context",
+            "retry_policy_request",
             "run_turn_request",
             "run_turn_result",
+            "turn_commit",
+            "turn_engine_result",
             "turn_model_request",
             "turn_model_response",
             "turn_options"
@@ -3395,30 +3970,51 @@
         "compaction_start_payload.go",
         "connection.go",
         "content_part.go",
+        "context_candidate.go",
+        "context_request.go",
+        "delegated_state_reference.go",
         "done_event_payload.go",
+        "engine_checkpoint.go",
+        "engine_event.go",
+        "engine_permission_decision.go",
         "error_event_payload.go",
         "event_journal_writer.go",
         "event_sink.go",
         "executor.go",
         "file_not_found_error.go",
+        "final_output_policy_request.go",
+        "final_output_policy_result.go",
         "format_config.go",
         "guardrail_result.go",
         "harness_context.go",
         "hook_end_payload.go",
         "hook_start_payload.go",
+        "host_policy_request.go",
+        "host_policy_result.go",
         "host_tool_executor.go",
         "host_tool_request.go",
         "host_tool_result.go",
+        "invocation_context_decision.go",
+        "invocation_context_state.go",
+        "invocation_usage.go",
         "invoker_error.go",
         "llm_complete_payload.go",
         "llm_start_payload.go",
         "mcp_approval_mode.go",
+        "memory_entry.go",
+        "memory_store.go",
         "message.go",
         "messages_updated_payload.go",
         "model.go",
         "model_info.go",
+        "model_invocation_context_snapshot.go",
+        "model_invocation_request.go",
+        "model_invocation_response.go",
         "model_lister.go",
         "model_options.go",
+        "model_reconciliation_state.go",
+        "model_tool_request.go",
+        "model_tool_result.go",
         "open_ai_model_info.go",
         "open_ai_models_response.go",
         "parser.go",
@@ -3438,7 +4034,9 @@
         "replay_mismatch.go",
         "replay_verification_request.go",
         "replay_verification_result.go",
+        "resume_context.go",
         "retry_payload.go",
+        "retry_policy_request.go",
         "run_turn_request.go",
         "run_turn_result.go",
         "session_end_payload.go",
@@ -3471,7 +4069,9 @@
         "trace_span.go",
         "trace_time.go",
         "trajectory_event.go",
+        "turn_commit.go",
         "turn_end_payload.go",
+        "turn_engine_result.go",
         "turn_event.go",
         "turn_model_request.go",
         "turn_model_response.go",
@@ -3512,8 +4112,14 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -3521,6 +4127,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -3528,21 +4136,34 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenAIModelInfo",
@@ -3568,7 +4189,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -3605,7 +4228,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -3613,6 +4238,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -3773,6 +4400,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "Property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "Property",
@@ -4129,6 +4763,34 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryEntry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryStore",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "InvocationUsage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -4178,6 +4840,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ContextCandidate",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ContextRequest",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "DelegatedStateReference",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EngineCheckpoint",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EngineEvent",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EnginePermissionDecision",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -4199,11 +4903,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "FinalOutputPolicyRequest",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "FinalOutputPolicyResult",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "HostPolicyRequest",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "HostPolicyResult",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "HostToolExecutor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "InvocationContextDecision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "InvocationContextState",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationContextSnapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationRequest",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationResponse",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelReconciliationState",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelToolRequest",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelToolResult",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -4262,6 +5050,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ResumeContext",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "RetryPolicyRequest",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -4273,6 +5075,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "RunTurnResult",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnCommit",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnEngineResult",
           "protocol": false
         },
         {
@@ -4570,6 +5386,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -4631,7 +5448,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -4681,8 +5499,20 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
@@ -4690,6 +5520,7 @@
             "TokenUsage"
           ],
           "modules": [
+            "invocation_usage",
             "model",
             "model_info",
             "model_lister",
@@ -4702,10 +5533,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -4714,8 +5563,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -4723,10 +5576,28 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "context_candidate",
+            "context_request",
+            "delegated_state_reference",
+            "engine_checkpoint",
+            "engine_event",
+            "engine_permission_decision",
             "event_journal_writer",
             "event_sink",
             "executor",
+            "final_output_policy_request",
+            "final_output_policy_result",
+            "host_policy_request",
+            "host_policy_result",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_reconciliation_state",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -4735,8 +5606,12 @@
             "replay_mismatch",
             "replay_verification_request",
             "replay_verification_result",
+            "resume_context",
+            "retry_policy_request",
             "run_turn_request",
             "run_turn_result",
+            "turn_commit",
+            "turn_engine_result",
             "turn_model_request",
             "turn_model_response",
             "turn_options"
@@ -5121,30 +5996,51 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
+        "DelegatedStateReference",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
         "FileNotFoundError",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "GuardrailResult",
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OpenAIModelInfo",
         "OpenAIModelsResponse",
         "Parser",
@@ -5164,7 +6060,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -5197,7 +6095,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -5239,8 +6139,14 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -5248,6 +6154,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -5255,21 +6163,34 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenAIModelInfo",
@@ -5295,7 +6216,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -5332,7 +6255,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -5340,6 +6265,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -5500,6 +6427,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": ".core",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": ".core",
@@ -5856,6 +6790,34 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": ".events",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": ".memory",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": ".memory",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -5905,6 +6867,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -5926,11 +6930,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": ".pipeline",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -5989,6 +7077,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -5997,6 +7099,20 @@
         },
         {
           "name": "RunTurnResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
           "kind": "value",
           "group": "pipeline",
           "source": ".pipeline",
@@ -6297,6 +7413,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -6358,7 +7475,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "_Checkpoint",
@@ -6408,8 +7526,20 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "_MemoryEntry",
+            "_MemoryStore"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
@@ -6417,6 +7547,7 @@
             "TokenUsage"
           ],
           "modules": [
+            "_InvocationUsage",
             "_Model",
             "_ModelInfo",
             "_ModelLister",
@@ -6429,10 +7560,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -6441,8 +7590,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -6450,10 +7603,28 @@
           "modules": [
             "_CheckpointStore",
             "_CompactionConfig",
+            "_ContextCandidate",
+            "_ContextRequest",
+            "_DelegatedStateReference",
+            "_EngineCheckpoint",
+            "_EngineEvent",
+            "_EnginePermissionDecision",
             "_EventJournalWriter",
             "_EventSink",
             "_Executor",
+            "_FinalOutputPolicyRequest",
+            "_FinalOutputPolicyResult",
+            "_HostPolicyRequest",
+            "_HostPolicyResult",
             "_HostToolExecutor",
+            "_InvocationContextDecision",
+            "_InvocationContextState",
+            "_ModelInvocationContextSnapshot",
+            "_ModelInvocationRequest",
+            "_ModelInvocationResponse",
+            "_ModelReconciliationState",
+            "_ModelToolRequest",
+            "_ModelToolResult",
             "_Parser",
             "_PermissionResolver",
             "_Processor",
@@ -6462,8 +7633,12 @@
             "_ReplayMismatch",
             "_ReplayVerificationRequest",
             "_ReplayVerificationResult",
+            "_ResumeContext",
+            "_RetryPolicyRequest",
             "_RunTurnRequest",
             "_RunTurnResult",
+            "_TurnCommit",
+            "_TurnEngineResult",
             "_TurnModelRequest",
             "_TurnModelResponse",
             "_TurnOptions"
@@ -6832,6 +8007,7 @@
         ".conversation",
         ".core",
         ".events",
+        ".memory",
         ".model",
         ".pipeline",
         ".streaming",
@@ -6870,8 +8046,14 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -6879,6 +8061,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -6886,21 +8070,34 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenAIModelInfo",
@@ -6926,7 +8123,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -6963,7 +8162,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -6971,6 +8172,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -7131,6 +8334,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "core::property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "core::property",
@@ -7487,6 +8697,34 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "events::stream_chunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory::memory_entry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory::memory_store",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "model::invocation_usage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -7536,6 +8774,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::context_candidate",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::context_request",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::delegated_state_reference",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::engine_checkpoint",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::engine_event",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::engine_permission_decision",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -7557,11 +8837,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::final_output_policy_request",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::final_output_policy_result",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::host_policy_request",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::host_policy_result",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "pipeline::host_tool_executor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::invocation_context_decision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::invocation_context_state",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_context_snapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_request",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_response",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_reconciliation_state",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_tool_request",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_tool_result",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -7620,6 +8984,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::resume_context",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::retry_policy_request",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -7631,6 +9009,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "pipeline::run_turn_result",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::turn_commit",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::turn_engine_result",
           "protocol": false
         },
         {
@@ -7928,6 +9320,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -7989,7 +9382,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -8039,8 +9433,20 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
@@ -8048,6 +9454,7 @@
             "TokenUsage"
           ],
           "modules": [
+            "invocation_usage",
             "model",
             "model_info",
             "model_lister",
@@ -8060,10 +9467,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -8072,8 +9497,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -8081,10 +9510,28 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "context_candidate",
+            "context_request",
+            "delegated_state_reference",
+            "engine_checkpoint",
+            "engine_event",
+            "engine_permission_decision",
             "event_journal_writer",
             "event_sink",
             "executor",
+            "final_output_policy_request",
+            "final_output_policy_result",
+            "host_policy_request",
+            "host_policy_result",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_reconciliation_state",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -8093,8 +9540,12 @@
             "replay_mismatch",
             "replay_verification_request",
             "replay_verification_result",
+            "resume_context",
+            "retry_policy_request",
             "run_turn_request",
             "run_turn_result",
+            "turn_commit",
+            "turn_engine_result",
             "turn_model_request",
             "turn_model_response",
             "turn_options"
@@ -8464,6 +9915,7 @@
         "conversation",
         "core",
         "events",
+        "memory",
         "model",
         "pipeline",
         "streaming",
@@ -8503,8 +9955,14 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -8512,6 +9970,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -8519,21 +9979,34 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
         "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
         "ObjectProperty",
         "OpenAIModelInfo",
@@ -8559,7 +10032,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -8596,7 +10071,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -8604,6 +10081,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -8764,6 +10243,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "./core/property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "./core/property",
@@ -9120,6 +10606,34 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "./events/stream-chunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "./memory/memory-entry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "./memory/memory-store",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/invocation-usage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -9169,6 +10683,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/context-candidate",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/context-request",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/delegated-state-reference",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/engine-checkpoint",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/engine-event",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/engine-permission-decision",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -9190,11 +10746,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/final-output-policy-request",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/final-output-policy-result",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/host-policy-request",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/host-policy-result",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "./pipeline/host-tool-executor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/invocation-context-decision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/invocation-context-state",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-context-snapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-request",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-response",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-reconciliation-state",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-tool-request",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-tool-result",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -9253,6 +10893,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/resume-context",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/retry-policy-request",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -9264,6 +10918,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "./pipeline/run-turn-result",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/turn-commit",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/turn-engine-result",
           "protocol": false
         },
         {
@@ -9561,6 +11229,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -9622,7 +11291,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -9672,8 +11342,20 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory-entry",
+            "memory-store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "InvocationUsage",
             "Model",
             "ModelInfo",
             "ModelLister",
@@ -9681,6 +11363,7 @@
             "TokenUsage"
           ],
           "modules": [
+            "invocation-usage",
             "model",
             "model-info",
             "model-lister",
@@ -9693,10 +11376,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -9705,8 +11406,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -9714,10 +11419,28 @@
           "modules": [
             "checkpoint-store",
             "compaction-config",
+            "context-candidate",
+            "context-request",
+            "delegated-state-reference",
+            "engine-checkpoint",
+            "engine-event",
+            "engine-permission-decision",
             "event-journal-writer",
             "event-sink",
             "executor",
+            "final-output-policy-request",
+            "final-output-policy-result",
+            "host-policy-request",
+            "host-policy-result",
             "host-tool-executor",
+            "invocation-context-decision",
+            "invocation-context-state",
+            "model-invocation-context-snapshot",
+            "model-invocation-request",
+            "model-invocation-response",
+            "model-reconciliation-state",
+            "model-tool-request",
+            "model-tool-result",
             "parser",
             "permission-resolver",
             "processor",
@@ -9726,8 +11449,12 @@
             "replay-mismatch",
             "replay-verification-request",
             "replay-verification-result",
+            "resume-context",
+            "retry-policy-request",
             "run-turn-request",
             "run-turn-result",
+            "turn-commit",
+            "turn-engine-result",
             "turn-model-request",
             "turn-model-response",
             "turn-options"
@@ -10148,6 +11875,9 @@
         "./events/turn-start-payload",
         "./events/turn-summary",
         "./events/turn-trace",
+        "./memory/memory-entry",
+        "./memory/memory-store",
+        "./model/invocation-usage",
         "./model/model",
         "./model/model-info",
         "./model/model-lister",
@@ -10155,10 +11885,28 @@
         "./model/token-usage",
         "./pipeline/checkpoint-store",
         "./pipeline/compaction-config",
+        "./pipeline/context-candidate",
+        "./pipeline/context-request",
+        "./pipeline/delegated-state-reference",
+        "./pipeline/engine-checkpoint",
+        "./pipeline/engine-event",
+        "./pipeline/engine-permission-decision",
         "./pipeline/event-journal-writer",
         "./pipeline/event-sink",
         "./pipeline/executor",
+        "./pipeline/final-output-policy-request",
+        "./pipeline/final-output-policy-result",
+        "./pipeline/host-policy-request",
+        "./pipeline/host-policy-result",
         "./pipeline/host-tool-executor",
+        "./pipeline/invocation-context-decision",
+        "./pipeline/invocation-context-state",
+        "./pipeline/model-invocation-context-snapshot",
+        "./pipeline/model-invocation-request",
+        "./pipeline/model-invocation-response",
+        "./pipeline/model-reconciliation-state",
+        "./pipeline/model-tool-request",
+        "./pipeline/model-tool-result",
         "./pipeline/parser",
         "./pipeline/permission-resolver",
         "./pipeline/processor",
@@ -10167,8 +11915,12 @@
         "./pipeline/replay-mismatch",
         "./pipeline/replay-verification-request",
         "./pipeline/replay-verification-result",
+        "./pipeline/resume-context",
+        "./pipeline/retry-policy-request",
         "./pipeline/run-turn-request",
         "./pipeline/run-turn-result",
+        "./pipeline/turn-commit",
+        "./pipeline/turn-engine-result",
         "./pipeline/turn-model-request",
         "./pipeline/turn-model-response",
         "./pipeline/turn-options",

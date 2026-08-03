@@ -85,7 +85,7 @@ public partial class SessionSummary
 
         if (data.TryGetValue("status", out var statusValue) && statusValue is not null)
         {
-            instance.Status = Enum.Parse<SessionSummaryStatus>(statusValue?.ToString()!, true);
+            instance.Status = SessionSummaryStatusParser.Parse(statusValue?.ToString()!);
         }
 
         if (data.TryGetValue("turns", out var turnsValue) && turnsValue is not null)
@@ -142,7 +142,7 @@ public partial class SessionSummary
 
         if (obj.Status is not null)
         {
-            result["status"] = obj.Status.Value.ToString().ToLowerInvariant();
+            result["status"] = SessionSummaryStatusParser.ToValue(obj.Status.Value);
         }
 
 

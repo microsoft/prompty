@@ -34,7 +34,8 @@ impl Executor for AnthropicExecutor {
             ));
         }
 
-        let body = wire::build_chat_args(agent, messages);
+        let body = wire::build_chat_args(agent, messages)
+            .map_err(|error| InvokerError::Validation(error.to_string()))?;
         let url = build_url(agent)?;
         let api_key = get_api_key(agent)?;
 
@@ -105,7 +106,8 @@ impl Executor for AnthropicExecutor {
             ));
         }
 
-        let mut body = wire::build_chat_args(agent, messages);
+        let mut body = wire::build_chat_args(agent, messages)
+            .map_err(|error| InvokerError::Validation(error.to_string()))?;
         // Force stream: true
         if let Some(obj) = body.as_object_mut() {
             obj.insert("stream".into(), Value::Bool(true));
@@ -155,7 +157,8 @@ impl AnthropicExecutor {
                 format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
             ));
         }
-        Ok(wire::build_chat_args(agent, messages))
+        wire::build_chat_args(agent, messages)
+            .map_err(|error| InvokerError::Validation(error.to_string()))
     }
 }
 

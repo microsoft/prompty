@@ -11,10 +11,12 @@
 
 use super::super::context::{LoadContext, SaveContext};
 
+use super::super::model::invocation_usage::InvocationUsage;
+
 use super::super::conversation::tool_call::ToolCall;
 
 /// Variant-specific data for [`StreamChunk`], discriminated by `kind`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum StreamChunkKind {
     /// `kind` = `"text"`
     TextChunk {
@@ -31,6 +33,11 @@ pub enum StreamChunkKind {
         /// The tool call data
         tool_call: ToolCall,
     },
+    /// `kind` = `"usage"`
+    UsageChunk {
+        /// Complete cumulative token usage for the completed provider invocation
+        usage: InvocationUsage,
+    },
     /// `kind` = `"error"`
     ErrorChunk {
         /// The error message
@@ -46,7 +53,7 @@ impl Default for StreamChunkKind {
     }
 }
 /// A chunk of data from a streaming LLM response. Stream chunks are discriminated on the `kind` field.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct StreamChunk {
     /// Variant-specific data, discriminated by `kind`.
     pub kind: StreamChunkKind,
@@ -98,6 +105,13 @@ impl StreamChunk {
                     .map(|v| ToolCall::load_from_value(v, ctx))
                     .unwrap_or_default(),
             },
+            "usage" => StreamChunkKind::UsageChunk {
+                usage: value
+                    .get("usage")
+                    .filter(|v| v.is_object() || v.is_array() || v.is_string())
+                    .map(|v| InvocationUsage::load_from_value(v, ctx))
+                    .unwrap_or_default(),
+            },
             "error" => StreamChunkKind::ErrorChunk {
                 message: value
                     .get("message")
@@ -116,6 +130,7 @@ impl StreamChunk {
             StreamChunkKind::TextChunk { .. } => "text",
             StreamChunkKind::ThinkingChunk { .. } => "thinking",
             StreamChunkKind::ToolChunk { .. } => "tool",
+            StreamChunkKind::UsageChunk { .. } => "usage",
             StreamChunkKind::ErrorChunk { .. } => "error",
         }
     }
@@ -155,6 +170,12 @@ impl StreamChunk {
                     result.insert("toolCall".to_string(), nested);
                 }
             }
+            StreamChunkKind::UsageChunk { usage, .. } => {
+                let nested = usage.to_value(ctx);
+                if !nested.is_null() {
+                    result.insert("usage".to_string(), nested);
+                }
+            }
             StreamChunkKind::ErrorChunk { message, .. } => {
                 if !message.is_empty() {
                     result.insert(
@@ -175,5 +196,42 @@ impl StreamChunk {
     /// Serialize StreamChunk to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `StreamChunk` delegates to the canonical to_value/load_from_value
+// logic so the `kind` discriminator round-trips to its exact wire value. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for StreamChunk {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for StreamChunk {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// Serde for `StreamChunkKind` wraps the variant into its parent `StreamChunk` and delegates
+// to the canonical to_value/load_from_value logic, so a bare `StreamChunkKind`
+// serializes to internally-tagged `{"kind": "<value>", ...}` — the same wire
+// form as its parent — instead of serde's externally-tagged `{"<Variant>": {...}}`.
+impl serde::Serialize for StreamChunkKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let parent = StreamChunk {
+            kind: self.clone(),
+            ..Default::default()
+        };
+        serde::Serialize::serialize(&parent.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for StreamChunkKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(StreamChunk::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

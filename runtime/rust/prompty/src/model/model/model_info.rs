@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// Information about a model available from a provider. Used by provider-level model discovery to report which models are available and their capabilities. Not all providers return all fields — implementations SHOULD populate as many fields as the provider's API supports and MAY enrich sparse results from a built-in lookup table of known models.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ModelInfo {
     /// The model identifier (e.g., 'gpt-4o', 'claude-3-opus')
     pub id: String,
@@ -157,5 +157,21 @@ impl ModelInfo {
         &self,
     ) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.additional_properties.as_object()
+    }
+}
+
+// Serde for `ModelInfo` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ModelInfo {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ModelInfo {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

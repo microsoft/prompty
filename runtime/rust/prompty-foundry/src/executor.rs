@@ -40,7 +40,8 @@ impl Executor for FoundryExecutor {
             .unwrap_or("chat");
 
         let body = match api_type {
-            "chat" | "agent" => wire::build_chat_args(agent, messages),
+            "chat" | "agent" => wire::build_chat_args(agent, messages)
+                .map_err(|error| InvokerError::Validation(error.to_string()))?,
             "embedding" => wire::build_embedding_args(agent, messages),
             "image" => wire::build_image_args(agent, messages),
             other => {
@@ -108,7 +109,8 @@ impl Executor for FoundryExecutor {
             ));
         }
 
-        let mut body = wire::build_chat_args(agent, messages);
+        let mut body = wire::build_chat_args(agent, messages)
+            .map_err(|error| InvokerError::Validation(error.to_string()))?;
         // Force stream: true
         if let Some(obj) = body.as_object_mut() {
             obj.insert("stream".into(), Value::Bool(true));

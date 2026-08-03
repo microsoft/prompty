@@ -10,7 +10,8 @@ pub use cancellation::CancellationToken;
 pub use context::{
     AppendContextPackingStrategy, ContextCandidate, ContextDecision, ContextDisposition,
     ContextError, ContextPackingStrategy, ContextPipeline, ContextPortability, ContextRequest,
-    ContextSource, ContextTransform, DelegatedStateReference, ModelInvocationContextSnapshot,
+    ContextSource, ContextTransform, DelegatedStateReference, InvocationContextState,
+    ModelInvocationContextSnapshot,
 };
 pub use event::{EngineEvent, EngineEventKind};
 pub use ports::{
@@ -19,11 +20,12 @@ pub use ports::{
     FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyError, HostPolicyPort,
     HostPolicyRequest, HostPolicyResult, IdGenerator, ModelInvocationRequest,
     ModelInvocationResponse, ModelPort, ModelReconciliationState, ModelStreamChunk,
-    ModelStreamPort, NoopDurabilityPort, NoopHostPolicyPort, NoopModelStreamPort,
-    NoopPostCommitPort, NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort,
-    RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, ToolOutcome, ToolPort,
+    ModelStreamPort, ModelToolOutcome, ModelToolRequest, ModelToolResult, NoopDurabilityPort,
+    NoopHostPolicyPort, NoopModelStreamPort, NoopPostCommitPort, NoopRetryPolicyPort,
+    PermissionPort, PortError, PostCommitPort, ResumeContext, RetryPolicyError, RetryPolicyPort,
+    RetryPolicyRequest, ToolOutcome, ToolPort,
 };
 pub use turn::{
-    TurnCommit, TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest,
-    TurnEngineResult, TurnStatus,
+    EngineTurnStatus, TurnCommit, TurnEngine, TurnEngineEffects, TurnEngineError,
+    TurnEngineRequest, TurnEngineResult, TurnStatus,
 };

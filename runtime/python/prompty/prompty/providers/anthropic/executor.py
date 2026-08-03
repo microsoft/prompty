@@ -157,9 +157,8 @@ _KIND_TO_JSON_TYPE: dict[str, str] = {
 
 def _property_to_json_schema(prop: Any) -> dict[str, Any]:
     """Convert a Property to JSON Schema format."""
-    schema: dict[str, Any] = {
-        "type": _KIND_TO_JSON_TYPE.get(getattr(prop, "kind", "string") or "string", "string"),
-    }
+    json_type = _KIND_TO_JSON_TYPE.get(getattr(prop, "kind", ""))
+    schema: dict[str, Any] = {"type": json_type} if json_type else {}
 
     if hasattr(prop, "description") and prop.description:
         schema["description"] = prop.description
@@ -180,15 +179,43 @@ def _property_to_json_schema(prop: Any) -> dict[str, Any]:
                 if not name:
                     continue
                 nested[name] = _property_to_json_schema(p)
-                req.append(name)
+                if getattr(p, "required", False):
+                    req.append(name)
             schema["properties"] = nested
-            schema["required"] = req
+            if req:
+                schema["required"] = req
         else:
             schema["properties"] = {}
-            schema["required"] = []
         schema["additionalProperties"] = False
 
+    if getattr(prop, "kind", None) == "union":
+        one_of = getattr(prop, "one_of", None)
+        any_of = getattr(prop, "any_of", None)
+        has_one_of = isinstance(one_of, list) and bool(one_of)
+        has_any_of = isinstance(any_of, list) and bool(any_of)
+        if has_one_of == has_any_of:
+            raise ValueError("UnionProperty must specify exactly one non-empty composition: oneOf or anyOf")
+        if has_one_of:
+            schema["oneOf"] = [_property_to_json_schema(branch) for branch in prop.one_of]
+        else:
+            schema["anyOf"] = [_property_to_json_schema(branch) for branch in prop.any_of]
+
+    if getattr(prop, "nullable", False):
+        _add_nullability(schema)
+
     return schema
+
+
+def _add_nullability(schema: dict[str, Any]) -> None:
+    """Add JSON Schema null support without emitting an invalid empty type."""
+    if isinstance(schema.get("enum"), list) and None not in schema["enum"]:
+        schema["enum"].append(None)
+    if isinstance(schema.get("type"), str):
+        schema["type"] = [schema["type"], "null"]
+    elif isinstance(schema.get("anyOf"), list):
+        schema["anyOf"].append({"type": "null"})
+    elif isinstance(schema.get("oneOf"), list):
+        schema["oneOf"].append({"type": "null"})
 
 
 def _schema_to_wire(properties: list[Any]) -> dict[str, Any]:
@@ -251,7 +278,8 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
         if not name:
             continue
         properties[name] = _property_to_json_schema(prop)
-        required.append(name)
+        if getattr(prop, "required", False):
+            required.append(name)
 
     if not properties:
         return None
@@ -262,7 +290,7 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
             "schema": {
                 "type": "object",
                 "properties": properties,
-                "required": required,
+                **({"required": required} if required else {}),
                 "additionalProperties": False,
             },
         },

@@ -75,7 +75,7 @@ public partial class SessionEndPayload
 
         if (data.TryGetValue("status", out var statusValue) && statusValue is not null)
         {
-            instance.Status = Enum.Parse<SessionEndStatus>(statusValue?.ToString()!, true);
+            instance.Status = SessionEndStatusParser.Parse(statusValue?.ToString()!);
         }
 
         if (data.TryGetValue("reason", out var reasonValue) && reasonValue is not null)
@@ -125,7 +125,7 @@ public partial class SessionEndPayload
 
         if (obj.Status is not null)
         {
-            result["status"] = obj.Status.Value.ToString().ToLowerInvariant();
+            result["status"] = SessionEndStatusParser.ToValue(obj.Status.Value);
         }
 
 

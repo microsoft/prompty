@@ -18,7 +18,12 @@ import "./core/validation.tsp";
 import "./model/usage.tsp";
 import "./model/discovery.tsp";
 
+// Memory (agent recall + persistence data contract)
+import "./memory/memory.tsp";
+
 // Pipeline (turn options + protocol contracts)
+import "./pipeline/invocation.tsp";
+import "./pipeline/engine.tsp";
 import "./pipeline/turn.tsp";
 import "./pipeline/renderer.tsp";
 import "./pipeline/parser.tsp";

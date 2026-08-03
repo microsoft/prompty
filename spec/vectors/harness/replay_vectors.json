@@ -52,6 +52,7 @@
         "session:checkpoint_created:session-1:turn-1",
         "turn:permission_requested:0:exec-1-permission",
         "turn:permission_completed:0:false",
+        "turn:tool_result:0:add:false:permission_denied",
         "turn:messages_updated:0",
         "turn:llm_start:1",
         "turn:llm_complete:1",

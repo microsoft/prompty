@@ -234,4 +234,28 @@ func TestBindingFromString(t *testing.T) {
 	if instance.Input != "example" {
 		t.Errorf(`Expected Input to be "example", got %v`, instance.Input)
 	}
+
+	jsonBytes, err := json.Marshal("example")
+	if err != nil {
+		t.Fatalf("Failed to encode string JSON: %v", err)
+	}
+	fromJSON, err := prompty.BindingFromJSON(string(jsonBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Binding from string JSON helper: %v", err)
+	}
+	if fromJSON.Input != "example" {
+		t.Errorf(`Expected Input to be "example", got %v`, fromJSON.Input)
+	}
+
+	yamlBytes, err := yaml.Marshal("example")
+	if err != nil {
+		t.Fatalf("Failed to encode string YAML: %v", err)
+	}
+	fromYAML, err := prompty.BindingFromYAML(string(yamlBytes))
+	if err != nil {
+		t.Fatalf("Failed to load Binding from string YAML helper: %v", err)
+	}
+	if fromYAML.Input != "example" {
+		t.Errorf(`Expected Input to be "example", got %v`, fromYAML.Input)
+	}
 }

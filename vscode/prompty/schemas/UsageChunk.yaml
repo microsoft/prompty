@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: UsageChunk.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: usage
+    description: The kind identifier for usage chunks
+  usage:
+    $ref: InvocationUsage.yaml
+    description: Complete cumulative token usage for the completed provider invocation
+required:
+  - kind
+  - usage
+allOf:
+  - $ref: StreamChunk.yaml
+description: Cumulative token usage emitted once after provider content and tool chunks.

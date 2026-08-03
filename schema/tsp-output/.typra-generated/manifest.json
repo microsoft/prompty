@@ -120,6 +120,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/core/UnionPropertyConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/core/ValidationErrorConversionTests.cs",
       "marker": true
     },
@@ -370,6 +375,26 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/events/UsageChunkConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/memory/MemoryEntryConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/memory/MemoryStoreConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/model/InvocationUsageConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/model/ModelConversionTests.cs",
       "marker": true
     },
@@ -395,6 +420,96 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ContextCandidateConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ContextRequestConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/DelegatedStateReferenceConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/EngineCheckpointConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/EngineEventConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/EnginePermissionDecisionConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/FinalOutputPolicyRequestConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/FinalOutputPolicyResultConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/HostPolicyRequestConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/HostPolicyResultConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/InvocationContextDecisionConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/InvocationContextStateConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ModelInvocationContextSnapshotConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ModelInvocationRequestConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ModelInvocationResponseConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ModelReconciliationStateConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ModelToolRequestConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ModelToolResultConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ReplayJournalRecordConversionTests.cs",
       "marker": true
     },
@@ -415,12 +530,32 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/ResumeContextConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/RetryPolicyRequestConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/RunTurnRequestConversionTests.cs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/RunTurnResultConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/TurnCommitConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/pipeline/TurnEngineResultConversionTests.cs",
       "marker": true
     },
     {
@@ -730,6 +865,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/core/UnionProperty.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/core/ValidationError.cs",
       "marker": true
     },
@@ -1020,6 +1160,31 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/events/UsageChunk.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryCategory.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryEntry.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryStore.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/model/InvocationUsage.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/model/Model.cs",
       "marker": true
     },
@@ -1055,6 +1220,46 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ContextCandidate.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ContextRequest.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/DelegatedStateReference.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/EngineCheckpoint.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/EngineEvent.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/EngineEventKind.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/EnginePermissionDecision.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/EngineTurnStatus.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/pipeline/EventJournalWriter.cs",
       "marker": true
     },
@@ -1070,7 +1275,82 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/FinalOutputPolicyRequest.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/FinalOutputPolicyResult.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/HostPolicyRequest.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/HostPolicyResult.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/pipeline/HostToolExecutor.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/InvocationContextDecision.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/InvocationContextDisposition.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/InvocationContextPortability.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/InvocationContextState.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ModelInvocationContextSnapshot.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ModelInvocationRequest.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ModelInvocationResponse.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ModelReconciliationState.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ModelToolOutcome.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ModelToolRequest.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ModelToolResult.cs",
       "marker": true
     },
     {
@@ -1130,6 +1410,16 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ResumeContext.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/RetryPolicyRequest.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/pipeline/RunTurnRequest.cs",
       "marker": true
     },
@@ -1141,6 +1431,16 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/pipeline/RunTurnStatus.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/TurnCommit.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/TurnEngineResult.cs",
       "marker": true
     },
     {
@@ -1550,6 +1850,26 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/context_candidate_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/context_candidate.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/context_request_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/context_request.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/context.go",
       "marker": true
     },
@@ -1560,12 +1880,52 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/delegated_state_reference_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/delegated_state_reference.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/done_event_payload_test.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/done_event_payload.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_checkpoint_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_checkpoint.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_event_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_event.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_permission_decision_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_permission_decision.go",
       "marker": true
     },
     {
@@ -1611,6 +1971,26 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/file_part_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/final_output_policy_request_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/final_output_policy_request.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/final_output_policy_result_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/final_output_policy_result.go",
       "marker": true
     },
     {
@@ -1675,6 +2055,26 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/host_policy_request_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/host_policy_request.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/host_policy_result_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/host_policy_result.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/host_tool_executor.go",
       "marker": true
     },
@@ -1701,6 +2101,36 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/image_part_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/invocation_context_decision_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/invocation_context_decision.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/invocation_context_state_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/invocation_context_state.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/invocation_usage_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/invocation_usage.go",
       "marker": true
     },
     {
@@ -1750,6 +2180,26 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_entry_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_entry.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_store_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/memory_store.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/message_test.go",
       "marker": true
     },
@@ -1780,6 +2230,36 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_invocation_context_snapshot_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_invocation_context_snapshot.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_invocation_request_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_invocation_request.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_invocation_response_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_invocation_response.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/model_lister.go",
       "marker": true
     },
@@ -1795,7 +2275,37 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_reconciliation_state_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_reconciliation_state.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/model_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_tool_request_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_tool_request.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_tool_result_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/model_tool_result.go",
       "marker": true
     },
     {
@@ -2005,12 +2515,32 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/resume_context_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/resume_context.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/retry_payload_test.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/retry_payload.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/retry_policy_request_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/retry_policy_request.go",
       "marker": true
     },
     {
@@ -2355,12 +2885,32 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/turn_commit_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/turn_commit.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/turn_end_payload_test.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/turn_end_payload.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/turn_engine_result_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/turn_engine_result.go",
       "marker": true
     },
     {
@@ -2431,6 +2981,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/turn_trace.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/union_property_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/usage_chunk_test.go",
       "marker": true
     },
     {
@@ -2775,7 +3335,27 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/memory/__init__.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/memory/_MemoryEntry.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/memory/_MemoryStore.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/model/__init__.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/model/_InvocationUsage.py",
       "marker": true
     },
     {
@@ -2820,6 +3400,36 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ContextCandidate.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ContextRequest.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_DelegatedStateReference.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_EngineCheckpoint.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_EngineEvent.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_EnginePermissionDecision.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/pipeline/_EventJournalWriter.py",
       "marker": true
     },
@@ -2835,7 +3445,67 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_FinalOutputPolicyRequest.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_FinalOutputPolicyResult.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_HostPolicyRequest.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_HostPolicyResult.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/pipeline/_HostToolExecutor.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_InvocationContextDecision.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_InvocationContextState.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ModelInvocationContextSnapshot.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ModelInvocationRequest.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ModelInvocationResponse.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ModelReconciliationState.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ModelToolRequest.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ModelToolResult.py",
       "marker": true
     },
     {
@@ -2880,12 +3550,32 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_ResumeContext.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_RetryPolicyRequest.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/pipeline/_RunTurnRequest.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/pipeline/_RunTurnResult.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_TurnCommit.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/pipeline/_TurnEngineResult.py",
       "marker": true
     },
     {
@@ -2906,7 +3596,7 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/py.typed",
-      "marker": true
+      "marker": false
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
@@ -3115,11 +3805,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/conversation/test_content_part.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/conversation/test_file_part.py",
       "marker": true
     },
@@ -3180,6 +3865,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/core/test_union_property.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/core/test_validation_error.py",
       "marker": true
     },
@@ -3206,11 +3896,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/events/test_compaction_start_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/events/test_done_event_payload.py",
       "marker": true
     },
     {
@@ -3345,11 +4030,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/events/test_stream_chunk.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/events/test_text_chunk.py",
       "marker": true
     },
@@ -3430,6 +4110,21 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/memory/test_memory_entry.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/memory/test_memory_store.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/model/test_invocation_usage.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/model/test_model_info.py",
       "marker": true
     },
@@ -3455,22 +4150,52 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_journal_record.py",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_context_candidate.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_mismatch.py",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_delegated_state_reference.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_verification_request.py",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_engine_checkpoint.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_verification_result.py",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_engine_event.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_invocation_context_decision.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_model_invocation_context_snapshot.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_model_reconciliation_state.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_model_tool_request.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_model_tool_result.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_resume_context.py",
       "marker": true
     },
     {
@@ -3485,12 +4210,12 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_model_request.py",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_commit.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_model_response.py",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_model_request.py",
       "marker": true
     },
     {
@@ -3590,11 +4315,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_image_block.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_image_source.py",
       "marker": true
     },
@@ -3606,16 +4326,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_messages_response.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_model_info.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_models_response.py",
       "marker": true
     },
     {
@@ -3646,16 +4356,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_wire_message.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/test_open_ai_model_info.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/test_open_ai_models_response.py",
       "marker": true
     },
     {
@@ -3975,7 +4675,27 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/memory/memory_entry.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/memory/memory_store.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/memory/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/model/invocation_usage.rs",
       "marker": true
     },
     {
@@ -4020,6 +4740,36 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/context_candidate.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/context_request.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/delegated_state_reference.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/engine_checkpoint.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/engine_event.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/engine_permission_decision.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/event_journal_writer.rs",
       "marker": true
     },
@@ -4035,12 +4785,72 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/final_output_policy_request.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/final_output_policy_result.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/host_policy_request.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/host_policy_result.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/host_tool_executor.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/invocation_context_decision.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/invocation_context_state.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/model_invocation_context_snapshot.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/model_invocation_request.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/model_invocation_response.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/model_reconciliation_state.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/model_tool_request.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/model_tool_result.rs",
       "marker": true
     },
     {
@@ -4085,12 +4895,32 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/resume_context.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/retry_policy_request.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/run_turn_request.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/run_turn_result.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/turn_commit.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/pipeline/turn_engine_result.rs",
       "marker": true
     },
     {
@@ -4580,6 +5410,26 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/memory/memory_entry_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/memory/memory_store_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/memory/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/model/invocation_usage_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/model/mod.rs",
       "marker": true
     },
@@ -4610,7 +5460,97 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/context_candidate_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/context_request_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/delegated_state_reference_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/engine_checkpoint_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/engine_event_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/engine_permission_decision_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/final_output_policy_request_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/final_output_policy_result_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/host_policy_request_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/host_policy_result_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/invocation_context_decision_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/invocation_context_state_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/pipeline/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/model_invocation_context_snapshot_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/model_invocation_request_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/model_invocation_response_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/model_reconciliation_state_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/model_tool_request_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/model_tool_result_test.rs",
       "marker": true
     },
     {
@@ -4635,12 +5575,32 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/resume_context_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/retry_policy_request_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/pipeline/run_turn_request_test.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/pipeline/run_turn_result_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/turn_commit_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/pipeline/turn_engine_result_test.rs",
       "marker": true
     },
     {
@@ -5140,7 +6100,27 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/memory/index.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/memory/memory-entry.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/memory/memory-store.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/model/index.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/model/invocation-usage.ts",
       "marker": true
     },
     {
@@ -5180,6 +6160,36 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/context-candidate.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/context-request.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/delegated-state-reference.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/engine-checkpoint.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/engine-event.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/engine-permission-decision.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/event-journal-writer.ts",
       "marker": true
     },
@@ -5195,12 +6205,72 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/final-output-policy-request.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/final-output-policy-result.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/host-policy-request.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/host-policy-result.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/host-tool-executor.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/index.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/invocation-context-decision.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/invocation-context-state.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/model-invocation-context-snapshot.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/model-invocation-request.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/model-invocation-response.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/model-reconciliation-state.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/model-tool-request.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/model-tool-result.ts",
       "marker": true
     },
     {
@@ -5245,12 +6315,32 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/resume-context.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/retry-policy-request.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/run-turn-request.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/run-turn-result.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/turn-commit.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/pipeline/turn-engine-result.ts",
       "marker": true
     },
     {
@@ -5540,6 +6630,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/core/union-property.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/core/validation-error.test.ts",
       "marker": true
     },
@@ -5790,6 +6885,26 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/events/usage-chunk.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/memory/memory-entry.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/memory/memory-store.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/model/invocation-usage.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/model/model-info.test.ts",
       "marker": true
     },
@@ -5815,6 +6930,96 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/context-candidate.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/context-request.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/delegated-state-reference.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/engine-checkpoint.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/engine-event.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/engine-permission-decision.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/final-output-policy-request.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/final-output-policy-result.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/host-policy-request.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/host-policy-result.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/invocation-context-decision.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/invocation-context-state.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/model-invocation-context-snapshot.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/model-invocation-request.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/model-invocation-response.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/model-reconciliation-state.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/model-tool-request.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/model-tool-result.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/pipeline/replay-journal-record.test.ts",
       "marker": true
     },
@@ -5835,12 +7040,32 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/resume-context.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/retry-policy-request.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/pipeline/run-turn-request.test.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/pipeline/run-turn-result.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/turn-commit.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/pipeline/turn-engine-result.test.ts",
       "marker": true
     },
     {
@@ -6140,12 +7365,42 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ContextCandidate.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ContextRequest.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/CustomTool.md",
       "marker": true
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/DelegatedStateReference.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/DoneEventPayload.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/EngineCheckpoint.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/EngineEvent.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/EnginePermissionDecision.md",
       "marker": true
     },
     {
@@ -6185,6 +7440,16 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/FinalOutputPolicyRequest.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/FinalOutputPolicyResult.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/FormatConfig.md",
       "marker": true
     },
@@ -6220,6 +7485,16 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/HostPolicyRequest.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/HostPolicyResult.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/HostToolExecutor.md",
       "marker": true
     },
@@ -6241,6 +7516,21 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/index.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/InvocationContextDecision.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/InvocationContextState.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/InvocationUsage.md",
       "marker": true
     },
     {
@@ -6270,6 +7560,16 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/MemoryEntry.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/MemoryStore.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/Message.md",
       "marker": true
     },
@@ -6290,12 +7590,42 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ModelInvocationContextSnapshot.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ModelInvocationRequest.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ModelInvocationResponse.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ModelLister.md",
       "marker": true
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ModelOptions.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ModelReconciliationState.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ModelToolRequest.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ModelToolResult.md",
       "marker": true
     },
     {
@@ -6425,7 +7755,17 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/ResumeContext.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/RetryPayload.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/RetryPolicyRequest.md",
       "marker": true
     },
     {
@@ -6610,7 +7950,17 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/TurnCommit.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/TurnEndPayload.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/TurnEngineResult.md",
       "marker": true
     },
     {
@@ -6646,6 +7996,16 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/TurnTrace.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/UnionProperty.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/UsageChunk.md",
       "marker": true
     },
     {

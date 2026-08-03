@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::anthropic_model_info::AnthropicModelInfo;
 
 /// The response body from Anthropic's model listing API.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct AnthropicModelsResponse {
     /// Models available to the authenticated caller
     pub data: Vec<AnthropicModelInfo>,
@@ -124,5 +124,21 @@ impl AnthropicModelsResponse {
                 .map(|item| item.to_value(ctx))
                 .collect::<Vec<_>>(),
         )
+    }
+}
+
+// Serde for `AnthropicModelsResponse` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for AnthropicModelsResponse {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for AnthropicModelsResponse {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

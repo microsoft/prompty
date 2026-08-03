@@ -131,3 +131,35 @@ fn test_tool_execution_complete_payload_roundtrip() {
         json_output.err()
     );
 }
+
+#[test]
+fn test_tool_execution_complete_payload_serde_roundtrip() {
+    let json = r####"
+{
+  "requestId": "exec_abc123",
+  "toolCallId": "call_abc123",
+  "toolName": "powershell",
+  "success": true,
+  "exitCode": 0,
+  "durationMs": 250,
+  "errorKind": "timeout"
+}
+"####;
+    let instance: ToolExecutionCompletePayload =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        ToolExecutionCompletePayload::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    let reparsed: ToolExecutionCompletePayload =
+        serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+}

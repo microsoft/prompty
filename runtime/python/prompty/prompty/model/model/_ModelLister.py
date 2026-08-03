@@ -16,8 +16,8 @@ class ModelLister(Protocol):
 
     def list_models(self, connection: Any) -> list[ModelInfo]:
         """List models available through a provider connection"""
-        ...
+        raise NotImplementedError
 
     async def list_models_async(self, connection: Any) -> list[ModelInfo]:
         """List models available through a provider connection (async variant)"""
-        ...
+        raise NotImplementedError

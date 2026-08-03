@@ -63,7 +63,10 @@ func LoadSessionStartPayload(data interface{}, ctx *LoadContext) (SessionStartPa
 		}
 		if val, ok := m["context"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadHarnessContext(m, ctx)
+				loaded, err := LoadHarnessContext(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Context = &loaded
 			}
 		}

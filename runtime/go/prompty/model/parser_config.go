@@ -74,7 +74,7 @@ func (obj *ParserConfig) ToYAML() (string, error) {
 
 // FromJSON creates ParserConfig from JSON string
 func ParserConfigFromJSON(jsonStr string) (ParserConfig, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		return ParserConfig{}, err
 	}
@@ -84,7 +84,7 @@ func ParserConfigFromJSON(jsonStr string) (ParserConfig, error) {
 
 // FromYAML creates ParserConfig from YAML string
 func ParserConfigFromYAML(yamlStr string) (ParserConfig, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
 		return ParserConfig{}, err
 	}

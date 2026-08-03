@@ -10,28 +10,30 @@ use super::{
     ConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint, EngineEvent,
     EngineEventKind, EnginePermissionDecision, EngineToolRequest, EngineToolResult,
     FinalOutputPolicyRequest, HostPolicyPort, HostPolicyRequest, IdGenerator,
-    ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelReconciliationState,
-    ModelStreamPort, PermissionPort, PortError, PostCommitPort, RetryPolicyError, RetryPolicyPort,
-    RetryPolicyRequest, ToolOutcome, ToolPort,
+    InvocationContextState, ModelInvocationRequest, ModelInvocationResponse, ModelPort,
+    ModelReconciliationState, ModelStreamPort, PermissionPort, PortError, PostCommitPort,
+    ResumeContext, RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, ToolOutcome, ToolPort,
 };
 use crate::types::Message;
 
-/// Terminal semantic status for a canonical turn.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[non_exhaustive]
-pub enum TurnStatus {
-    Success,
-    Failed,
-    Cancelled,
-    ReconciliationRequired,
-}
+/// Terminal semantic status for a canonical turn. The generated cross-runtime
+/// contract is consumed directly; `TurnStatus` is a thin alias.
+pub use crate::model::{EngineTurnStatus, EngineTurnStatus as TurnStatus};
 
 /// Request accepted by the canonical turn engine.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TurnEngineRequest {
     pub session_id: String,
     pub turn_id: String,
+    /// Stable identifier of this engine run. Empty means the engine assigns one at run start.
+    #[serde(default)]
+    pub run_id: String,
+    /// Run identifier of the parent run when this run was delegated.
+    #[serde(default)]
+    pub parent_run_id: Option<String>,
+    /// Zero-based delegation nesting depth; 0 for a top-level run.
+    #[serde(default)]
+    pub delegation_depth: i32,
     pub messages: Vec<Message>,
     #[serde(default)]
     pub inputs: Value,
@@ -76,6 +78,9 @@ impl TurnEngineRequest {
         Self {
             session_id: session_id.into(),
             turn_id: turn_id.into(),
+            run_id: String::new(),
+            parent_run_id: None,
+            delegation_depth: 0,
             stable_prefix_messages: messages.len(),
             messages,
             inputs: Value::Null,
@@ -109,29 +114,32 @@ impl TurnEngineRequest {
         Self {
             session_id: checkpoint.session_id.clone(),
             turn_id: checkpoint.turn_id.clone(),
-            stable_prefix_messages: checkpoint.stable_prefix_messages,
+            run_id: checkpoint.run_id.clone(),
+            parent_run_id: checkpoint.parent_run_id.clone(),
+            delegation_depth: checkpoint.delegation_depth,
+            stable_prefix_messages: checkpoint.stable_prefix_messages as usize,
             messages: checkpoint.messages.clone(),
-            inputs: checkpoint.inputs.clone(),
+            inputs: checkpoint.inputs.clone().unwrap_or(Value::Null),
             max_iterations,
             max_model_attempts: 3,
             start_iteration: if checkpoint.resume_same_iteration {
-                checkpoint.iteration
+                checkpoint.iteration as usize
             } else if checkpoint.pending_tool_requests.is_empty()
                 && checkpoint.pending_model_response.is_none()
                 && !checkpoint.final_output_ready
                 && !checkpoint.reconciliation_required
             {
-                checkpoint.iteration + 1
+                checkpoint.iteration as usize + 1
             } else {
-                checkpoint.iteration
+                checkpoint.iteration as usize
             },
-            initial_sequence: last_journal_sequence.max(checkpoint.last_sequence),
-            portability: checkpoint.portability,
-            delegated_state: checkpoint.delegated_state.clone(),
+            initial_sequence: last_journal_sequence.max(checkpoint.last_sequence as u64),
+            portability: checkpoint.context_state.portability,
+            delegated_state: checkpoint.context_state.delegated_state.clone(),
             active_invocation_id: checkpoint.active_invocation_id.clone(),
             pending_tool_requests: checkpoint.pending_tool_requests.clone(),
             completed_tool_results: checkpoint.completed_tool_results.clone(),
-            completed_model_iterations: checkpoint.completed_model_iterations,
+            completed_model_iterations: checkpoint.completed_model_iterations as usize,
             reconciliation_required: checkpoint.reconciliation_required,
             model_reconciliation: checkpoint.model_reconciliation.clone(),
             pending_output: checkpoint.pending_output.clone(),
@@ -233,29 +241,92 @@ impl TurnEngineRequest {
         }
 
         let mut request = Self::resume_from(checkpoint, max_iterations, last_journal_sequence);
-        request.start_iteration = checkpoint.iteration;
+        request.start_iteration = checkpoint.iteration as usize;
         request.reconciliation_required = false;
         request.model_reconciliation_resolution = Some(resolved_response);
         Ok(request)
     }
+
+    /// Set the stable run identifier for this run. An empty value lets the engine
+    /// assign one at run start.
+    pub fn with_run_id(mut self, run_id: impl Into<String>) -> Self {
+        self.run_id = run_id.into();
+        self
+    }
+
+    /// Mark this run as delegated from a parent run, carrying the parent run
+    /// identifier and nesting one level deeper than the parent.
+    pub fn delegated_under(
+        mut self,
+        parent_run_id: impl Into<String>,
+        parent_delegation_depth: i32,
+    ) -> Self {
+        self.parent_run_id = Some(parent_run_id.into());
+        self.delegation_depth = parent_delegation_depth.saturating_add(1);
+        self
+    }
+
+    /// Build a resume request from the durable generated [`ResumeContext`].
+    ///
+    /// Consumes the checkpoint, the iteration and model-attempt budgets, and the
+    /// journal tail the record carries. Unlike the ad-hoc [`resume_from`] entry,
+    /// this threads `maxModelAttempts` from the durable record rather than
+    /// defaulting it. Use the reconciliation variants when the checkpoint is
+    /// blocked pending a resolved model or tool outcome.
+    ///
+    /// [`resume_from`]: TurnEngineRequest::resume_from
+    pub fn from_resume(resume: &ResumeContext) -> Self {
+        let mut request = Self::resume_from(
+            &resume.checkpoint,
+            resume.max_iterations.max(0) as usize,
+            resume.resume_sequence().max(0) as u64,
+        );
+        request.apply_resume_attempts(resume);
+        request
+    }
+
+    /// Build a resume request from a [`ResumeContext`] after the host resolves an
+    /// indeterminate tool effect recorded in the checkpoint.
+    pub fn from_resume_after_reconciliation(
+        resume: &ResumeContext,
+        resolved_result: EngineToolResult,
+    ) -> Result<Self, TurnEngineError> {
+        let mut request = Self::resume_after_reconciliation(
+            &resume.checkpoint,
+            resume.max_iterations.max(0) as usize,
+            resume.resume_sequence().max(0) as u64,
+            resolved_result,
+        )?;
+        request.apply_resume_attempts(resume);
+        Ok(request)
+    }
+
+    /// Build a resume request from a [`ResumeContext`] after the host resolves an
+    /// indeterminate model invocation recorded in the checkpoint.
+    pub fn from_resume_after_model_reconciliation(
+        resume: &ResumeContext,
+        resolved_response: ModelInvocationResponse,
+    ) -> Result<Self, TurnEngineError> {
+        let mut request = Self::resume_after_model_reconciliation(
+            &resume.checkpoint,
+            resume.max_iterations.max(0) as usize,
+            resume.resume_sequence().max(0) as u64,
+            resolved_response,
+        )?;
+        request.apply_resume_attempts(resume);
+        Ok(request)
+    }
+
+    fn apply_resume_attempts(&mut self, resume: &ResumeContext) {
+        if resume.max_model_attempts > 0 {
+            self.max_model_attempts = resume.max_model_attempts as usize;
+        }
+    }
 }
 
-/// Final committed turn data supplied to post-commit effects.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct TurnCommit {
-    pub session_id: String,
-    pub turn_id: String,
-    pub status: TurnStatus,
-    pub output: Option<Value>,
-    pub messages: Vec<Message>,
-    pub iterations: usize,
-    pub last_sequence: u64,
-    pub portability: ContextPortability,
-    pub delegated_state: Vec<DelegatedStateReference>,
-    /// Typed provider state when this commit requires model reconciliation.
-    #[serde(default)]
-    pub model_reconciliation: Option<ModelReconciliationState>,
-}
+/// Final committed turn data supplied to post-commit effects. The generated
+/// cross-runtime contract is consumed directly.
+pub use crate::model::TurnCommit;
 
 /// Result returned by the canonical turn engine.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -318,19 +389,37 @@ impl TurnEngine {
         Self { context, effects }
     }
 
+    /// Resume an interrupted turn from the durable generated [`ResumeContext`].
+    ///
+    /// Consumes the record directly so a host round-trips the same persisted
+    /// resume state the engine's checkpoints produce, without duplicating a
+    /// committed model or tool effect.
+    pub async fn resume(
+        &self,
+        resume: ResumeContext,
+        cancellation: CancellationToken,
+    ) -> Result<TurnEngineResult, TurnEngineError> {
+        self.run(TurnEngineRequest::from_resume(&resume), cancellation)
+            .await
+    }
+
     pub async fn run(
         &self,
         request: TurnEngineRequest,
         cancellation: CancellationToken,
     ) -> Result<TurnEngineResult, TurnEngineError> {
         self.validate_request(&request)?;
+        let mut request = request;
+        if request.run_id.is_empty() {
+            request.run_id = self.effects.ids.next_id("run");
+        }
         let mut state = TurnState::new(request);
         let max_iterations = state.max_iterations;
         let start_iteration = state.iteration;
         let inputs = state.inputs.clone();
         self.emit(
             &mut state,
-            EngineEventKind::TurnStarted,
+            EngineEventKind::Turn_started,
             None,
             None,
             json!({
@@ -399,17 +488,20 @@ impl TurnEngine {
                     .active_invocation_id
                     .clone()
                     .unwrap_or_else(|| self.effects.ids.next_id("invocation"));
-                if let Err(error) = self.finalize_tool_exchange(&mut state) {
-                    return self
-                        .commit_failed(
-                            state,
-                            "conversation_format_error",
-                            &error.to_string(),
-                            &cancellation,
-                        )
-                        .await;
-                }
-                self.persist_conversation_update(&mut state, &invocation_id)
+                let results = match self.finalize_tool_exchange(&mut state) {
+                    Ok(results) => results,
+                    Err(error) => {
+                        return self
+                            .commit_failed(
+                                state,
+                                "conversation_format_error",
+                                &error.to_string(),
+                                &cancellation,
+                            )
+                            .await;
+                    }
+                };
+                self.persist_tool_exchange(&mut state, &invocation_id, &results)
                     .await?;
                 state.active_invocation_id = None;
                 state.iteration += 1;
@@ -539,12 +631,15 @@ impl TurnEngine {
                     session_id: state.session_id.clone(),
                     turn_id: state.turn_id.clone(),
                     invocation_id: invocation_id.clone(),
-                    iteration: state.iteration,
+                    iteration: state.iteration as i32,
                     messages: state.messages.clone(),
-                    stable_prefix_messages: state.stable_prefix_messages.min(state.messages.len()),
-                    portability: state.portability,
-                    delegated_state: state.delegated_state.clone(),
-                    inputs: state.inputs.clone(),
+                    stable_prefix_messages: state.stable_prefix_messages.min(state.messages.len())
+                        as i32,
+                    context_state: InvocationContextState {
+                        portability: state.portability,
+                        delegated_state: state.delegated_state.clone(),
+                    },
+                    inputs: Some(state.inputs.clone()),
                 })
                 .await
             {
@@ -558,7 +653,7 @@ impl TurnEngine {
             let iteration = state.iteration;
             self.emit(
                 &mut state,
-                EngineEventKind::ContextPrepared,
+                EngineEventKind::Context_prepared,
                 Some(&invocation_id),
                 Some(iteration),
                 serde_json::to_value(&snapshot).unwrap_or(Value::Null),
@@ -579,7 +674,7 @@ impl TurnEngine {
                 }
                 self.emit(
                     &mut state,
-                    EngineEventKind::ModelInvocationStarted,
+                    EngineEventKind::Model_invocation_started,
                     Some(&invocation_id),
                     Some(iteration),
                     json!({
@@ -606,7 +701,7 @@ impl TurnEngine {
                         let reason = source.to_string();
                         self.emit(
                             &mut state,
-                            EngineEventKind::ModelInvocationFailed,
+                            EngineEventKind::Model_invocation_failed,
                             Some(&invocation_id),
                             Some(iteration),
                             json!({
@@ -622,7 +717,7 @@ impl TurnEngine {
                             state.model_reconciliation = Some(ModelReconciliationState {
                                 invocation_id: invocation_id.clone(),
                                 request: model_request.clone(),
-                                failed_attempt: attempt - 1,
+                                failed_attempt: (attempt - 1) as i32,
                                 message: reason.clone(),
                                 metadata: source.metadata.clone(),
                             });
@@ -742,12 +837,15 @@ impl TurnEngine {
         Ok(())
     }
 
-    fn finalize_tool_exchange(&self, state: &mut TurnState) -> Result<(), PortError> {
+    fn finalize_tool_exchange(
+        &self,
+        state: &mut TurnState,
+    ) -> Result<Vec<EngineToolResult>, PortError> {
         let Some(response) = state.pending_model_response.take() else {
-            return Ok(());
+            return Ok(Vec::new());
         };
         if response.tool_requests.is_empty() {
-            return Ok(());
+            return Ok(Vec::new());
         }
         let results = response
             .tool_requests
@@ -778,7 +876,7 @@ impl TurnEngine {
             }
         };
         state.messages.extend(messages);
-        Ok(())
+        Ok(results)
     }
 
     async fn persist_policy_update(
@@ -793,7 +891,7 @@ impl TurnEngine {
         let event = self.build_event(
             state,
             sequence,
-            EngineEventKind::PolicyApplied,
+            EngineEventKind::Policy_applied,
             Some(invocation_id),
             Some(state.iteration),
             json!({
@@ -821,37 +919,52 @@ impl TurnEngine {
         Ok(checkpoint)
     }
 
-    async fn persist_conversation_update(
+    async fn persist_tool_exchange(
         &self,
         state: &mut TurnState,
         invocation_id: &str,
+        results: &[EngineToolResult],
     ) -> Result<EngineCheckpoint, TurnEngineError> {
-        let sequence = state.sequence + 1;
-        let checkpoint = self.build_checkpoint(state, sequence, false);
-        let event = self.build_event(
+        let mut sequence = state.sequence;
+        let mut events = Vec::with_capacity(results.len() + 1);
+        for result in results {
+            sequence += 1;
+            events.push(self.build_event(
+                state,
+                sequence,
+                EngineEventKind::Tool_result_committed,
+                Some(invocation_id),
+                Some(state.iteration),
+                json!({ "toolResult": result }),
+            ));
+        }
+        sequence += 1;
+        events.push(self.build_event(
             state,
             sequence,
-            EngineEventKind::ConversationUpdated,
+            EngineEventKind::Conversation_updated,
             Some(invocation_id),
             Some(state.iteration),
             json!({ "messageCount": state.messages.len() }),
-        );
+        ));
+        let checkpoint = self.build_checkpoint(state, sequence, false);
         let checkpoint_event = self.build_checkpoint_event(state, &checkpoint, invocation_id);
+        events.push(checkpoint_event);
         if let Err(source) = self
             .effects
             .durability
-            .append_with_checkpoint(&[event, checkpoint_event], &checkpoint)
+            .append_with_checkpoint(&events, &checkpoint)
             .await
         {
             return Err(TurnEngineError::RecoveryRequired {
-                stage: "conversation update",
+                stage: "tool exchange",
                 request_id: invocation_id.to_string(),
                 checkpoint: Box::new(checkpoint),
                 tool_results: state.tool_results.clone(),
                 source: Box::new(source),
             });
         }
-        state.sequence = sequence + 1;
+        state.sequence = checkpoint.last_sequence as u64 + 1;
         Ok(checkpoint)
     }
 
@@ -869,7 +982,7 @@ impl TurnEngine {
         let event = self.build_event(
             state,
             sequence,
-            EngineEventKind::ModelReconciliationRequired,
+            EngineEventKind::Model_reconciliation_required,
             Some(invocation_id),
             Some(state.iteration),
             serde_json::to_value(reconciliation).unwrap_or(Value::Null),
@@ -905,7 +1018,7 @@ impl TurnEngine {
         let event = self.build_event(
             state,
             sequence,
-            EngineEventKind::ModelInvocationReconciled,
+            EngineEventKind::Model_invocation_reconciled,
             Some(invocation_id),
             Some(state.iteration),
             json!({
@@ -945,14 +1058,14 @@ impl TurnEngine {
         let event = self.build_event(
             state,
             sequence,
-            EngineEventKind::ModelInvocationCompleted,
+            EngineEventKind::Model_invocation_completed,
             Some(invocation_id),
             Some(state.iteration),
             json!({
                 "hasOutput": response.output.is_some(),
                 "toolRequests": response.tool_requests.len(),
-                "nextPortability": response.next_portability,
-                "delegatedState": response.delegated_state,
+                "nextPortability": response.next_context_state.as_ref().map(|s| &s.portability),
+                "delegatedState": response.next_context_state.as_ref().map(|s| &s.delegated_state),
                 "metadata": response.metadata,
             }),
         );
@@ -984,7 +1097,7 @@ impl TurnEngine {
     ) -> Result<EngineToolResult, ExecuteToolError> {
         self.emit(
             state,
-            EngineEventKind::PermissionRequested,
+            EngineEventKind::Permission_requested,
             Some(invocation_id),
             Some(state.iteration),
             json!({ "toolRequest": request }),
@@ -1012,11 +1125,11 @@ impl TurnEngine {
                 request_id: request.id.clone(),
                 name: request.name.clone(),
                 outcome: ToolOutcome::Failed,
-                output: Value::String(
+                output: Some(Value::String(
                     decision
                         .reason
                         .unwrap_or_else(|| "Permission denied".to_string()),
-                ),
+                )),
                 error_kind: Some(error_kind),
                 metadata: decision.metadata,
             });
@@ -1028,7 +1141,7 @@ impl TurnEngine {
 
         self.emit(
             state,
-            EngineEventKind::ToolExecutionStarted,
+            EngineEventKind::Tool_execution_started,
             Some(invocation_id),
             Some(state.iteration),
             json!({ "toolRequest": request }),
@@ -1051,14 +1164,14 @@ impl TurnEngine {
                 } else {
                     ToolOutcome::Failed
                 },
-                output: Value::String(if error.outcome_unknown {
+                output: Some(Value::String(if error.outcome_unknown {
                     format!(
                         "Tool '{}' outcome is unknown and requires reconciliation: {error}",
                         request.name
                     )
                 } else {
                     format!("Tool '{}' failed: {error}", request.name)
-                }),
+                })),
                 error_kind: Some(if error.outcome_unknown {
                     "effect_outcome_unknown".to_string()
                 } else {
@@ -1082,18 +1195,10 @@ impl TurnEngine {
             .tool_results
             .last()
             .expect("tool result must be added before persistence");
-        let event_kind = if matches!(
-            result.error_kind.as_deref(),
-            Some("permission_denied" | "guardrail_denied")
-        ) {
-            EngineEventKind::ToolResultCommitted
-        } else {
-            EngineEventKind::ToolExecutionCompleted
-        };
         let event = self.build_event(
             state,
             sequence,
-            event_kind,
+            EngineEventKind::Tool_execution_completed,
             Some(invocation_id),
             Some(state.iteration),
             json!({ "toolResult": result }),
@@ -1131,7 +1236,7 @@ impl TurnEngine {
         let event = self.build_event(
             state,
             sequence,
-            EngineEventKind::ToolResultReconciled,
+            EngineEventKind::Tool_result_reconciled,
             Some(invocation_id),
             Some(state.iteration),
             json!({ "toolResult": result }),
@@ -1163,10 +1268,10 @@ impl TurnEngine {
     ) -> EngineEvent {
         self.build_event(
             state,
-            checkpoint.last_sequence + 1,
-            EngineEventKind::CheckpointCreated,
+            checkpoint.last_sequence as u64 + 1,
+            EngineEventKind::Checkpoint_created,
             Some(invocation_id),
-            Some(checkpoint.iteration),
+            Some(checkpoint.iteration as usize),
             json!({
                 "checkpointId": checkpoint.id,
                 "includedThroughSequence": checkpoint.last_sequence,
@@ -1184,15 +1289,22 @@ impl TurnEngine {
             id: self.effects.ids.next_id("checkpoint"),
             session_id: state.session_id.clone(),
             turn_id: state.turn_id.clone(),
-            iteration: state.iteration,
-            last_sequence,
+            run_id: state.run_id.clone(),
+            parent_run_id: state.parent_run_id.clone(),
+            delegation_depth: state.delegation_depth,
+            iteration: state.iteration as i32,
+            last_sequence: last_sequence as i64,
             messages: state.messages.clone(),
-            stable_prefix_messages: state.stable_prefix_messages,
-            inputs: state.inputs.clone(),
+            stable_prefix_messages: state.stable_prefix_messages as i32,
+            inputs: if state.inputs.is_null() {
+                None
+            } else {
+                Some(state.inputs.clone())
+            },
             active_invocation_id: state.active_invocation_id.clone(),
             pending_tool_requests: state.pending_tool_requests.clone(),
             completed_tool_results: state.tool_results.clone(),
-            completed_model_iterations: state.completed_model_iterations,
+            completed_model_iterations: state.completed_model_iterations as i32,
             reconciliation_required: state.reconciliation_required
                 || state
                     .tool_results
@@ -1204,8 +1316,10 @@ impl TurnEngine {
             pending_model_response: state.pending_model_response.clone(),
             resume_same_iteration,
             policy_applied_for_iteration: state.policy_applied_for_iteration,
-            portability: state.portability,
-            delegated_state: state.delegated_state.clone(),
+            context_state: InvocationContextState {
+                portability: state.portability,
+                delegated_state: state.delegated_state.clone(),
+            },
             metadata: Value::Null,
         }
     }
@@ -1219,7 +1333,7 @@ impl TurnEngine {
     ) -> Result<(), TurnEngineError> {
         self.emit(
             state,
-            EngineEventKind::PermissionResolved,
+            EngineEventKind::Permission_resolved,
             Some(invocation_id),
             Some(state.iteration),
             json!({ "toolRequestId": request.id, "decision": decision }),
@@ -1235,7 +1349,7 @@ impl TurnEngine {
         self.commit(
             state,
             TurnStatus::Success,
-            EngineEventKind::TurnCommitted,
+            EngineEventKind::Turn_committed,
             cancellation,
         )
         .await
@@ -1246,6 +1360,9 @@ impl TurnEngine {
         mut state: TurnState,
         cancellation: &CancellationToken,
     ) -> Result<TurnEngineResult, TurnEngineError> {
+        if cancellation.is_cancelled() {
+            return self.commit_cancelled(state, cancellation).await;
+        }
         let request = FinalOutputPolicyRequest {
             session_id: state.session_id.clone(),
             turn_id: state.turn_id.clone(),
@@ -1262,6 +1379,9 @@ impl TurnEngine {
         {
             Ok(result) => result,
             Err(error) => {
+                if cancellation.is_cancelled() {
+                    return self.commit_cancelled(state, cancellation).await;
+                }
                 return self
                     .commit_failed(state, &error.error_kind, &error.message, cancellation)
                     .await;
@@ -1282,7 +1402,7 @@ impl TurnEngine {
         self.commit(
             state,
             TurnStatus::Cancelled,
-            EngineEventKind::TurnCancelled,
+            EngineEventKind::Turn_cancelled,
             cancellation,
         )
         .await
@@ -1299,7 +1419,7 @@ impl TurnEngine {
         self.commit(
             state,
             TurnStatus::Failed,
-            EngineEventKind::TurnFailed,
+            EngineEventKind::Turn_failed,
             cancellation,
         )
         .await
@@ -1315,8 +1435,8 @@ impl TurnEngine {
         state.output = Some(json!({ "errorKind": error_kind, "message": message }));
         self.commit(
             state,
-            TurnStatus::ReconciliationRequired,
-            EngineEventKind::TurnReconciliationRequired,
+            TurnStatus::Reconciliation_required,
+            EngineEventKind::Turn_reconciliation_required,
             cancellation,
         )
         .await
@@ -1339,10 +1459,12 @@ impl TurnEngine {
             status,
             output: state.output.clone(),
             messages: state.messages.clone(),
-            iterations: state.completed_model_iterations,
-            last_sequence: state.sequence,
-            portability: state.portability,
-            delegated_state: state.delegated_state.clone(),
+            iterations: state.completed_model_iterations as i32,
+            last_sequence: state.sequence as i64,
+            context_state: InvocationContextState {
+                portability: state.portability,
+                delegated_state: state.delegated_state.clone(),
+            },
             model_reconciliation: state.model_reconciliation.clone(),
         };
 
@@ -1357,7 +1479,7 @@ impl TurnEngine {
             let started = self
                 .emit(
                     &mut state,
-                    EngineEventKind::PostCommitStarted,
+                    EngineEventKind::Post_commit_started,
                     None,
                     Some(iteration),
                     json!({ "effectId": effect_id }),
@@ -1377,7 +1499,7 @@ impl TurnEngine {
                     Ok(()) => self
                         .emit(
                             &mut state,
-                            EngineEventKind::PostCommitCompleted,
+                            EngineEventKind::Post_commit_completed,
                             None,
                             Some(iteration),
                             json!({ "effectId": effect_id }),
@@ -1394,7 +1516,7 @@ impl TurnEngine {
                         let event_error = self
                             .emit(
                                 &mut state,
-                                EngineEventKind::PostCommitFailed,
+                                EngineEventKind::Post_commit_failed,
                                 None,
                                 Some(iteration),
                                 json!({ "effectId": effect_id, "message": message }),
@@ -1413,7 +1535,7 @@ impl TurnEngine {
         } else {
             None
         };
-        commit.last_sequence = state.sequence;
+        commit.last_sequence = state.sequence as i64;
 
         Ok(TurnEngineResult {
             commit,
@@ -1455,15 +1577,18 @@ impl TurnEngine {
         payload: Value,
     ) -> EngineEvent {
         EngineEvent {
-            sequence,
+            sequence: sequence as i64,
             id: self.effects.ids.next_id("event"),
             timestamp: self.effects.clock.now(),
             session_id: state.session_id.clone(),
             turn_id: state.turn_id.clone(),
+            run_id: state.run_id.clone(),
+            parent_run_id: state.parent_run_id.clone(),
+            delegation_depth: state.delegation_depth,
             invocation_id: invocation_id.map(str::to_string),
-            iteration,
+            iteration: iteration.map(|value| value as i32),
             kind,
-            payload,
+            payload: Some(payload),
         }
     }
 }
@@ -1478,6 +1603,9 @@ enum ExecuteToolError {
 struct TurnState {
     session_id: String,
     turn_id: String,
+    run_id: String,
+    parent_run_id: Option<String>,
+    delegation_depth: i32,
     messages: Vec<Message>,
     inputs: Value,
     max_iterations: usize,
@@ -1508,6 +1636,9 @@ impl TurnState {
         Self {
             session_id: request.session_id,
             turn_id: request.turn_id,
+            run_id: request.run_id,
+            parent_run_id: request.parent_run_id,
+            delegation_depth: request.delegation_depth,
             messages: request.messages,
             inputs: request.inputs,
             max_iterations: request.max_iterations,
@@ -1555,11 +1686,9 @@ impl TurnState {
     }
 
     fn apply_provider_state(&mut self, response: &ModelInvocationResponse) -> Result<(), String> {
-        if let Some(portability) = response.next_portability {
-            self.portability = portability;
-        }
-        if let Some(delegated_state) = &response.delegated_state {
-            self.delegated_state = delegated_state.clone();
+        if let Some(next) = &response.next_context_state {
+            self.portability = next.portability;
+            self.delegated_state = next.delegated_state.clone();
         } else if self.portability == ContextPortability::Portable {
             self.delegated_state.clear();
         }

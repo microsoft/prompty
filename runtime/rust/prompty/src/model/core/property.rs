@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// Variant-specific data for [`Property`], discriminated by `kind`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PropertyKind {
     /// `kind` = `"array"`
     Array {
@@ -23,6 +23,13 @@ pub enum PropertyKind {
     Object {
         /// The properties contained in the object
         properties: Vec<Property>,
+    },
+    /// `kind` = `"union"`
+    Union {
+        /// Alternative property schemas where exactly one branch must match
+        one_of: Vec<Property>,
+        /// Alternative property schemas where one or more branches may match
+        any_of: Vec<Property>,
     },
     /// Wildcard / catch-all variant for unrecognized `kind` values.
     Custom {
@@ -39,7 +46,7 @@ impl Default for PropertyKind {
     }
 }
 /// Represents a single property. - This model defines the structure of properties that can be used in prompts, including their type, description, whether they are required, and other attributes. - It allows for the definition of dynamic inputs that can be filled with data and processed to generate prompts for AI models.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Property {
     /// Name of the property
     pub name: String,
@@ -47,6 +54,8 @@ pub struct Property {
     pub description: Option<String>,
     /// Whether the property is required
     pub required: Option<bool>,
+    /// Whether the property also accepts a JSON null value
+    pub nullable: Option<bool>,
     /// The default value of the property - this represents the default value if none is provided
     pub default: Option<serde_json::Value>,
     /// Example value used for either initialization or tooling
@@ -122,6 +131,16 @@ impl Property {
                     .map(|v| Self::load_properties(v, ctx))
                     .unwrap_or_default(),
             },
+            "union" => PropertyKind::Union {
+                one_of: value
+                    .get("oneOf")
+                    .map(|v| Self::load_one_of(v, ctx))
+                    .unwrap_or_default(),
+                any_of: value
+                    .get("anyOf")
+                    .map(|v| Self::load_any_of(v, ctx))
+                    .unwrap_or_default(),
+            },
             _ => PropertyKind::Custom {
                 kind_name: kind_str.to_string(),
             },
@@ -137,6 +156,7 @@ impl Property {
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
             required: value.get("required").and_then(|v| v.as_bool()),
+            nullable: value.get("nullable").and_then(|v| v.as_bool()),
             default: value.get("default").cloned(),
             example: value.get("example").cloned(),
             enum_values: value
@@ -152,6 +172,7 @@ impl Property {
         match &self.kind {
             PropertyKind::Array { .. } => "array",
             PropertyKind::Object { .. } => "object",
+            PropertyKind::Union { .. } => "union",
             PropertyKind::Custom { kind_name, .. } => kind_name.as_str(),
         }
     }
@@ -182,6 +203,9 @@ impl Property {
         if let Some(val) = self.required {
             result.insert("required".to_string(), serde_json::Value::Bool(val));
         }
+        if let Some(val) = self.nullable {
+            result.insert("nullable".to_string(), serde_json::Value::Bool(val));
+        }
         if let Some(ref val) = self.default {
             result.insert("default".to_string(), val.clone());
         }
@@ -211,6 +235,24 @@ impl Property {
                     );
                 }
             }
+            PropertyKind::Union { one_of, any_of, .. } => {
+                if !one_of.is_empty() {
+                    result.insert(
+                        "oneOf".to_string(),
+                        serde_json::Value::Array(
+                            one_of.iter().map(|item| item.to_value(ctx)).collect(),
+                        ),
+                    );
+                }
+                if !any_of.is_empty() {
+                    result.insert(
+                        "anyOf".to_string(),
+                        serde_json::Value::Array(
+                            any_of.iter().map(|item| item.to_value(ctx)).collect(),
+                        ),
+                    );
+                }
+            }
             PropertyKind::Custom { kind_name: _, .. } => {}
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -227,8 +269,67 @@ impl Property {
     }
 
     /// Load a collection of Property from a JSON value.
-    /// Handles both array format `[{...}]`.
+    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
     fn load_properties(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
+        match data {
+            serde_json::Value::Array(arr) => arr
+                .iter()
+                .map(|v| Property::load_from_value(v, ctx))
+                .collect(),
+
+            serde_json::Value::Object(obj) => obj
+                .iter()
+                .filter_map(|(name, value)| {
+                    if value.is_array() {
+                        return None;
+                    }
+                    let mut v = if value.is_object() {
+                        value.clone()
+                    } else {
+                        serde_json::json!({ "kind": value })
+                    };
+                    if let serde_json::Value::Object(ref mut m) = v {
+                        m.entry("name".to_string())
+                            .or_insert_with(|| serde_json::Value::String(name.clone()));
+                    }
+                    Some(Property::load_from_value(&v, ctx))
+                })
+                .collect(),
+            _ => Vec::new(),
+        }
+    }
+
+    /// Save a collection of Property to a JSON value.
+    fn save_properties(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+        if ctx.collection_format == "array" {
+            return serde_json::Value::Array(
+                items
+                    .iter()
+                    .map(|item| item.to_value(ctx))
+                    .collect::<Vec<_>>(),
+            );
+        }
+        // Object format: use name as key
+        let mut result = serde_json::Map::new();
+        for item in items {
+            let mut item_data = match item.to_value(ctx) {
+                serde_json::Value::Object(m) => m,
+                other => {
+                    let mut m = serde_json::Map::new();
+                    m.insert("value".to_string(), other);
+                    m
+                }
+            };
+            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
+                result.insert(name, serde_json::Value::Object(item_data));
+            }
+        }
+        serde_json::Value::Object(result)
+    }
+
+    /// Load a collection of Property from a JSON value.
+    /// Handles both array format `[{...}]`.
+    fn load_one_of(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
         match data {
             serde_json::Value::Array(arr) => arr
                 .iter()
@@ -240,12 +341,72 @@ impl Property {
     }
 
     /// Save a collection of Property to a JSON value.
-    fn save_properties(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+    fn save_one_of(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
         serde_json::Value::Array(
             items
                 .iter()
                 .map(|item| item.to_value(ctx))
                 .collect::<Vec<_>>(),
         )
+    }
+
+    /// Load a collection of Property from a JSON value.
+    /// Handles both array format `[{...}]`.
+    fn load_any_of(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
+        match data {
+            serde_json::Value::Array(arr) => arr
+                .iter()
+                .map(|v| Property::load_from_value(v, ctx))
+                .collect(),
+
+            _ => Vec::new(),
+        }
+    }
+
+    /// Save a collection of Property to a JSON value.
+    fn save_any_of(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+        serde_json::Value::Array(
+            items
+                .iter()
+                .map(|item| item.to_value(ctx))
+                .collect::<Vec<_>>(),
+        )
+    }
+}
+
+// Serde for `Property` delegates to the canonical to_value/load_from_value
+// logic so the `kind` discriminator round-trips to its exact wire value. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for Property {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Property {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// Serde for `PropertyKind` wraps the variant into its parent `Property` and delegates
+// to the canonical to_value/load_from_value logic, so a bare `PropertyKind`
+// serializes to internally-tagged `{"kind": "<value>", ...}` — the same wire
+// form as its parent — instead of serde's externally-tagged `{"<Variant>": {...}}`.
+impl serde::Serialize for PropertyKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let parent = Property {
+            kind: self.clone(),
+            ..Default::default()
+        };
+        serde::Serialize::serialize(&parent.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for PropertyKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Property::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

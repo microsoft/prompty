@@ -16,7 +16,7 @@ use super::format_config::FormatConfig;
 use super::parser_config::ParserConfig;
 
 /// Template model for defining prompt templates. This model specifies the rendering engine used for slot filling prompts, the parser used to process the rendered template into API-compatible format, and additional options for the template engine. It allows for the creation of reusable templates that can be filled with dynamic data and processed to generate prompts for AI models.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Template {
     /// Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
     pub format: FormatConfig,
@@ -90,5 +90,21 @@ impl Template {
     /// Serialize Template to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
+    }
+}
+
+// Serde for `Template` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for Template {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Template {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

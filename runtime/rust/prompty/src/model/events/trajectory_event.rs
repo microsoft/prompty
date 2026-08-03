@@ -14,7 +14,7 @@ use super::super::context::{LoadContext, SaveContext};
 use super::redaction_metadata::RedactionMetadata;
 
 /// A compact, replay-oriented record of one harness-side action or observation.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TrajectoryEvent {
     /// Stable trajectory event identifier
     pub id: Option<String>,
@@ -167,5 +167,21 @@ impl TrajectoryEvent {
     /// Returns `None` if the field is null or not an object.
     pub fn as_data_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.data.as_object()
+    }
+}
+
+// Serde for `TrajectoryEvent` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for TrajectoryEvent {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for TrajectoryEvent {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

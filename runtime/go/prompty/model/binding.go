@@ -70,7 +70,7 @@ func (obj *Binding) ToYAML() (string, error) {
 
 // FromJSON creates Binding from JSON string
 func BindingFromJSON(jsonStr string) (Binding, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		return Binding{}, err
 	}
@@ -80,7 +80,7 @@ func BindingFromJSON(jsonStr string) (Binding, error) {
 
 // FromYAML creates Binding from YAML string
 func BindingFromYAML(yamlStr string) (Binding, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
 		return Binding{}, err
 	}

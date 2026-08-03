@@ -21,8 +21,8 @@ class Parser(Protocol):
 
     def parse(self, agent: Prompty, rendered: str, context: dict[str, Any] | None) -> list[Message]:
         """Parse rendered text into a structured message array"""
-        ...
+        raise NotImplementedError
 
     async def parse_async(self, agent: Prompty, rendered: str, context: dict[str, Any] | None) -> list[Message]:
         """Parse rendered text into a structured message array (async variant)"""
-        ...
+        raise NotImplementedError
