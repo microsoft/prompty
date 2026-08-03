@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "24"
 
@@ -58,7 +58,7 @@ jobs:
         working-directory: ./vscode/prompty
         run: npm run package-pre -- "$VERSION" --no-update-package-json --out "prompty-${VSIX_TIMESTAMP}.vsix"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: prompty-vsix-${{ env.VSIX_TIMESTAMP }}
           path: ./vscode/prompty/prompty-${{ env.VSIX_TIMESTAMP }}.vsix
