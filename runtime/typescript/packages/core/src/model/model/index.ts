@@ -5,4 +5,9 @@
 export { ModelOptions } from "./model-options";
 export { Model } from "./model";
 export { TokenUsage } from "./token-usage";
+export { InvocationUsage } from "./invocation-usage";
+export type { ModelLister } from "./model-lister";
 export { ModelInfo } from "./model-info";
+export { SubscriptionInfo } from "./subscription-info";
+export { AiResourceInfo } from "./ai-resource-info";
+export { ProjectInfo } from "./project-info";

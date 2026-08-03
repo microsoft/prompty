@@ -4,7 +4,9 @@
 //! is called with the span signature; factories that return `Some` produce a
 //! backend that receives key/value events for that span.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::mpsc::{SyncSender, sync_channel};
 use std::sync::{OnceLock, RwLock};
 use std::time::Instant;
 
@@ -56,6 +58,160 @@ impl SpanEmitter {
 }
 
 // ---------------------------------------------------------------------------
+// Bounded lifecycle telemetry dispatch
+// ---------------------------------------------------------------------------
+
+const LIFECYCLE_TELEMETRY_QUEUE_CAPACITY: usize = 256;
+const MAX_ACTIVE_LIFECYCLE_SPANS: usize = 64;
+
+enum LifecycleTelemetryMessage {
+    Start {
+        id: u64,
+        signature: &'static str,
+        initial_events: Vec<(String, Value)>,
+    },
+    Emit {
+        id: u64,
+        key: String,
+        value: Value,
+    },
+    Finish {
+        id: u64,
+    },
+}
+
+/// A non-blocking handle to a lifecycle telemetry span.
+///
+/// Lifecycle telemetry is intentionally best-effort: a saturated queue,
+/// unavailable worker, or blocked tracing backend drops telemetry rather than
+/// delaying canonical engine work.
+pub(crate) struct LifecycleTelemetrySpan {
+    id: u64,
+    sender: Option<SyncSender<LifecycleTelemetryMessage>>,
+}
+
+impl LifecycleTelemetrySpan {
+    /// Queue a lifecycle event without waiting for a tracing backend.
+    pub(crate) fn emit(&self, key: &str, value: Value) {
+        self.send(LifecycleTelemetryMessage::Emit {
+            id: self.id,
+            key: key.to_string(),
+            value,
+        });
+    }
+
+    /// Queue lifecycle span completion without waiting for a tracing backend.
+    pub(crate) fn finish(&self) {
+        self.send(LifecycleTelemetryMessage::Finish { id: self.id });
+    }
+
+    fn send(&self, message: LifecycleTelemetryMessage) {
+        if let Some(sender) = &self.sender {
+            let _ = sender.try_send(message);
+        }
+    }
+}
+
+struct LifecycleTelemetryDispatcher {
+    sender: SyncSender<LifecycleTelemetryMessage>,
+    next_id: AtomicU64,
+}
+
+impl LifecycleTelemetryDispatcher {
+    fn start(
+        &self,
+        signature: &'static str,
+        initial_events: Vec<(String, Value)>,
+    ) -> LifecycleTelemetrySpan {
+        let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+        let sender = self.sender.clone();
+        let span = LifecycleTelemetrySpan {
+            id,
+            sender: Some(sender),
+        };
+        span.send(LifecycleTelemetryMessage::Start {
+            id,
+            signature,
+            initial_events,
+        });
+        span
+    }
+}
+
+fn lifecycle_telemetry_dispatcher() -> Option<&'static LifecycleTelemetryDispatcher> {
+    static DISPATCHER: OnceLock<Option<LifecycleTelemetryDispatcher>> = OnceLock::new();
+    DISPATCHER
+        .get_or_init(|| {
+            let (sender, receiver) = sync_channel(LIFECYCLE_TELEMETRY_QUEUE_CAPACITY);
+            std::thread::Builder::new()
+                .name("prompty-lifecycle-telemetry".to_string())
+                .spawn(move || {
+                    let mut spans = HashMap::<u64, SpanEmitter>::new();
+                    let mut active_ids = VecDeque::<u64>::new();
+
+                    while let Ok(message) = receiver.recv() {
+                        match message {
+                            LifecycleTelemetryMessage::Start {
+                                id,
+                                signature,
+                                initial_events,
+                            } => {
+                                while spans.len() >= MAX_ACTIVE_LIFECYCLE_SPANS {
+                                    let Some(oldest_id) = active_ids.pop_front() else {
+                                        break;
+                                    };
+                                    if let Some(span) = spans.remove(&oldest_id) {
+                                        span.end();
+                                    }
+                                }
+
+                                let span = Tracer::start(signature);
+                                for (key, value) in initial_events {
+                                    span.emit(&key, &value);
+                                }
+                                spans.insert(id, span);
+                                active_ids.push_back(id);
+                            }
+                            LifecycleTelemetryMessage::Emit { id, key, value } => {
+                                if let Some(span) = spans.get(&id) {
+                                    span.emit(&key, &value);
+                                }
+                            }
+                            LifecycleTelemetryMessage::Finish { id } => {
+                                if let Some(span) = spans.remove(&id) {
+                                    span.end();
+                                }
+                                active_ids.retain(|active_id| *active_id != id);
+                            }
+                        }
+                    }
+                })
+                .ok()
+                .map(|_| LifecycleTelemetryDispatcher {
+                    sender,
+                    next_id: AtomicU64::new(1),
+                })
+        })
+        .as_ref()
+}
+
+/// Start a bounded, best-effort lifecycle telemetry span.
+///
+/// This is crate-private because it is reserved for canonical engine lifecycle
+/// projection; the public tracing API keeps its existing synchronous semantics.
+pub(crate) fn start_lifecycle_telemetry(
+    signature: &'static str,
+    initial_events: Vec<(String, Value)>,
+) -> LifecycleTelemetrySpan {
+    lifecycle_telemetry_dispatcher()
+        .map(|dispatcher| dispatcher.start(signature, initial_events))
+        .unwrap_or(LifecycleTelemetrySpan {
+            id: 0,
+            sender: None,
+        })
+}
+
+// ---------------------------------------------------------------------------
 // Global registry
 // ---------------------------------------------------------------------------
 
@@ -94,7 +250,14 @@ impl Tracer {
         let map = registry().read().unwrap();
         let mut backends = Vec::new();
         for factory in map.values() {
-            if let Some(backend) = factory.create(signature) {
+            // A telemetry backend must never prevent the prompt runtime from
+            // progressing, including while a backend opts into a new span.
+            let backend = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                factory.create(signature)
+            }))
+            .ok()
+            .flatten();
+            if let Some(backend) = backend {
                 backends.push(backend);
             }
         }
@@ -309,6 +472,14 @@ mod tests {
         }
     }
 
+    struct PanickingFactory;
+
+    impl TracerFactory for PanickingFactory {
+        fn create(&self, _signature: &str) -> Option<Box<dyn TracerBackend>> {
+            panic!("tracer factory failed");
+        }
+    }
+
     fn setup_memory_tracer() -> Arc<Mutex<Vec<(String, Value)>>> {
         Tracer::clear();
         let events = Arc::new(Mutex::new(Vec::new()));
@@ -400,6 +571,27 @@ mod tests {
         span.emit("x", &json!(2));
         span.end();
         assert!(events.lock().unwrap().is_empty());
+        Tracer::clear();
+    }
+
+    #[test]
+    #[serial]
+    fn test_panicking_factory_is_isolated() {
+        Tracer::clear();
+        Tracer::add("panicking", PanickingFactory);
+        let events = Arc::new(Mutex::new(Vec::new()));
+        Tracer::add(
+            "healthy",
+            MemoryFactory {
+                events: events.clone(),
+            },
+        );
+
+        let span = Tracer::start("still-runs");
+        span.emit("value", &json!(42));
+        span.end();
+
+        assert_eq!(events.lock().unwrap()[0], ("value".to_string(), json!(42)));
         Tracer::clear();
     }
 

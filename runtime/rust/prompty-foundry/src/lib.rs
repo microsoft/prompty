@@ -13,12 +13,17 @@
 //! // Now invoke/turn will use Azure OpenAI for agents with provider="foundry" or "azure"
 //! ```
 
+pub mod arm_discovery;
+mod auth;
 pub mod executor;
 pub mod models;
+pub mod oauth;
 pub mod processor;
 
+pub use arm_discovery::{AiResource, FoundryProject, Subscription};
 pub use executor::FoundryExecutor;
-pub use models::{list_models, list_models_async};
+pub use models::{FoundryModelLister, list_models, list_models_async};
+pub use oauth::{AuthCodeFlowInit, DeviceCodeResponse, TokenResponse};
 pub use processor::FoundryProcessor;
 
 /// Register the Foundry executor and processor in the global registry.

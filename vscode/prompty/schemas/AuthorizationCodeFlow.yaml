@@ -1,0 +1,14 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AuthorizationCodeFlow.yaml
+type: object
+properties:
+  authUrl:
+    type: string
+    description: The authorization URL the host opens for the user
+  codeVerifier:
+    type: string
+    description: The PKCE verifier retained by the host for token exchange
+required:
+  - authUrl
+  - codeVerifier
+description: Provider-neutral initialization result for an authorization-code flow.

@@ -19,14 +19,19 @@ use std::collections::HashMap;
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Load `runtime/rust/.env` (KEY=VALUE lines) into the process environment.
+/// Load the live-test `.env` (KEY=VALUE lines) into the process environment.
+/// Tries `runtime/rust/.env` first, then the repository-root `.env`.
 /// Already-set variables are not overwritten.
 fn load_dotenv() {
-    let env_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .join(".env");
-    if let Ok(contents) = std::fs::read_to_string(env_path) {
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    let candidates = [
+        manifest.parent().map(|p| p.join(".env")),
+        manifest.ancestors().nth(3).map(|p| p.join(".env")),
+    ];
+    for env_path in candidates.into_iter().flatten() {
+        let Ok(contents) = std::fs::read_to_string(&env_path) else {
+            continue;
+        };
         for line in contents.lines() {
             let line = line.trim();
             if line.is_empty() || line.starts_with('#') {

@@ -21,11 +21,18 @@ use std::collections::HashMap;
 // ---------------------------------------------------------------------------
 
 fn load_dotenv() {
-    let env_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .join(".env");
-    if let Ok(contents) = std::fs::read_to_string(env_path) {
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    // Prefer the runtime-local `runtime/rust/.env`, then fall back to the
+    // repository-root `.env` so a single root file can drive every provider's
+    // live tests. Already-set variables are never overwritten.
+    let candidates = [
+        manifest.parent().map(|p| p.join(".env")),
+        manifest.ancestors().nth(3).map(|p| p.join(".env")),
+    ];
+    for env_path in candidates.into_iter().flatten() {
+        let Ok(contents) = std::fs::read_to_string(&env_path) else {
+            continue;
+        };
         for line in contents.lines() {
             let line = line.trim();
             if line.is_empty() || line.starts_with('#') {
@@ -294,4 +301,79 @@ async fn test_azure_agent_tool_calling() {
         "Agent response should mention weather info: {text}"
     );
     eprintln!("Azure agent result: {text}");
+}
+
+/// Acquire an `https://ai.azure.com` bearer token from the Azure CLI login.
+///
+/// Returns `None` when the CLI is unavailable or not logged in so the test can
+/// skip cleanly rather than fail. Handles the Windows `az.cmd` shim.
+fn cli_ai_token() -> Option<String> {
+    let args = [
+        "account",
+        "get-access-token",
+        "--resource",
+        "https://ai.azure.com",
+        "--query",
+        "accessToken",
+        "-o",
+        "tsv",
+    ];
+    let programs: &[&str] = if cfg!(windows) {
+        &["az.cmd", "az"]
+    } else {
+        &["az"]
+    };
+    for program in programs {
+        if let Ok(output) = std::process::Command::new(program).args(args).output() {
+            if output.status.success() {
+                let token = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if !token.is_empty() {
+                    return Some(token);
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Live discovery via the caller-supplied bearer-token path (as used by hosts
+/// that already hold an interactive Entra token). Requires
+/// `FOUNDRY_PROJECT_ENDPOINT` and an `az` login.
+#[tokio::test]
+#[ignore]
+async fn test_foundry_list_deployments_with_cli_token() {
+    setup();
+    skip_if_no_env!("FOUNDRY_PROJECT_ENDPOINT");
+
+    let Some(token) = cli_ai_token() else {
+        eprintln!("Skipping: `az account get-access-token` unavailable");
+        return;
+    };
+
+    let endpoint = std::env::var("FOUNDRY_PROJECT_ENDPOINT").unwrap();
+    let connection = json!({
+        "kind": "foundry",
+        "endpoint": endpoint,
+        "apiKey": token,
+    });
+
+    let models = prompty_foundry::list_models_async(&connection)
+        .await
+        .expect("foundry deployment listing should succeed");
+
+    assert!(!models.is_empty(), "expected at least one deployment");
+    let first = &models[0];
+    assert!(!first.id.is_empty(), "deployment should have an id");
+    assert!(
+        first.display_name.is_some(),
+        "v1 data-plane deployment should map a display name: {first:?}"
+    );
+    eprintln!(
+        "Foundry deployments: {}",
+        models
+            .iter()
+            .map(|m| m.id.as_str())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 }

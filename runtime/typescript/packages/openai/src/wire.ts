@@ -255,14 +255,14 @@ function modelOptionsToWire(
 }
 
 /** Convert a Property list to a JSON Schema `{type: "object", properties: ...}`. */
-function schemaToWire(properties: unknown[]): Record<string, unknown> {
+function schemaToWire(properties: unknown[], strict: boolean = false): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   const required: string[] = [];
 
   for (const p of properties as Array<{ name?: string; required?: boolean } & Parameters<typeof propertyToJsonSchema>[0]>) {
     if (!p.name) continue;
-    props[p.name] = propertyToJsonSchema(p);
-    if (p.required) required.push(p.name);
+    props[p.name] = propertyToJsonSchema(p, strict && !p.required, strict);
+    if (strict || p.required) required.push(p.name);
   }
 
   const result: Record<string, unknown> = { type: "object", properties: props };
@@ -273,14 +273,17 @@ function schemaToWire(properties: unknown[]): Record<string, unknown> {
 /** Convert a single Property to a JSON Schema definition (recursive for structured output). */
 function propertyToJsonSchema(prop: {
   kind?: string;
+  required?: boolean;
   description?: string;
   enumValues?: unknown[];
   items?: unknown;
   properties?: unknown[];
-}): Record<string, unknown> {
-  const schema: Record<string, unknown> = {
-    type: KIND_TO_JSON_TYPE[prop.kind ?? "string"] ?? "string",
-  };
+  nullable?: boolean;
+  oneOf?: unknown[];
+  anyOf?: unknown[];
+}, optional: boolean = false, strict: boolean = false): Record<string, unknown> {
+  const jsonType = KIND_TO_JSON_TYPE[prop.kind ?? ""];
+  const schema: Record<string, unknown> = jsonType ? { type: jsonType } : {};
 
   if (prop.description) schema.description = prop.description;
   if (prop.enumValues && prop.enumValues.length > 0) schema.enum = prop.enumValues;
@@ -288,7 +291,7 @@ function propertyToJsonSchema(prop: {
   // Array items
   if (prop.kind === "array") {
     schema.items = prop.items
-      ? propertyToJsonSchema(prop.items as typeof prop)
+      ? propertyToJsonSchema(prop.items as typeof prop, false, strict)
       : { type: "string" };
   }
 
@@ -299,19 +302,50 @@ function propertyToJsonSchema(prop: {
       const req: string[] = [];
       for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
         if (!p.name) continue;
-        nested[p.name] = propertyToJsonSchema(p);
-        req.push(p.name);
+          nested[p.name] = propertyToJsonSchema(p, strict && !p.required, strict);
+          if (strict || p.required) req.push(p.name);
       }
       schema.properties = nested;
-      schema.required = req;
+      if (req.length > 0) schema.required = req;
     } else {
       schema.properties = {};
-      schema.required = [];
     }
     schema.additionalProperties = false;
   }
 
+  if (prop.kind === "union") {
+    const hasOneOf = Array.isArray(prop.oneOf) && prop.oneOf.length > 0;
+    const hasAnyOf = Array.isArray(prop.anyOf) && prop.anyOf.length > 0;
+    if (hasOneOf === hasAnyOf) {
+      throw new Error(
+        "UnionProperty must specify exactly one non-empty composition: oneOf or anyOf",
+      );
+    }
+    if (hasOneOf) {
+      throw new Error(
+        "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition",
+      );
+    }
+    schema.anyOf = prop.anyOf!.map((branch) =>
+      propertyToJsonSchema(branch as typeof prop, false, strict),
+    );
+  }
+
+  if (prop.nullable || (strict && optional)) addNullability(schema);
   return schema;
+}
+
+function addNullability(schema: Record<string, unknown>): void {
+  if (typeof schema.type === "string") {
+    schema.type = [schema.type, "null"];
+  } else if (Array.isArray(schema.anyOf)) {
+    schema.anyOf.push({ type: "null" });
+  } else if (Object.keys(schema).length > 0) {
+    schema.anyOf = [{ ...schema }, { type: "null" }];
+  }
+  if (Array.isArray(schema.enum) && !schema.enum.includes(null)) {
+    schema.enum.push(null);
+  }
 }
 
 function toolsToWire(agent: Prompty): Record<string, unknown>[] {
@@ -334,7 +368,7 @@ function toolsToWire(agent: Prompty): Record<string, unknown>[] {
         if (boundNames.size > 0) {
           params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
         }
-        funcDef.parameters = schemaToWire(params);
+        funcDef.parameters = schemaToWire(params, Boolean((t as { strict?: boolean }).strict));
       }
 
       // Strict mode
@@ -390,7 +424,7 @@ function projectPromptyTool(tool: Record<string, unknown>, parent: Prompty): Rec
   if (boundNames.size > 0) {
     params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
   }
-  funcDef.parameters = schemaToWire(params);
+  funcDef.parameters = schemaToWire(params, Boolean((tool as { strict?: boolean }).strict));
 
   const strict = (tool as { strict?: boolean }).strict;
   if (strict) {
@@ -412,7 +446,11 @@ function outputsToWire(agent: Prompty): Record<string, unknown> | null {
 
   for (const prop of outputs) {
     if (!prop.name) continue;
-    properties[prop.name] = propertyToJsonSchema(prop as Parameters<typeof propertyToJsonSchema>[0]);
+    properties[prop.name] = propertyToJsonSchema(
+      prop as Parameters<typeof propertyToJsonSchema>[0],
+      !prop.required,
+      true,
+    );
     required.push(prop.name);
   }
 
@@ -426,7 +464,7 @@ function outputsToWire(agent: Prompty): Record<string, unknown> | null {
       schema: {
         type: "object",
         properties,
-        required,
+        ...(required.length > 0 ? { required } : {}),
         additionalProperties: false,
       },
     },
@@ -600,7 +638,11 @@ function outputsToResponsesWire(agent: Prompty): Record<string, unknown> | null 
 
   for (const prop of outputs) {
     if (!prop.name) continue;
-    properties[prop.name] = propertyToJsonSchema(prop as Parameters<typeof propertyToJsonSchema>[0]);
+    properties[prop.name] = propertyToJsonSchema(
+      prop as Parameters<typeof propertyToJsonSchema>[0],
+      !prop.required,
+      true,
+    );
     required.push(prop.name);
   }
 
@@ -614,7 +656,7 @@ function outputsToResponsesWire(agent: Prompty): Record<string, unknown> | null 
       schema: {
         type: "object",
         properties,
-        required,
+        ...(required.length > 0 ? { required } : {}),
         additionalProperties: false,
       },
     },

@@ -20,6 +20,7 @@ fn test_property_load_json() {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -45,6 +46,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:
@@ -70,6 +72,7 @@ fn test_property_roundtrip() {
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [

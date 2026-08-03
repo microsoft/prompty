@@ -29,7 +29,10 @@ func LoadAnthropicImageBlock(data interface{}, ctx *LoadContext) (AnthropicImage
 		}
 		if val, ok := m["source"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadAnthropicImageSource(m, ctx)
+				loaded, err := LoadAnthropicImageSource(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Source = loaded
 			}
 		}

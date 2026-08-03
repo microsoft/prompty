@@ -79,10 +79,15 @@ impl Parser for PromptyChatParser {
 
 /// Generate a cryptographically random hex nonce for strict mode.
 fn generate_nonce() -> String {
+    use std::fmt::Write;
+
     use rand::Rng;
     let mut rng = rand::rng();
     let bytes: [u8; 8] = rng.random();
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    bytes.iter().fold(String::new(), |mut acc, b| {
+        let _ = write!(acc, "{b:02x}");
+        acc
+    })
 }
 
 /// Parse rendered text into a list of messages, validating nonces in strict mode.

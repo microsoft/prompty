@@ -5,7 +5,7 @@
 
 use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
-use prompty::types::{ContentPart, ContentPartKind, Message, Role};
+use prompty::types::{ContentPart, Message, Role};
 use prompty_openai::wire;
 use serde_json::{Value, json};
 
@@ -166,10 +166,11 @@ macro_rules! wire_test {
             let actual = match api_type {
                 "chat" | "agent" => wire::build_chat_args(&agent, &messages),
                 "responses" => wire::build_responses_args(&agent, &messages),
-                "embedding" => wire::build_embedding_args(&agent, &messages),
-                "image" => wire::build_image_args(&agent, &messages),
+                "embedding" => Ok(wire::build_embedding_args(&agent, &messages)),
+                "image" => Ok(wire::build_image_args(&agent, &messages)),
                 _ => panic!("Unknown apiType: {api_type}"),
-            };
+            }
+            .unwrap_or_else(|error| panic!("Vector '{test_name}' schema error: {error}"));
 
             let expected = &vector["expected"]["request_body"];
 
@@ -205,3 +206,192 @@ wire_test!(chat_image_base64);
 wire_test!(responses_simple);
 wire_test!(responses_with_tools);
 wire_test!(responses_structured_output);
+
+fn function_parameters_schema(parameters: Value) -> Result<Value, wire::SchemaError> {
+    let agent = Prompty::load_from_value(
+        &json!({
+            "name": "set-row-visual-test",
+            "kind": "prompt",
+            "model": { "id": "gpt-4", "provider": "openai" },
+            "instructions": "test",
+            "tools": [{
+                "name": "set_row_visual",
+                "kind": "function",
+                "strict": true,
+                "parameters": parameters,
+            }],
+        }),
+        &LoadContext::default(),
+    );
+
+    wire::build_chat_args(&agent, &[]).map(|request| {
+        request
+            .pointer("/tools/0/function/parameters")
+            .cloned()
+            .expect("function parameters schema")
+    })
+}
+
+fn assert_no_empty_type(schema: &Value) {
+    match schema {
+        Value::Object(values) => {
+            assert_ne!(
+                values.get("type"),
+                Some(&Value::String(String::new())),
+                "schemas must not emit an empty JSON Schema type: {schema}"
+            );
+            for value in values.values() {
+                assert_no_empty_type(value);
+            }
+        }
+        Value::Array(values) => {
+            for value in values {
+                assert_no_empty_type(value);
+            }
+        }
+        _ => {}
+    }
+}
+
+#[test]
+fn set_row_visual_schema_supports_nullable_unions_and_nested_optionality() {
+    let schema = function_parameters_schema(json!([
+        {
+            "name": "row",
+            "kind": "object",
+            "required": true,
+            "properties": [
+                {
+                    "name": "color",
+                    "kind": "string",
+                    "nullable": true,
+                    "required": true
+                },
+                {
+                    "name": "border",
+                    "kind": "union",
+                    "nullable": true,
+                    "anyOf": [
+                        { "kind": "string", "enumValues": ["thin"] },
+                        { "kind": "string", "enumValues": ["thick"] }
+                    ],
+                    "required": false
+                },
+                {
+                    "name": "fill",
+                    "kind": "union",
+                    "anyOf": [
+                        { "kind": "string" },
+                        {
+                            "kind": "object",
+                            "properties": [
+                                { "name": "theme", "kind": "string", "required": true },
+                                { "name": "tint", "kind": "float", "required": false }
+                            ]
+                        }
+                    ],
+                    "required": true
+                }
+            ]
+        }
+    ]))
+    .expect("valid anyOf union schema");
+
+    assert_eq!(schema["properties"]["row"]["type"], "object");
+    assert_eq!(
+        schema["properties"]["row"]["required"],
+        json!(["color", "fill"])
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["color"]["type"],
+        json!(["string", "null"])
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["border"]["anyOf"][0]["type"],
+        "string"
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["border"]["anyOf"][1]["type"],
+        "string"
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["border"]["anyOf"][2],
+        json!({ "type": "null" })
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["fill"]["anyOf"][0]["type"],
+        "string"
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["fill"]["anyOf"][1]["type"],
+        "object"
+    );
+    assert_eq!(
+        schema["properties"]["row"]["properties"]["fill"]["anyOf"][1]["required"],
+        json!(["theme"])
+    );
+    assert_no_empty_type(&schema);
+}
+
+#[test]
+fn strict_openai_schemas_use_required_nullable_optionals_and_nullable_enums() {
+    let schema = function_parameters_schema(json!([
+        {
+            "name": "choice",
+            "kind": "string",
+            "required": false,
+            "nullable": true,
+            "enumValues": ["yes", "no"]
+        },
+        {
+            "name": "extension",
+            "kind": "my-extension",
+            "required": false,
+            "nullable": true
+        }
+    ]))
+    .expect("strict schema");
+
+    assert_eq!(schema["required"], json!(["choice", "extension"]));
+    assert_eq!(
+        schema["properties"]["choice"]["type"],
+        json!(["string", "null"])
+    );
+    assert_eq!(
+        schema["properties"]["choice"]["enum"],
+        json!(["yes", "no", null])
+    );
+    assert_eq!(schema["properties"]["extension"], json!({}));
+}
+
+#[test]
+fn strict_openai_schemas_reject_one_of_unions() {
+    let result = function_parameters_schema(json!([{
+        "name": "invalid",
+        "kind": "union",
+        "oneOf": [{"kind": "string"}, {"kind": "integer"}]
+    }]));
+
+    assert!(
+        result.is_err(),
+        "oneOf must be rejected before sending to OpenAI"
+    );
+}
+
+#[test]
+fn openai_schemas_reject_malformed_unions_without_panicking() {
+    for union in [
+        json!({"name": "invalid", "kind": "union"}),
+        json!({
+            "name": "invalid",
+            "kind": "union",
+            "oneOf": [{"kind": "string"}],
+            "anyOf": [{"kind": "integer"}]
+        }),
+    ] {
+        assert!(
+            function_parameters_schema(json!([union])).is_err(),
+            "malformed unions must return an error"
+        );
+    }
+}

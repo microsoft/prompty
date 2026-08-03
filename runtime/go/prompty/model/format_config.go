@@ -82,7 +82,7 @@ func (obj *FormatConfig) ToYAML() (string, error) {
 
 // FromJSON creates FormatConfig from JSON string
 func FormatConfigFromJSON(jsonStr string) (FormatConfig, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		return FormatConfig{}, err
 	}
@@ -92,7 +92,7 @@ func FormatConfigFromJSON(jsonStr string) (FormatConfig, error) {
 
 // FromYAML creates FormatConfig from YAML string
 func FormatConfigFromYAML(yamlStr string) (FormatConfig, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
 		return FormatConfig{}, err
 	}

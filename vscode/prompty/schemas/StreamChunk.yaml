@@ -11,6 +11,8 @@ properties:
       - type: string
         const: tool
       - type: string
+        const: usage
+      - type: string
         const: error
     description: The kind of stream chunk
 required:

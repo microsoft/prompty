@@ -11,8 +11,11 @@ use async_trait::async_trait;
 use serde_json::{Value, json};
 
 use prompty::interfaces::{InvokerError, Processor};
-use prompty::model::Prompty;
-use prompty::types::ToolCall;
+use prompty::model::{
+    InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+    ModelInvocationResponse, ModelToolRequest, Prompty,
+};
+use prompty::types::{Message, Role, ToolCall};
 
 /// Anthropic processor implementing the `Processor` trait.
 pub struct AnthropicProcessor;
@@ -21,6 +24,53 @@ pub struct AnthropicProcessor;
 impl Processor for AnthropicProcessor {
     async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
         process_response(agent, &response)
+    }
+
+    async fn process_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        _request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        let output = process_response(agent, &response)?;
+        let tool_requests = extract_tool_calls(&response)
+            .into_iter()
+            .map(|call| ModelToolRequest {
+                id: call.id,
+                name: call.name,
+                arguments: serde_json::from_str(&call.arguments)
+                    .ok()
+                    .or(Some(Value::String(call.arguments))),
+                metadata: Value::Null,
+            })
+            .collect::<Vec<_>>();
+        // Anthropic Messages API has no continuation handle that can restore
+        // the complete provider-visible context, so do not fabricate one.
+        Ok(ModelInvocationResponse {
+            output: tool_requests.is_empty().then_some(output),
+            usage: None,
+            assistant_messages: portable_assistant_messages(&response),
+            tool_requests,
+            next_context_state: Some(InvocationContextState {
+                portability: InvocationContextPortability::Portable,
+                delegated_state: Vec::new(),
+            }),
+            metadata: Value::Null,
+        })
+    }
+
+    async fn process_raw_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        let mut mapped = self
+            .process_with_context(agent, response.clone(), request)
+            .await?;
+        mapped.output = Some(response);
+        mapped.tool_requests.clear();
+        Ok(mapped)
     }
 
     fn process_stream(
@@ -32,6 +82,27 @@ impl Processor for AnthropicProcessor {
     > {
         Ok(Box::pin(AnthropicStreamProcessor::new(inner)))
     }
+}
+
+fn portable_assistant_messages(response: &Value) -> Vec<Message> {
+    let content = response
+        .get("content")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+    let text = content
+        .iter()
+        .filter(|block| block.get("type").and_then(Value::as_str) == Some("text"))
+        .filter_map(|block| block.get("text").and_then(Value::as_str))
+        .collect::<Vec<_>>()
+        .join("");
+    let mut assistant = Message::with_text(Role::Assistant, text);
+    if !content.is_empty() {
+        assistant
+            .metadata_mut()
+            .insert("content".to_string(), Value::Array(content));
+    }
+    vec![assistant]
 }
 
 /// Process an Anthropic Messages API response.
@@ -145,7 +216,7 @@ use std::collections::BTreeMap;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use prompty::types::StreamChunk;
+use prompty::types::{StreamChunk, Usage};
 
 /// Anthropic stream processor — converts SSE JSON events into `StreamChunk` items.
 ///
@@ -154,16 +225,20 @@ use prompty::types::StreamChunk;
 /// - `content_block_start` with `content_block.type == "tool_use"` → accumulates tool call
 /// - `content_block_delta` with `delta.type == "input_json_delta"` → appends to tool args
 /// - On stream end, yields accumulated tool calls as `StreamChunk::Tool`
+/// - On stream end, yields one cumulative `StreamChunk::Usage` after tool calls
 struct AnthropicStreamProcessor {
     inner: Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
     tool_call_acc: BTreeMap<usize, (String, String, String)>, // index → (id, name, arguments)
     pending: std::collections::VecDeque<StreamChunk>,
     phase: AnthropicStreamPhase,
+    usage: Usage,
+    has_usage: bool,
 }
 
 enum AnthropicStreamPhase {
     Streaming,
     YieldingTools(Vec<ToolCall>, usize),
+    YieldingUsage(Usage),
     Done,
 }
 
@@ -174,6 +249,8 @@ impl AnthropicStreamProcessor {
             tool_call_acc: BTreeMap::new(),
             pending: std::collections::VecDeque::new(),
             phase: AnthropicStreamPhase::Streaming,
+            usage: Usage::default(),
+            has_usage: false,
         }
     }
 }
@@ -196,6 +273,28 @@ impl futures::Stream for AnthropicStreamProcessor {
                         let event_type = event.get("type").and_then(Value::as_str).unwrap_or("");
 
                         match event_type {
+                            "message_start" => {
+                                if let Some(usage) = event.pointer("/message/usage") {
+                                    this.usage.input_tokens = usage
+                                        .get("input_tokens")
+                                        .and_then(Value::as_u64)
+                                        .unwrap_or(0);
+                                    this.has_usage = true;
+                                }
+                                cx.waker().wake_by_ref();
+                                Poll::Pending
+                            }
+                            "message_delta" => {
+                                if let Some(usage) = event.get("usage") {
+                                    this.usage.output_tokens = usage
+                                        .get("output_tokens")
+                                        .and_then(Value::as_u64)
+                                        .unwrap_or(0);
+                                    this.has_usage = true;
+                                }
+                                cx.waker().wake_by_ref();
+                                Poll::Pending
+                            }
                             "content_block_delta" => {
                                 if let Some(delta) = event.get("delta") {
                                     let delta_type =
@@ -294,8 +393,7 @@ impl futures::Stream for AnthropicStreamProcessor {
                             cx.waker().wake_by_ref();
                             Poll::Pending
                         } else {
-                            this.phase = AnthropicStreamPhase::Done;
-                            Poll::Ready(None)
+                            this.finish_with_usage(cx)
                         }
                     }
                     Poll::Pending => Poll::Pending,
@@ -307,11 +405,29 @@ impl futures::Stream for AnthropicStreamProcessor {
                     *idx += 1;
                     Poll::Ready(Some(StreamChunk::Tool(tc)))
                 } else {
-                    this.phase = AnthropicStreamPhase::Done;
-                    Poll::Ready(None)
+                    this.finish_with_usage(cx)
                 }
             }
+            AnthropicStreamPhase::YieldingUsage(usage) => {
+                let usage = *usage;
+                this.phase = AnthropicStreamPhase::Done;
+                Poll::Ready(Some(StreamChunk::Usage(usage)))
+            }
             AnthropicStreamPhase::Done => Poll::Ready(None),
+        }
+    }
+}
+
+impl AnthropicStreamProcessor {
+    fn finish_with_usage(&mut self, cx: &Context<'_>) -> Poll<Option<StreamChunk>> {
+        if self.has_usage {
+            self.usage.total_tokens = self.usage.input_tokens + self.usage.output_tokens;
+            self.phase = AnthropicStreamPhase::YieldingUsage(self.usage);
+            cx.waker().wake_by_ref();
+            Poll::Pending
+        } else {
+            self.phase = AnthropicStreamPhase::Done;
+            Poll::Ready(None)
         }
     }
 }
@@ -351,6 +467,33 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_stream_emits_terminal_usage() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({"type": "message_start", "message": {"usage": {"input_tokens": 10}}}),
+            json!({"type": "message_delta", "usage": {"output_tokens": 5}}),
+            json!({"type": "message_stop"}),
+        ];
+        let mut stream = AnthropicStreamProcessor::new(futures::stream::iter(chunks));
+        let mut usage = None;
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Usage(value) = chunk {
+                usage = Some(value);
+            }
+        }
+
+        assert_eq!(
+            usage,
+            Some(Usage {
+                input_tokens: 10,
+                output_tokens: 5,
+                total_tokens: 15,
+            })
+        );
+    }
+
+    #[tokio::test]
     async fn test_process_text_response() {
         let agent = make_agent();
         let response = json!({
@@ -365,6 +508,38 @@ mod tests {
 
         let result = AnthropicProcessor.process(&agent, response).await.unwrap();
         assert_eq!(result, "Hello!");
+    }
+
+    #[tokio::test]
+    async fn test_context_response_is_portable_without_native_continuation() {
+        let agent = make_agent();
+        let response = json!({
+            "id": "msg_01",
+            "type": "message",
+            "content": [
+                {"type": "text", "text": "Hello!"},
+                {"type": "tool_use", "id": "toolu_1", "name": "weather", "input": {"city": "Paris"}}
+            ]
+        });
+
+        let result = AnthropicProcessor
+            .process_with_context(
+                &agent,
+                response,
+                &ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default()),
+            )
+            .await
+            .unwrap();
+
+        let state = result.next_context_state.expect("context state");
+        assert_eq!(state.portability, InvocationContextPortability::Portable);
+        assert!(state.delegated_state.is_empty());
+        assert_eq!(result.assistant_messages.len(), 1);
+        assert_eq!(result.assistant_messages[0].text_content(), "Hello!");
+        assert_eq!(
+            result.assistant_messages[0].metadata["content"][1]["type"],
+            "tool_use"
+        );
     }
 
     #[tokio::test]

@@ -16,6 +16,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:
@@ -32,6 +33,7 @@ enumValues:
         Assert.Equal("string", instance.Kind);
         Assert.Equal("A description of the input property", instance.Description);
         Assert.True(instance.Required);
+        Assert.True(instance.Nullable);
         Assert.Equal("default value", instance.Default);
         Assert.Equal("example value", instance.Example);
     }
@@ -45,6 +47,7 @@ enumValues:
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -61,6 +64,7 @@ enumValues:
         Assert.Equal("string", instance.Kind);
         Assert.Equal("A description of the input property", instance.Description);
         Assert.True(instance.Required);
+        Assert.True(instance.Nullable);
         Assert.Equal("default value", instance.Default);
         Assert.Equal("example value", instance.Example);
     }
@@ -75,6 +79,7 @@ enumValues:
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -97,6 +102,7 @@ enumValues:
         Assert.Equal("string", reloaded.Kind);
         Assert.Equal("A description of the input property", reloaded.Description);
         Assert.True(reloaded.Required);
+        Assert.True(reloaded.Nullable);
         Assert.Equal("default value", reloaded.Default);
         Assert.Equal("example value", reloaded.Example);
     }
@@ -110,6 +116,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:
@@ -131,6 +138,7 @@ enumValues:
         Assert.Equal("string", reloaded.Kind);
         Assert.Equal("A description of the input property", reloaded.Description);
         Assert.True(reloaded.Required);
+        Assert.True(reloaded.Nullable);
         Assert.Equal("default value", reloaded.Default);
         Assert.Equal("example value", reloaded.Example);
     }
@@ -144,6 +152,7 @@ enumValues:
   "kind": "string",
   "description": "A description of the input property",
   "required": true,
+  "nullable": true,
   "default": "default value",
   "example": "example value",
   "enumValues": [
@@ -170,6 +179,7 @@ name: my-input
 kind: string
 description: A description of the input property
 required: true
+nullable: true
 default: default value
 example: example value
 enumValues:

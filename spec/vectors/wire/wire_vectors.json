@@ -1019,8 +1019,8 @@
             "schema": {
               "type": "object",
               "properties": {
-                "city": { "type": "string" },
-                "temp": { "type": "integer" }
+                "city": { "type": ["string", "null"] },
+                "temp": { "type": ["integer", "null"] }
               },
               "required": ["city", "temp"],
               "additionalProperties": false

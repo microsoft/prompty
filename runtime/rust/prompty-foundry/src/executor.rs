@@ -14,6 +14,8 @@ use prompty::types::Message;
 
 use prompty_openai::wire;
 
+use crate::auth::{connection_api_key, connection_bearer_token};
+
 /// Shared HTTP client — reuses connection pool across requests.
 static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
@@ -40,7 +42,8 @@ impl Executor for FoundryExecutor {
             .unwrap_or("chat");
 
         let body = match api_type {
-            "chat" | "agent" => wire::build_chat_args(agent, messages),
+            "chat" | "agent" => wire::build_chat_args(agent, messages)
+                .map_err(|error| InvokerError::Validation(error.to_string()))?,
             "embedding" => wire::build_embedding_args(agent, messages),
             "image" => wire::build_image_args(agent, messages),
             other => {
@@ -108,7 +111,8 @@ impl Executor for FoundryExecutor {
             ));
         }
 
-        let mut body = wire::build_chat_args(agent, messages);
+        let mut body = wire::build_chat_args(agent, messages)
+            .map_err(|error| InvokerError::Validation(error.to_string()))?;
         // Force stream: true
         if let Some(obj) = body.as_object_mut() {
             obj.insert("stream".into(), Value::Bool(true));
@@ -318,12 +322,12 @@ async fn get_auth_header(agent: &Prompty) -> Result<(&'static str, String), Invo
     let conn = resolve_connection(agent)?;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
-    // Try connection-level API key
-    if let Some(key) = conn
-        .get("apiKey")
-        .or(conn.get("api_key"))
-        .and_then(|k| k.as_str())
-    {
+    let connection_credential = if kind == "foundry" {
+        connection_bearer_token(&conn)
+    } else {
+        connection_api_key(&conn)
+    };
+    if let Some(key) = connection_credential {
         if !key.is_empty() {
             return if kind == "foundry" {
                 Ok(("Authorization", format!("Bearer {key}")))
@@ -603,6 +607,22 @@ mod tests {
         let (name, value) = get_auth_header(&agent).await.unwrap();
         assert_eq!(name, "api-key");
         assert_eq!(value, "my-azure-key");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_auth_header_foundry_bearer_token() {
+        let agent = make_agent(json!({
+            "id": "gpt-4o",
+            "connection": {
+                "kind": "foundry",
+                "endpoint": "https://resource.services.ai.azure.com/api/projects/project",
+                "bearerToken": "caller-token"
+            }
+        }));
+        let (name, value) = get_auth_header(&agent).await.unwrap();
+        assert_eq!(name, "Authorization");
+        assert_eq!(value, ["Bearer", "caller-token"].join(" "));
     }
 
     #[test]

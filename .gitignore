@@ -19,6 +19,8 @@ schema/tsp-output/*
 !schema/tsp-output/.typra-generated/export-surfaces.json
 !schema/tsp-output/.typra-generated/hydration-seams.json
 !schema/tsp-output/.typra-generated/manifest.json
+# report.json carries a generatedAt timestamp (non-deterministic) — do not track
+schema/tsp-output/.typra-generated/report.json
 !schema/tsp-output/json-ast/
 !schema/tsp-output/json-ast/model.json
 .playwright-mcp/

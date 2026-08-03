@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -36,22 +37,30 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
-			switch discriminator {
-			case "reference":
-				return LoadReferenceConnection(data, ctx)
-			case "remote":
-				return LoadRemoteConnection(data, ctx)
-			case "key":
-				return LoadApiKeyConnection(data, ctx)
-			case "anonymous":
-				return LoadAnonymousConnection(data, ctx)
-			case "oauth":
-				return LoadOAuthConnection(data, ctx)
-			case "foundry":
-				return LoadFoundryConnection(data, ctx)
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "reference":
+					return LoadReferenceConnection(data, ctx)
+				case "remote":
+					return LoadRemoteConnection(data, ctx)
+				case "key":
+					return LoadApiKeyConnection(data, ctx)
+				case "anonymous":
+					return LoadAnonymousConnection(data, ctx)
+				case "oauth":
+					return LoadOAuthConnection(data, ctx)
+				case "foundry":
+					return LoadFoundryConnection(data, ctx)
+				default:
+					return nil, fmt.Errorf("unknown Connection discriminator value: %s", discriminator)
+				}
+			default:
+				return nil, fmt.Errorf("unknown Connection discriminator value: %v", discriminator)
 			}
 		}
 	}
+	return nil, fmt.Errorf("missing Connection discriminator property: kind")
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
@@ -127,9 +136,11 @@ func ConnectionFromYAML(yamlStr string) (interface{}, error) {
 // ReferenceConnection represents Connection configuration for AI services using named connections.
 
 type ReferenceConnection struct {
-	Kind   string  `json:"kind" yaml:"kind"`
-	Name   string  `json:"name" yaml:"name"`
-	Target *string `json:"target,omitempty" yaml:"target,omitempty"`
+	Kind               string              `json:"kind" yaml:"kind"`
+	AuthenticationMode *AuthenticationMode `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
+	UsageDescription   *string             `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
+	Name               string              `json:"name" yaml:"name"`
+	Target             *string             `json:"target,omitempty" yaml:"target,omitempty"`
 }
 
 // LoadReferenceConnection creates a ReferenceConnection from a map[string]interface{}
@@ -140,6 +151,14 @@ func LoadReferenceConnection(data interface{}, ctx *LoadContext) (ReferenceConne
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["authenticationMode"]; ok && val != nil {
+			v := AuthenticationMode(val.(string))
+			result.AuthenticationMode = &v
+		}
+		if val, ok := m["usageDescription"]; ok && val != nil {
+			v := string(val.(string))
+			result.UsageDescription = &v
 		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
@@ -157,6 +176,12 @@ func LoadReferenceConnection(data interface{}, ctx *LoadContext) (ReferenceConne
 func (obj ReferenceConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
+	if obj.AuthenticationMode != nil {
+		result["authenticationMode"] = string(*obj.AuthenticationMode)
+	}
+	if obj.UsageDescription != nil {
+		result["usageDescription"] = *obj.UsageDescription
+	}
 	result["name"] = obj.Name
 	if obj.Target != nil {
 		result["target"] = *obj.Target
@@ -206,9 +231,11 @@ func ReferenceConnectionFromYAML(yamlStr string) (ReferenceConnection, error) {
 // RemoteConnection represents Connection configuration for AI services using named connections.
 
 type RemoteConnection struct {
-	Kind     string `json:"kind" yaml:"kind"`
-	Name     string `json:"name" yaml:"name"`
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
+	Kind               string              `json:"kind" yaml:"kind"`
+	AuthenticationMode *AuthenticationMode `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
+	UsageDescription   *string             `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
+	Name               string              `json:"name" yaml:"name"`
+	Endpoint           string              `json:"endpoint" yaml:"endpoint"`
 }
 
 // LoadRemoteConnection creates a RemoteConnection from a map[string]interface{}
@@ -219,6 +246,14 @@ func LoadRemoteConnection(data interface{}, ctx *LoadContext) (RemoteConnection,
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["authenticationMode"]; ok && val != nil {
+			v := AuthenticationMode(val.(string))
+			result.AuthenticationMode = &v
+		}
+		if val, ok := m["usageDescription"]; ok && val != nil {
+			v := string(val.(string))
+			result.UsageDescription = &v
 		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
@@ -235,6 +270,12 @@ func LoadRemoteConnection(data interface{}, ctx *LoadContext) (RemoteConnection,
 func (obj RemoteConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
+	if obj.AuthenticationMode != nil {
+		result["authenticationMode"] = string(*obj.AuthenticationMode)
+	}
+	if obj.UsageDescription != nil {
+		result["usageDescription"] = *obj.UsageDescription
+	}
 	result["name"] = obj.Name
 	result["endpoint"] = obj.Endpoint
 
@@ -282,9 +323,11 @@ func RemoteConnectionFromYAML(yamlStr string) (RemoteConnection, error) {
 // ApiKeyConnection represents Connection configuration for AI services using API keys.
 
 type ApiKeyConnection struct {
-	Kind     string `json:"kind" yaml:"kind"`
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
-	ApiKey   string `json:"apiKey" yaml:"apiKey"`
+	Kind               string              `json:"kind" yaml:"kind"`
+	AuthenticationMode *AuthenticationMode `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
+	UsageDescription   *string             `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
+	Endpoint           string              `json:"endpoint" yaml:"endpoint"`
+	ApiKey             string              `json:"apiKey" yaml:"apiKey"`
 }
 
 // LoadApiKeyConnection creates a ApiKeyConnection from a map[string]interface{}
@@ -295,6 +338,14 @@ func LoadApiKeyConnection(data interface{}, ctx *LoadContext) (ApiKeyConnection,
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["authenticationMode"]; ok && val != nil {
+			v := AuthenticationMode(val.(string))
+			result.AuthenticationMode = &v
+		}
+		if val, ok := m["usageDescription"]; ok && val != nil {
+			v := string(val.(string))
+			result.UsageDescription = &v
 		}
 		if val, ok := m["endpoint"]; ok && val != nil {
 			result.Endpoint = string(val.(string))
@@ -311,6 +362,12 @@ func LoadApiKeyConnection(data interface{}, ctx *LoadContext) (ApiKeyConnection,
 func (obj ApiKeyConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
+	if obj.AuthenticationMode != nil {
+		result["authenticationMode"] = string(*obj.AuthenticationMode)
+	}
+	if obj.UsageDescription != nil {
+		result["usageDescription"] = *obj.UsageDescription
+	}
 	result["endpoint"] = obj.Endpoint
 	result["apiKey"] = obj.ApiKey
 
@@ -357,8 +414,10 @@ func ApiKeyConnectionFromYAML(yamlStr string) (ApiKeyConnection, error) {
 
 // AnonymousConnection represents a schema type
 type AnonymousConnection struct {
-	Kind     string `json:"kind" yaml:"kind"`
-	Endpoint string `json:"endpoint" yaml:"endpoint"`
+	Kind               string              `json:"kind" yaml:"kind"`
+	AuthenticationMode *AuthenticationMode `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
+	UsageDescription   *string             `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
+	Endpoint           string              `json:"endpoint" yaml:"endpoint"`
 }
 
 // LoadAnonymousConnection creates a AnonymousConnection from a map[string]interface{}
@@ -369,6 +428,14 @@ func LoadAnonymousConnection(data interface{}, ctx *LoadContext) (AnonymousConne
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["authenticationMode"]; ok && val != nil {
+			v := AuthenticationMode(val.(string))
+			result.AuthenticationMode = &v
+		}
+		if val, ok := m["usageDescription"]; ok && val != nil {
+			v := string(val.(string))
+			result.UsageDescription = &v
 		}
 		if val, ok := m["endpoint"]; ok && val != nil {
 			result.Endpoint = string(val.(string))
@@ -382,6 +449,12 @@ func LoadAnonymousConnection(data interface{}, ctx *LoadContext) (AnonymousConne
 func (obj AnonymousConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
+	if obj.AuthenticationMode != nil {
+		result["authenticationMode"] = string(*obj.AuthenticationMode)
+	}
+	if obj.UsageDescription != nil {
+		result["usageDescription"] = *obj.UsageDescription
+	}
 	result["endpoint"] = obj.Endpoint
 
 	return result
@@ -430,12 +503,14 @@ func AnonymousConnectionFromYAML(yamlStr string) (AnonymousConnection, error) {
 // such as MCP servers, OpenAPI endpoints, or other REST APIs.
 
 type OAuthConnection struct {
-	Kind         string   `json:"kind" yaml:"kind"`
-	Endpoint     string   `json:"endpoint" yaml:"endpoint"`
-	ClientId     string   `json:"clientId" yaml:"clientId"`
-	ClientSecret string   `json:"clientSecret" yaml:"clientSecret"`
-	TokenUrl     string   `json:"tokenUrl" yaml:"tokenUrl"`
-	Scopes       []string `json:"scopes,omitempty" yaml:"scopes,omitempty"`
+	Kind               string              `json:"kind" yaml:"kind"`
+	AuthenticationMode *AuthenticationMode `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
+	UsageDescription   *string             `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
+	Endpoint           string              `json:"endpoint" yaml:"endpoint"`
+	ClientId           string              `json:"clientId" yaml:"clientId"`
+	ClientSecret       string              `json:"clientSecret" yaml:"clientSecret"`
+	TokenUrl           string              `json:"tokenUrl" yaml:"tokenUrl"`
+	Scopes             []string            `json:"scopes,omitempty" yaml:"scopes,omitempty"`
 }
 
 // LoadOAuthConnection creates a OAuthConnection from a map[string]interface{}
@@ -446,6 +521,14 @@ func LoadOAuthConnection(data interface{}, ctx *LoadContext) (OAuthConnection, e
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["authenticationMode"]; ok && val != nil {
+			v := AuthenticationMode(val.(string))
+			result.AuthenticationMode = &v
+		}
+		if val, ok := m["usageDescription"]; ok && val != nil {
+			v := string(val.(string))
+			result.UsageDescription = &v
 		}
 		if val, ok := m["endpoint"]; ok && val != nil {
 			result.Endpoint = string(val.(string))
@@ -479,6 +562,12 @@ func LoadOAuthConnection(data interface{}, ctx *LoadContext) (OAuthConnection, e
 func (obj OAuthConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
+	if obj.AuthenticationMode != nil {
+		result["authenticationMode"] = string(*obj.AuthenticationMode)
+	}
+	if obj.UsageDescription != nil {
+		result["usageDescription"] = *obj.UsageDescription
+	}
 	result["endpoint"] = obj.Endpoint
 	result["clientId"] = obj.ClientId
 	result["clientSecret"] = obj.ClientSecret
@@ -531,10 +620,12 @@ func OAuthConnectionFromYAML(yamlStr string) (OAuthConnection, error) {
 // via Entra ID (DefaultAzureCredential) authentication.
 
 type FoundryConnection struct {
-	Kind           string  `json:"kind" yaml:"kind"`
-	Endpoint       string  `json:"endpoint" yaml:"endpoint"`
-	Name           *string `json:"name,omitempty" yaml:"name,omitempty"`
-	ConnectionType *string `json:"connectionType,omitempty" yaml:"connectionType,omitempty"`
+	Kind               string              `json:"kind" yaml:"kind"`
+	AuthenticationMode *AuthenticationMode `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
+	UsageDescription   *string             `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
+	Endpoint           string              `json:"endpoint" yaml:"endpoint"`
+	Name               *string             `json:"name,omitempty" yaml:"name,omitempty"`
+	ConnectionType     *string             `json:"connectionType,omitempty" yaml:"connectionType,omitempty"`
 }
 
 // LoadFoundryConnection creates a FoundryConnection from a map[string]interface{}
@@ -545,6 +636,14 @@ func LoadFoundryConnection(data interface{}, ctx *LoadContext) (FoundryConnectio
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
+		}
+		if val, ok := m["authenticationMode"]; ok && val != nil {
+			v := AuthenticationMode(val.(string))
+			result.AuthenticationMode = &v
+		}
+		if val, ok := m["usageDescription"]; ok && val != nil {
+			v := string(val.(string))
+			result.UsageDescription = &v
 		}
 		if val, ok := m["endpoint"]; ok && val != nil {
 			result.Endpoint = string(val.(string))
@@ -566,6 +665,12 @@ func LoadFoundryConnection(data interface{}, ctx *LoadContext) (FoundryConnectio
 func (obj FoundryConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = obj.Kind
+	if obj.AuthenticationMode != nil {
+		result["authenticationMode"] = string(*obj.AuthenticationMode)
+	}
+	if obj.UsageDescription != nil {
+		result["usageDescription"] = *obj.UsageDescription
+	}
 	result["endpoint"] = obj.Endpoint
 	if obj.Name != nil {
 		result["name"] = *obj.Name

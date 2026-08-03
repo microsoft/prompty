@@ -17,8 +17,8 @@
       },
       {
         "name": "@typra/emitter",
-        "version": "0.3.1",
-        "supportedRange": "0.3.1",
+        "version": "0.4.2",
+        "supportedRange": "0.4.2",
         "supported": true
       }
     ]
@@ -34,6 +34,7 @@
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "namespace": "Prompty.Core",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
@@ -48,6 +49,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -57,8 +59,15 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -66,6 +75,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -73,21 +84,36 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
         "OpenApiTool",
         "Parser",
@@ -98,6 +124,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -110,7 +137,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -124,6 +153,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -147,7 +177,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -155,6 +187,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -188,10 +222,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection/AuthorizationCodeFlow.cs",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "connection/Connection.cs",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection/DeviceAuthorization.cs",
           "protocol": false
         },
         {
@@ -206,6 +254,13 @@
           "kind": "value",
           "group": "connection",
           "source": "connection/Connection.cs",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection/OAuthToken.cs",
           "protocol": false
         },
         {
@@ -315,6 +370,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "core/Property.cs",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "core/Property.cs",
@@ -671,6 +733,41 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "events/StreamChunk.cs",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory/MemoryEntry.cs",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory/MemoryStore.cs",
+          "protocol": false
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model/AiResourceInfo.cs",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "model/InvocationUsage.cs",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -685,10 +782,31 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "model/ModelLister.cs",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
           "source": "model/ModelOptions.cs",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model/ProjectInfo.cs",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model/SubscriptionInfo.cs",
           "protocol": false
         },
         {
@@ -713,6 +831,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ContextCandidate.cs",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ContextRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/DelegatedStateReference.cs",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/EngineCheckpoint.cs",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/EngineEvent.cs",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/EnginePermissionDecision.cs",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -734,11 +894,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/FinalOutputPolicyRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/FinalOutputPolicyResult.cs",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/HostPolicyRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/HostPolicyResult.cs",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "pipeline/HostToolExecutor.cs",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/InvocationContextDecision.cs",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/InvocationContextState.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationContextSnapshot.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelInvocationResponse.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelReconciliationState.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelToolRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ModelToolResult.cs",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -797,6 +1041,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/ResumeContext.cs",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/RetryPolicyRequest.cs",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -808,6 +1066,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "pipeline/RunTurnResult.cs",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/TurnCommit.cs",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline/TurnEngineResult.cs",
           "protocol": false
         },
         {
@@ -1038,14 +1310,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "Connection.cs"
+            "AuthorizationCodeFlow.cs",
+            "Connection.cs",
+            "DeviceAuthorization.cs",
+            "OAuthToken.cs"
           ]
         },
         {
@@ -1077,6 +1355,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -1138,7 +1417,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "Checkpoint.cs",
@@ -1188,17 +1468,38 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "MemoryEntry.cs",
+            "MemoryStore.cs"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
+            "InvocationUsage",
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "AiResourceInfo.cs",
+            "InvocationUsage.cs",
             "Model.cs",
             "ModelInfo.cs",
+            "ModelLister.cs",
             "ModelOptions.cs",
+            "ProjectInfo.cs",
+            "SubscriptionInfo.cs",
             "TokenUsage.cs"
           ]
         },
@@ -1207,10 +1508,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -1219,8 +1538,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -1228,10 +1551,28 @@
           "modules": [
             "CheckpointStore.cs",
             "CompactionConfig.cs",
+            "ContextCandidate.cs",
+            "ContextRequest.cs",
+            "DelegatedStateReference.cs",
+            "EngineCheckpoint.cs",
+            "EngineEvent.cs",
+            "EnginePermissionDecision.cs",
             "EventJournalWriter.cs",
             "EventSink.cs",
             "Executor.cs",
+            "FinalOutputPolicyRequest.cs",
+            "FinalOutputPolicyResult.cs",
+            "HostPolicyRequest.cs",
+            "HostPolicyResult.cs",
             "HostToolExecutor.cs",
+            "InvocationContextDecision.cs",
+            "InvocationContextState.cs",
+            "ModelInvocationContextSnapshot.cs",
+            "ModelInvocationRequest.cs",
+            "ModelInvocationResponse.cs",
+            "ModelReconciliationState.cs",
+            "ModelToolRequest.cs",
+            "ModelToolResult.cs",
             "Parser.cs",
             "PermissionResolver.cs",
             "Processor.cs",
@@ -1240,8 +1581,12 @@
             "ReplayMismatch.cs",
             "ReplayVerificationRequest.cs",
             "ReplayVerificationResult.cs",
+            "ResumeContext.cs",
+            "RetryPolicyRequest.cs",
             "RunTurnRequest.cs",
             "RunTurnResult.cs",
+            "TurnCommit.cs",
+            "TurnEngineResult.cs",
             "TurnModelRequest.cs",
             "TurnModelResponse.cs",
             "TurnOptions.cs"
@@ -1333,6 +1678,23 @@
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "model/ModelLister.cs",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -1582,7 +1944,10 @@
       "modules": [
         "agent/GuardrailResult.cs",
         "agent/Prompty.cs",
+        "connection/AuthorizationCodeFlow.cs",
         "connection/Connection.cs",
+        "connection/DeviceAuthorization.cs",
+        "connection/OAuthToken.cs",
         "conversation/ContentPart.cs",
         "conversation/Message.cs",
         "conversation/ThreadMarker.cs",
@@ -1637,16 +2002,41 @@
         "events/TurnStartPayload.cs",
         "events/TurnSummary.cs",
         "events/TurnTrace.cs",
+        "memory/MemoryEntry.cs",
+        "memory/MemoryStore.cs",
+        "model/AiResourceInfo.cs",
+        "model/InvocationUsage.cs",
         "model/Model.cs",
         "model/ModelInfo.cs",
+        "model/ModelLister.cs",
         "model/ModelOptions.cs",
+        "model/ProjectInfo.cs",
+        "model/SubscriptionInfo.cs",
         "model/TokenUsage.cs",
         "pipeline/CheckpointStore.cs",
         "pipeline/CompactionConfig.cs",
+        "pipeline/ContextCandidate.cs",
+        "pipeline/ContextRequest.cs",
+        "pipeline/DelegatedStateReference.cs",
+        "pipeline/EngineCheckpoint.cs",
+        "pipeline/EngineEvent.cs",
+        "pipeline/EnginePermissionDecision.cs",
         "pipeline/EventJournalWriter.cs",
         "pipeline/EventSink.cs",
         "pipeline/Executor.cs",
+        "pipeline/FinalOutputPolicyRequest.cs",
+        "pipeline/FinalOutputPolicyResult.cs",
+        "pipeline/HostPolicyRequest.cs",
+        "pipeline/HostPolicyResult.cs",
         "pipeline/HostToolExecutor.cs",
+        "pipeline/InvocationContextDecision.cs",
+        "pipeline/InvocationContextState.cs",
+        "pipeline/ModelInvocationContextSnapshot.cs",
+        "pipeline/ModelInvocationRequest.cs",
+        "pipeline/ModelInvocationResponse.cs",
+        "pipeline/ModelReconciliationState.cs",
+        "pipeline/ModelToolRequest.cs",
+        "pipeline/ModelToolResult.cs",
         "pipeline/Parser.cs",
         "pipeline/PermissionResolver.cs",
         "pipeline/Processor.cs",
@@ -1655,8 +2045,12 @@
         "pipeline/ReplayMismatch.cs",
         "pipeline/ReplayVerificationRequest.cs",
         "pipeline/ReplayVerificationResult.cs",
+        "pipeline/ResumeContext.cs",
+        "pipeline/RetryPolicyRequest.cs",
         "pipeline/RunTurnRequest.cs",
         "pipeline/RunTurnResult.cs",
+        "pipeline/TurnCommit.cs",
+        "pipeline/TurnEngineResult.cs",
         "pipeline/TurnModelRequest.cs",
         "pipeline/TurnModelResponse.cs",
         "pipeline/TurnOptions.cs",
@@ -1689,6 +2083,7 @@
       "outputRoot": "../runtime/go/prompty/model",
       "packageName": "prompty",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
@@ -1703,6 +2098,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -1712,8 +2108,15 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -1721,6 +2124,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -1728,21 +2133,36 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
         "OpenApiTool",
         "Parser",
@@ -1753,6 +2173,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -1765,7 +2186,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -1779,6 +2202,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -1802,7 +2226,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -1810,6 +2236,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -1843,10 +2271,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "authorization_code_flow.go",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "connection.go",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "device_authorization.go",
           "protocol": false
         },
         {
@@ -1861,6 +2303,13 @@
           "kind": "value",
           "group": "connection",
           "source": "connection.go",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "o_auth_token.go",
           "protocol": false
         },
         {
@@ -1970,6 +2419,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "property.go",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "property.go",
@@ -2326,6 +2782,41 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "stream_chunk.go",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory_entry.go",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory_store.go",
+          "protocol": false
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "ai_resource_info.go",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "invocation_usage.go",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -2340,10 +2831,31 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "model_lister.go",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
           "source": "model_options.go",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "project_info.go",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "subscription_info.go",
           "protocol": false
         },
         {
@@ -2368,6 +2880,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "context_candidate.go",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "context_request.go",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "delegated_state_reference.go",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "engine_checkpoint.go",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "engine_event.go",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "engine_permission_decision.go",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -2389,11 +2943,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "final_output_policy_request.go",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "final_output_policy_result.go",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "host_policy_request.go",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "host_policy_result.go",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "host_tool_executor.go",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "invocation_context_decision.go",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "invocation_context_state.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_context_snapshot.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_request.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_invocation_response.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_reconciliation_state.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_tool_request.go",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "model_tool_result.go",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -2452,6 +3090,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "resume_context.go",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "retry_policy_request.go",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -2463,6 +3115,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "run_turn_result.go",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "turn_commit.go",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "turn_engine_result.go",
           "protocol": false
         },
         {
@@ -2693,14 +3359,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "connection"
+            "authorization_code_flow",
+            "connection",
+            "device_authorization",
+            "o_auth_token"
           ]
         },
         {
@@ -2732,6 +3404,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -2793,7 +3466,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -2843,17 +3517,38 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
+            "InvocationUsage",
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "ai_resource_info",
+            "invocation_usage",
             "model",
             "model_info",
+            "model_lister",
             "model_options",
+            "project_info",
+            "subscription_info",
             "token_usage"
           ]
         },
@@ -2862,10 +3557,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -2874,8 +3587,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -2883,10 +3600,28 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "context_candidate",
+            "context_request",
+            "delegated_state_reference",
+            "engine_checkpoint",
+            "engine_event",
+            "engine_permission_decision",
             "event_journal_writer",
             "event_sink",
             "executor",
+            "final_output_policy_request",
+            "final_output_policy_result",
+            "host_policy_request",
+            "host_policy_result",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_reconciliation_state",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -2895,8 +3630,12 @@
             "replay_mismatch",
             "replay_verification_request",
             "replay_verification_result",
+            "resume_context",
+            "retry_policy_request",
             "run_turn_request",
             "run_turn_result",
+            "turn_commit",
+            "turn_engine_result",
             "turn_model_request",
             "turn_model_response",
             "turn_options"
@@ -2988,6 +3727,23 @@
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "model_lister.go",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -3235,6 +3991,7 @@
         }
       ],
       "modules": [
+        "ai_resource_info.go",
         "anthropic_image_block.go",
         "anthropic_image_source.go",
         "anthropic_messages_request.go",
@@ -3245,6 +4002,7 @@
         "anthropic_tool_use_block.go",
         "anthropic_usage.go",
         "anthropic_wire_message.go",
+        "authorization_code_flow.go",
         "binding.go",
         "checkpoint.go",
         "checkpoint_store.go",
@@ -3254,29 +4012,53 @@
         "compaction_start_payload.go",
         "connection.go",
         "content_part.go",
+        "context_candidate.go",
+        "context_request.go",
+        "delegated_state_reference.go",
+        "device_authorization.go",
         "done_event_payload.go",
+        "engine_checkpoint.go",
+        "engine_event.go",
+        "engine_permission_decision.go",
         "error_event_payload.go",
         "event_journal_writer.go",
         "event_sink.go",
         "executor.go",
         "file_not_found_error.go",
+        "final_output_policy_request.go",
+        "final_output_policy_result.go",
         "format_config.go",
         "guardrail_result.go",
         "harness_context.go",
         "hook_end_payload.go",
         "hook_start_payload.go",
+        "host_policy_request.go",
+        "host_policy_result.go",
         "host_tool_executor.go",
         "host_tool_request.go",
         "host_tool_result.go",
+        "invocation_context_decision.go",
+        "invocation_context_state.go",
+        "invocation_usage.go",
         "invoker_error.go",
         "llm_complete_payload.go",
         "llm_start_payload.go",
         "mcp_approval_mode.go",
+        "memory_entry.go",
+        "memory_store.go",
         "message.go",
         "messages_updated_payload.go",
         "model.go",
         "model_info.go",
+        "model_invocation_context_snapshot.go",
+        "model_invocation_request.go",
+        "model_invocation_response.go",
+        "model_lister.go",
         "model_options.go",
+        "model_reconciliation_state.go",
+        "model_tool_request.go",
+        "model_tool_result.go",
+        "o_auth_token.go",
         "parser.go",
         "parser_config.go",
         "permission_completed_payload.go",
@@ -3285,6 +4067,7 @@
         "permission_requested_payload.go",
         "permission_resolver.go",
         "processor.go",
+        "project_info.go",
         "prompty.go",
         "property.go",
         "redacted_field.go",
@@ -3294,7 +4077,9 @@
         "replay_mismatch.go",
         "replay_verification_request.go",
         "replay_verification_result.go",
+        "resume_context.go",
         "retry_payload.go",
+        "retry_policy_request.go",
         "run_turn_request.go",
         "run_turn_result.go",
         "session_end_payload.go",
@@ -3308,6 +4093,7 @@
         "status_event_payload.go",
         "stream_chunk.go",
         "stream_options.go",
+        "subscription_info.go",
         "template.go",
         "thinking_event_payload.go",
         "thread_marker.go",
@@ -3327,7 +4113,9 @@
         "trace_span.go",
         "trace_time.go",
         "trajectory_event.go",
+        "turn_commit.go",
         "turn_end_payload.go",
+        "turn_engine_result.go",
         "turn_event.go",
         "turn_model_request.go",
         "turn_model_response.go",
@@ -3343,6 +4131,7 @@
       "target": "markdown",
       "outputRoot": "../web/src/content/docs/reference",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
@@ -3357,6 +4146,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -3366,8 +4156,15 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -3375,6 +4172,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -3382,21 +4181,36 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
         "OpenApiTool",
         "Parser",
@@ -3407,6 +4221,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -3419,7 +4234,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -3433,6 +4250,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -3456,7 +4274,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -3464,6 +4284,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -3497,10 +4319,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "AuthorizationCodeFlow",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "Connection",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "DeviceAuthorization",
           "protocol": false
         },
         {
@@ -3515,6 +4351,13 @@
           "kind": "value",
           "group": "connection",
           "source": "Connection",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "OAuthToken",
           "protocol": false
         },
         {
@@ -3624,6 +4467,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "Property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "Property",
@@ -3980,6 +4830,41 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryEntry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryStore",
+          "protocol": false
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "AiResourceInfo",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "InvocationUsage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -3994,10 +4879,31 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "ModelLister",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
           "source": "ModelOptions",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "ProjectInfo",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "SubscriptionInfo",
           "protocol": false
         },
         {
@@ -4022,6 +4928,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ContextCandidate",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ContextRequest",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "DelegatedStateReference",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EngineCheckpoint",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EngineEvent",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EnginePermissionDecision",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -4043,11 +4991,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "FinalOutputPolicyRequest",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "FinalOutputPolicyResult",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "HostPolicyRequest",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "HostPolicyResult",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "HostToolExecutor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "InvocationContextDecision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "InvocationContextState",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationContextSnapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationRequest",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationResponse",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelReconciliationState",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelToolRequest",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelToolResult",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -4106,6 +5138,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ResumeContext",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "RetryPolicyRequest",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -4117,6 +5163,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "RunTurnResult",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnCommit",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnEngineResult",
           "protocol": false
         },
         {
@@ -4347,14 +5407,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "connection"
+            "authorization_code_flow",
+            "connection",
+            "device_authorization",
+            "o_auth_token"
           ]
         },
         {
@@ -4386,6 +5452,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -4447,7 +5514,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -4497,17 +5565,38 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
+            "InvocationUsage",
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "ai_resource_info",
+            "invocation_usage",
             "model",
             "model_info",
+            "model_lister",
             "model_options",
+            "project_info",
+            "subscription_info",
             "token_usage"
           ]
         },
@@ -4516,10 +5605,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -4528,8 +5635,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -4537,10 +5648,28 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "context_candidate",
+            "context_request",
+            "delegated_state_reference",
+            "engine_checkpoint",
+            "engine_event",
+            "engine_permission_decision",
             "event_journal_writer",
             "event_sink",
             "executor",
+            "final_output_policy_request",
+            "final_output_policy_result",
+            "host_policy_request",
+            "host_policy_result",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_reconciliation_state",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -4549,8 +5678,12 @@
             "replay_mismatch",
             "replay_verification_request",
             "replay_verification_result",
+            "resume_context",
+            "retry_policy_request",
             "run_turn_request",
             "run_turn_result",
+            "turn_commit",
+            "turn_engine_result",
             "turn_model_request",
             "turn_model_response",
             "turn_options"
@@ -4642,6 +5775,23 @@
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "ModelLister",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -4889,6 +6039,7 @@
         }
       ],
       "modules": [
+        "AiResourceInfo",
         "AnthropicImageBlock",
         "AnthropicImageSource",
         "AnthropicMessagesRequest",
@@ -4899,6 +6050,7 @@
         "AnthropicToolUseBlock",
         "AnthropicUsage",
         "AnthropicWireMessage",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -4908,29 +6060,53 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
         "FileNotFoundError",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "GuardrailResult",
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
+        "OAuthToken",
         "Parser",
         "ParserConfig",
         "PermissionCompletedPayload",
@@ -4939,6 +6115,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "Property",
         "RedactedField",
@@ -4948,7 +6125,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -4962,6 +6141,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "ThinkingEventPayload",
         "ThreadMarker",
@@ -4981,7 +6161,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -4998,6 +6180,7 @@
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "packageName": "prompty",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
@@ -5012,6 +6195,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -5021,8 +6205,15 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -5030,6 +6221,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -5037,21 +6230,36 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
         "OpenApiTool",
         "Parser",
@@ -5062,6 +6270,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -5074,7 +6283,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -5088,6 +6299,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -5111,7 +6323,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -5119,6 +6333,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -5152,7 +6368,21 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": ".connection",
+          "protocol": false
+        },
+        {
           "name": "Connection",
+          "kind": "value",
+          "group": "connection",
+          "source": ".connection",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
           "kind": "value",
           "group": "connection",
           "source": ".connection",
@@ -5167,6 +6397,13 @@
         },
         {
           "name": "OAuthConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": ".connection",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
           "kind": "value",
           "group": "connection",
           "source": ".connection",
@@ -5279,6 +6516,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": ".core",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": ".core",
@@ -5635,6 +6879,41 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": ".events",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": ".memory",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": ".memory",
+          "protocol": false
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -5649,7 +6928,28 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": ".model",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": ".model",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
           "kind": "value",
           "group": "model",
           "source": ".model",
@@ -5677,6 +6977,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -5698,11 +7040,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": ".pipeline",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -5761,6 +7187,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -5769,6 +7209,20 @@
         },
         {
           "name": "RunTurnResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
           "kind": "value",
           "group": "pipeline",
           "source": ".pipeline",
@@ -6002,14 +7456,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "_Connection"
+            "_AuthorizationCodeFlow",
+            "_Connection",
+            "_DeviceAuthorization",
+            "_OAuthToken"
           ]
         },
         {
@@ -6041,6 +7501,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -6102,7 +7563,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "_Checkpoint",
@@ -6152,17 +7614,38 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "_MemoryEntry",
+            "_MemoryStore"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
+            "InvocationUsage",
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "_AiResourceInfo",
+            "_InvocationUsage",
             "_Model",
             "_ModelInfo",
+            "_ModelLister",
             "_ModelOptions",
+            "_ProjectInfo",
+            "_SubscriptionInfo",
             "_TokenUsage"
           ]
         },
@@ -6171,10 +7654,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -6183,8 +7684,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -6192,10 +7697,28 @@
           "modules": [
             "_CheckpointStore",
             "_CompactionConfig",
+            "_ContextCandidate",
+            "_ContextRequest",
+            "_DelegatedStateReference",
+            "_EngineCheckpoint",
+            "_EngineEvent",
+            "_EnginePermissionDecision",
             "_EventJournalWriter",
             "_EventSink",
             "_Executor",
+            "_FinalOutputPolicyRequest",
+            "_FinalOutputPolicyResult",
+            "_HostPolicyRequest",
+            "_HostPolicyResult",
             "_HostToolExecutor",
+            "_InvocationContextDecision",
+            "_InvocationContextState",
+            "_ModelInvocationContextSnapshot",
+            "_ModelInvocationRequest",
+            "_ModelInvocationResponse",
+            "_ModelReconciliationState",
+            "_ModelToolRequest",
+            "_ModelToolResult",
             "_Parser",
             "_PermissionResolver",
             "_Processor",
@@ -6204,8 +7727,12 @@
             "_ReplayMismatch",
             "_ReplayVerificationRequest",
             "_ReplayVerificationResult",
+            "_ResumeContext",
+            "_RetryPolicyRequest",
             "_RunTurnRequest",
             "_RunTurnResult",
+            "_TurnCommit",
+            "_TurnEngineResult",
             "_TurnModelRequest",
             "_TurnModelResponse",
             "_TurnOptions"
@@ -6297,6 +7824,23 @@
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": ".model",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -6549,6 +8093,7 @@
         ".conversation",
         ".core",
         ".events",
+        ".memory",
         ".model",
         ".pipeline",
         ".streaming",
@@ -6562,6 +8107,7 @@
       "target": "rust",
       "outputRoot": "../runtime/rust/prompty/src/model",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
@@ -6576,6 +8122,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -6585,8 +8132,15 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -6594,6 +8148,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -6601,21 +8157,36 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
         "OpenApiTool",
         "Parser",
@@ -6626,6 +8197,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -6638,7 +8210,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -6652,6 +8226,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -6675,7 +8250,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -6683,6 +8260,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -6716,10 +8295,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection::authorization_code_flow",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "connection::connection",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection::device_authorization",
           "protocol": false
         },
         {
@@ -6734,6 +8327,13 @@
           "kind": "value",
           "group": "connection",
           "source": "connection::connection",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "connection::o_auth_token",
           "protocol": false
         },
         {
@@ -6843,6 +8443,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "core::property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "core::property",
@@ -7199,6 +8806,41 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "events::stream_chunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory::memory_entry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "memory::memory_store",
+          "protocol": false
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model::ai_resource_info",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "model::invocation_usage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -7213,10 +8855,31 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "model::model_lister",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
           "source": "model::model_options",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model::project_info",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "model::subscription_info",
           "protocol": false
         },
         {
@@ -7241,6 +8904,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::context_candidate",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::context_request",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::delegated_state_reference",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::engine_checkpoint",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::engine_event",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::engine_permission_decision",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -7262,11 +8967,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::final_output_policy_request",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::final_output_policy_result",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::host_policy_request",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::host_policy_result",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "pipeline::host_tool_executor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::invocation_context_decision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::invocation_context_state",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_context_snapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_request",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_invocation_response",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_reconciliation_state",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_tool_request",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::model_tool_result",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -7325,6 +9114,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::resume_context",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::retry_policy_request",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -7336,6 +9139,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "pipeline::run_turn_result",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::turn_commit",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "pipeline::turn_engine_result",
           "protocol": false
         },
         {
@@ -7566,14 +9383,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "connection"
+            "authorization_code_flow",
+            "connection",
+            "device_authorization",
+            "o_auth_token"
           ]
         },
         {
@@ -7605,6 +9428,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -7666,7 +9490,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -7716,17 +9541,38 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_entry",
+            "memory_store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
+            "InvocationUsage",
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "ai_resource_info",
+            "invocation_usage",
             "model",
             "model_info",
+            "model_lister",
             "model_options",
+            "project_info",
+            "subscription_info",
             "token_usage"
           ]
         },
@@ -7735,10 +9581,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -7747,8 +9611,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -7756,10 +9624,28 @@
           "modules": [
             "checkpoint_store",
             "compaction_config",
+            "context_candidate",
+            "context_request",
+            "delegated_state_reference",
+            "engine_checkpoint",
+            "engine_event",
+            "engine_permission_decision",
             "event_journal_writer",
             "event_sink",
             "executor",
+            "final_output_policy_request",
+            "final_output_policy_result",
+            "host_policy_request",
+            "host_policy_result",
             "host_tool_executor",
+            "invocation_context_decision",
+            "invocation_context_state",
+            "model_invocation_context_snapshot",
+            "model_invocation_request",
+            "model_invocation_response",
+            "model_reconciliation_state",
+            "model_tool_request",
+            "model_tool_result",
             "parser",
             "permission_resolver",
             "processor",
@@ -7768,8 +9654,12 @@
             "replay_mismatch",
             "replay_verification_request",
             "replay_verification_result",
+            "resume_context",
+            "retry_policy_request",
             "run_turn_request",
             "run_turn_result",
+            "turn_commit",
+            "turn_engine_result",
             "turn_model_request",
             "turn_model_response",
             "turn_options"
@@ -7861,6 +9751,23 @@
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "model::model_lister",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -8114,6 +10021,7 @@
         "conversation",
         "core",
         "events",
+        "memory",
         "model",
         "pipeline",
         "streaming",
@@ -8128,6 +10036,7 @@
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "namespace": "Prompty",
       "rootExports": [
+        "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
         "AnthropicImageSource",
@@ -8142,6 +10051,7 @@
         "ApiKeyConnection",
         "ArrayProperty",
         "AudioPart",
+        "AuthorizationCodeFlow",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -8151,8 +10061,15 @@
         "CompactionStartPayload",
         "Connection",
         "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
         "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
         "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -8160,6 +10077,8 @@
         "Executor",
         "FileNotFoundError",
         "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
         "FormatConfig",
         "FoundryConnection",
         "FunctionTool",
@@ -8167,21 +10086,36 @@
         "HarnessContext",
         "HookEndPayload",
         "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
         "HostToolExecutor",
         "HostToolRequest",
         "HostToolResult",
         "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
         "McpApprovalMode",
         "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
         "Message",
         "MessagesUpdatedPayload",
         "Model",
         "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
         "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
         "OAuthConnection",
+        "OAuthToken",
         "ObjectProperty",
         "OpenApiTool",
         "Parser",
@@ -8192,6 +10126,7 @@
         "PermissionRequestedPayload",
         "PermissionResolver",
         "Processor",
+        "ProjectInfo",
         "Prompty",
         "PromptyTool",
         "Property",
@@ -8204,7 +10139,9 @@
         "ReplayMismatch",
         "ReplayVerificationRequest",
         "ReplayVerificationResult",
+        "ResumeContext",
         "RetryPayload",
+        "RetryPolicyRequest",
         "RunTurnRequest",
         "RunTurnResult",
         "SessionEndPayload",
@@ -8218,6 +10155,7 @@
         "StatusEventPayload",
         "StreamChunk",
         "StreamOptions",
+        "SubscriptionInfo",
         "Template",
         "TextChunk",
         "TextPart",
@@ -8241,7 +10179,9 @@
         "TraceSpan",
         "TraceTime",
         "TrajectoryEvent",
+        "TurnCommit",
         "TurnEndPayload",
+        "TurnEngineResult",
         "TurnEvent",
         "TurnModelRequest",
         "TurnModelResponse",
@@ -8249,6 +10189,8 @@
         "TurnStartPayload",
         "TurnSummary",
         "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
         "ValidationError",
         "ValidationResult"
       ],
@@ -8282,10 +10224,24 @@
           "protocol": false
         },
         {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "./connection/authorization-code-flow",
+          "protocol": false
+        },
+        {
           "name": "Connection",
           "kind": "value",
           "group": "connection",
           "source": "./connection/connection",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "./connection/device-authorization",
           "protocol": false
         },
         {
@@ -8300,6 +10256,13 @@
           "kind": "value",
           "group": "connection",
           "source": "./connection/connection",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "./connection/o-auth-token",
           "protocol": false
         },
         {
@@ -8409,6 +10372,13 @@
         },
         {
           "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "./core/property",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
           "kind": "value",
           "group": "core",
           "source": "./core/property",
@@ -8765,6 +10735,41 @@
           "protocol": false
         },
         {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "./events/stream-chunk",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "./memory/memory-entry",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "./memory/memory-store",
+          "protocol": false
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/ai-resource-info",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/invocation-usage",
+          "protocol": false
+        },
+        {
           "name": "Model",
           "kind": "value",
           "group": "model",
@@ -8779,10 +10784,31 @@
           "protocol": false
         },
         {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "./model/model-lister",
+          "protocol": true
+        },
+        {
           "name": "ModelOptions",
           "kind": "value",
           "group": "model",
           "source": "./model/model-options",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/project-info",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "./model/subscription-info",
           "protocol": false
         },
         {
@@ -8807,6 +10833,48 @@
           "protocol": false
         },
         {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/context-candidate",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/context-request",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/delegated-state-reference",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/engine-checkpoint",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/engine-event",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/engine-permission-decision",
+          "protocol": false
+        },
+        {
           "name": "EventJournalWriter",
           "kind": "type",
           "group": "pipeline",
@@ -8828,11 +10896,95 @@
           "protocol": true
         },
         {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/final-output-policy-request",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/final-output-policy-result",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/host-policy-request",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/host-policy-result",
+          "protocol": false
+        },
+        {
           "name": "HostToolExecutor",
           "kind": "type",
           "group": "pipeline",
           "source": "./pipeline/host-tool-executor",
           "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/invocation-context-decision",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/invocation-context-state",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-context-snapshot",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-request",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-invocation-response",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-reconciliation-state",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-tool-request",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/model-tool-result",
+          "protocol": false
         },
         {
           "name": "Parser",
@@ -8891,6 +11043,20 @@
           "protocol": false
         },
         {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/resume-context",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/retry-policy-request",
+          "protocol": false
+        },
+        {
           "name": "RunTurnRequest",
           "kind": "value",
           "group": "pipeline",
@@ -8902,6 +11068,20 @@
           "kind": "value",
           "group": "pipeline",
           "source": "./pipeline/run-turn-result",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/turn-commit",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "./pipeline/turn-engine-result",
           "protocol": false
         },
         {
@@ -9132,14 +11312,20 @@
           "exports": [
             "AnonymousConnection",
             "ApiKeyConnection",
+            "AuthorizationCodeFlow",
             "Connection",
+            "DeviceAuthorization",
             "FoundryConnection",
             "OAuthConnection",
+            "OAuthToken",
             "ReferenceConnection",
             "RemoteConnection"
           ],
           "modules": [
-            "connection"
+            "authorization-code-flow",
+            "connection",
+            "device-authorization",
+            "o-auth-token"
           ]
         },
         {
@@ -9171,6 +11357,7 @@
             "InvokerError",
             "ObjectProperty",
             "Property",
+            "UnionProperty",
             "ValidationError",
             "ValidationResult"
           ],
@@ -9232,7 +11419,8 @@
             "TurnEvent",
             "TurnStartPayload",
             "TurnSummary",
-            "TurnTrace"
+            "TurnTrace",
+            "UsageChunk"
           ],
           "modules": [
             "checkpoint",
@@ -9282,17 +11470,38 @@
           ]
         },
         {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory-entry",
+            "memory-store"
+          ]
+        },
+        {
           "name": "model",
           "exports": [
+            "AiResourceInfo",
+            "InvocationUsage",
             "Model",
             "ModelInfo",
+            "ModelLister",
             "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
             "TokenUsage"
           ],
           "modules": [
+            "ai-resource-info",
+            "invocation-usage",
             "model",
             "model-info",
+            "model-lister",
             "model-options",
+            "project-info",
+            "subscription-info",
             "token-usage"
           ]
         },
@@ -9301,10 +11510,28 @@
           "exports": [
             "CheckpointStore",
             "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
             "EventJournalWriter",
             "EventSink",
             "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
             "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
             "Parser",
             "PermissionResolver",
             "Processor",
@@ -9313,8 +11540,12 @@
             "ReplayMismatch",
             "ReplayVerificationRequest",
             "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
             "RunTurnRequest",
             "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
             "TurnModelRequest",
             "TurnModelResponse",
             "TurnOptions"
@@ -9322,10 +11553,28 @@
           "modules": [
             "checkpoint-store",
             "compaction-config",
+            "context-candidate",
+            "context-request",
+            "delegated-state-reference",
+            "engine-checkpoint",
+            "engine-event",
+            "engine-permission-decision",
             "event-journal-writer",
             "event-sink",
             "executor",
+            "final-output-policy-request",
+            "final-output-policy-result",
+            "host-policy-request",
+            "host-policy-result",
             "host-tool-executor",
+            "invocation-context-decision",
+            "invocation-context-state",
+            "model-invocation-context-snapshot",
+            "model-invocation-request",
+            "model-invocation-response",
+            "model-reconciliation-state",
+            "model-tool-request",
+            "model-tool-result",
             "parser",
             "permission-resolver",
             "processor",
@@ -9334,8 +11583,12 @@
             "replay-mismatch",
             "replay-verification-request",
             "replay-verification-result",
+            "resume-context",
+            "retry-policy-request",
             "run-turn-request",
             "run-turn-result",
+            "turn-commit",
+            "turn-engine-result",
             "turn-model-request",
             "turn-model-response",
             "turn-options"
@@ -9427,6 +11680,23 @@
         }
       ],
       "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "./model/model-lister",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
         {
           "name": "CheckpointStore",
           "group": "pipeline",
@@ -9676,7 +11946,10 @@
       "modules": [
         "./agent/guardrail-result",
         "./agent/prompty",
+        "./connection/authorization-code-flow",
         "./connection/connection",
+        "./connection/device-authorization",
+        "./connection/o-auth-token",
         "./conversation/content-part",
         "./conversation/message",
         "./conversation/thread-marker",
@@ -9731,16 +12004,41 @@
         "./events/turn-start-payload",
         "./events/turn-summary",
         "./events/turn-trace",
+        "./memory/memory-entry",
+        "./memory/memory-store",
+        "./model/ai-resource-info",
+        "./model/invocation-usage",
         "./model/model",
         "./model/model-info",
+        "./model/model-lister",
         "./model/model-options",
+        "./model/project-info",
+        "./model/subscription-info",
         "./model/token-usage",
         "./pipeline/checkpoint-store",
         "./pipeline/compaction-config",
+        "./pipeline/context-candidate",
+        "./pipeline/context-request",
+        "./pipeline/delegated-state-reference",
+        "./pipeline/engine-checkpoint",
+        "./pipeline/engine-event",
+        "./pipeline/engine-permission-decision",
         "./pipeline/event-journal-writer",
         "./pipeline/event-sink",
         "./pipeline/executor",
+        "./pipeline/final-output-policy-request",
+        "./pipeline/final-output-policy-result",
+        "./pipeline/host-policy-request",
+        "./pipeline/host-policy-result",
         "./pipeline/host-tool-executor",
+        "./pipeline/invocation-context-decision",
+        "./pipeline/invocation-context-state",
+        "./pipeline/model-invocation-context-snapshot",
+        "./pipeline/model-invocation-request",
+        "./pipeline/model-invocation-response",
+        "./pipeline/model-reconciliation-state",
+        "./pipeline/model-tool-request",
+        "./pipeline/model-tool-result",
         "./pipeline/parser",
         "./pipeline/permission-resolver",
         "./pipeline/processor",
@@ -9749,8 +12047,12 @@
         "./pipeline/replay-mismatch",
         "./pipeline/replay-verification-request",
         "./pipeline/replay-verification-result",
+        "./pipeline/resume-context",
+        "./pipeline/retry-policy-request",
         "./pipeline/run-turn-request",
         "./pipeline/run-turn-result",
+        "./pipeline/turn-commit",
+        "./pipeline/turn-engine-result",
         "./pipeline/turn-model-request",
         "./pipeline/turn-model-response",
         "./pipeline/turn-options",

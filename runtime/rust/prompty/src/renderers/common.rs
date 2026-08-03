@@ -15,10 +15,13 @@ pub const RICH_KINDS: &[&str] = &["thread", "image", "file", "audio"];
 
 /// Generate a nonce marker: `__PROMPTY_THREAD_<hex8>_<name>__`
 fn generate_nonce(name: &str) -> String {
+    use std::fmt::Write;
+
     let mut rng = rand::rng();
-    let hex: String = (0..8)
-        .map(|_| format!("{:x}", rng.random_range(0..16u8)))
-        .collect();
+    let hex = (0..8).fold(String::new(), |mut acc, _| {
+        let _ = write!(acc, "{:x}", rng.random_range(0..16u8));
+        acc
+    });
     format!("__PROMPTY_THREAD_{hex}_{name}__")
 }
 

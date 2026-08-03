@@ -22,6 +22,14 @@ pub struct ToolCall {
     pub arguments: String,
 }
 
+/// Cumulative token usage reported once at the end of a provider invocation.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Usage {
+    pub input_tokens: u64,
+    pub output_tokens: u64,
+    pub total_tokens: u64,
+}
+
 // ---------------------------------------------------------------------------
 // ThreadMarker
 // ---------------------------------------------------------------------------
@@ -272,8 +280,45 @@ pub enum StreamChunk {
     Thinking(String),
     /// A completed tool call (yielded at end of stream).
     Tool(ToolCall),
-    /// A stream error (e.g., model refusal). Consumers MUST stop iteration.
+    /// Cumulative terminal token usage for the provider invocation.
+    Usage(Usage),
+    /// A stream failure. Consumers MUST stop iteration.
+    ///
+    /// This legacy shape intentionally remains a `String` so existing
+    /// processors can continue constructing and matching it.
     Error(String),
+    /// A classified stream failure for consumers that need outcome semantics.
+    ///
+    /// `StreamFailure::Indeterminate` means the provider may have accepted the
+    /// invocation and the engine must reconcile rather than retry or commit.
+    Failure(StreamFailure),
+}
+
+/// Terminal failure reported by a streaming provider response.
+///
+/// Transport failures after a response has opened are indeterminate: the provider
+/// may have accepted or completed the invocation even though the local stream
+/// ended before a terminal response was received.
+#[derive(Debug, Clone)]
+pub enum StreamFailure {
+    /// The stream failed deterministically (for example, a model refusal).
+    Determinate(String),
+    /// The provider outcome cannot be determined and requires reconciliation.
+    Indeterminate(String),
+}
+
+impl StreamFailure {
+    /// Return the human-readable failure message.
+    pub fn message(&self) -> &str {
+        match self {
+            Self::Determinate(message) | Self::Indeterminate(message) => message,
+        }
+    }
+
+    /// Whether this failure requires reconciliation instead of retry or commit.
+    pub fn outcome_unknown(&self) -> bool {
+        matches!(self, Self::Indeterminate(_))
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -308,7 +353,8 @@ pub async fn consume_stream_chunks(
             StreamChunk::Tool(tc) => {
                 tool_calls.push(tc);
             }
-            StreamChunk::Error(_) => {
+            StreamChunk::Usage(_) => {}
+            StreamChunk::Error(_) | StreamChunk::Failure(_) => {
                 // Error chunks signal stream termination; stop consuming
                 break;
             }
@@ -432,6 +478,27 @@ mod tests {
         let json = serde_json::to_value(&tc).unwrap();
         assert_eq!(json["id"], "call_abc");
         assert_eq!(json["name"], "get_weather");
+    }
+
+    #[test]
+    fn stream_chunk_error_string_construction_and_matching_remain_compatible() {
+        let chunk = StreamChunk::Error("legacy processor failure".to_string());
+
+        match chunk {
+            StreamChunk::Error(message) => assert_eq!(message, "legacy processor failure"),
+            _ => panic!("legacy StreamChunk::Error(String) must remain constructible"),
+        }
+    }
+
+    #[test]
+    fn classified_stream_failure_retains_indeterminate_outcome() {
+        let chunk =
+            StreamChunk::Failure(StreamFailure::Indeterminate("connection reset".to_string()));
+
+        assert!(matches!(
+            chunk,
+            StreamChunk::Failure(failure) if failure.outcome_unknown()
+        ));
     }
 
     // PromptyStream tests

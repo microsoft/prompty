@@ -16,6 +16,9 @@ export {
   OAuthConnection,
   FoundryConnection,
 } from "./connection/connection";
+export { OAuthToken } from "./connection/o-auth-token";
+export { DeviceAuthorization } from "./connection/device-authorization";
+export { AuthorizationCodeFlow } from "./connection/authorization-code-flow";
 
 export {
   ContentPart,
@@ -29,7 +32,12 @@ export { ToolResult } from "./conversation/tool-result";
 export { ToolCall } from "./conversation/tool-call";
 export { ThreadMarker } from "./conversation/thread-marker";
 
-export { Property, ArrayProperty, ObjectProperty } from "./core/property";
+export {
+  Property,
+  ArrayProperty,
+  ObjectProperty,
+  UnionProperty,
+} from "./core/property";
 export { InvokerError } from "./core/invoker-error";
 export { ValidationError } from "./core/validation-error";
 export { FileNotFoundError } from "./core/file-not-found-error";
@@ -83,14 +91,45 @@ export {
   TextChunk,
   ThinkingChunk,
   ToolChunk,
+  UsageChunk,
   ErrorChunk,
 } from "./events/stream-chunk";
+
+export { MemoryEntry } from "./memory/memory-entry";
+export { MemoryStore } from "./memory/memory-store";
 
 export { ModelOptions } from "./model/model-options";
 export { Model } from "./model/model";
 export { TokenUsage } from "./model/token-usage";
+export { InvocationUsage } from "./model/invocation-usage";
+export type { ModelLister } from "./model/model-lister";
 export { ModelInfo } from "./model/model-info";
+export { SubscriptionInfo } from "./model/subscription-info";
+export { AiResourceInfo } from "./model/ai-resource-info";
+export { ProjectInfo } from "./model/project-info";
 
+export { DelegatedStateReference } from "./pipeline/delegated-state-reference";
+export { InvocationContextState } from "./pipeline/invocation-context-state";
+export { InvocationContextDecision } from "./pipeline/invocation-context-decision";
+export { ModelInvocationContextSnapshot } from "./pipeline/model-invocation-context-snapshot";
+export { ModelInvocationRequest } from "./pipeline/model-invocation-request";
+export { ModelToolRequest } from "./pipeline/model-tool-request";
+export { ModelToolResult } from "./pipeline/model-tool-result";
+export { ModelInvocationResponse } from "./pipeline/model-invocation-response";
+export { EngineEvent } from "./pipeline/engine-event";
+export { ModelReconciliationState } from "./pipeline/model-reconciliation-state";
+export { EnginePermissionDecision } from "./pipeline/engine-permission-decision";
+export { EngineCheckpoint } from "./pipeline/engine-checkpoint";
+export { ResumeContext } from "./pipeline/resume-context";
+export { TurnCommit } from "./pipeline/turn-commit";
+export { TurnEngineResult } from "./pipeline/turn-engine-result";
+export { HostPolicyRequest } from "./pipeline/host-policy-request";
+export { HostPolicyResult } from "./pipeline/host-policy-result";
+export { FinalOutputPolicyRequest } from "./pipeline/final-output-policy-request";
+export { FinalOutputPolicyResult } from "./pipeline/final-output-policy-result";
+export { RetryPolicyRequest } from "./pipeline/retry-policy-request";
+export { ContextRequest } from "./pipeline/context-request";
+export { ContextCandidate } from "./pipeline/context-candidate";
 export { CompactionConfig } from "./pipeline/compaction-config";
 export { TurnOptions } from "./pipeline/turn-options";
 export { TurnModelRequest } from "./pipeline/turn-model-request";

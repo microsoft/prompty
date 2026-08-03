@@ -1,0 +1,25 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ContextCandidate.yaml
+type: object
+properties:
+  id:
+    type: string
+    description: Stable candidate identifier
+  source:
+    type: string
+    description: Host-defined source of the candidate
+  messages:
+    type: array
+    items:
+      $ref: Message.yaml
+    default: []
+    description: Messages contributed by the candidate
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific candidate metadata
+required:
+  - id
+  - source
+  - messages
+description: A context contribution before filtering, ranking, and packing.

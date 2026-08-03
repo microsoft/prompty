@@ -15,7 +15,8 @@ schema/
 │   ├── template/    # Template, renderer, and parser config
 │   ├── tools/       # Tool subtypes and tool dispatch types
 │   └── wire/        # Provider wire helper types
-├── emitter/         # Code generation tooling (TypeSpec emitter)
+├── scripts/         # Post-generation normalization and drift verification
+├── tsp-output/      # Typra generation metadata (manifest, export surfaces, JSON AST)
 ├── tspconfig.yaml   # Generation targets
 └── package.json     # Dependencies
 ```
@@ -30,13 +31,10 @@ cd schema
 # First time only: install dependencies
 npm install
 
-# Build the emitter (if emitter source changed)
-npm run build:emitter
-
-# Generate all runtimes
+# Generate all runtimes (compile TypeSpec + normalize output)
 npm run generate
 
-# Or do both in one step
+# Format TypeSpec, generate, and format generated Rust in one step
 npm run build
 ```
 
@@ -51,7 +49,7 @@ This generates code into:
 
 ## Generated Code
 
-Generated files are **committed to the repo**. The emitter is a dev-time tool — consumers don't need TypeSpec installed.
+Generated files are **committed to the repo**. The generator is a dev-time tool — consumers don't need TypeSpec installed.
 
 Generated files have a header:
 ```
@@ -65,12 +63,25 @@ Generated files have a header:
 3. Verify runtime tests pass
 4. Commit both the `.tsp` changes and generated output
 
-## Emitter
+## Code Generation
 
-The emitter in `schema/emitter/` is Prompty's code generator. It reads the
-TypeSpec model graph, lowers it into a shared intermediate representation, and
-emits runtime model code, tests, JSON Schema, and Markdown reference docs.
+Code generation is driven by [Typra](https://github.com/sethjuarez/typra)
+(`@typra/emitter`, pinned in `package.json`) plus `@typespec/json-schema`,
+configured in `tspconfig.yaml`. The `@typra/emitter` reads the TypeSpec model
+graph and emits runtime model code and tests for TypeScript, Python, C#, Go, and
+Rust, along with the Markdown reference docs; `@typespec/json-schema` emits the
+JSON Schema under `vscode/prompty/schemas/`.
 
-The generated outputs should be deterministic: if the TypeSpec files and emitter
-source do not change, running `npm run build` should not produce meaningful
-runtime or documentation changes.
+The `scripts/` folder holds the supporting Node helpers:
+
+- `normalize-typra-output.mjs` runs at the end of `npm run generate` to make
+  output deterministic — it normalizes the generation timestamp in the Typra
+  manifest, collapses empty generated Python test files, and trims trailing
+  whitespace in generated Go files.
+- `verify-typra.mjs` backs `npm run verify:typra`, which compares the current
+  Typra export surfaces, manifest, hydration seams, and JSON AST against the
+  committed `HEAD` baseline to detect schema drift.
+
+The generated outputs should be deterministic: if the TypeSpec files and the
+pinned Typra version do not change, running `npm run build` should not produce
+meaningful runtime or documentation changes.

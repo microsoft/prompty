@@ -16,11 +16,11 @@ class Processor(Protocol):
 
     def process(self, agent: Prompty, response: Any) -> Any:
         """Extract a clean result from a raw LLM response"""
-        ...
+        raise NotImplementedError
 
     async def process_async(self, agent: Prompty, response: Any) -> Any:
         """Extract a clean result from a raw LLM response (async variant)"""
-        ...
+        raise NotImplementedError
 
     def process_stream(self, stream: Any) -> Any:
         """Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support."""

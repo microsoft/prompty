@@ -67,10 +67,10 @@ fn test_format_dropped_messages_multiple_tool_calls() {
 fn test_trim_returns_dropped_messages() {
     let msgs = vec![
         Message::with_text(Role::System, "sys"),
-        Message::with_text(Role::User, &"A".repeat(1000)),
-        Message::with_text(Role::User, &"B".repeat(1000)),
-        Message::with_text(Role::User, &"C".repeat(100)),
-        Message::with_text(Role::User, &"D".repeat(100)),
+        Message::with_text(Role::User, "A".repeat(1000)),
+        Message::with_text(Role::User, "B".repeat(1000)),
+        Message::with_text(Role::User, "C".repeat(100)),
+        Message::with_text(Role::User, "D".repeat(100)),
     ];
     let (dropped, trimmed) = trim_to_context_window(&msgs, 500);
     assert!(!dropped.is_empty(), "should have dropped messages");

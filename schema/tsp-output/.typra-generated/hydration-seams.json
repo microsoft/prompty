@@ -5,6 +5,14 @@
   "hydrationZones": [],
   "seams": [
     {
+      "contract": "ModelLister",
+      "target": "csharp",
+      "group": "model",
+      "symbol": "ModelLister",
+      "generatedSource": "model/ModelLister.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "CheckpointStore",
       "target": "csharp",
       "group": "pipeline",
@@ -74,6 +82,14 @@
       "group": "pipeline",
       "symbol": "Renderer",
       "generatedSource": "pipeline/Renderer.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "go",
+      "group": "model",
+      "symbol": "ModelLister",
+      "generatedSource": "model_lister.go",
       "seamKind": "protocol-adapter"
     },
     {
@@ -149,6 +165,14 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "ModelLister",
+      "target": "markdown",
+      "group": "model",
+      "symbol": "ModelLister",
+      "generatedSource": "ModelLister",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "CheckpointStore",
       "target": "markdown",
       "group": "pipeline",
@@ -221,6 +245,14 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "ModelLister",
+      "target": "python",
+      "group": "model",
+      "symbol": "ModelLister",
+      "generatedSource": ".model",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "CheckpointStore",
       "target": "python",
       "group": "pipeline",
@@ -290,6 +322,14 @@
       "group": "pipeline",
       "symbol": "Renderer",
       "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "rust",
+      "group": "model",
+      "symbol": "ModelLister",
+      "generatedSource": "model::model_lister",
       "seamKind": "protocol-adapter"
     },
     {
@@ -362,6 +402,14 @@
       "group": "pipeline",
       "symbol": "Renderer",
       "generatedSource": "pipeline::renderer",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "typescript",
+      "group": "model",
+      "symbol": "ModelLister",
+      "generatedSource": "./model/model-lister",
       "seamKind": "protocol-adapter"
     },
     {

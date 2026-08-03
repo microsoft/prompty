@@ -6,8 +6,20 @@ use async_trait::async_trait;
 use serde_json::Value;
 
 use prompty::interfaces::{InvokerError, Processor};
-use prompty::model::Prompty;
-use prompty::types::ToolCall;
+use prompty::model::{
+    DelegatedStateReference, InvocationContextPortability, InvocationContextState, InvocationUsage,
+    ModelInvocationRequest, ModelInvocationResponse, ModelToolRequest, Prompty,
+};
+use prompty::types::{Message, Role, StreamFailure, ToolCall};
+
+/// Provider-state metadata key for the exact message prefix represented by a
+/// Responses API `previous_response_id`.
+///
+/// The generated delegated-state contract intentionally leaves provider
+/// metadata opaque. This is OpenAI's stable, provider-owned continuation
+/// boundary, recorded from the immutable invocation snapshot rather than
+/// inferred from assistant or tool message metadata.
+pub(crate) const RESPONSES_CONTINUATION_BOUNDARY: &str = "prompty.openai.responses.boundary";
 
 /// OpenAI processor implementing the `Processor` trait.
 pub struct OpenAIProcessor;
@@ -16,6 +28,28 @@ pub struct OpenAIProcessor;
 impl Processor for OpenAIProcessor {
     async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
         process_response(agent, &response)
+    }
+
+    async fn process_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        process_invocation_response_with_context(agent, &response, "openai", true, request)
+    }
+
+    async fn process_raw_with_context(
+        &self,
+        agent: &Prompty,
+        response: Value,
+        request: &ModelInvocationRequest,
+    ) -> Result<ModelInvocationResponse, InvokerError> {
+        let mut mapped =
+            process_invocation_response_with_context(agent, &response, "openai", true, request)?;
+        mapped.output = Some(response);
+        mapped.tool_requests.clear();
+        Ok(mapped)
     }
 
     fn process_stream(
@@ -27,6 +61,168 @@ impl Processor for OpenAIProcessor {
     > {
         Ok(process_stream(inner))
     }
+}
+
+/// Map an OpenAI-compatible response into the generated provider contract.
+///
+/// Only the OpenAI Responses API exposes a reusable `previous_response_id`
+/// continuation. Chat completions remain explicitly portable because their
+/// response IDs cannot restore provider-side context.
+pub fn process_invocation_response(
+    agent: &Prompty,
+    response: &Value,
+    provider: &str,
+    supports_responses_continuation: bool,
+) -> Result<ModelInvocationResponse, InvokerError> {
+    let mut mapped = process_invocation_response_with_context(
+        agent,
+        response,
+        provider,
+        supports_responses_continuation,
+        &ModelInvocationRequest::default(),
+    )?;
+    if let Some(state) = &mut mapped.next_context_state {
+        // The legacy surface has no immutable request snapshot, so it cannot
+        // establish a trustworthy native continuation boundary.
+        for delegated in &mut state.delegated_state {
+            delegated.metadata = Value::Null;
+        }
+    }
+    Ok(mapped)
+}
+
+/// Map a response while recording the immutable provider-visible continuation boundary.
+pub fn process_invocation_response_with_context(
+    agent: &Prompty,
+    response: &Value,
+    provider: &str,
+    supports_responses_continuation: bool,
+    request: &ModelInvocationRequest,
+) -> Result<ModelInvocationResponse, InvokerError> {
+    let output = process_response(agent, response)?;
+    let tool_requests = extract_tool_calls(&output)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|call| ModelToolRequest {
+            id: call.id,
+            name: call.name,
+            arguments: serde_json::from_str(&call.arguments)
+                .ok()
+                .or(Some(Value::String(call.arguments))),
+            metadata: Value::Null,
+        })
+        .collect::<Vec<_>>();
+    let next_context_state = Some(
+        response
+            .get("object")
+            .and_then(Value::as_str)
+            .filter(|object| *object == "response")
+            .filter(|_| supports_responses_continuation)
+            .and_then(|_| response.get("id"))
+            .and_then(Value::as_str)
+            .filter(|id| !id.is_empty())
+            .map(|id| InvocationContextState {
+                portability: InvocationContextPortability::Delegated,
+                delegated_state: vec![DelegatedStateReference {
+                    provider: provider.to_string(),
+                    kind: "response".to_string(),
+                    id: id.to_string(),
+                    metadata: serde_json::json!({
+                        RESPONSES_CONTINUATION_BOUNDARY: {
+                            "inputMessages": request.context.messages,
+                        },
+                    }),
+                }],
+            })
+            .unwrap_or(InvocationContextState {
+                portability: InvocationContextPortability::Portable,
+                delegated_state: Vec::new(),
+            }),
+    );
+    let assistant_messages = next_context_state
+        .as_ref()
+        .filter(|state| state.portability == InvocationContextPortability::Portable)
+        .map(|_| portable_assistant_messages(response))
+        .unwrap_or_default();
+
+    Ok(ModelInvocationResponse {
+        output: tool_requests.is_empty().then_some(output),
+        usage: invocation_usage(response),
+        assistant_messages,
+        tool_requests,
+        next_context_state,
+        metadata: Value::Null,
+    })
+}
+
+fn portable_assistant_messages(response: &Value) -> Vec<Message> {
+    if response.get("object").and_then(Value::as_str) == Some("response") {
+        let function_calls = response
+            .get("output")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter(|item| item.get("type").and_then(Value::as_str) == Some("function_call"))
+            .cloned()
+            .map(|function_call| {
+                let mut message = Message::with_text(Role::Assistant, "");
+                message
+                    .metadata_mut()
+                    .insert("responses_function_call".to_string(), function_call);
+                message
+            })
+            .collect::<Vec<_>>();
+        if !function_calls.is_empty() {
+            return function_calls;
+        }
+        return vec![Message::with_text(
+            Role::Assistant,
+            response
+                .get("output_text")
+                .and_then(Value::as_str)
+                .unwrap_or(""),
+        )];
+    }
+
+    let Some(message) = response
+        .get("choices")
+        .and_then(Value::as_array)
+        .and_then(|choices| choices.first())
+        .and_then(|choice| choice.get("message"))
+    else {
+        return Vec::new();
+    };
+    let mut assistant = Message::with_text(
+        Role::Assistant,
+        message.get("content").and_then(Value::as_str).unwrap_or(""),
+    );
+    if let Some(tool_calls) = message.get("tool_calls").and_then(Value::as_array) {
+        assistant
+            .metadata_mut()
+            .insert("tool_calls".to_string(), Value::Array(tool_calls.clone()));
+    }
+    vec![assistant]
+}
+
+fn invocation_usage(response: &Value) -> Option<InvocationUsage> {
+    let usage = response.get("usage")?;
+    let input_tokens = usage
+        .get("input_tokens")
+        .or_else(|| usage.get("prompt_tokens"))
+        .and_then(Value::as_i64)?;
+    let output_tokens = usage
+        .get("output_tokens")
+        .or_else(|| usage.get("completion_tokens"))
+        .and_then(Value::as_i64)?;
+    let total_tokens = usage
+        .get("total_tokens")
+        .and_then(Value::as_i64)
+        .unwrap_or(input_tokens + output_tokens);
+    Some(InvocationUsage {
+        input_tokens,
+        output_tokens,
+        total_tokens,
+    })
 }
 
 /// Process an OpenAI API response, dispatching by response shape.
@@ -227,7 +423,7 @@ pub fn extract_tool_calls(response: &Value) -> Option<Vec<ToolCall>> {
 // Streaming processor — yields StreamChunk from raw SSE chunks
 // ---------------------------------------------------------------------------
 
-use prompty::types::StreamChunk;
+use prompty::types::{StreamChunk, Usage};
 
 /// Process an OpenAI streaming response (SSE chunks) into a stream of `StreamChunk`s.
 ///
@@ -235,6 +431,7 @@ use prompty::types::StreamChunk;
 /// - `delta.content` — yields `StreamChunk::Text`
 /// - `delta.tool_calls` — accumulates partial tool call chunks,
 ///   yields `StreamChunk::Tool` objects when the stream ends
+/// - terminal usage — yields one cumulative `StreamChunk::Usage` after tools
 /// - `delta.refusal` — yields an error as text
 ///
 /// Matches TypeScript's `streamGenerator()` in `openai/processor.ts`.
@@ -253,12 +450,14 @@ struct OpenAIStreamProcessor {
     phase: StreamPhase,
     /// Buffer for chunks to yield (content text from a single SSE event can only produce one).
     pending: std::collections::VecDeque<StreamChunk>,
+    usage: Option<Usage>,
 }
 
 enum StreamPhase {
     Streaming,
     /// Yielding accumulated tool calls, current index.
     YieldingTools(Vec<ToolCall>, usize),
+    YieldingUsage(Usage),
     Done,
 }
 
@@ -269,6 +468,7 @@ impl OpenAIStreamProcessor {
             tool_call_acc: std::collections::BTreeMap::new(),
             phase: StreamPhase::Streaming,
             pending: std::collections::VecDeque::new(),
+            usage: None,
         }
     }
 }
@@ -291,11 +491,150 @@ impl futures::Stream for OpenAIStreamProcessor {
             StreamPhase::Streaming => {
                 match this.inner.as_mut().poll_next(cx) {
                     std::task::Poll::Ready(Some(chunk)) => {
+                        if let Some(error) = chunk.get("error").and_then(Value::as_object) {
+                            this.phase = StreamPhase::Done;
+                            let message = error
+                                .get("message")
+                                .and_then(Value::as_str)
+                                .unwrap_or("OpenAI stream failed")
+                                .to_string();
+                            let stream_chunk = match error.get("type").and_then(Value::as_str) {
+                                Some("sse_transport_error") => {
+                                    StreamChunk::Failure(StreamFailure::Indeterminate(message))
+                                }
+                                _ => StreamChunk::Error(message),
+                            };
+                            return std::task::Poll::Ready(Some(stream_chunk));
+                        }
+                        let event_type = chunk.get("type").and_then(Value::as_str);
+                        match event_type {
+                            Some("response.output_text.delta") => {
+                                if let Some(text) = chunk.get("delta").and_then(Value::as_str) {
+                                    if !text.is_empty() {
+                                        return std::task::Poll::Ready(Some(StreamChunk::Text(
+                                            text.to_string(),
+                                        )));
+                                    }
+                                }
+                            }
+                            Some("response.output_item.added" | "response.output_item.done") => {
+                                if let Some(item) = chunk.get("item") {
+                                    if item.get("type").and_then(Value::as_str)
+                                        == Some("function_call")
+                                    {
+                                        let index = chunk
+                                            .get("output_index")
+                                            .and_then(Value::as_u64)
+                                            .unwrap_or(this.tool_call_acc.len() as u64)
+                                            as usize;
+                                        this.tool_call_acc.insert(
+                                            index,
+                                            (
+                                                item.get("call_id")
+                                                    .and_then(Value::as_str)
+                                                    .unwrap_or("")
+                                                    .to_string(),
+                                                item.get("name")
+                                                    .and_then(Value::as_str)
+                                                    .unwrap_or("")
+                                                    .to_string(),
+                                                item.get("arguments")
+                                                    .and_then(Value::as_str)
+                                                    .unwrap_or("")
+                                                    .to_string(),
+                                            ),
+                                        );
+                                    }
+                                }
+                            }
+                            Some("response.function_call_arguments.delta") => {
+                                if let Some(call_id) = chunk.get("call_id").and_then(Value::as_str)
+                                {
+                                    if let Some(arguments) =
+                                        chunk.get("delta").and_then(Value::as_str)
+                                    {
+                                        if let Some(entry) = this
+                                            .tool_call_acc
+                                            .values_mut()
+                                            .find(|entry| entry.0 == call_id)
+                                        {
+                                            entry.2.push_str(arguments);
+                                        }
+                                    }
+                                }
+                            }
+                            Some("response.function_call_arguments.done") => {
+                                if let Some(call_id) = chunk.get("call_id").and_then(Value::as_str)
+                                {
+                                    if let Some(arguments) =
+                                        chunk.get("arguments").and_then(Value::as_str)
+                                    {
+                                        if let Some(entry) = this
+                                            .tool_call_acc
+                                            .values_mut()
+                                            .find(|entry| entry.0 == call_id)
+                                        {
+                                            entry.2 = arguments.to_string();
+                                        }
+                                    }
+                                }
+                            }
+                            Some("response.completed") => {
+                                this.usage = usage_from_value(
+                                    chunk.pointer("/response/usage").unwrap_or(&Value::Null),
+                                );
+                                if let Some(output) = chunk
+                                    .get("response")
+                                    .and_then(|response| response.get("output"))
+                                    .and_then(Value::as_array)
+                                {
+                                    for (index, item) in output.iter().enumerate() {
+                                        if item.get("type").and_then(Value::as_str)
+                                            == Some("function_call")
+                                        {
+                                            this.tool_call_acc.insert(
+                                                index,
+                                                (
+                                                    item.get("call_id")
+                                                        .and_then(Value::as_str)
+                                                        .unwrap_or("")
+                                                        .to_string(),
+                                                    item.get("name")
+                                                        .and_then(Value::as_str)
+                                                        .unwrap_or("")
+                                                        .to_string(),
+                                                    item.get("arguments")
+                                                        .and_then(Value::as_str)
+                                                        .unwrap_or("")
+                                                        .to_string(),
+                                                ),
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                            Some("response.refusal.delta") => {
+                                if let Some(refusal) = chunk.get("delta").and_then(Value::as_str) {
+                                    if !refusal.is_empty() {
+                                        this.phase = StreamPhase::Done;
+                                        return std::task::Poll::Ready(Some(StreamChunk::Error(
+                                            format!("Model refused: {refusal}"),
+                                        )));
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+
                         let delta = chunk
                             .get("choices")
                             .and_then(Value::as_array)
                             .and_then(|c| c.first())
                             .and_then(|c| c.get("delta"));
+
+                        if let Some(usage) = chunk.get("usage") {
+                            this.usage = usage_from_value(usage);
+                        }
 
                         if let Some(delta) = delta {
                             // Content text
@@ -364,8 +703,14 @@ impl futures::Stream for OpenAIStreamProcessor {
                             .collect();
 
                         if tools.is_empty() {
-                            this.phase = StreamPhase::Done;
-                            std::task::Poll::Ready(None)
+                            if let Some(usage) = this.usage.take() {
+                                this.phase = StreamPhase::YieldingUsage(usage);
+                                cx.waker().wake_by_ref();
+                                std::task::Poll::Pending
+                            } else {
+                                this.phase = StreamPhase::Done;
+                                std::task::Poll::Ready(None)
+                            }
                         } else {
                             let first = tools[0].clone();
                             this.phase = StreamPhase::YieldingTools(tools, 1);
@@ -381,12 +726,42 @@ impl futures::Stream for OpenAIStreamProcessor {
                 std::task::Poll::Ready(Some(StreamChunk::Tool(tc)))
             }
             StreamPhase::YieldingTools(..) => {
+                if let Some(usage) = this.usage.take() {
+                    this.phase = StreamPhase::YieldingUsage(usage);
+                    cx.waker().wake_by_ref();
+                    std::task::Poll::Pending
+                } else {
+                    this.phase = StreamPhase::Done;
+                    std::task::Poll::Ready(None)
+                }
+            }
+            StreamPhase::YieldingUsage(usage) => {
+                let usage = *usage;
                 this.phase = StreamPhase::Done;
-                std::task::Poll::Ready(None)
+                std::task::Poll::Ready(Some(StreamChunk::Usage(usage)))
             }
             StreamPhase::Done => std::task::Poll::Ready(None),
         }
     }
+}
+
+fn usage_from_value(value: &Value) -> Option<Usage> {
+    let input_tokens = value
+        .get("input_tokens")
+        .or_else(|| value.get("prompt_tokens"))
+        .and_then(Value::as_u64)?;
+    let output_tokens = value
+        .get("output_tokens")
+        .or_else(|| value.get("completion_tokens"))
+        .and_then(Value::as_u64)?;
+    Some(Usage {
+        input_tokens,
+        output_tokens,
+        total_tokens: value
+            .get("total_tokens")
+            .and_then(Value::as_u64)
+            .unwrap_or(input_tokens + output_tokens),
+    })
 }
 
 // ---------------------------------------------------------------------------
@@ -397,6 +772,7 @@ impl futures::Stream for OpenAIStreamProcessor {
 mod tests {
     use super::*;
     use prompty::model::context::LoadContext;
+    use prompty::model::{ModelInvocationContextSnapshot, ModelInvocationRequest};
     use serde_json::json;
 
     fn make_agent(outputs_json: Value) -> Prompty {
@@ -412,6 +788,15 @@ mod tests {
         Prompty::load_from_value(&data, &LoadContext::default())
     }
 
+    fn request(messages: Vec<Message>) -> ModelInvocationRequest {
+        ModelInvocationRequest {
+            context: ModelInvocationContextSnapshot {
+                messages,
+                ..Default::default()
+            },
+        }
+    }
+
     #[test]
     fn test_process_chat_content() {
         let agent = make_agent(Value::Null);
@@ -425,6 +810,75 @@ mod tests {
         });
         let result = process_response(&agent, &response).unwrap();
         assert_eq!(result, json!("Hello!"));
+    }
+
+    #[test]
+    fn test_responses_api_maps_delegated_continuation_state() {
+        let agent = make_agent(Value::Null);
+        let response = json!({
+            "object": "response",
+            "id": "resp_123",
+            "output_text": "Hello from Responses"
+        });
+
+        let initial_messages = vec![Message::with_text(Role::User, "Hello")];
+        let result = process_invocation_response_with_context(
+            &agent,
+            &response,
+            "openai",
+            true,
+            &request(initial_messages.clone()),
+        )
+        .unwrap();
+
+        let state = result
+            .next_context_state
+            .expect("Responses API response should carry a continuation reference");
+        assert_eq!(state.portability, InvocationContextPortability::Delegated);
+        assert_eq!(state.delegated_state[0].provider, "openai");
+        assert_eq!(state.delegated_state[0].kind, "response");
+        assert_eq!(state.delegated_state[0].id, "resp_123");
+        assert_eq!(
+            state.delegated_state[0].metadata[RESPONSES_CONTINUATION_BOUNDARY]["inputMessages"],
+            serde_json::to_value(initial_messages).unwrap()
+        );
+        assert_eq!(result.output, Some(json!("Hello from Responses")));
+    }
+
+    #[test]
+    fn test_chat_completion_remains_portable() {
+        let agent = make_agent(Value::Null);
+        let response = json!({
+            "id": "chatcmpl_123",
+            "choices": [{"message": {
+                "role": "assistant",
+                "content": "Hello",
+                "tool_calls": [{
+                    "id": "call_1",
+                    "type": "function",
+                    "function": {"name": "weather", "arguments": "{\"city\":\"Paris\"}"}
+                }]
+            }}]
+        });
+
+        let result = process_invocation_response_with_context(
+            &agent,
+            &response,
+            "openai",
+            true,
+            &request(Vec::new()),
+        )
+        .unwrap();
+
+        let state = result.next_context_state.expect("context state");
+        assert_eq!(state.portability, InvocationContextPortability::Portable);
+        assert!(state.delegated_state.is_empty());
+        assert_eq!(result.assistant_messages.len(), 1);
+        assert_eq!(result.assistant_messages[0].text_content(), "Hello");
+        assert_eq!(
+            result.assistant_messages[0].metadata["tool_calls"][0]["id"],
+            "call_1"
+        );
     }
 
     #[test]
@@ -722,6 +1176,90 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_stream_emits_terminal_chat_usage() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({"choices": [{"delta": {"content": "Hello"}}]}),
+            json!({
+                "choices": [{"delta": {}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15}
+            }),
+        ];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut usage = None;
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Usage(value) = chunk {
+                usage = Some(value);
+            }
+        }
+
+        assert_eq!(
+            usage,
+            Some(Usage {
+                input_tokens: 10,
+                output_tokens: 5,
+                total_tokens: 15,
+            })
+        );
+    }
+
+    #[tokio::test]
+    async fn test_stream_emits_terminal_responses_usage() {
+        use futures::StreamExt;
+
+        let chunks = vec![json!({
+            "type": "response.completed",
+            "response": {
+                "usage": {"input_tokens": 9, "output_tokens": 6, "total_tokens": 15},
+                "output": []
+            }
+        })];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut usage = None;
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Usage(value) = chunk {
+                usage = Some(value);
+            }
+        }
+
+        assert_eq!(
+            usage,
+            Some(Usage {
+                input_tokens: 9,
+                output_tokens: 6,
+                total_tokens: 15,
+            })
+        );
+    }
+
+    #[tokio::test]
+    async fn test_stream_usage_calculates_missing_total() {
+        use futures::StreamExt;
+
+        let chunks = vec![json!({
+            "choices": [{"delta": {}}],
+            "usage": {"prompt_tokens": 9, "completion_tokens": 6}
+        })];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut usage = None;
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Usage(value) = chunk {
+                usage = Some(value);
+            }
+        }
+
+        assert_eq!(
+            usage,
+            Some(Usage {
+                input_tokens: 9,
+                output_tokens: 6,
+                total_tokens: 15,
+            })
+        );
+    }
+
+    #[tokio::test]
     async fn test_stream_tool_calls() {
         use futures::StreamExt;
         let chunks = vec![
@@ -756,12 +1294,37 @@ mod tests {
         let mut stream = process_stream(inner);
         let mut errors = Vec::new();
         while let Some(chunk) = stream.next().await {
-            if let StreamChunk::Error(e) = chunk {
-                errors.push(e);
+            if let StreamChunk::Error(message) = chunk {
+                errors.push(message);
             }
         }
         assert_eq!(errors.len(), 1);
         assert!(errors[0].contains("refused"));
+    }
+
+    #[tokio::test]
+    async fn test_stream_transport_error_is_indeterminate_after_tokens() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({"choices": [{"delta": {"content": "partial"}}]}),
+            json!({"error": {
+                "type": "sse_transport_error",
+                "message": "SSE stream error: connection reset"
+            }}),
+        ];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+
+        assert!(matches!(
+            stream.next().await,
+            Some(StreamChunk::Text(value)) if value == "partial"
+        ));
+        assert!(matches!(
+            stream.next().await,
+            Some(StreamChunk::Failure(StreamFailure::Indeterminate(message)))
+                if message.contains("connection reset")
+        ));
+        assert!(stream.next().await.is_none());
     }
 
     #[tokio::test]
@@ -777,6 +1340,76 @@ mod tests {
         let (tool_calls, content) = consume_stream_chunks(stream, None).await;
         assert!(tool_calls.is_empty());
         assert_eq!(content, "Hello world");
+    }
+
+    #[tokio::test]
+    async fn test_stream_responses_api_text_delta() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({
+                "type": "response.output_text.delta",
+                "item_id": "msg_1",
+                "output_index": 0,
+                "content_index": 0,
+                "delta": "Hello"
+            }),
+            json!({
+                "type": "response.output_text.delta",
+                "item_id": "msg_1",
+                "output_index": 0,
+                "content_index": 0,
+                "delta": " world"
+            }),
+        ];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut text = String::new();
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Text(value) = chunk {
+                text.push_str(&value);
+            }
+        }
+        assert_eq!(text, "Hello world");
+    }
+
+    #[tokio::test]
+    async fn test_stream_responses_api_function_call() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({
+                "type": "response.output_item.added",
+                "output_index": 1,
+                "item": {
+                    "type": "function_call",
+                    "id": "fc_1",
+                    "call_id": "call_1",
+                    "name": "get_weather",
+                    "arguments": ""
+                }
+            }),
+            json!({
+                "type": "response.function_call_arguments.delta",
+                "call_id": "call_1",
+                "delta": "{\"city\""
+            }),
+            json!({
+                "type": "response.function_call_arguments.done",
+                "call_id": "call_1",
+                "arguments": "{\"city\":\"Seattle\"}"
+            }),
+        ];
+        let mut stream = process_stream(futures::stream::iter(chunks));
+        let mut calls = Vec::new();
+        while let Some(chunk) = stream.next().await {
+            if let StreamChunk::Tool(call) = chunk {
+                calls.push(call);
+            }
+        }
+        assert_eq!(calls.len(), 1);
+        assert_eq!(calls[0].id, "call_1");
+        assert_eq!(calls[0].name, "get_weather");
+        assert_eq!(calls[0].arguments, "{\"city\":\"Seattle\"}");
     }
 
     #[tokio::test]

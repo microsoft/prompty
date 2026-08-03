@@ -1,0 +1,11 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FinalOutputPolicyResult.yaml
+type: object
+properties:
+  output:
+    description: Rewritten final output
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific policy metadata
+description: Final output rewrite produced by the host policy before commit.

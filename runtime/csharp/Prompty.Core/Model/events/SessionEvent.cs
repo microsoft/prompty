@@ -100,7 +100,7 @@ public partial class SessionEvent
 
         if (data.TryGetValue("type", out var typeValue) && typeValue is not null)
         {
-            instance.Type = Enum.Parse<SessionEventType>(typeValue?.ToString()!, true);
+            instance.Type = SessionEventTypeParser.Parse(typeValue?.ToString()!);
         }
 
         if (data.TryGetValue("timestamp", out var timestampValue) && timestampValue is not null)
@@ -170,7 +170,7 @@ public partial class SessionEvent
         result["id"] = obj.Id;
 
 
-        result["type"] = obj.Type.ToString().ToLowerInvariant();
+        result["type"] = SessionEventTypeParser.ToValue(obj.Type);
 
 
         result["timestamp"] = obj.Timestamp;

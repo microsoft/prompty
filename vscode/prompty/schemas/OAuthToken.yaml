@@ -1,0 +1,24 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OAuthToken.yaml
+type: object
+properties:
+  accessToken:
+    type: string
+    description: The bearer access token
+  tokenType:
+    type: string
+    description: The token type, typically Bearer
+  expiresIn:
+    type: string
+    description: Lifetime of the access token in seconds
+  refreshToken:
+    type: string
+    description: Refresh token when offline access was granted
+  scope:
+    type: string
+    description: Scopes granted by the authorization server
+required:
+  - accessToken
+  - tokenType
+  - expiresIn
+description: Provider-neutral OAuth token material returned by an authorization server.

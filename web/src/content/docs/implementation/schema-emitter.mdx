@@ -1,19 +1,19 @@
 ---
-title: Schema Emitter
-description: How Prompty's TypeSpec emitter generates runtime models, tests, JSON Schema, and reference docs.
+title: Code Generation
+description: How Prompty's TypeSpec model generates runtime models, tests, JSON Schema, and reference docs through Typra.
 slug: "implementation/schema-emitter"
 sidebar:
   order: 20
 ---
 
-The schema emitter is the dev-time code generator that turns the
-TypeSpec model in `schema/model/` into checked-in runtime and documentation
-artifacts.
+Code generation is the dev-time step that turns the TypeSpec model in
+`schema/model/` into checked-in runtime and documentation artifacts.
 
-Prompty's TypeSpec files are the source of truth for type shapes. The emitter
-is responsible for keeping every runtime aligned with those shapes.
+Prompty's TypeSpec files are the source of truth for type shapes. Generation
+keeps every runtime aligned with those shapes so no runtime hand-maintains its
+own model code.
 
-## What the emitter generates
+## What generation produces
 
 Running `cd schema && npm run build` generates:
 
@@ -28,36 +28,52 @@ Running `cd schema && npm run build` generates:
 | Markdown schema reference | `web/src/content/docs/reference/` |
 
 Generated files are committed to the repository. Users of Prompty do not need
-TypeSpec or the emitter installed.
+TypeSpec or the generator installed.
 
 ## How generation works
 
-The emitter has four main stages:
+Generation is driven by two TypeSpec emitters, configured in
+`schema/tspconfig.yaml`:
 
-1. **Read TypeSpec** — TypeSpec compiles `schema/model/main.tsp` and loads the
-   Prompty model graph.
-2. **Collect metadata** — Prompty decorators capture samples, factories,
-   helper methods, shorthand coercions, known wire names, defaults, protocol
-   markers, and other generation hints.
-3. **Lower to IR** — the emitter converts TypeSpec models into a language-neutral
-   intermediate representation that describes types, fields, polymorphism,
-   factories, methods, wire mappings, and examples.
-4. **Emit per target** — language emitters convert the IR into idiomatic model
-   code, tests, scaffolding, and documentation for each target.
+- [`@typra/emitter`](https://github.com/sethjuarez/typra) — the multi-language
+  code generator. It reads the Prompty model graph, lowers it into a
+  language-neutral intermediate representation, and emits idiomatic model code,
+  tests, and Markdown reference docs for every target runtime.
+- `@typespec/json-schema` — emits the JSON Schema consumed by the VS Code
+  extension into `vscode/prompty/schemas/`.
+
+Both are ordinary npm dependencies pinned in `schema/package.json`; there is no
+in-repo generator source to build. The `npm run generate` script runs the
+TypeSpec compiler over `schema/model/main.tsp` with that config, then runs a
+post-processing pass (see below).
 
 The generated output should be deterministic. If neither the TypeSpec files nor
-the emitter source changed, `npm run build` should not produce meaningful diffs.
+the pinned generator version changed, `npm run build` should not produce
+meaningful diffs.
 
 ## Directory map
 
 | Path | Purpose |
 | --- | --- |
-| `schema/model/` | Prompty TypeSpec source files |
-| `schema/tspconfig.yaml` | Generation targets and output paths |
-| `schema/emitter/src/decorators.ts` | Prompty TypeSpec decorators |
-| `schema/emitter/src/ir/` | Shared intermediate representation and lowering |
-| `schema/emitter/src/languages/` | Per-language emitters |
-| `schema/emitter/src/testing/` | Shared test-context generation |
+| `schema/model/` | Prompty TypeSpec source files (source of truth) |
+| `schema/tspconfig.yaml` | Emitters and per-target output paths |
+| `schema/package.json` | Pinned `@typra/emitter` and TypeSpec dependencies |
+| `schema/scripts/normalize-typra-output.mjs` | Post-generation normalization for deterministic output |
+| `schema/scripts/verify-typra.mjs` | Schema-drift verification against the committed baseline |
+| `schema/tsp-output/` | Typra generation metadata (manifest, export surfaces, JSON AST) |
+
+## Supporting scripts
+
+The `schema/scripts/` folder holds the Node helpers that wrap generation:
+
+- **`normalize-typra-output.mjs`** runs at the end of `npm run generate`. It
+  normalizes the generation timestamp in the Typra manifest, collapses empty
+  generated Python test files, and trims trailing whitespace in generated Go
+  files so regeneration produces clean, diff-stable output.
+- **`verify-typra.mjs`** backs `npm run verify:typra`. It compares the current
+  Typra export surfaces, manifest, hydration seams, and JSON AST against the
+  committed `HEAD` baseline and reports schema drift — including whether a change
+  is additive or a governance-relevant major change.
 
 ## Common workflow
 
@@ -67,13 +83,16 @@ npm install
 npm run build
 ```
 
-Use `npm run build` when you change TypeSpec or emitter code. It builds the
-emitter, formats TypeSpec, regenerates all targets, and formats generated Rust.
+`npm run build` formats TypeSpec, regenerates all targets (`npm run generate`),
+and formats the generated Rust. Run it whenever you change TypeSpec.
 
 ## Editing rules
 
-- Edit `schema/model/**/*.tsp` for schema changes.
-- Edit `schema/emitter/src/**` for generation behavior changes.
+- Edit `schema/model/**/*.tsp` for schema changes. Keep provider-specific field
+  names out of the canonical models — express them as wire mappings under
+  `schema/model/wire/**`.
+- To change generation behavior itself, update the pinned `@typra/emitter`
+  version in `schema/package.json` (and re-run `npm install`).
 - Do not hand-edit generated reference pages or generated runtime model files
   unless you are debugging; the next generation run will overwrite them.
-- Commit TypeSpec/emitter changes together with the generated output.
+- Commit TypeSpec changes together with the regenerated output.

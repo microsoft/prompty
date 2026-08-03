@@ -75,7 +75,7 @@ public partial class TurnEndPayload
 
         if (data.TryGetValue("status", out var statusValue) && statusValue is not null)
         {
-            instance.Status = Enum.Parse<TurnStatus>(statusValue?.ToString()!, true);
+            instance.Status = TurnStatusParser.Parse(statusValue?.ToString()!);
         }
 
         if (data.TryGetValue("response", out var responseValue) && responseValue is not null)
@@ -125,7 +125,7 @@ public partial class TurnEndPayload
 
         if (obj.Status is not null)
         {
-            result["status"] = obj.Status.Value.ToString().ToLowerInvariant();
+            result["status"] = TurnStatusParser.ToValue(obj.Status.Value);
         }
 
 

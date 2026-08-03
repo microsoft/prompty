@@ -1,0 +1,33 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelToolResult.yaml
+type: object
+properties:
+  requestId:
+    type: string
+    description: Identifier of the corresponding model tool request
+  name:
+    type: string
+    description: Name of the executed tool
+  outcome:
+    anyOf:
+      - type: string
+        const: success
+      - type: string
+        const: failed
+      - type: string
+        const: indeterminate
+    description: Semantic outcome of the external tool effect
+  output:
+    description: JSON-shaped tool output when available
+  errorKind:
+    type: string
+    description: Stable error category for failed or indeterminate results
+  metadata:
+    $ref: RecordUnknown.yaml
+    default: {}
+    description: Opaque host-specific tool result metadata
+required:
+  - requestId
+  - name
+  - outcome
+description: Normalized result of executing one model-requested tool.

@@ -2,22 +2,22 @@
 
 ## Overview
 
-Prompty is being rebuilt from the ground up. The type system that originated in Prompty's TypeSpec specification has been extracted into [AgentSchema](https://microsoft.github.io/AgentSchema/) as the canonical, lower-level type layer. Prompty v2 takes a dependency on the `agentschema` Python package and builds its runtime on top.
+Prompty is being rebuilt from the ground up. The type system that originated in Prompty's TypeSpec specification is now owned in this repo and emitted through Typra. Prompty v2 uses the generated Prompty model packages as the canonical, lower-level type layer.
 
-**Core principle**: Prompty is a markdown file format (`.prompty`) for LLM prompts. The frontmatter uses AgentSchema's PromptAgent schema. The markdown body becomes `instructions`. The runtime loads, renders, parses, and executes prompts.
+**Core principle**: Prompty is a markdown file format (`.prompty`) for LLM prompts. The frontmatter uses Prompty's Typra-generated prompt model. The markdown body becomes `instructions`. The runtime loads, renders, parses, and executes prompts.
 
-### What Prompty Uses from AgentSchema
+### What Prompty Uses from the Typra-Generated Model
 
-Only the PromptAgent subset — not the full spec:
+Only the prompt runtime subset — not every schema contract:
 
-| AgentSchema Type                                           | Prompty Uses                                        |
+| Model Type                                                 | Prompty Uses                                        |
 | ---------------------------------------------------------- | --------------------------------------------------- |
-| `PromptAgent`                                              | Yes — the loaded `.prompty` file becomes this       |
+| `Prompty`                                                  | Yes — the loaded `.prompty` file becomes this       |
 | `Model`                                                    | Yes — model configuration                           |
 | `Connection` (all subtypes)                                | Yes — auth/endpoint config                          |
 | `ModelOptions`                                             | Yes — temperature, maxOutputTokens, etc.            |
-| `Template` / `Format` / `Parser`                           | Yes — template engine config                        |
-| `PropertySchema` / `Property`                              | Yes — inputSchema/outputSchema                      |
+| `Template` / `FormatConfig` / `ParserConfig`               | Yes — template engine config                        |
+| `Property`                                                 | Yes — inputs/outputs                                |
 | `FunctionTool`                                             | Yes — local function calling                        |
 | `McpTool`                                                  | Yes — MCP server integration                        |
 | `OpenApiTool`                                              | Yes — API-based tools                               |
@@ -29,15 +29,15 @@ Only the PromptAgent subset — not the full spec:
 
 ### Key Design Decisions
 
-1. **`agentschema` is a pip dependency** — no code generation, no TypeSpec in Prompty repo
-2. **No `kind` in `.prompty` files** — the loader injects `kind: "prompt"` since Prompty only produces PromptAgents
+1. **Typra owns generated model code** — schema changes flow through the in-repo TypeSpec/Typra emitter, not an external model package
+2. **No `kind` in `.prompty` files** — the loader injects the generated prompt model kind when needed
 3. **Markdown body → `instructions`** — the loader splits frontmatter/body and sets `agent.instructions = body`
 4. **Legacy migration in the loader** — old-format `.prompty` files still load with deprecation warnings
 5. **Invoker pattern retained** — Renderer → Parser → Executor → Processor pipeline, redesigned in Phase 2
 6. **Use `uv` exclusively** for all Python environment and package management. Never use `pip`, `pip install`, `python -m pip`, or `python -m venv` directly. Use `uv venv`, `uv pip install`, `uv run`, etc. instead.
-7. **Use `AgentDefinition.load(data, ctx)`** — not `PromptAgent.load()`. `AgentDefinition.load()` dispatches on `kind` via `load_kind()` to create a `PromptAgent`, then populates base fields (`name`, `metadata`, `inputSchema`, `outputSchema`, `description`, `displayName`). `PromptAgent.load()` only handles prompt-specific fields (`model`, `tools`, `template`, `instructions`)
-8. **`Property` has `default` and `example`** — not `value`. The `value` field mentioned in early specs does not exist in agentschema. Use `default` for sample/default values
-9. **`${protocol:value}` expansion via `LoadContext.pre_process`** — agentschema's `LoadContext(pre_process=fn)` walks every dict in the tree, calling `fn(dict)` → mutated dict. This is the ideal hook for resolving `${env:VAR}`, `${file:path}`, etc. without a separate recursive pass
+7. **Use generated `Prompty.load(data)` model loaders** — keep field names aligned with the generated Prompty model classes and their `load()`/`save()` behavior.
+8. **`Property` has `default` and `example`** — use `default` for sample/default values.
+9. **`${protocol:value}` expansion is owned by the loader** — resolve `${env:VAR}`, `${file:path}`, and related references before or during generated model loading.
 
 ---
 
@@ -120,7 +120,7 @@ Only the PromptAgent subset — not the full spec:
 
 ### Package Management
 
-- **Required deps**: `agentschema`, `pyyaml`, `python-dotenv`, `aiofiles`.
+- **Required deps**: `pyyaml`, `python-dotenv`, `aiofiles`.
 - **Optional deps** via extras: `[jinja2]`, `[mustache]`, `[openai]`, `[azure]`, `[otel]`, `[all]`, `[dev]`.
 - **Never add optional deps to `dependencies`** — they go in `[project.optional-dependencies]`.
 - **Entry points** register invokers for pluggable discovery — always update `pyproject.toml` when adding a new renderer, parser, executor, or processor.
@@ -146,24 +146,23 @@ Only the PromptAgent subset — not the full spec:
 utils.parse()              Split frontmatter (YAML) from body (markdown)
      │                     Returns dict with body as 'instructions' key
      ▼
-_migrate_legacy()          Convert old property names → AgentSchema names
+_migrate_legacy()          Convert old property names → v2 Prompty model names
      │                     (with deprecation warnings)
      ▼
-Inject kind: "prompt"      Always — .prompty files are PromptAgents
+Load generated model       .prompty files become Prompty model instances
      │
      ▼
-AgentDefinition.load(      Uses LoadContext(pre_process=...) for ${} expansion
-  data, ctx)               Resolves ${env:VAR}, ${file:path} in every dict
-     │                     Dispatches on kind → PromptAgent, populates ALL fields
+Prompty.load(data)         Resolves ${env:VAR}, ${file:path} through loader hooks
+     │                     Populates generated model fields
      ▼
-PromptAgent                Fully typed: .instructions, .model, .tools,
-                           .inputSchema, .outputSchema, .template, .metadata
+Prompty                    Fully typed: .instructions, .model, .tools,
+                           .inputs, .outputs, .template, .metadata
 ```
 
 ### Execution Pipeline (Phases 2-3)
 
 ```
-PromptAgent
+Prompty
      │
      ▼
   Renderer                 Jinja2 or Mustache: render instructions with inputs
@@ -189,7 +188,7 @@ PromptAgent
 
 | Path                                 | Reason                                  |
 | ------------------------------------ | --------------------------------------- |
-| `specification/` (entire directory)  | TypeSpec + emitter moved to AgentSchema |
+| `specification/` (entire directory)  | Superseded by the in-repo schema/Typra model pipeline |
 | `runtime/csharp/` (entire directory) | Auto-generated from same TypeSpec       |
 
 ### What Stays
@@ -234,7 +233,7 @@ prompty/                              # runtime/python/prompty/prompty/
 │
 ├── core/                             # Infrastructure & pipeline logic
 │   ├── __init__.py                   # Re-exports from all core submodules
-│   ├── loader.py                     # load(), load_async() → PromptAgent
+│   ├── loader.py                     # load(), load_async() → Prompty
 │   ├── migration.py                  # Legacy v1 → v2 frontmatter migration
 │   ├── utils.py                      # Frontmatter parsing, file I/O helpers
 │   ├── types.py                      # Message, ContentPart, TextPart, ImagePart, etc.
@@ -275,8 +274,8 @@ prompty/                              # runtime/python/prompty/prompty/
 
 | Module         | What it does                                                                                                             |
 | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `loader.py`    | `load()` / `load_async()` — parse `.prompty` file → `PromptAgent`. Handles frontmatter, `${env:}`, `${file:}`.           |
-| `migration.py` | `_migrate_legacy()` — converts v1 property names to v2 AgentSchema names with deprecation warnings.                      |
+| `loader.py`    | `load()` / `load_async()` — parse `.prompty` file → `Prompty`. Handles frontmatter, `${env:}`, `${file:}`.               |
+| `migration.py` | `_migrate_legacy()` — converts v1 property names to v2 Prompty model names with deprecation warnings.                    |
 | `utils.py`     | `parse()` — regex frontmatter/body split. `load_prompty()`, `load_text()`, `load_json()` file helpers.                   |
 | `types.py`     | `Message`, `TextPart`, `ImagePart`, `AudioPart`, `FilePart`, `ContentPart`, `ThreadMarker`, `ROLES`.                     |
 | `protocols.py` | Protocol classes defining the interfaces: `RendererProtocol`, `ParserProtocol`, `ExecutorProtocol`, `ProcessorProtocol`. |
@@ -418,14 +417,14 @@ Integration tests live in `runtime/python/prompty/tests/integration/` (see Phase
 | `test_image.py`      | DALL-E 2 image generation (OpenAI only)                |
 | `test_agent.py`      | Agent loop with tool calling against real endpoints    |
 | `test_streaming.py`  | Streaming chat completions                             |
-| `test_structured.py` | Structured output via outputSchema / response_format   |
+| `test_structured.py` | Structured output via outputs / response_format        |
 
 Run unit tests: `uv run pytest tests/ -q` (or `.venv/Scripts/python -m pytest tests/ -q`)
 Run integration tests: `pytest tests/integration/ -v -o "addopts="` (requires API keys in `.env`)
 
 ### Dependencies
 
-**Required**: `agentschema`, `pyyaml`, `python-dotenv`, `aiofiles`
+**Required**: `pyyaml`, `python-dotenv`, `aiofiles`
 
 **Optional** (install via extras):
 
@@ -447,7 +446,7 @@ Install: `uv pip install -e ".[dev,all]"`
 
 ### Goal
 
-`load("path/to/file.prompty")` returns a typed `PromptAgent` from `agentschema`.
+`load("path/to/file.prompty")` returns a typed `Prompty` model from the generated runtime model package.
 
 ### Files to Create/Modify
 
@@ -460,7 +459,6 @@ dynamic = ["version"]
 description = "Prompty is an asset class and format for LLM prompts"
 requires-python = ">=3.11"
 dependencies = [
-    "agentschema",
     "pyyaml",
     "python-dotenv",
     "aiofiles",
@@ -487,20 +485,20 @@ No `[project.scripts]` — CLI comes later.
 
 Public API:
 
-- `load(path: str | Path) -> PromptAgent`
-- `load_async(path: str | Path) -> PromptAgent`
+- `load(path: str | Path) -> Prompty`
+- `load_async(path: str | Path) -> Prompty`
 
 Internal helpers:
 
 - `_migrate_legacy(data: dict) -> dict` — deprecation conversions
-- `_pre_process(agent_file: Path) -> Callable` — returns a `LoadContext.pre_process` callback for `${env:}` and `${file:}` resolution
+- `_pre_process(agent_file: Path) -> Callable` — returns a loader callback for `${env:}` and `${file:}` resolution
 
 **Loading flow**:
 
 ```python
-from agentschema import AgentDefinition, LoadContext, PromptAgent
+from prompty.model import Prompty
 
-def load(path: str | Path) -> PromptAgent:
+def load(path: str | Path) -> Prompty:
     path = Path(path).resolve()
 
     # 1. Split frontmatter + body (existing util)
@@ -509,13 +507,11 @@ def load(path: str | Path) -> PromptAgent:
     # 2. Migrate legacy property names
     data = _migrate_legacy(data)
 
-    # 3. Inject kind (Prompty files are always PromptAgents)
+    # 3. Load as the generated Prompty model shape
     data["kind"] = "prompt"
 
-    # 4. Load via agentschema with pre_process for ${} expansion
-    ctx = LoadContext(pre_process=_pre_process(path))
-    agent = AgentDefinition.load(data, ctx)
-    assert isinstance(agent, PromptAgent)
+    # 4. Load through the generated Prompty model
+    agent = Prompty.load(data)
     return agent
 ```
 
@@ -538,23 +534,22 @@ def load(path: str | Path) -> PromptAgent:
 | `model.parameters.stop`                    | `model.options.stopSequences`                                           | Rename                               |
 | `model.api`                                | `model.apiType`                                                         | Rename                               |
 | `model.parameters.tools`                   | top-level `tools`                                                       | Move out of model                    |
-| `inputs` (dict/list)                       | `inputSchema.properties`                                                | Restructure                          |
-| `inputs.X.type`                            | `inputSchema.properties.X.kind`                                         | `type` → `kind`                      |
-| `inputs.X.sample`                          | `inputSchema.properties.X.default`                                      | `sample` → `default`                 |
-| `outputs`                                  | `outputSchema`                                                          | Rename                               |
+| `inputs` (dict/list)                       | generated `inputs` properties                                           | Normalize                            |
+| `inputs.X.type`                            | `inputs.X.kind`                                                         | `type` → `kind`                      |
+| `inputs.X.sample`                          | `inputs.X.default`                                                      | `sample` → `default`                 |
+| `outputs`                                  | generated `outputs` properties                                          | Normalize                            |
 | Root `authors`                             | `metadata.authors`                                                      | Move into metadata                   |
 | Root `tags`                                | `metadata.tags`                                                         | Move into metadata                   |
 | Root `version`                             | `metadata.version`                                                      | Move into metadata                   |
 | `template: "jinja2"` (string)              | `template: { format: { kind: "jinja2" }, parser: { kind: "prompty" } }` | Restructure                          |
 | `template.type`                            | `template.format.kind`                                                  | Nested rename                        |
-| `sample` (root)                            | Raise error                                                             | Deprecated, use inputSchema.examples |
+| `sample` (root)                            | Raise error                                                             | Deprecated, use examples on inputs   |
 
 Each legacy conversion emits `warnings.warn("...", DeprecationWarning)`.
 
 **Reference resolution** (`_pre_process`):
 
-Uses `LoadContext(pre_process=fn)` — agentschema walks every dict in the tree, calling `fn(dict)` → mutated dict.
-This resolves `${env:VAR}`, `${env:VAR:default}`, and `${file:path}` in-place as the tree is loaded.
+The loader resolves `${env:VAR}`, `${env:VAR:default}`, and `${file:path}` before passing data into the generated model loader.
 
 ```python
 def _pre_process(agent_file: Path) -> Callable[[Any], Any]:
@@ -598,10 +593,9 @@ __version__ = VERSION
 # Core API
 from .loader import load, load_async
 
-# Re-export key agentschema types for convenience
-from agentschema import (
-    AgentDefinition,
-    PromptAgent,
+# Re-export key generated model types for convenience
+from .model import (
+    Prompty,
     Model,
     ModelOptions,
     Connection,
@@ -610,17 +604,14 @@ from agentschema import (
     RemoteConnection,
     AnonymousConnection,
     Template,
-    Format,
-    Parser,
-    PropertySchema,
+    FormatConfig,
+    ParserConfig,
     Property,
     Tool,
     FunctionTool,
     McpTool,
     OpenApiTool,
     CustomTool,
-    LoadContext,
-    SaveContext,
 )
 
 # Tracing
@@ -629,7 +620,7 @@ from .tracer import Tracer, trace
 
 #### 4. Create Test Fixtures (`tests/prompts/`)
 
-**`basic.prompty`** — new AgentSchema format:
+**`basic.prompty`** — new Prompty v2 format:
 
 ```prompty
 ---
@@ -648,7 +639,7 @@ model:
   options:
     temperature: 0.7
     maxOutputTokens: 1000
-inputSchema:
+inputs:
   properties:
     firstName:
       kind: string
@@ -787,13 +778,12 @@ name: threaded-chat
 model:
   id: gpt-4
   apiType: chat
-inputSchema:
-  properties:
-    - name: question
-      kind: string
-      default: Hello
-    - name: conversation
-      kind: thread
+inputs:
+  question:
+    kind: string
+    default: Hello
+  conversation:
+    kind: thread
 ---
 system:
 You are a helpful assistant.{{conversation}}user:
@@ -844,14 +834,14 @@ user:
 # Tests to implement (each is a separate test function):
 
 # --- Basic loading ---
-# test_load_basic: load basic.prompty → assert PromptAgent fields
+# test_load_basic: load basic.prompty → assert Prompty fields
 # test_load_minimal: load minimal.prompty → model shorthand works
-# test_load_returns_prompt_agent: isinstance(result, PromptAgent)
+# test_load_returns_prompty: isinstance(result, Prompty)
 # test_load_kind_is_prompt: agent.kind == "prompt"
 
 # --- Instructions ---
 # test_load_instructions_from_body: agent.instructions == markdown body
-# test_load_thread_input_kind: thread-kind input is declared in inputSchema
+# test_load_thread_input_kind: thread-kind input is declared in inputs
 
 # --- Model ---
 # test_load_model_shorthand: model: gpt-4 → Model(id="gpt-4")
@@ -859,7 +849,7 @@ user:
 # test_load_model_connection: connection.kind, endpoint, apiKey
 
 # --- Input/Output Schema ---
-# test_load_input_schema: inputSchema.properties loaded with correct kinds
+# test_load_inputs: inputs loaded with correct kinds
 # test_load_input_values: property values (examples) preserved
 
 # --- Tools ---
@@ -883,11 +873,11 @@ user:
 # test_load_file_shared_config: ${file:shared_connection.json} merges into model connection
 
 # --- Legacy Migration ---
-# test_load_legacy_basic: old format loads, produces correct PromptAgent
+# test_load_legacy_basic: old format loads, produces correct Prompty
 # test_load_legacy_deprecation_warnings: warnings.warn emitted
 # test_load_legacy_configuration_to_connection: model.configuration → connection
 # test_load_legacy_parameters_to_options: model.parameters → options
-# test_load_legacy_inputs: inputs → inputSchema.properties
+# test_load_legacy_inputs: legacy inputs normalize to generated inputs
 # test_load_legacy_template_string: template: jinja2 → structured Template
 
 # --- Error Cases ---
@@ -902,7 +892,7 @@ All of the following must pass before moving to Phase 2:
 
 - `pytest tests/test_loader.py` — all green
 - `from prompty import load` works
-- `load()` returns a `PromptAgent` (from agentschema)
+- `load()` returns a typed `Prompty` model
 - `agent.instructions` contains the markdown body
 - `agent.model` is a typed `Model` object
 - `agent.tools` contains typed tool instances (`FunctionTool`, `McpTool`, etc.)
@@ -1013,14 +1003,14 @@ currently only supports `chat.completions`.
 
 | Item                                 | Decision                                                                  |
 | ------------------------------------ | ------------------------------------------------------------------------- |
-| Structured output (`outputSchema`)   | **Yes** — convert `outputSchema` → OpenAI `response_format`               |
+| Structured output (`outputs`)        | **Yes** — convert `outputs` → OpenAI `response_format`                    |
 | Embedding API (`apiType: embedding`) | **Yes** — dispatch to `embeddings.create()`                               |
 | Image generation (`apiType: image`)  | **Yes** — dispatch to `images.generate()`                                 |
 | Agent loop (`apiType: agent`)        | **Yes** — auto tool-call execution loop                                   |
 | Streaming wrappers                   | **Yes** — `PromptyStream` / `AsyncPromptyStream` with tracing             |
-| `headless()` convenience API         | **Yes** — helper function wrapping `PromptAgent` construction             |
+| `headless()` convenience API         | **Yes** — helper function wrapping `Prompty` construction                 |
 | Serverless provider                  | **No** — API keeps changing, defer indefinitely                           |
-| Runtime connection override          | **No** — `LoadContext.pre_process` with `${env:}` covers this             |
+| Runtime connection override          | **No** — loader reference resolution with `${env:}` covers this           |
 | Dynamic tools from prompt body       | **Deferred** — frontmatter `tools:` is sufficient for now                 |
 | Raw HTTP instead of SDK providers    | **Later** — keep SDK-based providers, design allows adding raw HTTP later |
 
@@ -1034,9 +1024,9 @@ currently only supports `chat.completions`.
 
 ---
 
-### Step 4.1: Structured Output (`outputSchema` → `response_format`) — IMPLEMENTED
+### Step 4.1: Structured Output (`outputs` → `response_format`) — IMPLEMENTED
 
-**What**: When `agent.outputSchema` is defined, convert it to OpenAI's `response_format`
+**What**: When `agent.outputs` is defined, convert it to OpenAI's `response_format`
 parameter so the LLM returns structured JSON matching the schema.
 
 **Files modified**:
@@ -1045,14 +1035,12 @@ parameter so the LLM returns structured JSON matching the schema.
 | ------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `providers/openai/executor.py`  | Added `_property_to_json_schema()`, `_output_schema_to_wire()`, wired into `_build_args()`           |
 | `providers/azure/executor.py`   | Imported `_output_schema_to_wire`, wired into `_build_args()`                                        |
-| `providers/openai/processor.py` | Updated `_process_response()` to accept optional `agent`, JSON-parse when `outputSchema` present     |
+| `providers/openai/processor.py` | Updated `_process_response()` to accept optional `agent`, JSON-parse when `outputs` present          |
 | `providers/azure/processor.py`  | Updated `process()`/`process_async()` to pass `agent` through                                        |
 | `tests/test_executor.py`        | Added `TestPropertyToJsonSchema`, `TestOutputSchemaToWire`, `TestBuildArgsResponseFormat` (14 tests) |
 | `tests/test_processor.py`       | Added `TestStructuredOutput` (7 tests)                                                               |
 
-**Key design note**: Test helpers must use `AgentDefinition.load()` (not `PromptAgent.load()`)
-because `outputSchema` is a base field populated by `AgentDefinition.load()`, not by
-`PromptAgent.load()` which only handles prompt-specific fields.
+**Key design note**: Test helpers should use generated model loaders so outputs and prompt-specific fields are populated consistently.
 
 ---
 
@@ -1125,7 +1113,7 @@ to properly `await` async tool functions.
 
 ### Step 4.5: `headless()` Convenience API — IMPLEMENTED
 
-**What**: Create a `PromptAgent` programmatically without a `.prompty` file. Useful for
+**What**: Create a `Prompty` programmatically without a `.prompty` file. Useful for
 embedding calls, one-off completions, or any case where a file isn't needed.
 
 **Files modified**:
@@ -1149,7 +1137,7 @@ def headless(
     provider: str = "openai",
     connection: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
-) -> PromptAgent:
+) -> Prompty:
 ```
 
 Content is stored in `agent.metadata["content"]` for later use with `execute()`.
@@ -1162,12 +1150,12 @@ All of the following must pass:
 
 - `pytest tests/` — all tests green (298 tests passing)
 - `ruff check .` — clean
-- `agent.outputSchema` → `response_format` works in both OpenAI and Azure executors
+- `agent.outputs` → `response_format` works in both OpenAI and Azure executors
 - `apiType: embedding` calls `embeddings.create()` and returns vectors
 - `apiType: image` calls `images.generate()` and returns URLs
 - Streaming responses are wrapped in `PromptyStream` / `AsyncPromptyStream` with tracing
 - Agent loop executes tool calls and loops until completion
-- `headless()` creates a valid `PromptAgent` usable with `execute()` + `process()`
+- `headless()` creates a valid `Prompty` usable with `execute()` + `process()`
 
 **Phase 4 Gate: PASSED** — 298 tests, ruff clean.
 
@@ -1225,12 +1213,12 @@ Configured via `.env` in the package root (`runtime/python/prompty/.env`), alrea
 | `test_image.py`      | 1     | DALL-E 2 image generation (OpenAI only, 256x256 for cost) |
 | `test_agent.py`      | 3     | Tool-calling agent loop, sync + async, both providers     |
 | `test_streaming.py`  | 3     | Streaming chat with PromptyStream/AsyncPromptyStream      |
-| `test_structured.py` | 4     | Structured output via outputSchema → response_format      |
+| `test_structured.py` | 4     | Structured output via outputs → response_format           |
 
 ### Agent Helper Functions
 
-`conftest.py` provides two helpers that build `PromptAgent` instances programmatically
-via `AgentDefinition.load()`:
+`conftest.py` provides two helpers that build `Prompty` instances programmatically
+via generated model loaders:
 
 ```python
 make_openai_agent(
@@ -1238,7 +1226,7 @@ make_openai_agent(
     model="gpt-4o-mini",     # model name
     options=None,             # ModelOptions dict
     tools=None,               # list of tool dicts
-    output_schema=None,       # outputSchema dict
+    output_schema=None,       # outputs dict/list
     metadata=None,            # metadata dict (e.g. {"tool_functions": {...}})
 )
 
@@ -1346,16 +1334,16 @@ Resolved all Pyright/Pylance errors across source and test files:
 
 ```prompty
 ---
-# YAML frontmatter — AgentSchema PromptAgent properties (minus kind and instructions)
+# YAML frontmatter — Prompty v2 model properties (minus instructions)
 ---
-# Markdown body — becomes 'instructions' on the PromptAgent
+# Markdown body — becomes 'instructions' on the Prompty model
 # Uses role markers and template syntax (Jinja2 or Mustache)
 ```
 
 ### Valid Frontmatter Properties
 
 **Root level**:
-`name`, `displayName`, `description`, `metadata`, `model`, `inputSchema`, `outputSchema`, `tools`, `template`
+`name`, `displayName`, `description`, `metadata`, `model`, `inputs`, `outputs`, `tools`, `template`
 
 **Model** (`model:` or shorthand `model: gpt-4`):
 `id`, `provider`, `apiType`, `connection`, `options`
@@ -1366,10 +1354,10 @@ Resolved all Pyright/Pylance errors across source and test files:
 **ModelOptions** (`model.options:`):
 `temperature`, `maxOutputTokens`, `frequencyPenalty`, `presencePenalty`, `seed`, `topK`, `topP`, `stopSequences`, `allowMultipleToolCalls`, `additionalProperties`
 
-**InputSchema/OutputSchema** (`inputSchema:` / `outputSchema:`):
+**Inputs/Outputs** (`inputs:` / `outputs:`):
 `properties` (list or dict of Property), `examples`, `strict`
 
-**Property** (`inputSchema.properties.X:`):
+**Property** (`inputs.X:`):
 `kind` (`string` | `integer` | `float` | `boolean` | `array` | `object` | `thread`), `description`, `required`, `default`, `value`, `example`, `enumValues`
 
 **Template** (`template:`):
@@ -1395,7 +1383,7 @@ assistant:  → {"role": "assistant", "content": "..."}
 Conversation history is handled via `kind: thread` input properties:
 
 ```yaml
-inputSchema:
+inputs:
   properties:
     - name: conversation
       kind: thread
@@ -1449,49 +1437,13 @@ Use `${file:path/to/config.json}` references in frontmatter to load shared conne
 The v1 Python runtime (`runtime/prompty/`) has been removed. The v2 runtime at
 `runtime/python/prompty/` is now the only Python implementation. Key porting notes:
 
-- `core.py` dataclasses → `core/model.py` (AgentSchema-based)
+- `core.py` dataclasses → generated model classes
 - `invoker.py` InvokerFactory → `core/discovery.py` entry-point lookup
 - `renderers.py` → `renderers/jinja2.py`, `renderers/mustache.py`
 - `parsers.py` → `parsers/prompty.py`
 - `load_manifest()` legacy migrations → `core/migration.py:_migrate_legacy()`
 
-### AgentSchema API Reference
+### Generated Model API Reference
 
-```python
-from agentschema import (
-    AgentDefinition,     # ABC — dispatches on 'kind'
-    PromptAgent,         # kind="prompt" — what .prompty files become
-    Model,               # model config (id, provider, apiType, connection, options)
-    Connection,          # ABC — dispatches on 'kind'
-    ApiKeyConnection,    # kind="key" (endpoint, apiKey)
-    ReferenceConnection, # kind="reference"
-    RemoteConnection,    # kind="remote"
-    AnonymousConnection, # kind="anonymous"
-    ModelOptions,        # temperature, maxOutputTokens, etc.
-    Template,            # format (Format) + parser (Parser)
-    PropertySchema,      # properties list + examples + strict
-    Property,            # kind, description, value, required, etc.
-    Tool,                # ABC — dispatches on 'kind'
-    FunctionTool,        # kind="function" (parameters: PropertySchema)
-    McpTool,             # kind="mcp" (connection, serverName, etc.)
-    OpenApiTool,         # kind="openapi" (connection, specification)
-    CustomTool,          # kind="*" (wildcard catch-all)
-    LoadContext,          # pre/post processing hooks for loading
-    SaveContext,          # pre/post processing hooks for saving
-)
-
-# Loading
-agent = PromptAgent.load(data_dict)                    # from dict
-agent = PromptAgent.load(data_dict, LoadContext(...))   # with hooks
-agent = AgentDefinition.from_yaml(yaml_string)         # from YAML (needs kind in data)
-agent = AgentDefinition.from_yaml_file("agent.yaml")   # from file
-
-# Saving
-data = agent.save()                                     # to dict
-yaml = agent.to_yaml()                                  # to YAML string
-json = agent.to_json()                                  # to JSON string
-
-# Tool dispatch (automatic via Tool.load_kind):
-# "function" → FunctionTool, "mcp" → McpTool, "openapi" → OpenApiTool
-# unknown kind → CustomTool (the * wildcard)
-```
+Use the Typra-generated model classes under `prompty.model`. The generated
+classes provide `load()` for dictionaries and `save()` for stable wire shapes.

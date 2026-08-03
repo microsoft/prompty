@@ -63,7 +63,10 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 				result.Inputs = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						// Polymorphic type - store as interface{}
 						result.Inputs[i] = loaded
 					}
@@ -75,7 +78,10 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 				result.Outputs = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						// Polymorphic type - store as interface{}
 						result.Outputs[i] = loaded
 					}
@@ -84,10 +90,16 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 		}
 		if val, ok := m["model"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadModel(m, ctx)
+				loaded, err := LoadModel(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Model = loaded
 			} else {
-				loaded, _ := LoadModel(val, ctx)
+				loaded, err := LoadModel(val, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Model = loaded
 			}
 		}
@@ -96,7 +108,10 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 				result.Tools = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadTool(item, ctx)
+						loaded, err := LoadTool(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						// Polymorphic type - store as interface{}
 						result.Tools[i] = loaded
 					}
@@ -105,7 +120,10 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 		}
 		if val, ok := m["template"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTemplate(m, ctx)
+				loaded, err := LoadTemplate(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Template = &loaded
 			}
 		}

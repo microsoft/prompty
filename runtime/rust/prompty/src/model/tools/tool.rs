@@ -20,7 +20,7 @@ use super::mcp_approval_mode::McpApprovalMode;
 use super::super::core::property::Property;
 
 /// Variant-specific data for [`Tool`], discriminated by `kind`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ToolKind {
     /// `kind` = `"function"`
     Function {
@@ -77,7 +77,7 @@ impl Default for ToolKind {
     }
 }
 /// Represents a tool that can be used in prompts.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct Tool {
     /// Name of the tool. If a function tool, this is the function name, otherwise it is the type
     pub name: String,
@@ -405,7 +405,7 @@ impl Tool {
     }
 
     /// Load a collection of Property from a JSON value.
-    /// Handles both array format `[{...}]`.
+    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
     fn load_parameters(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Property> {
         match data {
             serde_json::Value::Array(arr) => arr
@@ -413,17 +413,90 @@ impl Tool {
                 .map(|v| Property::load_from_value(v, ctx))
                 .collect(),
 
+            serde_json::Value::Object(obj) => obj
+                .iter()
+                .filter_map(|(name, value)| {
+                    if value.is_array() {
+                        return None;
+                    }
+                    let mut v = if value.is_object() {
+                        value.clone()
+                    } else {
+                        serde_json::json!({ "kind": value })
+                    };
+                    if let serde_json::Value::Object(ref mut m) = v {
+                        m.entry("name".to_string())
+                            .or_insert_with(|| serde_json::Value::String(name.clone()));
+                    }
+                    Some(Property::load_from_value(&v, ctx))
+                })
+                .collect(),
             _ => Vec::new(),
         }
     }
 
     /// Save a collection of Property to a JSON value.
     fn save_parameters(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
-        serde_json::Value::Array(
-            items
-                .iter()
-                .map(|item| item.to_value(ctx))
-                .collect::<Vec<_>>(),
-        )
+        if ctx.collection_format == "array" {
+            return serde_json::Value::Array(
+                items
+                    .iter()
+                    .map(|item| item.to_value(ctx))
+                    .collect::<Vec<_>>(),
+            );
+        }
+        // Object format: use name as key
+        let mut result = serde_json::Map::new();
+        for item in items {
+            let mut item_data = match item.to_value(ctx) {
+                serde_json::Value::Object(m) => m,
+                other => {
+                    let mut m = serde_json::Map::new();
+                    m.insert("value".to_string(), other);
+                    m
+                }
+            };
+            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
+                result.insert(name, serde_json::Value::Object(item_data));
+            }
+        }
+        serde_json::Value::Object(result)
+    }
+}
+
+// Serde for `Tool` delegates to the canonical to_value/load_from_value
+// logic so the `kind` discriminator round-trips to its exact wire value. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for Tool {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Tool {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// Serde for `ToolKind` wraps the variant into its parent `Tool` and delegates
+// to the canonical to_value/load_from_value logic, so a bare `ToolKind`
+// serializes to internally-tagged `{"kind": "<value>", ...}` — the same wire
+// form as its parent — instead of serde's externally-tagged `{"<Variant>": {...}}`.
+impl serde::Serialize for ToolKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let parent = Tool {
+            kind: self.clone(),
+            ..Default::default()
+        };
+        serde::Serialize::serialize(&parent.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ToolKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Tool::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

@@ -11,3 +11,6 @@ export {
   OAuthConnection,
   FoundryConnection,
 } from "./connection";
+export { OAuthToken } from "./o-auth-token";
+export { DeviceAuthorization } from "./device-authorization";
+export { AuthorizationCodeFlow } from "./authorization-code-flow";

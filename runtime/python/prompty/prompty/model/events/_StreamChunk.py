@@ -11,6 +11,7 @@ from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
 from ..conversation._ToolCall import ToolCall
+from ..model._InvocationUsage import InvocationUsage
 
 
 @dataclass
@@ -65,6 +66,8 @@ class StreamChunk(ABC):
                 return ThinkingChunk.load(data, context)
             elif discriminator_value == "tool":
                 return ToolChunk.load(data, context)
+            elif discriminator_value == "usage":
+                return UsageChunk.load(data, context)
             elif discriminator_value == "error":
                 return ErrorChunk.load(data, context)
 
@@ -384,6 +387,98 @@ class ToolChunk(StreamChunk):
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ToolChunk instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class UsageChunk(StreamChunk):
+    """Cumulative token usage emitted once after provider content and tool chunks.
+
+    Attributes
+    ----------
+    kind : str
+        The kind identifier for usage chunks
+    usage : InvocationUsage
+        Complete cumulative token usage for the completed provider invocation
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="usage")
+    usage: InvocationUsage = field(default_factory=InvocationUsage)
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "UsageChunk":
+        """Load a UsageChunk instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            UsageChunk: The loaded UsageChunk instance.
+
+        """
+
+        if context is not None:
+            data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for UsageChunk: {data}")
+
+        # create new instance
+        instance = UsageChunk()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "usage" in data:
+            instance.usage = InvocationUsage.load(data["usage"], context)
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the UsageChunk instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        if obj.usage is not None:
+            result["usage"] = obj.usage.save(context)
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the UsageChunk instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the UsageChunk instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

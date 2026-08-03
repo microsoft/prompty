@@ -24,8 +24,9 @@ pub mod processor;
 pub mod wire;
 
 pub use executor::AnthropicExecutor;
-pub use models::{list_models, list_models_async};
+pub use models::{AnthropicModelLister, list_models, list_models_async};
 pub use processor::{AnthropicProcessor, process_response};
+pub use wire::SchemaError;
 
 /// Register the Anthropic executor and processor in the global registry.
 pub fn register() {

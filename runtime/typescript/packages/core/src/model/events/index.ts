@@ -50,5 +50,6 @@ export {
   TextChunk,
   ThinkingChunk,
   ToolChunk,
+  UsageChunk,
   ErrorChunk,
 } from "./stream-chunk";

@@ -32,6 +32,11 @@ public partial class TurnModelResponse
     public object? Output { get; set; }
 
     /// <summary>
+    /// Complete cumulative token usage reported for this model invocation, when available
+    /// </summary>
+    public InvocationUsage? Usage { get; set; }
+
+    /// <summary>
     /// Host tool execution requests emitted by the model callback
     /// </summary>
     public IList<HostToolRequest>? ToolRequests { get; set; }
@@ -66,6 +71,11 @@ public partial class TurnModelResponse
         if (data.TryGetValue("output", out var outputValue) && outputValue is not null)
         {
             instance.Output = outputValue;
+        }
+
+        if (data.TryGetValue("usage", out var usageValue) && usageValue is not null)
+        {
+            instance.Usage = InvocationUsage.Load(usageValue.GetDictionary(InvocationUsage.ShorthandProperty), context);
         }
 
         if (data.TryGetValue("toolRequests", out var toolRequestsValue) && toolRequestsValue is not null)
@@ -164,6 +174,12 @@ public partial class TurnModelResponse
         if (obj.Output is not null)
         {
             result["output"] = obj.Output;
+        }
+
+
+        if (obj.Usage is not null)
+        {
+            result["usage"] = obj.Usage?.Save(context);
         }
 
 

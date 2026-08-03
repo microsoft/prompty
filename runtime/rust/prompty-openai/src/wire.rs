@@ -9,6 +9,34 @@ use prompty::model::{
 use prompty::types::{ContentPart, ContentPartKind, Message};
 use serde_json::{Map, Value, json};
 
+/// Error raised when a portable Property schema cannot be represented safely
+/// by the OpenAI JSON Schema subset.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SchemaError(String);
+
+impl SchemaError {
+    fn invalid_union() -> Self {
+        Self(
+            "UnionProperty must contain exactly one non-empty `oneOf` or `anyOf` array".to_string(),
+        )
+    }
+
+    fn unsupported_one_of() -> Self {
+        Self(
+            "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition"
+                .to_string(),
+        )
+    }
+}
+
+impl std::fmt::Display for SchemaError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+impl std::error::Error for SchemaError {}
+
 // ---------------------------------------------------------------------------
 // Message → OpenAI wire format
 // ---------------------------------------------------------------------------
@@ -98,7 +126,7 @@ fn mime_to_audio_format(mime: &str) -> String {
 // ---------------------------------------------------------------------------
 
 /// Build the full request body for a chat completions call.
-pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
+pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
     let mut args = Map::new();
 
     // Model ID
@@ -112,17 +140,17 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Value {
     apply_options(&mut args, &agent.model.options);
 
     // Tools
-    let tools = tools_to_wire(agent);
+    let tools = tools_to_wire(agent)?;
     if !tools.is_empty() {
         args.insert("tools".to_string(), Value::Array(tools));
     }
 
     // Structured output (response_format)
-    if let Some(rf) = output_schema_to_wire(agent) {
+    if let Some(rf) = output_schema_to_wire(agent)? {
         args.insert("response_format".to_string(), rf);
     }
 
-    Value::Object(args)
+    Ok(Value::Object(args))
 }
 
 /// Build the request body for an embedding call.
@@ -247,9 +275,9 @@ fn apply_options(args: &mut Map<String, Value>, opts: &Option<ModelOptions>) {
 // ---------------------------------------------------------------------------
 
 /// Convert agent's tools to OpenAI wire format.
-pub fn tools_to_wire(agent: &Prompty) -> Vec<Value> {
+pub fn tools_to_wire(agent: &Prompty) -> Result<Vec<Value>, SchemaError> {
     let Some(tools) = agent.as_tools() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
 
     tools
@@ -259,10 +287,10 @@ pub fn tools_to_wire(agent: &Prompty) -> Vec<Value> {
         .collect()
 }
 
-fn function_tool_to_wire(tool: &Tool) -> Value {
+fn function_tool_to_wire(tool: &Tool) -> Result<Value, SchemaError> {
     let (parameters, strict) = match &tool.kind {
         ToolKind::Function { parameters, strict } => (parameters, strict),
-        _ => return json!({}),
+        _ => return Ok(json!({})),
     };
 
     let mut func_def = Map::new();
@@ -282,7 +310,7 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
             .iter()
             .filter(|p| !bound_names.contains(&p.name))
             .collect();
-        let schema = parameters_to_json_schema(&typed_params);
+        let schema = parameters_to_json_schema(&typed_params, strict.unwrap_or(false))?;
         func_def.insert("parameters".to_string(), schema);
     }
 
@@ -295,19 +323,18 @@ fn function_tool_to_wire(tool: &Tool) -> Value {
         }
     }
 
-    json!({
+    Ok(json!({
         "type": "function",
         "function": Value::Object(func_def),
-    })
+    }))
 }
 
 /// Convert a single Property to a recursive JSON Schema definition.
-fn property_to_json_schema(prop: &Property) -> Value {
+fn property_to_json_schema(prop: &Property, strict: bool) -> Result<Value, SchemaError> {
     let mut schema = Map::new();
-    schema.insert(
-        "type".to_string(),
-        Value::String(kind_to_json_type(prop.kind_str())),
-    );
+    if let Some(json_type) = kind_to_json_type(prop.kind_str()) {
+        schema.insert("type".to_string(), Value::String(json_type.to_string()));
+    }
 
     if let Some(ref desc) = prop.description {
         schema.insert("description".to_string(), Value::String(desc.clone()));
@@ -320,7 +347,10 @@ fn property_to_json_schema(prop: &Property) -> Value {
         PropertyKind::Array { items } if !items.is_null() => {
             let ctx = prompty::model::context::LoadContext::default();
             let item_prop = Property::load_from_value(items, &ctx);
-            schema.insert("items".to_string(), property_to_json_schema(&item_prop));
+            schema.insert(
+                "items".to_string(),
+                property_to_json_schema(&item_prop, strict)?,
+            );
         }
         PropertyKind::Array { .. } => {
             // bare {"type": "array"} when items is null/unspecified
@@ -332,30 +362,99 @@ fn property_to_json_schema(prop: &Property) -> Value {
                 if p.name.is_empty() {
                     continue;
                 }
-                nested.insert(p.name.clone(), property_to_json_schema(p));
-                req.push(Value::String(p.name.clone()));
+                nested.insert(
+                    p.name.clone(),
+                    property_to_json_schema_with_optional(p, !p.required.unwrap_or(false), strict)?,
+                );
+                if p.required.unwrap_or(false) {
+                    req.push(Value::String(p.name.clone()));
+                }
             }
             schema.insert("properties".to_string(), Value::Object(nested));
-            schema.insert("required".to_string(), Value::Array(req));
+            if !req.is_empty() {
+                schema.insert("required".to_string(), Value::Array(req));
+            }
             schema.insert("additionalProperties".to_string(), Value::Bool(false));
         }
         PropertyKind::Object { .. } => {
             // bare {"type": "object"} when properties is empty or absent
         }
+        PropertyKind::Union { one_of, any_of } => match (!one_of.is_empty(), !any_of.is_empty()) {
+            (true, false) => return Err(SchemaError::unsupported_one_of()),
+            (false, true) => {
+                let branches = any_of
+                    .iter()
+                    .map(|branch| property_to_json_schema(branch, strict))
+                    .collect::<Result<Vec<_>, _>>()?;
+                schema.insert("anyOf".to_string(), Value::Array(branches));
+            }
+            _ => return Err(SchemaError::invalid_union()),
+        },
         _ => {}
     }
 
-    Value::Object(schema)
+    if prop.nullable.unwrap_or(false) {
+        add_nullability(&mut schema);
+    }
+
+    Ok(Value::Object(schema))
 }
 
-fn parameters_to_json_schema(params: &[&Property]) -> Value {
+fn property_to_json_schema_with_optional(
+    prop: &Property,
+    optional: bool,
+    strict: bool,
+) -> Result<Value, SchemaError> {
+    let mut schema = property_to_json_schema(prop, strict)?;
+    if strict && optional && !prop.nullable.unwrap_or(false) {
+        let Some(schema) = schema.as_object_mut() else {
+            return Err(SchemaError(
+                "Property schema conversion must produce a JSON object".to_string(),
+            ));
+        };
+        add_nullability(schema);
+    }
+    Ok(schema)
+}
+
+fn add_nullability(schema: &mut Map<String, Value>) {
+    if let Some(Value::String(json_type)) = schema.remove("type") {
+        schema.insert(
+            "type".to_string(),
+            Value::Array(vec![
+                Value::String(json_type),
+                Value::String("null".to_string()),
+            ]),
+        );
+    } else if let Some(Value::Array(branches)) = schema.get_mut("anyOf") {
+        branches.push(json!({ "type": "null" }));
+    } else if !schema.is_empty() {
+        schema.insert(
+            "anyOf".to_string(),
+            Value::Array(vec![
+                Value::Object(schema.clone()),
+                json!({ "type": "null" }),
+            ]),
+        );
+    }
+
+    if let Some(Value::Array(enum_values)) = schema.get_mut("enum") {
+        if !enum_values.iter().any(Value::is_null) {
+            enum_values.push(Value::Null);
+        }
+    }
+}
+
+fn parameters_to_json_schema(params: &[&Property], strict: bool) -> Result<Value, SchemaError> {
     let mut properties = Map::new();
     let mut required = Vec::new();
 
     for param in params {
-        properties.insert(param.name.clone(), property_to_json_schema(param));
-
-        if param.required.unwrap_or(false) {
+        properties.insert(
+            param.name.clone(),
+            property_to_json_schema_with_optional(param, !param.required.unwrap_or(false), strict)?,
+        );
+        if strict || param.required.unwrap_or(false) {
             required.push(Value::String(param.name.clone()));
         }
     }
@@ -366,18 +465,18 @@ fn parameters_to_json_schema(params: &[&Property]) -> Value {
     if !required.is_empty() {
         schema.insert("required".to_string(), Value::Array(required));
     }
-    Value::Object(schema)
+    Ok(Value::Object(schema))
 }
 
-fn kind_to_json_type(kind: &str) -> String {
+fn kind_to_json_type(kind: &str) -> Option<&'static str> {
     match kind {
-        "string" => "string".to_string(),
-        "integer" => "integer".to_string(),
-        "float" | "number" => "number".to_string(),
-        "boolean" => "boolean".to_string(),
-        "array" => "array".to_string(),
-        "object" => "object".to_string(),
-        other => other.to_string(),
+        "string" => Some("string"),
+        "integer" => Some("integer"),
+        "float" | "number" => Some("number"),
+        "boolean" => Some("boolean"),
+        "array" => Some("array"),
+        "object" => Some("object"),
+        _ => None,
     }
 }
 
@@ -385,20 +484,23 @@ fn kind_to_json_type(kind: &str) -> String {
 // Structured output (outputs → response_format)
 // ---------------------------------------------------------------------------
 
-fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
-    let outputs = agent.as_outputs()?;
+fn output_schema_to_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+    let Some(outputs) = agent.as_outputs() else {
+        return Ok(None);
+    };
     if outputs.is_empty() {
-        return None;
+        return Ok(None);
     }
 
     let mut properties = Map::new();
     let mut required = Vec::new();
 
     for prop in outputs {
-        properties.insert(prop.name.clone(), property_to_json_schema(prop));
-        if prop.required.unwrap_or(false) {
-            required.push(Value::String(prop.name.clone()));
-        }
+        properties.insert(
+            prop.name.clone(),
+            property_to_json_schema_with_optional(prop, !prop.required.unwrap_or(false), true)?,
+        );
+        required.push(Value::String(prop.name.clone()));
     }
 
     let mut schema = Map::new();
@@ -409,14 +511,14 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
     }
     schema.insert("additionalProperties".to_string(), Value::Bool(false));
 
-    Some(json!({
+    Ok(Some(json!({
         "type": "json_schema",
         "json_schema": {
             "name": "structured_output",
             "strict": true,
             "schema": Value::Object(schema),
         },
-    }))
+    })))
 }
 
 // ---------------------------------------------------------------------------
@@ -426,7 +528,7 @@ fn output_schema_to_wire(agent: &Prompty) -> Option<Value> {
 /// Build the request body for the OpenAI Responses API.
 ///
 /// System/developer messages become `instructions`; other messages become `input` items.
-pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Value {
+pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
     let model = if agent.model.id.is_empty() {
         "gpt-4o".to_string()
     } else {
@@ -460,17 +562,17 @@ pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Value {
     apply_responses_options(&mut args, &agent.model.options);
 
     // Tools (flat format — no nested "function" key)
-    let tools = responses_tools_to_wire(agent);
+    let tools = responses_tools_to_wire(agent)?;
     if !tools.is_empty() {
         args.insert("tools".to_string(), Value::Array(tools));
     }
 
     // Structured output via text.format
-    if let Some(text_config) = output_schema_to_responses_wire(agent) {
+    if let Some(text_config) = output_schema_to_responses_wire(agent)? {
         args.insert("text".to_string(), text_config);
     }
 
-    Value::Object(args)
+    Ok(Value::Object(args))
 }
 
 fn message_to_responses_input(msg: &Message) -> Value {
@@ -507,6 +609,14 @@ fn message_to_responses_input(msg: &Message) -> Value {
     Value::Object(obj)
 }
 
+/// Return whether a durable message holds a provider-owned Responses function-call item.
+///
+/// Native `previous_response_id` continuation already owns this item; its delta
+/// must carry only the following function-call output and later caller input.
+pub fn is_responses_function_call(msg: &Message) -> bool {
+    msg.metadata.get("responses_function_call").is_some()
+}
+
 fn apply_responses_options(args: &mut Map<String, Value>, opts: &Option<ModelOptions>) {
     let Some(opts) = opts else { return };
 
@@ -529,9 +639,9 @@ fn apply_responses_options(args: &mut Map<String, Value>, opts: &Option<ModelOpt
     }
 }
 
-fn responses_tools_to_wire(agent: &Prompty) -> Vec<Value> {
+fn responses_tools_to_wire(agent: &Prompty) -> Result<Vec<Value>, SchemaError> {
     let Some(tools) = agent.as_tools() else {
-        return Vec::new();
+        return Ok(Vec::new());
     };
 
     tools
@@ -541,10 +651,10 @@ fn responses_tools_to_wire(agent: &Prompty) -> Vec<Value> {
         .collect()
 }
 
-fn responses_function_tool_to_wire(tool: &Tool) -> Value {
+fn responses_function_tool_to_wire(tool: &Tool) -> Result<Value, SchemaError> {
     let (parameters, strict) = match &tool.kind {
         ToolKind::Function { parameters, strict } => (parameters, strict),
-        _ => return json!({}),
+        _ => return Ok(json!({})),
     };
 
     // Responses API uses flat format: { type, name, description, parameters }
@@ -565,7 +675,7 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Value {
             .iter()
             .filter(|p| !bound_names.contains(&p.name))
             .collect();
-        let schema = parameters_to_json_schema(&typed_params);
+        let schema = parameters_to_json_schema(&typed_params, strict.unwrap_or(false))?;
         obj.insert("parameters".to_string(), schema);
     }
 
@@ -576,20 +686,25 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Value {
         }
     }
 
-    Value::Object(obj)
+    Ok(Value::Object(obj))
 }
 
-fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
-    let outputs = agent.as_outputs()?;
+fn output_schema_to_responses_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+    let Some(outputs) = agent.as_outputs() else {
+        return Ok(None);
+    };
     if outputs.is_empty() {
-        return None;
+        return Ok(None);
     }
 
     let mut properties = Map::new();
     let mut required = Vec::new();
 
     for prop in outputs {
-        properties.insert(prop.name.clone(), property_to_json_schema(prop));
+        properties.insert(
+            prop.name.clone(),
+            property_to_json_schema_with_optional(prop, !prop.required.unwrap_or(false), true)?,
+        );
         required.push(Value::String(prop.name.clone()));
     }
 
@@ -599,14 +714,14 @@ fn output_schema_to_responses_wire(agent: &Prompty) -> Option<Value> {
     schema.insert("required".to_string(), Value::Array(required));
     schema.insert("additionalProperties".to_string(), Value::Bool(false));
 
-    Some(json!({
+    Ok(Some(json!({
         "format": {
             "type": "json_schema",
             "name": "structured_output",
             "schema": Value::Object(schema),
             "strict": true,
         },
-    }))
+    })))
 }
 
 // ---------------------------------------------------------------------------
@@ -652,6 +767,115 @@ pub fn format_tool_messages(
         messages.push(msg);
     }
 
+    messages
+}
+
+/// Format a Responses API tool exchange while preserving original function-call items.
+pub fn format_responses_tool_messages(
+    raw_response: &Value,
+    tool_calls: &[prompty::types::ToolCall],
+    results: &[String],
+) -> Vec<Message> {
+    let originals = raw_response
+        .get("output")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|item| item.get("type").and_then(Value::as_str) == Some("function_call"))
+        .filter(|item| {
+            item.get("call_id")
+                .and_then(Value::as_str)
+                .is_some_and(|call_id| tool_calls.iter().any(|call| call.id == call_id))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+
+    format_responses_tool_exchange(originals, tool_calls, results)
+}
+
+/// Format a streamed Responses API tool exchange from raw response events.
+pub fn format_stream_responses_tool_messages(
+    raw_chunks: &[Value],
+    tool_calls: &[prompty::types::ToolCall],
+    results: &[String],
+) -> Vec<Message> {
+    use std::collections::BTreeMap;
+
+    let mut originals = BTreeMap::<usize, Value>::new();
+    for chunk in raw_chunks {
+        let event_type = chunk.get("type").and_then(Value::as_str);
+        if event_type == Some("response.completed") {
+            if let Some(output) = chunk
+                .get("response")
+                .and_then(|response| response.get("output"))
+                .and_then(Value::as_array)
+            {
+                for (index, item) in output.iter().enumerate() {
+                    if item.get("type").and_then(Value::as_str) == Some("function_call") {
+                        originals.insert(index, item.clone());
+                    }
+                }
+            }
+        }
+        if matches!(
+            event_type,
+            Some("response.output_item.added" | "response.output_item.done")
+        ) {
+            if let Some(item) = chunk.get("item") {
+                if item.get("type").and_then(Value::as_str) == Some("function_call") {
+                    let index = chunk
+                        .get("output_index")
+                        .and_then(Value::as_u64)
+                        .unwrap_or(originals.len() as u64) as usize;
+                    originals.insert(index, item.clone());
+                }
+            }
+        }
+        if event_type == Some("response.function_call_arguments.done") {
+            if let Some(call_id) = chunk.get("call_id").and_then(Value::as_str) {
+                if let Some(arguments) = chunk.get("arguments").and_then(Value::as_str) {
+                    if let Some(item) = originals
+                        .values_mut()
+                        .find(|item| item.get("call_id").and_then(Value::as_str) == Some(call_id))
+                    {
+                        item["arguments"] = Value::String(arguments.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    format_responses_tool_exchange(originals.into_values().collect(), tool_calls, results)
+}
+
+fn format_responses_tool_exchange(
+    originals: Vec<Value>,
+    tool_calls: &[prompty::types::ToolCall],
+    results: &[String],
+) -> Vec<Message> {
+    let mut messages = Vec::new();
+    for tool_call in tool_calls {
+        let original = originals
+            .iter()
+            .find(|item| item.get("call_id").and_then(Value::as_str) == Some(tool_call.id.as_str()))
+            .cloned()
+            .unwrap_or_else(|| {
+                json!({
+                    "type": "function_call",
+                    "call_id": tool_call.id,
+                    "name": tool_call.name,
+                    "arguments": tool_call.arguments,
+                })
+            });
+        let mut message = Message::with_text(prompty::Role::Assistant, "");
+        message
+            .metadata_mut()
+            .insert("responses_function_call".to_string(), original);
+        messages.push(message);
+    }
+    for (tool_call, result) in tool_calls.iter().zip(results) {
+        messages.push(Message::tool_result(&tool_call.id, result));
+    }
     messages
 }
 
@@ -720,13 +944,15 @@ mod tests {
 
     #[test]
     fn test_kind_to_json_type() {
-        assert_eq!(kind_to_json_type("string"), "string");
-        assert_eq!(kind_to_json_type("integer"), "integer");
-        assert_eq!(kind_to_json_type("float"), "number");
-        assert_eq!(kind_to_json_type("number"), "number");
-        assert_eq!(kind_to_json_type("boolean"), "boolean");
-        assert_eq!(kind_to_json_type("array"), "array");
-        assert_eq!(kind_to_json_type("object"), "object");
+        assert_eq!(kind_to_json_type("string"), Some("string"));
+        assert_eq!(kind_to_json_type("integer"), Some("integer"));
+        assert_eq!(kind_to_json_type("float"), Some("number"));
+        assert_eq!(kind_to_json_type("number"), Some("number"));
+        assert_eq!(kind_to_json_type("boolean"), Some("boolean"));
+        assert_eq!(kind_to_json_type("array"), Some("array"));
+        assert_eq!(kind_to_json_type("object"), Some("object"));
+        assert_eq!(kind_to_json_type("union"), None);
+        assert_eq!(kind_to_json_type(""), None);
     }
 
     #[test]
@@ -759,5 +985,175 @@ mod tests {
         assert!(msgs[0].metadata.get("tool_calls").is_some());
         assert_eq!(msgs[1].role.to_string(), "tool");
         assert_eq!(msgs[1].text_content(), "72°F");
+    }
+
+    #[test]
+    fn test_format_multiple_tool_messages_preserves_request_order() {
+        let tool_calls = vec![
+            prompty::types::ToolCall {
+                id: "call_1".to_string(),
+                name: "first".to_string(),
+                arguments: "{}".to_string(),
+            },
+            prompty::types::ToolCall {
+                id: "call_2".to_string(),
+                name: "second".to_string(),
+                arguments: "{}".to_string(),
+            },
+        ];
+
+        let messages = format_tool_messages(&tool_calls, &["one".to_string(), "two".to_string()]);
+
+        assert_eq!(messages.len(), 3);
+        assert_eq!(messages[1].metadata["tool_call_id"], "call_1");
+        assert_eq!(messages[1].text_content(), "one");
+        assert_eq!(messages[2].metadata["tool_call_id"], "call_2");
+        assert_eq!(messages[2].text_content(), "two");
+    }
+
+    #[test]
+    fn test_responses_tool_messages_preserve_original_calls_before_outputs() {
+        let raw_response = json!({
+            "object": "response",
+            "output": [
+                {
+                    "type": "function_call",
+                    "id": "fc_1",
+                    "call_id": "call_1",
+                    "name": "first",
+                    "arguments": "{\"value\":1}",
+                    "status": "completed"
+                },
+                {
+                    "type": "function_call",
+                    "id": "fc_2",
+                    "call_id": "call_2",
+                    "name": "second",
+                    "arguments": "{\"value\":2}",
+                    "status": "completed"
+                }
+            ]
+        });
+        let calls = vec![
+            prompty::types::ToolCall {
+                id: "call_1".to_string(),
+                name: "first".to_string(),
+                arguments: "{\"value\":1}".to_string(),
+            },
+            prompty::types::ToolCall {
+                id: "call_2".to_string(),
+                name: "second".to_string(),
+                arguments: "{\"value\":2}".to_string(),
+            },
+        ];
+
+        let messages =
+            format_responses_tool_messages(&raw_response, &calls, &["one".into(), "two".into()]);
+
+        assert_eq!(messages.len(), 4);
+        assert_eq!(
+            messages[0].metadata["responses_function_call"]["id"],
+            "fc_1"
+        );
+        assert_eq!(
+            messages[1].metadata["responses_function_call"]["status"],
+            "completed"
+        );
+        assert_eq!(messages[2].metadata["tool_call_id"], "call_1");
+        assert_eq!(messages[3].metadata["tool_call_id"], "call_2");
+    }
+
+    #[test]
+    fn test_responses_tool_messages_round_trip_to_function_call_items() {
+        let agent = Prompty::load_from_value(
+            &json!({
+                "name": "responses",
+                "kind": "prompt",
+                "model": {"id": "gpt-4o", "provider": "openai", "apiType": "responses"},
+                "instructions": "test"
+            }),
+            &prompty::model::context::LoadContext::default(),
+        );
+        let calls = vec![prompty::types::ToolCall {
+            id: "call_1".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{}".to_string(),
+        }];
+        let mut messages = vec![Message::with_text(prompty::Role::User, "run")];
+        messages.extend(format_responses_tool_messages(
+            &json!({
+                "object": "response",
+                "output": [{
+                    "type": "function_call",
+                    "id": "fc_original",
+                    "call_id": "call_1",
+                    "name": "lookup",
+                    "arguments": "{}",
+                    "status": "completed"
+                }]
+            }),
+            &calls,
+            &["result".to_string()],
+        ));
+
+        let input =
+            build_responses_args(&agent, &messages).expect("valid Responses schema")["input"]
+                .as_array()
+                .unwrap()
+                .clone();
+
+        assert_eq!(input[1]["type"], "function_call");
+        assert_eq!(input[1]["id"], "fc_original");
+        assert_eq!(input[2]["type"], "function_call_output");
+        assert_eq!(input[2]["call_id"], "call_1");
+        assert_eq!(input[2]["output"], "result");
+    }
+
+    #[test]
+    fn test_stream_responses_tool_messages_preserve_done_item_and_arguments() {
+        let calls = vec![prompty::types::ToolCall {
+            id: "call_stream".to_string(),
+            name: "lookup".to_string(),
+            arguments: "{\"q\":\"rust\"}".to_string(),
+        }];
+        let chunks = vec![
+            json!({
+                "type": "response.output_item.added",
+                "output_index": 0,
+                "item": {
+                    "type": "function_call",
+                    "id": "fc_stream",
+                    "call_id": "call_stream",
+                    "name": "lookup",
+                    "arguments": ""
+                }
+            }),
+            json!({
+                "type": "response.function_call_arguments.done",
+                "call_id": "call_stream",
+                "arguments": "{\"q\":\"rust\"}"
+            }),
+            json!({
+                "type": "response.output_item.done",
+                "output_index": 0,
+                "item": {
+                    "type": "function_call",
+                    "id": "fc_stream",
+                    "call_id": "call_stream",
+                    "name": "lookup",
+                    "arguments": "{\"q\":\"rust\"}",
+                    "status": "completed"
+                }
+            }),
+        ];
+
+        let messages =
+            format_stream_responses_tool_messages(&chunks, &calls, &["found".to_string()]);
+
+        let original = &messages[0].metadata["responses_function_call"];
+        assert_eq!(original["id"], "fc_stream");
+        assert_eq!(original["arguments"], "{\"q\":\"rust\"}");
+        assert_eq!(original["status"], "completed");
+        assert_eq!(messages[1].metadata["tool_call_id"], "call_stream");
     }
 }

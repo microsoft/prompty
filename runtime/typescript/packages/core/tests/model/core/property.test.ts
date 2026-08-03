@@ -19,7 +19,7 @@ describe("Property", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "name": "my-input",\n  "kind": "string",\n  "description": "A description of the input property",\n  "required": true,\n  "default": "default value",\n  "example": "example value",\n  "enumValues": [\n    "value1",\n    "value2",\n    "value3"\n  ]\n}`;
+      const json = `{\n  "name": "my-input",\n  "kind": "string",\n  "description": "A description of the input property",\n  "required": true,\n  "nullable": true,\n  "default": "default value",\n  "example": "example value",\n  "enumValues": [\n    "value1",\n    "value2",\n    "value3"\n  ]\n}`;
       const instance = Property.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("my-input");
@@ -28,12 +28,13 @@ describe("Property", () => {
         "A description of the input property",
       );
       expect(instance.required).toEqual(true);
+      expect(instance.nullable).toEqual(true);
       expect(instance.default).toEqual("default value");
       expect(instance.example).toEqual("example value");
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "name": "my-input",\n  "kind": "string",\n  "description": "A description of the input property",\n  "required": true,\n  "default": "default value",\n  "example": "example value",\n  "enumValues": [\n    "value1",\n    "value2",\n    "value3"\n  ]\n}`;
+      const json = `{\n  "name": "my-input",\n  "kind": "string",\n  "description": "A description of the input property",\n  "required": true,\n  "nullable": true,\n  "default": "default value",\n  "example": "example value",\n  "enumValues": [\n    "value1",\n    "value2",\n    "value3"\n  ]\n}`;
       const instance = Property.fromJson(json);
       const output = instance.toJson();
       const reloaded = Property.fromJson(output);
@@ -41,6 +42,7 @@ describe("Property", () => {
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.description).toEqual(instance.description);
       expect(reloaded.required).toEqual(instance.required);
+      expect(reloaded.nullable).toEqual(instance.nullable);
       expect(reloaded.default).toEqual(instance.default);
       expect(reloaded.example).toEqual(instance.example);
     });
@@ -48,7 +50,7 @@ describe("Property", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `name: my-input\nkind: string\ndescription: A description of the input property\nrequired: true\ndefault: default value\nexample: example value\nenumValues:\n  - value1\n  - value2\n  - value3\n`;
+      const yaml = `name: my-input\nkind: string\ndescription: A description of the input property\nrequired: true\nnullable: true\ndefault: default value\nexample: example value\nenumValues:\n  - value1\n  - value2\n  - value3\n`;
       const instance = Property.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("my-input");
@@ -57,12 +59,13 @@ describe("Property", () => {
         "A description of the input property",
       );
       expect(instance.required).toEqual(true);
+      expect(instance.nullable).toEqual(true);
       expect(instance.default).toEqual("default value");
       expect(instance.example).toEqual("example value");
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `name: my-input\nkind: string\ndescription: A description of the input property\nrequired: true\ndefault: default value\nexample: example value\nenumValues:\n  - value1\n  - value2\n  - value3\n`;
+      const yaml = `name: my-input\nkind: string\ndescription: A description of the input property\nrequired: true\nnullable: true\ndefault: default value\nexample: example value\nenumValues:\n  - value1\n  - value2\n  - value3\n`;
       const instance = Property.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Property.fromYaml(output);
@@ -70,6 +73,7 @@ describe("Property", () => {
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.description).toEqual(instance.description);
       expect(reloaded.required).toEqual(instance.required);
+      expect(reloaded.nullable).toEqual(instance.nullable);
       expect(reloaded.default).toEqual(instance.default);
       expect(reloaded.example).toEqual(instance.example);
     });

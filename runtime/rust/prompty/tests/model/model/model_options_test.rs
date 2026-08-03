@@ -161,3 +161,44 @@ fn test_model_options_roundtrip() {
         json_output.err()
     );
 }
+
+#[test]
+fn test_model_options_serde_roundtrip() {
+    let json = r####"
+{
+  "frequencyPenalty": 0.5,
+  "maxOutputTokens": 2048,
+  "presencePenalty": 0.3,
+  "seed": 42,
+  "temperature": 0.7,
+  "topK": 40,
+  "topP": 0.9,
+  "stopSequences": [
+    "\n",
+    "###"
+  ],
+  "allowMultipleToolCalls": true,
+  "additionalProperties": {
+    "customProperty": "value",
+    "anotherProperty": "anotherValue"
+  }
+}
+"####;
+    let instance: ModelOptions =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        ModelOptions::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    let reparsed: ModelOptions =
+        serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+}

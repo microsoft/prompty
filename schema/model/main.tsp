@@ -17,8 +17,18 @@ import "./core/validation.tsp";
 // Model + usage + discovery
 import "./model/usage.tsp";
 import "./model/discovery.tsp";
+import "./model/resource-discovery.tsp";
+
+// Memory (agent recall + persistence data contract)
+import "./memory/memory.tsp";
 
 // Pipeline (turn options + protocol contracts)
+import "./pipeline/invocation.tsp";
+import "./pipeline/engine-events.tsp";
+import "./pipeline/checkpoint.tsp";
+import "./pipeline/turn-engine.tsp";
+import "./pipeline/policy.tsp";
+import "./pipeline/context-planning.tsp";
 import "./pipeline/turn.tsp";
 import "./pipeline/renderer.tsp";
 import "./pipeline/parser.tsp";
@@ -47,9 +57,11 @@ import "./tools/dispatch.tsp";
 // Connections
 import "./connection/connection.tsp";
 import "./connection/oauth.tsp";
+import "./connection/oauth-flow.tsp";
 import "./connection/foundry.tsp";
 
 // Wire format mappings (augment existing models with provider field names)
 import "./wire/openai.tsp";
 import "./wire/anthropic.tsp";
 import "./wire/anthropic-types.tsp";
+import "./wire/foundry.tsp";

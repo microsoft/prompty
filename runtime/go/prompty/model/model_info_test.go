@@ -469,3 +469,75 @@ func TestModelInfoFromJSONInvalid(t *testing.T) {
 		t.Fatalf("Expected malformed JSON to fail")
 	}
 }
+
+// TestModelInfoToWire tests provider-specific wire field names
+func TestModelInfoToWire(t *testing.T) {
+	jsonData := `
+{
+  "id": "gpt-4o",
+  "displayName": "GPT-4o",
+  "ownedBy": "openai",
+  "contextWindow": 128000,
+  "inputModalities": [
+    "text",
+    "image"
+  ],
+  "outputModalities": [
+    "text"
+  ],
+  "additionalProperties": {
+    "supportsStreaming": true
+  }
+}
+`
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
+		t.Fatalf("Failed to parse JSON: %v", err)
+	}
+
+	ctx := prompty.NewLoadContext()
+	instance, err := prompty.LoadModelInfo(data, ctx)
+	if err != nil {
+		t.Fatalf("Failed to load ModelInfo: %v", err)
+	}
+
+	openaiWire := instance.ToWire("openai")
+	if _, ok := openaiWire["id"]; !ok {
+		t.Errorf("Expected openai wire output to include id")
+	}
+	if _, ok := openaiWire["owned_by"]; !ok {
+		t.Errorf("Expected openai wire output to include owned_by")
+	}
+	if _, ok := openaiWire["ownedBy"]; ok {
+		t.Errorf("Expected openai wire output to omit source field ownedBy")
+	}
+
+	anthropicWire := instance.ToWire("anthropic")
+	if _, ok := anthropicWire["id"]; !ok {
+		t.Errorf("Expected anthropic wire output to include id")
+	}
+	if _, ok := anthropicWire["display_name"]; !ok {
+		t.Errorf("Expected anthropic wire output to include display_name")
+	}
+	if _, ok := anthropicWire["displayName"]; ok {
+		t.Errorf("Expected anthropic wire output to omit source field displayName")
+	}
+	if _, ok := anthropicWire["context_length"]; !ok {
+		t.Errorf("Expected anthropic wire output to include context_length")
+	}
+	if _, ok := anthropicWire["contextWindow"]; ok {
+		t.Errorf("Expected anthropic wire output to omit source field contextWindow")
+	}
+	if _, ok := anthropicWire["input_modalities"]; !ok {
+		t.Errorf("Expected anthropic wire output to include input_modalities")
+	}
+	if _, ok := anthropicWire["inputModalities"]; ok {
+		t.Errorf("Expected anthropic wire output to omit source field inputModalities")
+	}
+	if _, ok := anthropicWire["output_modalities"]; !ok {
+		t.Errorf("Expected anthropic wire output to include output_modalities")
+	}
+	if _, ok := anthropicWire["outputModalities"]; ok {
+		t.Errorf("Expected anthropic wire output to omit source field outputModalities")
+	}
+}

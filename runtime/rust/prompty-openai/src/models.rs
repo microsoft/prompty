@@ -1,79 +1,20 @@
-//! Model discovery for OpenAI — calls `GET /v1/models` and enriches results
-//! with known context-window and modality data.
+//! Model discovery for OpenAI.
+//!
+//! Maps the provider response into the Typra-generated, provider-neutral
+//! [`ModelInfo`] contract.
 
 use std::sync::LazyLock;
 
 use prompty::interfaces::InvokerError;
-use prompty::model::ModelInfo;
+use prompty::model::{ModelInfo, ModelLister};
 use serde_json::Value;
 
-/// Shared HTTP client — reuses the same pool as the executor.
+/// Shared HTTP client for model discovery requests.
 static HTTP_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 
-/// Known model metadata for enrichment when the API doesn't provide these fields.
-struct KnownModel {
-    prefix: &'static str,
-    context_window: Option<i32>,
-    input_modalities: &'static [&'static str],
-    output_modalities: &'static [&'static str],
-}
-
-static KNOWN_MODELS: &[KnownModel] = &[
-    KnownModel {
-        prefix: "gpt-4o-mini",
-        context_window: Some(128_000),
-        input_modalities: &["text", "image"],
-        output_modalities: &["text"],
-    },
-    KnownModel {
-        prefix: "gpt-4o",
-        context_window: Some(128_000),
-        input_modalities: &["text", "image"],
-        output_modalities: &["text"],
-    },
-    KnownModel {
-        prefix: "gpt-4-turbo",
-        context_window: Some(128_000),
-        input_modalities: &["text", "image"],
-        output_modalities: &["text"],
-    },
-    KnownModel {
-        prefix: "gpt-4",
-        context_window: Some(8_192),
-        input_modalities: &["text"],
-        output_modalities: &["text"],
-    },
-    KnownModel {
-        prefix: "gpt-3.5-turbo",
-        context_window: Some(16_385),
-        input_modalities: &["text"],
-        output_modalities: &["text"],
-    },
-    KnownModel {
-        prefix: "text-embedding-3-small",
-        context_window: Some(8_191),
-        input_modalities: &["text"],
-        output_modalities: &[],
-    },
-    KnownModel {
-        prefix: "text-embedding-3-large",
-        context_window: Some(8_191),
-        input_modalities: &["text"],
-        output_modalities: &[],
-    },
-    KnownModel {
-        prefix: "dall-e-3",
-        context_window: None,
-        input_modalities: &["text"],
-        output_modalities: &["image"],
-    },
-];
-
-/// Look up a known model entry by prefix match (longest prefix first since
-/// the table is ordered from most-specific to least-specific).
-fn find_known(id: &str) -> Option<&'static KnownModel> {
-    KNOWN_MODELS.iter().find(|km| id.starts_with(km.prefix))
-}
+/// OpenAI implementation of the Typra-generated model discovery protocol.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct OpenAIModelLister;
 
 /// Build the models endpoint URL from a connection JSON value.
 fn build_models_url(connection: &Value) -> String {
@@ -126,39 +67,58 @@ fn get_api_key(connection: &Value) -> Result<String, InvokerError> {
     ))
 }
 
-/// Convert one API model object into a `ModelInfo`, enriching from `KNOWN_MODELS`.
-fn parse_model_object(obj: &Value) -> ModelInfo {
-    let id = obj
+fn validate_connection_kind(connection: &Value) -> Result<(), InvokerError> {
+    let kind = connection.get("kind").and_then(Value::as_str).unwrap_or("");
+    if kind == "key" {
+        return Ok(());
+    }
+    Err(InvokerError::Execute(
+        format!("Connection kind '{kind}' is not supported for OpenAI model listing. Use 'key'.")
+            .into(),
+    ))
+}
+
+/// Convert one OpenAI model payload into the generated provider-neutral contract.
+///
+/// OpenAI's `/v1/models` returns only `id`/`owned_by`, so capability fields are
+/// filled from the shared `spec/data/model_capabilities.json` dataset via
+/// [`prompty::discovery::enrich`]. That primitive applies the cross-runtime
+/// fill-only-missing rule: any field OpenAI *did* supply is preserved.
+fn to_model_info(model: &Value) -> ModelInfo {
+    let id = model
         .get("id")
-        .and_then(|v| v.as_str())
+        .and_then(Value::as_str)
         .unwrap_or_default()
         .to_string();
-    let owned_by = obj
-        .get("owned_by")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string());
 
-    let known = find_known(&id);
-
-    ModelInfo {
+    let mut info = ModelInfo {
         id,
         display_name: None,
-        owned_by,
-        context_window: known.and_then(|k| k.context_window),
-        input_modalities: known.map(|k| {
-            k.input_modalities
-                .iter()
-                .map(|s| (*s).to_string())
-                .collect()
-        }),
-        output_modalities: known.map(|k| {
-            k.output_modalities
-                .iter()
-                .map(|s| (*s).to_string())
-                .collect()
-        }),
-        additional_properties: serde_json::Value::Null,
-    }
+        owned_by: model
+            .get("owned_by")
+            .and_then(Value::as_str)
+            .map(ToString::to_string),
+        context_window: None,
+        input_modalities: None,
+        output_modalities: None,
+        additional_properties: model.clone(),
+    };
+
+    prompty::discovery::enrich("openai", &mut info);
+    info
+}
+
+/// Map one raw OpenAI `/v1/models` entry into the provider-neutral
+/// [`ModelInfo`] contract.
+///
+/// This is the single source of truth for the OpenAI wire → `ModelInfo`
+/// mapping and is exercised by the shared `spec/vectors/discovery` vectors so
+/// every runtime converges on the same canonical shape. Enrichment from the
+/// built-in known-model table is applied here but is provider-optional per the
+/// `ModelInfo` contract, so discovery vectors deliberately use ids outside that
+/// table to assert the pure wire mapping.
+pub fn model_info_from_wire(raw: &Value) -> ModelInfo {
+    to_model_info(raw)
 }
 
 /// List models available from the OpenAI API (async).
@@ -166,6 +126,7 @@ fn parse_model_object(obj: &Value) -> ModelInfo {
 /// Calls `GET /v1/models` and enriches the response with known model metadata
 /// (context window, modalities) from a built-in lookup table.
 pub async fn list_models_async(connection: &Value) -> Result<Vec<ModelInfo>, InvokerError> {
+    validate_connection_kind(connection)?;
     let url = build_models_url(connection);
     let api_key = get_api_key(connection)?;
 
@@ -193,13 +154,23 @@ pub async fn list_models_async(connection: &Value) -> Result<Vec<ModelInfo>, Inv
         .await
         .map_err(|e| InvokerError::Execute(format!("Failed to parse response: {e}").into()))?;
 
-    let models = body
+    Ok(body
         .get("data")
-        .and_then(|d| d.as_array())
-        .map(|arr| arr.iter().map(parse_model_object).collect())
-        .unwrap_or_default();
+        .and_then(Value::as_array)
+        .map(|models| models.iter().map(to_model_info).collect())
+        .unwrap_or_default())
+}
 
-    Ok(models)
+#[async_trait::async_trait]
+impl ModelLister for OpenAIModelLister {
+    async fn list_models(
+        &self,
+        connection: &Value,
+    ) -> Result<Vec<ModelInfo>, Box<dyn std::error::Error + Send + Sync>> {
+        list_models_async(connection)
+            .await
+            .map_err(|error| Box::new(error) as Box<dyn std::error::Error + Send + Sync>)
+    }
 }
 
 /// List models available from the OpenAI API (blocking).
@@ -231,14 +202,60 @@ pub fn list_models(connection: &Value) -> Result<Vec<ModelInfo>, InvokerError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+    use tokio::sync::oneshot;
+
+    struct RemovedEnv {
+        name: &'static str,
+        previous: Option<String>,
+    }
+
+    impl RemovedEnv {
+        fn new(name: &'static str) -> Self {
+            let previous = std::env::var(name).ok();
+            // SAFETY: Tests that mutate provider environment variables are serialized.
+            unsafe { std::env::remove_var(name) };
+            Self { name, previous }
+        }
+    }
+
+    impl Drop for RemovedEnv {
+        fn drop(&mut self) {
+            if let Some(value) = &self.previous {
+                // SAFETY: Tests that mutate provider environment variables are serialized.
+                unsafe { std::env::set_var(self.name, value) };
+            }
+        }
+    }
+
+    async fn spawn_model_server(body: &'static str) -> (String, oneshot::Receiver<String>) {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let (request_tx, request_rx) = oneshot::channel();
+        tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut request = vec![0; 4096];
+            let size = stream.read(&mut request).await.unwrap();
+            request.truncate(size);
+            request_tx
+                .send(String::from_utf8(request).unwrap())
+                .unwrap();
+            let response = format!(
+                "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+                body.len()
+            );
+            stream.write_all(response.as_bytes()).await.unwrap();
+        });
+        (format!("http://{address}"), request_rx)
+    }
 
     #[test]
+    #[serial]
     fn test_build_models_url_default() {
         let conn = serde_json::json!({});
-        // Clear env to test default
-        let _prev = std::env::var("OPENAI_BASE_URL").ok();
-        // Safety: test-only env manipulation
-        unsafe { std::env::remove_var("OPENAI_BASE_URL") };
+        let _env = RemovedEnv::new("OPENAI_BASE_URL");
         let url = build_models_url(&conn);
         assert_eq!(url, "https://api.openai.com/v1/models");
     }
@@ -271,46 +288,72 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_get_api_key_missing() {
-        // Safety: test-only env manipulation
-        unsafe { std::env::remove_var("OPENAI_API_KEY") };
+        let _env = RemovedEnv::new("OPENAI_API_KEY");
         let conn = serde_json::json!({});
         let result = get_api_key(&conn);
         assert!(result.is_err());
     }
 
     #[test]
-    fn test_find_known_gpt4o() {
-        let km = find_known("gpt-4o").unwrap();
-        assert_eq!(km.context_window, Some(128_000));
-        assert_eq!(km.input_modalities, &["text", "image"]);
+    fn test_validate_connection_kind() {
+        assert!(validate_connection_kind(&serde_json::json!({"kind": "key"})).is_ok());
+        let error =
+            validate_connection_kind(&serde_json::json!({"kind": "reference"})).unwrap_err();
+        assert!(error.to_string().contains("not supported"));
     }
 
     #[test]
-    fn test_find_known_gpt4o_mini() {
-        // "gpt-4o-mini" should match the gpt-4o-mini entry (before gpt-4o)
-        let km = find_known("gpt-4o-mini-2024-07-18").unwrap();
-        assert_eq!(km.context_window, Some(128_000));
-        assert_eq!(km.prefix, "gpt-4o-mini");
+    fn test_model_lister_implements_generated_protocol() {
+        fn assert_model_lister<T: ModelLister>() {}
+        assert_model_lister::<OpenAIModelLister>();
     }
 
     #[test]
-    fn test_find_known_gpt4() {
-        let km = find_known("gpt-4-0613").unwrap();
-        assert_eq!(km.context_window, Some(8_192));
-        assert_eq!(km.input_modalities, &["text"]);
+    fn test_shared_dataset_lookup_gpt4o() {
+        let caps = prompty::discovery::lookup("openai", "gpt-4o").unwrap();
+        assert_eq!(caps.context_window, Some(128_000));
+        assert_eq!(
+            caps.input_modalities.as_deref(),
+            Some(["text".to_string(), "image".to_string()].as_slice())
+        );
     }
 
     #[test]
-    fn test_find_known_dalle3() {
-        let km = find_known("dall-e-3").unwrap();
-        assert!(km.context_window.is_none());
-        assert_eq!(km.output_modalities, &["image"]);
+    fn test_shared_dataset_lookup_gpt4o_mini() {
+        // "gpt-4o-mini" should match the gpt-4o-mini entry (longest prefix first).
+        let caps = prompty::discovery::lookup("openai", "gpt-4o-mini-2024-07-18").unwrap();
+        assert_eq!(caps.context_window, Some(128_000));
+        assert_eq!(
+            caps.output_modalities.as_deref(),
+            Some(["text".to_string()].as_slice())
+        );
     }
 
     #[test]
-    fn test_find_known_unknown_model() {
-        assert!(find_known("some-custom-model").is_none());
+    fn test_shared_dataset_lookup_gpt4() {
+        let caps = prompty::discovery::lookup("openai", "gpt-4-0613").unwrap();
+        assert_eq!(caps.context_window, Some(8_192));
+        assert_eq!(
+            caps.input_modalities.as_deref(),
+            Some(["text".to_string()].as_slice())
+        );
+    }
+
+    #[test]
+    fn test_shared_dataset_lookup_dalle3() {
+        let caps = prompty::discovery::lookup("openai", "dall-e-3").unwrap();
+        assert!(caps.context_window.is_none());
+        assert_eq!(
+            caps.output_modalities.as_deref(),
+            Some(["image".to_string()].as_slice())
+        );
+    }
+
+    #[test]
+    fn test_shared_dataset_lookup_unknown_model() {
+        assert!(prompty::discovery::lookup("openai", "some-custom-model").is_none());
     }
 
     #[test]
@@ -320,7 +363,7 @@ mod tests {
             "owned_by": "openai",
             "object": "model"
         });
-        let info = parse_model_object(&obj);
+        let info = to_model_info(&obj);
         assert_eq!(info.id, "gpt-4o");
         assert_eq!(info.owned_by.as_deref(), Some("openai"));
         assert_eq!(info.context_window, Some(128_000));
@@ -328,6 +371,8 @@ mod tests {
             info.input_modalities.as_deref(),
             Some(vec!["text".to_string(), "image".to_string()].as_slice())
         );
+        assert_eq!(info.additional_properties["object"], "model");
+        assert_eq!(info.to_wire("openai")["owned_by"], "openai");
     }
 
     #[test]
@@ -336,7 +381,7 @@ mod tests {
             "id": "ft:custom:user-123",
             "owned_by": "user-123"
         });
-        let info = parse_model_object(&obj);
+        let info = to_model_info(&obj);
         assert_eq!(info.id, "ft:custom:user-123");
         assert!(info.context_window.is_none());
         assert!(info.input_modalities.is_none());
@@ -348,11 +393,31 @@ mod tests {
             "id": "text-embedding-3-small",
             "owned_by": "openai"
         });
-        let info = parse_model_object(&obj);
+        let info = to_model_info(&obj);
         assert_eq!(info.context_window, Some(8_191));
         assert_eq!(
             info.output_modalities.as_deref(),
             Some(Vec::<String>::new().as_slice())
         );
+    }
+
+    #[tokio::test]
+    async fn test_list_models_sends_bearer_auth_and_loads_typed_response() {
+        let body = r#"{"object":"list","data":[{"id":"gpt-4o","object":"model","created":1715367049,"owned_by":"openai"}]}"#;
+        let (endpoint, request) = spawn_model_server(body).await;
+        let models = list_models_async(&serde_json::json!({
+            "kind": "key",
+            "endpoint": endpoint,
+            "apiKey": "test-openai-key"
+        }))
+        .await
+        .unwrap();
+
+        let request = request.await.unwrap().to_ascii_lowercase();
+        assert!(request.starts_with("get /v1/models "));
+        assert!(request.contains("authorization: bearer test-openai-key"));
+        assert_eq!(models.len(), 1);
+        assert_eq!(models[0].id, "gpt-4o");
+        assert_eq!(models[0].additional_properties["created"], 1_715_367_049);
     }
 }

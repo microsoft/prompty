@@ -14,6 +14,7 @@ mod connection;
 mod conversation;
 mod core;
 mod events;
+mod memory;
 mod model;
 mod pipeline;
 mod streaming;

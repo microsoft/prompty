@@ -86,3 +86,30 @@ fn test_turn_end_payload_roundtrip() {
         json_output.err()
     );
 }
+
+#[test]
+fn test_turn_end_payload_serde_roundtrip() {
+    let json = r####"
+{
+  "iterations": 2,
+  "durationMs": 1500
+}
+"####;
+    let instance: TurnEndPayload =
+        serde_json::from_str(json).expect("serde should deserialize canonical JSON");
+    let value = serde_json::to_value(&instance).expect("serde should serialize");
+    let canonical: serde_json::Value = serde_json::from_str(json).expect("canonical json parses");
+    assert_eq!(
+        value,
+        instance.to_value(&SaveContext::default()),
+        "serde serialize must equal canonical to_value"
+    );
+    assert_eq!(
+        instance,
+        TurnEndPayload::load_from_value(&canonical, &LoadContext::default()),
+        "serde deserialize must equal canonical load_from_value"
+    );
+    let reparsed: TurnEndPayload =
+        serde_json::from_value(value).expect("serde should re-deserialize");
+    assert_eq!(instance, reparsed, "serde round-trip must be stable");
+}

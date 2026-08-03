@@ -257,8 +257,28 @@ class FunctionTool(Tool):
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
-        return [item.save(context) for item in items]
+        if context.collection_format == "array":
+            return [item.save(context) for item in items]
+
+        # Object format: use name as key
+        result: dict[str, Any] = {}
+        for item in items:
+            item_data = item.save(context)
+            name = item_data.pop("name", None)
+            if name:
+                # Check if we can use shorthand (only primary property set)
+                if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                    shorthand_prop = item._shorthand_property
+                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                        result[name] = item_data[shorthand_prop]
+                        continue
+                result[name] = item_data
+            else:
+                # No name, fall back to array format for this item
+                if "_unnamed" not in result:
+                    result["_unnamed"] = []
+                result["_unnamed"].append(item_data)
+        return result
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FunctionTool instance to a dictionary.

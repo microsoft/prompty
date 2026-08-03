@@ -85,7 +85,7 @@ public partial class HookStartPayload
 
         if (data.TryGetValue("scope", out var scopeValue) && scopeValue is not null)
         {
-            instance.Scope = Enum.Parse<HookStartScope>(scopeValue?.ToString()!, true);
+            instance.Scope = HookStartScopeParser.Parse(scopeValue?.ToString()!);
         }
 
         if (data.TryGetValue("input", out var inputValue) && inputValue is not null)
@@ -135,7 +135,7 @@ public partial class HookStartPayload
 
         if (obj.Scope is not null)
         {
-            result["scope"] = obj.Scope.Value.ToString().ToLowerInvariant();
+            result["scope"] = HookStartScopeParser.ToValue(obj.Scope.Value);
         }
 
 

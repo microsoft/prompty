@@ -57,7 +57,10 @@ func LoadTurnModelRequest(data interface{}, ctx *LoadContext) (TurnModelRequest,
 		}
 		if val, ok := m["options"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTurnOptions(m, ctx)
+				loaded, err := LoadTurnOptions(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Options = &loaded
 			}
 		}
@@ -66,7 +69,10 @@ func LoadTurnModelRequest(data interface{}, ctx *LoadContext) (TurnModelRequest,
 				result.ToolResults = make([]HostToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadHostToolResult(item, ctx)
+						loaded, err := LoadHostToolResult(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.ToolResults[i] = loaded
 					}
 				}

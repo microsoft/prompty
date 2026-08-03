@@ -1,0 +1,28 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: RetryPolicyRequest.yaml
+type: object
+properties:
+  failedAttempts:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Number of failures observed for this invocation, starting at one
+  nextAttempt:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: One-based attempt number that will run after backoff
+  maxAttempts:
+    type: integer
+    minimum: -2147483648
+    maximum: 2147483647
+    description: Maximum attempts permitted for the invocation
+  reason:
+    type: string
+    description: Human-readable reason for the retry
+required:
+  - failedAttempts
+  - nextAttempt
+  - maxAttempts
+  - reason
+description: Context supplied to the retry policy after a retryable model failure.

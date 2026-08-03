@@ -68,7 +68,10 @@ func LoadRunTurnResult(data interface{}, ctx *LoadContext) (RunTurnResult, error
 				result.ToolResults = make([]HostToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadHostToolResult(item, ctx)
+						loaded, err := LoadHostToolResult(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.ToolResults[i] = loaded
 					}
 				}
@@ -79,7 +82,10 @@ func LoadRunTurnResult(data interface{}, ctx *LoadContext) (RunTurnResult, error
 				result.Checkpoints = make([]Checkpoint, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, _ := LoadCheckpoint(item, ctx)
+						loaded, err := LoadCheckpoint(item, ctx)
+						if err != nil {
+							return result, err
+						}
 						result.Checkpoints[i] = loaded
 					}
 				}

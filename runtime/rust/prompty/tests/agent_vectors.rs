@@ -647,15 +647,18 @@ async fn test_events_error_logged() {
     // The Rust runtime propagates tool errors — this differs from the spec
     // which expects error strings to be fed back to the LLM. We accept
     // either behavior: an error result, or the continued loop result.
-    if result.is_err() {
-        let err_str = result.unwrap_err().to_string();
-        assert!(
-            err_str.contains("Weather service unavailable") || err_str.contains("get_weather"),
-            "error should mention weather service: {err_str}"
-        );
-    } else {
-        // If the runtime feeds errors back to the LLM (spec behavior)
-        assert!(result.unwrap().as_str().is_some());
+    match result {
+        Err(err) => {
+            let err_str = err.to_string();
+            assert!(
+                err_str.contains("Weather service unavailable") || err_str.contains("get_weather"),
+                "error should mention weather service: {err_str}"
+            );
+        }
+        Ok(value) => {
+            // If the runtime feeds errors back to the LLM (spec behavior)
+            assert!(value.as_str().is_some());
+        }
     }
 
     assert!(
@@ -838,7 +841,7 @@ async fn test_cancellation_between_tools() {
 }
 
 // ===================================================================
-// BINDINGS — skip (not yet implemented in Rust runtime)
+// BINDINGS — legacy processor compatibility
 // ===================================================================
 
 #[tokio::test]
@@ -1211,27 +1214,29 @@ async fn test_steering_multiple_messages() {
 }
 
 // -------------------------------------------------------------------
-// Parallel tool calls (§13.6)
+// Parallel tool option rejection (§13.6)
 // -------------------------------------------------------------------
 
 #[tokio::test]
 async fn test_parallel_tools_basic() {
-    // 3 tool calls in one turn, dispatched in parallel.
     let vector = find_vector("parallel_tools_basic");
-    let expected_result = vector["expected"]["result"].as_str().unwrap();
+    let expected_error = vector["expected"]["rust_expected_error"].as_str().unwrap();
 
-    let result = run_extension_vector("parallel_tools_basic").await.unwrap();
-    assert_eq!(result.as_str().unwrap(), expected_result);
+    let error = run_extension_vector("parallel_tools_basic")
+        .await
+        .unwrap_err();
+    assert!(matches!(error, InvokerError::Validation(_)));
+    assert!(error.to_string().contains(expected_error));
 }
 
 #[tokio::test]
 async fn test_parallel_tools_with_guardrail_deny() {
-    // 3 parallel tool calls — one denied by tool guardrail, two allowed.
     let vector = find_vector("parallel_tools_with_guardrail_deny");
-    let expected_result = vector["expected"]["result"].as_str().unwrap();
+    let expected_error = vector["expected"]["rust_expected_error"].as_str().unwrap();
 
-    let result = run_extension_vector("parallel_tools_with_guardrail_deny")
+    let error = run_extension_vector("parallel_tools_with_guardrail_deny")
         .await
-        .unwrap();
-    assert_eq!(result.as_str().unwrap(), expected_result);
+        .unwrap_err();
+    assert!(matches!(error, InvokerError::Validation(_)));
+    assert!(error.to_string().contains(expected_error));
 }

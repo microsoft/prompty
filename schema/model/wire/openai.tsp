@@ -1,8 +1,13 @@
 import "@typra/emitter";
+import "../model/discovery.tsp";
 import "../model/model.tsp";
 import "../model/usage.tsp";
 
-using Prompty;
+namespace Prompty;
+
+// ModelInfo → OpenAI model-list response field names.
+@@knownAs(ModelInfo.id, "openai", "id");
+@@knownAs(ModelInfo.ownedBy, "openai", "owned_by");
 
 // ============================================================================
 // OpenAI Chat Completions API wire mappings
@@ -30,3 +35,8 @@ using Prompty;
 @@knownAs(TokenUsage.promptTokens, "openai", "prompt_tokens");
 @@knownAs(TokenUsage.completionTokens, "openai", "completion_tokens");
 @@knownAs(TokenUsage.totalTokens, "openai", "total_tokens");
+
+// InvocationUsage → OpenAI terminal streaming usage field names
+@@knownAs(InvocationUsage.inputTokens, "openai", "prompt_tokens");
+@@knownAs(InvocationUsage.outputTokens, "openai", "completion_tokens");
+@@knownAs(InvocationUsage.totalTokens, "openai", "total_tokens");

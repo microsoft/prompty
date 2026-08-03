@@ -58,14 +58,20 @@ func LoadModel(data interface{}, ctx *LoadContext) (Model, error) {
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadConnection(m, ctx)
+				loaded, err := LoadConnection(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				// Polymorphic type - keep as interface{} (no pointer needed, interface{} can be nil)
 				result.Connection = loaded
 			}
 		}
 		if val, ok := m["options"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadModelOptions(m, ctx)
+				loaded, err := LoadModelOptions(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Options = &loaded
 			}
 		}
@@ -124,7 +130,7 @@ func (obj *Model) ToYAML() (string, error) {
 
 // FromJSON creates Model from JSON string
 func ModelFromJSON(jsonStr string) (Model, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
 		return Model{}, err
 	}
@@ -134,7 +140,7 @@ func ModelFromJSON(jsonStr string) (Model, error) {
 
 // FromYAML creates Model from YAML string
 func ModelFromYAML(yamlStr string) (Model, error) {
-	var data map[string]interface{}
+	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
 		return Model{}, err
 	}

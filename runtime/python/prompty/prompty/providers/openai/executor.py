@@ -119,7 +119,7 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
             if hasattr(tool, "parameters") and tool.parameters:
                 bound_names = {b.name for b in tool.bindings} if tool.bindings else set()
                 params = [p for p in tool.parameters if p.name not in bound_names]
-                func_def["parameters"] = _schema_to_wire(params)
+                func_def["parameters"] = _schema_to_wire(params, strict=bool(getattr(tool, "strict", False)))
             if hasattr(tool, "strict") and tool.strict:
                 func_def["strict"] = True
                 if "parameters" in func_def:
@@ -162,7 +162,7 @@ def _project_prompty_tool(tool: Any, parent: Prompty) -> dict[str, Any]:
     bound_names = {b.name for b in tool.bindings} if tool.bindings else set()
     child_inputs = child.inputs or []
     params = [p for p in child_inputs if p.name not in bound_names]
-    func_def["parameters"] = _schema_to_wire(params)
+    func_def["parameters"] = _schema_to_wire(params, strict=bool(getattr(tool, "strict", False)))
 
     if hasattr(tool, "strict") and tool.strict:
         func_def["strict"] = True
@@ -172,14 +172,16 @@ def _project_prompty_tool(tool: Any, parent: Prompty) -> dict[str, Any]:
     return func_def
 
 
-def _schema_to_wire(properties: list) -> dict[str, Any]:
+def _schema_to_wire(properties: list, *, strict: bool = False) -> dict[str, Any]:
     """Convert a list of Property instances to a JSON Schema dict for OpenAI tools."""
     props_dict: dict[str, Any] = {}
     required: list[str] = []
 
     for prop in properties:
-        props_dict[prop.name] = _property_to_json_schema(prop)
-        if prop.required:
+        props_dict[prop.name] = _property_to_json_schema(
+            prop, optional=strict and not bool(prop.required), strict=strict
+        )
+        if strict or prop.required:
             required.append(prop.name)
 
     result: dict[str, Any] = {"type": "object", "properties": props_dict}
@@ -188,7 +190,7 @@ def _schema_to_wire(properties: list) -> dict[str, Any]:
     return result
 
 
-def _property_to_json_schema(prop) -> dict[str, Any]:
+def _property_to_json_schema(prop: Any, *, optional: bool = False, strict: bool = False) -> dict[str, Any]:
     """Convert a Property to a JSON Schema dict for structured output."""
     kind_map = {
         "string": "string",
@@ -200,7 +202,8 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
         "object": "object",
     }
 
-    schema: dict[str, Any] = {"type": kind_map.get(prop.kind, "string")}
+    json_type = kind_map.get(getattr(prop, "kind", ""))
+    schema: dict[str, Any] = {"type": json_type} if json_type else {}
 
     if prop.description:
         schema["description"] = prop.description
@@ -210,7 +213,7 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
     # Array items — default to string if unspecified
     if prop.kind == "array":
         if hasattr(prop, "items") and prop.items is not None:
-            schema["items"] = _property_to_json_schema(prop.items)
+            schema["items"] = _property_to_json_schema(prop.items, strict=strict)
         else:
             schema["items"] = {"type": "string"}
 
@@ -220,16 +223,46 @@ def _property_to_json_schema(prop) -> dict[str, Any]:
             props: dict[str, Any] = {}
             required: list[str] = []
             for p in prop.properties:
-                props[p.name] = _property_to_json_schema(p)
-                required.append(p.name)
+                props[p.name] = _property_to_json_schema(
+                    p, optional=strict and not bool(p.required), strict=strict
+                )
+                if strict or p.required:
+                    required.append(p.name)
             schema["properties"] = props
-            schema["required"] = required
+            if required:
+                schema["required"] = required
         else:
             schema["properties"] = {}
-            schema["required"] = []
         schema["additionalProperties"] = False
 
+    if prop.kind == "union":
+        has_one_of = isinstance(prop.one_of, list) and bool(prop.one_of)
+        has_any_of = isinstance(prop.any_of, list) and bool(prop.any_of)
+        if has_one_of == has_any_of:
+            raise ValueError("UnionProperty must specify exactly one non-empty composition: oneOf or anyOf")
+        if has_one_of:
+            raise ValueError(
+                "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition"
+            )
+        schema["anyOf"] = [_property_to_json_schema(branch, strict=strict) for branch in prop.any_of]
+
+    if getattr(prop, "nullable", False) or optional:
+        _add_nullability(schema)
+
     return schema
+
+
+def _add_nullability(schema: dict[str, Any]) -> None:
+    """Add JSON Schema null support without emitting an invalid empty type."""
+    if isinstance(schema.get("type"), str):
+        schema["type"] = [schema["type"], "null"]
+    elif isinstance(schema.get("anyOf"), list):
+        schema["anyOf"].append({"type": "null"})
+    elif schema:
+        schema["anyOf"] = [schema.copy(), {"type": "null"}]
+
+    if isinstance(schema.get("enum"), list) and None not in schema["enum"]:
+        schema["enum"].append(None)
 
 
 def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
@@ -246,15 +279,16 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
     required: list[str] = []
 
     for prop in agent.outputs:
-        properties[prop.name] = _property_to_json_schema(prop)
+        properties[prop.name] = _property_to_json_schema(prop, optional=not bool(prop.required), strict=True)
         required.append(prop.name)
 
     schema: dict[str, Any] = {
         "type": "object",
         "properties": properties,
         "additionalProperties": False,
-        "required": required,
     }
+    if required:
+        schema["required"] = required
 
     name = "structured_output"
 
@@ -332,7 +366,9 @@ def _responses_tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
             if tool.description:
                 tool_def["description"] = tool.description
             if hasattr(tool, "parameters") and tool.parameters:
-                tool_def["parameters"] = _schema_to_wire(tool.parameters)
+                tool_def["parameters"] = _schema_to_wire(
+                    tool.parameters, strict=bool(getattr(tool, "strict", False))
+                )
             if hasattr(tool, "strict") and tool.strict:
                 tool_def["strict"] = True
                 if "parameters" in tool_def:
@@ -373,7 +409,7 @@ def _output_schema_to_responses_wire(agent: Prompty) -> dict[str, Any] | None:
     required: list[str] = []
 
     for prop in agent.outputs:
-        properties[prop.name] = _property_to_json_schema(prop)
+        properties[prop.name] = _property_to_json_schema(prop, optional=not bool(prop.required), strict=True)
         required.append(prop.name)
 
     name = "structured_output"
@@ -386,7 +422,7 @@ def _output_schema_to_responses_wire(agent: Prompty) -> dict[str, Any] | None:
             "schema": {
                 "type": "object",
                 "properties": properties,
-                "required": required,
+                **({"required": required} if required else {}),
                 "additionalProperties": False,
             },
         },

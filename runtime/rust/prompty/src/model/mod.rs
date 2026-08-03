@@ -27,6 +27,9 @@ pub use core::*;
 pub mod events;
 pub use events::*;
 
+pub mod memory;
+pub use memory::*;
+
 pub mod model;
 pub use model::*;
 

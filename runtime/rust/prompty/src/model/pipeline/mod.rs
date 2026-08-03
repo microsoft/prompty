@@ -9,6 +9,72 @@
     clippy::all
 )]
 
+pub mod delegated_state_reference;
+pub use delegated_state_reference::*;
+
+pub mod invocation_context_state;
+pub use invocation_context_state::*;
+
+pub mod invocation_context_decision;
+pub use invocation_context_decision::*;
+
+pub mod model_invocation_context_snapshot;
+pub use model_invocation_context_snapshot::*;
+
+pub mod model_invocation_request;
+pub use model_invocation_request::*;
+
+pub mod model_tool_request;
+pub use model_tool_request::*;
+
+pub mod model_tool_result;
+pub use model_tool_result::*;
+
+pub mod model_invocation_response;
+pub use model_invocation_response::*;
+
+pub mod engine_event;
+pub use engine_event::*;
+
+pub mod model_reconciliation_state;
+pub use model_reconciliation_state::*;
+
+pub mod engine_permission_decision;
+pub use engine_permission_decision::*;
+
+pub mod engine_checkpoint;
+pub use engine_checkpoint::*;
+
+pub mod resume_context;
+pub use resume_context::*;
+
+pub mod turn_commit;
+pub use turn_commit::*;
+
+pub mod turn_engine_result;
+pub use turn_engine_result::*;
+
+pub mod host_policy_request;
+pub use host_policy_request::*;
+
+pub mod host_policy_result;
+pub use host_policy_result::*;
+
+pub mod final_output_policy_request;
+pub use final_output_policy_request::*;
+
+pub mod final_output_policy_result;
+pub use final_output_policy_result::*;
+
+pub mod retry_policy_request;
+pub use retry_policy_request::*;
+
+pub mod context_request;
+pub use context_request::*;
+
+pub mod context_candidate;
+pub use context_candidate::*;
+
 pub mod compaction_config;
 pub use compaction_config::*;
 

@@ -32,7 +32,10 @@ func LoadTraceFile(data interface{}, ctx *LoadContext) (TraceFile, error) {
 		}
 		if val, ok := m["trace"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, _ := LoadTraceSpan(m, ctx)
+				loaded, err := LoadTraceSpan(m, ctx)
+				if err != nil {
+					return result, err
+				}
 				result.Trace = loaded
 			}
 		}

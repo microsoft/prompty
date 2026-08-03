@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 use serde_json::{Value, json};
 
+use crate::engine::{DurabilityPort, PermissionPort, PostCommitPort, TurnEngineRequest};
 use crate::interfaces::InvokerError;
 use crate::model::Prompty;
 use crate::parsers::parse_chat;
@@ -23,10 +24,13 @@ use crate::registry;
 use crate::renderers::prepare_render_inputs;
 use crate::structured::{create_structured_result, to_structured_value, unwrap_structured};
 use crate::tracing::{Tracer, sanitize_value};
+#[cfg(test)]
+use crate::types::ToolCall;
 use crate::types::{
-    ContentPart, ContentPartKind, Message, PromptyStream, Role, StreamChunk, ToolCall,
-    consume_stream_chunks,
+    ContentPart, ContentPartKind, Message, PromptyStream, Role, consume_stream_chunks,
 };
+
+mod live_turn;
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -702,16 +706,46 @@ pub struct TurnOptions {
     pub guardrails: Option<crate::guardrails::Guardrails>,
     /// Steering message queue for injecting messages between iterations.
     pub steering: Option<crate::steering::Steering>,
-    /// If true, dispatch tool calls in parallel (via tokio::join!).
+    /// Compatibility flag retained for the public API.
+    ///
+    /// Setting this to `true` returns [`InvokerError::Validation`] and emits an
+    /// error turn lifecycle. The canonical engine executes tool effects
+    /// sequentially so durable result ordering is deterministic.
     pub parallel_tool_calls: bool,
-    /// Optional validator for structured output (called via cast after processing).
+    /// Optional validator for the final processed output.
+    ///
+    /// The canonical turn engine invokes this after output guardrail rewrites and
+    /// structured-result unwrapping, immediately before its durable success commit.
+    /// A rejection commits an `output_validation_failed` turn lifecycle and returns
+    /// [`InvokerError::Validation`].
     #[allow(clippy::type_complexity)]
     pub validator: Option<Box<dyn Fn(&serde_json::Value) -> Result<(), String> + Send + Sync>>,
-    /// Maximum retries for LLM calls with exponential backoff (§9.10, default: 3).
+    /// Maximum model attempts for each LLM invocation with exponential backoff (§9.10, default: 3).
+    ///
+    /// This applies to simple public turns and tool-calling turns alike. Values below
+    /// one are normalized to one attempt.
     pub max_llm_retries: usize,
     /// Context compaction strategy. When set and messages are trimmed, replaces
     /// the default `summarize_dropped()` summary with a higher-quality one.
     pub compaction: Option<Compaction>,
+    /// Optional durable event/checkpoint sink for the canonical turn engine.
+    ///
+    /// When supplied, the sink is called before live events are projected to
+    /// the callback. Hosts can resume with [`turn_with_engine_request`] and a
+    /// request created from [`TurnEngineRequest::resume_from`].
+    pub durability: Option<Arc<dyn DurabilityPort>>,
+    /// Optional host authorization port for tool requests.
+    ///
+    /// When omitted, live turns retain their existing behavior: tool guardrails
+    /// authorize requests when configured and all requests are otherwise allowed.
+    /// When supplied, this port owns the authorization decision.
+    pub permission: Option<Arc<dyn PermissionPort>>,
+    /// Optional non-fatal effect invoked after a successful turn is committed.
+    ///
+    /// The hook receives the committed [`crate::engine::TurnCommit`] and the
+    /// turn cancellation token. Hook failures are recorded by the canonical
+    /// engine but never revoke an already committed successful turn.
+    pub post_commit: Option<Arc<dyn PostCommitPort>>,
 }
 
 impl Default for TurnOptions {
@@ -729,6 +763,9 @@ impl Default for TurnOptions {
             validator: None,
             max_llm_retries: 3,
             compaction: None,
+            durability: None,
+            permission: None,
+            post_commit: None,
         }
     }
 }
@@ -742,6 +779,7 @@ impl TurnOptions {
         }
     }
 
+    #[cfg(test)]
     fn emit(&self, event: AgentEvent) {
         if let Some(ref cb) = self.on_event {
             // Per spec §13.1: event callbacks MUST NOT block the loop.
@@ -752,14 +790,7 @@ impl TurnOptions {
         }
     }
 
-    fn emit_failed_turn_end(&self, status: &str, iterations: usize) {
-        self.emit(AgentEvent::TurnEnd {
-            status: status.to_string(),
-            iterations,
-            response: serde_json::Value::Null,
-        });
-    }
-
+    #[cfg(test)]
     fn is_cancelled(&self) -> bool {
         self.cancelled
             .as_ref()
@@ -860,6 +891,26 @@ impl TurnOptionsBuilder {
         self
     }
 
+    /// Persist canonical engine events and checkpoints through the supplied sink.
+    pub fn durability(mut self, durability: Arc<dyn DurabilityPort>) -> Self {
+        self.opts.durability = Some(durability);
+        self
+    }
+
+    /// Use a host-owned authorization port for tool requests.
+    ///
+    /// This replaces the default tool-guardrail/allow-all authorization path.
+    pub fn permission(mut self, permission: Arc<dyn PermissionPort>) -> Self {
+        self.opts.permission = Some(permission);
+        self
+    }
+
+    /// Run a host-owned non-fatal hook after a successful turn commit.
+    pub fn post_commit(mut self, post_commit: Arc<dyn PostCommitPort>) -> Self {
+        self.opts.post_commit = Some(post_commit);
+        self
+    }
+
     /// Consume the builder and return the configured [`TurnOptions`].
     pub fn build(self) -> TurnOptions {
         self.opts
@@ -932,595 +983,37 @@ pub async fn apply_compaction(
 
 /// One conversational round-trip: prepare → [agent loop with tool calls] → process.
 ///
-/// Without tools, this is equivalent to `invoke` (simple mode). With tools,
-/// it loops: execute → check for tool_calls → dispatch tools → re-execute
-/// until the model returns a final response or `max_iterations` is reached.
+/// All live execution delegates to the canonical [`crate::engine::TurnEngine`].
 ///
 /// Extensions (matching TypeScript):
 /// - **Context trimming**: If `context_budget` is set, messages are trimmed before each LLM call
 /// - **Guardrails**: Input/output/tool guardrails checked at appropriate points
 /// - **Steering**: Messages injected between iterations
-/// - **Parallel tools**: If `parallel_tool_calls` is true, tool calls run concurrently
+/// - **Ordered tools**: Tool effects are durably committed in request order
 /// - **Cancellation**: Checked at each iteration boundary
 pub async fn turn(
     agent: &Prompty,
     inputs: Option<&serde_json::Value>,
     options: Option<TurnOptions>,
 ) -> Result<serde_json::Value, InvokerError> {
-    let mut opts = options.unwrap_or_default();
+    live_turn::turn(agent, inputs, options).await
+}
 
-    // If no tools registered (neither user tools nor global registry), fast-path to invoke
-    if opts.tools.is_empty() && !has_any_tools(agent) {
-        // Simple mode: steering → trim → input guardrail → execute → output guardrail → process
-        let span = Tracer::start("turn");
-        span.emit("signature", &json!("prompty.turn"));
-        span.emit("description", &json!("Simple turn (no tools)"));
-        let empty = serde_json::json!({});
-        span.emit("inputs", inputs.unwrap_or(&empty));
-        opts.emit(AgentEvent::TurnStart {
-            agent: Some(agent.name.clone()),
-            max_iterations: opts.max_iterations,
-        });
-
-        if opts.is_cancelled() {
-            opts.emit(AgentEvent::Cancelled);
-            opts.emit_failed_turn_end("cancelled", 0);
-            span.emit("error", &json!("Operation cancelled"));
-            span.end();
-            return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
-        }
-
-        let mut messages = match prepare(agent, inputs).await {
-            Ok(messages) => messages,
-            Err(err) => {
-                opts.emit_failed_turn_end("error", 0);
-                span.end();
-                return Err(err);
-            }
-        };
-        let provider = resolve_provider(agent);
-
-        // Drain steering
-        if let Some(ref mut steering) = opts.steering {
-            messages.extend(steering.drain());
-        }
-
-        // Context trimming
-        if let Some(budget) = opts.context_budget {
-            let (dropped, trimmed) = crate::context::trim_to_context_window(&messages, budget);
-            if !dropped.is_empty() {
-                span.emit("context_trimmed", &json!(dropped.len()));
-                messages = trimmed;
-                // Apply compaction if configured
-                if let Some(ref compaction) = opts.compaction {
-                    apply_compaction(compaction, &dropped, &mut messages, &span).await;
-                }
-            } else {
-                messages = trimmed;
-            }
-        }
-
-        // Input guardrail
-        if let Some(ref guardrails) = opts.guardrails {
-            let gr = guardrails.check_input(&messages, agent).await;
-            if !gr.allowed {
-                let reason = gr.reason.unwrap_or_else(|| "Input denied".into());
-                opts.emit_failed_turn_end("error", 0);
-                span.emit("error", &json!(format!("Input guardrail: {reason}")));
-                span.end();
-                return Err(InvokerError::Execute(
-                    format!("Input guardrail denied: {reason}").into(),
-                ));
-            }
-        }
-
-        // Execute (streaming-aware)
-        if opts.is_cancelled() {
-            opts.emit(AgentEvent::Cancelled);
-            opts.emit_failed_turn_end("cancelled", 0);
-            span.emit("error", &json!("Operation cancelled"));
-            span.end();
-            return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
-        }
-        let streaming = is_streaming(agent);
-        let processed = if streaming {
-            opts.emit(AgentEvent::LlmStart {
-                provider: provider.clone(),
-                model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
-                message_count: messages.len(),
-                iteration: 0,
-            });
-            match registry::invoke_executor_stream(&provider, agent, &messages).await {
-                Ok(sse_stream) => {
-                    opts.emit(AgentEvent::LlmComplete { iteration: 0 });
-                    let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
-                    let chunk_stream = match registry::invoke_processor_stream(
-                        &provider,
-                        Box::pin(prompty_stream),
-                    ) {
-                        Ok(stream) => stream,
-                        Err(err) => {
-                            opts.emit_failed_turn_end("error", 0);
-                            return Err(err);
-                        }
-                    };
-
-                    use futures::StreamExt;
-                    let mut text_parts = Vec::new();
-                    futures::pin_mut!(chunk_stream);
-                    while let Some(chunk) = chunk_stream.next().await {
-                        match chunk {
-                            StreamChunk::Text(t) => {
-                                opts.emit(AgentEvent::Token(t.clone()));
-                                text_parts.push(t);
-                            }
-                            StreamChunk::Thinking(t) => {
-                                opts.emit(AgentEvent::Thinking(t));
-                            }
-                            StreamChunk::Error(e) => {
-                                opts.emit_failed_turn_end("error", 0);
-                                span.emit("error", &json!(e));
-                                span.end();
-                                return Err(InvokerError::Execute(e.into()));
-                            }
-                            _ => {}
-                        }
-                    }
-                    json!(text_parts.join(""))
-                }
-                Err(_) => {
-                    // Fallback to non-streaming
-                    let raw_response =
-                        match registry::invoke_executor(&provider, agent, &messages).await {
-                            Ok(response) => response,
-                            Err(err) => {
-                                opts.emit_failed_turn_end("error", 0);
-                                return Err(err);
-                            }
-                        };
-                    opts.emit(AgentEvent::LlmComplete { iteration: 0 });
-                    if opts.raw {
-                        span.emit("result", &json!("(raw)"));
-                        span.end();
-                        opts.emit(AgentEvent::Done {
-                            response: raw_response.clone(),
-                            messages: messages.clone(),
-                        });
-                        opts.emit(AgentEvent::TurnEnd {
-                            status: "success".to_string(),
-                            iterations: 0,
-                            response: raw_response.clone(),
-                        });
-                        return Ok(raw_response);
-                    }
-
-                    match process(agent, raw_response.clone()).await {
-                        Ok(result) => result,
-                        Err(err) => {
-                            opts.emit_failed_turn_end("error", 0);
-                            return Err(err);
-                        }
-                    }
-                }
-            }
-        } else {
-            opts.emit(AgentEvent::LlmStart {
-                provider: provider.clone(),
-                model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
-                message_count: messages.len(),
-                iteration: 0,
-            });
-            let raw_response = match registry::invoke_executor(&provider, agent, &messages).await {
-                Ok(response) => response,
-                Err(err) => {
-                    opts.emit_failed_turn_end("error", 0);
-                    return Err(err);
-                }
-            };
-            opts.emit(AgentEvent::LlmComplete { iteration: 0 });
-
-            if opts.raw {
-                span.emit("result", &json!("(raw)"));
-                span.end();
-                opts.emit(AgentEvent::Done {
-                    response: raw_response.clone(),
-                    messages: messages.clone(),
-                });
-                opts.emit(AgentEvent::TurnEnd {
-                    status: "success".to_string(),
-                    iterations: 0,
-                    response: raw_response.clone(),
-                });
-                return Ok(raw_response);
-            }
-
-            match process(agent, raw_response.clone()).await {
-                Ok(result) => result,
-                Err(err) => {
-                    opts.emit_failed_turn_end("error", 0);
-                    return Err(err);
-                }
-            }
-        };
-
-        // Output guardrail
-        if let Some(ref guardrails) = opts.guardrails {
-            let gr = guardrails.check_output(&processed, agent).await;
-            if !gr.allowed {
-                let reason = gr.reason.unwrap_or_else(|| "Output denied".into());
-                opts.emit_failed_turn_end("error", 0);
-                span.emit("error", &json!(format!("Output guardrail: {reason}")));
-                span.end();
-                return Err(InvokerError::Execute(
-                    format!("Output guardrail denied: {reason}").into(),
-                ));
-            }
-            if let Some(rewrite) = gr.rewrite {
-                span.emit("result", &rewrite);
-                span.end();
-                opts.emit(AgentEvent::Done {
-                    response: rewrite.clone(),
-                    messages: messages.clone(),
-                });
-                opts.emit(AgentEvent::TurnEnd {
-                    status: "success".to_string(),
-                    iterations: 0,
-                    response: rewrite.clone(),
-                });
-                return Ok(rewrite);
-            }
-        }
-
-        span.emit("result", &processed);
-        span.end();
-        opts.emit(AgentEvent::Done {
-            response: processed.clone(),
-            messages: messages.clone(),
-        });
-        opts.emit(AgentEvent::TurnEnd {
-            status: "success".to_string(),
-            iterations: 0,
-            response: processed.clone(),
-        });
-        return Ok(processed);
-    }
-
-    // Agent mode — tool-calling loop
-    let span = Tracer::start("turn");
-    span.emit("signature", &json!("prompty.turn"));
-    span.emit("description", &json!("Agent turn (tool-calling loop)"));
-    let empty = serde_json::json!({});
-    span.emit("inputs", inputs.unwrap_or(&empty));
-    opts.emit(AgentEvent::TurnStart {
-        agent: Some(agent.name.clone()),
-        max_iterations: opts.max_iterations,
-    });
-
-    // Check cancellation at start
-    if opts.is_cancelled() {
-        opts.emit(AgentEvent::Cancelled);
-        opts.emit_failed_turn_end("cancelled", 0);
-        span.emit("error", &json!("Operation cancelled"));
-        span.end();
-        return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
-    }
-
-    // Prepare messages
-    let mut messages = match prepare(agent, inputs).await {
-        Ok(messages) => messages,
-        Err(err) => {
-            opts.emit_failed_turn_end("error", 0);
-            span.end();
-            return Err(err);
-        }
-    };
-    let provider = resolve_provider(agent);
-
-    for iteration in 0..opts.max_iterations {
-        // Check cancellation before each LLM call
-        if opts.is_cancelled() {
-            opts.emit(AgentEvent::Cancelled);
-            opts.emit_failed_turn_end("cancelled", iteration);
-            span.emit("error", &json!("Operation cancelled"));
-            span.end();
-            return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
-        }
-
-        let iter_span = Tracer::start(&format!("turn.iteration.{iteration}"));
-        iter_span.emit("iteration", &json!(iteration));
-
-        // Drain steering messages
-        if let Some(ref steering) = opts.steering {
-            let steering_msgs = steering.drain();
-            if !steering_msgs.is_empty() {
-                let count = steering_msgs.len();
-                iter_span.emit("steering_messages", &json!(count));
-                messages.extend(steering_msgs);
-                opts.emit(AgentEvent::Status(format!(
-                    "Injected {count} steering message(s)"
-                )));
-                opts.emit(AgentEvent::MessagesUpdated {
-                    messages: messages.clone(),
-                });
-            }
-        }
-
-        // Context trimming
-        if let Some(budget) = opts.context_budget {
-            let (dropped, trimmed) = crate::context::trim_to_context_window(&messages, budget);
-            if !dropped.is_empty() {
-                iter_span.emit("context_trimmed", &json!(dropped.len()));
-                messages = trimmed;
-                // Apply compaction if configured
-                if let Some(ref compaction) = opts.compaction {
-                    apply_compaction(compaction, &dropped, &mut messages, &iter_span).await;
-                }
-                opts.emit(AgentEvent::MessagesUpdated {
-                    messages: messages.clone(),
-                });
-            } else {
-                messages = trimmed;
-            }
-        }
-
-        // Input guardrail
-        if let Some(ref guardrails) = opts.guardrails {
-            let gr = guardrails.check_input(&messages, agent).await;
-            if !gr.allowed {
-                let reason = gr.reason.unwrap_or_else(|| "Input denied".into());
-                iter_span.end();
-                opts.emit_failed_turn_end("error", iteration);
-                span.emit("error", &json!(format!("Input guardrail: {reason}")));
-                span.end();
-                return Err(InvokerError::Execute(
-                    format!("Input guardrail denied: {reason}").into(),
-                ));
-            }
-        }
-
-        // Execute LLM — streaming or non-streaming, with retry (§9.10)
-        let streaming = is_streaming(agent);
-        let mut llm_attempts = 0u32;
-        let (tool_calls, processed, raw_response) = loop {
-            // Check cancellation before each attempt
-            if opts.is_cancelled() {
-                iter_span.end();
-                opts.emit(AgentEvent::Cancelled);
-                opts.emit_failed_turn_end("cancelled", iteration);
-                span.emit("error", &json!("Operation cancelled"));
-                span.end();
-                return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
-            }
-
-            opts.emit(AgentEvent::LlmStart {
-                provider: provider.clone(),
-                model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
-                message_count: messages.len(),
-                iteration,
-            });
-            match execute_llm_attempt(&provider, agent, &messages, streaming, &opts).await {
-                Ok(result) => {
-                    opts.emit(AgentEvent::LlmComplete { iteration });
-                    break result;
-                }
-                Err(e) => {
-                    llm_attempts += 1;
-                    if llm_attempts >= opts.max_llm_retries as u32 {
-                        iter_span.end();
-                        opts.emit_failed_turn_end("error", iteration);
-                        span.emit(
-                            "error",
-                            &json!(format!(
-                                "LLM call failed after {} retries: {}",
-                                opts.max_llm_retries, e
-                            )),
-                        );
-                        span.end();
-                        return Err(InvokerError::ExecuteRetryExhausted(
-                            crate::interfaces::ExecuteError {
-                                message: format!(
-                                    "LLM call failed after {} retries: {}",
-                                    opts.max_llm_retries, e
-                                ),
-                                messages: messages.clone(),
-                            },
-                        ));
-                    }
-                    opts.emit(AgentEvent::Status(format!(
-                        "LLM call failed, retrying (attempt {}/{})...",
-                        llm_attempts + 1,
-                        opts.max_llm_retries
-                    )));
-                    opts.emit(AgentEvent::Retry {
-                        operation: "llm".to_string(),
-                        attempt: llm_attempts as usize + 1,
-                        max_attempts: opts.max_llm_retries,
-                        reason: e.clone(),
-                    });
-                    // Exponential backoff with jitter, capped at 60s
-                    // Formula: min(2^attempts + jitter, 60) per spec §9.10
-                    let backoff_secs = {
-                        use rand::Rng;
-                        let jitter: f64 = rand::rng().random();
-                        (2.0_f64.powi(llm_attempts as i32) + jitter).min(60.0)
-                    };
-                    let delay = std::time::Duration::from_secs_f64(backoff_secs);
-
-                    // Check cancellation during backoff sleep (spec §9.10)
-                    if let Some(ref cancel_flag) = opts.cancelled {
-                        let cancel_flag = cancel_flag.clone();
-                        tokio::select! {
-                            _ = tokio::time::sleep(delay) => {}
-                            _ = async {
-                                loop {
-                                    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-                                    if cancel_flag.load(std::sync::atomic::Ordering::Relaxed) {
-                                        return;
-                                    }
-                                }
-                            } => {
-                                opts.emit(AgentEvent::Cancelled);
-                                opts.emit_failed_turn_end("cancelled", iteration);
-                                span.emit("error", &json!("Operation cancelled during retry backoff"));
-                                span.end();
-                                return Err(InvokerError::Cancelled(
-                                    "Operation cancelled during retry backoff".to_string(),
-                                ));
-                            }
-                        }
-                    } else {
-                        tokio::time::sleep(delay).await;
-                    }
-                }
-            }
-        };
-
-        if tool_calls.is_empty() {
-            // No tool calls — final response
-
-            // Output guardrail
-            if let Some(ref guardrails) = opts.guardrails {
-                let gr = guardrails.check_output(&processed, agent).await;
-                if !gr.allowed {
-                    let reason = gr.reason.unwrap_or_else(|| "Output denied".into());
-                    iter_span.end();
-                    opts.emit_failed_turn_end("error", iteration + 1);
-                    span.emit("error", &json!(format!("Output guardrail: {reason}")));
-                    span.end();
-                    return Err(InvokerError::Execute(
-                        format!("Output guardrail denied: {reason}").into(),
-                    ));
-                }
-                if let Some(rewrite) = gr.rewrite {
-                    iter_span.emit("result", &rewrite);
-                    iter_span.end();
-                    opts.emit(AgentEvent::Done {
-                        response: rewrite.clone(),
-                        messages: messages.clone(),
-                    });
-                    opts.emit(AgentEvent::TurnEnd {
-                        status: "success".to_string(),
-                        iterations: iteration + 1,
-                        response: rewrite.clone(),
-                    });
-                    span.emit("result", &rewrite);
-                    span.emit("iterations", &json!(iteration + 1));
-                    span.end();
-                    return Ok(rewrite);
-                }
-            }
-
-            iter_span.emit("result", &processed);
-            iter_span.end();
-            let final_result = unwrap_structured(&processed);
-            opts.emit(AgentEvent::Done {
-                response: final_result.clone(),
-                messages: messages.clone(),
-            });
-            opts.emit(AgentEvent::TurnEnd {
-                status: "success".to_string(),
-                iterations: iteration + 1,
-                response: final_result.clone(),
-            });
-            span.emit("result", &final_result);
-            span.emit("iterations", &json!(iteration + 1));
-            span.end();
-            return Ok(final_result);
-        }
-
-        // Dispatch tool calls (parallel or sequential)
-        let tool_span = Tracer::start("turn.toolCalls");
-        tool_span.emit("signature", &json!("prompty.turn.toolCalls"));
-        tool_span.emit(
-            "inputs",
-            &json!(
-                tool_calls
-                    .iter()
-                    .map(|tc| {
-                        json!({ "name": tc.name, "id": tc.id, "arguments": tc.arguments })
-                    })
-                    .collect::<Vec<_>>()
-            ),
-        );
-
-        let tool_results = if opts.parallel_tool_calls {
-            dispatch_tools_parallel(&tool_calls, &opts, agent, inputs).await
-        } else {
-            match dispatch_tools_sequential(&tool_calls, &opts, agent, inputs).await {
-                Ok(results) => results,
-                Err(err) => {
-                    let status = if matches!(err, InvokerError::Cancelled(_)) {
-                        "cancelled"
-                    } else {
-                        "error"
-                    };
-                    opts.emit_failed_turn_end(status, iteration + 1);
-                    return Err(err);
-                }
-            }
-        };
-
-        tool_span.emit("result", &json!(tool_results));
-        tool_span.end();
-
-        // Extract text content for formatToolMessages (some providers need it)
-        let text_content = extract_text_from_processed(&processed);
-
-        // Format tool results into messages using provider-specific formatting
-        let tool_messages = match registry::invoke_format_tool_messages(
-            &provider,
-            &raw_response,
-            &tool_calls,
-            &tool_results,
-            text_content.as_deref(),
-        ) {
-            Ok(messages) => messages,
-            Err(err) => {
-                opts.emit_failed_turn_end("error", iteration + 1);
-                return Err(err);
-            }
-        };
-
-        messages.extend(tool_messages);
-        opts.emit(AgentEvent::MessagesUpdated {
-            messages: messages.clone(),
-        });
-
-        iter_span.emit(
-            "tool_calls",
-            &json!(
-                tool_calls
-                    .iter()
-                    .map(|tc| { json!({ "name": tc.name, "id": tc.id }) })
-                    .collect::<Vec<_>>()
-            ),
-        );
-        iter_span.end();
-
-        // If this was the last iteration, error out like TypeScript does
-        if iteration == opts.max_iterations - 1 {
-            let msg = format!(
-                "Agent loop exceeded max iterations ({})",
-                opts.max_iterations
-            );
-            opts.emit(AgentEvent::Error(msg.clone()));
-            opts.emit_failed_turn_end("error", iteration + 1);
-            span.emit("error", &json!(msg));
-            span.end();
-            return Err(InvokerError::Execute(msg.into()));
-        }
-    }
-
-    // Loop exhausted without returning — only reachable if max_iterations == 0
-    let msg = format!(
-        "Agent loop exceeded max iterations ({})",
-        opts.max_iterations
-    );
-    opts.emit(AgentEvent::Error(msg.clone()));
-    opts.emit_failed_turn_end("error", opts.max_iterations);
-    span.emit("error", &json!(msg));
-    span.end();
-    Err(InvokerError::Execute(msg.into()))
+/// Run a live turn using a caller-owned canonical engine request.
+///
+/// This is the durable/resumable counterpart to [`turn`]. Supply a request
+/// created with [`TurnEngineRequest::new`] for a named turn or
+/// [`TurnEngineRequest::resume_from`] after restoring a durable checkpoint.
+/// Configure durable events, host tool authorization, and post-commit effects
+/// through [`TurnOptions`]. Supplied ports are passed unchanged to the
+/// canonical engine, preserving its durable event ordering and non-fatal
+/// post-commit semantics.
+pub async fn turn_with_engine_request(
+    agent: &Prompty,
+    request: TurnEngineRequest,
+    options: Option<TurnOptions>,
+) -> Result<serde_json::Value, InvokerError> {
+    live_turn::turn_with_engine_request(agent, request, options).await
 }
 
 /// Convenience wrapper: load a `.prompty` file and run `turn()` on it.
@@ -1536,249 +1029,11 @@ pub async fn turn_from_path(
         .map_err(|e| InvokerError::Load(e.to_string()))?;
     turn(&agent, inputs, options).await
 }
-fn has_any_tools(agent: &Prompty) -> bool {
-    !agent.tools.is_empty()
-}
-
-/// Execute a single LLM attempt (streaming or non-streaming).
-/// Returns (tool_calls, processed, raw_response) on success, or an error string on failure.
-async fn execute_llm_attempt(
-    provider: &str,
-    agent: &Prompty,
-    messages: &[Message],
-    streaming: bool,
-    opts: &TurnOptions,
-) -> Result<(Vec<ToolCall>, Value, Value), String> {
-    if streaming {
-        match registry::invoke_executor_stream(provider, agent, messages).await {
-            Ok(sse_stream) => {
-                let prompty_stream = PromptyStream::from_stream("PromptyStream", sse_stream);
-                let chunk_stream =
-                    registry::invoke_processor_stream(provider, Box::pin(prompty_stream))
-                        .map_err(|e| e.to_string())?;
-
-                use futures::StreamExt;
-                let mut tool_calls_vec = Vec::new();
-                let mut text_parts = Vec::new();
-                let mut stream_error = None;
-                futures::pin_mut!(chunk_stream);
-                while let Some(chunk) = chunk_stream.next().await {
-                    match chunk {
-                        StreamChunk::Text(t) => {
-                            opts.emit(AgentEvent::Token(t.clone()));
-                            text_parts.push(t);
-                        }
-                        StreamChunk::Thinking(t) => {
-                            opts.emit(AgentEvent::Thinking(t));
-                        }
-                        StreamChunk::Tool(tc) => {
-                            tool_calls_vec.push(tc);
-                        }
-                        StreamChunk::Error(e) => {
-                            stream_error = Some(e);
-                            break;
-                        }
-                    }
-                }
-                if let Some(err) = stream_error {
-                    return Err(err);
-                }
-                let text = text_parts.join("");
-                let processed = json!(text);
-                Ok((tool_calls_vec, processed, json!(null)))
-            }
-            Err(stream_err) => {
-                // Fallback to non-streaming if executor doesn't support it
-                let raw_response = registry::invoke_executor(provider, agent, messages)
-                    .await
-                    .map_err(|e| format!("{stream_err} (stream), then {e} (non-stream)"))?;
-                let processed = process(agent, raw_response.clone())
-                    .await
-                    .map_err(|e| e.to_string())?;
-                let tool_calls = extract_tool_calls_from_processed(&processed);
-                Ok((tool_calls, processed, raw_response))
-            }
-        }
-    } else {
-        let raw_response = registry::invoke_executor(provider, agent, messages)
-            .await
-            .map_err(|e| e.to_string())?;
-        let processed = process(agent, raw_response.clone())
-            .await
-            .map_err(|e| e.to_string())?;
-        let tool_calls = extract_tool_calls_from_processed(&processed);
-        Ok((tool_calls, processed, raw_response))
-    }
-}
-
-/// Dispatch tool calls sequentially, checking cancellation and tool guardrails.
-async fn dispatch_tools_sequential(
-    tool_calls: &[ToolCall],
-    opts: &TurnOptions,
-    agent: &Prompty,
-    parent_inputs: Option<&serde_json::Value>,
-) -> Result<Vec<String>, InvokerError> {
-    let mut tool_results = Vec::new();
-    for tc in tool_calls {
-        // Check cancellation before each tool call
-        if opts.is_cancelled() {
-            opts.emit(AgentEvent::Cancelled);
-            return Err(InvokerError::Cancelled("Operation cancelled".to_string()));
-        }
-
-        // Tool guardrail
-        if let Some(ref guardrails) = opts.guardrails {
-            let args: serde_json::Value = serde_json::from_str(&tc.arguments).unwrap_or(json!({}));
-            let gr = guardrails.check_tool(&tc.name, &args, agent).await;
-            if !gr.allowed {
-                let reason = gr.reason.unwrap_or_else(|| "Tool denied".into());
-                opts.emit(AgentEvent::ToolResult {
-                    name: tc.name.clone(),
-                    result: format!("Error: Tool guardrail denied: {reason}"),
-                });
-                opts.emit(AgentEvent::ToolCallComplete {
-                    name: tc.name.clone(),
-                    success: false,
-                    result: format!("Error: Tool guardrail denied: {reason}"),
-                    error_kind: Some("guardrail_denied".to_string()),
-                });
-                tool_results.push(format!("Error: Tool guardrail denied: {reason}"));
-                continue;
-            }
-        }
-
-        opts.emit(AgentEvent::ToolCallStart {
-            name: tc.name.clone(),
-            arguments: tc.arguments.clone(),
-        });
-
-        // §9.9: Wrap dispatch in catch_unwind for panic safety
-        let result = {
-            let fut = std::panic::AssertUnwindSafe(crate::tool_dispatch::dispatch_tool(
-                tc,
-                &opts.tools,
-                agent,
-                parent_inputs,
-            ));
-            match futures::FutureExt::catch_unwind(fut).await {
-                Ok(r) => r,
-                Err(panic_info) => {
-                    let msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
-                        s.to_string()
-                    } else if let Some(s) = panic_info.downcast_ref::<String>() {
-                        s.clone()
-                    } else {
-                        "unknown panic".to_string()
-                    };
-                    opts.emit(AgentEvent::Error(format!(
-                        "Tool '{}' panicked: {}",
-                        tc.name, msg
-                    )));
-                    format!("Error: Tool '{}' panicked: {}", tc.name, msg)
-                }
-            }
-        };
-
-        opts.emit(AgentEvent::ToolResult {
-            name: tc.name.clone(),
-            result: result.clone(),
-        });
-        opts.emit(AgentEvent::ToolCallComplete {
-            name: tc.name.clone(),
-            success: !result.starts_with("Error:"),
-            result: result.clone(),
-            error_kind: result
-                .starts_with("Error:")
-                .then(|| "tool_error".to_string()),
-        });
-        tool_results.push(result);
-    }
-    Ok(tool_results)
-}
-
-/// Dispatch tool calls in parallel using tokio::join_all.
-async fn dispatch_tools_parallel(
-    tool_calls: &[ToolCall],
-    opts: &TurnOptions,
-    agent: &Prompty,
-    parent_inputs: Option<&serde_json::Value>,
-) -> Vec<String> {
-    // Emit start events synchronously before dispatching
-    for tc in tool_calls {
-        opts.emit(AgentEvent::ToolCallStart {
-            name: tc.name.clone(),
-            arguments: tc.arguments.clone(),
-        });
-    }
-
-    // Dispatch all in parallel with panic safety (§9.9)
-    let futures: Vec<_> = tool_calls
-        .iter()
-        .map(|tc| {
-            let tools = &opts.tools;
-            async move {
-                // Tool guardrail (check in parallel)
-                if let Some(ref guardrails) = opts.guardrails {
-                    let args: serde_json::Value =
-                        serde_json::from_str(&tc.arguments).unwrap_or(json!({}));
-                    let gr = guardrails.check_tool(&tc.name, &args, agent).await;
-                    if !gr.allowed {
-                        let reason = gr.reason.unwrap_or_else(|| "Tool denied".into());
-                        return format!("Error: Tool guardrail denied: {reason}");
-                    }
-                }
-                let fut = std::panic::AssertUnwindSafe(crate::tool_dispatch::dispatch_tool(
-                    tc,
-                    tools,
-                    agent,
-                    parent_inputs,
-                ));
-                match futures::FutureExt::catch_unwind(fut).await {
-                    Ok(r) => r,
-                    Err(panic_info) => {
-                        let msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
-                            s.to_string()
-                        } else if let Some(s) = panic_info.downcast_ref::<String>() {
-                            s.clone()
-                        } else {
-                            "unknown panic".to_string()
-                        };
-                        opts.emit(AgentEvent::Error(format!(
-                            "Tool '{}' panicked: {}",
-                            tc.name, msg
-                        )));
-                        format!("Error: Tool '{}' panicked: {}", tc.name, msg)
-                    }
-                }
-            }
-        })
-        .collect();
-
-    let results = futures::future::join_all(futures).await;
-
-    // Emit result events
-    for (tc, result) in tool_calls.iter().zip(results.iter()) {
-        opts.emit(AgentEvent::ToolResult {
-            name: tc.name.clone(),
-            result: result.clone(),
-        });
-        opts.emit(AgentEvent::ToolCallComplete {
-            name: tc.name.clone(),
-            success: !result.starts_with("Error:"),
-            result: result.clone(),
-            error_kind: result
-                .starts_with("Error:")
-                .then(|| "tool_error".to_string()),
-        });
-    }
-
-    results
-}
-
 /// Extract ToolCalls from a processed response value.
 ///
 /// Works with both OpenAI-style and Anthropic-style processed results:
 /// both return `Value::Array([{id, name, arguments}])` for tool calls.
+#[cfg(test)]
 fn extract_tool_calls_from_processed(processed: &serde_json::Value) -> Vec<ToolCall> {
     let arr = match processed.as_array() {
         Some(a) => a,
@@ -1920,8 +1175,17 @@ pub(crate) fn ensure_defaults() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::Prompty;
+    use std::sync::Mutex;
+
+    use crate::engine::{
+        ContextPortability, DelegatedStateReference, EngineCheckpoint, EngineEvent, PortError,
+    };
     use crate::model::context::LoadContext;
+    use crate::model::{
+        InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+        ModelInvocationResponse, ModelToolRequest, Prompty,
+    };
+    use async_trait::async_trait;
     use serial_test::serial;
 
     fn make_agent_with_inputs() -> Prompty {
@@ -1937,6 +1201,92 @@ mod tests {
             "instructions": "system:\nHello {{ firstName }} {{ lastName }}\n\nuser:\n{{ question }}"
         });
         Prompty::load_from_value(&data, &LoadContext::default())
+    }
+
+    #[derive(Default)]
+    struct RecordingDurability {
+        events: Mutex<Vec<EngineEvent>>,
+        checkpoints: Mutex<Vec<EngineCheckpoint>>,
+    }
+
+    #[async_trait]
+    impl DurabilityPort for RecordingDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.events.lock().unwrap().push(event.clone());
+            Ok(())
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.events.lock().unwrap().extend_from_slice(events);
+            self.checkpoints.lock().unwrap().push(checkpoint.clone());
+            Ok(())
+        }
+    }
+
+    struct FailOnceDurability {
+        recording: RecordingDurability,
+        failed: AtomicBool,
+    }
+
+    impl Default for FailOnceDurability {
+        fn default() -> Self {
+            Self {
+                recording: RecordingDurability::default(),
+                failed: AtomicBool::new(false),
+            }
+        }
+    }
+
+    #[async_trait]
+    impl DurabilityPort for FailOnceDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.recording.append(event).await
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.recording
+                .append_with_checkpoint(events, checkpoint)
+                .await?;
+            if !self.failed.swap(true, Ordering::SeqCst) {
+                return Err(PortError::new("injected durability failure"));
+            }
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    struct FailOnSecondCheckpointDurability {
+        recording: RecordingDurability,
+        checkpoint_count: AtomicUsize,
+    }
+
+    #[async_trait]
+    impl DurabilityPort for FailOnSecondCheckpointDurability {
+        async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+            self.recording.append(event).await
+        }
+
+        async fn append_with_checkpoint(
+            &self,
+            events: &[EngineEvent],
+            checkpoint: &EngineCheckpoint,
+        ) -> Result<(), PortError> {
+            self.recording
+                .append_with_checkpoint(events, checkpoint)
+                .await?;
+            if self.checkpoint_count.fetch_add(1, Ordering::SeqCst) == 1 {
+                return Err(PortError::new("injected model response durability failure"));
+            }
+            Ok(())
+        }
     }
 
     #[test]
@@ -2003,7 +1353,7 @@ mod tests {
         let nonce = "__PROMPTY_THREAD_abcd1234_conversation__";
         let msgs = vec![
             Message::with_text(Role::System, "You are helpful."),
-            Message::with_text(Role::User, &format!("Before\n{nonce}\nAfter")),
+            Message::with_text(Role::User, format!("Before\n{nonce}\nAfter")),
         ];
         let mut nonces = HashMap::new();
         nonces.insert("conversation".to_string(), nonce.to_string());
@@ -2358,6 +1708,97 @@ mod tests {
         }
     }
 
+    struct ContextAwareExecutor {
+        received_state_ids: Arc<Mutex<Vec<String>>>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for ContextAwareExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<serde_json::Value, InvokerError> {
+            Err(InvokerError::Execute(
+                "live turns must call execute_with_context".into(),
+            ))
+        }
+
+        async fn execute_with_context(
+            &self,
+            _agent: &Prompty,
+            request: &ModelInvocationRequest,
+            _cancellation: &crate::engine::CancellationToken,
+        ) -> Result<serde_json::Value, InvokerError> {
+            self.received_state_ids.lock().unwrap().push(
+                request
+                    .context
+                    .context_state
+                    .delegated_state
+                    .first()
+                    .map(|state| state.id.clone())
+                    .unwrap_or_default(),
+            );
+            Ok(json!({ "contextAware": true }))
+        }
+    }
+
+    struct ContextAwareProcessor {
+        calls: Arc<AtomicUsize>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Processor for ContextAwareProcessor {
+        async fn process(
+            &self,
+            _agent: &Prompty,
+            _response: serde_json::Value,
+        ) -> Result<serde_json::Value, InvokerError> {
+            Err(InvokerError::Process(
+                "live turns must call process_with_context".into(),
+            ))
+        }
+
+        async fn process_with_context(
+            &self,
+            _agent: &Prompty,
+            _response: serde_json::Value,
+            _request: &ModelInvocationRequest,
+        ) -> Result<ModelInvocationResponse, InvokerError> {
+            let call = self.calls.fetch_add(1, Ordering::SeqCst);
+            let next_context_state = Some(InvocationContextState {
+                portability: InvocationContextPortability::Delegated,
+                delegated_state: vec![crate::model::DelegatedStateReference {
+                    provider: "context-test".to_string(),
+                    kind: "continuation".to_string(),
+                    id: if call == 0 {
+                        "provider-state-1".to_string()
+                    } else {
+                        "provider-state-2".to_string()
+                    },
+                    metadata: Value::Null,
+                }],
+            });
+            Ok(ModelInvocationResponse {
+                output: (call != 0).then(|| json!("resumed")),
+                usage: None,
+                assistant_messages: Vec::new(),
+                tool_requests: if call == 0 {
+                    vec![ModelToolRequest {
+                        id: "context-tool".to_string(),
+                        name: "acknowledge".to_string(),
+                        arguments: Some(json!({})),
+                        metadata: Value::Null,
+                    }]
+                } else {
+                    Vec::new()
+                },
+                next_context_state,
+                metadata: Value::Null,
+            })
+        }
+    }
+
     fn make_simple_agent(provider: &str) -> Prompty {
         let data = serde_json::json!({
             "kind": "prompt",
@@ -2421,6 +1862,8 @@ mod tests {
     #[serial]
     async fn test_turn_without_tools_invokes_directly() {
         ensure_defaults();
+        let engine_runs =
+            super::live_turn::LIVE_ENGINE_RUNS.load(std::sync::atomic::Ordering::SeqCst);
         let key = "turn_test_no_tools";
         registry::register_executor(
             key,
@@ -2432,8 +1875,263 @@ mod tests {
 
         let agent = make_simple_agent(key);
         let result = turn(&agent, None, None).await.unwrap();
-        // Without tools, turn() fast-paths to invoke() — should get text content
         assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert!(
+            super::live_turn::LIVE_ENGINE_RUNS.load(std::sync::atomic::Ordering::SeqCst)
+                > engine_runs,
+            "pipeline::turn must route through the canonical TurnEngine live bundle"
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_with_engine_request_persists_canonical_checkpoint() {
+        ensure_defaults();
+        let key = "turn_durable_request";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(RecordingDurability::default());
+        let mut request = TurnEngineRequest::new("durable-session", "durable-turn", Vec::new());
+        request.inputs = json!({});
+
+        let result = turn_with_engine_request(
+            &agent,
+            request,
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert!(
+            !durability.events.lock().unwrap().is_empty(),
+            "live turns must write canonical events through the caller durability port"
+        );
+        let checkpoints = durability.checkpoints.lock().unwrap();
+        assert!(
+            checkpoints.len() >= 2,
+            "the live request should persist both the model and terminal checkpoints"
+        );
+        assert!(checkpoints.iter().all(|checkpoint| {
+            checkpoint.session_id == "durable-session" && checkpoint.turn_id == "durable-turn"
+        }));
+        assert!(
+            checkpoints
+                .iter()
+                .any(|checkpoint| checkpoint.final_output_ready)
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_with_engine_request_resumes_after_durability_failure() {
+        ensure_defaults();
+        let key = "turn_durable_resume";
+        let calls = Arc::new(AtomicUsize::new(1));
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: calls.clone(),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(FailOnceDurability::default());
+        let mut request = TurnEngineRequest::new("resume-session", "resume-turn", Vec::new());
+        request.inputs = json!({});
+
+        let failure = turn_with_engine_request(
+            &agent,
+            request,
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        )
+        .await
+        .expect_err("injected persistence failure must stop the live turn");
+        assert!(failure.to_string().contains("injected durability failure"));
+
+        let checkpoint = durability
+            .recording
+            .checkpoints
+            .lock()
+            .unwrap()
+            .last()
+            .cloned()
+            .expect("the failing durability sink must retain the checkpoint");
+        let resume =
+            TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence as u64);
+        let result = turn_with_engine_request(
+            &agent,
+            resume,
+            Some(TurnOptions::builder().durability(durability).build()),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            2,
+            "resume must commit the retained model response without another provider invocation"
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_context_aware_provider_state_reaches_checkpoint_and_resume() {
+        ensure_defaults();
+        let key = "turn_context_state_resume";
+        let received_state_ids = Arc::new(Mutex::new(Vec::new()));
+        let processor_calls = Arc::new(AtomicUsize::new(0));
+        registry::register_executor(
+            key,
+            ContextAwareExecutor {
+                received_state_ids: received_state_ids.clone(),
+            },
+        );
+        registry::register_processor(
+            key,
+            ContextAwareProcessor {
+                calls: processor_calls.clone(),
+            },
+        );
+        let agent = make_simple_agent(key);
+        let durability = Arc::new(FailOnSecondCheckpointDurability::default());
+        let mut request = TurnEngineRequest::new("context-session", "context-turn", Vec::new());
+        request.inputs = json!({});
+        request.portability = ContextPortability::Delegated;
+        request.delegated_state = vec![DelegatedStateReference {
+            provider: "context-test".to_string(),
+            kind: "continuation".to_string(),
+            id: "incoming-state".to_string(),
+            metadata: Value::Null,
+        }];
+
+        let mut first_tools = HashMap::new();
+        first_tools.insert(
+            "acknowledge".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("acknowledged".to_string()))),
+        );
+        let failure = turn_with_engine_request(
+            &agent,
+            request,
+            Some(
+                TurnOptions::builder()
+                    .tools(first_tools)
+                    .durability(durability.clone())
+                    .build(),
+            ),
+        )
+        .await
+        .expect_err("the injected durability failure must leave a resumable checkpoint");
+        assert!(
+            failure
+                .to_string()
+                .contains("injected model response durability failure")
+        );
+
+        let checkpoint = durability
+            .recording
+            .checkpoints
+            .lock()
+            .unwrap()
+            .last()
+            .cloned()
+            .expect("model response checkpoint must be retained");
+        assert_eq!(
+            checkpoint.context_state.portability,
+            ContextPortability::Delegated
+        );
+        assert_eq!(
+            checkpoint.context_state.delegated_state[0].id, "provider-state-1",
+            "checkpoint: {checkpoint:?}"
+        );
+        assert_eq!(
+            received_state_ids.lock().unwrap().as_slice(),
+            ["incoming-state"]
+        );
+
+        let resume =
+            TurnEngineRequest::resume_from(&checkpoint, 10, checkpoint.last_sequence as u64);
+        let mut resumed_tools = HashMap::new();
+        resumed_tools.insert(
+            "acknowledge".to_string(),
+            ToolHandler::Sync(Box::new(|_| Ok("acknowledged".to_string()))),
+        );
+        let result = turn_with_engine_request(
+            &agent,
+            resume,
+            Some(
+                TurnOptions::builder()
+                    .tools(resumed_tools)
+                    .durability(durability)
+                    .build(),
+            ),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "resumed");
+        assert_eq!(
+            received_state_ids.lock().unwrap().as_slice(),
+            ["incoming-state", "provider-state-1"]
+        );
+        assert_eq!(processor_calls.load(Ordering::SeqCst), 2);
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_rejects_parallel_tool_calls_with_error_lifecycle() {
+        ensure_defaults();
+        let key = "turn_parallel_rejected";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+        let (events, callback) = capture_events();
+
+        let error = turn(
+            &agent,
+            None,
+            Some(TurnOptions {
+                parallel_tool_calls: true,
+                on_event: Some(callback),
+                ..Default::default()
+            }),
+        )
+        .await
+        .unwrap_err();
+
+        assert!(matches!(error, InvokerError::Validation(_)));
+        assert!(error.to_string().contains("parallel_tool_calls=true"));
+        let events = events.lock().unwrap();
+        assert!(matches!(events[0], AgentEvent::TurnStart { .. }));
+        assert!(matches!(events[1], AgentEvent::Error(_)));
+        assert!(matches!(
+            events[2],
+            AgentEvent::TurnEnd {
+                ref status,
+                iterations: 0,
+                ..
+            } if status == "error"
+        ));
     }
 
     #[tokio::test]
@@ -3204,5 +2902,390 @@ mod tests {
         assert!(!opts.is_cancelled());
         token.store(true, std::sync::atomic::Ordering::Relaxed);
         assert!(opts.is_cancelled());
+    }
+
+    struct StreamingExecutor;
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for StreamingExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            Err(InvokerError::Execute("unexpected fallback".into()))
+        }
+
+        async fn execute_stream(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError>
+        {
+            Ok(Box::pin(futures::stream::iter(vec![
+                json!({"kind": "thinking", "value": "plan"}),
+                json!({"kind": "text", "value": "hello "}),
+                json!({"kind": "text", "value": "world"}),
+            ])))
+        }
+    }
+
+    struct StreamingProcessor;
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Processor for StreamingProcessor {
+        async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+            Ok(response)
+        }
+
+        fn process_stream(
+            &self,
+            inner: std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>,
+        ) -> Result<
+            std::pin::Pin<Box<dyn futures::Stream<Item = crate::types::StreamChunk> + Send>>,
+            InvokerError,
+        > {
+            use futures::StreamExt;
+            Ok(Box::pin(inner.map(|value| {
+                if value["kind"] == "thinking" {
+                    crate::types::StreamChunk::Thinking(
+                        value["value"].as_str().unwrap().to_string(),
+                    )
+                } else {
+                    crate::types::StreamChunk::Text(value["value"].as_str().unwrap().to_string())
+                }
+            })))
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_streaming_projects_side_channel_events_before_done() {
+        ensure_defaults();
+        let key = "turn_live_streaming";
+        registry::register_executor(key, StreamingExecutor);
+        registry::register_processor(key, StreamingProcessor);
+        let agent = Prompty::load_from_value(
+            &json!({
+                "name": "streaming",
+                "kind": "prompt",
+                "model": {
+                    "id": "stream-model",
+                    "provider": key,
+                    "options": {"additionalProperties": {"stream": true}}
+                },
+                "instructions": "user:\nhello"
+            }),
+            &LoadContext::default(),
+        );
+        let captured = Arc::new(Mutex::new(Vec::new()));
+        let events = captured.clone();
+
+        let result = turn(
+            &agent,
+            None,
+            Some(TurnOptions {
+                on_event: Some(Box::new(move |event| events.lock().unwrap().push(event))),
+                ..Default::default()
+            }),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "hello world");
+        let events = captured.lock().unwrap();
+        let thinking = events
+            .iter()
+            .position(|event| matches!(event, AgentEvent::Thinking(value) if value == "plan"))
+            .unwrap();
+        let first_token = events
+            .iter()
+            .position(|event| matches!(event, AgentEvent::Token(value) if value == "hello "))
+            .unwrap();
+        let done = events
+            .iter()
+            .position(|event| matches!(event, AgentEvent::Done { .. }))
+            .unwrap();
+        let turn_end = events
+            .iter()
+            .position(|event| matches!(event, AgentEvent::TurnEnd { .. }))
+            .unwrap();
+        assert!(thinking < done);
+        assert!(first_token < done);
+        assert!(done < turn_end);
+    }
+
+    struct CapturingExecutor {
+        messages: Arc<Mutex<Vec<Vec<Message>>>>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for CapturingExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            self.messages.lock().unwrap().push(messages.to_vec());
+            Ok(json!({
+                "choices": [{
+                    "message": {"content": "captured"}
+                }]
+            }))
+        }
+    }
+
+    struct CustomFormattingExecutor {
+        calls: AtomicUsize,
+        messages: Arc<Mutex<Vec<Vec<Message>>>>,
+        format_calls: Arc<AtomicUsize>,
+    }
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for CustomFormattingExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            self.messages.lock().unwrap().push(messages.to_vec());
+            if self.calls.fetch_add(1, Ordering::SeqCst) == 0 {
+                Ok(json!({
+                    "choices": [{
+                        "message": {
+                            "tool_calls": [{
+                                "id": "custom-call",
+                                "type": "function",
+                                "function": {"name": "custom", "arguments": "{}"}
+                            }]
+                        }
+                    }]
+                }))
+            } else {
+                Ok(json!({
+                    "choices": [{
+                        "message": {"content": "formatted"}
+                    }]
+                }))
+            }
+        }
+
+        fn format_tool_messages(
+            &self,
+            _raw_response: &Value,
+            _tool_calls: &[ToolCall],
+            tool_results: &[String],
+            _text_content: Option<&str>,
+        ) -> Vec<Message> {
+            self.format_calls.fetch_add(1, Ordering::SeqCst);
+            vec![Message::with_text(
+                Role::User,
+                format!("custom-format:{}", tool_results.join(",")),
+            )]
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_uses_registered_executor_conversation_formatting() {
+        ensure_defaults();
+        let key = "turn_live_custom_formatter";
+        let messages = Arc::new(Mutex::new(Vec::new()));
+        let format_calls = Arc::new(AtomicUsize::new(0));
+        registry::register_executor(
+            key,
+            CustomFormattingExecutor {
+                calls: AtomicUsize::new(0),
+                messages: messages.clone(),
+                format_calls: format_calls.clone(),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+
+        let result = turn(
+            &agent,
+            None,
+            Some(TurnOptions {
+                raw: true,
+                tools: HashMap::from([(
+                    "custom".to_string(),
+                    ToolHandler::Sync(Box::new(|_| Ok("tool-output".to_string()))),
+                )]),
+                ..Default::default()
+            }),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "formatted");
+        assert_eq!(format_calls.load(Ordering::SeqCst), 1);
+        assert!(
+            messages.lock().unwrap()[1]
+                .iter()
+                .any(|message| message.text_content() == "custom-format:tool-output")
+        );
+    }
+
+    struct RawExecutor;
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Executor for RawExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            Ok(json!({"raw": true}))
+        }
+    }
+
+    struct FailingProcessor;
+
+    #[async_trait::async_trait]
+    impl crate::interfaces::Processor for FailingProcessor {
+        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+            Err(InvokerError::Process(
+                "raw responses must bypass processing".into(),
+            ))
+        }
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_raw_simple_response_bypasses_processor() {
+        ensure_defaults();
+        let key = "turn_live_raw";
+        registry::register_executor(key, RawExecutor);
+        registry::register_processor(key, FailingProcessor);
+        let agent = make_simple_agent(key);
+
+        let result = turn(
+            &agent,
+            None,
+            Some(TurnOptions {
+                raw: true,
+                guardrails: Some(crate::guardrails::Guardrails {
+                    output: Some(Box::new(|_, _| {
+                        Box::pin(async {
+                            crate::guardrails::GuardrailResult::deny(
+                                "raw response must bypass output guardrails",
+                            )
+                        })
+                    })),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, json!({"raw": true}));
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_policy_rewrites_persist_into_model_and_done_messages() {
+        ensure_defaults();
+        let key = "turn_live_policy_persistence";
+        let model_messages = Arc::new(Mutex::new(Vec::new()));
+        registry::register_executor(
+            key,
+            CapturingExecutor {
+                messages: model_messages.clone(),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = Prompty::load_from_value(
+            &json!({
+                "name": "policy",
+                "kind": "prompt",
+                "model": {"id": "capture", "provider": key},
+                "instructions": format!(
+                    "system:\nKeep system\n\nuser:\n{}\n\nassistant:\n{}\n\nuser:\nlatest",
+                    "a".repeat(300),
+                    "b".repeat(300)
+                )
+            }),
+            &LoadContext::default(),
+        );
+        let steering = crate::steering::Steering::new();
+        steering.send("persist this steering");
+        let captured = Arc::new(Mutex::new(Vec::new()));
+        let events = captured.clone();
+
+        turn(
+            &agent,
+            None,
+            Some(TurnOptions {
+                context_budget: Some(250),
+                steering: Some(steering),
+                on_event: Some(Box::new(move |event| events.lock().unwrap().push(event))),
+                ..Default::default()
+            }),
+        )
+        .await
+        .unwrap();
+
+        let sent = model_messages.lock().unwrap()[0].clone();
+        assert!(
+            sent.iter()
+                .any(|message| message.text_content().starts_with("[Context summary:"))
+        );
+        assert!(
+            sent.iter()
+                .any(|message| message.text_content() == "persist this steering")
+        );
+        let done_messages = captured
+            .lock()
+            .unwrap()
+            .iter()
+            .find_map(|event| match event {
+                AgentEvent::Done { messages, .. } => Some(messages.clone()),
+                _ => None,
+            })
+            .unwrap();
+        assert_eq!(&done_messages[..sent.len()], sent.as_slice());
+        assert_eq!(
+            done_messages.last().map(Message::text_content).as_deref(),
+            Some("captured")
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn test_turn_output_guardrail_rewrite_is_committed() {
+        ensure_defaults();
+        let key = "turn_live_output_rewrite";
+        registry::register_executor(
+            key,
+            ToolCallThenDoneExecutor {
+                call_count: Arc::new(AtomicUsize::new(1)),
+            },
+        );
+        registry::register_processor(key, MockProcessor);
+        let agent = make_simple_agent(key);
+        let guardrails = crate::guardrails::Guardrails {
+            output: Some(Box::new(|_, _| {
+                Box::pin(async {
+                    crate::guardrails::GuardrailResult::rewrite(json!("safe rewrite"))
+                })
+            })),
+            ..Default::default()
+        };
+
+        let result = turn(
+            &agent,
+            None,
+            Some(TurnOptions {
+                guardrails: Some(guardrails),
+                ..Default::default()
+            }),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(result, "safe rewrite");
     }
 }

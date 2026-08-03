@@ -34,7 +34,8 @@ impl Executor for AnthropicExecutor {
             ));
         }
 
-        let body = wire::build_chat_args(agent, messages);
+        let body = wire::build_chat_args(agent, messages)
+            .map_err(|error| InvokerError::Validation(error.to_string()))?;
         let url = build_url(agent)?;
         let api_key = get_api_key(agent)?;
 
@@ -78,6 +79,16 @@ impl Executor for AnthropicExecutor {
         wire::format_tool_messages(raw_response, tool_calls, tool_results)
     }
 
+    fn format_stream_tool_messages(
+        &self,
+        raw_chunks: &[Value],
+        tool_calls: &[prompty::types::ToolCall],
+        tool_results: &[String],
+        text_content: Option<&str>,
+    ) -> Vec<Message> {
+        wire::format_stream_tool_messages(raw_chunks, tool_calls, tool_results, text_content)
+    }
+
     async fn execute_stream(
         &self,
         agent: &Prompty,
@@ -95,7 +106,8 @@ impl Executor for AnthropicExecutor {
             ));
         }
 
-        let mut body = wire::build_chat_args(agent, messages);
+        let mut body = wire::build_chat_args(agent, messages)
+            .map_err(|error| InvokerError::Validation(error.to_string()))?;
         // Force stream: true
         if let Some(obj) = body.as_object_mut() {
             obj.insert("stream".into(), Value::Bool(true));
@@ -145,7 +157,8 @@ impl AnthropicExecutor {
                 format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
             ));
         }
-        Ok(wire::build_chat_args(agent, messages))
+        wire::build_chat_args(agent, messages)
+            .map_err(|error| InvokerError::Validation(error.to_string()))
     }
 }
 

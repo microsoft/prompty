@@ -1,8 +1,16 @@
 import "@typra/emitter";
+import "../model/discovery.tsp";
 import "../model/model.tsp";
 import "../model/usage.tsp";
 
 using Prompty;
+
+// ModelInfo → Anthropic model-list response field names.
+@@knownAs(ModelInfo.id, "anthropic", "id");
+@@knownAs(ModelInfo.displayName, "anthropic", "display_name");
+@@knownAs(ModelInfo.contextWindow, "anthropic", "context_length");
+@@knownAs(ModelInfo.inputModalities, "anthropic", "input_modalities");
+@@knownAs(ModelInfo.outputModalities, "anthropic", "output_modalities");
 
 // ============================================================================
 // Anthropic Messages API wire mappings
@@ -20,3 +28,7 @@ using Prompty;
 // TokenUsage → Anthropic usage field names
 @@knownAs(TokenUsage.promptTokens, "anthropic", "input_tokens");
 @@knownAs(TokenUsage.completionTokens, "anthropic", "output_tokens");
+
+// InvocationUsage → Anthropic terminal streaming usage field names
+@@knownAs(InvocationUsage.inputTokens, "anthropic", "input_tokens");
+@@knownAs(InvocationUsage.outputTokens, "anthropic", "output_tokens");

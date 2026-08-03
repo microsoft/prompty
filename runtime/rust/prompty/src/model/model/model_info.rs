@@ -12,7 +12,7 @@
 use super::super::context::{LoadContext, SaveContext};
 
 /// Information about a model available from a provider. Used by provider-level model discovery to report which models are available and their capabilities. Not all providers return all fields — implementations SHOULD populate as many fields as the provider's API supports and MAY enrich sparse results from a built-in lookup table of known models.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct ModelInfo {
     /// The model identifier (e.g., 'gpt-4o', 'claude-3-opus')
     pub id: String,
@@ -151,11 +151,70 @@ impl ModelInfo {
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
     }
+
+    /// Convert to provider-specific wire format.
+    pub fn to_wire(&self, provider: &str) -> serde_json::Value {
+        let data = serde_json::to_value(self).unwrap_or_default();
+        let mut result = serde_json::Map::new();
+        let wire_map: std::collections::HashMap<&str, std::collections::HashMap<&str, &str>> =
+            std::collections::HashMap::from([
+                (
+                    "id",
+                    std::collections::HashMap::from([("openai", "id"), ("anthropic", "id")]),
+                ),
+                (
+                    "displayName",
+                    std::collections::HashMap::from([("anthropic", "display_name")]),
+                ),
+                (
+                    "ownedBy",
+                    std::collections::HashMap::from([("openai", "owned_by")]),
+                ),
+                (
+                    "contextWindow",
+                    std::collections::HashMap::from([("anthropic", "context_length")]),
+                ),
+                (
+                    "inputModalities",
+                    std::collections::HashMap::from([("anthropic", "input_modalities")]),
+                ),
+                (
+                    "outputModalities",
+                    std::collections::HashMap::from([("anthropic", "output_modalities")]),
+                ),
+            ]);
+        if let serde_json::Value::Object(map) = data {
+            for (key, value) in map {
+                if let Some(mapping) = wire_map.get(key.as_str()) {
+                    if let Some(wire_name) = mapping.get(provider) {
+                        result.insert(wire_name.to_string(), value);
+                    }
+                }
+            }
+        }
+        serde_json::Value::Object(result)
+    }
     /// Returns typed reference to the map if the field is an object.
     /// Returns `None` if the field is null or not an object.
     pub fn as_additional_properties_dict(
         &self,
     ) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.additional_properties.as_object()
+    }
+}
+
+// Serde for `ModelInfo` delegates to the canonical to_value/load_from_value
+// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
+// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
+impl serde::Serialize for ModelInfo {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for ModelInfo {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

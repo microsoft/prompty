@@ -17,11 +17,18 @@ use std::collections::HashMap;
 // ---------------------------------------------------------------------------
 
 fn load_dotenv() {
-    let env_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .join(".env");
-    if let Ok(contents) = std::fs::read_to_string(env_path) {
+    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+    // Prefer the runtime-local `runtime/rust/.env`, then fall back to the
+    // repository-root `.env` so a single root file can drive every provider's
+    // live tests. Already-set variables are never overwritten.
+    let candidates = [
+        manifest.parent().map(|p| p.join(".env")),
+        manifest.ancestors().nth(3).map(|p| p.join(".env")),
+    ];
+    for env_path in candidates.into_iter().flatten() {
+        let Ok(contents) = std::fs::read_to_string(&env_path) else {
+            continue;
+        };
         for line in contents.lines() {
             let line = line.trim();
             if line.is_empty() || line.starts_with('#') {

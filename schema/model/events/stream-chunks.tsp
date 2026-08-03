@@ -1,12 +1,13 @@
 import "@typra/emitter";
 import "../conversation/tool-invocation.tsp";
+import "../model/usage.tsp";
 
 namespace Prompty;
 
 /**
  * The kind discriminator for stream chunks.
  */
-alias StreamChunkType = "text" | "thinking" | "tool" | "error";
+alias StreamChunkType = "text" | "thinking" | "tool" | "usage" | "error";
 
 /**
  * A chunk of data from a streaming LLM response. Stream chunks are
@@ -59,6 +60,17 @@ model ToolChunk extends StreamChunk {
     },
   })
   toolCall: ToolCall;
+}
+
+/**
+ * Cumulative token usage emitted once after provider content and tool chunks.
+ */
+model UsageChunk extends StreamChunk {
+  @doc("The kind identifier for usage chunks")
+  kind: "usage";
+
+  @doc("Complete cumulative token usage for the completed provider invocation")
+  usage: InvocationUsage;
 }
 
 /**

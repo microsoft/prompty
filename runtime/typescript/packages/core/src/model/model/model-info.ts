@@ -133,6 +133,26 @@ export class ModelInfo {
     return result;
   }
 
+  toWire(provider: string): Record<string, unknown> {
+    const data = this.save();
+    const result: Record<string, unknown> = {};
+    const wireMap: Record<string, Record<string, string>> = {
+      id: { openai: "id", anthropic: "id" },
+      displayName: { anthropic: "display_name" },
+      ownedBy: { openai: "owned_by" },
+      contextWindow: { anthropic: "context_length" },
+      inputModalities: { anthropic: "input_modalities" },
+      outputModalities: { anthropic: "output_modalities" },
+    };
+    for (const [key, value] of Object.entries(data)) {
+      const mapping = wireMap[key];
+      if (mapping?.[provider]) {
+        result[mapping[provider]] = value;
+      }
+    }
+    return result;
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));

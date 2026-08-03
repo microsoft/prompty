@@ -2,11 +2,11 @@ import * as vscode from "vscode";
 
 // ─── Connection Profile Types ─────────────────────────────────────────
 
-/** Authentication method for a connection — maps to AgentSchema Connection.kind */
+/** Authentication method for a connection — maps to Prompty Connection.kind */
 export type ConnectionAuthType =
-	| "key"                        // AgentSchema: ApiKeyConnection
-	| "foundry"                    // AgentSchema: FoundryConnection (Entra ID)
-	| "anonymous";                 // AgentSchema: AnonymousConnection
+	| "key"                        // Prompty: ApiKeyConnection
+	| "foundry"                    // Prompty: FoundryConnection (Entra ID)
+	| "anonymous";                 // Prompty: AnonymousConnection
 
 /** Supported AI provider types */
 export type ConnectionProviderType =
@@ -38,7 +38,7 @@ export interface BaseConnectionProfile {
 	metadata?: Record<string, unknown>;
 }
 
-/** OpenAI connection profile — maps to AgentSchema ApiKeyConnection */
+/** OpenAI connection profile — maps to Prompty ApiKeyConnection */
 export interface OpenAIConnectionProfile extends BaseConnectionProfile {
 	providerType: "openai";
 	authType: "key";
@@ -48,7 +48,7 @@ export interface OpenAIConnectionProfile extends BaseConnectionProfile {
 	model?: string;
 }
 
-/** Anthropic connection profile — maps to AgentSchema ApiKeyConnection */
+/** Anthropic connection profile — maps to Prompty ApiKeyConnection */
 export interface AnthropicConnectionProfile extends BaseConnectionProfile {
 	providerType: "anthropic";
 	authType: "key";
@@ -58,7 +58,7 @@ export interface AnthropicConnectionProfile extends BaseConnectionProfile {
 	model?: string;
 }
 
-/** Microsoft Foundry connection profile — maps to AgentSchema FoundryConnection */
+/** Microsoft Foundry connection profile — maps to Prompty FoundryConnection */
 export interface FoundryConnectionProfile extends BaseConnectionProfile {
 	providerType: "foundry";
 	authType: "foundry";
