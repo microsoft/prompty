@@ -86,7 +86,7 @@ impl CapabilityTable {
                     .filter_map(CapabilityEntry::from_value)
                     .collect();
                 // Longest prefix first, so `find` returns the most specific match.
-                parsed.sort_by(|a, b| b.prefix.len().cmp(&a.prefix.len()));
+                parsed.sort_by_key(|b| std::cmp::Reverse(b.prefix.len()));
                 providers.insert(provider.clone(), parsed);
             }
         }
