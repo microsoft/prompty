@@ -1188,7 +1188,7 @@ where
             turn_id: request.turn_id,
             status,
             output,
-            iterations: result.commit.iterations as i32,
+            iterations: result.commit.iterations,
             tool_results,
             checkpoints,
         })
