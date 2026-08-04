@@ -151,25 +151,38 @@ public class AnthropicExecutor : IExecutor
             _ => "user",
         };
 
-        // Handle tool results
+        if (msg.Metadata is not null
+            && msg.Metadata.TryGetValue("tool_results", out var toolResults))
+        {
+            return new Dictionary<string, object?>
+            {
+                ["role"] = role,
+                ["content"] = toolResults,
+            };
+        }
+
+        if (msg.Metadata is not null
+            && msg.Metadata.TryGetValue("tool_use_id", out var toolUseId))
+        {
+            return BuildToolResultMessage(toolUseId?.ToString() ?? "", msg.Text);
+        }
+
+        if (msg.Metadata is not null
+            && msg.Metadata.TryGetValue("content", out var rawContent))
+        {
+            return new Dictionary<string, object?>
+            {
+                ["role"] = role,
+                ["content"] = rawContent,
+            };
+        }
+
         if (msg.Role == Role.Tool)
         {
             var toolCallId = msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var id)
                 ? id?.ToString() ?? ""
                 : "";
-            return new Dictionary<string, object?>
-            {
-                ["role"] = "user",
-                ["content"] = new List<Dictionary<string, object?>>
-                {
-                    new()
-                    {
-                        ["type"] = "tool_result",
-                        ["tool_use_id"] = toolCallId,
-                        ["content"] = msg.Text,
-                    }
-                },
-            };
+            return BuildToolResultMessage(toolCallId, msg.Text);
         }
 
         // Build content blocks
@@ -207,13 +220,24 @@ public class AnthropicExecutor : IExecutor
             }
         }
 
-        // Simplify single text content
-        if (content.Count == 1 && content[0]["type"]?.ToString() == "text")
-        {
-            return new() { ["role"] = role, ["content"] = content[0]["text"] };
-        }
-
         return new() { ["role"] = role, ["content"] = content };
+    }
+
+    private static Dictionary<string, object?> BuildToolResultMessage(string toolUseId, string content)
+    {
+        return new Dictionary<string, object?>
+        {
+            ["role"] = "user",
+            ["content"] = new List<Dictionary<string, object?>>
+            {
+                new()
+                {
+                    ["type"] = "tool_result",
+                    ["tool_use_id"] = toolUseId,
+                    ["content"] = content,
+                }
+            },
+        };
     }
 
     private static List<Dictionary<string, object?>>? ToolsToWire(Core.Prompty agent)
@@ -315,35 +339,18 @@ public class AnthropicExecutor : IExecutor
     {
         var messages = new List<Message>();
 
-        // --- Assistant message with ALL content blocks (text + tool_use) ---
-        var rawContent = new List<Dictionary<string, object?>>();
-        if (!string.IsNullOrEmpty(textContent))
-        {
-            rawContent.Add(new() { ["type"] = "text", ["text"] = textContent });
-        }
-        foreach (var tc in toolCalls)
-        {
-            rawContent.Add(new()
-            {
-                ["type"] = "tool_use",
-                ["id"] = tc.Id,
-                ["name"] = tc.Name,
-                ["input"] = JsonSerializer.Deserialize<JsonElement>(tc.Arguments),
-            });
-        }
-
         messages.Add(new Message
         {
             Role = Role.Assistant,
             Parts = !string.IsNullOrEmpty(textContent)
                 ? [new TextPart { Value = textContent }]
                 : [],
-            Metadata = new Dictionary<string, object> { ["content"] = rawContent },
+            Metadata = new Dictionary<string, object> { ["content"] = GetRawContent(rawResponse) },
         });
 
         // --- Single user message with batched tool_result blocks ---
         var toolResultBlocks = new List<Dictionary<string, object?>>();
-        for (var i = 0; i < toolCalls.Count; i++)
+        for (var i = 0; i < Math.Min(toolCalls.Count, toolResults.Count); i++)
         {
             toolResultBlocks.Add(new()
             {
@@ -361,5 +368,23 @@ public class AnthropicExecutor : IExecutor
         });
 
         return messages;
+    }
+
+    private static object GetRawContent(object rawResponse)
+    {
+        if (rawResponse is JsonElement { ValueKind: JsonValueKind.Object } element
+            && element.TryGetProperty("content", out var content))
+        {
+            return content.Clone();
+        }
+
+        if (rawResponse is IReadOnlyDictionary<string, object?> dictionary
+            && dictionary.TryGetValue("content", out var value)
+            && value is not null)
+        {
+            return value;
+        }
+
+        return Array.Empty<object>();
     }
 }
