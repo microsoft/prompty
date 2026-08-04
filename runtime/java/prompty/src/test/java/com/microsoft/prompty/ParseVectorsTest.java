@@ -1,6 +1,7 @@
 package com.microsoft.prompty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import com.microsoft.prompty.model.LoadContext;
@@ -109,5 +110,36 @@ class ParseVectorsTest {
   @org.junit.jupiter.api.Test
   void suiteIsComplete() {
     assertEquals(15, SpecVectors.readArray("parse/parse_vectors.json").size(), "parse vector count");
+  }
+
+  /**
+   * A nonce that happens to be all digits must still validate.
+   *
+   * <p>Nonces are random hex, so roughly one in eighteen thousand comes out as digits only with a
+   * leading zero. Attribute values are coerced to numbers where they parse, and that coercion drops
+   * the leading zero, so the nonce no longer matches the one that was stamped and a perfectly
+   * legitimate render is rejected as a prompt injection. This pins the case that made the agent
+   * vectors fail intermittently.
+   */
+  @org.junit.jupiter.api.Test
+  void allDigitNonceWithLeadingZeroStillValidates() {
+    String nonce = "0123456789012345";
+    List<Message> messages =
+        com.microsoft.prompty.parsers.PromptyChatParser.parseChat(
+            "system[nonce=\"" + nonce + "\"]:\nYou are helpful.", nonce);
+
+    assertEquals(1, messages.size(), "expected the marker to be accepted");
+    assertEquals(
+        null, messages.get(0).metadata.get("nonce"), "the nonce must not leak into metadata");
+  }
+
+  /** A marker carrying the wrong nonce is still rejected once coercion is off. */
+  @org.junit.jupiter.api.Test
+  void mismatchedNonceIsStillRejected() {
+    assertThrows(
+        InvokerException.class,
+        () ->
+            com.microsoft.prompty.parsers.PromptyChatParser.parseChat(
+                "system[nonce=\"0123456789012345\"]:\nHi", "0123456789012346"));
   }
 }

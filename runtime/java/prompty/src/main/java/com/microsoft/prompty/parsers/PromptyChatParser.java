@@ -140,7 +140,7 @@ public final class PromptyChatParser implements Parser {
       Role role, String content, Map<String, Object> attributes, String expectedNonce) {
     if (expectedNonce != null) {
       Object raw = attributes.get(NONCE_KEY);
-      // An all-digit nonce is coerced to a number by attribute parsing, so compare as text.
+      // Nonces are captured verbatim (see parseAttributes), so this is a plain text comparison.
       String actual = raw == null ? "" : String.valueOf(raw);
       if (!expectedNonce.equals(actual)) {
         throw InvokerException.parse(
@@ -177,7 +177,14 @@ public final class PromptyChatParser implements Parser {
     Map<String, Object> attributes = new LinkedHashMap<>();
     Matcher matcher = ATTRIBUTE.matcher(block);
     while (matcher.find()) {
-      attributes.put(matcher.group(1), coerce(matcher.group(2).trim()));
+      String key = matcher.group(1);
+      String value = matcher.group(2).trim();
+      // The nonce is an opaque token, not data. Coercing it loses leading zeros on the roughly
+      // one-in-eighteen-thousand nonce that comes out all digits, which would then fail to match
+      // the nonce that was stamped and reject a legitimate render as a prompt injection. The Rust
+      // reference converts the coerced number back to text, which does not restore the lost zero,
+      // so it still carries this fault; capturing the nonce verbatim avoids it outright.
+      attributes.put(key, NONCE_KEY.equals(key) ? value : coerce(value));
     }
     return attributes;
   }
