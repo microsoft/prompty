@@ -10,20 +10,6 @@ namespace Prompty.Core;
 /// </summary>
 public static class Pipeline
 {
-    private static void EmitFailedTurnEnd(EventCallback? onEvent, Exception exception, int iterations, object? response = null)
-    {
-        var payload = new Dictionary<string, object?>
-        {
-            ["iterations"] = iterations,
-            ["status"] = exception is OperationCanceledException ? "cancelled" : "error"
-        };
-        if (response is not null)
-        {
-            payload["response"] = response;
-        }
-        AgentEvents.EmitEvent(onEvent, AgentEventType.TurnEnd, payload);
-    }
-
     // -----------------------------------------------------------------------
     // Input Validation
     // -----------------------------------------------------------------------
@@ -229,9 +215,8 @@ public static class Pipeline
     // -----------------------------------------------------------------------
 
     /// <summary>
-    /// Conversational round-trip: Prepare → [Execute → check tool_calls → execute tools → loop] → Process.
-    /// If no tools are provided, performs a single Prepare → Execute → Process pass.
-    /// Calls executor and processor directly (not via RunAsync).
+    /// Conversational round-trip through the canonical durable turn engine.
+    /// If no tools are provided, the engine performs a single Prepare → Execute → Process pass.
     /// </summary>
     public static async Task<object> TurnAsync(
         Prompty agent,
@@ -250,427 +235,42 @@ public static class Pipeline
         CompactionStrategy? compaction = null)
     {
         var label = turnNumber.HasValue ? $"turn {turnNumber.Value}" : "turn";
-        return await Trace.TraceAsync<object>($"prompty.turn", async (emit) =>
+        return await Trace.TraceAsync<object>("prompty.turn", async (emit) =>
         {
             emit("signature", "prompty.turn");
-            emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["label"] = label, ["maxIterations"] = maxIterations });
-            var messages = await PrepareAsync(agent, inputs);
-            AgentEvents.EmitEvent(onEvent, AgentEventType.TurnStart,
-                new Dictionary<string, object?>
-                {
-                    ["agent"] = agent.Name,
-                    ["inputs"] = inputs ?? new Dictionary<string, object?>(),
-                    ["maxIterations"] = maxIterations
-                });
-
-            // Simple path: no tools on agent, no user tools, and no agent-loop features → single execute + process
-            var hasAgentTools = agent.Tools is not null && agent.Tools.Count > 0;
-            var hasUserTools = tools is not null && tools.Count > 0;
-            var hasAgentFeatures = guardrails is not null || steering is not null || contextBudget is not null;
-            if (!hasAgentTools && !hasUserTools && !hasAgentFeatures)
+            emit("inputs", new Dictionary<string, object?>
             {
-                AgentEvents.EmitEvent(onEvent, AgentEventType.LlmStart,
-                    new Dictionary<string, object?>
-                    {
-                        ["provider"] = agent.Model?.Provider,
-                        ["modelId"] = agent.Model?.Id,
-                        ["messageCount"] = messages.Count,
-                        ["attempt"] = 0
-                    });
-                object response;
-                try
-                {
-                    response = await ExecuteAsync(agent, messages);
-                }
-                catch (Exception ex)
-                {
-                    EmitFailedTurnEnd(onEvent, ex, 0);
-                    throw;
-                }
-                AgentEvents.EmitEvent(onEvent, AgentEventType.LlmComplete, new Dictionary<string, object?>());
-                if (raw)
-                {
-                    AgentEvents.EmitEvent(onEvent, AgentEventType.TurnEnd,
-                        new Dictionary<string, object?> { ["iterations"] = 0, ["status"] = "success", ["response"] = response });
-                    return response;
-                }
-                object processed;
-                try
-                {
-                    processed = await ProcessAsync(agent, response);
-                }
-                catch (Exception ex)
-                {
-                    EmitFailedTurnEnd(onEvent, ex, 0, response);
-                    throw;
-                }
-                AgentEvents.EmitEvent(onEvent, AgentEventType.TurnEnd,
-                    new Dictionary<string, object?> { ["iterations"] = 0, ["status"] = "success", ["response"] = processed });
-                return processed;
-            }
+                ["agent"] = agent.Name,
+                ["label"] = label,
+                ["maxIterations"] = maxIterations,
+            });
+            return await LiveTurn.RunAsync(
+                agent,
+                inputs,
+                tools,
+                maxIterations,
+                raw,
+                onEvent,
+                cancellationToken,
+                contextBudget,
+                guardrails,
+                steering,
+                parallelToolCalls,
+                maxLlmRetries,
+                compaction).ConfigureAwait(false);
+        }).ConfigureAwait(false);
 
-            // Agent loop: execute → check tool_calls → dispatch tools → loop
-            var executor = InvokerRegistry.GetExecutor(agent.Model?.Provider ?? "openai");
-            object? response2 = null;
-            int iteration = 0;
-
-            while (true)
-            {
-                if (iteration >= maxIterations)
-                {
-                    EmitFailedTurnEnd(onEvent, new InvalidOperationException("Agent loop exceeded maximum iterations."), iteration);
-                    throw new InvalidOperationException(
-                        $"Agent loop exceeded maximum iterations ({maxIterations}).");
-                }
-
-                // Cancellation check at loop start
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                }
-                catch (OperationCanceledException)
-                {
-                    AgentEvents.EmitEvent(onEvent, AgentEventType.Cancelled,
-                        new Dictionary<string, object?> { ["iteration"] = iteration, ["reason"] = "cancellation_requested" });
-                    EmitFailedTurnEnd(onEvent, new OperationCanceledException(), iteration);
-                    throw;
-                }
-
-                // Drain steering messages
-                if (steering is not null)
-                {
-                    var steered = steering.Drain();
-                    if (steered.Count > 0)
-                    {
-                        messages.AddRange(steered);
-                        AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
-                            new Dictionary<string, object?> { ["source"] = "steering", ["count"] = steered.Count });
-                    }
-                }
-
-                // Context window trimming
-                if (contextBudget is not null)
-                {
-                    var (droppedCount, droppedMessages) = ContextWindow.TrimToContextWindow(messages, contextBudget.Value);
-                    if (droppedCount > 0)
-                    {
-                        AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
-                            new Dictionary<string, object?> { ["source"] = "context_trim", ["dropped"] = droppedCount });
-
-                        if (compaction is not null)
-                        {
-                            await ApplyCompactionAsync(compaction, droppedMessages, messages, onEvent);
-                        }
-                    }
-                }
-
-                // Input guardrail
-                if (guardrails is not null)
-                {
-                    var inputCheck = guardrails.CheckInput(messages);
-                    if (!inputCheck.Allowed)
-                    {
-                        AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
-                            new Dictionary<string, object?> { ["guardrail"] = "input", ["reason"] = inputCheck.Reason });
-                        EmitFailedTurnEnd(onEvent, new GuardrailError(inputCheck.Reason ?? "Input guardrail denied"), iteration);
-                        throw new GuardrailError(inputCheck.Reason ?? "Input guardrail denied");
-                    }
-                    if (inputCheck.Rewrite is List<Message> rewrittenMessages)
-                    {
-                        messages = rewrittenMessages;
-                    }
-                }
-
-                // Cancellation check before LLM call
-                try
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                }
-                catch (OperationCanceledException)
-                {
-                    AgentEvents.EmitEvent(onEvent, AgentEventType.Cancelled,
-                        new Dictionary<string, object?> { ["iteration"] = iteration, ["reason"] = "cancelled_before_llm" });
-                    EmitFailedTurnEnd(onEvent, new OperationCanceledException(), iteration);
-                    throw;
-                }
-
-                AgentEvents.EmitEvent(onEvent, AgentEventType.Status,
-                    new Dictionary<string, object?> { ["iteration"] = iteration, ["phase"] = "executing" });
-
-                AgentEvents.EmitEvent(onEvent, AgentEventType.LlmStart,
-                    new Dictionary<string, object?>
-                    {
-                        ["provider"] = agent.Model?.Provider,
-                        ["modelId"] = agent.Model?.Id,
-                        ["messageCount"] = messages.Count,
-                        ["attempt"] = 0,
-                        ["iteration"] = iteration
-                    });
-                try
-                {
-                    response2 = await InvokeWithRetryAsync(agent, messages, maxLlmRetries, onEvent, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    EmitFailedTurnEnd(onEvent, ex, iteration);
-                    throw;
-                }
-                AgentEvents.EmitEvent(onEvent, AgentEventType.LlmComplete,
-                    new Dictionary<string, object?> { ["iteration"] = iteration });
-
-                // If response is a stream, consume it fully before processing.
-                if (response2 is PromptyStream stream)
-                {
-                    try
-                    {
-                        await foreach (var chunk in stream)
-                        {
-                            if (chunk is string tokenText && tokenText.Length > 0)
-                            {
-                                AgentEvents.EmitEvent(onEvent, AgentEventType.Token,
-                                    new Dictionary<string, object?> { ["token"] = tokenText });
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        EmitFailedTurnEnd(onEvent, ex, iteration, response2);
-                        throw;
-                    }
-                    response2 = stream;
-                }
-
-                object result;
-                try
-                {
-                    result = raw ? response2! : await ProcessAsync(agent, response2!);
-                }
-                catch (Exception ex)
-                {
-                    EmitFailedTurnEnd(onEvent, ex, iteration, response2);
-                    throw;
-                }
-
-                if (result is ToolCallResult toolResult && toolResult.ToolCalls.Count > 0)
-                {
-                    // Dispatch tool calls (parallel or sequential)
-                    var toolResults = new List<string>();
-
-                    if (parallelToolCalls && toolResult.ToolCalls.Count > 1)
-                    {
-                        // Parallel dispatch via Task.WhenAll
-                        var tasks = new List<Task<(int Index, string Result)>>();
-                        for (int ti = 0; ti < toolResult.ToolCalls.Count; ti++)
-                        {
-                            var call = toolResult.ToolCalls[ti];
-                            var capturedIndex = ti;
-
-                            // Tool guardrail (with rewrite support)
-                            if (guardrails is not null)
-                            {
-                                var args = ToolDispatch.ParseArguments(call.Arguments);
-                                var toolCheck = guardrails.CheckTool(call.Name, args);
-                                if (!toolCheck.Allowed)
-                                {
-                                    var deniedMsg = $"Tool denied by guardrail: {toolCheck.Reason}";
-                                    AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
-                                        new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = deniedMsg });
-                                    AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallComplete,
-                                        new Dictionary<string, object?> { ["name"] = call.Name, ["success"] = false, ["result"] = deniedMsg, ["errorKind"] = "guardrail_denied" });
-                                    tasks.Add(Task.FromResult((capturedIndex, deniedMsg)));
-                                    continue;
-                                }
-                                if (toolCheck.Rewrite is Dictionary<string, object?> rewrittenArgs)
-                                {
-                                    call.Arguments = System.Text.Json.JsonSerializer.Serialize(rewrittenArgs);
-                                }
-                            }
-
-                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallStart,
-                                new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-
-                            tasks.Add(Task.Run(async () =>
-                            {
-                                var toolStarted = DateTimeOffset.UtcNow;
-                                string toolResponse;
-                                try
-                                {
-                                    toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
-                                    {
-                                        toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-                                        return await ToolDispatch.DispatchAsync(agent, call, tools, inputs) ?? string.Empty;
-                                    });
-                                }
-                                catch (Exception ex) when (ex is not OperationCanceledException)
-                                {
-                                    toolResponse = $"Error: Tool '{call.Name}' failed: {ex.Message}";
-                                    AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
-                                        new Dictionary<string, object?> { ["tool"] = call.Name, ["error"] = ex.Message });
-                                }
-                                AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallComplete,
-                                    new Dictionary<string, object?>
-                                    {
-                                        ["name"] = call.Name,
-                                        ["success"] = !toolResponse.StartsWith("Error:", StringComparison.Ordinal),
-                                        ["result"] = toolResponse,
-                                        ["durationMs"] = (DateTimeOffset.UtcNow - toolStarted).TotalMilliseconds,
-                                        ["errorKind"] = toolResponse.StartsWith("Error:", StringComparison.Ordinal) ? "tool_error" : null
-                                    });
-                                return (capturedIndex, toolResponse);
-                            }));
-                        }
-
-                        (int Index, string Result)[] completed;
-                        try
-                        {
-                            completed = await Task.WhenAll(tasks);
-                        }
-                        catch (Exception ex)
-                        {
-                            EmitFailedTurnEnd(onEvent, ex, iteration);
-                            throw;
-                        }
-                        // Maintain order
-                        var ordered = new string[toolResult.ToolCalls.Count];
-                        foreach (var (index, res) in completed)
-                        {
-                            ordered[index] = res;
-                        }
-                        toolResults.AddRange(ordered);
-
-                        for (int ti = 0; ti < toolResult.ToolCalls.Count; ti++)
-                        {
-                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
-                                new Dictionary<string, object?> { ["tool"] = toolResult.ToolCalls[ti].Name, ["result"] = toolResults[ti] });
-                        }
-                    }
-                    else
-                    {
-                        // Sequential dispatch
-                        foreach (var call in toolResult.ToolCalls)
-                        {
-                            // Tool guardrail (with rewrite support)
-                            if (guardrails is not null)
-                            {
-                                var args = ToolDispatch.ParseArguments(call.Arguments);
-                                var toolCheck = guardrails.CheckTool(call.Name, args);
-                                if (!toolCheck.Allowed)
-                                {
-                                    var deniedMsg = $"Tool denied by guardrail: {toolCheck.Reason}";
-                                    AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
-                                        new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = deniedMsg });
-                                    AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallComplete,
-                                        new Dictionary<string, object?> { ["name"] = call.Name, ["success"] = false, ["result"] = deniedMsg, ["errorKind"] = "guardrail_denied" });
-                                    toolResults.Add(deniedMsg);
-                                    continue;
-                                }
-                                if (toolCheck.Rewrite is Dictionary<string, object?> rewrittenArgs)
-                                {
-                                    call.Arguments = System.Text.Json.JsonSerializer.Serialize(rewrittenArgs);
-                                }
-                            }
-
-                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallStart,
-                                new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-
-                            var toolStarted = DateTimeOffset.UtcNow;
-                            string toolResponse;
-                            try
-                            {
-                                toolResponse = await Trace.TraceAsync<string>("Prompty.Core.ToolDispatch.Execute", async (toolEmit) =>
-                                {
-                                    toolEmit("inputs", new Dictionary<string, object?> { ["tool"] = call.Name, ["arguments"] = call.Arguments });
-                                    return await ToolDispatch.DispatchAsync(agent, call, tools, inputs);
-                                });
-                            }
-                            catch (Exception ex) when (ex is not OperationCanceledException)
-                            {
-                                toolResponse = $"Error: Tool '{call.Name}' failed: {ex.Message}";
-                                AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
-                                    new Dictionary<string, object?> { ["tool"] = call.Name, ["error"] = ex.Message });
-                            }
-                            catch (OperationCanceledException ex)
-                            {
-                                EmitFailedTurnEnd(onEvent, ex, iteration);
-                                throw;
-                            }
-                            toolResults.Add(toolResponse);
-
-                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult,
-                                new Dictionary<string, object?> { ["tool"] = call.Name, ["result"] = toolResponse });
-                            AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallComplete,
-                                new Dictionary<string, object?>
-                                {
-                                    ["name"] = call.Name,
-                                    ["success"] = !toolResponse.StartsWith("Error:", StringComparison.Ordinal),
-                                    ["result"] = toolResponse,
-                                    ["durationMs"] = (DateTimeOffset.UtcNow - toolStarted).TotalMilliseconds,
-                                    ["errorKind"] = toolResponse.StartsWith("Error:", StringComparison.Ordinal) ? "tool_error" : null
-                                });
-                        }
-                    }
-
-                    // Delegate message formatting to the executor (provider-specific)
-                    List<Message> toolMessages;
-                    try
-                    {
-                        toolMessages = executor.FormatToolMessages(
-                            response2, toolResult.ToolCalls, toolResults, toolResult.Content);
-                    }
-                    catch (Exception ex)
-                    {
-                        EmitFailedTurnEnd(onEvent, ex, iteration, response2);
-                        throw;
-                    }
-                    messages.AddRange(toolMessages);
-
-                    AgentEvents.EmitEvent(onEvent, AgentEventType.MessagesUpdated,
-                        new Dictionary<string, object?> { ["source"] = "tool_results", ["count"] = toolMessages.Count });
-
-                    iteration++;
-                    continue;
-                }
-
-                // Output guardrail on final response
-                if (guardrails is not null)
-                {
-                    var outputMsg = result switch
-                    {
-                        string resultText => new Message
-                        {
-                            Role = Role.Assistant,
-                            Parts = [new TextPart { Value = resultText }]
-                        },
-                        Message msg => msg,
-                        _ => new Message
-                        {
-                            Role = Role.Assistant,
-                            Parts = [new TextPart { Value = result?.ToString() ?? "" }]
-                        },
-                    };
-                    var outputCheck = guardrails.CheckOutput(outputMsg);
-                    if (!outputCheck.Allowed)
-                    {
-                        AgentEvents.EmitEvent(onEvent, AgentEventType.Error,
-                            new Dictionary<string, object?> { ["guardrail"] = "output", ["reason"] = outputCheck.Reason });
-                        EmitFailedTurnEnd(onEvent, new GuardrailError(outputCheck.Reason ?? "Output guardrail denied"), iteration + 1, result);
-                        throw new GuardrailError(outputCheck.Reason ?? "Output guardrail denied");
-                    }
-                    if (outputCheck.Rewrite is not null)
-                    {
-                        result = outputCheck.Rewrite;
-                    }
-                }
-
-                AgentEvents.EmitEvent(onEvent, AgentEventType.Done,
-                    new Dictionary<string, object?> { ["iterations"] = iteration + 1 });
-                AgentEvents.EmitEvent(onEvent, AgentEventType.TurnEnd,
-                    new Dictionary<string, object?> { ["iterations"] = iteration + 1, ["status"] = "success", ["response"] = result });
-
-                return result!;
-            }
-        });
     }
+
+    /// <summary>
+    /// Executes or resumes a turn through the canonical engine using caller-owned durability and effect ports.
+    /// </summary>
+    public static Task<object> TurnWithEngineRequestAsync(
+        Prompty agent,
+        TurnEngineRequest request,
+        TurnEnginePipelineOptions? options = null,
+        CancellationToken cancellationToken = default)
+        => LiveTurn.RunAsync(agent, request, options, cancellationToken);
 
     /// <summary>
     /// Conversational round-trip with path-based loading.
@@ -819,58 +419,6 @@ public static class Pipeline
                     Parts = [new TextPart { Value = newSummary }]
                 };
                 return;
-            }
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // LLM Retry Helper (§9.10)
-    // -----------------------------------------------------------------------
-
-    /// <summary>
-    /// Invoke ExecuteAsync with exponential backoff retry on transient failures.
-    /// </summary>
-    private static async Task<object> InvokeWithRetryAsync(
-        Prompty agent,
-        List<Message> messages,
-        int maxRetries,
-        EventCallback? onEvent,
-        CancellationToken cancellationToken)
-    {
-        var attempts = 0;
-        while (true)
-        {
-            try
-            {
-                return await ExecuteAsync(agent, messages);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                attempts++;
-                if (attempts >= maxRetries)
-                {
-                    throw new ExecuteError(
-                        $"LLM call failed after {maxRetries} retries: {ex.Message}",
-                        new List<Message>(messages));
-                }
-
-                AgentEvents.EmitEvent(onEvent, AgentEventType.Status,
-                    new Dictionary<string, object?>
-                    {
-                        ["message"] = $"LLM call failed, retrying (attempt {attempts + 1}/{maxRetries})..."
-                    });
-                AgentEvents.EmitEvent(onEvent, AgentEventType.Retry,
-                    new Dictionary<string, object?>
-                    {
-                        ["operation"] = "llm",
-                        ["attempt"] = attempts + 1,
-                        ["maxAttempts"] = maxRetries,
-                        ["reason"] = ex.Message
-                    });
-
-                // Exponential backoff with jitter, capped at 60s
-                var backoff = Math.Min(Math.Pow(2, attempts) + Random.Shared.NextDouble(), 60);
-                await Task.Delay(TimeSpan.FromSeconds(backoff), cancellationToken);
             }
         }
     }
