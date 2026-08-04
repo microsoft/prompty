@@ -193,15 +193,7 @@ impl OpenAIExecutor {
         };
 
         // Force stream: true
-        if let Some(obj) = body.as_object_mut() {
-            obj.insert("stream".into(), Value::Bool(true));
-            if matches!(api_type, "chat" | "agent") {
-                obj.insert(
-                    "stream_options".into(),
-                    serde_json::json!({ "include_usage": true }),
-                );
-            }
-        }
+        wire::enable_streaming(&mut body, api_type);
 
         let api_key = get_api_key(agent)?;
         let client = &*HTTP_CLIENT;

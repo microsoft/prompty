@@ -113,10 +113,9 @@ impl Executor for FoundryExecutor {
 
         let mut body = wire::build_chat_args(agent, messages)
             .map_err(|error| InvokerError::Validation(error.to_string()))?;
-        // Force stream: true
-        if let Some(obj) = body.as_object_mut() {
-            obj.insert("stream".into(), Value::Bool(true));
-        }
+        // Force stream: true and request terminal usage so the done event
+        // reports token counts (Azure omits usage from the stream otherwise).
+        wire::enable_streaming(&mut body, api_type);
 
         let (url, auth_header) = build_azure_request(agent, api_type).await?;
 

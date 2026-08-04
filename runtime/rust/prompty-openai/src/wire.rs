@@ -153,6 +153,25 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, S
     Ok(Value::Object(args))
 }
 
+/// Enable server-sent streaming on a chat/agent request body.
+///
+/// Sets `stream: true` and, for the `chat` and `agent` API types, adds
+/// `stream_options: { include_usage: true }` so the terminal stream event
+/// carries token usage. Providers that speak the OpenAI wire format (OpenAI
+/// and Foundry/Azure OpenAI) share this helper so their streaming requests —
+/// and therefore the usage reported on their done events — stay identical.
+pub fn enable_streaming(body: &mut Value, api_type: &str) {
+    if let Some(obj) = body.as_object_mut() {
+        obj.insert("stream".to_string(), Value::Bool(true));
+        if matches!(api_type, "chat" | "agent") {
+            obj.insert(
+                "stream_options".to_string(),
+                serde_json::json!({ "include_usage": true }),
+            );
+        }
+    }
+}
+
 /// Build the request body for an embedding call.
 pub fn build_embedding_args(agent: &Prompty, messages: &[Message]) -> Value {
     let model = if agent.model.id.is_empty() {
@@ -893,6 +912,30 @@ mod tests {
         let wire = message_to_wire(&msg);
         assert_eq!(wire["role"], "user");
         assert_eq!(wire["content"], "Hello");
+    }
+
+    #[test]
+    fn test_enable_streaming_chat_includes_usage() {
+        let mut body = serde_json::json!({ "model": "gpt-4" });
+        enable_streaming(&mut body, "chat");
+        assert_eq!(body["stream"], true);
+        assert_eq!(body["stream_options"]["include_usage"], true);
+    }
+
+    #[test]
+    fn test_enable_streaming_agent_includes_usage() {
+        let mut body = serde_json::json!({ "model": "gpt-4" });
+        enable_streaming(&mut body, "agent");
+        assert_eq!(body["stream"], true);
+        assert_eq!(body["stream_options"]["include_usage"], true);
+    }
+
+    #[test]
+    fn test_enable_streaming_other_api_type_omits_usage() {
+        let mut body = serde_json::json!({ "model": "gpt-4" });
+        enable_streaming(&mut body, "responses");
+        assert_eq!(body["stream"], true);
+        assert!(body.get("stream_options").is_none());
     }
 
     #[test]
