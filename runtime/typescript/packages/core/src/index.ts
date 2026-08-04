@@ -109,6 +109,11 @@ export {
   cast,
 } from "./core/index.js";
 
+export * from "./core/turn-engine-cancellation.js";
+export * from "./core/turn-engine-context.js";
+export * from "./core/turn-engine-ports.js";
+export * from "./core/turn-engine.js";
+
 // ---------------------------------------------------------------------------
 // Implementations (core-provided: renderers + parsers only)
 // ---------------------------------------------------------------------------

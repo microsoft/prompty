@@ -726,13 +726,22 @@ export async function turn<T = unknown>(
     emit("inputs", sanitizeValue("inputs", inputs));
 
     const tools = options?.tools ?? {};
-    const hasTools = Object.keys(tools).length > 0;
+    const hasTools =
+      Object.keys(tools).length > 0 || (agent.tools?.length ?? 0) > 0;
     const onEvent = options?.onEvent;
     emitEvent(onEvent, "turn_start", {
       agent: agent.name,
       inputs,
       maxIterations: options?.maxIterations ?? DEFAULT_MAX_ITERATIONS,
     });
+
+    try {
+      checkCancellation(options?.signal);
+    } catch (err) {
+      emitEvent(onEvent, "cancelled", {});
+      emitFailedTurnEnd(onEvent, err, 0);
+      throw err;
+    }
 
     if (!hasTools) {
       // Simple mode: prepare → [extensions] → executor → [output guard] → process
@@ -794,7 +803,14 @@ export async function turn<T = unknown>(
       });
       let response: unknown;
       try {
-        response = await executor.execute(agent, messages);
+        response = await invokeWithRetry(
+          executor,
+          agent,
+          messages,
+          options?.maxLlmRetries ?? DEFAULT_MAX_LLM_RETRIES,
+          onEvent,
+          options?.signal,
+        );
       } catch (err) {
         emitFailedTurnEnd(onEvent, err, 0);
         throw err;

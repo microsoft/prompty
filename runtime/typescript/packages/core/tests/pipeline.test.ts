@@ -230,6 +230,112 @@ describe("Pipeline", () => {
   });
 
   describe("turn()", () => {
+    it("checks cancellation before preparing the prompt", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "missing" }, parser: { kind: "missing" } } as any;
+      (agent as any).model = { provider: "mock" };
+      const controller = new AbortController();
+      controller.abort();
+
+      await expect(
+        turn(agent, {}, { signal: controller.signal }),
+      ).rejects.toThrow("cancelled");
+    });
+
+    it("retries simple turns with the same prepared messages", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
+      (agent as any).model = { provider: "retrying-mock" };
+      const requests: Message[][] = [];
+
+      registerExecutor("retrying-mock", {
+        async execute(_agent, messages) {
+          requests.push(messages);
+          if (requests.length === 1) throw new Error("transient");
+          return { choices: [{ message: { content: "recovered" } }] };
+        },
+        formatToolMessages: new MockExecutor().formatToolMessages,
+      });
+      registerProcessor("retrying-mock", new MockProcessor());
+
+      const result = await turn(agent, {}, { maxLlmRetries: 2 });
+
+      expect(result).toBe("recovered");
+      expect(requests).toHaveLength(2);
+      expect(requests[0]).toBe(requests[1]);
+    });
+
+    it("activates agent mode for tools declared by the prompt", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
+      (agent as any).model = { provider: "asset-tool-mock" };
+      agent.tools = [{ name: "echo", kind: "function" }] as any;
+      let calls = 0;
+
+      registerExecutor("asset-tool-mock", {
+        async execute() {
+          calls++;
+          return calls === 1
+            ? {
+                choices: [{
+                  message: {
+                    content: null,
+                    tool_calls: [{
+                      id: "call-asset",
+                      function: { name: "echo", arguments: '{"value":"hello"}' },
+                    }],
+                  },
+                }],
+              }
+            : { choices: [{ message: { content: "done" } }] };
+        },
+        formatToolMessages: new MockExecutor().formatToolMessages,
+      });
+      registerProcessor("asset-tool-mock", new MockProcessor());
+
+      const result = await turn(agent, {}, {
+        tools: { echo: (value: unknown) => value },
+      });
+
+      expect(result).toBe("done");
+      expect(calls).toBe(2);
+    });
+
+    it("returns missing asset tool handlers to the model as failed tool results", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
+      (agent as any).model = { provider: "missing-asset-tool-mock" };
+      agent.tools = [{ name: "echo", kind: "function" }] as any;
+      const requests: Message[][] = [];
+
+      registerExecutor("missing-asset-tool-mock", {
+        async execute(_agent, messages) {
+          requests.push(messages);
+          return requests.length === 1
+            ? {
+                choices: [{
+                  message: {
+                    content: null,
+                    tool_calls: [{
+                      id: "call-missing",
+                      function: { name: "echo", arguments: '{"value":"hello"}' },
+                    }],
+                  },
+                }],
+              }
+            : { choices: [{ message: { content: "handled failure" } }] };
+        },
+        formatToolMessages: new MockExecutor().formatToolMessages,
+      });
+      registerProcessor("missing-asset-tool-mock", new MockProcessor());
+
+      const result = await turn(agent, {});
+
+      expect(result).toBe("handled failure");
+      expect(requests).toHaveLength(2);
+      expect(requests[1].some((message) => message.text.includes("no callable provided"))).toBe(true);
+    });
+
     it("emits llm_complete only after a simple stream is exhausted", async () => {
       const agent = makeAgent();
       agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
