@@ -48,8 +48,8 @@ class AnthropicMessagesRequest:
     temperature: float | None = None
     top_p: float | None = None
     top_k: int | None = None
-    stop_sequences: list[str] = field(default_factory=list)
-    tools: list[AnthropicToolDefinition] = field(default_factory=list)
+    stop_sequences: list[str] | None = None
+    tools: list[AnthropicToolDefinition] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "AnthropicMessagesRequest":

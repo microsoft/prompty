@@ -481,7 +481,7 @@ class TestShorthand:
         assert agent.name == "just-a-name"
         assert agent.model is not None  # Prompty.load() provides default Model
         assert agent.model.id == ""
-        assert len(agent.inputs) == 0
+        assert agent.inputs is None
         assert agent.instructions is not None
         assert "helpful assistant" in agent.instructions
 

@@ -37,7 +37,7 @@ class Tool(ABC):
     name: str = field(default="")
     kind: str = field(default="")
     description: str | None = None
-    bindings: list[Binding] = field(default_factory=list)
+    bindings: list[Binding] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Tool":
@@ -459,7 +459,7 @@ class McpTool(Tool):
     server_name: str = field(default="")
     server_description: str | None = None
     approval_mode: McpApprovalMode = field(default_factory=McpApprovalMode)
-    allowed_tools: list[str] = field(default_factory=list)
+    allowed_tools: list[str] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "McpTool":

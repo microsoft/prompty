@@ -33,8 +33,8 @@ class TurnEngineResult:
     _shorthand_property: ClassVar[str | None] = None
 
     commit: TurnCommit = field(default_factory=TurnCommit)
-    snapshots: list[ModelInvocationContextSnapshot] = field(default_factory=list)
-    tool_results: list[ModelToolResult] = field(default_factory=list)
+    snapshots: list[ModelInvocationContextSnapshot] | None = None
+    tool_results: list[ModelToolResult] | None = None
     post_commit_error: str | None = None
 
     @staticmethod

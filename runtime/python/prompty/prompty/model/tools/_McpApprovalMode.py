@@ -32,8 +32,8 @@ class McpApprovalMode:
     _shorthand_property: ClassVar[str | None] = "kind"
 
     kind: mcpApprovalModeKind = field(default="always")
-    always_require_approval_tools: list[str] = field(default_factory=list)
-    never_require_approval_tools: list[str] = field(default_factory=list)
+    always_require_approval_tools: list[str] | None = None
+    never_require_approval_tools: list[str] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "McpApprovalMode":

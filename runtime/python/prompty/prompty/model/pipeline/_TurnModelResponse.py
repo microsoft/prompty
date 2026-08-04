@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -33,7 +33,7 @@ class TurnModelResponse:
 
     output: Any | None = None
     usage: InvocationUsage | None = None
-    tool_requests: list[HostToolRequest] = field(default_factory=list)
+    tool_requests: list[HostToolRequest] | None = None
     checkpoint_state: dict[str, Any] | None = None
 
     @staticmethod

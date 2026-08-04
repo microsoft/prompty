@@ -27,22 +27,9 @@ volatile provider data (context windows, modalities, new model families)
 refreshed as a snapshot, whereas TypeSpec/Typra owns the structural
 :class:`~prompty.model.ModelInfo` contract consumed here.
 
-**Emitted-model caveat (Python-specific).** The Typra-generated
-:class:`~prompty.model.ModelInfo` declares ``input_modalities`` and
-``output_modalities`` as ``list[str] = field(default_factory=list)`` rather
-than ``list[str] | None = None`` (unlike the Rust ``Option<Vec<String>>`` and
-C# ``IList<string>?`` emissions for the same field). That default makes a
-freshly constructed ``ModelInfo()`` indistinguishable from one where a
-provider explicitly reported an empty modality list — which breaks the
-fill-only-missing contract's tri-state requirement (absent vs.
-explicitly-empty vs. non-empty). Since generated files under ``prompty/model``
-must not be hand-edited, callers that build a ``ModelInfo`` for use with
-:func:`enrich` MUST explicitly pass ``input_modalities=None`` /
-``output_modalities=None`` (not rely on the constructor default) when the
-provider payload does not include that field, and MUST NOT construct the
-object via ``ModelInfo.load(data)`` for this purpose (its presence-check
-logic leaves the buggy ``[]`` default when a key is absent). Every provider
-mapping function in ``prompty.providers.*.models`` follows this pattern.
+The Typra-emitted :class:`~prompty.model.ModelInfo` preserves the tri-state
+required by fill-only-missing enrichment: omitted modalities remain ``None``,
+explicit empty arrays remain ``[]``, and populated arrays retain their values.
 """
 
 from __future__ import annotations

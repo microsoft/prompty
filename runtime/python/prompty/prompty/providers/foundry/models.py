@@ -231,11 +231,8 @@ def catalog_model_to_model_info(raw: dict[str, Any]) -> ModelInfo:
         context_window = None
     info = ModelInfo(
         id=_get_string(raw, "id") or "",
-        display_name=None,
         owned_by=_get_string(raw, "owned_by"),
         context_window=context_window,
-        input_modalities=None,
-        output_modalities=None,
         additional_properties=dict(raw),
     )
     enrich("foundry", info)
@@ -297,8 +294,6 @@ def _map_model(m: Any) -> ModelInfo:
         id=m.id,
         owned_by=getattr(m, "owned_by", None),
         context_window=getattr(m, "max_context_length", None),
-        input_modalities=None,
-        output_modalities=None,
         additional_properties=_model_to_dict(m),
     )
     enrich("foundry", info)

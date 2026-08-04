@@ -228,7 +228,7 @@ class ReferenceTurnEngine:
         max_iterations = context.max_iterations
         max_model_attempts = context.max_model_attempts if context.max_model_attempts > 0 else 3
         snapshots: list[ModelInvocationContextSnapshot] = []
-        tool_results = list(checkpoint.completed_tool_results)
+        tool_results = list(checkpoint.completed_tool_results or [])
         messages = list(checkpoint.messages)
         context_state = checkpoint.context_state
 
@@ -336,7 +336,7 @@ class ReferenceTurnEngine:
                 )
             for result in round_results:
                 await self._emit("tool_result_committed", iteration=checkpoint.iteration, payload=result.save())
-            messages.extend(response.assistant_messages)
+            messages.extend(response.assistant_messages or [])
             messages.extend(self._tool_result_messages(round_results))
             await self._emit(
                 "conversation_updated",
@@ -518,7 +518,7 @@ class ReferenceTurnEngine:
                     )
                 context_state = response.next_context_state
             if not response.tool_requests:
-                messages.extend(response.assistant_messages)
+                messages.extend(response.assistant_messages or [])
             await self._checkpoint(
                 iteration=iteration,
                 messages=messages,
@@ -610,7 +610,7 @@ class ReferenceTurnEngine:
             round_results = ordered_results
             for result in round_results:
                 await self._emit("tool_result_committed", iteration=iteration, payload=result.save())
-            messages.extend(response.assistant_messages)
+            messages.extend(response.assistant_messages or [])
             messages.extend(self._tool_result_messages(round_results))
             await self._emit(
                 "conversation_updated",

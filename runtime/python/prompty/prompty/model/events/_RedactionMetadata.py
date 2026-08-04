@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -29,7 +29,7 @@ class RedactionMetadata:
     _shorthand_property: ClassVar[str | None] = None
 
     sanitized: bool | None = None
-    fields: list[RedactedField] = field(default_factory=list)
+    fields: list[RedactedField] | None = None
     policy: str | None = None
 
     @staticmethod

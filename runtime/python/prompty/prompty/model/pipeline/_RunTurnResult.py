@@ -44,8 +44,8 @@ class RunTurnResult:
     status: RunTurnStatus = field(default="success")
     output: Any | None = None
     iterations: int = field(default=0)
-    tool_results: list[HostToolResult] = field(default_factory=list)
-    checkpoints: list[Checkpoint] = field(default_factory=list)
+    tool_results: list[HostToolResult] | None = None
+    checkpoints: list[Checkpoint] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "RunTurnResult":

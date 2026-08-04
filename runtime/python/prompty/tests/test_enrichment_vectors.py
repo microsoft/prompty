@@ -5,22 +5,12 @@ vector builds a base ``ModelInfo`` from a partial camelCase ``input`` dict, appl
 ``prompty.core.model_capabilities.enrich``, and asserts the resulting ``ModelInfo.save()``
 equals the vector's ``expected`` value exactly.
 
-Base ``ModelInfo`` construction deliberately does NOT use ``ModelInfo.load(data)``: the
-Typra-generated ``ModelInfo`` declares ``input_modalities``/``output_modalities`` as
-``list[str] = field(default_factory=list)`` (not ``Optional[list[str]] = None``), and
-``load()``'s presence-check logic (``if "inputModalities" in data: ...``) leaves that buggy
-``[]`` default when the key is absent — which would make "absent" indistinguishable from
-"provider explicitly returned []" and break the fill-only-missing tri-state the vectors assert
-(see ``openai_enrich_provider_empty_modalities_win``, where a provider-supplied ``[]`` must be
-preserved, vs. every other vector where an absent key must be treated as "unset" and filled).
-This test instead reads the raw ``input`` dict with ``dict.get(key)``, which naturally yields
-``None`` for an absent key and the literal value (including ``[]``) for a present key — the
-exact tri-state semantics ``enrich()`` requires. See ``prompty/core/model_capabilities.py``'s
-module docstring for the full explanation of this generated-model caveat.
+Base ``ModelInfo`` construction uses the emitted loader so the vectors exercise its native
+absent-vs-empty modality tri-state before enrichment.
 
 Run:
     cd runtime/python/prompty
-    .venv\\Scripts\\python.exe -m pytest tests/test_enrichment_vectors.py -v
+    uv run pytest tests/test_enrichment_vectors.py -v
 """
 
 from __future__ import annotations
@@ -50,16 +40,8 @@ _VECTORS = _load_enrichment_vectors()
 
 
 def _build_base_model_info(data: dict[str, Any]) -> ModelInfo:
-    """Build a ModelInfo preserving the absent-vs-empty tri-state (see module docstring)."""
-    return ModelInfo(
-        id=data.get("id", ""),
-        display_name=data.get("displayName"),
-        owned_by=data.get("ownedBy"),
-        context_window=data.get("contextWindow"),
-        input_modalities=data.get("inputModalities"),
-        output_modalities=data.get("outputModalities"),
-        additional_properties=data.get("additionalProperties"),
-    )
+    """Build a ModelInfo through the emitted loader."""
+    return ModelInfo.load(data)
 
 
 @pytest.mark.parametrize("vector", _VECTORS, ids=[v["name"] for v in _VECTORS])

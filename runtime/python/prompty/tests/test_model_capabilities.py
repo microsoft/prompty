@@ -112,42 +112,53 @@ class TestLookup:
 # ---------------------------------------------------------------------------
 
 
+class TestModelInfoTriState:
+    def test_load_distinguishes_omitted_from_explicit_empty_modalities(self) -> None:
+        omitted = ModelInfo.load({"id": "gpt-4o"})
+        explicit_empty = ModelInfo.load({"id": "gpt-4o", "inputModalities": [], "outputModalities": []})
+
+        assert omitted.input_modalities is None
+        assert omitted.output_modalities is None
+        assert explicit_empty.input_modalities == []
+        assert explicit_empty.output_modalities == []
+
+
 class TestEnrich:
     def test_fills_all_missing_fields(self) -> None:
-        info = ModelInfo(id="gpt-4o", input_modalities=None, output_modalities=None)
+        info = ModelInfo(id="gpt-4o")
         enrich("openai", info)
         assert info.context_window == 128_000
         assert info.input_modalities == ["text", "image"]
         assert info.output_modalities == ["text"]
 
     def test_does_not_overwrite_provider_context_window(self) -> None:
-        info = ModelInfo(id="gpt-4o", context_window=999, input_modalities=None, output_modalities=None)
+        info = ModelInfo(id="gpt-4o", context_window=999)
         enrich("openai", info)
         assert info.context_window == 999
         assert info.input_modalities == ["text", "image"]
 
     def test_provider_supplied_empty_list_wins_over_dataset(self) -> None:
-        info = ModelInfo(id="gpt-4o", input_modalities=[], output_modalities=None)
+        info = ModelInfo(id="gpt-4o", input_modalities=[])
         enrich("openai", info)
         assert info.input_modalities == []
         assert info.output_modalities == ["text"]
 
     def test_unknown_id_is_noop(self) -> None:
-        info = ModelInfo(id="ft:custom-model:acme::xyz", input_modalities=None, output_modalities=None)
+        info = ModelInfo(id="ft:custom-model:acme::xyz")
         enrich("openai", info)
         assert info.context_window is None
         assert info.input_modalities is None
         assert info.output_modalities is None
 
     def test_prefix_requires_token_boundary(self) -> None:
-        info = ModelInfo(id="gpt-45-future", input_modalities=None, output_modalities=None)
+        info = ModelInfo(id="gpt-45-future")
         enrich("openai", info)
         assert info.context_window is None
 
     def test_dataset_empty_modality_fills_none(self) -> None:
         # A dataset-declared [] (embeddings' outputModalities) is a valid fill for a missing
         # (None) field, distinct from a provider explicitly supplying [].
-        info = ModelInfo(id="text-embedding-3-small", input_modalities=None, output_modalities=None)
+        info = ModelInfo(id="text-embedding-3-small")
         enrich("openai", info)
         assert info.output_modalities == []
 

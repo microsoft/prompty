@@ -91,8 +91,8 @@ class EngineCheckpoint:
     stable_prefix_messages: int = field(default=0)
     inputs: Any | None = None
     active_invocation_id: str | None = None
-    pending_tool_requests: list[ModelToolRequest] = field(default_factory=list)
-    completed_tool_results: list[ModelToolResult] = field(default_factory=list)
+    pending_tool_requests: list[ModelToolRequest] | None = None
+    completed_tool_results: list[ModelToolResult] | None = None
     completed_model_iterations: int = field(default=0)
     reconciliation_required: bool = field(default=False)
     model_reconciliation: ModelReconciliationState | None = None

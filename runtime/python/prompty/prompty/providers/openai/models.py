@@ -38,11 +38,7 @@ def model_info_from_wire(raw: dict[str, Any]) -> ModelInfo:
     owned_by = raw.get("owned_by")
     info = ModelInfo(
         id=model_id if isinstance(model_id, str) else "",
-        display_name=None,
         owned_by=owned_by if isinstance(owned_by, str) else None,
-        context_window=None,
-        input_modalities=None,
-        output_modalities=None,
         additional_properties=dict(raw),
     )
     enrich("openai", info)

@@ -55,11 +55,11 @@ class SessionTrace:
     prompty_version: str | None = None
     session_id: str | None = None
     events: list[SessionEvent] = field(default_factory=list)
-    turns: list[TurnTrace] = field(default_factory=list)
-    checkpoints: list[Checkpoint] = field(default_factory=list)
-    trajectory: list[TrajectoryEvent] = field(default_factory=list)
-    files: list[SessionFileRef] = field(default_factory=list)
-    refs: list[SessionRef] = field(default_factory=list)
+    turns: list[TurnTrace] | None = None
+    checkpoints: list[Checkpoint] | None = None
+    trajectory: list[TrajectoryEvent] | None = None
+    files: list[SessionFileRef] | None = None
+    refs: list[SessionRef] | None = None
     summary: SessionSummary | None = None
 
     @staticmethod

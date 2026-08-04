@@ -52,7 +52,7 @@ class ModelInvocationContextSnapshot:
     invocation_id: str = field(default="")
     iteration: int = field(default=0)
     messages: list[Message] = field(default_factory=list)
-    decisions: list[InvocationContextDecision] = field(default_factory=list)
+    decisions: list[InvocationContextDecision] | None = None
     stable_prefix_messages: int = field(default=0)
     context_state: InvocationContextState = field(default_factory=InvocationContextState)
     metadata: dict[str, Any] | None = None

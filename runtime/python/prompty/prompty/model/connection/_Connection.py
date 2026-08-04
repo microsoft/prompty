@@ -558,7 +558,7 @@ class OAuthConnection(Connection):
     client_id: str = field(default="")
     client_secret: str = field(default="")
     token_url: str = field(default="")
-    scopes: list[str] = field(default_factory=list)
+    scopes: list[str] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "OAuthConnection":

@@ -29,7 +29,7 @@ class InvocationContextState:
     _shorthand_property: ClassVar[str | None] = None
 
     portability: InvocationContextPortability = field(default="portable")
-    delegated_state: list[DelegatedStateReference] = field(default_factory=list)
+    delegated_state: list[DelegatedStateReference] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "InvocationContextState":

@@ -33,7 +33,7 @@ class ReplayVerificationResult:
     _shorthand_property: ClassVar[str | None] = None
 
     status: ReplayVerificationStatus = field(default="passed")
-    mismatches: list[ReplayMismatch] = field(default_factory=list)
+    mismatches: list[ReplayMismatch] | None = None
     expected_count: int = field(default=0)
     actual_count: int = field(default=0)
 

@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -42,8 +42,8 @@ class ModelInvocationResponse:
 
     output: Any | None = None
     usage: InvocationUsage | None = None
-    assistant_messages: list[Message] = field(default_factory=list)
-    tool_requests: list[ModelToolRequest] = field(default_factory=list)
+    assistant_messages: list[Message] | None = None
+    tool_requests: list[ModelToolRequest] | None = None
     next_context_state: InvocationContextState | None = None
     metadata: dict[str, Any] | None = None
 

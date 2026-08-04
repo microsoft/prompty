@@ -43,7 +43,7 @@ class TurnModelRequest:
     iteration: int = field(default=0)
     inputs: dict[str, Any] | None = None
     options: TurnOptions | None = None
-    tool_results: list[HostToolResult] = field(default_factory=list)
+    tool_results: list[HostToolResult] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "TurnModelRequest":

@@ -44,8 +44,8 @@ class ModelInfo:
     display_name: str | None = None
     owned_by: str | None = None
     context_window: int | None = None
-    input_modalities: list[str] = field(default_factory=list)
-    output_modalities: list[str] = field(default_factory=list)
+    input_modalities: list[str] | None = None
+    output_modalities: list[str] | None = None
     additional_properties: dict[str, Any] | None = None
 
     @staticmethod

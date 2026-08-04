@@ -60,10 +60,10 @@ class Prompty:
     display_name: str | None = None
     description: str | None = None
     metadata: dict[str, Any] | None = None
-    inputs: list[Property] = field(default_factory=list)
-    outputs: list[Property] = field(default_factory=list)
+    inputs: list[Property] | None = None
+    outputs: list[Property] | None = None
     model: Model = field(default_factory=Model)
-    tools: list[Tool] = field(default_factory=list)
+    tools: list[Tool] | None = None
     template: Template | None = None
     instructions: str | None = None
 
