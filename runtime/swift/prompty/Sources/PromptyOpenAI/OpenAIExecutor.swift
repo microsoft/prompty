@@ -116,7 +116,7 @@ enum SSE {
       try validate(response, data: data)
       let text = String(data: data, encoding: .utf8) ?? ""
       return AsyncThrowingStream { continuation in
-        for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
+        for line in Lines.split(text) {
           continuation.yield(String(line))
         }
         continuation.finish()

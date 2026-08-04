@@ -35,11 +35,21 @@ public struct PromptyChatParser: Parser {
 
   // MARK: - Parser
 
+  /// Split a template or transcript into lines, tolerating Windows endings.
+  ///
+  /// The loader normalizes what it reads from disk, but a prompt built in
+  /// memory — `Prompty.load` from a dictionary, or a template assembled by a
+  /// host — never passes through it. Swift treats a CRLF pair as a single
+  /// grapheme, so splitting such text on "\n" yields no split at all and every
+  /// role marker is missed. `Lines` scans scalars, which never cluster.
+  static func splitLines(_ text: String) -> [String] {
+    Lines.splitLineFeeds(text)
+  }
+
   public func preRender(template: String) throws -> Any? {
     let nonce = Self.generateNonce()
     let sanitized =
-      template
-      .components(separatedBy: "\n")
+      Self.splitLines(template)
       .map { line -> String in
         let trimmed = line.trimmingCharacters(in: .whitespaces)
         guard let match = Self.matchBoundary(trimmed) else { return line }
@@ -71,7 +81,7 @@ public struct PromptyChatParser: Parser {
     var currentAttributes: [String: Any] = [:]
     var hasRoleMarker = false
 
-    for line in text.components(separatedBy: "\n") {
+    for line in Self.splitLines(text) {
       let trimmed = line.trimmingCharacters(in: .whitespaces)
 
       guard let match = matchBoundary(trimmed) else {

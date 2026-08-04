@@ -116,8 +116,7 @@ public final class JsonlEventJournalWriter: EventJournalWriter, @unchecked Senda
   public static func readRecords(path: String) throws -> [[String: Any]] {
     let contents = try String(contentsOfFile: path, encoding: .utf8)
     return
-      contents
-      .split(separator: "\n", omittingEmptySubsequences: true)
+      Lines.split(contents)
       .compactMap { JSONSupport.parse(json: String($0)) as? [String: Any] }
   }
 }
