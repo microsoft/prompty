@@ -18,6 +18,8 @@
 //! // Now invoke/turn will use Anthropic for agents with provider="anthropic"
 //! ```
 
+mod endpoint;
+
 pub mod executor;
 pub mod models;
 pub mod processor;
