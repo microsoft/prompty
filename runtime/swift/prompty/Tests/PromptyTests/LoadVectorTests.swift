@@ -41,6 +41,92 @@ final class LoadVectorTests: XCTestCase {
     run.assertClean()
   }
 
+  /// Pin `tools_function_load`'s bindings map: exactly one entry, key `unit`,
+  /// input `preferred_unit`.
+  ///
+  /// `validateBindings` alone cannot hold this. It is opt-in by key — it
+  /// returns early when a vector carries no `bindings` expectation — so
+  /// deleting that block from `load_vectors.json` leaves every load vector
+  /// green while the loader is free to drop bindings entirely. That is not
+  /// hypothetical: removing the block was measured, and the suite stayed at 0
+  /// failures. This test asserts the expectation still *exists* and still says
+  /// what it is supposed to say, then checks the loaded tool against those
+  /// same literals, so neither half can quietly go missing.
+  ///
+  /// Bindings are read off `FunctionTool` rather than the `Tool.bindings`
+  /// convenience shim, so the generated type is what is under test.
+  func testFunctionToolBindingsArePinned() throws {
+    let vectors = try Spec.vectors("load")
+    let vector = try XCTUnwrap(
+      vectors.first { $0["name"] as? String == "tools_function_load" },
+      "tools_function_load vector missing from load_vectors.json")
+
+    // Half one: the vector still declares the expectation, in either of the two
+    // shapes validateBindings treats as equivalent.
+    let expected = try XCTUnwrap(vector["expected"] as? [String: Any])
+    let expectedTools = try XCTUnwrap(expected["tools"] as? [[String: Any]])
+    let declared = try XCTUnwrap(
+      expectedTools.first?["bindings"],
+      """
+      tools_function_load lost its bindings expectation. validateBindings skips \
+      absent keys, so removing it disables the check without failing anything.
+      """)
+    let declaredPairs = try Self.bindingPairs(declared)
+    XCTAssertEqual(declaredPairs.count, 1, "expected exactly one declared binding")
+    XCTAssertEqual(
+      declaredPairs["unit"], "preferred_unit",
+      "expected unit -> preferred_unit; vector declares \(declaredPairs)")
+
+    // Half two: the loaded FunctionTool matches those literals exactly.
+    let agent = try Self.loadAgent(try XCTUnwrap(vector["input"] as? [String: Any]))
+    let tools = try XCTUnwrap(agent.tools, "fixture produced no tools")
+    XCTAssertEqual(tools.count, 1, "fixture declares one tool")
+    // Unwrap rather than subscript: XCTAssertEqual records but does not halt, so
+    // indexing here would trap instead of failing cleanly on an empty list.
+    let loaded = try XCTUnwrap(tools.first, "fixture produced no tools")
+
+    guard case .functionTool(let function) = loaded else {
+      return XCTFail("expected a FunctionTool, got \(loaded.kindName)")
+    }
+    let bindings = try XCTUnwrap(function.bindings, "FunctionTool.bindings is nil")
+
+    XCTAssertEqual(bindings.count, 1, "binding count")
+    XCTAssertEqual(bindings.map(\.name), ["unit"], "binding key")
+    XCTAssertEqual(bindings.map(\.input), ["preferred_unit"], "binding input")
+  }
+
+  /// Normalize a vector's `bindings` expectation to `name -> input` pairs.
+  ///
+  /// `validateBindings` accepts a `Record<Binding>` map and an already-named
+  /// list as equivalent. Pinning only the map form would report a re-emission
+  /// in the list form as a *missing* expectation, which is false and sends the
+  /// reader somewhere useless.
+  private static func bindingPairs(_ declared: Any) throws -> [String: String] {
+    func input(_ value: Any, for name: String) throws -> String {
+      guard let input = ((value as? [String: Any])?["input"] ?? value) as? String else {
+        throw VectorFailure("binding '\(name)' expectation has no string 'input'")
+      }
+      return input
+    }
+
+    if let map = declared as? [String: Any] {
+      return try map.reduce(into: [:]) { pairs, entry in
+        pairs[entry.key] = try input(entry.value, for: entry.key)
+      }
+    }
+
+    if let list = declared as? [[String: Any]] {
+      return try list.reduce(into: [:]) { pairs, entry in
+        guard let name = entry["name"] as? String else {
+          throw VectorFailure("bindings list entry has no string 'name': \(entry)")
+        }
+        pairs[name] = try input(entry, for: name)
+      }
+    }
+
+    throw VectorFailure("bindings expectation is neither a map nor a list: \(declared)")
+  }
+
   // MARK: - Dispatch
 
   private static func runVector(
