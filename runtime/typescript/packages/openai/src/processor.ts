@@ -102,6 +102,7 @@ async function* streamGenerator(
     try {
       next = await iterator.next();
     } catch (error) {
+      await closeIterator(iterator);
       yield failureChunk("indeterminate", errorMessage(error));
       return;
     }
@@ -140,6 +141,7 @@ async function* streamGenerator(
 
     // Refusal
     if (delta.refusal != null) {
+      await closeIterator(iterator);
       yield failureChunk("determinate", `Model refused: ${delta.refusal}`);
       return;
     }
@@ -161,6 +163,17 @@ function failureChunk(outcome: "determinate" | "indeterminate", message: string)
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+async function closeIterator(iterator: AsyncIterator<unknown>): Promise<void> {
+  if (!iterator.return) return;
+  try {
+    await iterator.return();
+  } catch (error) {
+    if (typeof globalThis.console?.debug === "function") {
+      globalThis.console.debug("Failed to close OpenAI response stream:", error);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

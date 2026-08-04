@@ -91,6 +91,7 @@ async function* streamGenerator(
     try {
       next = await iterator.next();
     } catch (error) {
+      await closeIterator(iterator);
       yield new FailureChunk({
         failure: new StreamFailure({
           outcome: "indeterminate",
@@ -137,6 +138,17 @@ async function* streamGenerator(
   for (const idx of sortedIndices) {
     const tc = toolCallAcc.get(idx)!;
     yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
+  }
+}
+
+async function closeIterator(iterator: AsyncIterator<unknown>): Promise<void> {
+  if (!iterator.return) return;
+  try {
+    await iterator.return();
+  } catch (error) {
+    if (typeof globalThis.console?.debug === "function") {
+      globalThis.console.debug("Failed to close Anthropic response stream:", error);
+    }
   }
 }
 

@@ -33,6 +33,32 @@ function responseFromVector(vector: StreamFailureVector): AsyncIterable<unknown>
   };
 }
 
+function closableResponseFromVector(
+  vector: StreamFailureVector,
+  onClose: () => void,
+): AsyncIterable<unknown> {
+  const events = vector.input.events;
+  let index = 0;
+  return {
+    [Symbol.asyncIterator](): AsyncIterator<unknown> {
+      return {
+        async next(): Promise<IteratorResult<unknown>> {
+          const event = events[index++];
+          if (event === undefined) return { done: true, value: undefined };
+          if (event.kind === "transportError") {
+            throw new Error(event.message);
+          }
+          return { done: false, value: event.value };
+        },
+        async return(): Promise<IteratorResult<unknown>> {
+          onClose();
+          return { done: true, value: undefined };
+        },
+      };
+    },
+  };
+}
+
 describe("OpenAI classified stream failure vectors", () => {
   for (const vector of loadVectors()) {
     it(vector.name, async () => {
@@ -54,6 +80,23 @@ describe("OpenAI classified stream failure vectors", () => {
       }
 
       expect(actual).toEqual(vector.expected.chunks);
+    });
+
+    it(`${vector.name} closes the provider stream`, async () => {
+      let closed = false;
+      const agent = new Prompty({ name: "stream-vector", model: "gpt-test" });
+      const processed = processResponse(
+        agent,
+        closableResponseFromVector(vector, () => {
+          closed = true;
+        }),
+      );
+
+      for await (const _ of processed as AsyncIterable<unknown>) {
+        // Consume the terminal failure chunk.
+      }
+
+      expect(closed).toBe(true);
     });
   }
 });
