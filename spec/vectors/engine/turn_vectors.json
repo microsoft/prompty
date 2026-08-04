@@ -106,7 +106,27 @@
         "snapshots": 2,
         "snapshotStablePrefixes": [1, 1],
         "toolResults": 1,
-        "toolResultOrder": ["call-denied"]
+        "toolResultOrder": ["call-denied"],
+        "eventKinds": [
+          "turn_started",
+          "context_prepared",
+          "model_invocation_started",
+          "model_invocation_completed",
+          "checkpoint_created",
+          "permission_requested",
+          "permission_resolved",
+          "checkpoint_created",
+          "tool_result_committed",
+          "conversation_updated",
+          "checkpoint_created",
+          "context_prepared",
+          "model_invocation_started",
+          "model_invocation_completed",
+          "checkpoint_created",
+          "turn_committed",
+          "post_commit_started",
+          "post_commit_completed"
+        ]
       }
     },
     {
