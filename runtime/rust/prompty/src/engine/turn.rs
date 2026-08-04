@@ -514,7 +514,7 @@ impl TurnEngine {
                     .clone()
                     .unwrap_or_else(|| self.effects.ids.next_id("invocation"));
                 let tool_request = state.pending_tool_requests.remove(0);
-                let tool_result = match self
+                let tool_execution = match self
                     .execute_tool(&mut state, &invocation_id, &tool_request, &cancellation)
                     .await
                 {
@@ -544,6 +544,10 @@ impl TurnEngine {
                     }
                     Err(ExecuteToolError::Engine(error)) => return Err(error),
                 };
+                let ToolExecution {
+                    result: tool_result,
+                    execution_started,
+                } = tool_execution;
                 let outcome_unknown = tool_result.outcome == ToolOutcome::Indeterminate;
                 state.tool_results.push(tool_result);
                 if state.pending_model_response.is_none() {
@@ -557,8 +561,13 @@ impl TurnEngine {
                         .messages
                         .push(Message::tool_result(&tool_request.id, result.model_text()));
                 }
-                self.persist_tool_result(&mut state, &invocation_id, &tool_request)
-                    .await?;
+                self.persist_tool_result(
+                    &mut state,
+                    &invocation_id,
+                    &tool_request,
+                    execution_started,
+                )
+                .await?;
                 if outcome_unknown {
                     return self
                         .commit_reconciliation(
@@ -1097,7 +1106,7 @@ impl TurnEngine {
         invocation_id: &str,
         request: &EngineToolRequest,
         cancellation: &CancellationToken,
-    ) -> Result<EngineToolResult, ExecuteToolError> {
+    ) -> Result<ToolExecution, ExecuteToolError> {
         self.emit(
             state,
             EngineEventKind::Permission_requested,
@@ -1124,17 +1133,20 @@ impl TurnEngine {
                 .and_then(Value::as_str)
                 .unwrap_or("permission_denied")
                 .to_string();
-            return Ok(EngineToolResult {
-                request_id: request.id.clone(),
-                name: request.name.clone(),
-                outcome: ToolOutcome::Failed,
-                output: Some(Value::String(
-                    decision
-                        .reason
-                        .unwrap_or_else(|| "Permission denied".to_string()),
-                )),
-                error_kind: Some(error_kind),
-                metadata: decision.metadata,
+            return Ok(ToolExecution {
+                result: EngineToolResult {
+                    request_id: request.id.clone(),
+                    name: request.name.clone(),
+                    outcome: ToolOutcome::Failed,
+                    output: Some(Value::String(
+                        decision
+                            .reason
+                            .unwrap_or_else(|| "Permission denied".to_string()),
+                    )),
+                    error_kind: Some(error_kind),
+                    metadata: decision.metadata,
+                },
+                execution_started: false,
             });
         }
 
@@ -1183,7 +1195,10 @@ impl TurnEngine {
                 metadata: Value::Null,
             },
         };
-        Ok(result)
+        Ok(ToolExecution {
+            result,
+            execution_started: true,
+        })
     }
 
     async fn persist_tool_result(
@@ -1191,26 +1206,31 @@ impl TurnEngine {
         state: &mut TurnState,
         invocation_id: &str,
         request: &EngineToolRequest,
+        execution_started: bool,
     ) -> Result<EngineCheckpoint, TurnEngineError> {
-        let sequence = state.sequence + 1;
+        let sequence = state.sequence + u64::from(execution_started);
         let checkpoint = self.build_checkpoint(state, sequence, false);
         let result = state
             .tool_results
             .last()
             .expect("tool result must be added before persistence");
-        let event = self.build_event(
-            state,
-            sequence,
-            EngineEventKind::Tool_execution_completed,
-            Some(invocation_id),
-            Some(state.iteration),
-            json!({ "toolResult": result }),
-        );
+        let mut events = Vec::with_capacity(usize::from(execution_started) + 1);
+        if execution_started {
+            events.push(self.build_event(
+                state,
+                sequence,
+                EngineEventKind::Tool_execution_completed,
+                Some(invocation_id),
+                Some(state.iteration),
+                json!({ "toolResult": result }),
+            ));
+        }
         let checkpoint_event = self.build_checkpoint_event(state, &checkpoint, invocation_id);
+        events.push(checkpoint_event);
         if let Err(source) = self
             .effects
             .durability
-            .append_with_checkpoint(&[event, checkpoint_event], &checkpoint)
+            .append_with_checkpoint(&events, &checkpoint)
             .await
         {
             return Err(TurnEngineError::RecoveryRequired {
@@ -1601,6 +1621,11 @@ enum ExecuteToolError {
     Permission(PortError),
     Configuration(PortError),
     Engine(TurnEngineError),
+}
+
+struct ToolExecution {
+    result: EngineToolResult,
+    execution_started: bool,
 }
 
 struct TurnState {

@@ -237,7 +237,17 @@ async fn turn_with_engine_request_uses_host_permission_and_persists_denial() {
     );
     assert!(
         event_position(&events, EngineEventKind::Permission_resolved)
-            < event_position(&events, EngineEventKind::Tool_execution_completed)
+            < event_position(&events, EngineEventKind::Tool_result_committed)
+    );
+    assert!(
+        events
+            .iter()
+            .all(|event| event.kind != EngineEventKind::Tool_execution_started)
+    );
+    assert!(
+        events
+            .iter()
+            .all(|event| event.kind != EngineEventKind::Tool_execution_completed)
     );
     drop(events);
 
