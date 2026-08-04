@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json;
+using System.ClientModel.Primitives;
 using OpenAI.Chat;
 using Prompty.Core;
 using Prompty.OpenAI;
@@ -430,5 +431,50 @@ public class WireFormatTests
         Assert.Equal(123L, result.Seed);
         Assert.Single(result.StopSequences);
     }
-}
 
+    [Fact]
+    public void BuildOptions_AdditionalProperties_DoNotOverrideCanonicalOptions()
+    {
+        var agent = new Core.Prompty
+        {
+            Model = new Model
+            {
+                Options = new ModelOptions
+                {
+                    Temperature = 0.2f,
+                    AdditionalProperties = new Dictionary<string, object>
+                    {
+                        ["temperature"] = 0.9,
+                        ["logprobs"] = true,
+                    },
+                },
+            },
+        };
+
+        var result = WireFormat.BuildOptions(agent);
+        var json = JsonDocument.Parse(
+            ModelReaderWriter.Write(result, ModelReaderWriterOptions.Json).ToStream()).RootElement;
+
+        Assert.Equal(0.2, json.GetProperty("temperature").GetDouble(), precision: 6);
+        Assert.True(json.GetProperty("logprobs").GetBoolean());
+    }
+
+    [Fact]
+    public void BuildOptions_UnsafeAdditionalPropertyName_Throws()
+    {
+        var agent = new Core.Prompty
+        {
+            Model = new Model
+            {
+                Options = new ModelOptions
+                {
+                    AdditionalProperties = new Dictionary<string, object> { ["nested.option"] = true },
+                },
+            },
+        };
+
+        var error = Assert.Throws<ArgumentException>(() => WireFormat.BuildOptions(agent));
+
+        Assert.Contains("cannot be represented safely", error.Message);
+    }
+}

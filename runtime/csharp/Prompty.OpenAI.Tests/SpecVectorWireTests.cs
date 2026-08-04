@@ -123,6 +123,17 @@ public class SpecVectorWireTests
 
         // 4. Check options (temperature, max_completion_tokens, etc.)
         AssertOptionFields(optionsJson, expectedBody, name);
+        if (agent.Model?.Options?.AdditionalProperties is not null)
+        {
+            foreach (var optionName in agent.Model.Options.AdditionalProperties.Keys)
+            {
+                Assert.True(expectedBody.TryGetProperty(optionName, out var expectedOption),
+                    $"[{name}] Expected vector body to contain passthrough option '{optionName}'");
+                Assert.True(optionsJson.TryGetProperty(optionName, out var actualOption),
+                    $"[{name}] Serialized options omitted passthrough option '{optionName}'");
+                AssertJsonSubset(expectedOption, actualOption, $"[{name}] {optionName}");
+            }
+        }
 
         // 5. Check response_format (structured output)
         if (expectedBody.TryGetProperty("response_format", out var expectedRF))
@@ -143,16 +154,11 @@ public class SpecVectorWireTests
             if (provider != "openai") continue;
             if (apiType != "chat") continue;
 
-            var name = vec.GetProperty("name").GetString()!;
-
-            // Skip vectors that require features not yet implemented in C#
-            if (name is "chat_audio_part" or "chat_audio_mp3")
-                continue; // AudioPart not handled in WireFormat.BuildContentParts
-
-            if (name == "options_additional_properties")
-                continue; // AdditionalProperties passthrough not implemented in BuildOptions
-
-            yield return [name, input, vec.GetProperty("expected").GetProperty("request_body")];
+            yield return [
+                vec.GetProperty("name").GetString()!,
+                input,
+                vec.GetProperty("expected").GetProperty("request_body"),
+            ];
         }
     }
 
