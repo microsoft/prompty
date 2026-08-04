@@ -84,64 +84,71 @@ public partial class PromptyChatParser : IParser, IPreRenderable
     /// </summary>
     internal List<Message> Parse(string rendered)
     {
-        var messages = new List<Message>();
-        var lines = rendered.Split('\n');
-        string? currentRole = null;
-        var currentContent = new List<string>();
-        Dictionary<string, string>? currentAttrs = null;
-
-        foreach (var line in lines)
+        try
         {
-            var match = RoleMarkerRegex().Match(line);
-            if (match.Success)
+            var messages = new List<Message>();
+            var lines = rendered.Split('\n');
+            string? currentRole = null;
+            var currentContent = new List<string>();
+            Dictionary<string, string>? currentAttrs = null;
+
+            foreach (var line in lines)
             {
-                if (currentRole is not null)
+                var match = RoleMarkerRegex().Match(line);
+                if (match.Success)
                 {
-                    messages.Add(CreateMessage(currentRole, currentContent, currentAttrs, validateNonce: true));
-                }
-                else if (currentContent.Count > 0)
-                {
-                    var leadingText = string.Join("\n", currentContent).Trim('\r', '\n');
-                    if (!string.IsNullOrEmpty(leadingText))
+                    if (currentRole is not null)
                     {
-                        messages.Add(new Message
-                        {
-                            Role = Role.System,
-                            Parts = [new TextPart { Value = leadingText }]
-                        });
+                        messages.Add(CreateMessage(currentRole, currentContent, currentAttrs, validateNonce: true));
                     }
+                    else if (currentContent.Count > 0)
+                    {
+                        var leadingText = string.Join("\n", currentContent).Trim('\r', '\n');
+                        if (!string.IsNullOrEmpty(leadingText))
+                        {
+                            messages.Add(new Message
+                            {
+                                Role = Role.System,
+                                Parts = [new TextPart { Value = leadingText }]
+                            });
+                        }
+                    }
+
+                    currentRole = match.Groups[1].Value;
+                    currentAttrs = ParseAttributes(match.Groups[2].Value);
+                    currentContent = [];
                 }
-
-                currentRole = match.Groups[1].Value;
-                currentAttrs = ParseAttributes(match.Groups[2].Value);
-                currentContent = [];
-            }
-            else
-            {
-                currentContent.Add(line);
-            }
-        }
-
-        // Flush last message
-        if (currentRole is not null)
-        {
-            messages.Add(CreateMessage(currentRole, currentContent, currentAttrs, validateNonce: true));
-        }
-        else if (currentContent.Count > 0)
-        {
-            // No role markers at all — treat as system message
-            var text = string.Join("\n", currentContent).Trim();
-            if (!string.IsNullOrEmpty(text))
-            {
-                messages.Add(new Message
+                else
                 {
-                    Role = Role.System,
-                    Parts = [new TextPart { Value = text }]
-                });
+                    currentContent.Add(line);
+                }
             }
-        }
 
-        return messages;
+            // Flush last message
+            if (currentRole is not null)
+            {
+                messages.Add(CreateMessage(currentRole, currentContent, currentAttrs, validateNonce: true));
+            }
+            else if (currentContent.Count > 0)
+            {
+                // No role markers at all — treat as system message
+                var text = string.Join("\n", currentContent).Trim();
+                if (!string.IsNullOrEmpty(text))
+                {
+                    messages.Add(new Message
+                    {
+                        Role = Role.System,
+                        Parts = [new TextPart { Value = text }]
+                    });
+                }
+            }
+
+            return messages;
+        }
+        finally
+        {
+            _renderNonce.Value = null;
+        }
     }
 
     // -----------------------------------------------------------------------
