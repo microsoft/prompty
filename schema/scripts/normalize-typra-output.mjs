@@ -13,7 +13,22 @@ if (existsSync(manifestPath)) {
 
 trimEmptyPythonGeneratedTests(join("..", "runtime", "python", "prompty", "tests", "model"));
 trimTrailingWhitespace(join("..", "runtime", "go", "prompty", "model"));
-patchSwiftEmitterDefects();
+// PROMPTY_SKIP_SWIFT_SHIM=1 emits raw, unpatched Swift so a candidate emitter
+// build can be measured against the defects the shim compensates for.
+//
+// Retire the shim only when raw output passes `swift build --build-tests` AND
+// `swift test` in runtime/swift/prompty -- a clean build alone is not enough,
+// because dropped inherited fields on Property subtypes are read back through
+// save() and so vanish silently at runtime. InheritedPropertyFieldTests is the
+// gate for that. Restoring `test-dir` in tspconfig.yaml is a separate gate and
+// does not block deleting this shim.
+if (process.env.PROMPTY_SKIP_SWIFT_SHIM !== "1") {
+  patchSwiftEmitterDefects();
+} else {
+  console.warn(
+    "WARNING: Swift emitter shim skipped; generated Swift is unvalidated and must not be committed.",
+  );
+}
 
 function trimEmptyPythonGeneratedTests(root) {
   if (!existsSync(root)) {
