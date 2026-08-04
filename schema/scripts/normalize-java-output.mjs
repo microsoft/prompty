@@ -55,6 +55,37 @@
 // Every rewrite below is structural and idempotent: running the emitter and
 // this shim again from a clean tree produces byte-identical output.
 //
+// Retirement. This shim is retired as a unit, not by deleting this file alone:
+// pin a published @typra/emitter release, drop the `normalizeJavaOutput` and
+// `normalizeJavaTests` calls from `normalize-typra-output.mjs`, remove this
+// file and the references to it in `clean-java-output.mjs`,
+// `runtime/java/README.md`, `ModelNormalizationTest`, and the
+// `prompty-java-check` workflow path filter, regenerate from TypeSpec, and pass
+// the complete Java suite with no generated-file drift. The pin must move to a
+// published release rather than a branch build so the version resolves
+// reproducibly for every consumer.
+//
+// Two emitter defects are known to block that evaluation. Both were confirmed
+// against emitter commit 7595113, which is otherwise the closest candidate seen
+// — it compiles and clears J21 along with the generated-test escaping and
+// dotted-identifier defects.
+//
+//   * J13, above. Numeric shorthand must resolve integral and floating values
+//     to distinct kinds. The families must be mutually exclusive and jointly
+//     cover the boxed numeric types SnakeYAML actually produces — it yields
+//     `Long` for large integers and `Double` for `3.14` — so narrowing one
+//     branch to `Integer`/`Float` alone trades one failing case for another.
+//   * J16, above, in its collection half. The optional-property rule reached
+//     the scalars but not the collections: `description`, `required` and
+//     `nullable` now default to `null`, while `enumValues` still defaults to an
+//     empty list and is therefore emitted by an otherwise correct `!= null`
+//     save guard. Only the field default is wrong. Suppressing empty lists on
+//     save instead would be incorrect, because it would stop an explicitly
+//     supplied `[]` from round-tripping. `Prompty.tools` is
+//     required-with-default and must keep materializing to `[]` and emitting
+//     unconditionally; the distinction is optional versus required-with-default,
+//     not scalar versus collection.
+//
 // J5 — `@method` stubs — is deliberately NOT addressed here. The emitter now
 // emits a `${TypeName}Methods` extension seam, created only when missing and
 // never overwritten, which is where the hand-written implementations live.
