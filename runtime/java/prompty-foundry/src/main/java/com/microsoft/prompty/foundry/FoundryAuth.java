@@ -29,6 +29,11 @@ final class FoundryAuth {
 
   /** An API key for Azure OpenAI key-authenticated operations. */
   static Optional<String> apiKey(Connection connection) {
+    return apiKey(saved(connection));
+  }
+
+  /** As {@link #apiKey(Connection)}, but over a connection already in raw form. */
+  static Optional<String> apiKey(Map<?, ?> connection) {
     return firstNonBlank(connection, API_KEY_FIELDS);
   }
 
@@ -39,14 +44,27 @@ final class FoundryAuth {
    * an OAuth token in {@code apiKey}.
    */
   static Optional<String> bearerToken(Connection connection) {
+    return bearerToken(saved(connection));
+  }
+
+  /**
+   * As {@link #bearerToken(Connection)}, but over a connection already in raw form.
+   *
+   * <p>Callers holding raw JSON — model listing takes its connection as {@code Object} — reach the
+   * undeclared aliases this way, which is what Rust does everywhere.
+   */
+  static Optional<String> bearerToken(Map<?, ?> connection) {
     return firstNonBlank(connection, BEARER_TOKEN_FIELDS);
   }
 
-  private static Optional<String> firstNonBlank(Connection connection, String[] fields) {
-    if (connection == null) {
+  private static Map<String, Object> saved(Connection connection) {
+    return connection == null ? Map.of() : connection.save(new SaveContext());
+  }
+
+  private static Optional<String> firstNonBlank(Map<?, ?> saved, String[] fields) {
+    if (saved == null) {
       return Optional.empty();
     }
-    Map<String, Object> saved = connection.save(new SaveContext());
     for (String field : fields) {
       if (saved.get(field) instanceof String value) {
         String trimmed = value.trim();
