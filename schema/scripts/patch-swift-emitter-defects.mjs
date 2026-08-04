@@ -355,12 +355,33 @@ const patches = [
 ///           round-trip behaviour it guards. Rejected regardless: the C# break
 ///           below reproduces at 0.4.8 (verified locally). The 0.4.6 TypeScript
 ///           regression was not re-verified at 0.4.8.
-/// Compare failing test *identities*, not counts: every one of these releases
-/// leaves the C# failure count at 16 while swapping `*Json*` for `*Yaml*`. On
-/// Windows those are two unrelated causes — the baseline `*Json*` failures are a
-/// local CRLF artifact, while the new `*Yaml*` ones come from a trailing space at
-/// schema/model/agent/agent.tsp:166 that escaped expected-value literals preserve
-/// and verbatim input-YAML literals drop.
+///   0.4.9 — emits `Connection.unknown` in the requested shape, and
+///           Prompty.Core.Tests reports 48 passed, 0 failed, beating the 0.4.2
+///           baseline, which fails 16 `*Json*` tests locally due to a CRLF
+///           artifact. Go has 17 `FAIL` lines, down from 44, and Rust is green
+///           (4 + 33 + 6 passed, 0 failed). Rejected anyway: a new named-dict
+///           collection helper — added so `inputs:`/`tools:` can be read as
+///           name-keyed maps — is generated assuming a struct element type. For
+///           the polymorphic enums `Property` and `Tool`, it emits
+///           `item.name = name` and the corresponding `.shorthandProperty`,
+///           although those enums declare only cases and `load`/`save`. That is
+///           48 fresh compile errors (agent/prompty.swift 30, core/property.swift
+///           10, tools/tool.swift 8) where 0.4.8 had 30, so the shim cannot
+///           shrink, let alone be deleted. Routing the name through the
+///           dictionary before `load` — mirroring the save path, which already
+///           does `removeValue(forKey: "name")` — would make the helper agnostic
+///           to struct-vs-enum elements. The generated `test-dir` is also no
+///           better: after probe-patching those 48 source errors so the library
+///           could compile, it produced the same 180 test errors as 0.4.8, so
+///           restoring it stays blocked too. The 0.4.6 TypeScript `= []`
+///           regression persists.
+/// Compare failing test *identities*, not counts: the evaluated 0.4.3, 0.4.6,
+/// and 0.4.8 releases each leave the C# failure count at 16 while swapping
+/// `*Json*` for `*Yaml*`. On Windows those are two unrelated causes — the
+/// baseline `*Json*` failures are a local CRLF artifact, while the new `*Yaml*`
+/// ones come from a trailing space at schema/model/agent/agent.tsp:166 that
+/// escaped expected-value literals preserve and verbatim input-YAML literals
+/// drop. 0.4.9 resolves that asymmetry.
 const PINNED_EMITTER_VERSION = "0.4.2";
 
 function assertPinnedEmitterVersion() {

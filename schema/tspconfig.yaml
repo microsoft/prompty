@@ -35,21 +35,23 @@ options:
       - type: Swift
         output-dir: "../runtime/swift/prompty-model"
         package-name: "PromptyModel"
-        # test-dir is intentionally omitted: the Typra Swift emitter emits tests
-        # that do not compile. Measured by generating them and building — 1184
-        # errors at 0.4.3, down to 180 at 0.4.8, in four classes: element-level
-        # enum cases applied to array/optional types (`[Tool]?` has no member
+        # test-dir is intentionally omitted: the Typra Swift emitter emits
+        # tests that do not compile. Measured by generating and building
+        # them: 1184 errors at 0.4.3 and 180 at 0.4.8. At 0.4.9, after
+        # probe-patching 48 source errors so the test target could build, the
+        # same 180 test errors remained, in four classes: element-level enum
+        # cases applied to array/optional types (`[Tool]?` has no member
         # `customTool`), struct-style member access on polymorphic enums
-        # (`Property.kind`, where `Property` is an enum) alongside references to
-        # properties that do not exist (`ApiKeyConnection.key`; the property is
-        # `apiKey`), a typed enum compared against a raw string
-        # (`AuthenticationMode` vs `String`), and mis-cased or unqualified type
-        # references (`mcpApprovalModeKind` and `apiType` for the emitted
-        # `McpApprovalModeKind` and `ApiType`). These are test-generator defects,
-        # disjoint from the source-generator ones 0.4.3 and 0.4.6 fixed. Note the
-        # library must compile before this is measurable: if it fails first the
-        # test target is never built and the error count is misleadingly small.
-        # Reported upstream; restore test-dir once fixed. Model round-trip
-        # coverage lives in runtime/swift/prompty meanwhile.
+        # (`Property.kind`, where `Property` is an enum) alongside references
+        # to properties that do not exist (`ApiKeyConnection.key`; the
+        # property is `apiKey`), a typed enum compared against a raw string
+        # (`AuthenticationMode` vs `String`), and mis-cased or unqualified
+        # type references (`mcpApprovalModeKind` and `apiType` for the emitted
+        # `McpApprovalModeKind` and `ApiType`). These are test-generator
+        # defects, disjoint from the source-generator ones fixed in 0.4.3 and
+        # 0.4.6. The library must compile before this is measurable: if it
+        # fails first, the test target is never built and the error count is
+        # misleadingly small. Reported upstream; restore test-dir once fixed.
+        # Model round-trip coverage lives in runtime/swift/prompty meanwhile.
       - type: markdown
         output-dir: "../web/src/content/docs/reference"
