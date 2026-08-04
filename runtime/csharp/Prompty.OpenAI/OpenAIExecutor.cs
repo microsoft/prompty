@@ -20,8 +20,12 @@ namespace Prompty.OpenAI;
 /// </summary>
 public class OpenAIExecutor : IExecutor
 {
-    public async Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+    public async Task<object> ExecuteAsync(
+        Core.Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var apiType = agent.Model?.ApiType ?? "chat";
         var model = agent.Model?.Id ?? "gpt-4";
         var client = CreateClient(agent);
@@ -29,12 +33,12 @@ public class OpenAIExecutor : IExecutor
 
         return apiType switch
         {
-            "chat" when streaming => ExecuteChatStreamAsync(client, model, agent, messages),
-            "chat" => await ExecuteChatAsync(client, model, agent, messages),
-            "responses" when streaming => ExecuteResponsesStreamAsync(client, model, agent, messages),
-            "responses" => await ExecuteResponsesAsync(client, model, agent, messages),
-            "embedding" => await ExecuteEmbeddingAsync(client, model, messages),
-            "image" => await ExecuteImageAsync(client, model, messages),
+            "chat" when streaming => ExecuteChatStreamAsync(client, model, agent, messages, cancellationToken),
+            "chat" => await ExecuteChatAsync(client, model, agent, messages, cancellationToken),
+            "responses" when streaming => ExecuteResponsesStreamAsync(client, model, agent, messages, cancellationToken),
+            "responses" => await ExecuteResponsesAsync(client, model, agent, messages, cancellationToken),
+            "embedding" => await ExecuteEmbeddingAsync(client, model, messages, cancellationToken),
+            "image" => await ExecuteImageAsync(client, model, messages, cancellationToken),
             _ => throw new InvalidOperationException($"Unsupported API type: {apiType}"),
         };
     }
@@ -83,18 +87,26 @@ public class OpenAIExecutor : IExecutor
     }
 
     private static async Task<object> ExecuteChatAsync(
-        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+        OpenAIClient client,
+        string model,
+        Core.Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken)
     {
         var chatClient = client.GetChatClient(model);
         var chatMessages = messages.Select(WireFormat.MessageToWire).ToList();
         var options = WireFormat.BuildOptions(agent);
 
-        var result = await chatClient.CompleteChatAsync(chatMessages, options);
+        var result = await chatClient.CompleteChatAsync(chatMessages, options, cancellationToken);
         return result.Value;
     }
 
     private static PromptyStream ExecuteChatStreamAsync(
-        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+        OpenAIClient client,
+        string model,
+        Core.Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken)
     {
         var chatClient = client.GetChatClient(model);
         var chatMessages = messages.Select(WireFormat.MessageToWire).ToList();
@@ -109,7 +121,7 @@ public class OpenAIExecutor : IExecutor
             }
         }
 
-        return new PromptyStream(StreamChunks());
+        return new PromptyStream(StreamChunks(cancellationToken));
     }
 
     // -----------------------------------------------------------------------
@@ -117,16 +129,24 @@ public class OpenAIExecutor : IExecutor
     // -----------------------------------------------------------------------
 
     private static async Task<object> ExecuteResponsesAsync(
-        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+        OpenAIClient client,
+        string model,
+        Core.Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken)
     {
         var responsesClient = client.GetResponsesClient();
         var options = WireFormat.BuildResponsesOptions(model, agent, messages);
-        var result = await responsesClient.CreateResponseAsync(options);
+        var result = await responsesClient.CreateResponseAsync(options, cancellationToken);
         return result.Value;
     }
 
     private static PromptyStream ExecuteResponsesStreamAsync(
-        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+        OpenAIClient client,
+        string model,
+        Core.Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken)
     {
         var responsesClient = client.GetResponsesClient();
         var options = WireFormat.BuildResponsesOptions(model, agent, messages);
@@ -141,7 +161,7 @@ public class OpenAIExecutor : IExecutor
             }
         }
 
-        return new PromptyStream(StreamChunks());
+        return new PromptyStream(StreamChunks(cancellationToken));
     }
 
     // -----------------------------------------------------------------------
@@ -149,20 +169,26 @@ public class OpenAIExecutor : IExecutor
     // -----------------------------------------------------------------------
 
     private static async Task<object> ExecuteEmbeddingAsync(
-        OpenAIClient client, string model, List<Message> messages)
+        OpenAIClient client,
+        string model,
+        List<Message> messages,
+        CancellationToken cancellationToken)
     {
         var embeddingClient = client.GetEmbeddingClient(model);
         var inputs = messages.Select(m => m.Text).ToList();
-        var result = await embeddingClient.GenerateEmbeddingsAsync(inputs);
+        var result = await embeddingClient.GenerateEmbeddingsAsync(inputs, cancellationToken: cancellationToken);
         return result.Value;
     }
 
     private static async Task<object> ExecuteImageAsync(
-        OpenAIClient client, string model, List<Message> messages)
+        OpenAIClient client,
+        string model,
+        List<Message> messages,
+        CancellationToken cancellationToken)
     {
         var imageClient = client.GetImageClient(model);
         var prompt = messages.LastOrDefault()?.Text ?? "";
-        var result = await imageClient.GenerateImageAsync(prompt);
+        var result = await imageClient.GenerateImageAsync(prompt, cancellationToken: cancellationToken);
         return result.Value;
     }
 

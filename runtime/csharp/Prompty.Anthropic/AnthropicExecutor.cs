@@ -19,30 +19,40 @@ public class AnthropicExecutor : IExecutor
     private const string ApiVersion = "2023-06-01";
     private const int DefaultMaxTokens = 4096;
 
-    public async Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+    public async Task<object> ExecuteAsync(
+        Core.Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var streaming = agent.Metadata?.TryGetValue("stream", out var streamVal) == true && streamVal is true;
 
         if (streaming)
-            return ExecuteStreamAsync(agent, messages);
+            return ExecuteStreamAsync(agent, messages, cancellationToken);
 
-        return await ExecuteNonStreamAsync(agent, messages);
+        return await ExecuteNonStreamAsync(agent, messages, cancellationToken);
     }
 
-    private async Task<object> ExecuteNonStreamAsync(Core.Prompty agent, List<Message> messages)
+    private async Task<object> ExecuteNonStreamAsync(
+        Core.Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken)
     {
         var body = BuildRequestBody(agent, messages, stream: false);
         var (endpoint, apiKey) = GetConnectionInfo(agent);
 
         var request = CreateRequest(endpoint, apiKey, body);
-        var response = await _httpClient.SendAsync(request);
+        var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: cancellationToken);
         return json;
     }
 
-    private PromptyStream ExecuteStreamAsync(Core.Prompty agent, List<Message> messages)
+    private PromptyStream ExecuteStreamAsync(
+        Core.Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken)
     {
         var body = BuildRequestBody(agent, messages, stream: true);
         var (endpoint, apiKey) = GetConnectionInfo(agent);
@@ -69,7 +79,7 @@ public class AnthropicExecutor : IExecutor
             }
         }
 
-        return new PromptyStream(StreamEvents());
+        return new PromptyStream(StreamEvents(cancellationToken));
     }
 
     internal Dictionary<string, object?> BuildRequestBody(Core.Prompty agent, List<Message> messages, bool stream)

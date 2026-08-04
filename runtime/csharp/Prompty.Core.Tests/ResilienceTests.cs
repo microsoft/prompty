@@ -22,7 +22,10 @@ file class ThrowingMockExecutor : IExecutor
     public void EnqueueResponse(object response) => _responses.Enqueue(response);
     public void EnqueueException(Exception ex) => _exceptions.Enqueue(ex);
 
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(
+        Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken = default)
     {
         Calls.Add(new List<Message>(messages));
 

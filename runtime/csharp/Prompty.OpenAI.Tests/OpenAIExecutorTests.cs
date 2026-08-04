@@ -11,6 +11,17 @@ namespace Prompty.OpenAI.Tests;
 public class OpenAIExecutorTests
 {
     [Fact]
+    public async Task ExecuteAsync_Cancelled_ThrowsBeforeConnectionValidation()
+    {
+        var executor = new OpenAI.OpenAIExecutor();
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => executor.ExecuteAsync(new Core.Prompty(), [], cancellation.Token));
+    }
+
+    [Fact]
     public async Task ExecuteAsync_MissingApiKey_ThrowsInvalidOperationException()
     {
         var executor = new OpenAI.OpenAIExecutor();
@@ -146,4 +157,3 @@ public class OpenAIExecutorTests
         Assert.Equal("call_2", messages[2].Metadata["tool_call_id"]);
     }
 }
-

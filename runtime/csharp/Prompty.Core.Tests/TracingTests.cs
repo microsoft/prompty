@@ -577,7 +577,10 @@ public class TracingTests : IDisposable
 
     private class MockExecutor(object response) : IExecutor
     {
-        public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(
+            Prompty agent,
+            List<Message> messages,
+            CancellationToken cancellationToken = default)
             => Task.FromResult(response);
 
         public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)

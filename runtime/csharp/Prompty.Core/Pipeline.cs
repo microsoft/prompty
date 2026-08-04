@@ -104,14 +104,17 @@ public static class Pipeline
     /// <summary>
     /// Execute an LLM call with the given messages.
     /// </summary>
-    public static async Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public static async Task<object> ExecuteAsync(
+        Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken = default)
     {
         return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.ExecuteAsync", async (emit) =>
         {
             emit("inputs", new Dictionary<string, object?> { ["agent"] = agent.Name, ["message_count"] = messages.Count });
             var provider = agent.Model?.Provider ?? "openai";
             var executor = InvokerRegistry.GetExecutor(provider);
-            return await executor.ExecuteAsync(agent, messages);
+            return await executor.ExecuteAsync(agent, messages, cancellationToken);
         });
     }
 
@@ -280,7 +283,7 @@ public static class Pipeline
                 object response;
                 try
                 {
-                    response = await ExecuteAsync(agent, messages);
+                    response = await ExecuteAsync(agent, messages, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -842,7 +845,7 @@ public static class Pipeline
         {
             try
             {
-                return await ExecuteAsync(agent, messages);
+                return await ExecuteAsync(agent, messages, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
