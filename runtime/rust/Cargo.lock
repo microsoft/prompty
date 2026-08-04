@@ -1073,7 +1073,7 @@ dependencies = [
 
 [[package]]
 name = "prompty"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 dependencies = [
  "async-trait",
  "chrono",
@@ -1095,7 +1095,7 @@ dependencies = [
 
 [[package]]
 name = "prompty-anthropic"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1110,7 +1110,7 @@ dependencies = [
 
 [[package]]
 name = "prompty-foundry"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 dependencies = [
  "async-trait",
  "azure_core",
@@ -1131,7 +1131,7 @@ dependencies = [
 
 [[package]]
 name = "prompty-openai"
-version = "2.0.0-beta.3"
+version = "2.0.0-beta.4"
 dependencies = [
  "async-trait",
  "bytes",
