@@ -51,6 +51,11 @@ class _Ids:
         return f"{kind}-{self._counts[kind]}"
 
 
+class _NonJsonToolOutput:
+    def __str__(self) -> str:
+        return "stable-output"
+
+
 def _response(data: dict[str, Any]) -> ModelInvocationResponse:
     context_state = None
     if data.get("nextPortability") is not None or data.get("delegatedState") is not None:
@@ -685,3 +690,74 @@ async def test_portable_assistant_history_is_reused_after_tool_round() -> None:
 
     assert result.commit.status == "success"
     assert [message.role for message in requests[1].context.messages] == ["user", "assistant", "tool"]
+
+
+@pytest.mark.parametrize(
+    ("output", "expected"),
+    [
+        (None, ""),
+        ("raw", "raw"),
+        ({"value": 1}, '{"value": 1}'),
+        (b"bytes", '{"message": "Tool output is not JSON-serializable (type: builtins.bytes)"}'),
+        (
+            _NonJsonToolOutput(),
+            json.dumps(
+                {
+                    "message": (
+                        f"Tool output is not JSON-serializable "
+                        f"(type: {_NonJsonToolOutput.__module__}._NonJsonToolOutput)"
+                    )
+                }
+            ),
+        ),
+    ],
+)
+def test_tool_result_messages_tolerate_non_json_outputs(output: Any, expected: str) -> None:
+    messages = ReferenceTurnEngine._tool_result_messages(
+        [ModelToolResult(request_id="call-1", name="tool", output=output)]
+    )
+
+    assert messages[0].parts[0].value == expected
+
+
+@pytest.mark.asyncio
+async def test_non_json_tool_output_becomes_durable_failure() -> None:
+    requests: list[ModelInvocationRequest] = []
+    checkpoints: list[EngineCheckpoint] = []
+
+    def invoke_model(request: ModelInvocationRequest) -> ModelInvocationResponse:
+        requests.append(request)
+        if len(requests) == 1:
+            return ModelInvocationResponse(tool_requests=[ModelToolRequest(id="call-1", name="binary")])
+        return ModelInvocationResponse(output="done")
+
+    engine = ReferenceTurnEngine(
+        invoke_model=invoke_model,
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name, output=b"bytes"),
+        save_checkpoint=checkpoints.append,
+        next_id=_Ids(),
+    )
+    result = await engine.run_async("session-1", "turn-1", [Message.user("binary")])
+
+    normalized = result.tool_results[0]
+    assert normalized.outcome == "failed"
+    assert normalized.error_kind == "invalid_output"
+    assert normalized.output == {"message": "Tool output is not JSON-serializable (type: builtins.bytes)"}
+    assert (
+        json.loads(json.dumps(save_engine_checkpoint(checkpoints[-1])))["completedToolResults"][0] == normalized.save()
+    )
+    assert requests[1].context.messages[-1].parts[0].value == json.dumps(normalized.output)
+
+
+@pytest.mark.asyncio
+async def test_sync_entrypoints_reject_active_event_loop() -> None:
+    engine = ReferenceTurnEngine(
+        invoke_model=lambda request: ModelInvocationResponse(output="done"),
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name),
+        next_id=_Ids(),
+    )
+
+    with pytest.raises(RuntimeError, match=r"use await run_async\(\)"):
+        engine.run("session-1", "turn-1", [Message.user("hello")])
+    with pytest.raises(RuntimeError, match=r"use await resume_async\(\)"):
+        engine.resume(ResumeContext(checkpoint=EngineCheckpoint()))

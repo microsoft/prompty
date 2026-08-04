@@ -51,6 +51,21 @@ async def _resolve(value: _T | Awaitable[_T]) -> _T:
     return value
 
 
+def _ensure_sync_entrypoint(sync_name: str, async_name: str) -> None:
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return
+    raise RuntimeError(
+        f"ReferenceTurnEngine.{sync_name}() cannot run inside an active event loop; use await {async_name}() instead"
+    )
+
+
+def _non_json_output_message(output: Any) -> dict[str, str]:
+    output_type = f"{type(output).__module__}.{type(output).__qualname__}"
+    return {"message": f"Tool output is not JSON-serializable (type: {output_type})"}
+
+
 def _default_clock() -> str:
     from datetime import UTC, datetime
 
@@ -132,6 +147,7 @@ class ReferenceTurnEngine:
         delegation_depth: int = 0,
     ) -> TurnEngineResult:
         """Run a new turn synchronously."""
+        _ensure_sync_entrypoint("run", "run_async")
         return asyncio.run(
             self.run_async(
                 session_id,
@@ -191,6 +207,7 @@ class ReferenceTurnEngine:
         cancellation: CancellationToken | None = None,
     ) -> TurnEngineResult:
         """Resume a durable checkpoint synchronously without repeating committed effects."""
+        _ensure_sync_entrypoint("resume", "resume_async")
         return asyncio.run(self.resume_async(context, cancellation=cancellation))
 
     async def resume_async(
@@ -680,6 +697,7 @@ class ReferenceTurnEngine:
                     )
                 if not isinstance(result, ModelToolResult):
                     raise TypeError("execute_tool must return ModelToolResult")
+                result = self._normalize_tool_result(result)
                 await self._emit("tool_execution_completed", iteration=iteration, payload=result.save())
             results.append(result)
             await self._checkpoint(
@@ -918,9 +936,15 @@ class ReferenceTurnEngine:
     def _tool_result_messages(results: list[ModelToolResult]) -> list[Message]:
         messages: list[Message] = []
         for result in results:
-            value = result.output if isinstance(result.output, str) else json.dumps(result.output)
             if result.output is None:
                 value = ""
+            elif isinstance(result.output, str):
+                value = result.output
+            else:
+                try:
+                    value = json.dumps(result.output)
+                except (TypeError, ValueError):
+                    value = json.dumps(_non_json_output_message(result.output))
             messages.append(
                 Message(
                     role="tool",
@@ -931,6 +955,21 @@ class ReferenceTurnEngine:
                 )
             )
         return messages
+
+    @staticmethod
+    def _normalize_tool_result(result: ModelToolResult) -> ModelToolResult:
+        try:
+            json.dumps(result.output)
+        except (TypeError, ValueError):
+            return ModelToolResult(
+                request_id=result.request_id,
+                name=result.name,
+                outcome="failed" if result.outcome == "success" else result.outcome,
+                output=_non_json_output_message(result.output),
+                error_kind="invalid_output" if result.outcome == "success" else result.error_kind or "invalid_output",
+                metadata=result.metadata,
+            )
+        return result
 
     @staticmethod
     def _validate_context_state(state: InvocationContextState) -> str | None:
