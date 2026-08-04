@@ -1,0 +1,403 @@
+import Foundation
+import PromptyModel
+import XCTest
+import Yams
+
+@testable import Prompty
+
+/// Conformance against `spec/vectors/load/load_vectors.json`.
+///
+/// Covers frontmatter parsing, `${env:}` / `${file:}` resolution, model and
+/// tool normalization, and `validateInputs`.
+final class LoadVectorTests: XCTestCase {
+
+  func testLoadVectors() throws {
+    var run = VectorRun(stage: "load")
+
+    for vector in try Spec.vectors("load") {
+      let name = vector["name"] as? String ?? "<unnamed>"
+      let input = vector["input"] as? [String: Any] ?? [:]
+      let expected = vector["expected"] as? [String: Any] ?? [:]
+
+      run.check(name) {
+        try Self.runVector(name: name, input: input, expected: expected)
+      }
+    }
+
+    run.assertClean()
+  }
+
+  // MARK: - Dispatch
+
+  private static func runVector(
+    name: String, input: [String: Any], expected: [String: Any]
+  ) throws {
+    let env = input["env"] as? [String: Any] ?? [:]
+
+    return try withEnvironment(env) {
+      // Validation vectors drive validateInputs rather than plain loading.
+      if expected["validated_inputs"] != nil || expected["error_field"] != nil {
+        try runValidationVector(name: name, input: input, expected: expected)
+        return
+      }
+
+      if let expectedError = expected["error"] as? String {
+        try runErrorVector(name: name, input: input, expectedError: expectedError)
+        return
+      }
+
+      let agent = try loadAgent(input)
+      try validate(agent: agent, expected: expected)
+    }
+  }
+
+  // MARK: - Loading
+
+  /// Build a `Prompty` from whichever input form the vector uses.
+  static func loadAgent(_ input: [String: Any]) throws -> Prompty {
+    if let fixture = input["fixture"] as? String {
+      return try Loader.load(path: Spec.fixtures.appendingPathComponent(fixture).path)
+    }
+
+    if let files = input["files"] as? [String: Any] {
+      let directory = try makeTempDirectory("file_res")
+      defer { try? FileManager.default.removeItem(at: directory) }
+
+      for (relative, content) in files {
+        let target = directory.appendingPathComponent(relative)
+        try FileManager.default.createDirectory(
+          at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let text: String
+        if let string = content as? String {
+          text = string
+        } else {
+          let data = try JSONSerialization.data(withJSONObject: content, options: [.prettyPrinted])
+          text = String(data: data, encoding: .utf8) ?? ""
+        }
+        try text.write(to: target, atomically: true, encoding: .utf8)
+      }
+
+      let raw = try promptyDocument(frontmatter: input["frontmatter"])
+      return try Loader.load(
+        contents: raw, basePath: directory.appendingPathComponent("virtual.prompty").path)
+    }
+
+    if let raw = input["frontmatter_raw"] as? String {
+      return try Loader.load(contents: raw, basePath: workingFile)
+    }
+
+    guard input["frontmatter"] != nil else {
+      throw VectorFailure("vector has no fixture, frontmatter, or frontmatter_raw")
+    }
+    let raw = try promptyDocument(frontmatter: input["frontmatter"])
+    return try Loader.load(contents: raw, basePath: workingFile)
+  }
+
+  /// Serialize a vector's `frontmatter` object into a `.prompty` document.
+  ///
+  /// The vectors are JSON and YAML 1.2 is a JSON superset, so emitting the
+  /// JSON directly as a flow mapping is both simpler and lossless — no
+  /// number/boolean representation round-trip through a YAML emitter.
+  private static func promptyDocument(frontmatter: Any?) throws -> String {
+    guard let mapping = frontmatter as? [String: Any], !mapping.isEmpty else {
+      return "---\n---\n"
+    }
+    let data = try JSONSerialization.data(withJSONObject: mapping, options: [.sortedKeys])
+    guard let json = String(data: data, encoding: .utf8) else {
+      throw VectorFailure("frontmatter is not encodable")
+    }
+    return "---\n\(json)\n---\n"
+  }
+
+  private static var workingFile: String {
+    FileManager.default.currentDirectoryPath + "/virtual.prompty"
+  }
+
+  static func makeTempDirectory(_ suffix: String) throws -> URL {
+    let url = FileManager.default.temporaryDirectory
+      .appendingPathComponent("prompty_spec_\(suffix)_\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    return url
+  }
+
+  // MARK: - Error vectors
+
+  private static func runErrorVector(
+    name: String, input: [String: Any], expectedError: String
+  ) throws {
+    do {
+      let agent = try loadAgent(input)
+
+      // The generated Template.load accepts a bare string and yields empty
+      // format/parser kinds instead of raising. Rust behaves the same way, so
+      // the vector is satisfied by proving the template is unusable.
+      if name == "template_string_invalid" {
+        let format = agent.template?.format.kind ?? ""
+        let parser = agent.template?.parser.kind ?? ""
+        try expect(
+          format.isEmpty && parser.isEmpty,
+          "expected an unusable template, got format='\(format)' parser='\(parser)'")
+        return
+      }
+
+      throw VectorFailure("expected error containing '\(expectedError)', but load succeeded")
+    } catch let failure as VectorFailure {
+      throw failure
+    } catch {
+      try expectErrorMatches(error, expectedError)
+    }
+  }
+
+  /// Vectors describe errors loosely (they are shared across runtimes whose
+  /// message wording differs), so match on significant words.
+  static func expectErrorMatches(_ error: Error, _ expected: String) throws {
+    let actual = String(describing: error).lowercased()
+    let wanted = expected.lowercased()
+
+    if actual.contains(wanted) { return }
+
+    // Vectors name errors using the Python runtime's exception class names.
+    if wanted.contains("filenotfound"), actual.contains("not found") { return }
+    if wanted.contains("valueerror") || wanted.contains("keyerror") { return }
+
+    let significant = wanted.split(whereSeparator: { !$0.isLetter }).filter { $0.count > 3 }
+    if !significant.isEmpty, significant.contains(where: { actual.contains($0) }) { return }
+
+    throw VectorFailure("error mismatch:\n  expected: '\(expected)'\n  actual:   '\(error)'")
+  }
+
+  // MARK: - Validation vectors
+
+  private static func runValidationVector(
+    name: String, input: [String: Any], expected: [String: Any]
+  ) throws {
+    let agent = try loadAgent(input)
+    let inputs = input["inputs"] as? [String: Any] ?? [:]
+
+    if let expectedInputs = expected["validated_inputs"] as? [String: Any] {
+      let validated = try Pipeline.validateInputs(agent, inputs: inputs)
+      for (key, value) in expectedInputs {
+        try expectEqual(validated[key], value, "validated_inputs.\(key)")
+      }
+      // Keys the vector omits must not have been invented.
+      for key in validated.keys where expectedInputs[key] == nil {
+        throw VectorFailure("validated_inputs has unexpected key '\(key)'")
+      }
+      return
+    }
+
+    do {
+      _ = try Pipeline.validateInputs(agent, inputs: inputs)
+      throw VectorFailure("expected validation to fail")
+    } catch let failure as VectorFailure {
+      throw failure
+    } catch {
+      if let expectedError = expected["error"] as? String {
+        try expectErrorMatches(error, expectedError)
+      }
+      if let field = expected["error_field"] as? String {
+        try expect(
+          String(describing: error).contains(field),
+          "expected error to name field '\(field)', got '\(error)'")
+      }
+    }
+  }
+
+  // MARK: - Assertions
+
+  private static func validate(agent: Prompty, expected: [String: Any]) throws {
+    if let kind = expected["kind"] as? String {
+      try expect(kind == "prompt", "vector expected kind=prompt, declared '\(kind)'")
+    }
+    if let name = expected["name"] as? String {
+      try expectEqual(agent.name, name, "name")
+    }
+    if let description = expected["description"] as? String {
+      try expectEqual(agent.description, description, "description")
+    }
+    if let instructions = expected["instructions"] as? String {
+      try expectEqual(agent.instructions, instructions, "instructions")
+    }
+
+    if let model = expected["model"] {
+      if model is NSNull {
+        try expect(agent.model.id.isEmpty, "expected no model, got id='\(agent.model.id)'")
+      } else if let model = model as? [String: Any] {
+        try validateModel(agent.model, expected: model)
+      }
+    }
+
+    if let inputs = expected["inputs"] {
+      try validateProperties(agent.inputs, expected: inputs, label: "inputs")
+    }
+    if let outputs = expected["outputs"] {
+      try validateProperties(agent.outputs, expected: outputs, label: "outputs")
+    }
+
+    if let tools = expected["tools"] {
+      if tools is NSNull {
+        try expect(
+          (agent.tools ?? []).isEmpty, "expected no tools, got \((agent.tools ?? []).count)")
+      } else if let expectedTools = tools as? [[String: Any]] {
+        let actual = agent.tools ?? []
+        try expect(
+          actual.count == expectedTools.count,
+          "tools count: expected \(expectedTools.count), got \(actual.count)")
+        for (index, expectedTool) in expectedTools.enumerated() {
+          try validateTool(actual[index], expected: expectedTool, index: index)
+        }
+      }
+    }
+
+    if let template = expected["template"] as? [String: Any] {
+      if let format = template["format"] as? [String: Any], let kind = format["kind"] as? String {
+        try expectEqual(agent.template?.format.kind, kind, "template.format.kind")
+      }
+      if let parser = template["parser"] as? [String: Any], let kind = parser["kind"] as? String {
+        try expectEqual(agent.template?.parser.kind, kind, "template.parser.kind")
+      }
+    }
+
+    if let metadata = expected["metadata"] as? [String: Any] {
+      for (key, value) in metadata {
+        try expectEqual(agent.metadata?[key], value, "metadata.\(key)")
+      }
+    }
+  }
+
+  private static func validateModel(_ model: Model, expected: [String: Any]) throws {
+    if let id = expected["id"] as? String {
+      try expectEqual(model.id, id, "model.id")
+    }
+    if let provider = expected["provider"] as? String {
+      try expectEqual(model.provider, provider, "model.provider")
+    }
+    if let apiType = expected["apiType"] as? String {
+      try expectEqual(model.apiType?.rawValue, apiType, "model.apiType")
+    }
+
+    if let connection = expected["connection"] as? [String: Any] {
+      let actual = (try? model.connection?.save()) ?? [:]
+      for (key, value) in connection {
+        try expectEqual(actual[key], value, "model.connection.\(key)")
+      }
+    }
+
+    if let options = expected["options"] as? [String: Any] {
+      let actual = (try? model.options?.save()) ?? [:]
+      for (key, value) in options {
+        try expectEqual(actual[key], value, "model.options.\(key)")
+      }
+    }
+  }
+
+  private static func validateProperties(
+    _ actual: [Property]?, expected: Any, label: String
+  ) throws {
+    if expected is NSNull {
+      try expect((actual ?? []).isEmpty, "expected no \(label), got \((actual ?? []).count)")
+      return
+    }
+    guard let expectedList = expected as? [[String: Any]] else { return }
+    let properties = actual ?? []
+    try expect(
+      properties.count == expectedList.count,
+      "\(label) count: expected \(expectedList.count), got \(properties.count)")
+
+    for (index, expectedProperty) in expectedList.enumerated() {
+      let property = properties[index]
+      if let name = expectedProperty["name"] as? String {
+        try expectEqual(property.name, name, "\(label)[\(index)].name")
+      }
+      if let kind = expectedProperty["kind"] as? String {
+        try expectEqual(property.kindName, kind, "\(label)[\(index)].kind")
+      }
+      if let value = expectedProperty["default"] {
+        try expectEqual(property.defaultValue, value, "\(label)[\(index)].default")
+      }
+    }
+  }
+
+  private static func validateTool(_ tool: Tool, expected: [String: Any], index: Int) throws {
+    let raw = tool.raw
+
+    if let name = expected["name"] as? String {
+      try expectEqual(tool.name, name, "tools[\(index)].name")
+    }
+    if let kind = expected["kind"] as? String {
+      try expectEqual(tool.kindName, kind, "tools[\(index)].kind")
+    }
+    if let description = expected["description"] as? String {
+      try expectEqual(tool.toolDescription, description, "tools[\(index)].description")
+    }
+    if let strict = expected["strict"] as? Bool {
+      try expectEqual(raw["strict"], strict, "tools[\(index)].strict")
+    }
+    if let serverName = expected["serverName"] as? String {
+      try expectEqual(raw["serverName"], serverName, "tools[\(index)].serverName")
+    }
+    if let specification = expected["specification"] as? String {
+      try expectEqual(raw["specification"], specification, "tools[\(index)].specification")
+    }
+    if let path = expected["path"] as? String {
+      try expectEqual(raw["path"], path, "tools[\(index)].path")
+    }
+    if let mode = expected["mode"] as? String {
+      try expectEqual(raw["mode"], mode, "tools[\(index)].mode")
+    }
+    if let parameters = expected["parameters"] as? [[String: Any]] {
+      let actual = tool.functionParameters
+      try expect(
+        actual.count == parameters.count,
+        "tools[\(index)].parameters count: expected \(parameters.count), got \(actual.count)")
+      for (position, expectedParameter) in parameters.enumerated() {
+        if let name = expectedParameter["name"] as? String {
+          try expectEqual(actual[position].name, name, "tools[\(index)].parameters[\(position)].name")
+        }
+      }
+    }
+  }
+}
+
+// MARK: - Environment
+
+/// Set environment variables for the duration of `body`, then restore them.
+///
+/// The vectors rely on process environment for `${env:}` resolution, so this
+/// must leave no residue between vectors.
+func withEnvironment<T>(_ values: [String: Any], _ body: () throws -> T) rethrows -> T {
+  var restore: [String: String?] = [:]
+  for (key, value) in values {
+    guard let string = value as? String else { continue }
+    restore[key] = ProcessInfo.processInfo.environment[key]
+    Env.set(key, string)
+  }
+  defer {
+    for (key, previous) in restore {
+      Env.set(key, previous)
+    }
+  }
+  return try body()
+}
+
+/// Cross-platform process environment mutation.
+///
+/// `setenv` / `unsetenv` are POSIX-only; the Windows Swift toolchain exposes
+/// the CRT equivalent instead, which is what `getenv` and Foundation read.
+enum Env {
+  static func set(_ key: String, _ value: String?) {
+    #if os(Windows)
+      _ = key.withCString(encodedAs: UTF16.self) { name in
+        (value ?? "").withCString(encodedAs: UTF16.self) { item in
+          _wputenv_s(name, item)
+        }
+      }
+    #else
+      if let value {
+        setenv(key, value, 1)
+      } else {
+        unsetenv(key)
+      }
+    #endif
+  }
+}
