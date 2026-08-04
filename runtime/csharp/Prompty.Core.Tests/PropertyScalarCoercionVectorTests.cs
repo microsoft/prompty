@@ -24,7 +24,7 @@ public class PropertyScalarCoercionVectorTests
         var cases = vector.GetProperty("cases").EnumerateArray().ToArray();
         Assert.Equal(
             ["string", "integer", "float", "boolean"],
-            cases.Select(candidate => candidate.GetProperty("name").GetString()).ToArray());
+            cases.Select(candidate => candidate.GetProperty("name").GetString()!).ToArray());
 
         foreach (var scalarCase in cases)
         {
