@@ -106,7 +106,7 @@ export class ExecuteError extends Error {
 function sanitizeNonces(value: unknown): unknown {
   if (typeof value === "string") {
     return value.replace(
-      /__PROMPTY_THREAD_[a-f0-9]{8}_(\w+)__/g,
+      /__PROMPTY_THREAD_[a-f0-9]{8}_(.+?)__/g,
       (_nonce, name: string) => `[thread: ${name}]`,
     );
   }
@@ -254,7 +254,7 @@ async function renderTemplate(
 
   return traceSpan(renderer.constructor?.name ?? "Renderer", async (emit) => {
     emit("signature", `prompty.renderers.${renderer.constructor?.name ?? "Renderer"}.render`);
-    emit("inputs", { data: inputs });
+    emit("inputs", sanitizeNonces({ data: inputs }));
     const result = await renderer.render(agent, template, inputs);
     emit("result", sanitizeNonces(result));
     return result;

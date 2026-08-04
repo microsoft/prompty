@@ -20,6 +20,7 @@ import { Prompty, Property, TextChunk } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 import { NunjucksRenderer } from "../src/renderers/nunjucks.js";
 import { PromptyChatParser } from "../src/parsers/prompty.js";
+import { Tracer } from "../src/tracing/tracer.js";
 
 // ---------------------------------------------------------------------------
 // Mock implementations
@@ -154,6 +155,32 @@ describe("Pipeline", () => {
       });
 
       expect(rendered).toMatch(/^__PROMPTY_THREAD_[a-f0-9]{8}_conversation__$/);
+    });
+
+    it("sanitizes rich-input names with punctuation in trace data", async () => {
+      const events: [string, unknown][] = [];
+      Tracer.add("nonce-sanitization", () => (key, value) => {
+        events.push([key, value]);
+      });
+      const agent = makeAgent({ instructions: "{{conversation-history}}" });
+      agent.template = { format: { kind: "mock" } } as any;
+      agent.inputs = [
+        new Property({ name: "conversation-history", kind: "thread" }),
+      ];
+
+      try {
+        await render(agent, {
+          "conversation-history": [
+            { role: "user", content: "prior message" },
+          ],
+        });
+      } finally {
+        Tracer.remove("nonce-sanitization");
+      }
+
+      const traceData = JSON.stringify(events);
+      expect(traceData).toContain("[thread: conversation-history]");
+      expect(traceData).not.toContain("__PROMPTY_THREAD_");
     });
   });
 
