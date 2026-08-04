@@ -1,7 +1,5 @@
 import Foundation
-
 import PromptyModel
-
 import XCTest
 
 /// Guards for Windows line endings.
@@ -12,6 +10,7 @@ import XCTest
 /// this is a Swift-specific hazard with no counterpart in the reference
 /// implementation, and nothing in the LF-only spec vectors can catch it.
 @testable import Prompty
+@testable import PromptyOpenAI
 
 final class LineEndingTests: XCTestCase {
 
@@ -170,5 +169,206 @@ final class LineEndingTests: XCTestCase {
       if case .textPart(let text) = part { return text.value }
       return nil
     }.joined()
+  }
+
+  // MARK: - Frontmatter
+
+  /// `Frontmatter.split` must not depend on its caller having normalized first.
+  ///
+  /// It scanned with `firstIndex(of: "\n")`, which never matches in a CRLF
+  /// document because the pair is one `Character`. The opening delimiter looked
+  /// unterminated, so both the frontmatter and the body came back empty and a
+  /// Windows-authored file was silently discarded with no error.
+  func testFrontmatterSplitHandlesCarriageReturnDelimiters() throws {
+    let raw = "---\r\nname: crlf\r\ndescription: windows\r\n---\r\nsystem:\r\nHello.\r\n"
+    let (frontmatter, body) = try Frontmatter.split(raw)
+
+    XCTAssertEqual(frontmatter["name"] as? String, "crlf")
+    XCTAssertEqual(frontmatter["description"] as? String, "windows")
+    XCTAssertEqual(body, "system:\nHello.\n")
+  }
+
+  /// The `+++` delimiter and an indented opener take the same scalar path.
+  func testFrontmatterSplitHandlesCarriageReturnAlternateDelimiters() throws {
+    let (frontmatter, body) = try Frontmatter.split("+++\r\nname: toml-style\r\n+++\r\nBody.")
+    XCTAssertEqual(frontmatter["name"] as? String, "toml-style")
+    XCTAssertEqual(body, "Body.")
+
+    let indented = try Frontmatter.split("\r\n\r\n  ---\r\nname: indented\r\n  ---  \r\nBody.")
+    XCTAssertEqual(indented.frontmatter["name"] as? String, "indented")
+    XCTAssertEqual(indented.body, "Body.")
+  }
+
+  /// Blank-line skipping must use `isWhitespace`, not `CharacterSet.whitespaces`.
+  ///
+  /// `.whitespaces` is horizontal only: vertical tab, form feed, NEL, and the
+  /// Unicode separators are excluded. Treating such a line as non-blank would
+  /// make the opener unreachable and silently demote the file to body-only.
+  func testFrontmatterSplitSkipsVerticalWhitespaceBeforeDelimiter() throws {
+    for blank in ["\u{000B}", "\u{000C}", "\u{0085}", "\u{2028}", "\u{2029}"] {
+      let (frontmatter, body) = try Frontmatter.split(
+        "\(blank)\n---\nname: after-blank\n---\nBody.")
+      XCTAssertEqual(
+        frontmatter["name"] as? String, "after-blank",
+        "U+\(String(format: "%04X", blank.unicodeScalars.first!.value)) should count as blank")
+      XCTAssertEqual(body, "Body.")
+    }
+  }
+
+  /// CRLF and LF forms of one document must split identically.
+  func testFrontmatterSplitCarriageReturnMatchesUnix() throws {
+    let unix = "---\nname: same\nmodel:\n  id: gpt-4o\n---\nsystem:\nOne.\n\nuser:\nTwo.\n"
+    let windows = unix.replacingOccurrences(of: "\n", with: "\r\n")
+
+    let expected = try Frontmatter.split(unix)
+    let actual = try Frontmatter.split(windows)
+
+    XCTAssertEqual(actual.frontmatter["name"] as? String, expected.frontmatter["name"] as? String)
+    XCTAssertEqual(actual.body, expected.body)
+  }
+
+  /// A document with no frontmatter is still line-ending normalized.
+  ///
+  /// `split` owns the single normalization pass in the load path, so every
+  /// return — including the body-only one — hands back LF.
+  func testFrontmatterSplitWithoutDelimiterNormalizesCarriageReturns() throws {
+    let (frontmatter, body) = try Frontmatter.split("system:\r\nNo frontmatter here.\r\n")
+
+    XCTAssertTrue(frontmatter.isEmpty)
+    XCTAssertEqual(body, "system:\nNo frontmatter here.\n")
+  }
+
+  /// `\r\r\n` must keep its lone CR: exactly one normalization pass runs.
+  ///
+  /// The scalar scanner reads the CR + LF pair as the terminator and leaves the
+  /// preceding CR as content. A second pass over the already-normalized text
+  /// would read the residual `\r\n` as another terminator and delete that CR —
+  /// which is why `Loader` no longer normalizes before calling in.
+  func testAdjacentCarriageReturnSurvivesSingleNormalizationPass() throws {
+    let (_, body) = try Frontmatter.split("---\nname: cr\n---\nbefore\r\r\nafter")
+    XCTAssertEqual(body, "before\r\nafter")
+
+    let bodyOnly = try Frontmatter.split("before\r\r\nafter")
+    XCTAssertEqual(bodyOnly.body, "before\r\nafter")
+  }
+
+  /// An unterminated CRLF document must still be reported, not silently emptied.
+  func testFrontmatterSplitReportsUnclosedCarriageReturnDelimiter() {
+    XCTAssertThrowsError(try Frontmatter.split("---\r\nname: unclosed\r\nstill: yaml\r\n")) {
+      error in
+      guard case LoadError.invalidFrontmatter = error else {
+        return XCTFail("expected invalidFrontmatter, got \(error)")
+      }
+    }
+  }
+
+  // MARK: - Files on disk
+
+  /// The end-to-end Windows case: a `.prompty` file whose bytes contain CRLF.
+  ///
+  /// Every other line-ending test builds its input in memory, so none of them
+  /// exercises reading a file off disk and normalizing what came back.
+  func testLoadsPromptyFileWrittenWithCarriageReturnBytes() async throws {
+    let unix = """
+      ---
+      name: crlf-file
+      model:
+        id: gpt-4o
+      ---
+      system:
+      You are helpful.
+
+      user:
+      Hello there.
+
+      """
+    let path = try Self.writeTemporaryPrompt(
+      unix.replacingOccurrences(of: "\n", with: "\r\n"))
+    defer { try? FileManager.default.removeItem(at: path.deletingLastPathComponent()) }
+
+    let agent = try Loader.load(path: path.path)
+    XCTAssertEqual(agent.name, "crlf-file")
+    XCTAssertEqual(agent.instructions, "system:\nYou are helpful.\n\nuser:\nHello there.")
+
+    // The normalized instructions must still parse into distinct turns.
+    let messages = try await Pipeline.prepare(agent)
+    XCTAssertEqual(messages.map(\.role.rawValue), ["system", "user"])
+    XCTAssertEqual(Self.text(messages[1].parts), "Hello there.")
+  }
+
+  /// End-to-end: a lone CR inside a `\r\r\n` sequence survives the load path.
+  ///
+  /// This is the composition regression — `Loader` must not normalize before
+  /// `Frontmatter.split`, or the two passes together delete the CR.
+  func testLoadedInstructionsKeepLoneCarriageReturn() throws {
+    let raw = "---\r\nname: adjacent-cr\r\n---\r\nsystem:\r\nbefore\r\r\nafter\r\n"
+    let path = try Self.writeTemporaryPrompt(raw)
+    defer { try? FileManager.default.removeItem(at: path.deletingLastPathComponent()) }
+
+    let agent = try Loader.load(path: path.path)
+    XCTAssertEqual(agent.instructions, "system:\nbefore\r\nafter")
+  }
+
+  /// A CRLF file and its LF twin must load to the same prompt.
+  func testCarriageReturnFileMatchesUnixFile() throws {
+    let unix = """
+      ---
+      name: twin
+      description: line endings must not matter
+      model:
+        id: gpt-4o
+      ---
+      system:
+      Identical.
+
+      user:
+      Content.
+
+      """
+    let unixPath = try Self.writeTemporaryPrompt(unix)
+    let windowsPath = try Self.writeTemporaryPrompt(
+      unix.replacingOccurrences(of: "\n", with: "\r\n"))
+    defer {
+      try? FileManager.default.removeItem(at: unixPath.deletingLastPathComponent())
+      try? FileManager.default.removeItem(at: windowsPath.deletingLastPathComponent())
+    }
+
+    let expected = try Loader.load(path: unixPath.path)
+    let actual = try Loader.load(path: windowsPath.path)
+
+    XCTAssertEqual(actual.name, expected.name)
+    XCTAssertEqual(actual.description, expected.description)
+    XCTAssertEqual(actual.instructions, expected.instructions)
+  }
+
+  // MARK: - Server-sent events
+
+  /// A `data:` line may still carry its CR when the transport splits on LF.
+  ///
+  /// `CharacterSet.whitespaces` is space and tab only, so a trailing CR survived
+  /// trimming and `[DONE]` never compared equal.
+  func testServerSentEventPayloadToleratesTrailingCarriageReturn() {
+    XCTAssertEqual(SSE.payload(of: "data: [DONE]\r"), "[DONE]")
+    XCTAssertEqual(SSE.payload(of: "data: {\"id\":\"a\"}\r"), "{\"id\":\"a\"}")
+    XCTAssertEqual(SSE.payload(of: "data: [DONE]"), "[DONE]")
+    XCTAssertNil(SSE.payload(of: "data:\r"))
+    XCTAssertNil(SSE.payload(of: ": keep-alive\r"))
+  }
+
+  /// A CRLF-delimited SSE body must split into one record per event.
+  func testServerSentEventStreamSplitsCarriageReturnDelimitedBody() {
+    let body = "data: {\"n\":1}\r\n\r\ndata: {\"n\":2}\r\n\r\ndata: [DONE]\r\n"
+    let payloads = Lines.split(body).compactMap(SSE.payload(of:))
+    XCTAssertEqual(payloads, ["{\"n\":1}", "{\"n\":2}", "[DONE]"])
+  }
+
+  private static func writeTemporaryPrompt(_ contents: String) throws -> URL {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("prompty-line-endings-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let path = directory.appendingPathComponent("prompt.prompty")
+    // Write bytes directly: a String write would be re-encoded by the platform.
+    try Data(contents.utf8).write(to: path)
+    return path
   }
 }

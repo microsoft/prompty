@@ -1,7 +1,5 @@
 import Foundation
-
 import Prompty
-
 import PromptyModel
 
 /// Calls the OpenAI API over HTTP.
@@ -141,9 +139,13 @@ enum SSE {
   }
 
   /// The JSON payload of an SSE `data:` line, or `nil` for other lines.
+  ///
+  /// Trimming includes newlines so a line handed over with its CR still attached
+  /// — `CharacterSet.whitespaces` is space and tab only — does not defeat the
+  /// `[DONE]` sentinel comparison.
   static func payload(of line: String) -> String? {
     guard line.hasPrefix("data:") else { return nil }
-    let value = line.dropFirst("data:".count).trimmingCharacters(in: .whitespaces)
+    let value = line.dropFirst("data:".count).trimmingCharacters(in: .whitespacesAndNewlines)
     return value.isEmpty ? nil : value
   }
 

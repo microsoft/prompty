@@ -1,5 +1,4 @@
 import Foundation
-
 /// Options controlling how a `.prompty` file is loaded.
 import PromptyModel
 
@@ -70,11 +69,10 @@ public enum Loader {
     filePath: URL,
     options: LoadOptions
   ) throws -> Prompty {
-    // Normalize Windows line endings so downstream parsing is platform-neutral.
-    let normalized = raw.replacingOccurrences(of: "\r\n", with: "\n")
-
-    // 1. Split frontmatter from the markdown body.
-    var (data, body) = try Frontmatter.split(normalized)
+    // 1. Split frontmatter from the markdown body. `Frontmatter.split` owns line
+    //    ending normalization and returns an LF body; normalizing here as well
+    //    would run a second pass and swallow a lone CR in `\r\r\n`.
+    var (data, body) = try Frontmatter.split(raw)
 
     // 2. The body becomes `instructions`. Editors append trailing newlines, so
     //    trim the end only — leading and internal whitespace is significant.

@@ -145,5 +145,36 @@ regressed patch fails the suite rather than the runtime.
 harness replay — plus Swift-specific regression tests for defects the vectors
 cannot express, such as Windows line endings.
 
-`spec/vectors/engine/turn_vectors.json` describes a full turn engine that this
-port does not implement yet; those vectors are not run.
+### Coverage against the shared vectors
+
+This port is **not parity-complete**. Six of the ten shared vector files are
+exercised, and two of those six run only their OpenAI subset. The other four
+describe surface area this runtime does not implement. That is a deliberate
+scoping decision for an initial port, not an oversight.
+
+| Vector file                             |   Cases | Status                                |
+| --------------------------------------- | ------: | ------------------------------------- |
+| `load/load_vectors.json`                |      25 | Run                                   |
+| `render/render_vectors.json`            |      23 | Run                                   |
+| `parse/parse_vectors.json`              |      15 | Run                                   |
+| `wire/wire_vectors.json`                | 22 / 27 | Run — 5 Anthropic cases skipped       |
+| `process/process_vectors.json`          | 17 / 21 | Run — 4 Anthropic cases skipped       |
+| `harness/replay_vectors.json`           |       5 | Run                                   |
+| `engine/turn_vectors.json`              |       5 | **Not wired** — engine incomplete     |
+| `agent/agent_vectors.json`              |      28 | **Not implemented** — no agent layer  |
+| `discovery/discovery_vectors.json`      |       7 | **Not implemented** — no discovery    |
+| `discovery/enrichment_vectors.json`     |       9 | **Not implemented** — no enrichment   |
+
+The nine skipped Anthropic cases are provider coverage, not a contract gap: this
+package ships the OpenAI provider only, so `WireVectorTests` and
+`ProcessVectorTests` filter on `input.provider`. An Anthropic package would pick
+them up unchanged.
+
+The turn engine is the substantive gap. `ReferenceTurnRunner` already implements
+the iteration loop, permission mediation, host tool execution, and checkpointing,
+so three of the five engine vectors (`final_output`, `ordered_tool_round`,
+`permission_denial_is_model_visible`) describe behavior that exists but is not
+yet asserted against the shared file. The remaining two — `delegated_provider_state`
+and `cancel_before_context` — need delegated provider state and cancellation,
+which this port does not provide. Wiring the engine vectors and closing those two
+capabilities is follow-up work tracked separately from this PR.
