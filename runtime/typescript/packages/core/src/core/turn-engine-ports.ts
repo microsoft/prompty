@@ -278,4 +278,3 @@ export function normalizePortError(error: unknown): TurnPortError {
   }
   return new TurnPortError(String(error));
 }
-
