@@ -8,7 +8,8 @@
 
 import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
-import { processResponse } from "@prompty/openai";
+import type { StreamChunk } from "@prompty/core";
+import { processResponse, processStream } from "@prompty/openai";
 import { traceSpan } from "@prompty/core";
 
 export class FoundryProcessor implements Processor {
@@ -20,5 +21,9 @@ export class FoundryProcessor implements Processor {
       emit("result", result);
       return result;
     });
+  }
+
+  processStream(response: AsyncIterable<unknown>): AsyncIterable<StreamChunk> {
+    return processStream(response);
   }
 }

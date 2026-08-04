@@ -10,6 +10,7 @@
 
 import type { Prompty } from "../model/agent/prompty.js";
 import type { Message } from "./types.js";
+import type { StreamChunk } from "../model/events/stream-chunk.js";
 
 // ---------------------------------------------------------------------------
 // Renderer
@@ -83,4 +84,12 @@ export interface Executor {
  */
 export interface Processor {
   process(agent: Prompty, response: unknown): Promise<unknown>;
+
+  /**
+   * Convert raw provider stream items into canonical generated stream chunks.
+   * Providers that support streaming should implement this method.
+   */
+  processStream?(
+    response: AsyncIterable<unknown>,
+  ): AsyncIterable<StreamChunk>;
 }

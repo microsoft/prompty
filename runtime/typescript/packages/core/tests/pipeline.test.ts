@@ -16,7 +16,7 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import { Message, text } from "../src/core/types.js";
-import { Prompty, Property } from "@prompty/core";
+import { Prompty, Property, TextChunk } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 import { NunjucksRenderer } from "../src/renderers/nunjucks.js";
 import { PromptyChatParser } from "../src/parsers/prompty.js";
@@ -230,6 +230,52 @@ describe("Pipeline", () => {
   });
 
   describe("turn()", () => {
+    it("emits llm_complete only after a simple stream is exhausted", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
+      (agent as any).model = { provider: "streaming-mock" };
+      const events: string[] = [];
+
+      registerExecutor("streaming-mock", {
+        async execute() {
+          return {
+            async *[Symbol.asyncIterator]() {
+              yield { token: "Hello" };
+              yield { token: " world" };
+            },
+          };
+        },
+        formatToolMessages: new MockExecutor().formatToolMessages,
+      });
+      registerProcessor("streaming-mock", {
+        async process(_agent, response) {
+          const source = response as AsyncIterable<{ token: string }>;
+          return {
+            async *[Symbol.asyncIterator]() {
+              for await (const item of source) yield item.token;
+            },
+          };
+        },
+        async *processStream(response) {
+          for await (const item of response as AsyncIterable<{ token: string }>) {
+            yield new TextChunk({ value: item.token });
+          }
+        },
+      });
+
+      const result = await turn(agent, { name: "World" }, {
+        onEvent: (type) => events.push(type),
+      });
+      expect(events).not.toContain("llm_complete");
+
+      const chunks: unknown[] = [];
+      for await (const chunk of result as AsyncIterable<unknown>) chunks.push(chunk);
+
+      expect(chunks).toEqual(["Hello", " world"]);
+      expect(events).toContain("llm_complete");
+      expect(events.indexOf("llm_complete")).toBeLessThan(events.indexOf("turn_end"));
+    });
+
     it("runs a simple agent with no tool calls", async () => {
       const agent = makeAgent();
       agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;

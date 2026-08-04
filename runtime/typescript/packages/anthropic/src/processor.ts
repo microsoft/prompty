@@ -13,7 +13,16 @@
 import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
-import { traceSpan } from "@prompty/core";
+import {
+  ErrorChunk,
+  InvocationUsage,
+  StreamChunk,
+  TextChunk,
+  ThinkingChunk,
+  ToolChunk,
+  UsageChunk,
+  traceSpan,
+} from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
 export class AnthropicProcessor implements Processor {
@@ -29,6 +38,10 @@ export class AnthropicProcessor implements Processor {
       return result;
     });
   }
+
+  processStream(response: AsyncIterable<unknown>): AsyncIterable<StreamChunk> {
+    return processStream(response);
+  }
 }
 
 /**
@@ -39,7 +52,7 @@ export function processResponse(agent: Prompty, response: unknown): unknown {
 
   // Streaming response — return content-extracting async generator
   if (isAsyncIterable(response)) {
-    return streamGenerator(response);
+    return legacyStreamGenerator(processStream(response));
   }
 
   const r = response as Record<string, unknown>;
@@ -76,51 +89,106 @@ function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
  *
  * Tool calls are accumulated and yielded at the end of the stream.
  */
-async function* streamGenerator(
+export async function* processStream(
   response: AsyncIterable<unknown>,
-): AsyncGenerator<string | ToolCall> {
+): AsyncGenerator<StreamChunk> {
   const toolCallAcc: Map<
     number,
     { id: string; name: string; arguments: string }
   > = new Map();
+  let inputTokens: number | undefined;
+  let outputTokens: number | undefined;
 
-  for await (const event of response) {
-    const e = event as Record<string, unknown>;
-    const eventType = e.type as string | undefined;
+  try {
+    for await (const event of response) {
+      const e = event as Record<string, unknown>;
+      const eventType = e.type as string | undefined;
 
-    if (eventType === "content_block_delta") {
-      const delta = e.delta as Record<string, unknown> | undefined;
-      if (!delta) continue;
+      if (eventType === "message_start") {
+        const message = e.message as Record<string, unknown> | undefined;
+        const usage = message?.usage as Record<string, unknown> | undefined;
+        inputTokens = numberValue(usage?.input_tokens) ?? inputTokens;
+      } else if (eventType === "message_delta") {
+        const usage = e.usage as Record<string, unknown> | undefined;
+        outputTokens = numberValue(usage?.output_tokens) ?? outputTokens;
+      } else if (eventType === "content_block_delta") {
+        const delta = e.delta as Record<string, unknown> | undefined;
+        if (!delta) continue;
 
-      if (delta.type === "text_delta") {
-        yield delta.text as string;
-      } else if (delta.type === "input_json_delta") {
-        // Accumulate partial JSON for tool arguments
-        const idx = e.index as number;
-        const acc = toolCallAcc.get(idx);
-        if (acc) {
-          acc.arguments += (delta.partial_json ?? "") as string;
+        if (delta.type === "text_delta" && typeof delta.text === "string" && delta.text) {
+          yield new TextChunk({ value: delta.text });
+        } else if (delta.type === "thinking_delta" && typeof delta.thinking === "string" && delta.thinking) {
+          yield new ThinkingChunk({ value: delta.thinking });
+        } else if (delta.type === "input_json_delta") {
+          const idx = typeof e.index === "number" ? e.index : 0;
+          const acc = toolCallAcc.get(idx);
+          if (acc && typeof delta.partial_json === "string") {
+            acc.arguments += delta.partial_json;
+          }
         }
-      }
-    } else if (eventType === "content_block_start") {
-      const block = e.content_block as Record<string, unknown> | undefined;
-      if (block?.type === "tool_use") {
-        const idx = e.index as number;
-        toolCallAcc.set(idx, {
-          id: (block.id ?? "") as string,
-          name: (block.name ?? "") as string,
-          arguments: "",
+      } else if (eventType === "content_block_start") {
+        const block = e.content_block as Record<string, unknown> | undefined;
+        if (block?.type === "tool_use") {
+          const idx = typeof e.index === "number" ? e.index : 0;
+          toolCallAcc.set(idx, {
+            id: stringValue(block.id),
+            name: stringValue(block.name),
+            arguments: "",
+          });
+        }
+      } else if (eventType === "error") {
+        const error = e.error as Record<string, unknown> | undefined;
+        yield new ErrorChunk({
+          message: stringValue(error?.message) || "Anthropic stream failed",
         });
+        return;
       }
     }
+  } catch (error) {
+    yield new ErrorChunk({
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return;
   }
 
-  // Yield accumulated tool calls at the end of the stream
   const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
   for (const idx of sortedIndices) {
     const tc = toolCallAcc.get(idx)!;
-    yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
+    yield ToolChunk.load({ kind: "tool", toolCall: tc });
   }
+  if (inputTokens !== undefined || outputTokens !== undefined) {
+    const input = inputTokens ?? 0;
+    const output = outputTokens ?? 0;
+    yield new UsageChunk({
+      usage: new InvocationUsage({
+        inputTokens: input,
+        outputTokens: output,
+        totalTokens: input + output,
+      }),
+    });
+  }
+}
+
+async function* legacyStreamGenerator(
+  chunks: AsyncIterable<StreamChunk>,
+): AsyncGenerator<string | ToolCall> {
+  for await (const chunk of chunks) {
+    if (chunk instanceof TextChunk) {
+      yield chunk.value;
+    } else if (chunk instanceof ToolChunk) {
+      yield chunk.toolCall;
+    } else if (chunk instanceof ErrorChunk) {
+      throw new Error(chunk.message);
+    }
+  }
+}
+
+function stringValue(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 // ---------------------------------------------------------------------------

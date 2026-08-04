@@ -17,9 +17,13 @@ import {
   turn,
   registerConnection,
   clearConnections,
+  ErrorChunk,
+  TextChunk,
+  ToolChunk,
+  UsageChunk,
 } from "@prompty/core";
 import { OpenAIExecutor } from "../src/executor.js";
-import { OpenAIProcessor } from "../src/processor.js";
+import { OpenAIProcessor, processStream } from "../src/processor.js";
 import { registerExecutor, registerProcessor } from "@prompty/core";
 import * as fs from "fs";
 import * as path from "path";
@@ -459,6 +463,62 @@ describe("E2E Pipeline", () => {
   // =========================================================================
 
   describe("streaming", () => {
+    it("emits canonical text, tool, usage, and error chunks", async () => {
+      async function* stream() {
+        yield { choices: [{ delta: { content: "Hello" } }] };
+        yield {
+          choices: [{
+            delta: {
+              tool_calls: [{
+                index: 0,
+                id: "call_1",
+                function: { name: "lookup", arguments: '{"q":' },
+              }],
+            },
+          }],
+        };
+        yield {
+          choices: [{
+            delta: {
+              tool_calls: [{ index: 0, function: { arguments: '"test"}' } }],
+            },
+          }],
+        };
+        yield {
+          choices: [{ delta: {} }],
+          usage: { prompt_tokens: 3, completion_tokens: 2, total_tokens: 5 },
+        };
+      }
+
+      const chunks: unknown[] = [];
+      for await (const chunk of processStream(stream())) chunks.push(chunk);
+
+      expect(chunks[0]).toBeInstanceOf(TextChunk);
+      expect((chunks[0] as TextChunk).value).toBe("Hello");
+      expect(chunks[1]).toBeInstanceOf(ToolChunk);
+      expect((chunks[1] as ToolChunk).toolCall).toMatchObject({
+        id: "call_1",
+        name: "lookup",
+        arguments: '{"q":"test"}',
+      });
+      expect(chunks[2]).toBeInstanceOf(UsageChunk);
+      expect((chunks[2] as UsageChunk).usage).toMatchObject({
+        inputTokens: 3,
+        outputTokens: 2,
+        totalTokens: 5,
+      });
+
+      async function* refusal() {
+        yield { choices: [{ delta: { refusal: "not allowed" } }] };
+        yield { choices: [{ delta: { content: "must not be emitted" } }] };
+      }
+      const refused: unknown[] = [];
+      for await (const chunk of processStream(refusal())) refused.push(chunk);
+      expect(refused).toHaveLength(1);
+      expect(refused[0]).toBeInstanceOf(ErrorChunk);
+      expect((refused[0] as ErrorChunk).message).toContain("not allowed");
+    });
+
     it("returns an async generator that yields content chunks", async () => {
       // Mock streaming response: an async iterable of chunk objects
       const chunks = [

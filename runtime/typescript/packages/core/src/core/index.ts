@@ -3,11 +3,13 @@ export * from "./interfaces.js";
 export * from "./registry.js";
 export * from "./connections.js";
 export { load, defaultSaveContext, type LoadOptions } from "./loader.js";
+export { createModelInfo, enrichModelInfo } from "./discovery.js";
 export {
   validateInputs,
   render,
   parse,
   process,
+  processStream,
   prepare,
   run,
   turn,

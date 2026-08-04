@@ -59,9 +59,8 @@ describe("listAzureModels", () => {
   it("does not set modalities (Azure API does not return them)", async () => {
     const models = await listAzureModels(connection);
     for (const m of models) {
-      // ModelInfo defaults modalities to [] when not explicitly set
-      expect(m.inputModalities).toEqual([]);
-      expect(m.outputModalities).toEqual([]);
+      expect(m.inputModalities).toBeUndefined();
+      expect(m.outputModalities).toBeUndefined();
     }
   });
 

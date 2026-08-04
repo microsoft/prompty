@@ -73,9 +73,8 @@ describe("listModels (OpenAI)", () => {
     const custom = models.find((m) => m.id === "ft:gpt-4o:my-org:custom:abc123")!;
     expect(custom.ownedBy).toBe("user-org");
     expect(custom.contextWindow).toBeUndefined();
-    // ModelInfo defaults modalities to [] when not provided
-    expect(custom.inputModalities).toEqual([]);
-    expect(custom.outputModalities).toEqual([]);
+    expect(custom.inputModalities).toBeUndefined();
+    expect(custom.outputModalities).toBeUndefined();
   });
 
   it("throws for unsupported connection kind", async () => {

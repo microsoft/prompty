@@ -17,9 +17,14 @@ import {
   turn,
   registerConnection,
   clearConnections,
+  ErrorChunk,
+  TextChunk,
+  ThinkingChunk,
+  ToolChunk,
+  UsageChunk,
 } from "@prompty/core";
 import { AnthropicExecutor } from "../src/executor.js";
-import { AnthropicProcessor, processResponse } from "../src/processor.js";
+import { AnthropicProcessor, processResponse, processStream } from "../src/processor.js";
 import { buildChatArgs, messageToWire, toolsToWire, outputsToWire } from "../src/wire.js";
 import { registerExecutor, registerProcessor } from "@prompty/core";
 import { Message } from "@prompty/core";
@@ -406,6 +411,67 @@ describe("processor", () => {
 // ---------------------------------------------------------------------------
 
 describe("streaming processor", () => {
+  it("emits canonical text, thinking, tool, usage, and error chunks", async () => {
+    async function* stream() {
+      yield { type: "message_start", message: { usage: { input_tokens: 4 } } };
+      yield {
+        type: "content_block_start",
+        index: 0,
+        content_block: { type: "tool_use", id: "toolu_1", name: "lookup" },
+      };
+      yield {
+        type: "content_block_delta",
+        index: 1,
+        delta: { type: "text_delta", text: "Hello" },
+      };
+      yield {
+        type: "content_block_delta",
+        index: 1,
+        delta: { type: "thinking_delta", thinking: "Considering" },
+      };
+      yield {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "input_json_delta", partial_json: '{"q":"test"}' },
+      };
+      yield { type: "message_delta", usage: { output_tokens: 3 } };
+    }
+
+    const chunks: unknown[] = [];
+    for await (const chunk of processStream(stream())) chunks.push(chunk);
+
+    expect(chunks[0]).toBeInstanceOf(TextChunk);
+    expect((chunks[0] as TextChunk).value).toBe("Hello");
+    expect(chunks[1]).toBeInstanceOf(ThinkingChunk);
+    expect((chunks[1] as ThinkingChunk).value).toBe("Considering");
+    expect(chunks[2]).toBeInstanceOf(ToolChunk);
+    expect((chunks[2] as ToolChunk).toolCall).toMatchObject({
+      id: "toolu_1",
+      name: "lookup",
+      arguments: '{"q":"test"}',
+    });
+    expect(chunks[3]).toBeInstanceOf(UsageChunk);
+    expect((chunks[3] as UsageChunk).usage).toMatchObject({
+      inputTokens: 4,
+      outputTokens: 3,
+      totalTokens: 7,
+    });
+
+    async function* failed() {
+      yield { type: "error", error: { message: "overloaded" } };
+      yield {
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text: "must not be emitted" },
+      };
+    }
+    const errors: unknown[] = [];
+    for await (const chunk of processStream(failed())) errors.push(chunk);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toBeInstanceOf(ErrorChunk);
+    expect((errors[0] as ErrorChunk).message).toBe("overloaded");
+  });
+
   it("yields text deltas from content_block_delta events", async () => {
     const events = [
       { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },

@@ -32,6 +32,16 @@
  */
 
 import { Prompty } from "../model/agent/prompty.js";
+import { ToolCall as ModelToolCall } from "../model/conversation/tool-call.js";
+import {
+  ErrorChunk,
+  StreamChunk,
+  TextChunk,
+  ThinkingChunk,
+  ToolChunk,
+  UsageChunk,
+} from "../model/events/stream-chunk.js";
+import type { InvocationUsage } from "../model/model/invocation-usage.js";
 import {
   type ToolCall,
   Message,
@@ -286,6 +296,49 @@ export async function process(
   const provider = resolveProvider(agent);
   const processor = getProcessor(provider);
   return processor.process(agent, response);
+}
+
+/**
+ * Process a raw provider stream into canonical generated stream chunks.
+ *
+ * Custom processors that only implement the legacy `process()` streaming
+ * surface are adapted so existing integrations remain compatible.
+ */
+export async function processStream(
+  agent: Prompty,
+  response: AsyncIterable<unknown>,
+): Promise<AsyncIterable<StreamChunk>> {
+  const provider = resolveProvider(agent);
+  const processor = getProcessor(provider);
+  if (processor.processStream) {
+    return processor.processStream(response);
+  }
+
+  const legacy = await processor.process(agent, response);
+  return adaptLegacyStream(legacy);
+}
+
+async function* adaptLegacyStream(
+  value: unknown,
+): AsyncGenerator<StreamChunk> {
+  if (!isAsyncIterable(value)) {
+    if (typeof value === "string") {
+      yield new TextChunk({ value });
+    } else if (isToolCallLike(value)) {
+      yield new ToolChunk({ toolCall: new ModelToolCall(value) });
+    }
+    return;
+  }
+
+  for await (const item of value) {
+    if (item instanceof StreamChunk) {
+      yield item;
+    } else if (typeof item === "string") {
+      yield new TextChunk({ value: item });
+    } else if (isToolCallLike(item)) {
+      yield new ToolChunk({ toolCall: new ModelToolCall(item) });
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -746,9 +799,11 @@ export async function turn<T = unknown>(
         emitFailedTurnEnd(onEvent, err, 0);
         throw err;
       }
-      emitEvent(onEvent, "llm_complete", {});
-
       if (options?.raw) {
+        if (isAsyncIterable(response)) {
+          return finalizeSimpleTurnStream(response, messages, onEvent, true);
+        }
+        emitEvent(onEvent, "llm_complete", {});
         emit("result", response);
         emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response });
         return response;
@@ -760,6 +815,11 @@ export async function turn<T = unknown>(
         emitFailedTurnEnd(onEvent, err, 0, response);
         throw err;
       }
+
+      if (isAsyncIterable(processed)) {
+        return finalizeSimpleTurnStream(processed, messages, onEvent, false);
+      }
+      emitEvent(onEvent, "llm_complete", {});
 
       // §13.4 — Output guardrail on final response
       if (options?.guardrails) {
@@ -874,8 +934,6 @@ export async function turn<T = unknown>(
         emitFailedTurnEnd(onEvent, err, iteration);
         throw err;
       }
-      emitEvent(onEvent, "llm_complete", { iteration });
-
       // Streaming: consume the stream, extract tool calls from buffered chunks
       if (isAsyncIterable(response)) {
         let streamResult: Awaited<ReturnType<typeof consumeStream>>;
@@ -885,7 +943,11 @@ export async function turn<T = unknown>(
           emitFailedTurnEnd(onEvent, err, iteration, response);
           throw err;
         }
-        const { toolCalls, content } = streamResult;
+        const { toolCalls, content, usage } = streamResult;
+        emitEvent(onEvent, "llm_complete", {
+          iteration,
+          ...(usage ? { usage: usage.save() } : {}),
+        });
 
         // §13.4 — Output guardrail
         if (guardrails && content) {
@@ -936,6 +998,8 @@ export async function turn<T = unknown>(
         emitEvent(onEvent, "messages_updated", { messages });
         continue;
       }
+
+      emitEvent(onEvent, "llm_complete", { iteration });
 
       // Non-streaming: check raw response for tool calls
       if (!hasToolCalls(response)) {
@@ -1078,27 +1142,64 @@ async function consumeStream(
   agent: Prompty,
   response: unknown,
   onEvent?: EventCallback,
-): Promise<{ toolCalls: ToolCall[]; content: string }> {
-  const processed = await process(agent, response);
+): Promise<{ toolCalls: ToolCall[]; content: string; usage?: InvocationUsage }> {
+  if (!isAsyncIterable(response)) {
+    throw new TypeError("Expected an async iterable provider response");
+  }
+  const processed = await processStream(agent, response);
 
   const toolCalls: ToolCall[] = [];
   const textParts: string[] = [];
+  let usage: InvocationUsage | undefined;
 
-  if (isAsyncIterable(processed)) {
-    for await (const item of processed) {
-      if (isToolCallLike(item)) {
-        toolCalls.push(item);
-      } else if (typeof item === "string") {
-        textParts.push(item);
-        emitEvent(onEvent, "token", { token: item });
-      }
+  for await (const item of processed) {
+    if (item instanceof TextChunk) {
+      textParts.push(item.value);
+      emitEvent(onEvent, "token", { token: item.value });
+    } else if (item instanceof ThinkingChunk) {
+      emitEvent(onEvent, "thinking", { thinking: item.value });
+    } else if (item instanceof ToolChunk) {
+      toolCalls.push(item.toolCall);
+    } else if (item instanceof UsageChunk) {
+      usage = item.usage;
+    } else if (item instanceof ErrorChunk) {
+      throw new Error(item.message);
     }
-  } else if (typeof processed === "string") {
-    textParts.push(processed);
-    emitEvent(onEvent, "token", { token: processed });
   }
 
-  return { toolCalls, content: textParts.join("") };
+  return { toolCalls, content: textParts.join(""), usage };
+}
+
+/**
+ * Preserve the legacy public stream shape while completing turn events only
+ * after successful stream exhaustion.
+ */
+async function* finalizeSimpleTurnStream(
+  stream: AsyncIterable<unknown>,
+  messages: Message[],
+  onEvent: EventCallback | undefined,
+  raw: boolean,
+): AsyncGenerator<unknown> {
+  const collected: unknown[] = [];
+  try {
+    for await (const item of stream) {
+      collected.push(item);
+      if (!raw && typeof item === "string") {
+        emitEvent(onEvent, "token", { token: item });
+      }
+      yield item;
+    }
+  } catch (err) {
+    emitFailedTurnEnd(onEvent, err, 0, collected);
+    throw err;
+  }
+
+  emitEvent(onEvent, "llm_complete", {});
+  const response = raw ? collected : collected.filter((item) => typeof item === "string").join("");
+  if (!raw) {
+    emitEvent(onEvent, "done", { response, messages });
+  }
+  emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response });
 }
 
 
