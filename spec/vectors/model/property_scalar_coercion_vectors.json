@@ -1,0 +1,44 @@
+{
+  "version": "1",
+  "description": "Atomic cross-runtime Property scalar coercion contract. Direct generated-model JSON loading infers the exact primitive kind and stores the unmodified scalar in example. All four cases are required together.",
+  "vectors": [
+    {
+      "name": "all_primitive_property_scalars_coerce_atomically",
+      "operation": "load",
+      "cases": [
+        {
+          "name": "string",
+          "input": "example",
+          "expected": {
+            "kind": "string",
+            "example": "example"
+          }
+        },
+        {
+          "name": "integer",
+          "input": 4,
+          "expected": {
+            "kind": "integer",
+            "example": 4
+          }
+        },
+        {
+          "name": "float",
+          "input": 3.14,
+          "expected": {
+            "kind": "float",
+            "example": 3.14
+          }
+        },
+        {
+          "name": "boolean",
+          "input": false,
+          "expected": {
+            "kind": "boolean",
+            "example": false
+          }
+        }
+      ]
+    }
+  ]
+}

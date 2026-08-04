@@ -430,11 +430,12 @@ function validateAgentFields(agent: Prompty, expected: any, vecName: string): vo
           }
         }
         if (et.bindings !== undefined) {
-          const atBindings = (at as any).bindings as Array<{name: string; input: string}>;
+          const atBindings = (at as FunctionTool).bindings ?? [];
+          const expectedBindings = Object.entries(et.bindings as Record<string, { input?: string }>);
           expect(atBindings).toBeDefined();
-          expect(atBindings.length).toBeGreaterThan(0);
-          for (const [bk, bv] of Object.entries(et.bindings as Record<string, any>)) {
-            const found = atBindings.find((b: any) => b.name === bk);
+          expect(atBindings).toHaveLength(expectedBindings.length);
+          for (const [bk, bv] of expectedBindings) {
+            const found = atBindings.find((binding) => binding.name === bk);
             expect(found).toBeDefined();
             if (bv.input !== undefined) {
               expect(found!.input).toBe(bv.input);

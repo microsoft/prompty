@@ -497,6 +497,8 @@ def _check_tools(actual: list, expected: list[dict], errors: list[str]):
             act_bindings = getattr(act, "bindings", []) or []
             exp_bindings = exp["bindings"]
             if isinstance(exp_bindings, dict):
+                if len(act_bindings) != len(exp_bindings):
+                    errors.append(f"  {prefix}.bindings: count {len(act_bindings)} != expected {len(exp_bindings)}")
                 for bname, bval in exp_bindings.items():
                     found = [b for b in act_bindings if b.name == bname]
                     if not found:

@@ -10,6 +10,17 @@ namespace Prompty.Anthropic.Tests;
 public class AnthropicExecutorTests
 {
     [Fact]
+    public async Task ExecuteAsync_Cancelled_ThrowsBeforeConnectionValidation()
+    {
+        var executor = new Anthropic.AnthropicExecutor();
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => executor.ExecuteAsync(new Core.Prompty(), [], cancellation.Token));
+    }
+
+    [Fact]
     public async Task ExecuteAsync_MissingApiKey_ThrowsInvalidOperationException()
     {
         var executor = new Anthropic.AnthropicExecutor();
@@ -156,4 +167,3 @@ public class AnthropicExecutorTests
         Assert.Equal("tool_use", content[0]["type"]);
     }
 }
-

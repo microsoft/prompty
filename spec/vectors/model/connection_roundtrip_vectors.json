@@ -1,0 +1,106 @@
+{
+  "version": "1",
+  "description": "Cross-runtime Connection load/save/reload contracts. Unknown string discriminators are forward-compatible Connection values, not CustomTool values: runtimes must preserve the exact kind and complete JSON-compatible payload without coercing to a known/default connection kind.",
+  "vectors": [
+    {
+      "name": "known_reference_connection_roundtrip_unchanged",
+      "operation": "load-save-reload",
+      "input": {
+        "kind": "reference",
+        "authenticationMode": "system",
+        "usageDescription": "Exercise the known discriminator control",
+        "name": "shared-connection",
+        "target": "model-service"
+      },
+      "expected": {
+        "kind": "reference",
+        "authenticationMode": "system",
+        "usageDescription": "Exercise the known discriminator control",
+        "name": "shared-connection",
+        "target": "model-service"
+      }
+    },
+    {
+      "name": "unknown_connection_kind_preserves_payload",
+      "operation": "load-save-reload",
+      "input": {
+        "kind": "future-auth",
+        "authenticationMode": "system",
+        "usageDescription": "Exercise forward-compatible connection preservation",
+        "endpoint": "https://future.example.test",
+        "tenant": "example-tenant",
+        "priority": 5,
+        "enabled": false,
+        "weight": 0.1,
+        "regions": [
+          "west",
+          "east"
+        ],
+        "notes": null,
+        "providerOptions": {
+          "audience": "prompty",
+          "features": [
+            "delegation",
+            {
+              "name": "nested-option",
+              "enabled": true
+            }
+          ],
+          "retry": {
+            "maxAttempts": 3,
+            "backoffSeconds": 0.1
+          },
+          "nullable": null
+        }
+      },
+      "expected": {
+        "kind": "future-auth",
+        "authenticationMode": "system",
+        "usageDescription": "Exercise forward-compatible connection preservation",
+        "endpoint": "https://future.example.test",
+        "tenant": "example-tenant",
+        "priority": 5,
+        "enabled": false,
+        "weight": 0.1,
+        "regions": [
+          "west",
+          "east"
+        ],
+        "notes": null,
+        "providerOptions": {
+          "audience": "prompty",
+          "features": [
+            "delegation",
+            {
+              "name": "nested-option",
+              "enabled": true
+            }
+          ],
+          "retry": {
+            "maxAttempts": 3,
+            "backoffSeconds": 0.1
+          },
+          "nullable": null
+        }
+      }
+    },
+    {
+      "name": "unknown_connection_case_collision_preserves_payload",
+      "operation": "load-save-reload",
+      "input": {
+        "kind": "Reference",
+        "name": "case-sensitive-unknown",
+        "payload": {
+          "mode": "future"
+        }
+      },
+      "expected": {
+        "kind": "Reference",
+        "name": "case-sensitive-unknown",
+        "payload": {
+          "mode": "future"
+        }
+      }
+    }
+  ]
+}

@@ -715,7 +715,10 @@ public class SpecVectorAgentTests : IDisposable
 
     private class LambdaExecutor(Func<List<Message>, object> fn) : IExecutor
     {
-        public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(
+            Core.Prompty agent,
+            List<Message> messages,
+            CancellationToken cancellationToken = default)
             => Task.FromResult(fn(messages));
 
         public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)

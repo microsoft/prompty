@@ -261,7 +261,10 @@ internal class RawJsonExecutor : IExecutor
 
     public RawJsonExecutor(string rawJson) => _rawJson = rawJson;
 
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(
+        Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken = default)
         => Task.FromResult<object>(_rawJson);
 
     public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)

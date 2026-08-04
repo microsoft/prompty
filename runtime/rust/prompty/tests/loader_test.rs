@@ -20,6 +20,16 @@ fn fixtures_dir() -> PathBuf {
         .join("fixtures")
 }
 
+/// Path to the canonical load vectors.
+fn load_vectors_path() -> PathBuf {
+    fixtures_dir()
+        .parent()
+        .expect("spec/fixtures must have a spec parent")
+        .join("vectors")
+        .join("load")
+        .join("load_vectors.json")
+}
+
 /// Load a fixture `.prompty` file with optional env vars set.
 fn load_fixture(
     name: &str,
@@ -260,6 +270,32 @@ fn test_tools_function_load() {
     assert_eq!(tools.len(), 1);
     assert_eq!(tools[0].name, "get_weather");
     assert_eq!(tools[0].kind_str(), "function");
+
+    let raw = std::fs::read_to_string(load_vectors_path()).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(&raw).unwrap();
+    let vector = vectors
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|vector| vector["name"] == "tools_function_load")
+        .unwrap();
+    let expected_bindings = vector["expected"]["tools"][0]["bindings"]
+        .as_object()
+        .unwrap();
+
+    assert_eq!(tools[0].bindings.len(), expected_bindings.len());
+    for (name, expected) in expected_bindings {
+        let actual = tools[0]
+            .bindings
+            .iter()
+            .find(|binding| binding.name == *name)
+            .unwrap_or_else(|| panic!("missing binding {name:?}"));
+        assert_eq!(
+            actual.input,
+            expected["input"].as_str().unwrap(),
+            "binding {name:?} input mismatch"
+        );
+    }
 }
 
 #[test]

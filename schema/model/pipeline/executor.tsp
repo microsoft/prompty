@@ -10,14 +10,19 @@ namespace Prompty;
   "execute",
   "unknown",
   "Call an LLM provider with messages and return the raw response",
-  #{ agent: "Prompty", messages: "Message[]" }
+  #{ agent: "Prompty", messages: "Message[]" },
+  false,
+  false,
+  #{ runtimeCancellable: true }
 );
 @@method(Executor,
   "executeStream",
   "unknown",
   "Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support.",
   #{ agent: "Prompty", messages: "Message[]" },
-  true
+  true,
+  false,
+  #{ runtimeCancellable: true }
 );
 @@method(Executor,
   "formatToolMessages",

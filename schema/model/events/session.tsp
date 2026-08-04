@@ -157,7 +157,7 @@ model SessionEvent {
   @sample(#{ spanId: "span_hook_001" })
   spanId?: string;
 
-  @doc("Event-specific payload. Use the typed payload model matching 'type'.")
+  @doc("Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.")
   payload: Record<unknown> = #{};
 
   @doc("Redaction state for sensitive payload fields")
