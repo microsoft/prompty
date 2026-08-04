@@ -3,11 +3,73 @@ on:
   pull_request:
     paths:
       - 'runtime/java/**'
+      - 'schema/scripts/clean-java-output*'
+      - 'schema/scripts/normalize-java-output*'
       - '.github/workflows/prompty-java-check.yml'
 
   workflow_call:
 
 jobs:
+  generation-scripts:
+    name: test Java generation scripts
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: schema
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      # Guards the generated-output cleaner. Both of its failure modes are
+      # silent: destroying the hand-written `@method` implementations kept in
+      # extension seams, or leaving stale generated files behind.
+      - name: Test generation scripts
+        run: npm run test:scripts
+
+  generation-drift:
+    name: verify Java generation is reproducible
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install schema toolchain
+        working-directory: schema
+        run: npm ci
+
+      # Regenerating exercises every guard in normalize-java-output.mjs. Those
+      # guards fail the build when a rewrite stops matching emitter output,
+      # which is how an emitter upgrade that silently changes Java codegen is
+      # caught. Running the emitter here is the only place they execute.
+      - name: Regenerate
+        working-directory: schema
+        run: npm run generate
+
+      # The committed Java tree must be exactly what the pinned emitter plus the
+      # normalization shim produce. A diff means either a hand edit to generated
+      # code or a stale checked-in tree.
+      - name: Verify committed Java output matches generated output
+        run: |
+          if ! git diff --quiet -- runtime/java; then
+            echo "::error::Committed Java output differs from freshly generated output."
+            git --no-pager diff --stat -- runtime/java
+            git --no-pager diff -- runtime/java | head -200
+            exit 1
+          fi
+          echo "Committed Java output matches generated output."
+
   java-tests:
     name: test Java on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
