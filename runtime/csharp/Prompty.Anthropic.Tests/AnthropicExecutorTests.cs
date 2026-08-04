@@ -260,6 +260,29 @@ public class AnthropicExecutorTests
     }
 
     [Fact]
+    public async Task FormatToolMessages_SynthesizesBlocksWhenStreamItemsAreUnavailable()
+    {
+        var executor = new Anthropic.AnthropicExecutor();
+        var stream = new PromptyStream(StreamEvents());
+        await foreach (var _ in stream)
+        {
+        }
+
+        var messages = executor.FormatToolMessages(
+            stream,
+            [new ToolCall { Id = "call_1", Name = "lookup", Arguments = """{"key":"value"}""" }],
+            ["result"],
+            "Checking.");
+        var content = Assert.IsType<List<Dictionary<string, object?>>>(messages[0].Metadata["content"]);
+
+        Assert.Equal("text", content[0]["type"]);
+        Assert.Equal("Checking.", content[0]["text"]);
+        Assert.Equal("tool_use", content[1]["type"]);
+        Assert.Equal("call_1", content[1]["id"]);
+        Assert.Equal("""{"key":"value"}""", Assert.IsType<JsonElement>(content[1]["input"]).GetRawText());
+    }
+
+    [Fact]
     public void BuildRequestBody_SingleToolResultMetadata_PreservesCorrelation()
     {
         var executor = new Anthropic.AnthropicExecutor();

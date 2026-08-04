@@ -345,7 +345,10 @@ public class AnthropicExecutor : IExecutor
             Parts = !string.IsNullOrEmpty(textContent)
                 ? [new TextPart { Value = textContent }]
                 : [],
-            Metadata = new Dictionary<string, object> { ["content"] = GetRawContent(rawResponse) },
+            Metadata = new Dictionary<string, object>
+            {
+                ["content"] = GetRawContent(rawResponse, toolCalls, textContent),
+            },
         });
 
         // --- Single user message with batched tool_result blocks ---
@@ -370,11 +373,14 @@ public class AnthropicExecutor : IExecutor
         return messages;
     }
 
-    private static object GetRawContent(object rawResponse)
+    private static object GetRawContent(
+        object rawResponse,
+        IReadOnlyList<ToolCall> toolCalls,
+        string? textContent)
     {
         if (rawResponse is PromptyStream stream)
         {
-            return ReconstructStreamContent(stream.Items);
+            return ReconstructStreamContent(stream.Items, toolCalls, textContent);
         }
 
         if (rawResponse is JsonElement { ValueKind: JsonValueKind.Object } element
@@ -393,7 +399,10 @@ public class AnthropicExecutor : IExecutor
         return Array.Empty<object>();
     }
 
-    private static List<Dictionary<string, object?>> ReconstructStreamContent(IReadOnlyList<object> items)
+    private static List<Dictionary<string, object?>> ReconstructStreamContent(
+        IReadOnlyList<object> items,
+        IReadOnlyList<ToolCall> toolCalls,
+        string? textContent)
     {
         var blocks = new SortedDictionary<int, Dictionary<string, object?>>();
         var textDeltas = new Dictionary<int, List<string>>();
@@ -469,6 +478,39 @@ public class AnthropicExecutor : IExecutor
                 {
                     // Keep the valid initial input block when the provider stops mid-JSON.
                 }
+            }
+        }
+
+        if (blocks.Count == 0)
+        {
+            var index = 0;
+            if (!string.IsNullOrEmpty(textContent))
+            {
+                blocks[index++] = new Dictionary<string, object?>
+                {
+                    ["type"] = "text",
+                    ["text"] = textContent,
+                };
+            }
+            foreach (var toolCall in toolCalls)
+            {
+                object input;
+                try
+                {
+                    input = JsonSerializer.Deserialize<object>(toolCall.Arguments)
+                        ?? new Dictionary<string, object?>();
+                }
+                catch (JsonException)
+                {
+                    input = new Dictionary<string, object?>();
+                }
+                blocks[index++] = new Dictionary<string, object?>
+                {
+                    ["type"] = "tool_use",
+                    ["id"] = toolCall.Id,
+                    ["name"] = toolCall.Name,
+                    ["input"] = input,
+                };
             }
         }
 
