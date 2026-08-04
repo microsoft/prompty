@@ -37,7 +37,7 @@ public class StreamingAgentTests : IntegrationTestBase
     private static Dictionary<string, Func<string, Task<string>>> WeatherToolFunctions() =>
         new() { ["get_weather"] = GetWeatherAsync };
 
-    private static Dictionary<string, object> StreamingMetadata() =>
+    private static Dictionary<string, object?> StreamingMetadata() =>
         new() { ["stream"] = true };
 
     // -----------------------------------------------------------------------

@@ -12,6 +12,21 @@ using Prompty.Core;
 namespace Prompty.Foundry;
 
 /// <summary>
+/// Foundry implementation of the generated model-listing protocol.
+/// </summary>
+public sealed class FoundryModelLister : IModelLister
+{
+    /// <inheritdoc />
+    public async Task<List<ModelInfo>> ListModelsAsync(object connection)
+    {
+        if (connection is not Connection typedConnection)
+            throw new ArgumentException("Foundry model listing requires a generated Connection.", nameof(connection));
+
+        return [.. await FoundryModels.ListModelsAsync(typedConnection)];
+    }
+}
+
+/// <summary>
 /// Model discovery for Azure OpenAI / Microsoft Foundry endpoints.
 /// Creates the appropriate client (API key or Entra ID) and delegates
 /// listing and enrichment to <see cref="OpenAI.OpenAIModels"/>.
@@ -85,29 +100,56 @@ public static class FoundryModels
         return models.AsReadOnly();
     }
 
-    private static ModelInfo MapDeployment(JsonElement deployment)
+    /// <summary>
+    /// Map a raw Foundry deployment payload to the generated provider-neutral contract.
+    /// </summary>
+    public static ModelInfo MapDeployment(JsonElement deployment)
     {
         var properties = TryGetObject(deployment, "properties");
         var model = properties is not null ? TryGetObject(properties.Value, "model") : null;
         var capabilities = properties is not null ? TryGetObject(properties.Value, "capabilities") : null;
         capabilities ??= model is not null ? TryGetObject(model.Value, "capabilities") : null;
+        capabilities ??= TryGetObject(deployment, "capabilities");
 
-        return new ModelInfo
+        var info = new ModelInfo
         {
             Id = GetString(deployment, "name") ?? string.Empty,
-            DisplayName = model is not null ? GetString(model.Value, "name") : null,
-            OwnedBy = model is not null ? GetString(model.Value, "publisher") ?? "azure" : "azure",
+            DisplayName = GetString(deployment, "modelName")
+                ?? (model is not null ? GetString(model.Value, "name") : null),
+            OwnedBy = GetString(deployment, "modelPublisher")
+                ?? (model is not null ? GetString(model.Value, "publisher") : null)
+                ?? "azure",
             ContextWindow = capabilities is not null
                 ? GetInt(capabilities.Value, "maxContextLength", "contextWindow", "context_length")
-                : model is not null ? GetInt(model.Value, "maxContextLength") : null,
+                : null,
             InputModalities = capabilities is not null
                 ? GetStringList(capabilities.Value, "inputModalities", "input_modalities", "supportedInputModalities")
                 : null,
             OutputModalities = capabilities is not null
                 ? GetStringList(capabilities.Value, "outputModalities", "output_modalities", "supportedOutputModalities")
                 : null,
-            AdditionalProperties = new Dictionary<string, object> { ["deployment"] = deployment.Clone() },
+            AdditionalProperties = ModelDiscovery.PreserveRaw(deployment),
         };
+        info.ContextWindow ??= model is not null ? GetInt(model.Value, "maxContextLength") : null;
+        info.ContextWindow ??= GetInt(deployment, "maxContextLength");
+        ModelDiscovery.Enrich("foundry", info);
+        return info;
+    }
+
+    /// <summary>
+    /// Map a raw Azure OpenAI catalog payload to the generated provider-neutral contract.
+    /// </summary>
+    public static ModelInfo MapCatalogModel(JsonElement model)
+    {
+        var info = new ModelInfo
+        {
+            Id = GetString(model, "id") ?? string.Empty,
+            OwnedBy = GetString(model, "owned_by"),
+            ContextWindow = GetInt(model, "maxContextLength"),
+            AdditionalProperties = ModelDiscovery.PreserveRaw(model),
+        };
+        ModelDiscovery.Enrich("foundry", info);
+        return info;
     }
 
     private static JsonElement? TryGetObject(JsonElement element, string name) =>

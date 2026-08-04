@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.Text.Json;
+using System.ClientModel.Primitives;
 using OpenAI.Chat;
 using Prompty.Core;
 using Prompty.OpenAI;
@@ -74,6 +75,56 @@ public class WireFormatTests
     }
 
     [Fact]
+    public void MessageToWire_AudioDataUri_PreservesSource()
+    {
+        var msg = new Message
+        {
+            Role = Role.User,
+            Parts =
+            [
+                new AudioPart
+                {
+                    Source = "data:audio/wav;base64,YXVkaW8=",
+                    MediaType = "audio/wav",
+                },
+            ],
+        };
+
+        var result = WireFormat.MessageToWire(msg);
+        var data = ModelReaderWriter.Write(result, ModelReaderWriterOptions.Json);
+        using var json = JsonDocument.Parse(data.ToStream());
+        var inputAudio = json.RootElement.GetProperty("content")[0].GetProperty("input_audio");
+
+        Assert.Equal("data:audio/wav;base64,YXVkaW8=", inputAudio.GetProperty("data").GetString());
+        Assert.Equal("wav", inputAudio.GetProperty("format").GetString());
+    }
+
+    [Fact]
+    public void MessageToWire_AudioUrl_PreservesSource()
+    {
+        var msg = new Message
+        {
+            Role = Role.User,
+            Parts =
+            [
+                new AudioPart
+                {
+                    Source = "https://example.com/audio.wav",
+                    MediaType = "audio/wav",
+                },
+            ],
+        };
+
+        var result = WireFormat.MessageToWire(msg);
+        var data = ModelReaderWriter.Write(result, ModelReaderWriterOptions.Json);
+        using var json = JsonDocument.Parse(data.ToStream());
+        var inputAudio = json.RootElement.GetProperty("content")[0].GetProperty("input_audio");
+
+        Assert.Equal("https://example.com/audio.wav", inputAudio.GetProperty("data").GetString());
+        Assert.Equal("wav", inputAudio.GetProperty("format").GetString());
+    }
+
+    [Fact]
     public void MessageToWire_AssistantMessage_ReturnsAssistantChatMessage()
     {
         var msg = new Message
@@ -94,7 +145,7 @@ public class WireFormatTests
         {
             Role = Role.Assistant,
             Parts = [new TextPart { Value = "" }],
-            Metadata = new Dictionary<string, object>
+            Metadata = new Dictionary<string, object?>
             {
                 ["tool_calls"] = new List<ToolCall>
                 {
@@ -116,7 +167,7 @@ public class WireFormatTests
         {
             Role = Role.Tool,
             Parts = [new TextPart { Value = "72°F and sunny" }],
-            Metadata = new Dictionary<string, object> { ["tool_call_id"] = "call_1" },
+            Metadata = new Dictionary<string, object?> { ["tool_call_id"] = "call_1" },
         };
 
         var result = WireFormat.MessageToWire(msg);
@@ -430,5 +481,53 @@ public class WireFormatTests
         Assert.Equal(123L, result.Seed);
         Assert.Single(result.StopSequences);
     }
-}
 
+    [Fact]
+    public void BuildOptions_AdditionalProperties_DoNotOverrideCanonicalOptions()
+    {
+        var agent = new Core.Prompty
+        {
+            Model = new Model
+            {
+                Options = new ModelOptions
+                {
+                    Temperature = 0.2f,
+                    AdditionalProperties = new Dictionary<string, object?>
+                    {
+                        ["temperature"] = 0.9,
+                        ["logprobs"] = true,
+                    },
+                },
+            },
+        };
+
+        var result = WireFormat.BuildOptions(agent);
+        var json = JsonDocument.Parse(
+            ModelReaderWriter.Write(result, ModelReaderWriterOptions.Json).ToStream()).RootElement;
+
+        Assert.Equal(0.2, json.GetProperty("temperature").GetDouble(), precision: 6);
+        Assert.True(json.GetProperty("logprobs").GetBoolean());
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("nested.option")]
+    public void BuildOptions_UnsafeAdditionalPropertyName_Throws(string optionName)
+    {
+        var agent = new Core.Prompty
+        {
+            Model = new Model
+            {
+                Options = new ModelOptions
+                {
+                    AdditionalProperties = new Dictionary<string, object?> { [optionName] = true },
+                },
+            },
+        };
+
+        var error = Assert.Throws<ArgumentException>(() => WireFormat.BuildOptions(agent));
+
+        Assert.Contains("cannot be represented safely", error.Message);
+    }
+}

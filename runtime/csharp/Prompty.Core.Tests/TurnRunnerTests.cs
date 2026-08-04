@@ -22,11 +22,16 @@ public class TurnRunnerTests
                 checkpointStore,
                 new AllowAllPermissionResolver(),
                 new FunctionHostToolExecutor(new Dictionary<string, HostToolHandler>()),
-                request => Task.FromResult(new TurnModelResponse
+                request =>
                 {
-                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs["name"]}" },
-                    CheckpointState = new Dictionary<string, object> { ["stable"] = true }
-                }),
+                    Assert.True(request.Inputs!.ContainsKey("nullable"));
+                    Assert.Null(request.Inputs["nullable"]);
+                    return Task.FromResult(new TurnModelResponse
+                    {
+                        Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs["name"]}" },
+                        CheckpointState = new Dictionary<string, object?> { ["stable"] = true, ["nullable"] = null }
+                    });
+                },
                 FixedClock(),
                 FixedIds());
 
@@ -34,7 +39,7 @@ public class TurnRunnerTests
             {
                 SessionId = "session-1",
                 TurnId = "turn-1",
-                Inputs = new Dictionary<string, object> { ["name"] = "Ada" },
+                Inputs = new Dictionary<string, object?> { ["name"] = "Ada", ["nullable"] = null },
                 Options = new TurnOptions { MaxIterations = 3 }
             });
 
@@ -49,7 +54,13 @@ public class TurnRunnerTests
                 sink.SessionEvents.Select(sessionEvent => sessionEvent.Type).ToArray());
             var checkpoint = await checkpointStore.LoadAsync("session-1", "turn-1-checkpoint-0");
             Assert.NotNull(checkpoint);
-            Assert.True((bool)checkpoint.State!["stable"]);
+            Assert.True(Assert.IsType<bool>(checkpoint.State!["stable"]));
+            Assert.True(checkpoint.State.ContainsKey("nullable"));
+            Assert.Null(checkpoint.State["nullable"]);
+            var turnStart = sink.TurnEvents.Single(turnEvent => turnEvent.Type == TurnEventType.TurnStart);
+            var turnInputs = Assert.IsAssignableFrom<IDictionary<string, object?>>(turnStart.Payload["inputs"]);
+            Assert.True(turnInputs.ContainsKey("nullable"));
+            Assert.Null(turnInputs["nullable"]);
             Assert.Equal(
                 ["session", "turn", "turn", "turn", "session", "turn", "session", "summary"],
                 JournalKinds(journalPath));
@@ -67,14 +78,20 @@ public class TurnRunnerTests
         try
         {
             var sink = new CollectingEventSink();
+            var permissionResolver = new CapturingPermissionResolver();
             var runner = new ReferenceTurnRunner(
                 sink,
                 new JsonlEventJournalWriter(Path.Combine(directory.FullName, "trace.jsonl")),
                 new InMemoryCheckpointStore(),
-                new AllowAllPermissionResolver(),
+                permissionResolver,
                 new FunctionHostToolExecutor(new Dictionary<string, HostToolHandler>
                 {
-                    ["add"] = (args, _) => Task.FromResult<object?>(Convert.ToInt32(args["a"]) + Convert.ToInt32(args["b"]))
+                    ["add"] = (args, _) =>
+                    {
+                        Assert.True(args.ContainsKey("nullable"));
+                        Assert.Null(args["nullable"]);
+                        return Task.FromResult<object?>(Convert.ToInt32(args["a"]) + Convert.ToInt32(args["b"]));
+                    }
                 }),
                 request =>
                 {
@@ -89,7 +106,7 @@ public class TurnRunnerTests
                                     RequestId = "exec-1",
                                     ToolCallId = "call-1",
                                     ToolName = "add",
-                                    Arguments = new Dictionary<string, object> { ["a"] = 2, ["b"] = 3 }
+                                    Arguments = new Dictionary<string, object?> { ["a"] = 2, ["b"] = 3, ["nullable"] = null }
                                 }
                             ]
                         });
@@ -97,7 +114,7 @@ public class TurnRunnerTests
 
                     return Task.FromResult(new TurnModelResponse
                     {
-                        Output = new Dictionary<string, object?> { ["toolResult"] = request.ToolResults[0].Result }
+                        Output = new Dictionary<string, object?> { ["toolResult"] = request.ToolResults![0].Result }
                     });
                 },
                 FixedClock(),
@@ -106,7 +123,13 @@ public class TurnRunnerTests
             var result = await runner.RunAsync(new RunTurnRequest { SessionId = "session-1", TurnId = "turn-1" });
 
             Assert.Equal(5, Assert.IsType<Dictionary<string, object?>>(result.Output)["toolResult"]);
-            Assert.True(result.ToolResults[0].Success);
+            Assert.True(result.ToolResults![0].Success);
+            Assert.NotNull(permissionResolver.Request);
+            Assert.NotNull(permissionResolver.Request.Details);
+            var permissionArguments =
+                Assert.IsAssignableFrom<IDictionary<string, object?>>(permissionResolver.Request.Details["arguments"]);
+            Assert.True(permissionArguments.ContainsKey("nullable"));
+            Assert.Null(permissionArguments["nullable"]);
             Assert.Equal(
                 [
                     TurnEventType.TurnStart,
@@ -158,7 +181,7 @@ public class TurnRunnerTests
 
                     return Task.FromResult(new TurnModelResponse
                     {
-                        Output = new Dictionary<string, object?> { ["denied"] = request.ToolResults[0].ErrorKind }
+                        Output = new Dictionary<string, object?> { ["denied"] = request.ToolResults![0].ErrorKind }
                     });
                 },
                 FixedClock(),
@@ -168,6 +191,10 @@ public class TurnRunnerTests
 
             Assert.Equal("permission_denied", Assert.IsType<Dictionary<string, object?>>(result.Output)["denied"]);
             Assert.DoesNotContain(sink.TurnEvents, turnEvent => turnEvent.Type == TurnEventType.ToolExecutionStart);
+            Assert.Contains(
+                sink.TurnEvents,
+                turnEvent => turnEvent.Type == TurnEventType.ToolResult
+                    && turnEvent.Payload["errorKind"] as string == "permission_denied");
         }
         finally
         {
@@ -200,7 +227,7 @@ public class TurnRunnerTests
                         });
                     }
 
-                    return Task.FromResult(new TurnModelResponse { Output = request.ToolResults[0].Save() });
+                    return Task.FromResult(new TurnModelResponse { Output = request.ToolResults![0].Save() });
                 },
                 FixedClock(),
                 FixedIds());
@@ -277,7 +304,7 @@ public class TurnRunnerTests
                 {
                     SessionId = vectors.SessionId,
                     TurnId = vectors.TurnId,
-                    Inputs = scenario.Inputs ?? new Dictionary<string, object>(),
+                    Inputs = scenario.Inputs ?? new Dictionary<string, object?>(),
                     Options = new TurnOptions { MaxIterations = scenario.MaxIterations }
                 });
 
@@ -291,6 +318,24 @@ public class TurnRunnerTests
     }
 
     private static Func<string> FixedClock() => () => "2026-06-28T00:00:00Z";
+
+    private sealed class CapturingPermissionResolver : IPermissionResolver
+    {
+        public PermissionRequest? Request { get; private set; }
+
+        public Task<PermissionDecision> RequestAsync(PermissionRequest request)
+        {
+            Request = request;
+            return Task.FromResult(new PermissionDecision
+            {
+                RequestId = request.RequestId,
+                ToolCallId = request.ToolCallId,
+                Permission = request.Permission,
+                Approved = true,
+                Reason = "captured"
+            });
+        }
+    }
 
     private static Func<string, string> FixedIds()
     {
@@ -314,8 +359,8 @@ public class TurnRunnerTests
             {
                 return Task.FromResult(new TurnModelResponse
                 {
-                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs["name"]}" },
-                    CheckpointState = new Dictionary<string, object> { ["stable"] = true }
+                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs!["name"]}" },
+                    CheckpointState = new Dictionary<string, object?> { ["stable"] = true }
                 });
             }
 
@@ -330,7 +375,7 @@ public class TurnRunnerTests
                             RequestId = "exec-1",
                             ToolCallId = "call-1",
                             ToolName = name == "tool_failure" ? "fail" : "add",
-                            Arguments = new Dictionary<string, object> { ["a"] = 2, ["b"] = 3 }
+                            Arguments = new Dictionary<string, object?> { ["a"] = 2, ["b"] = 3 }
                         }
                     ]
                 });
@@ -340,8 +385,8 @@ public class TurnRunnerTests
             {
                 Output = new Dictionary<string, object?>
                 {
-                    ["toolResult"] = request.ToolResults[0].Result,
-                    ["errorKind"] = request.ToolResults[0].ErrorKind
+                    ["toolResult"] = request.ToolResults![0].Result,
+                    ["errorKind"] = request.ToolResults![0].ErrorKind
                 }
             });
         };
@@ -428,7 +473,7 @@ public class TurnRunnerTests
 
     private sealed record ReplayScenario(
         string Name,
-        Dictionary<string, object>? Inputs,
+        Dictionary<string, object?>? Inputs,
         int? MaxIterations,
         string[] Expected)
     {
@@ -442,9 +487,9 @@ public class TurnRunnerTests
         }
     }
 
-    private static Dictionary<string, object> ToDictionary(JsonElement element)
+    private static Dictionary<string, object?> ToDictionary(JsonElement element)
     {
-        return element.EnumerateObject().ToDictionary(property => property.Name, property => ToObject(property.Value)!);
+        return element.EnumerateObject().ToDictionary(property => property.Name, property => ToObject(property.Value));
     }
 
     private static object? ToObject(JsonElement element)

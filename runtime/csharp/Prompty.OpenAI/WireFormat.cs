@@ -2,6 +2,8 @@
 
 #pragma warning disable OPENAI001 // Responses API is in preview
 
+using System.ClientModel.Primitives;
+using System.Text;
 using System.Text.Json;
 using OpenAI.Chat;
 using OpenAI.Responses;
@@ -62,8 +64,55 @@ public static class WireFormat
                             _ => ChatImageDetailLevel.Auto,
                         });
                     break;
+                case AudioPart audio:
+                    yield return BuildAudioContentPart(audio);
+                    break;
+                case FilePart file:
+                    var filePart = ChatMessageContentPart.CreateFilePart(file.Source);
+                    filePart.Patch.Set(
+                        "$.file"u8,
+                        BinaryData.FromObjectAsJson(new Dictionary<string, object?> { ["url"] = file.Source }).ToMemory().Span);
+                    yield return filePart;
+                    break;
             }
         }
+    }
+
+    private static ChatMessageContentPart BuildAudioContentPart(AudioPart audio)
+    {
+        byte[] bytes;
+        try
+        {
+            bytes = Convert.FromBase64String(audio.Source);
+        }
+        catch (FormatException)
+        {
+            bytes = Encoding.UTF8.GetBytes(audio.Source);
+        }
+
+        var format = AudioFormat(audio.MediaType);
+        var part = ChatMessageContentPart.CreateInputAudioPart(
+            BinaryData.FromBytes(bytes),
+            format == "mp3" ? ChatInputAudioFormat.Mp3 : ChatInputAudioFormat.Wav);
+        part.Patch.Set("$.input_audio.data"u8, BinaryData.FromObjectAsJson(audio.Source).ToMemory().Span);
+        part.Patch.Set("$.input_audio.format"u8, BinaryData.FromObjectAsJson(format).ToMemory().Span);
+        return part;
+    }
+
+    private static string AudioFormat(string? mediaType)
+    {
+        return mediaType?.ToLowerInvariant() switch
+        {
+            "audio/wav" or "audio/x-wav" => "wav",
+            "audio/mpeg" or "audio/mp3" => "mp3",
+            "audio/mp4" => "mp4",
+            "audio/ogg" => "ogg",
+            "audio/flac" => "flac",
+            "audio/webm" => "webm",
+            "audio/pcm" => "pcm",
+            { } value when value.StartsWith("audio/", StringComparison.Ordinal) => value["audio/".Length..],
+            _ => "wav"
+        };
     }
 
     private static AssistantChatMessage BuildAssistantMessage(Message msg)
@@ -156,10 +205,29 @@ public static class WireFormat
             options.PresencePenalty = (float)opts.PresencePenalty;
         if (opts.Seed is not null)
             options.Seed = (long)opts.Seed;
+        if (opts.AllowMultipleToolCalls is not null)
+            options.AllowParallelToolCalls = opts.AllowMultipleToolCalls;
         if (opts.StopSequences is not null)
         {
             foreach (var s in opts.StopSequences)
                 options.StopSequences.Add(s);
+        }
+        if (opts.AdditionalProperties is not null)
+        {
+            foreach (var (name, value) in opts.AdditionalProperties)
+            {
+                if (CanonicalOptionIsSet(name, agent, opts))
+                    continue;
+                if (string.IsNullOrWhiteSpace(name) ||
+                    name.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '_'))
+                    throw new ArgumentException(
+                        $"OpenAI additional option name '{name}' cannot be represented safely by the SDK.",
+                        nameof(agent));
+
+                var path = Encoding.UTF8.GetBytes($"$.{name}");
+                var json = BinaryData.FromObjectAsJson(value).ToMemory().Span;
+                options.Patch.Set(path, json);
+            }
         }
 
         // Tools
@@ -176,6 +244,25 @@ public static class WireFormat
             options.ResponseFormat = responseFormat;
 
         return options;
+    }
+
+    private static bool CanonicalOptionIsSet(string name, Core.Prompty agent, ModelOptions options)
+    {
+        return name switch
+        {
+            "model" or "messages" or "stream" => true,
+            "temperature" => options.Temperature is not null,
+            "max_completion_tokens" => options.MaxOutputTokens is not null,
+            "top_p" => options.TopP is not null,
+            "frequency_penalty" => options.FrequencyPenalty is not null,
+            "presence_penalty" => options.PresencePenalty is not null,
+            "seed" => options.Seed is not null,
+            "stop" => options.StopSequences is not null,
+            "parallel_tool_calls" => options.AllowMultipleToolCalls is not null,
+            "tools" => agent.Tools is { Count: > 0 },
+            "response_format" => agent.Outputs is { Count: > 0 },
+            _ => false
+        };
     }
 
     // -----------------------------------------------------------------------

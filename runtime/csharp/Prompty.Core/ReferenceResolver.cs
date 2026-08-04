@@ -34,44 +34,67 @@ public static class ReferenceResolver
     }
 
     /// <summary>
-    /// Walks a dictionary and resolves any string values matching ${protocol:value} patterns.
-    /// Only processes top-level string values in the given dictionary (recursive walking is
-    /// handled by LoadContext calling PreProcess on each nested dict).
+    /// Recursively walks a dictionary and resolves string values matching ${protocol:value} patterns.
     /// </summary>
     internal static Dictionary<string, object?> ResolveReferences(
         Dictionary<string, object?> data,
         string parentDir,
         IReadOnlyCollection<string> allowedRoots)
     {
-        foreach (var key in data.Keys.ToList())
+        ResolveValue(data, "<root>", parentDir, allowedRoots);
+        return data;
+    }
+
+    private static object? ResolveValue(
+        object? value,
+        string key,
+        string parentDir,
+        IReadOnlyCollection<string> allowedRoots)
+    {
+        if (value is System.Collections.IDictionary dictionary)
         {
-            var value = data[key];
-            if (value is not string str)
-                continue;
-            if (!str.StartsWith(RefPrefix) || !str.EndsWith(RefSuffix))
-                continue;
-
-            var inner = str[RefPrefix.Length..^RefSuffix.Length];
-            var colonIndex = inner.IndexOf(':');
-            if (colonIndex < 0)
-                continue;
-
-            var protocol = inner[..colonIndex].ToLowerInvariant();
-            var remainder = inner[(colonIndex + 1)..];
-
-            switch (protocol)
+            foreach (var childKey in dictionary.Keys.Cast<object>().ToList())
             {
-                case "env":
-                    data[key] = ResolveEnvVar(remainder, key);
-                    break;
-                case "file":
-                    data[key] = ResolveFileRef(remainder, parentDir, allowedRoots, key);
-                    break;
-                    // Unknown protocol: leave unchanged per spec §4
+                if (childKey is string childName)
+                {
+                    dictionary[childKey] = ResolveValue(dictionary[childKey], childName, parentDir, allowedRoots);
+                }
             }
+
+            return value;
         }
 
-        return data;
+        if (value is System.Collections.IList list)
+        {
+            for (var index = 0; index < list.Count; index++)
+            {
+                list[index] = ResolveValue(list[index], $"{key}[{index}]", parentDir, allowedRoots);
+            }
+
+            return value;
+        }
+
+        if (value is not string str || !str.StartsWith(RefPrefix) || !str.EndsWith(RefSuffix))
+        {
+            return value;
+        }
+
+        var inner = str[RefPrefix.Length..^RefSuffix.Length];
+        var colonIndex = inner.IndexOf(':');
+        if (colonIndex < 0)
+        {
+            return value;
+        }
+
+        var protocol = inner[..colonIndex].ToLowerInvariant();
+        var remainder = inner[(colonIndex + 1)..];
+        var resolved = protocol switch
+        {
+            "env" => ResolveEnvVar(remainder, key),
+            "file" => ResolveFileRef(remainder, parentDir, allowedRoots, key),
+            _ => value
+        };
+        return resolved;
     }
 
     /// <summary>

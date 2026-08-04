@@ -1,5 +1,4 @@
 // Copyright (c) Microsoft. All rights reserved.
-using System.Text.RegularExpressions;
 using YamlDotNet.Serialization;
 
 namespace Prompty.Core;
@@ -8,18 +7,13 @@ namespace Prompty.Core;
 /// Splits .prompty file content into YAML frontmatter and markdown body.
 /// Frontmatter is delimited by --- or +++ markers.
 /// </summary>
-public static partial class FrontmatterParser
+public static class FrontmatterParser
 {
-    // Matches --- or +++ delimited frontmatter followed by body content.
-    // Group 1: frontmatter YAML, Group 2: markdown body.
-    [GeneratedRegex(@"^\s*(?:---|\+\+\+)(.*?)(?:---|\+\+\+)\s*(.+)$", RegexOptions.Singleline)]
-    private static partial Regex FrontmatterRegex();
-
     /// <summary>
     /// Parse .prompty file content into a dictionary.
     /// If frontmatter markers are present, splits frontmatter (YAML) from body (markdown).
     /// The body is stored under the "instructions" key.
-    /// If no frontmatter markers, treats entire content as YAML.
+    /// If no frontmatter markers are present, treats the entire content as instructions.
     /// </summary>
     /// <param name="contents">Raw .prompty file content.</param>
     /// <returns>Dictionary with parsed frontmatter fields and optional "instructions" key.</returns>
@@ -27,24 +21,41 @@ public static partial class FrontmatterParser
     {
         ArgumentNullException.ThrowIfNull(contents);
 
-        // Check for frontmatter markers
         var trimmed = contents.TrimStart();
-        if (trimmed.StartsWith("---") || trimmed.StartsWith("+++"))
+        var openingLineEnd = trimmed.IndexOf('\n');
+        var openingLine = (openingLineEnd >= 0 ? trimmed[..openingLineEnd] : trimmed).Trim();
+        if (openingLine is not "---" and not "+++")
         {
-            var match = FrontmatterRegex().Match(contents);
-            if (match.Success)
-            {
-                var frontmatter = match.Groups[1].Value;
-                var body = match.Groups[2].Value;
-
-                var data = DeserializeYaml(frontmatter);
-                data["instructions"] = body;
-                return data;
-            }
+            return new Dictionary<string, object?> { ["instructions"] = contents };
         }
 
-        // No frontmatter markers — treat entire content as YAML
-        return DeserializeYaml(contents);
+        if (openingLineEnd < 0)
+        {
+            return new Dictionary<string, object?> { ["instructions"] = string.Empty };
+        }
+
+        var frontmatterStart = openingLineEnd + 1;
+        var lineStart = frontmatterStart;
+        while (lineStart <= trimmed.Length)
+        {
+            var lineEnd = trimmed.IndexOf('\n', lineStart);
+            var line = (lineEnd >= 0 ? trimmed[lineStart..lineEnd] : trimmed[lineStart..]).Trim();
+            if (line is "---" or "+++")
+            {
+                var data = DeserializeYaml(trimmed[frontmatterStart..lineStart]);
+                data["instructions"] = lineEnd >= 0 ? trimmed[(lineEnd + 1)..] : string.Empty;
+                return data;
+            }
+
+            if (lineEnd < 0)
+            {
+                break;
+            }
+
+            lineStart = lineEnd + 1;
+        }
+
+        throw new InvalidOperationException("Opening frontmatter delimiter does not have a closing delimiter.");
     }
 
     private static Dictionary<string, object?> DeserializeYaml(string yaml)

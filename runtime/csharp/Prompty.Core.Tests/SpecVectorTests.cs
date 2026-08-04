@@ -59,12 +59,6 @@ public class SpecVectorTests
         var mustacheRenderer = new MustacheRenderer();
         var failures = new List<string>();
 
-        // Known Jinja2.NET compatibility issues
-        var knownSkips = new HashSet<string>
-        {
-            "for_loop", // Jinja2.NET strips whitespace inside for loops differently
-        };
-
         foreach (var vec in vectors)
         {
             var name = vec.GetProperty("name").GetString()!;
@@ -77,10 +71,6 @@ public class SpecVectorTests
 
             // Skip vectors with non-standard expected format
             if (!expected.TryGetProperty("rendered", out var renderedEl))
-                continue;
-
-            // Skip known compatibility issues
-            if (knownSkips.Contains(name))
                 continue;
 
             var template = input.GetProperty("template").GetString()!;
@@ -293,6 +283,26 @@ public class SpecVectorTests
             Assert.Fail($"{failures.Count} load vector(s) failed (skipped {skipped.Count}):\n" +
                 string.Join("\n\n", failures));
         }
+    }
+
+    [Fact]
+    public void FunctionToolLoadVector_DeclaresBindingsExpectation()
+    {
+        var vector = LoadVectors("load")
+            .Single(vector => vector.GetProperty("name").GetString() == "tools_function_load");
+        var expectedTool = vector.GetProperty("expected")
+            .GetProperty("tools")
+            .EnumerateArray()
+            .Single(tool =>
+                tool.GetProperty("kind").GetString() == "function" &&
+                tool.GetProperty("name").GetString() == "get_weather");
+
+        Assert.True(
+            expectedTool.TryGetProperty("bindings", out var bindings),
+            "tools_function_load must declare expected FunctionTool bindings");
+        Assert.True(
+            bindings.ValueKind is JsonValueKind.Object or JsonValueKind.Array,
+            "FunctionTool bindings expectations must use the equivalent map or list wire form");
     }
 
     // =========================================================================

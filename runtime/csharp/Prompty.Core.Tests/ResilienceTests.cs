@@ -48,7 +48,7 @@ file class ThrowingMockExecutor : IExecutor
         {
             Role = Role.Assistant,
             Parts = [new TextPart { Value = textContent ?? "" }],
-            Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls }
+            Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls }
         });
         for (int i = 0; i < toolCalls.Count; i++)
         {
@@ -56,7 +56,7 @@ file class ThrowingMockExecutor : IExecutor
             {
                 Role = Role.Tool,
                 Parts = [new TextPart { Value = toolResults[i] }],
-                Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id }
+                Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id }
             });
         }
         return msgs;
@@ -379,7 +379,7 @@ public class ToolExecutionErrorSafetyTests : IDisposable
     }
 
     [Fact]
-    public async Task ToolDispatch_ParallelPath_HandlerThrows_LoopContinues()
+    public async Task ToolDispatch_ParallelPath_IsRejectedForDeterministicDurability()
     {
         var executor = ResilienceHelper.Register();
 
@@ -407,9 +407,11 @@ public class ToolExecutionErrorSafetyTests : IDisposable
             ["bad_tool"] = _ => throw new InvalidOperationException("parallel boom")
         };
 
-        var result = await Pipeline.TurnAsync(agent, tools: tools, parallelToolCalls: true);
-        Assert.Equal("parallel recovered", result);
-        Assert.Equal(2, executor.Calls.Count);
+        var error = await Assert.ThrowsAsync<ArgumentException>(
+            () => Pipeline.TurnAsync(agent, tools: tools, parallelToolCalls: true));
+
+        Assert.Contains("sequentially", error.Message);
+        Assert.Empty(executor.Calls);
     }
 }
 

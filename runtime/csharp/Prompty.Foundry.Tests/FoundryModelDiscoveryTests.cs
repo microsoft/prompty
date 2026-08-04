@@ -87,4 +87,21 @@ public class FoundryModelDiscoveryTests
         Assert.Equal(new[] { "text", "json" }, model.OutputModalities);
         Assert.NotNull(model.AdditionalProperties);
     }
+
+    [Fact]
+    public void MapCatalogModel_PreservesExplicitJsonNull()
+    {
+        using var document = System.Text.Json.JsonDocument.Parse(
+            """{"id":"gpt-test","owned_by":"contoso","nullable":null}""");
+
+        var model = FoundryModels.MapCatalogModel(document.RootElement);
+
+        Assert.NotNull(model.AdditionalProperties);
+        var nullable = Assert.IsType<System.Text.Json.JsonElement>(model.AdditionalProperties["nullable"]);
+        Assert.Equal(System.Text.Json.JsonValueKind.Null, nullable.ValueKind);
+        using var saved = System.Text.Json.JsonDocument.Parse(model.ToJson(indent: false));
+        Assert.Equal(
+            System.Text.Json.JsonValueKind.Null,
+            saved.RootElement.GetProperty("additionalProperties").GetProperty("nullable").ValueKind);
+    }
 }

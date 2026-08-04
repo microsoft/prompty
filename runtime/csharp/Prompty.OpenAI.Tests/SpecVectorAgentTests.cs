@@ -369,7 +369,16 @@ public class SpecVectorAgentTests : IDisposable
         }
 
         // Execute and verify
-        if (expected.TryGetProperty("error", out var errorProp))
+        if (expected.TryGetProperty("rust_expected_error", out var rustError)
+            && rustError.GetString()?.Contains("parallel_tool_calls=true", StringComparison.Ordinal) == true)
+        {
+            var error = await Assert.ThrowsAsync<ArgumentException>(() =>
+                Pipeline.TurnAsync(agent, tools: toolFunctions, onEvent: onEvent,
+                    cancellationToken: cts?.Token ?? default, contextBudget: contextBudget,
+                    guardrails: guardrails, steering: steering, parallelToolCalls: parallelToolCalls));
+            Assert.Contains("sequentially", error.Message);
+        }
+        else if (expected.TryGetProperty("error", out var errorProp))
         {
             var errorMsg = errorProp.GetString() ?? "";
             if (errorMsg == "CancelledError" || errorMsg.Contains("cancelled", StringComparison.OrdinalIgnoreCase))
@@ -722,10 +731,10 @@ public class SpecVectorAgentTests : IDisposable
         {
             var messages = new List<Message>
             {
-                new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+                new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls } },
             };
             for (var i = 0; i < toolCalls.Count; i++)
-                messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+                messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
             return messages;
         }
     }

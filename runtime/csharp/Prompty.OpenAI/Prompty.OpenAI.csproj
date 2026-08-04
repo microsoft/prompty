@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <NoWarn>OPENAI001;CS1591</NoWarn>
+    <NoWarn>OPENAI001;SCME0001;CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Version>2.0.0-beta.4</Version>
     <PackageId>Prompty.OpenAI</PackageId>

@@ -123,6 +123,17 @@ public class SpecVectorWireTests
 
         // 4. Check options (temperature, max_completion_tokens, etc.)
         AssertOptionFields(optionsJson, expectedBody, name);
+        if (agent.Model?.Options?.AdditionalProperties is not null)
+        {
+            foreach (var optionName in agent.Model.Options.AdditionalProperties.Keys)
+            {
+                Assert.True(expectedBody.TryGetProperty(optionName, out var expectedOption),
+                    $"[{name}] Expected vector body to contain passthrough option '{optionName}'");
+                Assert.True(optionsJson.TryGetProperty(optionName, out var actualOption),
+                    $"[{name}] Serialized options omitted passthrough option '{optionName}'");
+                AssertJsonSubset(expectedOption, actualOption, $"[{name}] {optionName}");
+            }
+        }
 
         // 5. Check response_format (structured output)
         if (expectedBody.TryGetProperty("response_format", out var expectedRF))
@@ -143,16 +154,11 @@ public class SpecVectorWireTests
             if (provider != "openai") continue;
             if (apiType != "chat") continue;
 
-            var name = vec.GetProperty("name").GetString()!;
-
-            // Skip vectors that require features not yet implemented in C#
-            if (name is "chat_audio_part" or "chat_audio_mp3")
-                continue; // AudioPart not handled in WireFormat.BuildContentParts
-
-            if (name == "options_additional_properties")
-                continue; // AdditionalProperties passthrough not implemented in BuildOptions
-
-            yield return [name, input, vec.GetProperty("expected").GetProperty("request_body")];
+            yield return [
+                vec.GetProperty("name").GetString()!,
+                input,
+                vec.GetProperty("expected").GetProperty("request_body"),
+            ];
         }
     }
 
@@ -375,12 +381,10 @@ public class SpecVectorWireTests
 
             if (prop.Name == "messages")
             {
-                // Messages need special handling for content simplification:
-                // The runtime may simplify single-text content to a string while vectors use array form.
                 Assert.Equal(prop.Value.GetArrayLength(), actualProp.GetArrayLength());
                 for (int i = 0; i < prop.Value.GetArrayLength(); i++)
                 {
-                    AssertAnthropicMessageMatches(actualProp[i], prop.Value[i], $"[{name}] messages[{i}]");
+                    AssertJsonSubset(prop.Value[i], actualProp[i], $"[{name}] messages[{i}]");
                 }
             }
             else
@@ -645,63 +649,6 @@ public class SpecVectorWireTests
                     AssertJsonSubset(expectedContent[i], actualContent[i],
                         $"{context}.content[{i}]");
                 }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Compares an Anthropic message where the runtime may simplify single-text content
-    /// to a string (e.g., "content": "Hello") while vectors use the array form
-    /// (e.g., "content": [{"type": "text", "text": "Hello"}]).
-    /// </summary>
-    private static void AssertAnthropicMessageMatches(JsonElement actual, JsonElement expected, string context)
-    {
-        // Check role
-        if (expected.TryGetProperty("role", out var expectedRole))
-        {
-            Assert.True(actual.TryGetProperty("role", out var actualRole),
-                $"{context}: missing 'role' in actual. Actual: {actual.GetRawText()}");
-            Assert.Equal(expectedRole.GetString(), actualRole.GetString());
-        }
-
-        // Check content with simplification handling
-        if (expected.TryGetProperty("content", out var expectedContent))
-        {
-            Assert.True(actual.TryGetProperty("content", out var actualContent),
-                $"{context}: missing 'content' in actual. Actual: {actual.GetRawText()}");
-
-            if (expectedContent.ValueKind == JsonValueKind.Array && actualContent.ValueKind == JsonValueKind.String)
-            {
-                // Runtime simplified: expected array with single text, actual is string
-                if (expectedContent.GetArrayLength() == 1)
-                {
-                    var part = expectedContent[0];
-                    if (part.TryGetProperty("text", out var textProp))
-                    {
-                        Assert.Equal(textProp.GetString(), actualContent.GetString());
-                        return;
-                    }
-                }
-                Assert.Fail($"{context}: expected array content but got simplified string '{actualContent.GetString()}'");
-            }
-            else if (expectedContent.ValueKind == JsonValueKind.String && actualContent.ValueKind == JsonValueKind.Array)
-            {
-                // Opposite: expected string, actual array
-                if (actualContent.GetArrayLength() == 1)
-                {
-                    var part = actualContent[0];
-                    if (part.TryGetProperty("text", out var textProp))
-                    {
-                        Assert.Equal(expectedContent.GetString(), textProp.GetString());
-                        return;
-                    }
-                }
-                Assert.Fail($"{context}: expected string content but got array: {actualContent.GetRawText()}");
-            }
-            else
-            {
-                // Same kind — use standard comparison
-                AssertJsonSubset(expectedContent, actualContent, $"{context}.content");
             }
         }
     }

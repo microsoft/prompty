@@ -537,17 +537,22 @@ public class PipelineTests : IDisposable
             new()
             {
                 Role = Role.System,
-                Parts = [new TextPart { Value = "Prefix __PROMPTY_THREAD_abcd1234_conv__" }],
-                Metadata = new Dictionary<string, object> { ["source"] = "test" },
+                Parts = [new TextPart { Value = "Prefix __PROMPTY_THREAD_abcd1234_conv__ Suffix" }],
+                Metadata = new Dictionary<string, object?> { ["source"] = "test", ["nullable"] = null },
             },
         };
 
         var inputs = new Dictionary<string, object?> { ["conv"] = threadMessages };
         var result = Pipeline.ExpandThreadMarkers(messages, inputs);
 
-        // The "before" fragment should carry the original message's metadata
-        Assert.Equal(2, result.Count);
+        // Both fragments should carry all metadata, including explicit null values.
+        Assert.Equal(3, result.Count);
         Assert.Equal("test", result[0].Metadata["source"]);
+        Assert.True(result[0].Metadata.ContainsKey("nullable"));
+        Assert.Null(result[0].Metadata["nullable"]);
+        Assert.Equal("test", result[2].Metadata["source"]);
+        Assert.True(result[2].Metadata.ContainsKey("nullable"));
+        Assert.Null(result[2].Metadata["nullable"]);
     }
 
     // -----------------------------------------------------------------------
@@ -608,10 +613,10 @@ internal class MockExecutor : IExecutor
     {
         var messages = new List<Message>
         {
-            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }
@@ -643,10 +648,10 @@ internal class ToolCallingExecutor : IExecutor
     {
         var messages = new List<Message>
         {
-            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }

@@ -151,25 +151,38 @@ public class AnthropicExecutor : IExecutor
             _ => "user",
         };
 
-        // Handle tool results
+        if (msg.Metadata is not null
+            && msg.Metadata.TryGetValue("tool_results", out var toolResults))
+        {
+            return new Dictionary<string, object?>
+            {
+                ["role"] = role,
+                ["content"] = toolResults,
+            };
+        }
+
+        if (msg.Metadata is not null
+            && msg.Metadata.TryGetValue("tool_use_id", out var toolUseId))
+        {
+            return BuildToolResultMessage(toolUseId?.ToString() ?? "", msg.Text);
+        }
+
+        if (msg.Metadata is not null
+            && msg.Metadata.TryGetValue("content", out var rawContent))
+        {
+            return new Dictionary<string, object?>
+            {
+                ["role"] = role,
+                ["content"] = rawContent,
+            };
+        }
+
         if (msg.Role == Role.Tool)
         {
             var toolCallId = msg.Metadata is not null && msg.Metadata.TryGetValue("tool_call_id", out var id)
                 ? id?.ToString() ?? ""
                 : "";
-            return new Dictionary<string, object?>
-            {
-                ["role"] = "user",
-                ["content"] = new List<Dictionary<string, object?>>
-                {
-                    new()
-                    {
-                        ["type"] = "tool_result",
-                        ["tool_use_id"] = toolCallId,
-                        ["content"] = msg.Text,
-                    }
-                },
-            };
+            return BuildToolResultMessage(toolCallId, msg.Text);
         }
 
         // Build content blocks
@@ -207,13 +220,24 @@ public class AnthropicExecutor : IExecutor
             }
         }
 
-        // Simplify single text content
-        if (content.Count == 1 && content[0]["type"]?.ToString() == "text")
-        {
-            return new() { ["role"] = role, ["content"] = content[0]["text"] };
-        }
-
         return new() { ["role"] = role, ["content"] = content };
+    }
+
+    private static Dictionary<string, object?> BuildToolResultMessage(string toolUseId, string content)
+    {
+        return new Dictionary<string, object?>
+        {
+            ["role"] = "user",
+            ["content"] = new List<Dictionary<string, object?>>
+            {
+                new()
+                {
+                    ["type"] = "tool_result",
+                    ["tool_use_id"] = toolUseId,
+                    ["content"] = content,
+                }
+            },
+        };
     }
 
     private static List<Dictionary<string, object?>>? ToolsToWire(Core.Prompty agent)
@@ -315,35 +339,21 @@ public class AnthropicExecutor : IExecutor
     {
         var messages = new List<Message>();
 
-        // --- Assistant message with ALL content blocks (text + tool_use) ---
-        var rawContent = new List<Dictionary<string, object?>>();
-        if (!string.IsNullOrEmpty(textContent))
-        {
-            rawContent.Add(new() { ["type"] = "text", ["text"] = textContent });
-        }
-        foreach (var tc in toolCalls)
-        {
-            rawContent.Add(new()
-            {
-                ["type"] = "tool_use",
-                ["id"] = tc.Id,
-                ["name"] = tc.Name,
-                ["input"] = JsonSerializer.Deserialize<JsonElement>(tc.Arguments),
-            });
-        }
-
         messages.Add(new Message
         {
             Role = Role.Assistant,
             Parts = !string.IsNullOrEmpty(textContent)
                 ? [new TextPart { Value = textContent }]
                 : [],
-            Metadata = new Dictionary<string, object> { ["content"] = rawContent },
+            Metadata = new Dictionary<string, object?>
+            {
+                ["content"] = GetRawContent(rawResponse, toolCalls, textContent),
+            },
         });
 
         // --- Single user message with batched tool_result blocks ---
         var toolResultBlocks = new List<Dictionary<string, object?>>();
-        for (var i = 0; i < toolCalls.Count; i++)
+        for (var i = 0; i < Math.Min(toolCalls.Count, toolResults.Count); i++)
         {
             toolResultBlocks.Add(new()
             {
@@ -357,9 +367,172 @@ public class AnthropicExecutor : IExecutor
         {
             Role = Role.User,
             Parts = toolResults.Select(r => (ContentPart)new TextPart { Value = r }).ToList(),
-            Metadata = new Dictionary<string, object> { ["tool_results"] = toolResultBlocks },
+            Metadata = new Dictionary<string, object?> { ["tool_results"] = toolResultBlocks },
         });
 
         return messages;
+    }
+
+    private static object GetRawContent(
+        object rawResponse,
+        IReadOnlyList<ToolCall> toolCalls,
+        string? textContent)
+    {
+        if (rawResponse is PromptyStream stream)
+        {
+            return ReconstructStreamContent(stream.Items, toolCalls, textContent);
+        }
+
+        if (rawResponse is JsonElement { ValueKind: JsonValueKind.Object } element
+            && element.TryGetProperty("content", out var content))
+        {
+            return content.Clone();
+        }
+
+        if (rawResponse is IReadOnlyDictionary<string, object?> dictionary
+            && dictionary.TryGetValue("content", out var value)
+            && value is not null)
+        {
+            return value;
+        }
+
+        return Array.Empty<object>();
+    }
+
+    private static List<Dictionary<string, object?>> ReconstructStreamContent(
+        IReadOnlyList<object> items,
+        IReadOnlyList<ToolCall> toolCalls,
+        string? textContent)
+    {
+        var blocks = new SortedDictionary<int, Dictionary<string, object?>>();
+        var textDeltas = new Dictionary<int, List<string>>();
+        var thinkingDeltas = new Dictionary<int, List<string>>();
+        var signatureDeltas = new Dictionary<int, List<string>>();
+        var inputDeltas = new Dictionary<int, List<string>>();
+
+        foreach (var item in items)
+        {
+            if (item is not JsonElement evt
+                || !evt.TryGetProperty("type", out var eventType))
+            {
+                continue;
+            }
+
+            if (eventType.GetString() == "content_block_start"
+                && evt.TryGetProperty("index", out var startIndex)
+                && evt.TryGetProperty("content_block", out var contentBlock))
+            {
+                blocks[startIndex.GetInt32()] =
+                    JsonSerializer.Deserialize<Dictionary<string, object?>>(contentBlock.GetRawText()) ?? [];
+                continue;
+            }
+
+            if (eventType.GetString() != "content_block_delta"
+                || !evt.TryGetProperty("index", out var deltaIndex)
+                || !evt.TryGetProperty("delta", out var delta)
+                || !delta.TryGetProperty("type", out var deltaType))
+            {
+                continue;
+            }
+
+            var index = deltaIndex.GetInt32();
+            switch (deltaType.GetString())
+            {
+                case "text_delta":
+                    AppendDelta(textDeltas, index, delta, "text");
+                    break;
+                case "thinking_delta":
+                    AppendDelta(thinkingDeltas, index, delta, "thinking");
+                    break;
+                case "signature_delta":
+                    AppendDelta(signatureDeltas, index, delta, "signature");
+                    break;
+                case "input_json_delta":
+                    AppendDelta(inputDeltas, index, delta, "partial_json");
+                    break;
+            }
+        }
+
+        foreach (var (index, block) in blocks)
+        {
+            if (textDeltas.TryGetValue(index, out var text))
+            {
+                block["text"] = string.Concat(text);
+            }
+            if (thinkingDeltas.TryGetValue(index, out var thinking))
+            {
+                block["thinking"] = string.Concat(thinking);
+            }
+            if (signatureDeltas.TryGetValue(index, out var signature))
+            {
+                block["signature"] = string.Concat(signature);
+            }
+            if (inputDeltas.TryGetValue(index, out var input))
+            {
+                var json = string.Concat(input);
+                try
+                {
+                    block["input"] = JsonSerializer.Deserialize<object>(json) ?? new Dictionary<string, object?>();
+                }
+                catch (JsonException)
+                {
+                    // Keep the valid initial input block when the provider stops mid-JSON.
+                }
+            }
+        }
+
+        if (blocks.Count == 0)
+        {
+            var index = 0;
+            if (!string.IsNullOrEmpty(textContent))
+            {
+                blocks[index++] = new Dictionary<string, object?>
+                {
+                    ["type"] = "text",
+                    ["text"] = textContent,
+                };
+            }
+            foreach (var toolCall in toolCalls)
+            {
+                object input;
+                try
+                {
+                    input = JsonSerializer.Deserialize<object>(toolCall.Arguments)
+                        ?? new Dictionary<string, object?>();
+                }
+                catch (JsonException)
+                {
+                    input = new Dictionary<string, object?>();
+                }
+                blocks[index++] = new Dictionary<string, object?>
+                {
+                    ["type"] = "tool_use",
+                    ["id"] = toolCall.Id,
+                    ["name"] = toolCall.Name,
+                    ["input"] = input,
+                };
+            }
+        }
+
+        return blocks.Values.ToList();
+    }
+
+    private static void AppendDelta(
+        Dictionary<int, List<string>> target,
+        int index,
+        JsonElement delta,
+        string property)
+    {
+        if (!delta.TryGetProperty(property, out var value)
+            || string.IsNullOrEmpty(value.GetString()))
+        {
+            return;
+        }
+        if (!target.TryGetValue(index, out var values))
+        {
+            values = [];
+            target[index] = values;
+        }
+        values.Add(value.GetString()!);
     }
 }

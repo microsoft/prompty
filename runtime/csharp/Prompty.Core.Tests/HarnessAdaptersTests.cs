@@ -39,6 +39,8 @@ public class HarnessAdaptersTests
             Assert.Equal(new[] { "turn", "session", "summary" }, lines.Select(line => line["kind"].GetString()).ToArray());
             Assert.Equal("turn-event", lines[0]["event"].GetProperty("id").GetString());
             Assert.Equal("session-event", lines[1]["event"].GetProperty("id").GetString());
+            Assert.Equal(JsonValueKind.Null, lines[0]["event"].GetProperty("payload").GetProperty("nullable").ValueKind);
+            Assert.Equal(JsonValueKind.Null, lines[1]["event"].GetProperty("payload").GetProperty("nullable").ValueKind);
             Assert.Equal("session-1", lines[2]["summary"].GetProperty("sessionId").GetString());
             Assert.DoesNotContain("\r\n", File.ReadAllText(path));
         }
@@ -121,7 +123,7 @@ public class HarnessAdaptersTests
         {
             RequestId = "exec-1",
             ToolName = "add",
-            Arguments = new Dictionary<string, object> { ["a"] = 2, ["b"] = 3 }
+            Arguments = new Dictionary<string, object?> { ["a"] = 2, ["b"] = 3 }
         });
 
         Assert.True(result.Success);
@@ -142,6 +144,29 @@ public class HarnessAdaptersTests
 
         Assert.True(result.Success);
         Assert.Equal(0, result.Result);
+    }
+
+    [Fact]
+    public async Task FunctionHostToolExecutor_PreservesExplicitNullArguments()
+    {
+        var executor = new FunctionHostToolExecutor(new Dictionary<string, HostToolHandler>
+        {
+            ["inspect"] = (args, _) =>
+            {
+                Assert.True(args.ContainsKey("nullable"));
+                Assert.Null(args["nullable"]);
+                return Task.FromResult<object?>("observed");
+            }
+        });
+
+        var result = await executor.ExecuteAsync(new HostToolRequest
+        {
+            ToolName = "inspect",
+            Arguments = new Dictionary<string, object?> { ["nullable"] = null }
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal("observed", result.Result);
     }
 
     [Fact]
@@ -168,7 +193,7 @@ public class HarnessAdaptersTests
         Id = "turn-event",
         Type = TurnEventType.TurnStart,
         Timestamp = "2026-06-10T00:00:00Z",
-        Payload = new Dictionary<string, object> { ["phase"] = "start" }
+        Payload = new Dictionary<string, object?> { ["phase"] = "start", ["nullable"] = null }
     };
 
     private static SessionEvent SessionEvent() => new()
@@ -177,6 +202,6 @@ public class HarnessAdaptersTests
         Type = SessionEventType.SessionStart,
         Timestamp = "2026-06-10T00:00:00Z",
         SessionId = "session-1",
-        Payload = new Dictionary<string, object> { ["phase"] = "start" }
+        Payload = new Dictionary<string, object?> { ["phase"] = "start", ["nullable"] = null }
     };
 }
