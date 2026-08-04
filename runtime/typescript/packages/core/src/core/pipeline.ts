@@ -40,7 +40,7 @@ import {
   text,
 } from "./types.js";
 import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js";
-import { getLastNonces, clearLastNonces } from "../renderers/common.js";
+import { prepareRenderInputs } from "../renderers/common.js";
 import { traceSpan, sanitizeValue } from "../tracing/tracer.js";
 import { load } from "./loader.js";
 import { dispatchTool, resilientJsonParse } from "./tool-dispatch.js";
@@ -94,21 +94,11 @@ export class ExecuteError extends Error {
 
 /** Replace raw nonce strings with readable `{{thread:name}}` in trace output. */
 function sanitizeNonces(value: unknown): unknown {
-  const nonces = getLastNonces();
-  if (nonces.size === 0) return value;
-
-  // Build nonce → display name map
-  const replacements = new Map<string, string>();
-  for (const [name, nonce] of nonces) {
-    replacements.set(nonce, `[thread: ${name}]`);
-  }
-
   if (typeof value === "string") {
-    let result = value;
-    for (const [nonce, display] of replacements) {
-      result = result.replaceAll(nonce, display);
-    }
-    return result;
+    return value.replace(
+      /__PROMPTY_THREAD_[a-f0-9]{8}_(\w+)__/g,
+      (_nonce, name: string) => `[thread: ${name}]`,
+    );
   }
 
   if (Array.isArray(value)) {
@@ -240,12 +230,19 @@ export async function render(
   agent: Prompty,
   inputs: Record<string, unknown>,
 ): Promise<string> {
+  const [renderInputs] = prepareRenderInputs(agent, inputs);
+  return renderTemplate(agent, agent.instructions ?? "", renderInputs);
+}
+
+async function renderTemplate(
+  agent: Prompty,
+  template: string,
+  inputs: Record<string, unknown>,
+): Promise<string> {
   const formatKind = resolveFormatKind(agent);
   const renderer = getRenderer(formatKind);
 
   return traceSpan(renderer.constructor?.name ?? "Renderer", async (emit) => {
-    const template = agent.instructions ?? "";
-
     emit("signature", `prompty.renderers.${renderer.constructor?.name ?? "Renderer"}.render`);
     emit("inputs", { data: inputs });
     const result = await renderer.render(agent, template, inputs);
@@ -313,24 +310,18 @@ export async function prepare(
     const parserKind = resolveParserKind(agent);
     const parser = getParser(parserKind);
     let context: Record<string, unknown> | undefined;
+    const [renderInputs, nonces] = prepareRenderInputs(agent, validatedInputs);
 
     if (isStrictMode(agent) && parser.preRender) {
       const [sanitized, ctx] = parser.preRender(agent.instructions ?? "");
-      // Temporarily override instructions for rendering
-      const originalInstructions = agent.instructions;
-      agent.instructions = sanitized;
       context = ctx;
 
-      // Render
-      clearLastNonces();
-      const rendered = await render(agent, validatedInputs);
-      agent.instructions = originalInstructions;
+      const rendered = await renderTemplate(agent, sanitized, renderInputs);
 
       // Parse
       const messages = await parse(agent, rendered, context);
 
       // Thread expansion
-      const nonces = getLastNonces();
       const expanded = expandThreads(messages, nonces, validatedInputs);
 
       emit("result", serializeMessages(expanded));
@@ -338,12 +329,10 @@ export async function prepare(
     }
 
     // Non-strict path
-    clearLastNonces();
-    const rendered = await render(agent, validatedInputs);
+    const rendered = await renderTemplate(agent, agent.instructions ?? "", renderInputs);
     const messages = await parse(agent, rendered, context);
 
     // Thread expansion
-    const nonces = getLastNonces();
     const expanded = expandThreads(messages, nonces, validatedInputs);
 
     emit("result", serializeMessages(expanded));

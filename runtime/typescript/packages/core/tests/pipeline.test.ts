@@ -16,7 +16,7 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import { Message, text } from "../src/core/types.js";
-import { Prompty } from "@prompty/core";
+import { Prompty, Property } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 import { NunjucksRenderer } from "../src/renderers/nunjucks.js";
 import { PromptyChatParser } from "../src/parsers/prompty.js";
@@ -141,6 +141,46 @@ describe("Pipeline", () => {
 
       const result = await render(agent, { name: "World" });
       expect(result).toBe("Hi World");
+    });
+
+    it("uses the canonical request-local marker for rich inputs", async () => {
+      const agent = makeAgent({ instructions: "{{conversation}}" });
+      agent.template = { format: { kind: "nunjucks" } } as any;
+      agent.inputs = [new Property({ name: "conversation", kind: "thread" })];
+      registerRenderer("nunjucks", new NunjucksRenderer());
+
+      const rendered = await render(agent, {
+        conversation: [{ role: "user", content: "prior message" }],
+      });
+
+      expect(rendered).toMatch(/^__PROMPTY_THREAD_[a-f0-9]{8}_conversation__$/);
+    });
+  });
+
+  describe("prepare()", () => {
+    it("keeps concurrent rich-input mappings and instructions isolated", async () => {
+      const instructions = "user:\n{{conversation}}";
+      const agent = makeAgent({ instructions });
+      agent.template = {
+        format: { kind: "nunjucks" },
+        parser: { kind: "prompty" },
+      } as any;
+      agent.inputs = [new Property({ name: "conversation", kind: "thread" })];
+      registerRenderer("nunjucks", new NunjucksRenderer());
+      registerParser("prompty", new PromptyChatParser());
+
+      const [first, second] = await Promise.all([
+        prepare(agent, { conversation: [{ role: "user", content: "first thread" }] }),
+        prepare(agent, { conversation: [{ role: "assistant", content: "second thread" }] }),
+      ]);
+
+      expect(first).toHaveLength(1);
+      expect(first[0].role).toBe("user");
+      expect(first[0].text).toBe("first thread");
+      expect(second).toHaveLength(1);
+      expect(second[0].role).toBe("assistant");
+      expect(second[0].text).toBe("second thread");
+      expect(agent.instructions).toBe(instructions);
     });
   });
 

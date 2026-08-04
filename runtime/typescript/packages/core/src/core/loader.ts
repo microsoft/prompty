@@ -11,6 +11,7 @@
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, extname, isAbsolute, relative, resolve } from "node:path";
 import matter from "gray-matter";
+import { parse as parseYaml } from "yaml";
 import { LoadContext, SaveContext } from "../model/context.js";
 import { Prompty } from "../model/agent/prompty.js";
 
@@ -216,6 +217,8 @@ function loadFileContent(path: string): unknown {
   if (ext === ".json") {
     return JSON.parse(raw);
   }
-  // For YAML we return raw string — the loader handles YAML natively
+  if (ext === ".yaml" || ext === ".yml") {
+    return parseYaml(raw);
+  }
   return raw;
 }

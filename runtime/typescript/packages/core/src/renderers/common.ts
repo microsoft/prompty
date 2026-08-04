@@ -8,12 +8,9 @@
  * @module
  */
 
-import { randomUUID } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import type { Prompty } from "../model/agent/prompty.js";
 import { RICH_KINDS } from "../core/types.js";
-
-/** Map of input name → nonce string (set during rendering, read during prepare). */
-let lastNonces: Map<string, string> = new Map();
 
 /**
  * Prepare render inputs: replace thread/image/file/audio values with nonces.
@@ -30,25 +27,13 @@ export function prepareRenderInputs(
 
   for (const [name, kind] of Object.entries(richNames)) {
     if (kind === "thread" || RICH_KINDS.has(kind)) {
-      const nonce = `__prompty_nonce_${randomUUID().replace(/-/g, "")}__`;
+      const nonce = `__PROMPTY_THREAD_${randomBytes(4).toString("hex")}_${name}__`;
       nonces.set(name, nonce);
       modified[name] = nonce;
     }
   }
 
-  // Stash for retrieval by prepare()
-  lastNonces = nonces;
   return [modified, nonces];
-}
-
-/** Retrieve the last nonce mapping set by `prepareRenderInputs`. */
-export function getLastNonces(): Map<string, string> {
-  return lastNonces;
-}
-
-/** Clear the stashed nonces. */
-export function clearLastNonces(): void {
-  lastNonces = new Map();
 }
 
 /**

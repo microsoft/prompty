@@ -533,11 +533,7 @@ describe("Spec Vectors: Render", () => {
       }
 
       if (expected.nonce_pattern !== undefined) {
-        // The spec uses __PROMPTY_THREAD_{hex}_{name}__ but the TS runtime uses
-        // __prompty_nonce_{uuid_hex}__. Adapt the pattern to match the runtime format.
-        const adaptedPattern = expected.nonce_pattern
-          .replace(/__PROMPTY_THREAD_\[a-f0-9\]\{8\}_\w+__/g, "__prompty_nonce_[a-f0-9]{32}__");
-        const re = new RegExp(adaptedPattern);
+        const re = new RegExp(expected.nonce_pattern);
         expect(rendered).toMatch(re);
       }
     });
