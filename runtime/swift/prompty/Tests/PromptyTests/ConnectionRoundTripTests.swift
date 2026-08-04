@@ -34,6 +34,14 @@ import XCTest
 /// Everything here goes through the **public** API — `Prompty.load`,
 /// `Connection.load`, `.save()` — so it tests the shipped surface rather than
 /// generated internals, and no generated file is edited to make it pass.
+///
+/// One assertion here is deliberately **stronger than the portable contract**:
+/// the dynamic-type check that separates an integer from a whole-valued float.
+/// The canonical promise is complete JSON-*value* preservation, not lexical
+/// number spelling, and JavaScript and Go cannot preserve that distinction at
+/// all. It is kept as Swift-runtime-specific coverage and must not be
+/// generalized into the shared vector. See
+/// ``testWholeValuedFloatCoverageIsRuntimeSpecific``.
 final class ConnectionRoundTripTests: XCTestCase {
 
   // MARK: - Payloads
@@ -58,6 +66,13 @@ final class ConnectionRoundTripTests: XCTestCase {
       "floatValue": 3.25,
       // An integral-valued float: serializes as `3`, identical to the int
       // above, so only a dynamic-type check can prove it stayed a Double.
+      //
+      // This is **Swift-runtime-specific coverage, not portable contract.**
+      // The canonical promise is complete JSON-*value* preservation, not
+      // lexical number spelling: JavaScript and Go's default JSON value models
+      // cannot preserve an integer-versus-whole-float distinction at all. The
+      // shared vector therefore covers integer and fractional numbers only, and
+      // this case must never be generalized into it.
       "floatWhole": 3.0,
       "boolTrue": true,
       "boolFalse": false,
@@ -397,13 +412,40 @@ final class ConnectionRoundTripTests: XCTestCase {
 
   // MARK: - Tripwire
 
-  /// Repoint this suite at the shared vector once it reaches this branch.
+  /// Repoint the *portable* half of this suite at the shared vector once it
+  /// reaches this branch.
   ///
   /// The canonical cases live in
   /// `spec/vectors/model/connection_roundtrip_vectors.json`, which was added on
-  /// a branch with no Swift runtime tree. When both land on one commit, delete
-  /// the inline payloads above and drive them from the vector, exactly as
+  /// a branch with no Swift runtime tree. When both land on one commit, drive
+  /// the three required cases from the vector, exactly as
   /// `ToolBindingTests.testSharedBindingsInjectedVector` does.
+  ///
+  /// **Do not delete the inline payloads.** The canonical decision is that the
+  /// Swift dynamic-type assertions stay as runtime-specific coverage: they are
+  /// stronger than the portable contract, and deleting them on repoint would
+  /// lose real coverage. Concretely, after the repoint:
+  ///
+  /// - the shared vector drives ``canonical(_:)`` text comparison, which is the
+  ///   portable promise — complete JSON-value preservation;
+  /// - ``assertSameShape(_:_:_:)`` **may** also run against shared-vector
+  ///   payloads. Almost everything it checks — bool, null, integer, fractional
+  ///   float, nesting — is portable, and the shared vector deliberately
+  ///   contains no whole-valued float (it covers integer `priority: 5` and
+  ///   fractional `weight`/`backoff: 0.1`), so nothing non-portable is imposed;
+  /// - only the **whole-valued float** stays inline-only. That single case is
+  ///   the non-portable one: JavaScript and Go cannot preserve
+  ///   integer-versus-whole-float, so requiring it portably would fail those
+  ///   runtimes over a spelling difference the contract never promised.
+  ///
+  /// Keep ``futureAuthPayload()`` as the inline fixture even once a
+  /// vector-driven `future-auth` case exists. The two need not be kept in sync:
+  /// the vector case owns the portable assertions, while the inline payload
+  /// exists precisely to carry the extra whole-valued float that the vector
+  /// must not contain.
+  ///
+  /// ``testWholeValuedFloatCoverageIsRuntimeSpecific`` enforces that split, so
+  /// the coverage cannot silently evaporate during a repoint.
   func testCanonicalVectorStillAbsent() throws {
     let url =
       Spec.root
@@ -413,10 +455,62 @@ final class ConnectionRoundTripTests: XCTestCase {
 
     XCTAssertFalse(
       FileManager.default.fileExists(atPath: url.path),
-      """
-      connection_roundtrip_vectors.json is now on this branch. Drive \
-      ConnectionRoundTripTests from it instead of the inline payloads, and \
-      delete this tripwire.
-      """)
+      [
+        "connection_roundtrip_vectors.json is now on this branch. Drive the",
+        "three canonical cases from it instead of the inline payloads, then",
+        "delete this tripwire. Keep futureAuthPayload and",
+        "testWholeValuedFloatCoverageIsRuntimeSpecific: only the whole-valued",
+        "float is non-portable and must stay inline-only. assertSameShape may",
+        "run against the shared vector, which contains no whole-valued float.",
+      ].joined(separator: " "))
+  }
+
+  /// Pin that whole-valued-float coverage exists and is Swift-only.
+  ///
+  /// The coordinator's decision has two halves: keep this assertion as
+  /// runtime-specific coverage, and keep it *out* of the portable contract.
+  /// Prose alone would not survive a repoint, so this asserts the coverage
+  /// mechanically: the inline payload must carry a whole-valued `Double`, and
+  /// it must still be a `Double` after a full load/save round trip.
+  ///
+  /// If a future repoint deletes the inline payload, this fails rather than
+  /// quietly dropping the only check that separates `3` from `3.0`.
+  func testWholeValuedFloatCoverageIsRuntimeSpecific() throws {
+    let payload = futureAuthPayload()
+
+    let declared = try XCTUnwrap(
+      payload["floatWhole"],
+      "the inline payload must keep a whole-valued float; it is the only case "
+        + "that separates an int from an integral float")
+    XCTAssertTrue(
+      declared is Double,
+      "floatWhole must be declared as a Double, not \(type(of: declared))")
+    XCTAssertEqual(declared as? Double, 3.0)
+
+    // The value survives the round trip as a Double, not collapsed to an Int.
+    //
+    // This pins the runtime's raw-dictionary passthrough, not JSON round-trip
+    // fidelity: `Connection.load` stores the unknown payload by casting it
+    // (`TypraRuntime.object` is a bare `as? [String: Any]`) and `.save()`
+    // returns that same dictionary, so no serialization boundary is crossed
+    // and the native `Double` is never bridged to `NSNumber`. That is exactly
+    // why `is Double` is reliable here. Proving fidelity *through* JSON is
+    // impossible by construction -- `3.0` collapses to `3` in the text -- which
+    // is the reason the runtime keeps raw dictionaries in the first place.
+    let reloaded = try Connection.load(payload).save()
+    let observed = try XCTUnwrap(
+      reloaded["floatWhole"], "whole-valued float dropped on round trip")
+    XCTAssertTrue(
+      observed is Double,
+      "whole-valued float came back as \(type(of: observed)); the unknown arm "
+        + "must hand back the original dictionary untouched")
+
+    // Guard the other half of the split: this distinction is deliberately
+    // absent from the serialized form, which is what the shared vector
+    // compares. If these ever differ, the portable contract has drifted.
+    XCTAssertEqual(
+      try canonical(["v": 3.0]), try canonical(["v": 3]),
+      "an integral float and an int must remain indistinguishable in JSON "
+        + "text, since that is the level the portable vector asserts")
   }
 }
