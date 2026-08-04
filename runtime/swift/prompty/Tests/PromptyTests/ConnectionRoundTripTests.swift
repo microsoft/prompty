@@ -1,6 +1,10 @@
 import Foundation
 
+import PromptyModel
+
 import XCTest
+
+@testable import Prompty
 
 /// Public load/save/reload gate for unknown `Connection` kinds.
 ///
@@ -30,9 +34,6 @@ import XCTest
 /// Everything here goes through the **public** API — `Prompty.load`,
 /// `Connection.load`, `.save()` — so it tests the shipped surface rather than
 /// generated internals, and no generated file is edited to make it pass.
-@testable import Prompty
-import PromptyModel
-
 final class ConnectionRoundTripTests: XCTestCase {
 
   // MARK: - Payloads
