@@ -460,6 +460,54 @@ public class SpecVectorTests
             }
         }
 
+        if (expected.TryGetProperty("tools", out var toolsEl) && toolsEl.ValueKind == JsonValueKind.Array)
+        {
+            var expectedTools = toolsEl.EnumerateArray().ToList();
+            var actualTools = agent.Tools ?? [];
+            if (actualTools.Count != expectedTools.Count)
+            {
+                errors.Add($"tools: expected {expectedTools.Count}, got {actualTools.Count}");
+            }
+
+            for (var i = 0; i < Math.Min(actualTools.Count, expectedTools.Count); i++)
+            {
+                var expectedTool = expectedTools[i];
+                if (!expectedTool.TryGetProperty("bindings", out var bindingsEl) ||
+                    bindingsEl.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                var expectedBindings = bindingsEl.EnumerateObject().ToList();
+                var actualBindings = actualTools[i].Bindings ?? [];
+                if (actualBindings.Count != expectedBindings.Count)
+                {
+                    errors.Add(
+                        $"tools[{i}].bindings: expected {expectedBindings.Count}, got {actualBindings.Count}");
+                }
+
+                foreach (var expectedBinding in expectedBindings)
+                {
+                    var actualBinding = actualBindings.FirstOrDefault(binding => binding.Name == expectedBinding.Name);
+                    if (actualBinding is null)
+                    {
+                        errors.Add($"tools[{i}].bindings: missing binding '{expectedBinding.Name}'");
+                        continue;
+                    }
+
+                    var expectedInput = expectedBinding.Value.ValueKind == JsonValueKind.Object
+                        ? expectedBinding.Value.GetProperty("input").GetString()
+                        : expectedBinding.Value.GetString();
+                    if (actualBinding.Input != expectedInput)
+                    {
+                        errors.Add(
+                            $"tools[{i}].bindings.{expectedBinding.Name}.input: " +
+                            $"expected '{expectedInput}', got '{actualBinding.Input}'");
+                    }
+                }
+            }
+        }
+
         return errors;
     }
 
