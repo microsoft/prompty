@@ -509,8 +509,11 @@ public class WireFormatTests
         Assert.True(json.GetProperty("logprobs").GetBoolean());
     }
 
-    [Fact]
-    public void BuildOptions_UnsafeAdditionalPropertyName_Throws()
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("nested.option")]
+    public void BuildOptions_UnsafeAdditionalPropertyName_Throws(string optionName)
     {
         var agent = new Core.Prompty
         {
@@ -518,7 +521,7 @@ public class WireFormatTests
             {
                 Options = new ModelOptions
                 {
-                    AdditionalProperties = new Dictionary<string, object?> { ["nested.option"] = true },
+                    AdditionalProperties = new Dictionary<string, object?> { [optionName] = true },
                 },
             },
         };

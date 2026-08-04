@@ -218,7 +218,8 @@ public static class WireFormat
             {
                 if (CanonicalOptionIsSet(name, agent, opts))
                     continue;
-                if (name.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '_'))
+                if (string.IsNullOrWhiteSpace(name) ||
+                    name.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '_'))
                     throw new ArgumentException(
                         $"OpenAI additional option name '{name}' cannot be represented safely by the SDK.",
                         nameof(agent));
