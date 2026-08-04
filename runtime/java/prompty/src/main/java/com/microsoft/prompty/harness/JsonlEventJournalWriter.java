@@ -108,4 +108,3 @@ public final class JsonlEventJournalWriter implements EventJournalWriter {
     }
   }
 }
-

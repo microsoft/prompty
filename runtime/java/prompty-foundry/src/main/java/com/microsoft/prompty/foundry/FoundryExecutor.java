@@ -201,4 +201,3 @@ public class FoundryExecutor extends OpenAIExecutor {
     return connection != null && FOUNDRY_KIND.equals(connection.kind);
   }
 }
-

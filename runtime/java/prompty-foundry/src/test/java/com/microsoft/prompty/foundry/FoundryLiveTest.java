@@ -154,5 +154,3 @@ final class FoundryLiveTest {
     System.out.println("[foundry/project] missing credential -> " + message);
   }
 }
-
-

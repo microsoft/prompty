@@ -516,5 +516,3 @@ class ReplayVectorsTest {
     return value instanceof Number n ? n.intValue() : 0;
   }
 }
-
-
