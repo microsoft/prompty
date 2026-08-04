@@ -197,6 +197,7 @@ wire_test!(image_wire);
 wire_test!(kind_to_json_type_mapping);
 wire_test!(chat_image_part);
 wire_test!(structured_output);
+wire_test!(structured_output_nested_optional);
 wire_test!(options_max_completion_tokens);
 wire_test!(options_stop_sequences);
 wire_test!(options_additional_properties);
@@ -300,7 +301,7 @@ fn set_row_visual_schema_supports_nullable_unions_and_nested_optionality() {
     assert_eq!(schema["properties"]["row"]["type"], "object");
     assert_eq!(
         schema["properties"]["row"]["required"],
-        json!(["color", "fill"])
+        json!(["color", "border", "fill"])
     );
     assert_eq!(
         schema["properties"]["row"]["properties"]["color"]["type"],
@@ -328,7 +329,7 @@ fn set_row_visual_schema_supports_nullable_unions_and_nested_optionality() {
     );
     assert_eq!(
         schema["properties"]["row"]["properties"]["fill"]["anyOf"][1]["required"],
-        json!(["theme"])
+        json!(["theme", "tint"])
     );
     assert_no_empty_type(&schema);
 }
