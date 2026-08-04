@@ -21,22 +21,47 @@ public final class Streams {
   public record Consumed(List<ToolCall> toolCalls, String text) {}
 
   /**
+   * Release a stream's underlying resources, if it has any.
+   *
+   * <p>Provider streams sit on a live connection. Java has no destructor to release it, so a stream
+   * that is abandoned — cancelled, terminated by a refusal, or simply stopped early — has to be
+   * closed explicitly or the connection stays checked out until the garbage collector happens to
+   * notice. Streams with nothing to release are unaffected, so callers can close unconditionally.
+   */
+  public static void close(Object stream) {
+    if (stream instanceof AutoCloseable closeable) {
+      try {
+        closeable.close();
+      } catch (Exception e) {
+        // Releasing a stream that is already finished with is best-effort: there is no caller left
+        // to act on the failure, and raising it would mask whatever ended the stream in the first
+        // place.
+      }
+    }
+  }
+
+  /**
    * Wrap a stream so that every advance first observes a cancellation token.
    *
    * <p>A cancelled stream simply reports exhaustion rather than throwing. Cancellation is a normal
    * outcome for a stream — the caller asked for it — and the partial content already yielded stays
-   * valid.
+   * valid. The source is released on cancellation, since nothing will read from it again.
    */
   public static <T> Iterator<T> cancellable(Iterator<T> source, CancellationToken cancellation) {
-    return new Iterator<>() {
+    return new ClosingIterator<T>(source) {
       @Override
       public boolean hasNext() {
-        return !cancellation.isCancelled() && source.hasNext();
+        if (cancellation.isCancelled()) {
+          close();
+          return false;
+        }
+        return source.hasNext();
       }
 
       @Override
       public T next() {
         if (cancellation.isCancelled()) {
+          close();
           throw new NoSuchElementException("stream cancelled");
         }
         return source.next();
@@ -45,12 +70,36 @@ public final class Streams {
   }
 
   /**
+   * An iterator that forwards closure to the stream it wraps.
+   *
+   * <p>Streams are composed in layers — transport, cancellation, tracing, processing — and the
+   * connection to release sits at the bottom. Closing has to travel down the chain, or only the
+   * outermost wrapper hears about it and the connection stays open.
+   */
+  abstract static class ClosingIterator<T> implements Iterator<T>, java.io.Closeable {
+    private final Iterator<?> source;
+    private boolean closed;
+
+    ClosingIterator(Iterator<?> source) {
+      this.source = source;
+    }
+
+    @Override
+    public void close() {
+      if (!closed) {
+        closed = true;
+        Streams.close(source);
+      }
+    }
+  }
+
+  /**
    * Wrap a stream so every element passes through {@code observer} on its way out.
    *
    * <p>Used to accumulate raw chunks for tracing without buffering the whole stream up front.
    */
   public static <T> Iterator<T> peeking(Iterator<T> source, java.util.function.Consumer<T> observer) {
-    return new Iterator<>() {
+    return new ClosingIterator<T>(source) {
       @Override
       public boolean hasNext() {
         return source.hasNext();

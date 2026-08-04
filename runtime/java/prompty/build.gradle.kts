@@ -1,5 +1,8 @@
 plugins {
     id("java-library")
+    // Publishes the shared spec-vector harness so every provider module grades itself against the
+    // same fixtures, rather than each one re-implementing vector loading and comparison.
+    id("java-test-fixtures")
 }
 
 dependencies {
@@ -16,4 +19,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    testFixturesApi(platform("org.junit:junit-bom:5.11.4"))
+    testFixturesApi("org.junit.jupiter:junit-jupiter")
 }
