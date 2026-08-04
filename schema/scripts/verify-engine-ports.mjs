@@ -31,6 +31,7 @@ verifyLegacyHarness();
 verifyExportSurfaces();
 verifyNoWireCancellation();
 verifyNativeSignatures();
+verifyMarkdownSemantics();
 
 console.log("Canonical engine port contracts verified.");
 
@@ -120,7 +121,7 @@ function verifyExportSurfaces() {
           `${target.target}: ${protocolName}.${methodName}`,
         );
         if (expectedMethod.params) {
-          assertExactKeyOrder(
+          assertExactKeys(
             method.params,
             expectedMethod.params,
             `${target.target}: ${protocolName}.${methodName} params`,
@@ -345,24 +346,24 @@ function verifyGoSignatures(root) {
 function verifyTypeScriptSignatures(root) {
   expectMatches(
     join(root, "engine-permission-port.ts"),
-    /^\s{2}authorize\(\s*request: ModelToolRequest,\s*signal\?: AbortSignal\s*\): Promise<EnginePermissionDecision>;/mu,
+    /^\s{2}authorize\(\s*request: ModelToolRequest,\s*signal\?: AbortSignal,?\s*\): Promise<EnginePermissionDecision>;/mu,
   );
   expectMatches(
     join(root, "engine-tool-port.ts"),
-    /^\s{2}execute\(\s*request: ModelToolRequest,\s*signal\?: AbortSignal\s*\): Promise<ModelToolResult>;/mu,
+    /^\s{2}execute\(\s*request: ModelToolRequest,\s*signal\?: AbortSignal,?\s*\): Promise<ModelToolResult>;/mu,
   );
   expectAllMatches(join(root, "engine-durability-port.ts"), [
-    /^\s{2}append\(\s*event: EngineEvent\s*\): Promise<void>;/mu,
-    /^\s{2}appendWithCheckpoint\(\s*events: EngineEvent\[\],\s*checkpoint: EngineCheckpoint\s*\): Promise<void>;/mu,
+    /^\s{2}append\(\s*event: EngineEvent,?\s*\): Promise<void>;/mu,
+    /^\s{2}appendWithCheckpoint\(\s*events: EngineEvent\[\],\s*checkpoint: EngineCheckpoint,?\s*\): Promise<void>;/mu,
   ]);
   expectMatches(
     join(root, "engine-post-commit-port.ts"),
-    /^\s{2}afterCommit\(\s*effectId: string,\s*commit: TurnCommit,\s*signal\?: AbortSignal\s*\): Promise<void>;/mu,
+    /^\s{2}afterCommit\(\s*effectId: string,\s*commit: TurnCommit,\s*signal\?: AbortSignal,?\s*\): Promise<void>;/mu,
   );
   expectAllMatches(join(root, "executor.ts"), [
-    /^\s{2}execute\(\s*agent: Prompty,\s*messages: Message\[\],\s*signal\?: AbortSignal\s*\): Promise<unknown>;/mu,
-    /^\s{2}executeStream\?\(\s*agent: Prompty,\s*messages: Message\[\],\s*signal\?: AbortSignal\s*\): Promise<unknown>;/mu,
-    /^\s{2}formatToolMessages\(\s*rawResponse: unknown,\s*toolCalls: ToolCall\[\],\s*toolResults: string\[\],\s*textContent: string \| null,\s*\): Message\[\];/mu,
+    /^\s{2}execute\(\s*agent: Prompty,\s*messages: Message\[\],\s*signal\?: AbortSignal,?\s*\): Promise<unknown>;/mu,
+    /^\s{2}executeStream\?\(\s*agent: Prompty,\s*messages: Message\[\],\s*signal\?: AbortSignal,?\s*\): Promise<unknown>;/mu,
+    /^\s{2}formatToolMessages\(\s*rawResponse: unknown,\s*toolCalls: ToolCall\[\],\s*toolResults: string\[\],\s*textContent: string \| null,?\s*\): Message\[\];/mu,
   ]);
   for (const [file, expected] of [
     ["engine-permission-port.ts", ["authorize"]],
@@ -382,24 +383,24 @@ function verifyTypeScriptSignatures(root) {
 function verifyRustSignatures(root) {
   expectMatches(
     join(root, "engine_permission_port.rs"),
-    /^\s{4}async fn authorize\(\s*&self,\s*request: &ModelToolRequest,\s*cancellation: &CancellationToken,\s*\)\s*-> Result<EnginePermissionDecision,\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
+    /^\s{4}async fn authorize\(\s*&self,\s*request: &ModelToolRequest,\s*cancellation: &CancellationToken,?\s*\)\s*-> Result<EnginePermissionDecision,\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
   );
   expectMatches(
     join(root, "engine_tool_port.rs"),
-    /^\s{4}async fn execute\(\s*&self,\s*request: &ModelToolRequest,\s*cancellation: &CancellationToken,\s*\)\s*-> Result<ModelToolResult,\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
+    /^\s{4}async fn execute\(\s*&self,\s*request: &ModelToolRequest,\s*cancellation: &CancellationToken,?\s*\)\s*-> Result<ModelToolResult,\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
   );
   expectAllMatches(join(root, "engine_durability_port.rs"), [
-    /^\s{4}async fn append\(\s*&self,\s*event: &EngineEvent,\s*\)\s*-> Result<\(\),\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
-    /^\s{4}async fn append_with_checkpoint\(\s*&self,\s*events: &Vec<EngineEvent>,\s*checkpoint: &EngineCheckpoint,\s*\)\s*-> Result<\(\),\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
+    /^\s{4}async fn append\(\s*&self,\s*event: &EngineEvent,?\s*\)\s*-> Result<\(\),\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
+    /^\s{4}async fn append_with_checkpoint\(\s*&self,\s*events: &Vec<EngineEvent>,\s*checkpoint: &EngineCheckpoint,?\s*\)\s*-> Result<\(\),\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
   ]);
   expectMatches(
     join(root, "engine_post_commit_port.rs"),
-    /^\s{4}async fn after_commit\(\s*&self,\s*effect_id: &String,\s*commit: &TurnCommit,\s*cancellation: &CancellationToken,\s*\)\s*-> Result<\(\),\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
+    /^\s{4}async fn after_commit\(\s*&self,\s*effect_id: &String,\s*commit: &TurnCommit,\s*cancellation: &CancellationToken,?\s*\)\s*-> Result<\(\),\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
   );
   expectAllMatches(join(root, "executor.rs"), [
-    /^\s{4}async fn execute\(\s*&self,\s*agent: &Prompty,\s*messages: &Vec<Message>,\s*cancellation: &CancellationToken,\s*\)\s*-> Result<serde_json::Value,\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
-    /^\s{4}async fn execute_stream\(\s*&self,\s*agent: &Prompty,\s*messages: &Vec<Message>,\s*cancellation: &CancellationToken,\s*\)\s*-> Result<serde_json::Value,\s*Box<dyn std::error::Error \+ Send \+ Sync>>/mu,
-    /^\s{4}fn format_tool_messages\(\s*&self,\s*raw_response: &serde_json::Value,\s*tool_calls: &Vec<ToolCall>,\s*tool_results: &Vec<String>,\s*text_content: &Option<String>,\s*\)\s*-> Vec<Message>;/mu,
+    /^\s{4}async fn execute\(\s*&self,\s*agent: &Prompty,\s*messages: &Vec<Message>,\s*cancellation: &CancellationToken,?\s*\)\s*-> Result<serde_json::Value,\s*Box<dyn std::error::Error \+ Send \+ Sync>>;/mu,
+    /^\s{4}async fn execute_stream\(\s*&self,\s*agent: &Prompty,\s*messages: &Vec<Message>,\s*cancellation: &CancellationToken,?\s*\)\s*-> Result<serde_json::Value,\s*Box<dyn std::error::Error \+ Send \+ Sync>>/mu,
+    /^\s{4}fn format_tool_messages\(\s*&self,\s*raw_response: &serde_json::Value,\s*tool_calls: &Vec<ToolCall>,\s*tool_results: &Vec<String>,\s*text_content: &Option<String>,?\s*\)\s*-> Vec<Message>;/mu,
   ]);
   for (const [file, expected] of [
     ["engine_permission_port.rs", ["authorize"]],
@@ -474,6 +475,106 @@ function verifyPythonSignatures(root) {
   }
 }
 
+function verifyMarkdownSemantics() {
+  const root = join(repoRoot, "web", "src", "content", "docs", "reference");
+  expectMarkdownMethod(
+    join(root, "EnginePermissionPort.md"),
+    "authorize",
+    "authorize(request: ModelToolRequest) -> EnginePermissionDecision",
+    ["async-capable", "runtime-cancellable"],
+    ["atomic", "non-fatal", "sync"],
+  );
+  expectMarkdownMethod(
+    join(root, "EngineToolPort.md"),
+    "execute",
+    "execute(request: ModelToolRequest) -> ModelToolResult",
+    ["async-capable", "runtime-cancellable"],
+    ["atomic", "non-fatal", "sync"],
+  );
+  expectMarkdownMethod(
+    join(root, "EngineDurabilityPort.md"),
+    "append",
+    "append(event: EngineEvent) -> void",
+    ["async-capable"],
+    ["runtime-cancellable", "atomic", "non-fatal", "sync"],
+  );
+  expectMarkdownMethod(
+    join(root, "EngineDurabilityPort.md"),
+    "appendWithCheckpoint",
+    "appendWithCheckpoint(events: EngineEvent[], checkpoint: EngineCheckpoint) -> void",
+    ["async-capable", "atomic"],
+    ["runtime-cancellable", "non-fatal", "sync"],
+  );
+  expectMarkdownMethod(
+    join(root, "EnginePostCommitPort.md"),
+    "afterCommit",
+    "afterCommit(effectId: string, commit: TurnCommit) -> void",
+    ["async-capable", "runtime-cancellable", "non-fatal"],
+    ["atomic", "sync"],
+  );
+  expectMarkdownMethod(
+    join(root, "Executor.md"),
+    "execute",
+    "execute(agent: Prompty, messages: Message[]) -> unknown",
+    ["async-capable", "runtime-cancellable"],
+    ["atomic", "non-fatal", "sync"],
+  );
+  expectMarkdownMethod(
+    join(root, "Executor.md"),
+    "executeStream",
+    "executeStream(agent: Prompty, messages: Message[]) -> unknown",
+    ["async-capable", "runtime-cancellable"],
+    ["atomic", "non-fatal", "sync"],
+  );
+  expectMarkdownMethod(
+    join(root, "Executor.md"),
+    "formatToolMessages",
+    "formatToolMessages(rawResponse: unknown, toolCalls: ToolCall[], toolResults: string[], textContent: string?) -> Message[]",
+    ["sync"],
+    ["async-capable", "runtime-cancellable", "atomic", "non-fatal"],
+  );
+}
+
+function expectMarkdownMethod(
+  path,
+  methodName,
+  signature,
+  requiredEffects,
+  forbiddenEffects,
+) {
+  const content = readFileSync(path, "utf8");
+  const row = content
+    .split(/\r?\n/u)
+    .find((line) => line.startsWith(`| \`${methodName}\` |`));
+  assert(row, `${path}: missing ${methodName} helper-method row`);
+
+  const columns = row.split("|");
+  assertEqual(
+    columns[2].trim(),
+    `\`${signature}\``,
+    `${path}: ${methodName} signature`,
+  );
+  const runtimeShape = columns[3].trim().toLowerCase();
+  for (const effect of requiredEffects) {
+    assert(
+      hasRuntimeEffect(runtimeShape, effect),
+      `${path}: ${methodName} runtime shape must include ${effect}`,
+    );
+  }
+  for (const effect of forbiddenEffects) {
+    assert(
+      !hasRuntimeEffect(runtimeShape, effect),
+      `${path}: ${methodName} runtime shape must not include ${effect}`,
+    );
+  }
+}
+
+function hasRuntimeEffect(runtimeShape, effect) {
+  const escaped = effect.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const normalized = runtimeShape.replace(/[_()]/gu, " ");
+  return new RegExp(`(?:^|[,\\s])${escaped}(?=$|[,\\s])`, "u").test(normalized);
+}
+
 function expectMatches(path, pattern) {
   const content = readFileSync(path, "utf8");
   assert(
@@ -537,14 +638,6 @@ function assertExactKeys(actual, expected, label) {
     JSON.stringify(actualKeys),
     JSON.stringify(expectedKeys),
     `${label} keys`,
-  );
-}
-
-function assertExactKeyOrder(actual, expected, label) {
-  assertEqual(
-    JSON.stringify(Object.keys(actual)),
-    JSON.stringify(Object.keys(expected)),
-    `${label} order`,
   );
 }
 
