@@ -247,7 +247,9 @@ async def test_turn_runner_records_denied_permission_without_executing_tool(tmp_
     assert result.output == {"denied": "permission_denied"}
     assert result.tool_results[0].success is False
     assert result.tool_results[0].error_kind == "permission_denied"
-    assert "tool_execution_start" not in [event.type for event in sink.turn_events]
+    event_types = [event.type for event in sink.turn_events]
+    assert "tool_execution_start" not in event_types
+    assert event_types[event_types.index("permission_completed") + 1] == "tool_result"
 
 
 @pytest.mark.asyncio
