@@ -4,6 +4,40 @@ import { describe, expect, it } from "vitest";
 import { processResponse } from "../src/processor.js";
 
 describe("Anthropic classified stream failures", () => {
+  it("closes the provider stream when the consumer stops early", async () => {
+    let closeCount = 0;
+    const response: AsyncIterable<unknown> = {
+      [Symbol.asyncIterator](): AsyncIterator<unknown> {
+        return {
+          async next(): Promise<IteratorResult<unknown>> {
+            return {
+              done: false,
+              value: {
+                type: "content_block_delta",
+                delta: { type: "text_delta", text: "partial" },
+              },
+            };
+          },
+          async return(): Promise<IteratorResult<unknown>> {
+            closeCount += 1;
+            return { done: true, value: undefined };
+          },
+        };
+      },
+    };
+    const agent = new Prompty({ name: "stream-cancel", model: "claude-test" });
+
+    for await (const item of processResponse(
+      agent,
+      response,
+    ) as AsyncIterable<unknown>) {
+      expect(item).toBe("partial");
+      break;
+    }
+
+    expect(closeCount).toBe(1);
+  });
+
   it("closes the provider stream after a transport failure", async () => {
     let closed = false;
     const response: AsyncIterable<unknown> = {

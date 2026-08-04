@@ -10,17 +10,25 @@ interface StreamFailureVector {
   name: string;
   input: {
     provider: string;
-    events: Array<{ kind: "provider"; value: Record<string, unknown> } | { kind: "transportError"; message: string }>;
+    events: Array<
+      | { kind: "provider"; value: Record<string, unknown> }
+      | { kind: "transportError"; message: string }
+    >;
   };
   expected: { chunks: unknown[] };
 }
 
 function loadVectors(): StreamFailureVector[] {
-  const path = resolve(import.meta.dirname, "../../../../../spec/vectors/process/stream_failure_vectors.json");
+  const path = resolve(
+    import.meta.dirname,
+    "../../../../../spec/vectors/process/stream_failure_vectors.json",
+  );
   return JSON.parse(readFileSync(path, "utf8")) as StreamFailureVector[];
 }
 
-function responseFromVector(vector: StreamFailureVector): AsyncIterable<unknown> {
+function responseFromVector(
+  vector: StreamFailureVector,
+): AsyncIterable<unknown> {
   return {
     async *[Symbol.asyncIterator](): AsyncIterator<unknown> {
       for (const event of vector.input.events) {
@@ -60,6 +68,37 @@ function closableResponseFromVector(
 }
 
 describe("OpenAI classified stream failure vectors", () => {
+  it("closes the provider stream when the consumer stops early", async () => {
+    let closeCount = 0;
+    const response: AsyncIterable<unknown> = {
+      [Symbol.asyncIterator](): AsyncIterator<unknown> {
+        return {
+          async next(): Promise<IteratorResult<unknown>> {
+            return {
+              done: false,
+              value: { choices: [{ delta: { content: "partial" } }] },
+            };
+          },
+          async return(): Promise<IteratorResult<unknown>> {
+            closeCount += 1;
+            return { done: true, value: undefined };
+          },
+        };
+      },
+    };
+    const agent = new Prompty({ name: "stream-cancel", model: "gpt-test" });
+
+    for await (const item of processResponse(
+      agent,
+      response,
+    ) as AsyncIterable<unknown>) {
+      expect(item).toBe("partial");
+      break;
+    }
+
+    expect(closeCount).toBe(1);
+  });
+
   for (const vector of loadVectors()) {
     it(vector.name, async () => {
       expect(vector.input.provider).toBe("openai");

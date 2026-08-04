@@ -20,7 +20,10 @@ import { createStructuredResult } from "@prompty/core";
 export class AnthropicProcessor implements Processor {
   async process(agent: Prompty, response: unknown): Promise<unknown> {
     return traceSpan("AnthropicProcessor", async (emit) => {
-      emit("signature", "prompty.anthropic.processor.AnthropicProcessor.invoke");
+      emit(
+        "signature",
+        "prompty.anthropic.processor.AnthropicProcessor.invoke",
+      );
       emit("inputs", { data: response });
       const result = processResponse(agent, response);
       // Don't emit result for streaming — it's a generator, not a value
@@ -60,9 +63,7 @@ export function processResponse(agent: Prompty, response: unknown): unknown {
 /** Type guard for async iterables (PromptyStream or raw SDK stream). */
 function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    Symbol.asyncIterator in value
+    typeof value === "object" && value !== null && Symbol.asyncIterator in value
   );
 }
 
@@ -85,59 +86,76 @@ async function* streamGenerator(
     { id: string; name: string; arguments: string }
   > = new Map();
   const iterator = response[Symbol.asyncIterator]();
+  let iteratorClosed = false;
+  let iteratorExhausted = false;
 
-  while (true) {
-    let next: IteratorResult<unknown>;
-    try {
-      next = await iterator.next();
-    } catch (error) {
-      await closeIterator(iterator);
-      yield new FailureChunk({
-        failure: new StreamFailure({
-          outcome: "indeterminate",
-          message: error instanceof Error ? error.message : String(error),
-        }),
-      });
-      return;
-    }
-    if (next.done) break;
+  const close = async (): Promise<void> => {
+    if (iteratorClosed) return;
+    iteratorClosed = true;
+    await closeIterator(iterator);
+  };
 
-    const event = next.value;
-    const e = event as Record<string, unknown>;
-    const eventType = e.type as string | undefined;
+  try {
+    while (true) {
+      let next: IteratorResult<unknown>;
+      try {
+        next = await iterator.next();
+      } catch (error) {
+        await close();
+        yield new FailureChunk({
+          failure: new StreamFailure({
+            outcome: "indeterminate",
+            message: error instanceof Error ? error.message : String(error),
+          }),
+        });
+        return;
+      }
+      if (next.done) {
+        iteratorExhausted = true;
+        break;
+      }
 
-    if (eventType === "content_block_delta") {
-      const delta = e.delta as Record<string, unknown> | undefined;
-      if (!delta) continue;
+      const event = next.value;
+      const e = event as Record<string, unknown>;
+      const eventType = e.type as string | undefined;
 
-      if (delta.type === "text_delta") {
-        yield delta.text as string;
-      } else if (delta.type === "input_json_delta") {
-        // Accumulate partial JSON for tool arguments
-        const idx = e.index as number;
-        const acc = toolCallAcc.get(idx);
-        if (acc) {
-          acc.arguments += (delta.partial_json ?? "") as string;
+      if (eventType === "content_block_delta") {
+        const delta = e.delta as Record<string, unknown> | undefined;
+        if (!delta) continue;
+
+        if (delta.type === "text_delta") {
+          yield delta.text as string;
+        } else if (delta.type === "input_json_delta") {
+          // Accumulate partial JSON for tool arguments
+          const idx = e.index as number;
+          const acc = toolCallAcc.get(idx);
+          if (acc) {
+            acc.arguments += (delta.partial_json ?? "") as string;
+          }
+        }
+      } else if (eventType === "content_block_start") {
+        const block = e.content_block as Record<string, unknown> | undefined;
+        if (block?.type === "tool_use") {
+          const idx = e.index as number;
+          toolCallAcc.set(idx, {
+            id: (block.id ?? "") as string,
+            name: (block.name ?? "") as string,
+            arguments: "",
+          });
         }
       }
-    } else if (eventType === "content_block_start") {
-      const block = e.content_block as Record<string, unknown> | undefined;
-      if (block?.type === "tool_use") {
-        const idx = e.index as number;
-        toolCallAcc.set(idx, {
-          id: (block.id ?? "") as string,
-          name: (block.name ?? "") as string,
-          arguments: "",
-        });
-      }
     }
-  }
 
-  // Yield accumulated tool calls at the end of the stream
-  const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
-  for (const idx of sortedIndices) {
-    const tc = toolCallAcc.get(idx)!;
-    yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
+    // Yield accumulated tool calls at the end of the stream
+    const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
+    for (const idx of sortedIndices) {
+      const tc = toolCallAcc.get(idx)!;
+      yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
+    }
+  } finally {
+    if (!iteratorExhausted) {
+      await close();
+    }
   }
 }
 
@@ -147,7 +165,10 @@ async function closeIterator(iterator: AsyncIterator<unknown>): Promise<void> {
     await iterator.return();
   } catch (error) {
     if (typeof globalThis.console?.debug === "function") {
-      globalThis.console.debug("Failed to close Anthropic response stream:", error);
+      globalThis.console.debug(
+        "Failed to close Anthropic response stream:",
+        error,
+      );
     }
   }
 }
@@ -209,7 +230,10 @@ function processMessages(
   // Structured output — JSON parse when outputs schema exists
   if (agent.outputs && agent.outputs.length > 0) {
     try {
-      return createStructuredResult(JSON.parse(text) as Record<string, unknown>, text);
+      return createStructuredResult(
+        JSON.parse(text) as Record<string, unknown>,
+        text,
+      );
     } catch {
       return text;
     }

@@ -74,9 +74,7 @@ export function processResponse(agent: Prompty, response: unknown): unknown {
 /** Type guard for async iterables (PromptyStream or raw SDK stream). */
 function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    Symbol.asyncIterator in value
+    typeof value === "object" && value !== null && Symbol.asyncIterator in value
   );
 }
 
@@ -94,68 +92,95 @@ function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
 async function* streamGenerator(
   response: AsyncIterable<unknown>,
 ): AsyncGenerator<string | ToolCall | FailureChunk> {
-  const toolCallAcc: Map<number, { id: string; name: string; arguments: string }> = new Map();
+  const toolCallAcc: Map<
+    number,
+    { id: string; name: string; arguments: string }
+  > = new Map();
   const iterator = response[Symbol.asyncIterator]();
+  let iteratorClosed = false;
+  let iteratorExhausted = false;
 
-  while (true) {
-    let next: IteratorResult<unknown>;
-    try {
-      next = await iterator.next();
-    } catch (error) {
-      await closeIterator(iterator);
-      yield failureChunk("indeterminate", errorMessage(error));
-      return;
-    }
-    if (next.done) break;
+  const close = async (): Promise<void> => {
+    if (iteratorClosed) return;
+    iteratorClosed = true;
+    await closeIterator(iterator);
+  };
 
-    const chunk = next.value;
-    const c = chunk as Record<string, unknown>;
-    const choices = c.choices as Record<string, unknown>[] | undefined;
-    if (!choices || choices.length === 0) continue;
+  try {
+    while (true) {
+      let next: IteratorResult<unknown>;
+      try {
+        next = await iterator.next();
+      } catch (error) {
+        await close();
+        yield failureChunk("indeterminate", errorMessage(error));
+        return;
+      }
+      if (next.done) {
+        iteratorExhausted = true;
+        break;
+      }
 
-    const delta = (choices[0] as Record<string, unknown>).delta as Record<string, unknown> | undefined;
-    if (!delta) continue;
+      const chunk = next.value;
+      const c = chunk as Record<string, unknown>;
+      const choices = c.choices as Record<string, unknown>[] | undefined;
+      if (!choices || choices.length === 0) continue;
 
-    // Content
-    if (delta.content != null) {
-      yield delta.content as string;
-    }
+      const delta = (choices[0] as Record<string, unknown>).delta as
+        | Record<string, unknown>
+        | undefined;
+      if (!delta) continue;
 
-    // Tool call deltas — accumulate index-keyed partial chunks
-    const tcDeltas = delta.tool_calls as Record<string, unknown>[] | undefined;
-    if (tcDeltas) {
-      for (const tcDelta of tcDeltas) {
-        const idx = tcDelta.index as number;
-        if (!toolCallAcc.has(idx)) {
-          toolCallAcc.set(idx, { id: "", name: "", arguments: "" });
+      // Content
+      if (delta.content != null) {
+        yield delta.content as string;
+      }
+
+      // Tool call deltas — accumulate index-keyed partial chunks
+      const tcDeltas = delta.tool_calls as
+        | Record<string, unknown>[]
+        | undefined;
+      if (tcDeltas) {
+        for (const tcDelta of tcDeltas) {
+          const idx = tcDelta.index as number;
+          if (!toolCallAcc.has(idx)) {
+            toolCallAcc.set(idx, { id: "", name: "", arguments: "" });
+          }
+          const acc = toolCallAcc.get(idx)!;
+          if (tcDelta.id) acc.id = tcDelta.id as string;
+          const fn = tcDelta.function as Record<string, unknown> | undefined;
+          if (fn) {
+            if (fn.name) acc.name = fn.name as string;
+            if (fn.arguments) acc.arguments += fn.arguments as string;
+          }
         }
-        const acc = toolCallAcc.get(idx)!;
-        if (tcDelta.id) acc.id = tcDelta.id as string;
-        const fn = tcDelta.function as Record<string, unknown> | undefined;
-        if (fn) {
-          if (fn.name) acc.name = fn.name as string;
-          if (fn.arguments) acc.arguments += fn.arguments as string;
-        }
+      }
+
+      // Refusal
+      if (delta.refusal != null) {
+        await close();
+        yield failureChunk("determinate", `Model refused: ${delta.refusal}`);
+        return;
       }
     }
 
-    // Refusal
-    if (delta.refusal != null) {
-      await closeIterator(iterator);
-      yield failureChunk("determinate", `Model refused: ${delta.refusal}`);
-      return;
+    // Yield accumulated tool calls at the end of the stream
+    const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
+    for (const idx of sortedIndices) {
+      const tc = toolCallAcc.get(idx)!;
+      yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
     }
-  }
-
-  // Yield accumulated tool calls at the end of the stream
-  const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
-  for (const idx of sortedIndices) {
-    const tc = toolCallAcc.get(idx)!;
-    yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
+  } finally {
+    if (!iteratorExhausted) {
+      await close();
+    }
   }
 }
 
-function failureChunk(outcome: "determinate" | "indeterminate", message: string): FailureChunk {
+function failureChunk(
+  outcome: "determinate" | "indeterminate",
+  message: string,
+): FailureChunk {
   return new FailureChunk({
     failure: new StreamFailure({ outcome, message }),
   });
@@ -171,7 +196,10 @@ async function closeIterator(iterator: AsyncIterator<unknown>): Promise<void> {
     await iterator.return();
   } catch (error) {
     if (typeof globalThis.console?.debug === "function") {
-      globalThis.console.debug("Failed to close OpenAI response stream:", error);
+      globalThis.console.debug(
+        "Failed to close OpenAI response stream:",
+        error,
+      );
     }
   }
 }
@@ -216,7 +244,10 @@ function processResponsesApi(
     // Structured output — JSON parse when outputs schema exists
     if (agent.outputs && agent.outputs.length > 0) {
       try {
-        return createStructuredResult(JSON.parse(outputText) as Record<string, unknown>, outputText);
+        return createStructuredResult(
+          JSON.parse(outputText) as Record<string, unknown>,
+          outputText,
+        );
       } catch {
         return outputText;
       }
@@ -243,7 +274,10 @@ function processResponsesApi(
     const text = texts.join("");
     if (agent.outputs && agent.outputs.length > 0) {
       try {
-        return createStructuredResult(JSON.parse(text) as Record<string, unknown>, text);
+        return createStructuredResult(
+          JSON.parse(text) as Record<string, unknown>,
+          text,
+        );
       } catch {
         return text;
       }
@@ -295,7 +329,10 @@ function processChatCompletion(
   // Structured output — JSON parse when outputs schema exists
   if (agent.outputs && agent.outputs.length > 0) {
     try {
-      return createStructuredResult(JSON.parse(content) as Record<string, unknown>, content);
+      return createStructuredResult(
+        JSON.parse(content) as Record<string, unknown>,
+        content,
+      );
     } catch {
       return content;
     }
