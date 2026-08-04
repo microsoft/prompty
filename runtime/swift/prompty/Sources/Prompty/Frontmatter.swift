@@ -1,10 +1,11 @@
 import Foundation
-import Yams
 
 /// Splits a `.prompty` file into YAML frontmatter and a markdown body.
 ///
 /// Frontmatter is delimited by a leading `---` or `+++` line and closed by a
 /// line whose trimmed content is exactly `---` or `+++`.
+import Yams
+
 public enum Frontmatter {
 
   /// Split raw file contents.

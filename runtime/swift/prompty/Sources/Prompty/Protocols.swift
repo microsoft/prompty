@@ -1,5 +1,4 @@
 import Foundation
-import PromptyModel
 
 /// Pipeline stage conformances.
 ///
@@ -20,12 +19,16 @@ import PromptyModel
 ///   matching `parse` call needs, as `PreRenderResult`.
 
 /// The raw provider chunks an `Executor` streams.
-public typealias RawChunkStream = AsyncThrowingStream<[String: Any], Error>
+import PromptyModel
 
 /// The decoded chunks a `Processor` streams.
-public typealias ChunkStream = AsyncThrowingStream<StreamChunk, Error>
 
 /// What a strict-mode parser hands back from `preRender`.
+
+// MARK: - Generated model ergonomics
+
+public typealias RawChunkStream = AsyncThrowingStream<[String: Any], Error>
+public typealias ChunkStream = AsyncThrowingStream<StreamChunk, Error>
 public struct PreRenderResult {
   /// The rewritten template to render.
   public var text: String
@@ -37,14 +40,12 @@ public struct PreRenderResult {
     self.context = context
   }
 }
-
 extension Parser {
   /// Leave the template untouched.
   ///
   /// Only strict-mode parsers need to rewrite instructions before rendering.
   public func preRender(template: String) throws -> Any? { nil }
 }
-
 extension Executor {
   /// Report that this provider cannot stream.
   public func executeStream(agent: Prompty, messages: [Message]) async throws -> Any {
@@ -58,16 +59,12 @@ extension Executor {
     throw InvokerError.execution("tool calling is not supported by this executor")
   }
 }
-
 extension Processor {
   /// Report that this provider cannot stream.
   public func processStream(stream: Any) async throws -> Any {
     throw InvokerError.execution("streaming is not supported by this processor")
   }
 }
-
-// MARK: - Generated model ergonomics
-
 extension StreamChunk {
   /// Incremental assistant text.
   public static func text(_ value: String) -> StreamChunk {
@@ -91,7 +88,6 @@ extension StreamChunk {
     return nil
   }
 }
-
 extension ToolCall {
   /// Decoded arguments, or an empty dictionary when the payload is unusable.
   public var argumentValues: [String: Any] {

@@ -1,5 +1,4 @@
 import Foundation
-import PromptyModel
 
 /// Renders the Jinja2 subset that Prompty templates use.
 ///
@@ -9,6 +8,13 @@ import PromptyModel
 ///
 /// Prompt templates are not HTML, so output is never escaped and whitespace is
 /// preserved exactly. An undefined variable renders as an empty string.
+import PromptyModel
+
+// MARK: - Template syntax tree
+
+/// A parsed template node.
+
+/// Recursive-descent parser for the supported Jinja2 subset.
 public struct Jinja2Renderer: Renderer {
 
   public init() {}
@@ -128,7 +134,8 @@ public struct Jinja2Renderer: Renderer {
     }
   }
 
-  private func parseFilter(_ spec: String) -> (name: String, arguments: [String]) {    guard let open = spec.firstIndex(of: "("), spec.hasSuffix(")") else {
+  private func parseFilter(_ spec: String) -> (name: String, arguments: [String]) {
+    guard let open = spec.firstIndex(of: "("), spec.hasSuffix(")") else {
       return (spec.trimmingCharacters(in: .whitespaces), [])
     }
     let name = String(spec[spec.startIndex..<open]).trimmingCharacters(in: .whitespaces)
@@ -173,18 +180,12 @@ public struct Jinja2Renderer: Renderer {
     return parts
   }
 }
-
-// MARK: - Template syntax tree
-
-/// A parsed template node.
 enum Node {
   case text(String)
   case expression(String)
   case conditional(condition: String, body: [Node], alternate: [Node])
   case loop(variable: String, source: String, body: [Node])
 }
-
-/// Recursive-descent parser for the supported Jinja2 subset.
 struct TemplateParser {
   private let characters: [Character]
   private var index: Int = 0
@@ -267,7 +268,8 @@ struct TemplateParser {
       throw InvokerError.parse("unclosed {% if %} block")
     }
 
-    let keyword = terminator.split(separator: " ", maxSplits: 1).first.map(String.init) ?? terminator
+    let keyword =
+      terminator.split(separator: " ", maxSplits: 1).first.map(String.init) ?? terminator
     switch keyword {
     case "endif":
       return .conditional(condition: condition, body: branch.nodes, alternate: [])

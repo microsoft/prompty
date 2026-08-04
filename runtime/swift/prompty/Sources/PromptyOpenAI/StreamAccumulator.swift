@@ -1,6 +1,4 @@
 import Foundation
-import PromptyModel
-import Prompty
 
 /// Assembles streamed OpenAI events into generated `StreamChunk` values.
 ///
@@ -8,6 +6,10 @@ import Prompty
 /// are only emitted once the stream ends, because a call's arguments are split
 /// across many events. Usage totals are emitted last when the provider reports
 /// them.
+import Prompty
+
+import PromptyModel
+
 struct StreamAccumulator {
   private var calls: [Int: ToolCall] = [:]
   private var usage: [String: Any]?

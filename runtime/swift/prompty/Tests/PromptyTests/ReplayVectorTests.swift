@@ -1,8 +1,8 @@
 import Foundation
-import PromptyModel
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
 
 /// Conformance against `spec/vectors/harness/replay_vectors.json`.
 ///
@@ -10,6 +10,9 @@ import XCTest
 /// then normalizes that journal to the shared string form and compares it to
 /// the golden sequence. Because the journal is read back from disk rather than
 /// from an in-memory sink, this exercises durability as well as ordering.
+@testable import Prompty
+
+/// Deterministic monotonic counter for id generation.
 final class ReplayVectorTests: XCTestCase {
 
   func testReplayVectors() async throws {
@@ -150,8 +153,10 @@ final class ReplayVectorTests: XCTestCase {
       let payload = event["payload"] as? [String: Any] ?? [:]
 
       if kind == "session" {
-        var parts = ["session", type, event["sessionId"] as? String ?? "",
-                     event["turnId"] as? String ?? ""]
+        var parts = [
+          "session", type, event["sessionId"] as? String ?? "",
+          event["turnId"] as? String ?? "",
+        ]
         if type == "session_end" { parts.append(payload["status"] as? String ?? "") }
         return parts.joined(separator: ":")
       }
@@ -205,8 +210,6 @@ final class ReplayVectorTests: XCTestCase {
     return record
   }
 }
-
-/// Deterministic monotonic counter for id generation.
 private final class Counter: @unchecked Sendable {
   private let lock = NSLock()
   private var value = 0

@@ -21,29 +21,34 @@ public final class Registry: @unchecked Sendable {
   // MARK: - Registration
 
   public func register(renderer: Renderer, for key: String) {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     renderers[key] = renderer
   }
 
   public func register(parser: Parser, for key: String) {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     parsers[key] = parser
   }
 
   public func register(executor: Executor, for key: String) {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     executors[key] = executor
   }
 
   public func register(processor: Processor, for key: String) {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     processors[key] = processor
   }
 
   // MARK: - Lookup
 
   public func renderer(for key: String) throws -> Renderer {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     guard let value = renderers[key] else {
       throw InvokerError.notFound(group: "renderer", key: key)
     }
@@ -51,7 +56,8 @@ public final class Registry: @unchecked Sendable {
   }
 
   public func parser(for key: String) throws -> Parser {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     guard let value = parsers[key] else {
       throw InvokerError.notFound(group: "parser", key: key)
     }
@@ -59,7 +65,8 @@ public final class Registry: @unchecked Sendable {
   }
 
   public func executor(for key: String) throws -> Executor {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     guard let value = executors[key] else {
       throw InvokerError.notFound(group: "executor", key: key)
     }
@@ -67,7 +74,8 @@ public final class Registry: @unchecked Sendable {
   }
 
   public func processor(for key: String) throws -> Processor {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     guard let value = processors[key] else {
       throw InvokerError.notFound(group: "processor", key: key)
     }
@@ -87,7 +95,8 @@ public final class Registry: @unchecked Sendable {
   /// and registering afterwards would let a concurrent caller observe
   /// "registered" and then look up an empty table.
   public func registerDefaults() {
-    lock.lock(); defer { lock.unlock() }
+    lock.lock()
+    defer { lock.unlock() }
     guard !defaultsRegistered else { return }
     defaultsRegistered = true
 

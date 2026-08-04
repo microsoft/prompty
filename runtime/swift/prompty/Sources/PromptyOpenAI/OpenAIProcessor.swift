@@ -1,12 +1,14 @@
 import Foundation
-import PromptyModel
-import Prompty
 
 /// Normalizes OpenAI responses into runtime values.
 ///
 /// The response shape alone determines the projection, so one processor serves
 /// the Chat Completions, Responses, embedding, and image APIs. Behaviour is
 /// pinned by `spec/vectors/process/process_vectors.json`.
+import Prompty
+
+import PromptyModel
+
 public struct OpenAIProcessor: Processor {
   public init() {}
 

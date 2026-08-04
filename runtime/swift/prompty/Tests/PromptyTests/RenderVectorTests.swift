@@ -1,13 +1,15 @@
 import Foundation
-import PromptyModel
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
 
 /// Conformance against `spec/vectors/render/render_vectors.json`.
 ///
 /// Exercises both template engines plus the thread-nonce substitution that
 /// keeps rich inputs out of the rendered text.
+@testable import Prompty
+
 final class RenderVectorTests: XCTestCase {
 
   func testRenderVectors() async throws {
@@ -42,7 +44,9 @@ final class RenderVectorTests: XCTestCase {
           let regex = try NSRegularExpression(pattern: pattern)
           let range = NSRange(rendered.startIndex..., in: rendered)
           guard regex.firstMatch(in: rendered, range: range) != nil else {
-            run.fail(name, "rendered text does not match \(pattern):\n  actual: \(Spec.describe(rendered))")
+            run.fail(
+              name, "rendered text does not match \(pattern):\n  actual: \(Spec.describe(rendered))"
+            )
             continue
           }
         }

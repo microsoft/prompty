@@ -1,11 +1,13 @@
 import Foundation
-import PromptyModel
-import Prompty
 
 /// Wire-format projection for the OpenAI Chat Completions and Responses APIs.
 ///
 /// Every function here mirrors the Rust reference implementation so all runtimes
 /// produce identical request bodies for the shared `spec/vectors/wire` contract.
+import Prompty
+
+import PromptyModel
+
 public enum OpenAIWire {
 
   // MARK: - Messages

@@ -1,8 +1,8 @@
 import Foundation
-import PromptyModel
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
 
 /// Acceptance gate for inherited-field data loss on composite `Property` subtypes.
 ///
@@ -35,6 +35,8 @@ import XCTest
 /// `testInheritedFieldsSurviveProgrammaticConstruction` does. The shim's
 /// `assertPinnedEmitterVersion()` already fails the build on any emitter version
 /// change, so that gap gets re-audited without a canary test here.
+@testable import Prompty
+
 final class InheritedPropertyFieldTests: XCTestCase {
 
   /// Every field `Property` passes down to its composite subtypes.

@@ -1,13 +1,16 @@
 import Foundation
-import PromptyModel
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
 
 /// Guards for defects found in review that the spec vectors do not cover.
 ///
 /// Each test names the behavior it protects, so a future regression reads as a
 /// specific broken promise rather than an anonymous assertion failure.
+@testable import Prompty
+
+/// A parser whose only job is to return a chosen `preRender` result.
 final class RegressionTests: XCTestCase {
 
   // MARK: - Wildcard template kinds
@@ -174,7 +177,8 @@ final class RegressionTests: XCTestCase {
       do {
         let rendered = try await Pipeline.render(agent, inputs: inputs)
         if rendered != expected {
-          run.fail(template, "expected \(expected.debugDescription), got \(rendered.debugDescription)")
+          run.fail(
+            template, "expected \(expected.debugDescription), got \(rendered.debugDescription)")
         }
       } catch {
         run.fail(template, "\(error)")
@@ -300,8 +304,6 @@ final class RegressionTests: XCTestCase {
     XCTAssertFalse(Pipeline.isStreaming(unset))
   }
 }
-
-/// A parser whose only job is to return a chosen `preRender` result.
 private struct StubParser: Parser {
   let preRenderResult: Any?
 

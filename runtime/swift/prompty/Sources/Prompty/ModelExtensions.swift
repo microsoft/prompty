@@ -1,10 +1,11 @@
 import Foundation
-import PromptyModel
 
 // Convenience accessors over the Typra-generated model.
 //
 // These are extensions only — the generated types remain the single canonical
 // domain layer. Nothing here redefines or shadows a generated type.
+
+import PromptyModel
 
 extension Property {
   /// The property's raw frontmatter dictionary.
@@ -74,7 +75,6 @@ extension Property {
     return branches.compactMap { try? Property.load($0) }
   }
 }
-
 extension Tool {
   /// The tool's raw dictionary form.
   public var raw: [String: Any] { (try? save()) ?? [:] }
@@ -115,7 +115,6 @@ extension Tool {
     return false
   }
 }
-
 extension Prompty {
   /// The renderer key: `template.format.kind`, defaulting to `jinja2`.
   ///
@@ -166,7 +165,6 @@ extension Prompty {
   /// The absolute path this prompt was loaded from, when known.
   public var sourcePath: String? { metadata?[Defaults.sourcePathKey] as? String }
 }
-
 extension Message {
   /// Build a single-text-part message.
   public static func withText(_ role: Role, _ text: String) -> Message {
@@ -208,14 +206,12 @@ extension Message {
     }
   }
 }
-
 extension ContentPart {
   /// Build a text content part.
   public static func text(_ value: String) -> ContentPart {
     .textPart(TextPart(kind: "text", value: value))
   }
 }
-
 extension Role {
   /// Parse a role string, returning `nil` rather than throwing.
   public static func parseOptional(_ value: String) -> Role? {

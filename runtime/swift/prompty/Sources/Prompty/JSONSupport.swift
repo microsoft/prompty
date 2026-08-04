@@ -1,5 +1,3 @@
-import Foundation
-
 /// Helpers for working with the loosely-typed `Any` values that the
 /// Typra-generated model uses for free-form data (`metadata`, `inputs`,
 /// raw provider payloads, and template values).
@@ -8,6 +6,8 @@ import Foundation
 /// does not introduce a parallel `JSONValue` domain type. These functions supply
 /// the few operations — truthiness, rendering, deep equality, path lookup —
 /// that `Any` cannot provide on its own.
+import Foundation
+
 public enum JSONSupport {
 
   /// Normalize a decoded value so that `NSNumber`/`NSNull` bridges behave

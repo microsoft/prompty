@@ -1,16 +1,19 @@
 import Foundation
-import PromptyModel
+
 import Prompty
 
-#if canImport(FoundationNetworking)
-  import FoundationNetworking
-#endif
+import PromptyModel
 
 /// Calls the OpenAI API over HTTP.
 ///
 /// The executor is deliberately thin: request bodies come from ``OpenAIWire``
 /// so they stay identical to every other Prompty runtime, and responses are
 /// handed to ``OpenAIProcessor`` unmodified.
+#if canImport(FoundationNetworking)
+  import FoundationNetworking
+#endif
+
+/// Minimal server-sent-events reader.
 public struct OpenAIExecutor: Executor {
   private let session: URLSession
 
@@ -103,8 +106,6 @@ public struct OpenAIExecutor: Executor {
     return json
   }
 }
-
-/// Minimal server-sent-events reader.
 enum SSE {
   /// Stream response lines, using the platform's native byte stream when it is
   /// available and falling back to a buffered read otherwise.

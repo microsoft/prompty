@@ -1,7 +1,8 @@
 import Foundation
-import PromptyModel
 
 /// Shared renderer preparation.
+import PromptyModel
+
 public enum RenderCommon {
 
   /// Replace rich-kind inputs with nonce placeholders.

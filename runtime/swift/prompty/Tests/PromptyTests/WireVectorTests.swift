@@ -1,15 +1,18 @@
 import Foundation
+
 import PromptyModel
+
 import XCTest
 
 @testable import Prompty
-@testable import PromptyOpenAI
 
 /// Conformance against `spec/vectors/wire/wire_vectors.json`.
 ///
 /// Builds a real agent from each vector's input and drives the real request
 /// builders, so the assertion covers `ModelOptions.toWire`, tool projection and
 /// structured-output wiring rather than a test-local approximation.
+@testable import PromptyOpenAI
+
 final class WireVectorTests: XCTestCase {
 
   func testWireVectors() throws {

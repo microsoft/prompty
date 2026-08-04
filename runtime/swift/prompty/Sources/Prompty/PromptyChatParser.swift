@@ -1,5 +1,4 @@
 import Foundation
-import PromptyModel
 
 /// Splits rendered text at role markers into messages.
 ///
@@ -18,6 +17,8 @@ import PromptyModel
 /// injection path where a template variable smuggles in `system:`.
 ///
 /// Registered under the key `prompty`.
+import PromptyModel
+
 public struct PromptyChatParser: Parser {
 
   public init() {}

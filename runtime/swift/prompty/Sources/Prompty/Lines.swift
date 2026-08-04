@@ -1,5 +1,3 @@
-import Foundation
-
 /// Line handling that is safe on Windows and faithful to the reference runtime.
 ///
 /// Swift treats a CRLF pair as a single `Character`, so the obvious spellings
@@ -17,6 +15,8 @@ import Foundation
 /// `Character.isNewline` is not the fix either — it also matches U+0085, U+2028
 /// and U+2029, which are legal *inside* JSON strings. Splitting on those would
 /// tear a JSON record in half and leave both pieces unparseable.
+import Foundation
+
 public enum Lines {
 
   /// Collapse CRLF pairs to LF.

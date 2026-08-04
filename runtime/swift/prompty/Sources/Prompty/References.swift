@@ -1,5 +1,4 @@
 import Foundation
-import Yams
 
 /// Resolves `${protocol:value}` references in loaded frontmatter.
 ///
@@ -10,6 +9,8 @@ import Yams
 ///
 /// Only whole-value references are resolved — a reference must be the entire
 /// string. Unknown protocols are left untouched.
+import Yams
+
 public enum References {
 
   /// Recursively resolve every reference in a value tree, in place.

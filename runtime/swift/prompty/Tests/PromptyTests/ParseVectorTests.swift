@@ -1,13 +1,15 @@
 import Foundation
-import PromptyModel
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
 
 /// Conformance against `spec/vectors/parse/parse_vectors.json`.
 ///
 /// Drives the real `PromptyChatParser` and, for the thread vector, the real
 /// `Pipeline.expandThreads` rather than a test-local reimplementation.
+@testable import Prompty
+
 final class ParseVectorTests: XCTestCase {
 
   func testParseVectors() async throws {

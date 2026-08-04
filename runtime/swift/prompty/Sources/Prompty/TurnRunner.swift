@@ -1,5 +1,4 @@
 import Foundation
-import PromptyModel
 
 /// A durable, replayable single-turn runner.
 ///
@@ -13,6 +12,8 @@ import PromptyModel
 /// The clock and id factory are injected so a run is byte-for-byte
 /// reproducible; durability adapters are injected so the same loop works
 /// against in-memory, on-disk, or remote storage.
+import PromptyModel
+
 public struct ReferenceTurnRunner {
   public typealias ModelCallback = (TurnModelRequest) async throws -> TurnModelResponse
   public typealias Clock = () -> String

@@ -1,5 +1,4 @@
 import Foundation
-import PromptyModel
 
 /// Renders Mustache templates.
 ///
@@ -9,6 +8,10 @@ import PromptyModel
 ///
 /// As with Jinja2, output is never HTML-escaped — `{{{triple}}}` and `{{&raw}}`
 /// are accepted but behave identically to `{{double}}`.
+import PromptyModel
+
+// MARK: - Template syntax tree
+
 public struct MustacheRenderer: Renderer {
 
   public init() {}
@@ -75,16 +78,12 @@ public struct MustacheRenderer: Renderer {
     return nil
   }
 }
-
-// MARK: - Template syntax tree
-
 enum MustacheNode {
   case text(String)
   case variable(String)
   case section(name: String, body: [MustacheNode])
   case inverted(name: String, body: [MustacheNode])
 }
-
 private struct Scanner {
   private let characters: [Character]
   private var index = 0

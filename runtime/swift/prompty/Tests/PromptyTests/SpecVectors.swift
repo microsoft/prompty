@@ -1,7 +1,6 @@
 import Foundation
-import XCTest
 
-@testable import Prompty
+import XCTest
 
 /// Shared spec-vector plumbing.
 ///
@@ -9,6 +8,18 @@ import XCTest
 /// `spec/vectors/`, so conformance is comparable across languages. This file
 /// locates that directory relative to the test source and provides the
 /// order-insensitive JSON comparison the vectors are written against.
+@testable import Prompty
+
+/// Collects per-vector failures so one run reports every mismatch at once.
+///
+/// Failing fast on the first vector hides how much of a stage is broken, which
+/// is exactly the signal a conformance suite should give.
+
+/// A vector assertion failed.
+
+/// Assert a condition inside a vector body.
+
+/// Assert deep JSON equality inside a vector body.
 enum Spec {
 
   /// The repository's `spec/` directory.
@@ -57,7 +68,9 @@ enum Spec {
   enum SpecError: Error, CustomStringConvertible {
     case malformed(String)
     var description: String {
-      switch self { case .malformed(let detail): return detail }
+      switch self {
+      case .malformed(let detail): return detail
+      }
     }
   }
 
@@ -116,11 +129,6 @@ enum Spec {
     return String(describing: value)
   }
 }
-
-/// Collects per-vector failures so one run reports every mismatch at once.
-///
-/// Failing fast on the first vector hides how much of a stage is broken, which
-/// is exactly the signal a conformance suite should give.
 struct VectorRun {
   let stage: String
   private(set) var failures: [String] = []
@@ -169,7 +177,8 @@ struct VectorRun {
   /// one, and that is the most dangerous way for this harness to break.
   func assertClean(file: StaticString = #filePath, line: UInt = #line) {
     if ran == 0 && skipped == 0 {
-      XCTFail("no \(stage) vectors ran — the vector file was empty or misread", file: file, line: line)
+      XCTFail(
+        "no \(stage) vectors ran — the vector file was empty or misread", file: file, line: line)
       return
     }
     guard !failures.isEmpty else { return }
@@ -180,19 +189,13 @@ struct VectorRun {
     )
   }
 }
-
-/// A vector assertion failed.
 struct VectorFailure: Error, CustomStringConvertible {
   let description: String
   init(_ message: String) { description = message }
 }
-
-/// Assert a condition inside a vector body.
 func expect(_ condition: Bool, _ message: @autoclosure () -> String) throws {
   guard condition else { throw VectorFailure(message()) }
 }
-
-/// Assert deep JSON equality inside a vector body.
 func expectEqual(_ actual: Any?, _ expected: Any?, _ label: String) throws {
   guard Spec.equal(actual, expected) else {
     throw VectorFailure(

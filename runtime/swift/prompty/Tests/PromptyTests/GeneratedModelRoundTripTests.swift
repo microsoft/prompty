@@ -1,8 +1,8 @@
 import Foundation
-import PromptyModel
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
 
 /// Guards the fields `schema/scripts/patch-swift-emitter-defects.mjs` restores.
 ///
@@ -11,6 +11,8 @@ import XCTest
 /// `Tool` subtype silently lose data on load and save. The shim injects them
 /// back. These tests fail loudly if that regresses — including if a future
 /// emitter release fixes the defect differently.
+@testable import Prompty
+
 final class GeneratedModelRoundTripTests: XCTestCase {
 
   // MARK: - Property subtypes

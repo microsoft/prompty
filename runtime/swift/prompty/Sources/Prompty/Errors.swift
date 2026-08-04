@@ -2,6 +2,8 @@
 ///
 /// Message formats are shared across every Prompty runtime so that host
 /// applications can match on them consistently.
+
+/// Errors raised while resolving or running a pipeline stage.
 public enum LoadError: Error, CustomStringConvertible, Equatable {
   /// The `.prompty` file could not be read.
   case fileNotFound(path: String, detail: String)
@@ -29,8 +31,6 @@ public enum LoadError: Error, CustomStringConvertible, Equatable {
     }
   }
 }
-
-/// Errors raised while resolving or running a pipeline stage.
 public enum InvokerError: Error, CustomStringConvertible, Equatable {
   /// No implementation is registered under `key` for the given `group`.
   case notFound(group: String, key: String)

@@ -1,7 +1,13 @@
 import Foundation
-import PromptyModel
 
 /// Options controlling how a `.prompty` file is loaded.
+import PromptyModel
+
+/// Loads `.prompty` files into the Typra-generated `Prompty` model.
+
+/// Load a `.prompty` file. Shorthand for ``Loader/load(path:options:)``.
+
+/// Load a `.prompty` file asynchronously.
 public struct LoadOptions {
   /// Extra directories that `${file:...}` references may read from. The prompt
   /// file's own directory is always permitted.
@@ -13,8 +19,6 @@ public struct LoadOptions {
 
   public static let `default` = LoadOptions()
 }
-
-/// Loads `.prompty` files into the Typra-generated `Prompty` model.
 public enum Loader {
 
   /// Load a `.prompty` file from disk.
@@ -192,13 +196,9 @@ public enum Loader {
     }
   }
 }
-
-/// Load a `.prompty` file. Shorthand for ``Loader/load(path:options:)``.
 public func load(_ path: String, options: LoadOptions = .default) throws -> Prompty {
   try Loader.load(path: path, options: options)
 }
-
-/// Load a `.prompty` file asynchronously.
 public func loadAsync(_ path: String, options: LoadOptions = .default) async throws -> Prompty {
   try await Loader.loadAsync(path: path, options: options)
 }

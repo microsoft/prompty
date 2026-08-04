@@ -1,14 +1,18 @@
 import Foundation
+
 import Prompty
+
 import PromptyModel
+
 import PromptyOpenAI
-import XCTest
 
 /// Compiles the snippets in `runtime/swift/README.md`.
 ///
 /// The README claimed a `Prompty.load(path:)` entry point that never existed.
 /// Documented calls are API surface, so they are type-checked here rather than
 /// trusted. Nothing is executed — a compile is the whole assertion.
+import XCTest
+
 final class ReadmeSnippetTests: XCTestCase {
 
   func testReadmeSnippetsCompile() throws {

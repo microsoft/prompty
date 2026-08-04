@@ -1,5 +1,3 @@
-import Foundation
-
 /// Evaluates the expression grammar used inside `{{ … }}` and `{% if … %}`.
 ///
 /// Prompt templates routinely branch on comparisons (`{% if score > 3 %}`),
@@ -12,6 +10,8 @@ import Foundation
 /// Precedence, lowest to highest, follows Jinja:
 /// `or` → `and` → `not` → comparison / `in` / `is` → `~` → `+ -` → `* / // %`
 /// → unary `-` → filters, member access, indexing.
+import Foundation
+
 enum ExpressionParser {
 
   static func evaluate(
@@ -41,8 +41,10 @@ enum ExpressionParser {
 
     // Multi-character operators must be matched before their prefixes, or
     // `<=` would tokenize as `<` followed by `=`.
-    let operators = ["//", "==", "!=", "<=", ">=", "**", "|", "(", ")", "[", "]", ",", ".",
-                     "+", "-", "*", "/", "%", "<", ">", "~"]
+    let operators = [
+      "//", "==", "!=", "<=", ">=", "**", "|", "(", ")", "[", "]", ",", ".",
+      "+", "-", "*", "/", "%", "<", ">", "~",
+    ]
 
     while index < characters.count {
       let character = characters[index]
@@ -354,8 +356,7 @@ enum ExpressionParser {
         position += 1
         var elements: [Any] = []
         if !consume(symbol: "]") {
-          repeat { elements.append(try parseExpression() ?? NSNull()) }
-          while consume(symbol: ",")
+          repeat { elements.append(try parseExpression() ?? NSNull()) } while consume(symbol: ",")
           guard consume(symbol: "]") else {
             throw InvokerError.parse("expected ']' in '\(source)'")
           }
@@ -464,7 +465,8 @@ enum ExpressionParser {
         return Int((a / b).rounded(.down))
       case "%":
         guard b != 0 else { throw InvokerError.parse("division by zero in '\(source)'") }
-        return bothIntegers ? Int(a.truncatingRemainder(dividingBy: b)) as Any
+        return bothIntegers
+          ? Int(a.truncatingRemainder(dividingBy: b)) as Any
           : a.truncatingRemainder(dividingBy: b)
       default:
         throw InvokerError.parse("unsupported operator '\(symbol)' in '\(source)'")
@@ -482,8 +484,11 @@ enum ExpressionParser {
 
     func isInteger(_ value: Any?) -> Bool {
       if value is Int { return true }
-      if let number = value as? NSNumber { return !(number.doubleValue.truncatingRemainder(
-        dividingBy: 1) != 0) && !(value is Double) }
+      if let number = value as? NSNumber {
+        return
+          !(number.doubleValue.truncatingRemainder(
+            dividingBy: 1) != 0) && !(value is Double)
+      }
       return false
     }
   }

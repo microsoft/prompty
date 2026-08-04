@@ -1,8 +1,13 @@
 import Foundation
-import PromptyModel
 
 /// Raised when a portable `Property` cannot be represented safely by the
 /// provider's JSON Schema subset.
+import PromptyModel
+
+/// Projection of the portable `Property` model onto JSON Schema.
+///
+/// This mirrors the Rust reference implementation exactly so that every runtime
+/// produces byte-identical request bodies for the shared wire vectors.
 public struct SchemaError: Error, CustomStringConvertible, Equatable {
   public let message: String
 
@@ -20,11 +25,6 @@ public struct SchemaError: Error, CustomStringConvertible, Equatable {
     "OpenAI schemas do not support UnionProperty.oneOf; use the provider-supported anyOf composition"
   )
 }
-
-/// Projection of the portable `Property` model onto JSON Schema.
-///
-/// This mirrors the Rust reference implementation exactly so that every runtime
-/// produces byte-identical request bodies for the shared wire vectors.
 public enum JSONSchema {
 
   /// Map a Prompty property kind onto its JSON Schema type.

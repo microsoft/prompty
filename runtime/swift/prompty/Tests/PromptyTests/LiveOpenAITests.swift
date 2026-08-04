@@ -1,9 +1,10 @@
 import Foundation
-import PromptyModel
-import PromptyOpenAI
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import PromptyOpenAI
+
+import XCTest
 
 /// End-to-end tests against the real OpenAI API.
 ///
@@ -14,6 +15,12 @@ import XCTest
 ///
 /// The runtime itself never reads `.env` — populating the environment is the
 /// host's job, so the loading below belongs to the test, not the library.
+@testable import Prompty
+
+// MARK: - .env loading
+
+/// Load `KEY=VALUE` lines from a `.env` beside the package into the process
+/// environment, without overwriting values that are already set.
 final class LiveOpenAITests: XCTestCase {
 
   private static let loaded: Bool = {
@@ -57,7 +64,8 @@ final class LiveOpenAITests: XCTestCase {
     ])
 
     let result = try await Pipeline.invoke(agent, inputs: ["topic": "banana"])
-    let text = try XCTUnwrap(result as? String, "expected text content, got \(String(describing: result))")
+    let text = try XCTUnwrap(
+      result as? String, "expected text content, got \(String(describing: result))")
 
     XCTAssertFalse(text.isEmpty)
     XCTAssertTrue(
@@ -333,11 +341,6 @@ final class LiveOpenAITests: XCTestCase {
       "unexpected answer: \(text.debugDescription)")
   }
 }
-
-// MARK: - .env loading
-
-/// Load `KEY=VALUE` lines from a `.env` beside the package into the process
-/// environment, without overwriting values that are already set.
 private func loadDotEnv() {
   let packageRoot = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent()  // PromptyTests

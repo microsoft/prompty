@@ -1,5 +1,4 @@
 import Foundation
-import PromptyModel
 
 /// Transport for structured (schema-shaped) results.
 ///
@@ -7,6 +6,8 @@ import PromptyModel
 /// that the exact provider JSON survives alongside the parsed value. Callers
 /// that just want the data see it through ``unwrap(_:)``; callers that need a
 /// lossless round-trip decode ``cast(_:as:)`` from the preserved raw JSON.
+import PromptyModel
+
 public enum Structured {
 
   /// Wrap a processed result when the prompt declares outputs.

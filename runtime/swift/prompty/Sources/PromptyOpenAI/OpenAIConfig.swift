@@ -1,12 +1,13 @@
 import Foundation
-import PromptyModel
+
 import Prompty
 
+import PromptyModel
+
+/// Shared configuration for talking to an OpenAI-compatible endpoint.
 #if canImport(FoundationNetworking)
   import FoundationNetworking
 #endif
-
-/// Shared configuration for talking to an OpenAI-compatible endpoint.
 struct OpenAIConfig {
   var baseURL: URL
   var apiKey: String

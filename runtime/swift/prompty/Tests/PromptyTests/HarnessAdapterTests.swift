@@ -1,14 +1,16 @@
 import Foundation
-import PromptyModel
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
 
 /// Focused tests for the durability adapters.
 ///
 /// The replay vectors prove the *sequence* is right; these prove the adapters
 /// behave correctly at their edges — where crash-durability, ordering, and
 /// error containment actually live.
+@testable import Prompty
+
 final class HarnessAdapterTests: XCTestCase {
 
   // MARK: - Journal

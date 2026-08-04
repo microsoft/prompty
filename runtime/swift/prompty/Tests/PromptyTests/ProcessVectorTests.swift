@@ -1,14 +1,17 @@
 import Foundation
+
 import PromptyModel
+
 import XCTest
 
 @testable import Prompty
-@testable import PromptyOpenAI
 
 /// Conformance against `spec/vectors/process/process_vectors.json`.
 ///
 /// Drives the real `OpenAIProcessor`, including the structured-output
 /// finalization path that only engages when the agent declares outputs.
+@testable import PromptyOpenAI
+
 final class ProcessVectorTests: XCTestCase {
 
   func testProcessVectors() async throws {

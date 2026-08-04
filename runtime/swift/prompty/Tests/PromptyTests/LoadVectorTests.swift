@@ -1,14 +1,28 @@
 import Foundation
-import PromptyModel
-import XCTest
-import Yams
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
+
+import Yams
 
 /// Conformance against `spec/vectors/load/load_vectors.json`.
 ///
 /// Covers frontmatter parsing, `${env:}` / `${file:}` resolution, model and
 /// tool normalization, and `validateInputs`.
+@testable import Prompty
+
+// MARK: - Environment
+
+/// Set environment variables for the duration of `body`, then restore them.
+///
+/// The vectors rely on process environment for `${env:}` resolution, so this
+/// must leave no residue between vectors.
+
+/// Cross-platform process environment mutation.
+///
+/// `setenv` / `unsetenv` are POSIX-only; the Windows Swift toolchain exposes
+/// the CRT equivalent instead, which is what `getenv` and Foundation read.
 final class LoadVectorTests: XCTestCase {
 
   func testLoadVectors() throws {
@@ -352,19 +366,13 @@ final class LoadVectorTests: XCTestCase {
         "tools[\(index)].parameters count: expected \(parameters.count), got \(actual.count)")
       for (position, expectedParameter) in parameters.enumerated() {
         if let name = expectedParameter["name"] as? String {
-          try expectEqual(actual[position].name, name, "tools[\(index)].parameters[\(position)].name")
+          try expectEqual(
+            actual[position].name, name, "tools[\(index)].parameters[\(position)].name")
         }
       }
     }
   }
 }
-
-// MARK: - Environment
-
-/// Set environment variables for the duration of `body`, then restore them.
-///
-/// The vectors rely on process environment for `${env:}` resolution, so this
-/// must leave no residue between vectors.
 func withEnvironment<T>(_ values: [String: Any], _ body: () throws -> T) rethrows -> T {
   var restore: [String: String?] = [:]
   for (key, value) in values {
@@ -379,11 +387,6 @@ func withEnvironment<T>(_ values: [String: Any], _ body: () throws -> T) rethrow
   }
   return try body()
 }
-
-/// Cross-platform process environment mutation.
-///
-/// `setenv` / `unsetenv` are POSIX-only; the Windows Swift toolchain exposes
-/// the CRT equivalent instead, which is what `getenv` and Foundation read.
 enum Env {
   static func set(_ key: String, _ value: String?) {
     #if os(Windows)

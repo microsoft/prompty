@@ -1,5 +1,4 @@
 import Foundation
-import PromptyModel
 
 /// The Prompty execution pipeline.
 ///
@@ -9,6 +8,21 @@ import PromptyModel
 ///
 /// `prepare` covers template → messages; `run` covers messages → result;
 /// `invoke` runs the whole thing end to end.
+import PromptyModel
+
+// MARK: - Top-level conveniences
+
+/// Render a prompt's instructions.
+
+/// Render and parse a prompt into messages.
+
+/// Execute prepared messages and process the response.
+
+/// Run the full pipeline for a loaded prompt.
+
+/// Run the full pipeline for a prompt on disk.
+
+/// Register the built-in renderers and parsers.
 public enum Pipeline {
 
   // MARK: - Input validation
@@ -363,35 +377,21 @@ public enum Pipeline {
     }
   }
 }
-
-// MARK: - Top-level conveniences
-
-/// Render a prompt's instructions.
 public func render(_ agent: Prompty, inputs: [String: Any] = [:]) async throws -> String {
   try await Pipeline.render(agent, inputs: inputs)
 }
-
-/// Render and parse a prompt into messages.
 public func prepare(_ agent: Prompty, inputs: [String: Any] = [:]) async throws -> [Message] {
   try await Pipeline.prepare(agent, inputs: inputs)
 }
-
-/// Execute prepared messages and process the response.
 public func run(_ agent: Prompty, messages: [Message]) async throws -> Any? {
   try await Pipeline.run(agent, messages: messages)
 }
-
-/// Run the full pipeline for a loaded prompt.
 public func invoke(_ agent: Prompty, inputs: [String: Any] = [:]) async throws -> Any? {
   try await Pipeline.invoke(agent, inputs: inputs)
 }
-
-/// Run the full pipeline for a prompt on disk.
 public func invoke(path: String, inputs: [String: Any] = [:]) async throws -> Any? {
   try await Pipeline.invoke(path: path, inputs: inputs)
 }
-
-/// Register the built-in renderers and parsers.
 public func registerDefaults() {
   Registry.shared.registerDefaults()
 }

@@ -1,5 +1,4 @@
 import Foundation
-import PromptyModel
 
 /// Durable harness adapters: event capture, journaling, replay verification,
 /// checkpoint storage, permission resolution and host tool dispatch.
@@ -15,6 +14,32 @@ import PromptyModel
 ///
 /// Reference implementations are handed to engines that may fan out across
 /// tasks, so the buffers are lock-guarded and the type is `Sendable`.
+import PromptyModel
+
+// MARK: - Journaling
+
+/// Appends replayable journal records as newline-delimited JSON.
+///
+/// Every write is an append to a closed file handle rather than a retained one,
+/// which is what makes the journal durable across a crash mid-turn.
+
+// MARK: - Replay verification
+
+/// Compares an expected journal against an actual one, position by position.
+
+// MARK: - Checkpoint storage
+
+/// Stores checkpoints in memory, keyed by session and checkpoint id.
+
+// MARK: - Permission resolution
+
+/// Approves every permission request.
+
+/// Denies every permission request.
+
+// MARK: - Host tool dispatch
+
+/// Dispatches host tool requests to registered local functions.
 public final class CollectingEventSink: EventSink, @unchecked Sendable {
   private let lock = NSLock()
   private var turn: [TurnEvent] = []
@@ -48,13 +73,6 @@ public final class CollectingEventSink: EventSink, @unchecked Sendable {
     return true
   }
 }
-
-// MARK: - Journaling
-
-/// Appends replayable journal records as newline-delimited JSON.
-///
-/// Every write is an append to a closed file handle rather than a retained one,
-/// which is what makes the journal durable across a crash mid-turn.
 public final class JsonlEventJournalWriter: EventJournalWriter, @unchecked Sendable {
   private let lock = NSLock()
   private let url: URL
@@ -120,10 +138,6 @@ public final class JsonlEventJournalWriter: EventJournalWriter, @unchecked Senda
       .compactMap { JSONSupport.parse(json: String($0)) as? [String: Any] }
   }
 }
-
-// MARK: - Replay verification
-
-/// Compares an expected journal against an actual one, position by position.
 public struct ReferenceReplayVerifier: Sendable {
   public init() {}
 
@@ -169,10 +183,6 @@ public struct ReferenceReplayVerifier: Sendable {
     return JSONSupport.toJSON(try record.save())
   }
 }
-
-// MARK: - Checkpoint storage
-
-/// Stores checkpoints in memory, keyed by session and checkpoint id.
 public final class InMemoryCheckpointStore: CheckpointStore, @unchecked Sendable {
   private let lock = NSLock()
   private var checkpoints: [String: Checkpoint] = [:]
@@ -225,10 +235,6 @@ public final class InMemoryCheckpointStore: CheckpointStore, @unchecked Sendable
     "\(sessionId.replacingOccurrences(of: "\u{1}", with: ""))\u{1}\(checkpointId)"
   }
 }
-
-// MARK: - Permission resolution
-
-/// Approves every permission request.
 public struct AllowAllPermissionResolver: PermissionResolver, Sendable {
   public init() {}
 
@@ -242,8 +248,6 @@ public struct AllowAllPermissionResolver: PermissionResolver, Sendable {
     )
   }
 }
-
-/// Denies every permission request.
 public struct DenyAllPermissionResolver: PermissionResolver, Sendable {
   public init() {}
 
@@ -257,10 +261,6 @@ public struct DenyAllPermissionResolver: PermissionResolver, Sendable {
     )
   }
 }
-
-// MARK: - Host tool dispatch
-
-/// Dispatches host tool requests to registered local functions.
 public struct FunctionHostToolExecutor: HostToolExecutor, Sendable {
   public typealias Handler = @Sendable ([String: Any]) async throws -> Any
 

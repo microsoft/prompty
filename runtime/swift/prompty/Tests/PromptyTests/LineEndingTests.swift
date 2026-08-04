@@ -1,8 +1,8 @@
 import Foundation
-import PromptyModel
-import XCTest
 
-@testable import Prompty
+import PromptyModel
+
+import XCTest
 
 /// Guards for Windows line endings.
 ///
@@ -11,6 +11,8 @@ import XCTest
 /// thing as one line. Rust splits at byte level and degrades gracefully, so
 /// this is a Swift-specific hazard with no counterpart in the reference
 /// implementation, and nothing in the LF-only spec vectors can catch it.
+@testable import Prompty
+
 final class LineEndingTests: XCTestCase {
 
   /// A prompt assembled in memory with Windows line endings must parse.
