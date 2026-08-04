@@ -1,9 +1,7 @@
 {
   "version": "1",
   "legacyHarnessSha256": "c534140f1aae07034cedea13feec3d66a9acbc0df46869858753aef39e24fe69",
-  "nativeErrors": [
-    "PortError"
-  ],
+  "nativeErrors": ["PortError"],
   "protocols": {
     "EnginePermissionPort": {
       "methods": {
@@ -81,16 +79,42 @@
     "Executor": {
       "methods": {
         "execute": {
+          "returns": "unknown",
+          "params": {
+            "agent": "Prompty",
+            "messages": "Message[]"
+          },
+          "optional": false,
           "runtimeCancellable": true,
-          "sync": false
+          "sync": false,
+          "atomic": false,
+          "nonFatal": false
         },
         "executeStream": {
+          "returns": "unknown",
+          "params": {
+            "agent": "Prompty",
+            "messages": "Message[]"
+          },
+          "optional": true,
           "runtimeCancellable": true,
-          "sync": false
+          "sync": false,
+          "atomic": false,
+          "nonFatal": false
         },
         "formatToolMessages": {
+          "returns": "Message[]",
+          "params": {
+            "rawResponse": "unknown",
+            "toolCalls": "ToolCall[]",
+            "toolResults": "string[]",
+            "textContent": "string?"
+          },
+          "optional": false,
           "runtimeCancellable": false,
-          "sync": true
+          "sync": true,
+          "atomic": false,
+          "nonFatal": false
         }
       }
     }
