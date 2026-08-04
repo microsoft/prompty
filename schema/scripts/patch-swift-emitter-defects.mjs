@@ -549,8 +549,11 @@ const patches = [
 ///           still manually constructible, but it forces any exhaustive
 ///           consumer `switch` without a catch-all arm to grow one.
 ///  0.4.11 — the first builds among the 29 archives probed here that fix the
-///           collection-helper inheritance defect, and the first candidates
-///           worth adopting. The fix merges
+///           collection-helper inheritance defect. Every artifact named in
+///           this entry has since been withdrawn by the release owner and is
+///           ineligible: do not install, probe, adopt, or cite any of it as
+///           acceptance evidence. What survives is the acceptance *marker*,
+///           which is artifact-independent. The fix merges
 ///           `collectionHelpers` across ancestors in
 ///           `dist/src/ir/inheritance.js`; without it a
 ///           `Record<T> | Named<T, ...>` alias declared on a *base* type loses
@@ -568,12 +571,14 @@ const patches = [
 ///           the artifact alone. Key acceptance on sha256 and on the marker
 ///           above, never on the version string.
 ///
-///           Two builds were validated end to end against this repo:
-///           2C405A0AF5... and 29151169CD... (newest). Both generate cleanly
-///           with this shim disabled, and `swift build --build-tests` reaches
+///           Two builds were once validated end to end against this repo
+///           (2C405A0AF5..., 29151169CD...), both since withdrawn and
+///           ineligible. They are recorded for the failure *shapes* they
+///           exposed, never as candidates. Both generated cleanly
+///           with this shim disabled, and `swift build --build-tests` reached
 ///           zero errors after a single consumer adaptation —
 ///           `ContentPart.unknown` in `PromptyOpenAI/Wire.swift`. `swift test`
-///           then reports 80 executed with 17 failures. Sixteen are
+///           then reported 80 executed with 17 failures. Sixteen are
 ///           characterization tripwires in this repo firing *because* the
 ///           upstream fixes landed: 12 from
 ///           `testConnectionBaseFieldsAreDroppedOnEverySubtype`, whose messages
@@ -593,7 +598,8 @@ const patches = [
 ///           adds a case that loaded values can never occupy — it stays
 ///           manually constructible, as the 0.4.10 note above records, but no
 ///           loader can produce it. The 0.4.10 entry recorded that defect for
-///           `Tool`; 29151169CD... resolves it, emitting `Tool` as
+///           `Tool`; the withdrawn 29151169CD... resolved it, emitting `Tool`
+///           as
 ///           `functionTool | mcpTool | openApiTool | promptyTool | customTool`
 ///           with no `unknown`. Neither `Property` nor `ContentPart` declares a
 ///           `kind: "*"` subtype, yet both still emit `unknown` — which is what
