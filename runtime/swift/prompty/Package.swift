@@ -5,7 +5,8 @@ let package = Package(
   name: "Prompty",
   platforms: [.macOS(.v12), .iOS(.v15)],
   products: [
-    .library(name: "Prompty", targets: ["Prompty"])
+    .library(name: "Prompty", targets: ["Prompty"]),
+    .library(name: "PromptyOpenAI", targets: ["PromptyOpenAI"]),
   ],
   dependencies: [
     .package(path: "../prompty-model"),
@@ -19,10 +20,14 @@ let package = Package(
         .product(name: "Yams", package: "Yams"),
       ]
     ),
+    .target(
+      name: "PromptyOpenAI",
+      dependencies: ["Prompty", .product(name: "PromptyModel", package: "prompty-model")]
+    ),
     .testTarget(
       name: "PromptyTests",
       dependencies: [
-        "Prompty",
+        "Prompty", "PromptyOpenAI",
         .product(name: "PromptyModel", package: "prompty-model"),
         .product(name: "Yams", package: "Yams"),
       ]
