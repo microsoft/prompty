@@ -166,6 +166,86 @@
     },
     {
       "contract": "ModelLister",
+      "target": "java",
+      "group": "model",
+      "symbol": "ModelLister",
+      "generatedSource": "ModelLister.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "CheckpointStore",
+      "generatedSource": "CheckpointStore.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "EventJournalWriter.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "EventSink",
+      "generatedSource": "EventSink.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "Executor",
+      "generatedSource": "Executor.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "HostToolExecutor.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "Parser",
+      "generatedSource": "Parser.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "PermissionResolver",
+      "generatedSource": "PermissionResolver.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "Processor",
+      "generatedSource": "Processor.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "java",
+      "group": "pipeline",
+      "symbol": "Renderer",
+      "generatedSource": "Renderer.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
       "target": "markdown",
       "group": "model",
       "symbol": "ModelLister",

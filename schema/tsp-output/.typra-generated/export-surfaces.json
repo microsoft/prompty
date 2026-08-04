@@ -4128,6 +4128,2055 @@
       ]
     },
     {
+      "target": "java",
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "packageName": "com.microsoft.prompty.model",
+      "rootExports": [
+        "AiResourceInfo",
+        "AnonymousConnection",
+        "AnthropicImageBlock",
+        "AnthropicImageSource",
+        "AnthropicMessagesRequest",
+        "AnthropicMessagesResponse",
+        "AnthropicTextBlock",
+        "AnthropicToolDefinition",
+        "AnthropicToolResultBlock",
+        "AnthropicToolUseBlock",
+        "AnthropicUsage",
+        "AnthropicWireMessage",
+        "ApiKeyConnection",
+        "ArrayProperty",
+        "AudioPart",
+        "AuthorizationCodeFlow",
+        "Binding",
+        "Checkpoint",
+        "CheckpointStore",
+        "CompactionCompletePayload",
+        "CompactionConfig",
+        "CompactionFailedPayload",
+        "CompactionStartPayload",
+        "Connection",
+        "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
+        "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
+        "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
+        "ErrorChunk",
+        "ErrorEventPayload",
+        "EventJournalWriter",
+        "EventSink",
+        "Executor",
+        "FileNotFoundError",
+        "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
+        "FormatConfig",
+        "FoundryConnection",
+        "FunctionTool",
+        "GuardrailResult",
+        "HarnessContext",
+        "HookEndPayload",
+        "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
+        "HostToolExecutor",
+        "HostToolRequest",
+        "HostToolResult",
+        "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
+        "InvokerError",
+        "LlmCompletePayload",
+        "LlmStartPayload",
+        "McpApprovalMode",
+        "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
+        "Message",
+        "MessagesUpdatedPayload",
+        "Model",
+        "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
+        "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
+        "OAuthConnection",
+        "OAuthToken",
+        "ObjectProperty",
+        "OpenApiTool",
+        "Parser",
+        "ParserConfig",
+        "PermissionCompletedPayload",
+        "PermissionDecision",
+        "PermissionRequest",
+        "PermissionRequestedPayload",
+        "PermissionResolver",
+        "Processor",
+        "ProjectInfo",
+        "Prompty",
+        "PromptyTool",
+        "Property",
+        "RedactedField",
+        "RedactionMetadata",
+        "ReferenceConnection",
+        "RemoteConnection",
+        "Renderer",
+        "ReplayJournalRecord",
+        "ReplayMismatch",
+        "ReplayVerificationRequest",
+        "ReplayVerificationResult",
+        "ResumeContext",
+        "RetryPayload",
+        "RetryPolicyRequest",
+        "RunTurnRequest",
+        "RunTurnResult",
+        "SessionEndPayload",
+        "SessionEvent",
+        "SessionFileRef",
+        "SessionRef",
+        "SessionStartPayload",
+        "SessionSummary",
+        "SessionTrace",
+        "SessionWarningPayload",
+        "StatusEventPayload",
+        "StreamChunk",
+        "StreamOptions",
+        "SubscriptionInfo",
+        "Template",
+        "TextChunk",
+        "TextPart",
+        "ThinkingChunk",
+        "ThinkingEventPayload",
+        "ThreadMarker",
+        "TokenEventPayload",
+        "TokenUsage",
+        "Tool",
+        "ToolCall",
+        "ToolCallCompletePayload",
+        "ToolCallStartPayload",
+        "ToolChunk",
+        "ToolContext",
+        "ToolDispatchResult",
+        "ToolExecutionCompletePayload",
+        "ToolExecutionStartPayload",
+        "ToolResult",
+        "ToolResultPayload",
+        "TraceFile",
+        "TraceSpan",
+        "TraceTime",
+        "TrajectoryEvent",
+        "TurnCommit",
+        "TurnEndPayload",
+        "TurnEngineResult",
+        "TurnEvent",
+        "TurnModelRequest",
+        "TurnModelResponse",
+        "TurnOptions",
+        "TurnStartPayload",
+        "TurnSummary",
+        "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
+        "ValidationError",
+        "ValidationResult"
+      ],
+      "exports": [
+        {
+          "name": "GuardrailResult",
+          "kind": "value",
+          "group": "agent",
+          "source": "GuardrailResult.java",
+          "protocol": false
+        },
+        {
+          "name": "Prompty",
+          "kind": "value",
+          "group": "agent",
+          "source": "Prompty.java",
+          "protocol": false
+        },
+        {
+          "name": "AnonymousConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Connection.java",
+          "protocol": false
+        },
+        {
+          "name": "ApiKeyConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Connection.java",
+          "protocol": false
+        },
+        {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "AuthorizationCodeFlow.java",
+          "protocol": false
+        },
+        {
+          "name": "Connection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Connection.java",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "DeviceAuthorization.java",
+          "protocol": false
+        },
+        {
+          "name": "FoundryConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Connection.java",
+          "protocol": false
+        },
+        {
+          "name": "OAuthConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Connection.java",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "OAuthToken.java",
+          "protocol": false
+        },
+        {
+          "name": "ReferenceConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Connection.java",
+          "protocol": false
+        },
+        {
+          "name": "RemoteConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Connection.java",
+          "protocol": false
+        },
+        {
+          "name": "AudioPart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "ContentPart.java",
+          "protocol": false
+        },
+        {
+          "name": "ContentPart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "ContentPart.java",
+          "protocol": false
+        },
+        {
+          "name": "FilePart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "ContentPart.java",
+          "protocol": false
+        },
+        {
+          "name": "ImagePart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "ContentPart.java",
+          "protocol": false
+        },
+        {
+          "name": "Message",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Message.java",
+          "protocol": false
+        },
+        {
+          "name": "TextPart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "ContentPart.java",
+          "protocol": false
+        },
+        {
+          "name": "ThreadMarker",
+          "kind": "value",
+          "group": "conversation",
+          "source": "ThreadMarker.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolCall",
+          "kind": "value",
+          "group": "conversation",
+          "source": "ToolCall.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolResult",
+          "kind": "value",
+          "group": "conversation",
+          "source": "ToolResult.java",
+          "protocol": false
+        },
+        {
+          "name": "ArrayProperty",
+          "kind": "value",
+          "group": "core",
+          "source": "Property.java",
+          "protocol": false
+        },
+        {
+          "name": "FileNotFoundError",
+          "kind": "value",
+          "group": "core",
+          "source": "FileNotFoundError.java",
+          "protocol": false
+        },
+        {
+          "name": "InvokerError",
+          "kind": "value",
+          "group": "core",
+          "source": "InvokerError.java",
+          "protocol": false
+        },
+        {
+          "name": "ObjectProperty",
+          "kind": "value",
+          "group": "core",
+          "source": "Property.java",
+          "protocol": false
+        },
+        {
+          "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "Property.java",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
+          "kind": "value",
+          "group": "core",
+          "source": "Property.java",
+          "protocol": false
+        },
+        {
+          "name": "ValidationError",
+          "kind": "value",
+          "group": "core",
+          "source": "ValidationError.java",
+          "protocol": false
+        },
+        {
+          "name": "ValidationResult",
+          "kind": "value",
+          "group": "core",
+          "source": "ValidationResult.java",
+          "protocol": false
+        },
+        {
+          "name": "Checkpoint",
+          "kind": "value",
+          "group": "events",
+          "source": "Checkpoint.java",
+          "protocol": false
+        },
+        {
+          "name": "CompactionCompletePayload",
+          "kind": "value",
+          "group": "events",
+          "source": "CompactionCompletePayload.java",
+          "protocol": false
+        },
+        {
+          "name": "CompactionFailedPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "CompactionFailedPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "CompactionStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "CompactionStartPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "DoneEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "DoneEventPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "ErrorChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk.java",
+          "protocol": false
+        },
+        {
+          "name": "ErrorEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "ErrorEventPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "HarnessContext",
+          "kind": "value",
+          "group": "events",
+          "source": "HarnessContext.java",
+          "protocol": false
+        },
+        {
+          "name": "HookEndPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "HookEndPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "HookStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "HookStartPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "HostToolRequest",
+          "kind": "value",
+          "group": "events",
+          "source": "HostToolRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "HostToolResult",
+          "kind": "value",
+          "group": "events",
+          "source": "HostToolResult.java",
+          "protocol": false
+        },
+        {
+          "name": "LlmCompletePayload",
+          "kind": "value",
+          "group": "events",
+          "source": "LlmCompletePayload.java",
+          "protocol": false
+        },
+        {
+          "name": "LlmStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "LlmStartPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "MessagesUpdatedPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "MessagesUpdatedPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "PermissionCompletedPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "PermissionCompletedPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "PermissionDecision",
+          "kind": "value",
+          "group": "events",
+          "source": "PermissionDecision.java",
+          "protocol": false
+        },
+        {
+          "name": "PermissionRequest",
+          "kind": "value",
+          "group": "events",
+          "source": "PermissionRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "PermissionRequestedPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "PermissionRequestedPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "RedactedField",
+          "kind": "value",
+          "group": "events",
+          "source": "RedactedField.java",
+          "protocol": false
+        },
+        {
+          "name": "RedactionMetadata",
+          "kind": "value",
+          "group": "events",
+          "source": "RedactionMetadata.java",
+          "protocol": false
+        },
+        {
+          "name": "RetryPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "RetryPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "SessionEndPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "SessionEndPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "SessionEvent",
+          "kind": "value",
+          "group": "events",
+          "source": "SessionEvent.java",
+          "protocol": false
+        },
+        {
+          "name": "SessionFileRef",
+          "kind": "value",
+          "group": "events",
+          "source": "SessionFileRef.java",
+          "protocol": false
+        },
+        {
+          "name": "SessionRef",
+          "kind": "value",
+          "group": "events",
+          "source": "SessionRef.java",
+          "protocol": false
+        },
+        {
+          "name": "SessionStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "SessionStartPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "SessionSummary",
+          "kind": "value",
+          "group": "events",
+          "source": "SessionSummary.java",
+          "protocol": false
+        },
+        {
+          "name": "SessionTrace",
+          "kind": "value",
+          "group": "events",
+          "source": "SessionTrace.java",
+          "protocol": false
+        },
+        {
+          "name": "SessionWarningPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "SessionWarningPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "StatusEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "StatusEventPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "StreamChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk.java",
+          "protocol": false
+        },
+        {
+          "name": "TextChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk.java",
+          "protocol": false
+        },
+        {
+          "name": "ThinkingChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk.java",
+          "protocol": false
+        },
+        {
+          "name": "ThinkingEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "ThinkingEventPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "TokenEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "TokenEventPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolCallCompletePayload",
+          "kind": "value",
+          "group": "events",
+          "source": "ToolCallCompletePayload.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolCallStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "ToolCallStartPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolExecutionCompletePayload",
+          "kind": "value",
+          "group": "events",
+          "source": "ToolExecutionCompletePayload.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolExecutionStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "ToolExecutionStartPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolResultPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "ToolResultPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "TrajectoryEvent",
+          "kind": "value",
+          "group": "events",
+          "source": "TrajectoryEvent.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnEndPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "TurnEndPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnEvent",
+          "kind": "value",
+          "group": "events",
+          "source": "TurnEvent.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "TurnStartPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnSummary",
+          "kind": "value",
+          "group": "events",
+          "source": "TurnSummary.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnTrace",
+          "kind": "value",
+          "group": "events",
+          "source": "TurnTrace.java",
+          "protocol": false
+        },
+        {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk.java",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryEntry.java",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "MemoryStore.java",
+          "protocol": false
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "AiResourceInfo.java",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "InvocationUsage.java",
+          "protocol": false
+        },
+        {
+          "name": "Model",
+          "kind": "value",
+          "group": "model",
+          "source": "Model.java",
+          "protocol": false
+        },
+        {
+          "name": "ModelInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "ModelInfo.java",
+          "protocol": false
+        },
+        {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "ModelLister.java",
+          "protocol": true
+        },
+        {
+          "name": "ModelOptions",
+          "kind": "value",
+          "group": "model",
+          "source": "ModelOptions.java",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "ProjectInfo.java",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "SubscriptionInfo.java",
+          "protocol": false
+        },
+        {
+          "name": "TokenUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "TokenUsage.java",
+          "protocol": false
+        },
+        {
+          "name": "CheckpointStore",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "CheckpointStore.java",
+          "protocol": true
+        },
+        {
+          "name": "CompactionConfig",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "CompactionConfig.java",
+          "protocol": false
+        },
+        {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ContextCandidate.java",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ContextRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "DelegatedStateReference.java",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EngineCheckpoint.java",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EngineEvent.java",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "EnginePermissionDecision.java",
+          "protocol": false
+        },
+        {
+          "name": "EventJournalWriter",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "EventJournalWriter.java",
+          "protocol": true
+        },
+        {
+          "name": "EventSink",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "EventSink.java",
+          "protocol": true
+        },
+        {
+          "name": "Executor",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Executor.java",
+          "protocol": true
+        },
+        {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "FinalOutputPolicyRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "FinalOutputPolicyResult.java",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "HostPolicyRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "HostPolicyResult.java",
+          "protocol": false
+        },
+        {
+          "name": "HostToolExecutor",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "HostToolExecutor.java",
+          "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "InvocationContextDecision.java",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "InvocationContextState.java",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationContextSnapshot.java",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelInvocationResponse.java",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelReconciliationState.java",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelToolRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ModelToolResult.java",
+          "protocol": false
+        },
+        {
+          "name": "Parser",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Parser.java",
+          "protocol": true
+        },
+        {
+          "name": "PermissionResolver",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "PermissionResolver.java",
+          "protocol": true
+        },
+        {
+          "name": "Processor",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Processor.java",
+          "protocol": true
+        },
+        {
+          "name": "Renderer",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Renderer.java",
+          "protocol": true
+        },
+        {
+          "name": "ReplayJournalRecord",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ReplayJournalRecord.java",
+          "protocol": false
+        },
+        {
+          "name": "ReplayMismatch",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ReplayMismatch.java",
+          "protocol": false
+        },
+        {
+          "name": "ReplayVerificationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ReplayVerificationRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "ReplayVerificationResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ReplayVerificationResult.java",
+          "protocol": false
+        },
+        {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "ResumeContext.java",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "RetryPolicyRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "RunTurnRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "RunTurnRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "RunTurnResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "RunTurnResult.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnCommit.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnEngineResult.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnModelRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnModelRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnModelResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnModelResponse.java",
+          "protocol": false
+        },
+        {
+          "name": "TurnOptions",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "TurnOptions.java",
+          "protocol": false
+        },
+        {
+          "name": "StreamOptions",
+          "kind": "value",
+          "group": "streaming",
+          "source": "StreamOptions.java",
+          "protocol": false
+        },
+        {
+          "name": "FormatConfig",
+          "kind": "value",
+          "group": "template",
+          "source": "FormatConfig.java",
+          "protocol": false
+        },
+        {
+          "name": "ParserConfig",
+          "kind": "value",
+          "group": "template",
+          "source": "ParserConfig.java",
+          "protocol": false
+        },
+        {
+          "name": "Template",
+          "kind": "value",
+          "group": "template",
+          "source": "Template.java",
+          "protocol": false
+        },
+        {
+          "name": "Binding",
+          "kind": "value",
+          "group": "tools",
+          "source": "Binding.java",
+          "protocol": false
+        },
+        {
+          "name": "CustomTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Tool.java",
+          "protocol": false
+        },
+        {
+          "name": "FunctionTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Tool.java",
+          "protocol": false
+        },
+        {
+          "name": "McpApprovalMode",
+          "kind": "value",
+          "group": "tools",
+          "source": "McpApprovalMode.java",
+          "protocol": false
+        },
+        {
+          "name": "McpTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Tool.java",
+          "protocol": false
+        },
+        {
+          "name": "OpenApiTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Tool.java",
+          "protocol": false
+        },
+        {
+          "name": "PromptyTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Tool.java",
+          "protocol": false
+        },
+        {
+          "name": "Tool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Tool.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolContext",
+          "kind": "value",
+          "group": "tools",
+          "source": "ToolContext.java",
+          "protocol": false
+        },
+        {
+          "name": "ToolDispatchResult",
+          "kind": "value",
+          "group": "tools",
+          "source": "ToolDispatchResult.java",
+          "protocol": false
+        },
+        {
+          "name": "TraceFile",
+          "kind": "value",
+          "group": "tracing",
+          "source": "TraceFile.java",
+          "protocol": false
+        },
+        {
+          "name": "TraceSpan",
+          "kind": "value",
+          "group": "tracing",
+          "source": "TraceSpan.java",
+          "protocol": false
+        },
+        {
+          "name": "TraceTime",
+          "kind": "value",
+          "group": "tracing",
+          "source": "TraceTime.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicImageBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicImageBlock.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicImageSource",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicImageSource.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicMessagesRequest",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicMessagesRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicMessagesResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicMessagesResponse.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicTextBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicTextBlock.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolDefinition",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicToolDefinition.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolResultBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicToolResultBlock.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolUseBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicToolUseBlock.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicUsage",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicUsage.java",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicWireMessage",
+          "kind": "value",
+          "group": "wire",
+          "source": "AnthropicWireMessage.java",
+          "protocol": false
+        }
+      ],
+      "groups": [
+        {
+          "name": "agent",
+          "exports": [
+            "GuardrailResult",
+            "Prompty"
+          ],
+          "modules": [
+            "GuardrailResult.java",
+            "Prompty.java"
+          ]
+        },
+        {
+          "name": "connection",
+          "exports": [
+            "AnonymousConnection",
+            "ApiKeyConnection",
+            "AuthorizationCodeFlow",
+            "Connection",
+            "DeviceAuthorization",
+            "FoundryConnection",
+            "OAuthConnection",
+            "OAuthToken",
+            "ReferenceConnection",
+            "RemoteConnection"
+          ],
+          "modules": [
+            "AuthorizationCodeFlow.java",
+            "Connection.java",
+            "DeviceAuthorization.java",
+            "OAuthToken.java"
+          ]
+        },
+        {
+          "name": "conversation",
+          "exports": [
+            "AudioPart",
+            "ContentPart",
+            "FilePart",
+            "ImagePart",
+            "Message",
+            "TextPart",
+            "ThreadMarker",
+            "ToolCall",
+            "ToolResult"
+          ],
+          "modules": [
+            "ContentPart.java",
+            "Message.java",
+            "ThreadMarker.java",
+            "ToolCall.java",
+            "ToolResult.java"
+          ]
+        },
+        {
+          "name": "core",
+          "exports": [
+            "ArrayProperty",
+            "FileNotFoundError",
+            "InvokerError",
+            "ObjectProperty",
+            "Property",
+            "UnionProperty",
+            "ValidationError",
+            "ValidationResult"
+          ],
+          "modules": [
+            "FileNotFoundError.java",
+            "InvokerError.java",
+            "Property.java",
+            "ValidationError.java",
+            "ValidationResult.java"
+          ]
+        },
+        {
+          "name": "events",
+          "exports": [
+            "Checkpoint",
+            "CompactionCompletePayload",
+            "CompactionFailedPayload",
+            "CompactionStartPayload",
+            "DoneEventPayload",
+            "ErrorChunk",
+            "ErrorEventPayload",
+            "HarnessContext",
+            "HookEndPayload",
+            "HookStartPayload",
+            "HostToolRequest",
+            "HostToolResult",
+            "LlmCompletePayload",
+            "LlmStartPayload",
+            "MessagesUpdatedPayload",
+            "PermissionCompletedPayload",
+            "PermissionDecision",
+            "PermissionRequest",
+            "PermissionRequestedPayload",
+            "RedactedField",
+            "RedactionMetadata",
+            "RetryPayload",
+            "SessionEndPayload",
+            "SessionEvent",
+            "SessionFileRef",
+            "SessionRef",
+            "SessionStartPayload",
+            "SessionSummary",
+            "SessionTrace",
+            "SessionWarningPayload",
+            "StatusEventPayload",
+            "StreamChunk",
+            "TextChunk",
+            "ThinkingChunk",
+            "ThinkingEventPayload",
+            "TokenEventPayload",
+            "ToolCallCompletePayload",
+            "ToolCallStartPayload",
+            "ToolChunk",
+            "ToolExecutionCompletePayload",
+            "ToolExecutionStartPayload",
+            "ToolResultPayload",
+            "TrajectoryEvent",
+            "TurnEndPayload",
+            "TurnEvent",
+            "TurnStartPayload",
+            "TurnSummary",
+            "TurnTrace",
+            "UsageChunk"
+          ],
+          "modules": [
+            "Checkpoint.java",
+            "CompactionCompletePayload.java",
+            "CompactionFailedPayload.java",
+            "CompactionStartPayload.java",
+            "DoneEventPayload.java",
+            "ErrorEventPayload.java",
+            "HarnessContext.java",
+            "HookEndPayload.java",
+            "HookStartPayload.java",
+            "HostToolRequest.java",
+            "HostToolResult.java",
+            "LlmCompletePayload.java",
+            "LlmStartPayload.java",
+            "MessagesUpdatedPayload.java",
+            "PermissionCompletedPayload.java",
+            "PermissionDecision.java",
+            "PermissionRequest.java",
+            "PermissionRequestedPayload.java",
+            "RedactedField.java",
+            "RedactionMetadata.java",
+            "RetryPayload.java",
+            "SessionEndPayload.java",
+            "SessionEvent.java",
+            "SessionFileRef.java",
+            "SessionRef.java",
+            "SessionStartPayload.java",
+            "SessionSummary.java",
+            "SessionTrace.java",
+            "SessionWarningPayload.java",
+            "StatusEventPayload.java",
+            "StreamChunk.java",
+            "ThinkingEventPayload.java",
+            "TokenEventPayload.java",
+            "ToolCallCompletePayload.java",
+            "ToolCallStartPayload.java",
+            "ToolExecutionCompletePayload.java",
+            "ToolExecutionStartPayload.java",
+            "ToolResultPayload.java",
+            "TrajectoryEvent.java",
+            "TurnEndPayload.java",
+            "TurnEvent.java",
+            "TurnStartPayload.java",
+            "TurnSummary.java",
+            "TurnTrace.java"
+          ]
+        },
+        {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "MemoryEntry.java",
+            "MemoryStore.java"
+          ]
+        },
+        {
+          "name": "model",
+          "exports": [
+            "AiResourceInfo",
+            "InvocationUsage",
+            "Model",
+            "ModelInfo",
+            "ModelLister",
+            "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
+            "TokenUsage"
+          ],
+          "modules": [
+            "AiResourceInfo.java",
+            "InvocationUsage.java",
+            "Model.java",
+            "ModelInfo.java",
+            "ModelLister.java",
+            "ModelOptions.java",
+            "ProjectInfo.java",
+            "SubscriptionInfo.java",
+            "TokenUsage.java"
+          ]
+        },
+        {
+          "name": "pipeline",
+          "exports": [
+            "CheckpointStore",
+            "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
+            "EventJournalWriter",
+            "EventSink",
+            "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
+            "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
+            "Parser",
+            "PermissionResolver",
+            "Processor",
+            "Renderer",
+            "ReplayJournalRecord",
+            "ReplayMismatch",
+            "ReplayVerificationRequest",
+            "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
+            "RunTurnRequest",
+            "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
+            "TurnModelRequest",
+            "TurnModelResponse",
+            "TurnOptions"
+          ],
+          "modules": [
+            "CheckpointStore.java",
+            "CompactionConfig.java",
+            "ContextCandidate.java",
+            "ContextRequest.java",
+            "DelegatedStateReference.java",
+            "EngineCheckpoint.java",
+            "EngineEvent.java",
+            "EnginePermissionDecision.java",
+            "EventJournalWriter.java",
+            "EventSink.java",
+            "Executor.java",
+            "FinalOutputPolicyRequest.java",
+            "FinalOutputPolicyResult.java",
+            "HostPolicyRequest.java",
+            "HostPolicyResult.java",
+            "HostToolExecutor.java",
+            "InvocationContextDecision.java",
+            "InvocationContextState.java",
+            "ModelInvocationContextSnapshot.java",
+            "ModelInvocationRequest.java",
+            "ModelInvocationResponse.java",
+            "ModelReconciliationState.java",
+            "ModelToolRequest.java",
+            "ModelToolResult.java",
+            "Parser.java",
+            "PermissionResolver.java",
+            "Processor.java",
+            "Renderer.java",
+            "ReplayJournalRecord.java",
+            "ReplayMismatch.java",
+            "ReplayVerificationRequest.java",
+            "ReplayVerificationResult.java",
+            "ResumeContext.java",
+            "RetryPolicyRequest.java",
+            "RunTurnRequest.java",
+            "RunTurnResult.java",
+            "TurnCommit.java",
+            "TurnEngineResult.java",
+            "TurnModelRequest.java",
+            "TurnModelResponse.java",
+            "TurnOptions.java"
+          ]
+        },
+        {
+          "name": "streaming",
+          "exports": [
+            "StreamOptions"
+          ],
+          "modules": [
+            "StreamOptions.java"
+          ]
+        },
+        {
+          "name": "template",
+          "exports": [
+            "FormatConfig",
+            "ParserConfig",
+            "Template"
+          ],
+          "modules": [
+            "FormatConfig.java",
+            "ParserConfig.java",
+            "Template.java"
+          ]
+        },
+        {
+          "name": "tools",
+          "exports": [
+            "Binding",
+            "CustomTool",
+            "FunctionTool",
+            "McpApprovalMode",
+            "McpTool",
+            "OpenApiTool",
+            "PromptyTool",
+            "Tool",
+            "ToolContext",
+            "ToolDispatchResult"
+          ],
+          "modules": [
+            "Binding.java",
+            "McpApprovalMode.java",
+            "Tool.java",
+            "ToolContext.java",
+            "ToolDispatchResult.java"
+          ]
+        },
+        {
+          "name": "tracing",
+          "exports": [
+            "TraceFile",
+            "TraceSpan",
+            "TraceTime"
+          ],
+          "modules": [
+            "TraceFile.java",
+            "TraceSpan.java",
+            "TraceTime.java"
+          ]
+        },
+        {
+          "name": "wire",
+          "exports": [
+            "AnthropicImageBlock",
+            "AnthropicImageSource",
+            "AnthropicMessagesRequest",
+            "AnthropicMessagesResponse",
+            "AnthropicTextBlock",
+            "AnthropicToolDefinition",
+            "AnthropicToolResultBlock",
+            "AnthropicToolUseBlock",
+            "AnthropicUsage",
+            "AnthropicWireMessage"
+          ],
+          "modules": [
+            "AnthropicImageBlock.java",
+            "AnthropicImageSource.java",
+            "AnthropicMessagesRequest.java",
+            "AnthropicMessagesResponse.java",
+            "AnthropicTextBlock.java",
+            "AnthropicToolDefinition.java",
+            "AnthropicToolResultBlock.java",
+            "AnthropicToolUseBlock.java",
+            "AnthropicUsage.java",
+            "AnthropicWireMessage.java"
+          ]
+        }
+      ],
+      "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "ModelLister.java",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "CheckpointStore",
+          "group": "pipeline",
+          "symbol": "CheckpointStore",
+          "source": "CheckpointStore.java",
+          "methods": [
+            {
+              "name": "listCheckpoints",
+              "returns": "Checkpoint[]",
+              "params": {
+                "sessionId": "string"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "load",
+              "returns": "Checkpoint?",
+              "params": {
+                "checkpointId": "string",
+                "sessionId": "string"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "save",
+              "returns": "Checkpoint",
+              "params": {
+                "checkpoint": "Checkpoint"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "EventJournalWriter",
+          "group": "pipeline",
+          "symbol": "EventJournalWriter",
+          "source": "EventJournalWriter.java",
+          "methods": [
+            {
+              "name": "appendSession",
+              "returns": "boolean",
+              "params": {
+                "sessionEvent": "SessionEvent"
+              },
+              "optional": false,
+              "sync": true
+            },
+            {
+              "name": "appendTurn",
+              "returns": "boolean",
+              "params": {
+                "turnEvent": "TurnEvent"
+              },
+              "optional": false,
+              "sync": true
+            },
+            {
+              "name": "close",
+              "returns": "boolean",
+              "params": {
+                "summary": "SessionSummary?"
+              },
+              "optional": false,
+              "sync": true
+            }
+          ]
+        },
+        {
+          "name": "EventSink",
+          "group": "pipeline",
+          "symbol": "EventSink",
+          "source": "EventSink.java",
+          "methods": [
+            {
+              "name": "emitSession",
+              "returns": "boolean",
+              "params": {
+                "sessionEvent": "SessionEvent"
+              },
+              "optional": false,
+              "sync": true
+            },
+            {
+              "name": "emitTurn",
+              "returns": "boolean",
+              "params": {
+                "turnEvent": "TurnEvent"
+              },
+              "optional": false,
+              "sync": true
+            }
+          ]
+        },
+        {
+          "name": "Executor",
+          "group": "pipeline",
+          "symbol": "Executor",
+          "source": "Executor.java",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "unknown",
+              "params": {
+                "agent": "Prompty",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "executeStream",
+              "returns": "unknown",
+              "params": {
+                "agent": "Prompty",
+                "messages": "Message[]"
+              },
+              "optional": true,
+              "sync": false
+            },
+            {
+              "name": "formatToolMessages",
+              "returns": "Message[]",
+              "params": {
+                "rawResponse": "unknown",
+                "textContent": "string?",
+                "toolCalls": "ToolCall[]",
+                "toolResults": "string[]"
+              },
+              "optional": false,
+              "sync": true
+            }
+          ]
+        },
+        {
+          "name": "HostToolExecutor",
+          "group": "pipeline",
+          "symbol": "HostToolExecutor",
+          "source": "HostToolExecutor.java",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "HostToolResult",
+              "params": {
+                "request": "HostToolRequest"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "Parser",
+          "group": "pipeline",
+          "symbol": "Parser",
+          "source": "Parser.java",
+          "methods": [
+            {
+              "name": "parse",
+              "returns": "Message[]",
+              "params": {
+                "agent": "Prompty",
+                "context": "Record<unknown>?",
+                "rendered": "string"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "preRender",
+              "returns": "unknown?",
+              "params": {
+                "template": "string"
+              },
+              "optional": true,
+              "sync": true
+            }
+          ]
+        },
+        {
+          "name": "PermissionResolver",
+          "group": "pipeline",
+          "symbol": "PermissionResolver",
+          "source": "PermissionResolver.java",
+          "methods": [
+            {
+              "name": "request",
+              "returns": "PermissionDecision",
+              "params": {
+                "request": "PermissionRequest"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "Processor",
+          "group": "pipeline",
+          "symbol": "Processor",
+          "source": "Processor.java",
+          "methods": [
+            {
+              "name": "process",
+              "returns": "unknown",
+              "params": {
+                "agent": "Prompty",
+                "response": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "processStream",
+              "returns": "unknown",
+              "params": {
+                "stream": "unknown"
+              },
+              "optional": true,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "Renderer",
+          "group": "pipeline",
+          "symbol": "Renderer",
+          "source": "Renderer.java",
+          "methods": [
+            {
+              "name": "render",
+              "returns": "string",
+              "params": {
+                "agent": "Prompty",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        }
+      ],
+      "modules": [
+        "AiResourceInfo.java",
+        "AnthropicImageBlock.java",
+        "AnthropicImageSource.java",
+        "AnthropicMessagesRequest.java",
+        "AnthropicMessagesResponse.java",
+        "AnthropicTextBlock.java",
+        "AnthropicToolDefinition.java",
+        "AnthropicToolResultBlock.java",
+        "AnthropicToolUseBlock.java",
+        "AnthropicUsage.java",
+        "AnthropicWireMessage.java",
+        "AuthorizationCodeFlow.java",
+        "Binding.java",
+        "Checkpoint.java",
+        "CheckpointStore.java",
+        "CompactionCompletePayload.java",
+        "CompactionConfig.java",
+        "CompactionFailedPayload.java",
+        "CompactionStartPayload.java",
+        "Connection.java",
+        "ContentPart.java",
+        "ContextCandidate.java",
+        "ContextRequest.java",
+        "DelegatedStateReference.java",
+        "DeviceAuthorization.java",
+        "DoneEventPayload.java",
+        "EngineCheckpoint.java",
+        "EngineEvent.java",
+        "EnginePermissionDecision.java",
+        "ErrorEventPayload.java",
+        "EventJournalWriter.java",
+        "EventSink.java",
+        "Executor.java",
+        "FileNotFoundError.java",
+        "FinalOutputPolicyRequest.java",
+        "FinalOutputPolicyResult.java",
+        "FormatConfig.java",
+        "GuardrailResult.java",
+        "HarnessContext.java",
+        "HookEndPayload.java",
+        "HookStartPayload.java",
+        "HostPolicyRequest.java",
+        "HostPolicyResult.java",
+        "HostToolExecutor.java",
+        "HostToolRequest.java",
+        "HostToolResult.java",
+        "InvocationContextDecision.java",
+        "InvocationContextState.java",
+        "InvocationUsage.java",
+        "InvokerError.java",
+        "LlmCompletePayload.java",
+        "LlmStartPayload.java",
+        "McpApprovalMode.java",
+        "MemoryEntry.java",
+        "MemoryStore.java",
+        "Message.java",
+        "MessagesUpdatedPayload.java",
+        "Model.java",
+        "ModelInfo.java",
+        "ModelInvocationContextSnapshot.java",
+        "ModelInvocationRequest.java",
+        "ModelInvocationResponse.java",
+        "ModelLister.java",
+        "ModelOptions.java",
+        "ModelReconciliationState.java",
+        "ModelToolRequest.java",
+        "ModelToolResult.java",
+        "OAuthToken.java",
+        "Parser.java",
+        "ParserConfig.java",
+        "PermissionCompletedPayload.java",
+        "PermissionDecision.java",
+        "PermissionRequest.java",
+        "PermissionRequestedPayload.java",
+        "PermissionResolver.java",
+        "Processor.java",
+        "ProjectInfo.java",
+        "Prompty.java",
+        "Property.java",
+        "RedactedField.java",
+        "RedactionMetadata.java",
+        "Renderer.java",
+        "ReplayJournalRecord.java",
+        "ReplayMismatch.java",
+        "ReplayVerificationRequest.java",
+        "ReplayVerificationResult.java",
+        "ResumeContext.java",
+        "RetryPayload.java",
+        "RetryPolicyRequest.java",
+        "RunTurnRequest.java",
+        "RunTurnResult.java",
+        "SessionEndPayload.java",
+        "SessionEvent.java",
+        "SessionFileRef.java",
+        "SessionRef.java",
+        "SessionStartPayload.java",
+        "SessionSummary.java",
+        "SessionTrace.java",
+        "SessionWarningPayload.java",
+        "StatusEventPayload.java",
+        "StreamChunk.java",
+        "StreamOptions.java",
+        "SubscriptionInfo.java",
+        "Template.java",
+        "ThinkingEventPayload.java",
+        "ThreadMarker.java",
+        "TokenEventPayload.java",
+        "TokenUsage.java",
+        "Tool.java",
+        "ToolCall.java",
+        "ToolCallCompletePayload.java",
+        "ToolCallStartPayload.java",
+        "ToolContext.java",
+        "ToolDispatchResult.java",
+        "ToolExecutionCompletePayload.java",
+        "ToolExecutionStartPayload.java",
+        "ToolResult.java",
+        "ToolResultPayload.java",
+        "TraceFile.java",
+        "TraceSpan.java",
+        "TraceTime.java",
+        "TrajectoryEvent.java",
+        "TurnCommit.java",
+        "TurnEndPayload.java",
+        "TurnEngineResult.java",
+        "TurnEvent.java",
+        "TurnModelRequest.java",
+        "TurnModelResponse.java",
+        "TurnOptions.java",
+        "TurnStartPayload.java",
+        "TurnSummary.java",
+        "TurnTrace.java",
+        "ValidationError.java",
+        "ValidationResult.java"
+      ]
+    },
+    {
       "target": "markdown",
       "outputRoot": "../web/src/content/docs/reference",
       "rootExports": [
