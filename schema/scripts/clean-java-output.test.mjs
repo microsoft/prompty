@@ -11,7 +11,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, existsSync, rmSync } from "node:
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { cleanJavaOutput, MARKER, SEAM_MARKER } from "./clean-java-output.mjs";
+import { cleanJavaOutput, MARKER, SEAM_MARKER, SEAM_MARKERS } from "./clean-java-output.mjs";
 
 function withRoot(files, run) {
   const dir = mkdtempSync(join(tmpdir(), "clean-java-"));
@@ -55,6 +55,47 @@ test("preserves a seam whose name defeats a file-name pattern", () => {
     assert.equal(result.preserved.length, 1);
     assert.ok(existsSync(join(root, "Foo_1Methods.java")));
   });
+});
+
+test("preserves a seam opened by any accepted marker", () => {
+  // The pinned emitter opens a seam with prose; later lines front the file with
+  // a stable machine-readable tag. The cleaner is fail-closed, so an unrecognised
+  // spelling would abort the build instead of preserving hand-written code.
+  SEAM_MARKERS.forEach(({ marker }, index) => {
+    withRoot({ [`Message${index}Methods.java`]: `${marker}\npackage p;\n` }, (root) => {
+      const result = cleanJavaOutput([root]);
+      assert.equal(result.preserved.length, 1, `marker not accepted: ${marker}`);
+      assert.equal(result.removed.length, 0);
+    });
+  });
+});
+
+test("a tag marker must be the whole opening line", () => {
+  // Prefix matching would let a marker be smuggled in ahead of unrelated
+  // content, so tag markers are compared against the complete opening line.
+  // The pinned prose marker is the documented exception: its real form carries
+  // a trailing sentence, so it stays a prefix match.
+  for (const { marker, exact } of SEAM_MARKERS) {
+    const smuggled = { "Stray.java": `${marker}-not-a-seam\npackage p;\n` };
+    if (exact) {
+      withRoot(smuggled, (root) => {
+        assert.throws(() => cleanJavaOutput([root]), /missing the generated marker/u, marker);
+      });
+    } else {
+      withRoot(smuggled, (root) => {
+        assert.equal(cleanJavaOutput([root]).preserved.length, 1, marker);
+      });
+    }
+  }
+});
+
+test("no seam marker can shadow the generated marker", () => {
+  // A seam marker that prefixed the generated marker would strand every
+  // generated file, so the two sets must stay disjoint.
+  for (const { marker } of SEAM_MARKERS) {
+    assert.ok(!MARKER.startsWith(marker), `seam marker shadows generated files: ${marker}`);
+    assert.ok(!marker.startsWith(MARKER), `generated marker shadows a seam: ${marker}`);
+  }
 });
 
 test("refuses to clean an unmarked hand-written file", () => {
