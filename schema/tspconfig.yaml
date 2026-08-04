@@ -35,15 +35,16 @@ options:
       - type: Swift
         output-dir: "../runtime/swift/prompty-model"
         package-name: "PromptyModel"
-        # test-dir is intentionally omitted: @typra/emitter@0.4.3 emits Swift
-        # tests that do not compile. Measured against 0.4.3 by generating them
-        # and building: 1184 errors in four classes — optionals left unwrapped
-        # (`[String]?.count`), struct-style member access on polymorphic enums
-        # (`tool.name` where `Tool` is an enum), compound values compared to
-        # their scalar shorthand (`FormatConfig` vs `String`), and references
-        # to test helpers that are never emitted (`FixtureRoot`). These are
-        # test-generator defects, disjoint from the source-generator defects
-        # 0.4.3 fixed. Reported upstream; restore test-dir once fixed. Model
-        # round-trip coverage lives in runtime/swift/prompty meanwhile.
+        # test-dir is intentionally omitted: the Typra Swift emitter emits tests
+        # that do not compile. Measured by generating them and building — 1184
+        # errors in four classes: optionals left unwrapped (`[String]?.count`),
+        # struct-style member access on polymorphic enums (`tool.name` where
+        # `Tool` is an enum), compound values compared to their scalar
+        # shorthand (`FormatConfig` vs `String`), and references to test helpers
+        # that are never emitted (`FixtureRoot`). Still present at 0.4.3, and
+        # disjoint from the source-generator defects 0.4.3 fixed — so those
+        # fixes could not have made these compile. Reported upstream; restore
+        # test-dir once fixed. Model round-trip coverage lives in
+        # runtime/swift/prompty meanwhile.
       - type: markdown
         output-dir: "../web/src/content/docs/reference"

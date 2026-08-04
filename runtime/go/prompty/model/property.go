@@ -64,7 +64,11 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 					return LoadObjectProperty(data, ctx)
 				case "union":
 					return LoadUnionProperty(data, ctx)
+				default:
+					return result, nil
 				}
+			default:
+				return result, nil
 			}
 		}
 	}

@@ -5,5 +5,6 @@ import Foundation
 
 public protocol Parser {
   func preRender(template: String) throws -> Any?
-  func parse(agent: Prompty, rendered: String, context: [String: Any]?) async throws -> [Message]
+  func parse(agent: Prompty, rendered: String, context: [String: Any]?) async throws
+    -> [Message]
 }
