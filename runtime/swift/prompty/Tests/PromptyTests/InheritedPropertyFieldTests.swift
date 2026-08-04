@@ -25,8 +25,10 @@ import XCTest
 /// These tests are meant to survive the emitter fix: they assert the required
 /// *behaviour*, not the shim. They deliberately avoid whole-dictionary equality,
 /// because a corrected emitter may legitimately start materializing schema
-/// defaults (`required: false`, `enumValues: []`) that a strict key-count
-/// comparison would reject for reasons unrelated to this defect.
+/// defaults that a strict key-count comparison would reject for reasons
+/// unrelated to this defect. Of the inherited fields checked here, only
+/// `enumValues` carries such a default (`[]`), and that is the one case
+/// `assertInheritedFieldsPreserved` exempts when the source omitted it.
 ///
 /// Known residual gap, deliberately not asserted here: the shim restores base
 /// fields to the stored properties but not to the generated memberwise `init`,
@@ -78,6 +80,10 @@ final class InheritedPropertyFieldTests: XCTestCase {
     line: UInt = #line
   ) {
     for key in Self.inheritedFields {
+      // A corrected emitter materializes the schema default for `enumValues`
+      // (`[]`) even when the source omitted it. That is not a lost field, so
+      // treat an empty array standing in for an absent value as preserved.
+      if expected[key] == nil, Self.isMaterializedEmptyDefault(actual[key]) { continue }
       XCTAssertTrue(
         Spec.equal(actual[key], expected[key]),
         """
@@ -87,6 +93,39 @@ final class InheritedPropertyFieldTests: XCTestCase {
         file: file,
         line: line
       )
+    }
+  }
+
+  /// Whether a saved value is an empty array materialized from a schema default
+  /// — `enumValues` is the only inherited field carrying one — as opposed to
+  /// real data. Deliberately narrow: an empty *dictionary* is not exempted,
+  /// because no inherited field defaults to `{}`.
+  private static func isMaterializedEmptyDefault(_ value: Any?) -> Bool {
+    guard let list = value as? [Any] else { return false }
+    return list.isEmpty
+  }
+
+  /// Named collections save either as a name-keyed map — the default, where the
+  /// entry name is the key and no longer repeated in the payload — or as an
+  /// already-named list. Read the sole entry from either shape, re-injecting the
+  /// key as `name`, so these assertions pin inherited *fields* rather than the
+  /// emitter's chosen collection form. Returns nil unless the collection holds
+  /// exactly one entry, so a multi-entry source fails loudly instead of
+  /// silently asserting against a positionally- vs lexicographically-chosen
+  /// element.
+  private static func soleNamedEntry(_ value: Any?) -> [String: Any]? {
+    switch value {
+    case let list as [Any]:
+      guard list.count == 1 else { return nil }
+      return list.first as? [String: Any]
+    case let map as [String: Any]:
+      guard map.count == 1, let key = map.keys.first,
+        var entry = map[key] as? [String: Any]
+      else { return nil }
+      if entry["name"] == nil { entry["name"] = key }
+      return entry
+    default:
+      return nil
     }
   }
 
@@ -263,11 +302,9 @@ final class InheritedPropertyFieldTests: XCTestCase {
     let saved = try property.save()
     assertInheritedFieldsPreserved(saved, source, "outer object property")
 
-    let savedChildren = try XCTUnwrap(
-      saved["properties"] as? [Any], "outer object lost its 'properties' entirely")
-    let savedChild = try XCTUnwrap(savedChildren.first as? [String: Any])
-    let expectedChild = try XCTUnwrap(
-      (source["properties"] as? [Any])?.first as? [String: Any])
+    let savedChild = try XCTUnwrap(
+      Self.soleNamedEntry(saved["properties"]), "outer object lost its 'properties' entirely")
+    let expectedChild = try XCTUnwrap(Self.soleNamedEntry(source["properties"]))
     assertInheritedFieldsPreserved(savedChild, expectedChild, "nested array child")
 
     let savedItems = try XCTUnwrap(
@@ -373,8 +410,8 @@ final class InheritedPropertyFieldTests: XCTestCase {
     assertInheritedFieldsPreserved(savedRow, expectedRow, "level 2 (object)")
 
     let savedCell = try XCTUnwrap(
-      (savedRow["properties"] as? [Any])?.first as? [String: Any], "level 2 lost 'properties'")
-    let expectedCell = try XCTUnwrap((expectedRow["properties"] as? [Any])?.first as? [String: Any])
+      Self.soleNamedEntry(savedRow["properties"]), "level 2 lost 'properties'")
+    let expectedCell = try XCTUnwrap(Self.soleNamedEntry(expectedRow["properties"]))
     assertInheritedFieldsPreserved(savedCell, expectedCell, "level 3 (union)")
 
     let savedBranch = try XCTUnwrap(

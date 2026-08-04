@@ -241,9 +241,18 @@ final class GeneratedModelRoundTripTests: XCTestCase {
 
   /// Read binding names off the loaded tool, which the generated `Tool` enum
   /// exposes only through its raw payload.
+  /// Named collections serialize either as a name-keyed map — the default — or
+  /// as an already-named list when `collectionFormat` is `array`. Accept both,
+  /// so this pins binding *identity* rather than the emitter's chosen shape.
   private static func bindingNames(_ tool: Tool) -> [String]? {
-    guard let bindings = tool.raw["bindings"] as? [Any] else { return nil }
-    return bindings.compactMap { ($0 as? [String: Any])?["name"] as? String }
+    switch tool.raw["bindings"] {
+    case let list as [Any]:
+      return list.compactMap { ($0 as? [String: Any])?["name"] as? String }.sorted()
+    case let map as [String: Any]:
+      return map.keys.sorted()
+    default:
+      return nil
+    }
   }
 
   // MARK: - Convenience factories
