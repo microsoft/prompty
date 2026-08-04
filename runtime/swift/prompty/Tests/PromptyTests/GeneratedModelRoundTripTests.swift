@@ -182,6 +182,61 @@ final class GeneratedModelRoundTripTests: XCTestCase {
     XCTAssertTrue(Spec.equal(saved, source), "unknown connection kind was not preserved")
   }
 
+  /// Characterizes a base-field gap the shim deliberately leaves open.
+  ///
+  /// `model Connection` declares `authenticationMode` and `usageDescription`
+  /// (`schema/model/connection/connection.tsp`), and every subtype `extends`
+  /// it — so the emitter defect that drops `Property` / `Tool` base fields
+  /// drops these too. The shim does not inject them; see the Defect 10 scope
+  /// note in `schema/scripts/patch-swift-emitter-defects.mjs`.
+  ///
+  /// The cost is real even though no runtime code reads the fields: both are
+  /// lost between `load` and `save` with zero compile diagnostics, which is
+  /// precisely the failure mode this file exists to catch. Covering all six
+  /// subtypes keeps the gap measured rather than assumed, and makes the test
+  /// fail if either field starts surviving — at which point re-audit the
+  /// emitter and this shim, then assert preservation instead.
+  func testConnectionBaseFieldsAreDroppedOnEverySubtype() throws {
+    let subtypes: [(kind: String, declared: [String: String])] = [
+      ("reference", ["name": "my-connection", "target": "some-target"]),
+      ("remote", ["name": "my-connection", "endpoint": "https://example.test"]),
+      ("key", ["endpoint": "https://example.test", "apiKey": "secret"]),
+      ("anonymous", ["endpoint": "https://example.test"]),
+      ("oauth", ["endpoint": "https://example.test", "clientId": "client-id"]),
+      ("foundry", ["endpoint": "https://example.test", "name": "my-connection"]),
+    ]
+
+    for (kind, declared) in subtypes {
+      var source: [String: Any] = ["kind": kind]
+      for (key, value) in declared { source[key] = value }
+      source["authenticationMode"] = "system"
+      source["usageDescription"] = "respond to email on your behalf"
+
+      let loaded = try Connection.load(source)
+      // `.unknown` preserves its payload verbatim, so the assertions below
+      // would pass for the wrong reason if a discriminator stopped resolving.
+      if case .unknown = loaded {
+        XCTFail("\(kind) fell through to .unknown instead of its subtype")
+        continue
+      }
+
+      let saved = try loaded.save()
+      XCTAssertEqual(saved["kind"] as? String, kind, "\(kind): discriminator lost")
+      for (key, value) in declared {
+        XCTAssertEqual(saved[key] as? String, value, "\(kind): declared field \(key) lost")
+      }
+
+      XCTAssertNil(
+        saved["authenticationMode"],
+        "\(kind): authenticationMode now survives — re-audit the emitter and the "
+          + "shim, then replace this characterization with a preservation assertion")
+      XCTAssertNil(
+        saved["usageDescription"],
+        "\(kind): usageDescription now survives — re-audit the emitter and the "
+          + "shim, then replace this characterization with a preservation assertion")
+    }
+  }
+
   // MARK: - Helpers
 
   /// Read binding names off the loaded tool, which the generated `Tool` enum

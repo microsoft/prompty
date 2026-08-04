@@ -63,6 +63,20 @@ const swiftSources = join("..", "runtime", "swift", "prompty-model", "Sources", 
 // (`ReferenceConnection.authenticationMode` / `.usageDescription`), so
 // restoring `test-dir` needs the upstream `extends` fix — not more injections
 // here.
+//
+// That scoping decision has since been measured rather than assumed. A
+// load/save probe over the composite subtypes — three `Property` kinds, five
+// `Tool` kinds, and `ReferenceConnection` — scores 40/42 on this pinned
+// configuration; the two failures are `ReferenceConnection.authenticationMode`
+// and `.usageDescription`, lost between `load` and `save`. The same probe
+// scores 42/42 against 0.4.10-generated output carrying two probe-only
+// patches, so that release does declare and round-trip both fields. Injecting
+// them here would restore data the Swift runtime never reads and no spec
+// vector covers, at the cost of two more patches to delete on adoption — an
+// accepted limitation of the published model package, not a free win. The
+// behaviour is pinned across all six `Connection` subtypes by
+// `GeneratedModelRoundTripTests.testConnectionBaseFieldsAreDroppedOnEverySubtype`,
+// which fails if either field starts surviving.
 const propertyBase = {
   decls:
     '  public var name: String = ""\n' +
@@ -448,6 +462,24 @@ const patches = [
 ///           ModelTests failures are ours, not the emitter's — see the
 ///           `@sample` defect at schema/model/model/model.tsp L86/L93.
 ///           C# and TypeScript were not re-measured at 0.4.10.
+///           Round-trip evidence: a load/save probe over three `Property`
+///           kinds, five `Tool` kinds including the wildcard,
+///           `ReferenceConnection`, and the `Connection` unknown fallback
+///           scores 42/42 against 0.4.10-generated output carrying the enum
+///           forwarders and the one-line `Connection` change, against 40/42 on
+///           this pinned 0.4.2 configuration. The two-check delta is the
+///           deliberate `Connection` scope gap described near `propertyBase`,
+///           not a regression, and the probe covered only `ReferenceConnection`
+///           of the six connection subtypes. That result covers `load`/`save`
+///           on those types alone; it says nothing about the generated tests,
+///           which stay unusable. One behavioural difference is worth carrying
+///           forward: this shim writes `name` only when non-empty, while
+///           0.4.10 writes it unconditionally, so an unnamed composite
+///           serialises `"name": ""` there where it omits the key here.
+///           `Prompty.save` maps `inputs`/`outputs`/`tools` straight through
+///           without stripping `name`, so that difference can reach vector
+///           output; it was not measured against the vectors and must be
+///           settled before adopting, not after.
 ///           Contract note: `Tool` now emits both `customTool(CustomTool)` and
 ///           `unknown([String: Any])`, but `load`'s `default:` routes to
 ///           `.customTool`, so `.unknown` is unreachable through `load` — it is
