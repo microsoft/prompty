@@ -58,6 +58,9 @@ extension Property {
   public var objectProperties: [Property] {
     if case .objectProperty(let object) = self { return object.properties }
     guard let nested = raw["properties"] as? [Any] else { return [] }
+    // `try?` deliberately drops a structurally invalid child: `build()` already
+    // rejects those upstream, so this only fires for hand-built `Property`
+    // values that never went through the loader.
     return nested.compactMap { try? Property.load(Loader.normalizeProperty($0)) }
   }
 

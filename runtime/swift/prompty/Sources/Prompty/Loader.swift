@@ -96,8 +96,8 @@ public enum Loader {
 
     // 5. Normalize the shapes the schema accepts as shorthand.
     normalizeModel(&resolved)
-    normalizeProperties(&resolved, key: "inputs")
-    normalizeProperties(&resolved, key: "outputs")
+    try normalizeProperties(&resolved, key: "inputs", path: "inputs")
+    try normalizeProperties(&resolved, key: "outputs", path: "outputs")
 
     // 6. Hand off to the generated model — the canonical type layer.
     var agent: Prompty
@@ -135,35 +135,64 @@ public enum Loader {
   ///
   /// - a list of properties (already canonical),
   /// - a mapping of name to property object,
-  /// - a mapping of name to a scalar, which is shorthand for a property whose
-  ///   kind is inferred from the scalar and whose `example` is that scalar.
+  /// - a mapping of name to a scalar.
   ///
-  /// The scalar shorthand mirrors the `@coerce` decorators on the TypeSpec
-  /// `Property` model (`#{ kind: "string", example: "{value}" }`). The Swift
-  /// emitter does not yet emit `@coerce` constructions for polymorphic enums,
-  /// so the loader performs the widening.
-  private static func normalizeProperties(_ data: inout [String: Any], key: String) {
+  /// The two scalar contracts are deliberately distinct:
+  ///
+  /// - **Named-collection shorthand** (`inputs: { city: Seattle }`): the key
+  ///   supplies `name`, the scalar infers `kind`, and the scalar is stored as
+  ///   `default`. `example` stays absent.
+  /// - **Direct property coercion** (a bare scalar as a *list* element) mirrors
+  ///   the `@coerce` decorators on the TypeSpec `Property` model
+  ///   (`#{ kind: "string", example: "{value}" }`) and stores `example`.
+  ///
+  /// An immediate array value is never a property in a name-keyed collection,
+  /// so it is rejected with its full dotted path. Arrays nested inside declared
+  /// property fields (`default`, `items`, `enumValues`) stay valid.
+  ///
+  /// The Swift emitter does not yet emit `@coerce` constructions for
+  /// polymorphic enums, so the loader performs the widening.
+  private static func normalizeProperties(
+    _ data: inout [String: Any], key: String, path: String
+  ) throws {
     guard let value = data[key] else { return }
 
     if let list = value as? [Any] {
-      data[key] = list.map(normalizeProperty)
+      data[key] = try list.enumerated().map { index, element in
+        try normalizeProperty(element, path: "\(path)[\(index)]")
+      }
       return
     }
 
     guard let mapping = value as? [String: Any] else { return }
 
-    data[key] = mapping.keys.sorted().map { name -> Any in
-      guard var property = normalizeProperty(mapping[name] as Any) as? [String: Any] else {
-        return mapping[name] as Any
+    data[key] = try mapping.keys.sorted().map { name -> Any in
+      let entryPath = "\(path).\(name)"
+      let raw = mapping[name] as Any
+      let normalized = JSONSupport.normalize(raw)
+
+      // An immediate array can never be a named property entry.
+      if normalized is [Any] {
+        throw LoadError.invalidNamedCollectionEntry(path: entryPath, valueCategory: "array")
+      }
+
+      // Named-collection scalar shorthand: key names it, scalar becomes `default`.
+      if !(normalized is [String: Any]) && !(raw is NSNull) {
+        return ["name": name, "kind": inferKind(raw), "default": raw]
+      }
+
+      guard var property = try normalizeProperty(raw, path: entryPath) as? [String: Any] else {
+        return raw
       }
       property["name"] = name
       return property
     }
   }
 
-  /// Widen one property entry: dictionaries gain an inferred `kind`; scalars
-  /// become `{ kind: <inferred>, example: <scalar> }`.
-  static func normalizeProperty(_ element: Any) -> Any {
+  /// Widen one property entry: dictionaries gain an inferred `kind`; bare
+  /// scalars become `{ kind: <inferred>, example: <scalar> }` per the direct
+  /// `@coerce` contract.
+  static func normalizeProperty(_ element: Any, path: String = "") throws -> Any {
     if let dict = element as? [String: Any] {
       var property = dict
       if property["kind"] == nil {
@@ -171,11 +200,11 @@ public enum Loader {
       }
       if let nested = property["properties"] {
         var wrapper: [String: Any] = ["properties": nested]
-        normalizeProperties(&wrapper, key: "properties")
+        try normalizeProperties(&wrapper, key: "properties", path: "\(path).properties")
         property["properties"] = wrapper["properties"]
       }
       if let items = property["items"] {
-        property["items"] = normalizeProperty(items)
+        property["items"] = try normalizeProperty(items, path: "\(path).items")
       }
       return property
     }

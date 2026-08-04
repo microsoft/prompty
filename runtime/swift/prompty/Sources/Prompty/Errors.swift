@@ -15,6 +15,10 @@ public enum LoadError: Error, CustomStringConvertible, Equatable {
   case fileReference(path: String, detail: String)
   /// The frontmatter did not satisfy the Prompty model schema.
   case invalidModel(String)
+  /// A name-keyed collection (`inputs`, `outputs`, nested `properties`) held a
+  /// value that can never be a property. `path` is the full dotted path to the
+  /// offending entry and `valueCategory` names the rejected shape.
+  case invalidNamedCollectionEntry(path: String, valueCategory: String)
 
   public var description: String {
     switch self {
@@ -28,6 +32,11 @@ public enum LoadError: Error, CustomStringConvertible, Equatable {
       return "File reference error: \(path): \(detail)"
     case .invalidModel(let message):
       return "Invalid prompty model: \(message)"
+    case .invalidNamedCollectionEntry(let path, let valueCategory):
+      return
+        "invalid-named-collection-entry: \(path) holds a \(valueCategory), "
+        + "which is not a valid named collection entry. Declare the array inside "
+        + "a property instead, for example `\(path): { kind: array, default: [...] }`"
     }
   }
 }
