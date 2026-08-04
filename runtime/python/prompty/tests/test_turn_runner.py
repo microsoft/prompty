@@ -360,11 +360,7 @@ async def test_turn_runner_propagates_model_callback_failure_after_journaling_st
     with pytest.raises(RuntimeError, match="model unavailable"):
         await runner.run(RunTurnRequest(session_id="session-1", turn_id="turn-1"))
 
-    turn_types = [
-        record["event"]["type"]
-        for record in _records(journal_path)
-        if record["kind"] == "turn"
-    ]
+    turn_types = [record["event"]["type"] for record in _records(journal_path) if record["kind"] == "turn"]
     assert turn_types == ["turn_start", "llm_start"]
 
 

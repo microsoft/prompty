@@ -693,9 +693,7 @@ class ReferenceTurnEngine:
                 completed_tool_results=[*completed, *results],
                 pending_model_response=response,
                 active_invocation_id=active_invocation_id,
-                reconciliation_required=any(
-                    item.outcome == "indeterminate" for item in [*completed, *results]
-                ),
+                reconciliation_required=any(item.outcome == "indeterminate" for item in [*completed, *results]),
             )
             if result.outcome == "indeterminate":
                 return results

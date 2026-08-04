@@ -201,7 +201,7 @@ async def test_resume_does_not_repeat_completed_tool_effect() -> None:
             tool_requests=[
                 ModelToolRequest(id="call-a", name="echo", arguments={"value": "A"}),
                 ModelToolRequest(id="call-b", name="echo", arguments={"value": "B"}),
-            ]
+            ],
         )
 
     def execute_tool(request: ModelToolRequest) -> ModelToolResult:
@@ -558,9 +558,7 @@ async def test_resume_honors_max_model_attempts() -> None:
         execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name),
         next_id=_Ids(),
     )
-    result = await engine.resume_async(
-        ResumeContext(checkpoint=checkpoint, max_iterations=1, max_model_attempts=2)
-    )
+    result = await engine.resume_async(ResumeContext(checkpoint=checkpoint, max_iterations=1, max_model_attempts=2))
 
     assert result.commit.status == "failed"
     assert result.commit.output["errorKind"] == "model_error"

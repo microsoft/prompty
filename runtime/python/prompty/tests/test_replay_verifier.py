@@ -40,9 +40,7 @@ def test_replay_verifier_reports_missing_trailing_records() -> None:
         ReplayJournalRecord(kind="turn", type="turn_end", turn_id="turn-1", iteration=1, status="success"),
     ]
 
-    result = ReferenceReplayVerifier().verify(
-        ReplayVerificationRequest(expected=expected, actual=expected[:1])
-    )
+    result = ReferenceReplayVerifier().verify(ReplayVerificationRequest(expected=expected, actual=expected[:1]))
 
     assert result.status == "failed"
     assert result.expected_count == 2
@@ -59,9 +57,7 @@ def test_replay_verifier_reports_unexpected_trailing_records() -> None:
         ReplayJournalRecord(kind="turn", type="turn_end", turn_id="turn-1", iteration=1, status="success"),
     ]
 
-    result = ReferenceReplayVerifier().verify(
-        ReplayVerificationRequest(expected=actual[:1], actual=actual)
-    )
+    result = ReferenceReplayVerifier().verify(ReplayVerificationRequest(expected=actual[:1], actual=actual))
 
     assert result.status == "failed"
     assert result.mismatches[0].index == 1
