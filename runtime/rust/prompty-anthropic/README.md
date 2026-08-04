@@ -28,6 +28,9 @@ model:
     apiKey: ${env:ANTHROPIC_API_KEY}
 ```
 
+`ANTHROPIC_BASE_URL` optionally overrides the default `https://api.anthropic.com`
+base URL. A non-empty `model.connection.endpoint` takes precedence.
+
 ## License
 
 MIT — see [LICENSE](LICENSE) for details.
