@@ -27,6 +27,7 @@ import "./pipeline/invocation.tsp";
 import "./pipeline/engine-events.tsp";
 import "./pipeline/checkpoint.tsp";
 import "./pipeline/turn-engine.tsp";
+import "./pipeline/engine-ports.tsp";
 import "./pipeline/policy.tsp";
 import "./pipeline/context-planning.tsp";
 import "./pipeline/turn.tsp";

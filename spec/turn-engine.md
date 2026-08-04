@@ -250,24 +250,29 @@ post-commit start event prevents the effect from running. Failure to persist com
 after the effect ran is returned as non-fatal recovery information and MUST NOT make the committed
 turn appear to have failed.
 
-## Runtime-Local Ports
+## Engine Ports
 
-Native runtime interfaces own async, streaming, cancellation, and SDK-specific behavior:
+The stable permission, tool, durability, and post-commit effect boundaries are canonical
+TypeSpec protocols:
 
-- `ModelPort`
-- `ContextSource`
-- `ContextTransform`
-- `ContextPackingStrategy`
-- `PermissionPort`
-- `ToolPort`
-- `DurabilityPort` (atomic semantic-event and checkpoint persistence)
-- `Clock`
-- `IdGenerator`
-- post-commit effect ports
+- `EnginePermissionPort.authorize(ModelToolRequest) -> EnginePermissionDecision` is async
+  and runtime-cancellable.
+- `EngineToolPort.execute(ModelToolRequest) -> ModelToolResult` is async and
+  runtime-cancellable.
+- `EngineDurabilityPort.append(EngineEvent) -> void` is async and non-cancellable.
+- `EngineDurabilityPort.appendWithCheckpoint(EngineEvent[], EngineCheckpoint) -> void`
+  is async, atomic, and non-cancellable.
+- `EnginePostCommitPort.afterCommit(effectId, TurnCommit) -> void` is async,
+  runtime-cancellable, and non-fatal after the turn is committed.
 
-Portable TypeSpec models will be promoted only after the Rust state machine and
-conformance vectors establish stable semantics. Native interfaces themselves are not
-generated.
+Runtime cancellation is projected as a native language seam rather than a wire or model
+field: `CancellationToken` in C#, `context.Context` in Go, optional `AbortSignal` in
+TypeScript, the runtime `CancellationToken` reference in Rust, and the runtime
+`CancellationToken` signal in Python. Port failures remain native runtime errors such as
+`PortError`; they are not portable wire models.
+
+Richer runtime interfaces continue to own SDK-specific streaming, context assembly,
+host policy, retry, clocks, identifiers, and provider reconciliation behavior.
 
 ## Rust-First Conformance Gate
 

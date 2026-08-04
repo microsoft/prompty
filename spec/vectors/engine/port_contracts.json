@@ -1,0 +1,95 @@
+{
+  "version": "1",
+  "legacyHarnessSha256": "c534140f1aae07034cedea13feec3d66a9acbc0df46869858753aef39e24fe69",
+  "protocols": {
+    "EnginePermissionPort": {
+      "methods": {
+        "authorize": {
+          "returns": "EnginePermissionDecision",
+          "params": {
+            "request": "ModelToolRequest"
+          },
+          "optional": false,
+          "sync": false,
+          "runtimeCancellable": true,
+          "atomic": false,
+          "nonFatal": false
+        }
+      }
+    },
+    "EngineToolPort": {
+      "methods": {
+        "execute": {
+          "returns": "ModelToolResult",
+          "params": {
+            "request": "ModelToolRequest"
+          },
+          "optional": false,
+          "sync": false,
+          "runtimeCancellable": true,
+          "atomic": false,
+          "nonFatal": false
+        }
+      }
+    },
+    "EngineDurabilityPort": {
+      "methods": {
+        "append": {
+          "returns": "void",
+          "params": {
+            "event": "EngineEvent"
+          },
+          "optional": false,
+          "sync": false,
+          "runtimeCancellable": false,
+          "atomic": false,
+          "nonFatal": false
+        },
+        "appendWithCheckpoint": {
+          "returns": "void",
+          "params": {
+            "events": "EngineEvent[]",
+            "checkpoint": "EngineCheckpoint"
+          },
+          "optional": false,
+          "sync": false,
+          "runtimeCancellable": false,
+          "atomic": true,
+          "nonFatal": false
+        }
+      }
+    },
+    "EnginePostCommitPort": {
+      "methods": {
+        "afterCommit": {
+          "returns": "void",
+          "params": {
+            "effectId": "string",
+            "commit": "TurnCommit"
+          },
+          "optional": false,
+          "sync": false,
+          "runtimeCancellable": true,
+          "atomic": false,
+          "nonFatal": true
+        }
+      }
+    },
+    "Executor": {
+      "methods": {
+        "execute": {
+          "runtimeCancellable": true,
+          "sync": false
+        },
+        "executeStream": {
+          "runtimeCancellable": true,
+          "sync": false
+        },
+        "formatToolMessages": {
+          "runtimeCancellable": false,
+          "sync": true
+        }
+      }
+    }
+  }
+}
