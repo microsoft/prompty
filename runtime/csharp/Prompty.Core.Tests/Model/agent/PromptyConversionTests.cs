@@ -85,17 +85,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -174,17 +164,7 @@ user:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -270,17 +250,7 @@ user:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -366,17 +336,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -614,17 +574,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -702,17 +652,7 @@ user:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -797,17 +737,7 @@ user:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -893,17 +823,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -1140,17 +1060,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -1230,17 +1140,7 @@ user:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -1327,17 +1227,7 @@ user:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -1423,17 +1313,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -1672,17 +1552,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -1761,17 +1631,7 @@ user:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -1857,17 +1717,7 @@ user:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -1953,17 +1803,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -2201,17 +2041,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -2293,17 +2123,7 @@ user:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -2392,17 +2212,7 @@ user:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -2488,17 +2298,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -2739,17 +2539,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -2830,17 +2620,7 @@ user:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -2928,17 +2708,7 @@ user:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -3024,17 +2794,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -3274,17 +3034,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -3367,17 +3117,7 @@ user:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -3467,17 +3207,7 @@ user:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -3563,17 +3293,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -3815,17 +3535,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -3907,17 +3617,7 @@ user:
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", instance.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), instance.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance.Instructions);
     }
 
     [Fact]
@@ -4006,17 +3706,7 @@ user:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]
@@ -4102,17 +3792,7 @@ instructions: "system:
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
         Assert.Equal("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded.Description);
-        Assert.Equal(@"system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}".Replace("\r\n", "\n"), reloaded.Instructions);
+        Assert.Equal("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded.Instructions);
     }
 
     [Fact]

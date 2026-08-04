@@ -37,11 +37,6 @@ public enum Connection: TypraModel {
     case "oauth": return .oAuthConnection(try OAuthConnection.load(data, context: context))
     case "foundry": return .foundryConnection(try FoundryConnection.load(data, context: context))
     default:
-      // Defect 1 (continued): the emitter references `.unknown` in generated
-      // defaults but never makes it reachable from load. Connection has no
-      // wildcard subtype in TypeSpec, yet the Rust runtime tolerates unknown
-      // kinds (falls back to a default kind, retaining the raw fields), so
-      // throwing here breaks cross-runtime parity on forward-compatible files.
       return .unknown(object)
     }
   }
