@@ -52,6 +52,16 @@ options:
         # 0.4.6. The library must compile before this is measurable: if it
         # fails first, the test target is never built and the error count is
         # misleadingly small. Reported upstream; restore test-dir once fixed.
+        #
+        # The counts above are raw `error:` lines. Later probes report
+        # primary unique errors instead -- deduplicated whole lines, minus
+        # Swift's caret-annotation repeats -- because raw counts swing with
+        # incremental-build caching (the same state measured 392 and 98).
+        # On that normalised basis: 49 across five files at 0.4.5, 45 at
+        # 0.4.9, and 45 at 0.4.10. Do not compare a normalised figure against
+        # the raw ones above; compare failing identities, not counts. At
+        # least four of the ModelTests failures are ours, not the emitter's
+        # -- see the stale `@sample` blocks at model/model/model.tsp L86/L93.
         # Model round-trip coverage lives in runtime/swift/prompty meanwhile.
       - type: markdown
         output-dir: "../web/src/content/docs/reference"
