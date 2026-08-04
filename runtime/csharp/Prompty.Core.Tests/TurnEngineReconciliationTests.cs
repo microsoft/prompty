@@ -86,9 +86,10 @@ public class TurnEngineReconciliationTests
     public async Task IndeterminateModelEffect_BlocksTurnUntilExplicitReconciliation()
     {
         var durability = new RecordingDurabilityPort();
+        var failureMetadata = new Dictionary<string, object?> { ["nullable"] = null };
         var effects = new TurnEngineEffects
         {
-            Model = new IndeterminateModelPort(),
+            Model = new IndeterminateModelPort(failureMetadata),
             Tools = new EchoToolPort(),
             Clock = new FakeEngineClock(),
             Ids = new FakeEngineIdGenerator(),
@@ -108,6 +109,13 @@ public class TurnEngineReconciliationTests
         Assert.True(checkpoint.ReconciliationRequired);
         Assert.NotNull(checkpoint.ModelReconciliation);
         Assert.Equal(checkpoint.ActiveInvocationId, checkpoint.ModelReconciliation!.InvocationId);
+        Assert.NotNull(checkpoint.ModelReconciliation.Metadata);
+        Assert.True(checkpoint.ModelReconciliation.Metadata.ContainsKey("nullable"));
+        Assert.Null(checkpoint.ModelReconciliation.Metadata["nullable"]);
+        var reloadedReconciliation = ModelReconciliationState.Load(checkpoint.ModelReconciliation.Save());
+        Assert.NotNull(reloadedReconciliation.Metadata);
+        Assert.True(reloadedReconciliation.Metadata.ContainsKey("nullable"));
+        Assert.Null(reloadedReconciliation.Metadata["nullable"]);
 
         // Resolving with an explicit model response resumes without re-invoking the model port.
         var resolvedResponse = new ModelInvocationResponse { Output = "resolved output", AssistantMessages = [], ToolRequests = [] };

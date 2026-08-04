@@ -98,6 +98,10 @@ internal sealed class ThrowingModelPort : IEngineModelPort
 /// <summary>Model port whose single scripted attempt always fails with an indeterminate (outcome-unknown) error.</summary>
 internal sealed class IndeterminateModelPort : IEngineModelPort
 {
+    private readonly IDictionary<string, object?>? _metadata;
+
+    public IndeterminateModelPort(IDictionary<string, object?>? metadata = null) => _metadata = metadata;
+
     public int InvocationCount { get; private set; }
 
     public Task<ModelInvocationResponse> InvokeAsync(
@@ -106,7 +110,7 @@ internal sealed class IndeterminateModelPort : IEngineModelPort
         IEngineModelStreamPort stream)
     {
         InvocationCount++;
-        throw PortError.Indeterminate("model invocation outcome is unknown");
+        throw PortError.Indeterminate("model invocation outcome is unknown", _metadata);
     }
 }
 

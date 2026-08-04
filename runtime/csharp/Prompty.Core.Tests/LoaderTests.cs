@@ -485,6 +485,30 @@ public class LoaderTests
         Assert.EndsWith("minimal.prompty", sourcePath);
     }
 
+    [Fact]
+    public void Load_PreservesExplicitNullMetadata()
+    {
+        var root = Directory.CreateTempSubdirectory("prompty-loader-null-");
+        try
+        {
+            var path = Path.Combine(root.FullName, "nullable-metadata.prompty");
+            File.WriteAllText(
+                path,
+                "---\nname: nullable-metadata\nmetadata:\n  nullable: null\nmodel: gpt-4\n---\nsystem:\nHello.");
+
+            var agent = PromptyLoader.Load(path);
+
+            Assert.NotNull(agent.Metadata);
+            Assert.True(agent.Metadata.ContainsKey("nullable"));
+            Assert.Null(agent.Metadata["nullable"]);
+            Assert.True(agent.Metadata.ContainsKey("__source_path"));
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
     // --- Error cases ---
 
     [Fact]

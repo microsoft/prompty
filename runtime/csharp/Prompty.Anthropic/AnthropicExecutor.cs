@@ -345,7 +345,7 @@ public class AnthropicExecutor : IExecutor
             Parts = !string.IsNullOrEmpty(textContent)
                 ? [new TextPart { Value = textContent }]
                 : [],
-            Metadata = new Dictionary<string, object>
+            Metadata = new Dictionary<string, object?>
             {
                 ["content"] = GetRawContent(rawResponse, toolCalls, textContent),
             },
@@ -367,7 +367,7 @@ public class AnthropicExecutor : IExecutor
         {
             Role = Role.User,
             Parts = toolResults.Select(r => (ContentPart)new TextPart { Value = r }).ToList(),
-            Metadata = new Dictionary<string, object> { ["tool_results"] = toolResultBlocks },
+            Metadata = new Dictionary<string, object?> { ["tool_results"] = toolResultBlocks },
         });
 
         return messages;

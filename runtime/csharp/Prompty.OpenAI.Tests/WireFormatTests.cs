@@ -145,7 +145,7 @@ public class WireFormatTests
         {
             Role = Role.Assistant,
             Parts = [new TextPart { Value = "" }],
-            Metadata = new Dictionary<string, object>
+            Metadata = new Dictionary<string, object?>
             {
                 ["tool_calls"] = new List<ToolCall>
                 {
@@ -167,7 +167,7 @@ public class WireFormatTests
         {
             Role = Role.Tool,
             Parts = [new TextPart { Value = "72°F and sunny" }],
-            Metadata = new Dictionary<string, object> { ["tool_call_id"] = "call_1" },
+            Metadata = new Dictionary<string, object?> { ["tool_call_id"] = "call_1" },
         };
 
         var result = WireFormat.MessageToWire(msg);

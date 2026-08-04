@@ -15,7 +15,7 @@ public class StreamingTests : IntegrationTestBase
 {
     private static void EnableStreaming(Core.Prompty agent)
     {
-        agent.Metadata ??= new Dictionary<string, object>();
+        agent.Metadata ??= new Dictionary<string, object?>();
         agent.Metadata["stream"] = true;
     }
 

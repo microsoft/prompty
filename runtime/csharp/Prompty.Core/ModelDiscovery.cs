@@ -34,13 +34,13 @@ public static class ModelDiscovery
     /// <summary>
     /// Convert a provider JSON object to a dictionary while preserving nested raw values.
     /// </summary>
-    public static IDictionary<string, object> PreserveRaw(JsonElement value)
+    public static IDictionary<string, object?> PreserveRaw(JsonElement value)
     {
         if (value.ValueKind != JsonValueKind.Object)
             throw new ArgumentException("Provider model payload must be a JSON object.", nameof(value));
 
         return value.EnumerateObject()
-            .ToDictionary(property => property.Name, property => (object)property.Value.Clone());
+            .ToDictionary(property => property.Name, property => (object?)property.Value.Clone());
     }
 
     private static bool PrefixMatches(string id, string prefix)

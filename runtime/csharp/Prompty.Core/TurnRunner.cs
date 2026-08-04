@@ -37,7 +37,7 @@ public sealed class ReferenceTurnRunner
     public async Task<RunTurnResult> RunAsync(RunTurnRequest request)
     {
         var options = request.Options ?? new TurnOptions();
-        var inputs = request.Inputs ?? new Dictionary<string, object>();
+        var inputs = request.Inputs ?? new Dictionary<string, object?>();
         var maxIterations = options.MaxIterations ?? 10;
         var checkpoints = new List<Checkpoint>();
         var allToolResults = new List<HostToolResult>();
@@ -47,12 +47,12 @@ public sealed class ReferenceTurnRunner
         var status = RunTurnStatus.Success;
         var iterations = 0;
 
-        RecordSession(SessionEventType.SessionStart, request.SessionId, request.TurnId, new Dictionary<string, object>
+        RecordSession(SessionEventType.SessionStart, request.SessionId, request.TurnId, new Dictionary<string, object?>
         {
             ["sessionId"] = request.SessionId,
             ["schemaVersion"] = "1"
         });
-        RecordTurn(TurnEventType.TurnStart, request.TurnId, 0, new Dictionary<string, object>
+        RecordTurn(TurnEventType.TurnStart, request.TurnId, 0, new Dictionary<string, object?>
         {
             ["inputs"] = inputs,
             ["maxIterations"] = maxIterations
@@ -61,7 +61,7 @@ public sealed class ReferenceTurnRunner
         for (var iteration = 0; iteration < maxIterations; iteration++)
         {
             iterations = iteration + 1;
-            RecordTurn(TurnEventType.LlmStart, request.TurnId, iteration, new Dictionary<string, object> { ["attempt"] = 0 });
+            RecordTurn(TurnEventType.LlmStart, request.TurnId, iteration, new Dictionary<string, object?> { ["attempt"] = 0 });
             var modelResponse = await _invokeModel(new TurnModelRequest
             {
                 SessionId = request.SessionId,
@@ -71,7 +71,7 @@ public sealed class ReferenceTurnRunner
                 Options = options,
                 ToolResults = pendingToolResults
             });
-            RecordTurn(TurnEventType.LlmComplete, request.TurnId, iteration, new Dictionary<string, object>());
+            RecordTurn(TurnEventType.LlmComplete, request.TurnId, iteration, new Dictionary<string, object?>());
 
             var checkpoint = await SaveCheckpointAsync(request.SessionId, request.TurnId, iteration, modelResponse);
             checkpoints.Add(checkpoint);
@@ -92,7 +92,7 @@ public sealed class ReferenceTurnRunner
                 allToolResults.Add(toolResult);
             }
 
-            RecordTurn(TurnEventType.MessagesUpdated, request.TurnId, iteration, new Dictionary<string, object>
+            RecordTurn(TurnEventType.MessagesUpdated, request.TurnId, iteration, new Dictionary<string, object?>
             {
                 ["toolResults"] = pendingToolResults.Select(result => result.Save()).ToList()
             });
@@ -102,7 +102,7 @@ public sealed class ReferenceTurnRunner
         {
             status = RunTurnStatus.Error;
             output = new Dictionary<string, object> { ["message"] = "Maximum turn iterations reached" };
-            RecordTurn(TurnEventType.Error, request.TurnId, iterations, new Dictionary<string, object>
+            RecordTurn(TurnEventType.Error, request.TurnId, iterations, new Dictionary<string, object?>
             {
                 ["errorKind"] = "max_iterations",
                 ["message"] = "Maximum turn iterations reached"
@@ -115,7 +115,7 @@ public sealed class ReferenceTurnRunner
             ["status"] = status == RunTurnStatus.Success ? "success" : "error",
             ["response"] = output
         }!);
-        RecordSession(SessionEventType.SessionEnd, request.SessionId, request.TurnId, new Dictionary<string, object>
+        RecordSession(SessionEventType.SessionEnd, request.SessionId, request.TurnId, new Dictionary<string, object?>
         {
             ["sessionId"] = request.SessionId,
             ["status"] = status == RunTurnStatus.Success ? "success" : "error",
@@ -149,7 +149,7 @@ public sealed class ReferenceTurnRunner
             ["output"] = response.Output,
             ["toolRequests"] = (response.ToolRequests ?? []).Select(request => request.Save()).ToList()
         };
-        foreach (var (key, value) in response.CheckpointState ?? new Dictionary<string, object>())
+        foreach (var (key, value) in response.CheckpointState ?? new Dictionary<string, object?>())
         {
             state[key] = value;
         }
@@ -209,12 +209,11 @@ public sealed class ReferenceTurnRunner
         return result;
     }
 
-    private void RecordTurn<TPayload>(
+    private void RecordTurn(
         TurnEventType type,
         string turnId,
         int iteration,
-        IDictionary<string, TPayload> payload)
-        where TPayload : class?
+        IDictionary<string, object?> payload)
     {
         var turnEvent = new TurnEvent
         {
@@ -223,13 +222,13 @@ public sealed class ReferenceTurnRunner
             Timestamp = _now(),
             TurnId = turnId,
             Iteration = iteration,
-            Payload = payload.ToDictionary(entry => entry.Key, entry => (object)entry.Value!)
+            Payload = payload
         };
         _eventSink.EmitTurn(turnEvent);
         _journal.AppendTurn(turnEvent);
     }
 
-    private void RecordSession(SessionEventType type, string sessionId, string turnId, IDictionary<string, object> payload)
+    private void RecordSession(SessionEventType type, string sessionId, string turnId, IDictionary<string, object?> payload)
     {
         var sessionEvent = new SessionEvent
         {

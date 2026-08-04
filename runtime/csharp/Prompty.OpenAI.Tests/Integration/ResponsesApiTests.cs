@@ -64,7 +64,7 @@ public class ResponsesApiTests : IntegrationTestBase
         var agent = MakeOpenAIAgent(
             apiType: "responses",
             options: new ModelOptions { Temperature = 0.5f, MaxOutputTokens = 200 },
-            metadata: new Dictionary<string, object> { ["stream"] = true });
+            metadata: new Dictionary<string, object?> { ["stream"] = true });
 
         var messages = new List<Message>
         {
