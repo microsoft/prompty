@@ -7,6 +7,7 @@ import com.microsoft.prompty.model.Prompty;
 import com.microsoft.prompty.model.StreamChunk;
 import com.microsoft.prompty.model.Template;
 import com.microsoft.prompty.model.ToolCall;
+import com.microsoft.prompty.engine.TurnEngineRequest;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -284,6 +285,50 @@ public final class Pipeline {
   /** Load a {@code .prompty} file and invoke it. */
   public static Object invoke(String path, Map<String, Object> inputs) {
     return invoke(Loader.load(path), inputs);
+  }
+
+  // ---------------------------------------------------------------- agent turn
+
+  /**
+   * Run a full agent turn: prepare, invoke the model, run any tools it asks for, and repeat until
+   * the model produces a final answer.
+   *
+   * <p>Where {@link #invoke} is a single round-trip, this drives the loop, and every extension —
+   * guardrails, steering, context trimming, durability, event listeners — attaches through {@link
+   * TurnOptions}. The loop itself is the canonical turn engine, so the same sequence of decisions
+   * is made here as in a replayed or resumed turn.
+   *
+   * @return the model's final output
+   */
+  public static Object turn(Prompty agent, Map<String, Object> inputs, TurnOptions options) {
+    return LiveTurn.turn(agent, inputs, options);
+  }
+
+  /** Run an agent turn with default options. */
+  public static Object turn(Prompty agent, Map<String, Object> inputs) {
+    return LiveTurn.turn(agent, inputs, TurnOptions.defaults());
+  }
+
+  /**
+   * Run an agent turn against a caller-owned engine request.
+   *
+   * <p>This is the entry point for durability: the request carries the session and turn
+   * identifiers the journal is keyed by, and may describe a checkpoint to resume from rather than
+   * a fresh conversation.
+   */
+  public static Object turn(
+      Prompty agent, TurnEngineRequest request, TurnOptions options) {
+    return LiveTurn.turn(agent, request, options);
+  }
+
+  /** Load a {@code .prompty} file and run an agent turn. */
+  public static Object turn(Path path, Map<String, Object> inputs, TurnOptions options) {
+    return LiveTurn.turn(Loader.load(path), inputs, options);
+  }
+
+  /** Load a {@code .prompty} file and run an agent turn. */
+  public static Object turn(String path, Map<String, Object> inputs, TurnOptions options) {
+    return LiveTurn.turn(Loader.load(path), inputs, options);
   }
 
   // ---------------------------------------------------------------- result inspection
