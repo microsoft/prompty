@@ -548,6 +548,63 @@ const patches = [
 ///           `.customTool`, so `.unknown` is unreachable through `load` — it is
 ///           still manually constructible, but it forces any exhaustive
 ///           consumer `switch` without a catch-all arm to grow one.
+///  0.4.11 — the first builds among the 29 archives probed here that fix the
+///           collection-helper inheritance defect, and the first candidates
+///           worth adopting. The fix merges
+///           `collectionHelpers` across ancestors in
+///           `dist/src/ir/inheritance.js`; without it a
+///           `Record<T> | Named<T, ...>` alias declared on a *base* type loses
+///           its dual-form helper in every subtype — exactly the
+///           `Tool.bindings` map arm that rejected 0.4.7 above. Presence of
+///           that merge is the acceptance marker.
+///
+///           Version labels do not identify these bytes. Twenty-nine distinct
+///           tarballs were content-hashed: no 0.4.9 or 0.4.10 archive among
+///           them carries the fix, including one repeatedly circulated as "the
+///           candidate" (sha256 317249BFAC..., 197971 B). Two *different*
+///           archives are both labelled 0.4.9, and 0.4.11-333d8f390456 is
+///           byte-identical to 0.4.11-72b51ec5437b. `gitHead` is empty in every
+///           archive opened, so bytes cannot be mapped back to a commit from
+///           the artifact alone. Key acceptance on sha256 and on the marker
+///           above, never on the version string.
+///
+///           Two builds were validated end to end against this repo:
+///           2C405A0AF5... and 29151169CD... (newest). Both generate cleanly
+///           with this shim disabled, and `swift build --build-tests` reaches
+///           zero errors after a single consumer adaptation —
+///           `ContentPart.unknown` in `PromptyOpenAI/Wire.swift`. `swift test`
+///           then reports 80 executed with 17 failures. Sixteen are
+///           characterization tripwires in this repo firing *because* the
+///           upstream fixes landed: 12 from
+///           `testConnectionBaseFieldsAreDroppedOnEverySubtype`, whose messages
+///           read "... now survives", and 4 from
+///           `testBareScalarShorthandIsNotCoerced`, "... the emitter grew
+///           @coerce support". Each of those names the assertion it should
+///           become on adoption. The seventeenth is *not* a tripwire:
+///           `testNestedPropertySubtypesRoundTrip` is a positive invariant
+///           asserting `save()` equals its source, and its whole-dict delta was
+///           never inspected field by field. Do not read it as upstream-fixed
+///           behaviour — identify the differing keys before adopting.
+///
+///           Wildcard contract, settled for `Tool`: when a polymorphic enum
+///           declares a wildcard subtype, the emitter should not also emit an
+///           `unknown` fallback. The wildcard already absorbs unrecognised
+///           discriminators, so the fallback is unreachable through `load` and
+///           adds a case that loaded values can never occupy — it stays
+///           manually constructible, as the 0.4.10 note above records, but no
+///           loader can produce it. The 0.4.10 entry recorded that defect for
+///           `Tool`; 29151169CD... resolves it, emitting `Tool` as
+///           `functionTool | mcpTool | openApiTool | promptyTool | customTool`
+///           with no `unknown`. Neither `Property` nor `ContentPart` declares a
+///           `kind: "*"` subtype, yet both still emit `unknown` — which is what
+///           forces the `Wire.swift` adaptation above. Do not read that as
+///           sanctioned: `content.tsp` closes `ContentPart` to four variants,
+///           and the current pinned output rejects an unknown discriminator
+///           outright, so `ContentPart.unknown` is a behavioural change needing
+///           a contract decision before adoption, not a settled one.
+///           `Property.unknown` stands on different ground — it carries the
+///           scalar `SimpleTypes` shorthand, which has no concrete subtype
+///           model — so the two should be decided separately.
 /// Compare failing test *identities*, not counts: the 0.4.3, 0.4.6, and 0.4.8
 /// releases evaluated against C# each leave its failure count at 16 while
 /// swapping `*Json*` for `*Yaml*`. On Windows those are two unrelated causes —
@@ -555,6 +612,19 @@ const patches = [
 /// `*Yaml*` ones come from a trailing space at schema/model/agent/agent.tsp:166
 /// that escaped expected-value literals preserve and verbatim input-YAML
 /// literals drop. 0.4.9 resolves that asymmetry.
+///
+/// `npm run generate` is not the whole pipeline: `npm run build` is
+/// `format:tsp && generate && format:rust`, and it is `format:rust`
+/// (`cargo fmt --all` over the Rust runtime) that reconciles the emitter's raw
+/// output with the formatted files this repo commits. Running `generate` alone
+/// therefore leaves the Rust tree dirty. Measured at the pinned 0.4.2: 287
+/// modified Rust files (3881 insertions, 12478 deletions), and `format:rust`
+/// alone restored an exactly clean tree — so that particular delta was
+/// whitespace, not semantics. Do not generalise it: a future delta surviving
+/// formatting is a real change, which is the point of re-checking. Swift output
+/// was byte-identical straight from the emitter and needs no such step. Prefer
+/// `npm run build`, and re-read `git status` after formatting rather than
+/// reading a dirty Rust tree as an emitter change.
 ///
 /// Confirm every "still residual" verdict by reading generated source, never by
 /// matching the `find` anchors below. Those anchors are only a hypothesis about
