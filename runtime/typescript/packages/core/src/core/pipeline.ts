@@ -32,6 +32,16 @@
  */
 
 import { Prompty } from "../model/agent/prompty.js";
+import { ToolCall as ModelToolCall } from "../model/conversation/tool-call.js";
+import {
+  ErrorChunk,
+  StreamChunk,
+  TextChunk,
+  ThinkingChunk,
+  ToolChunk,
+  UsageChunk,
+} from "../model/events/stream-chunk.js";
+import type { InvocationUsage } from "../model/model/invocation-usage.js";
 import {
   type ToolCall,
   Message,
@@ -40,7 +50,7 @@ import {
   text,
 } from "./types.js";
 import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js";
-import { getLastNonces, clearLastNonces } from "../renderers/common.js";
+import { prepareRenderInputs } from "../renderers/common.js";
 import { traceSpan, sanitizeValue } from "../tracing/tracer.js";
 import { load } from "./loader.js";
 import { dispatchTool, resilientJsonParse } from "./tool-dispatch.js";
@@ -94,21 +104,11 @@ export class ExecuteError extends Error {
 
 /** Replace raw nonce strings with readable `{{thread:name}}` in trace output. */
 function sanitizeNonces(value: unknown): unknown {
-  const nonces = getLastNonces();
-  if (nonces.size === 0) return value;
-
-  // Build nonce → display name map
-  const replacements = new Map<string, string>();
-  for (const [name, nonce] of nonces) {
-    replacements.set(nonce, `[thread: ${name}]`);
-  }
-
   if (typeof value === "string") {
-    let result = value;
-    for (const [nonce, display] of replacements) {
-      result = result.replaceAll(nonce, display);
-    }
-    return result;
+    return value.replace(
+      /__PROMPTY_THREAD_[a-f0-9]{8}_(.+?)__/g,
+      (_nonce, name: string) => `[thread: ${name}]`,
+    );
   }
 
   if (Array.isArray(value)) {
@@ -240,14 +240,21 @@ export async function render(
   agent: Prompty,
   inputs: Record<string, unknown>,
 ): Promise<string> {
+  const [renderInputs] = prepareRenderInputs(agent, inputs);
+  return renderTemplate(agent, agent.instructions ?? "", renderInputs);
+}
+
+async function renderTemplate(
+  agent: Prompty,
+  template: string,
+  inputs: Record<string, unknown>,
+): Promise<string> {
   const formatKind = resolveFormatKind(agent);
   const renderer = getRenderer(formatKind);
 
   return traceSpan(renderer.constructor?.name ?? "Renderer", async (emit) => {
-    const template = agent.instructions ?? "";
-
     emit("signature", `prompty.renderers.${renderer.constructor?.name ?? "Renderer"}.render`);
-    emit("inputs", { data: inputs });
+    emit("inputs", sanitizeNonces({ data: inputs }));
     const result = await renderer.render(agent, template, inputs);
     emit("result", sanitizeNonces(result));
     return result;
@@ -291,6 +298,49 @@ export async function process(
   return processor.process(agent, response);
 }
 
+/**
+ * Process a raw provider stream into canonical generated stream chunks.
+ *
+ * Custom processors that only implement the legacy `process()` streaming
+ * surface are adapted so existing integrations remain compatible.
+ */
+export async function processStream(
+  agent: Prompty,
+  response: AsyncIterable<unknown>,
+): Promise<AsyncIterable<StreamChunk>> {
+  const provider = resolveProvider(agent);
+  const processor = getProcessor(provider);
+  if (processor.processStream) {
+    return processor.processStream(response);
+  }
+
+  const legacy = await processor.process(agent, response);
+  return adaptLegacyStream(legacy);
+}
+
+async function* adaptLegacyStream(
+  value: unknown,
+): AsyncGenerator<StreamChunk> {
+  if (!isAsyncIterable(value)) {
+    if (typeof value === "string") {
+      yield new TextChunk({ value });
+    } else if (isToolCallLike(value)) {
+      yield new ToolChunk({ toolCall: new ModelToolCall(value) });
+    }
+    return;
+  }
+
+  for await (const item of value) {
+    if (item instanceof StreamChunk) {
+      yield item;
+    } else if (typeof item === "string") {
+      yield new TextChunk({ value: item });
+    } else if (isToolCallLike(item)) {
+      yield new ToolChunk({ toolCall: new ModelToolCall(item) });
+    }
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Composite: prepare() = render + parse + thread expansion
 // ---------------------------------------------------------------------------
@@ -313,24 +363,18 @@ export async function prepare(
     const parserKind = resolveParserKind(agent);
     const parser = getParser(parserKind);
     let context: Record<string, unknown> | undefined;
+    const [renderInputs, nonces] = prepareRenderInputs(agent, validatedInputs);
 
     if (isStrictMode(agent) && parser.preRender) {
       const [sanitized, ctx] = parser.preRender(agent.instructions ?? "");
-      // Temporarily override instructions for rendering
-      const originalInstructions = agent.instructions;
-      agent.instructions = sanitized;
       context = ctx;
 
-      // Render
-      clearLastNonces();
-      const rendered = await render(agent, validatedInputs);
-      agent.instructions = originalInstructions;
+      const rendered = await renderTemplate(agent, sanitized, renderInputs);
 
       // Parse
       const messages = await parse(agent, rendered, context);
 
       // Thread expansion
-      const nonces = getLastNonces();
       const expanded = expandThreads(messages, nonces, validatedInputs);
 
       emit("result", serializeMessages(expanded));
@@ -338,12 +382,10 @@ export async function prepare(
     }
 
     // Non-strict path
-    clearLastNonces();
-    const rendered = await render(agent, validatedInputs);
+    const rendered = await renderTemplate(agent, agent.instructions ?? "", renderInputs);
     const messages = await parse(agent, rendered, context);
 
     // Thread expansion
-    const nonces = getLastNonces();
     const expanded = expandThreads(messages, nonces, validatedInputs);
 
     emit("result", serializeMessages(expanded));
@@ -684,13 +726,22 @@ export async function turn<T = unknown>(
     emit("inputs", sanitizeValue("inputs", inputs));
 
     const tools = options?.tools ?? {};
-    const hasTools = Object.keys(tools).length > 0;
+    const hasTools =
+      Object.keys(tools).length > 0 || (agent.tools?.length ?? 0) > 0;
     const onEvent = options?.onEvent;
     emitEvent(onEvent, "turn_start", {
       agent: agent.name,
       inputs,
       maxIterations: options?.maxIterations ?? DEFAULT_MAX_ITERATIONS,
     });
+
+    try {
+      checkCancellation(options?.signal);
+    } catch (err) {
+      emitEvent(onEvent, "cancelled", {});
+      emitFailedTurnEnd(onEvent, err, 0);
+      throw err;
+    }
 
     if (!hasTools) {
       // Simple mode: prepare → [extensions] → executor → [output guard] → process
@@ -752,14 +803,23 @@ export async function turn<T = unknown>(
       });
       let response: unknown;
       try {
-        response = await executor.execute(agent, messages);
+        response = await invokeWithRetry(
+          executor,
+          agent,
+          messages,
+          options?.maxLlmRetries ?? DEFAULT_MAX_LLM_RETRIES,
+          onEvent,
+          options?.signal,
+        );
       } catch (err) {
         emitFailedTurnEnd(onEvent, err, 0);
         throw err;
       }
-      emitEvent(onEvent, "llm_complete", {});
-
       if (options?.raw) {
+        if (isAsyncIterable(response)) {
+          return finalizeSimpleTurnStream(response, messages, onEvent, true);
+        }
+        emitEvent(onEvent, "llm_complete", {});
         emit("result", response);
         emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response });
         return response;
@@ -771,6 +831,11 @@ export async function turn<T = unknown>(
         emitFailedTurnEnd(onEvent, err, 0, response);
         throw err;
       }
+
+      if (isAsyncIterable(processed)) {
+        return finalizeSimpleTurnStream(processed, messages, onEvent, false);
+      }
+      emitEvent(onEvent, "llm_complete", {});
 
       // §13.4 — Output guardrail on final response
       if (options?.guardrails) {
@@ -885,8 +950,6 @@ export async function turn<T = unknown>(
         emitFailedTurnEnd(onEvent, err, iteration);
         throw err;
       }
-      emitEvent(onEvent, "llm_complete", { iteration });
-
       // Streaming: consume the stream, extract tool calls from buffered chunks
       if (isAsyncIterable(response)) {
         let streamResult: Awaited<ReturnType<typeof consumeStream>>;
@@ -896,7 +959,11 @@ export async function turn<T = unknown>(
           emitFailedTurnEnd(onEvent, err, iteration, response);
           throw err;
         }
-        const { toolCalls, content } = streamResult;
+        const { toolCalls, content, usage } = streamResult;
+        emitEvent(onEvent, "llm_complete", {
+          iteration,
+          ...(usage ? { usage: usage.save() } : {}),
+        });
 
         // §13.4 — Output guardrail
         if (guardrails && content) {
@@ -947,6 +1014,8 @@ export async function turn<T = unknown>(
         emitEvent(onEvent, "messages_updated", { messages });
         continue;
       }
+
+      emitEvent(onEvent, "llm_complete", { iteration });
 
       // Non-streaming: check raw response for tool calls
       if (!hasToolCalls(response)) {
@@ -1089,27 +1158,64 @@ async function consumeStream(
   agent: Prompty,
   response: unknown,
   onEvent?: EventCallback,
-): Promise<{ toolCalls: ToolCall[]; content: string }> {
-  const processed = await process(agent, response);
+): Promise<{ toolCalls: ToolCall[]; content: string; usage?: InvocationUsage }> {
+  if (!isAsyncIterable(response)) {
+    throw new TypeError("Expected an async iterable provider response");
+  }
+  const processed = await processStream(agent, response);
 
   const toolCalls: ToolCall[] = [];
   const textParts: string[] = [];
+  let usage: InvocationUsage | undefined;
 
-  if (isAsyncIterable(processed)) {
-    for await (const item of processed) {
-      if (isToolCallLike(item)) {
-        toolCalls.push(item);
-      } else if (typeof item === "string") {
-        textParts.push(item);
-        emitEvent(onEvent, "token", { token: item });
-      }
+  for await (const item of processed) {
+    if (item instanceof TextChunk) {
+      textParts.push(item.value);
+      emitEvent(onEvent, "token", { token: item.value });
+    } else if (item instanceof ThinkingChunk) {
+      emitEvent(onEvent, "thinking", { thinking: item.value });
+    } else if (item instanceof ToolChunk) {
+      toolCalls.push(item.toolCall);
+    } else if (item instanceof UsageChunk) {
+      usage = item.usage;
+    } else if (item instanceof ErrorChunk) {
+      throw new Error(item.message);
     }
-  } else if (typeof processed === "string") {
-    textParts.push(processed);
-    emitEvent(onEvent, "token", { token: processed });
   }
 
-  return { toolCalls, content: textParts.join("") };
+  return { toolCalls, content: textParts.join(""), usage };
+}
+
+/**
+ * Preserve the legacy public stream shape while completing turn events only
+ * after successful stream exhaustion.
+ */
+async function* finalizeSimpleTurnStream(
+  stream: AsyncIterable<unknown>,
+  messages: Message[],
+  onEvent: EventCallback | undefined,
+  raw: boolean,
+): AsyncGenerator<unknown> {
+  const collected: unknown[] = [];
+  try {
+    for await (const item of stream) {
+      collected.push(item);
+      if (!raw && typeof item === "string") {
+        emitEvent(onEvent, "token", { token: item });
+      }
+      yield item;
+    }
+  } catch (err) {
+    emitFailedTurnEnd(onEvent, err, 0, collected);
+    throw err;
+  }
+
+  emitEvent(onEvent, "llm_complete", {});
+  const response = raw ? collected : collected.filter((item) => typeof item === "string").join("");
+  if (!raw) {
+    emitEvent(onEvent, "done", { response, messages });
+  }
+  emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response });
 }
 
 

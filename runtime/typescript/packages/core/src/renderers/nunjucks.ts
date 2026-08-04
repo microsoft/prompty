@@ -11,7 +11,6 @@
 import nunjucks from "nunjucks";
 import type { Prompty } from "../model/agent/prompty.js";
 import type { Renderer } from "../core/interfaces.js";
-import { prepareRenderInputs } from "./common.js";
 
 type NunjucksRuntime = {
   memberLookup: (object: unknown, property: unknown) => unknown;
@@ -100,11 +99,10 @@ function renderSafely(template: string, inputs: Record<string, unknown>): string
 
 export class NunjucksRenderer implements Renderer {
   async render(
-    agent: Prompty,
+    _agent: Prompty,
     template: string,
     inputs: Record<string, unknown>,
   ): Promise<string> {
-    const [modified] = prepareRenderInputs(agent, inputs);
-    return renderSafely(template, sanitizeInputs(modified));
+    return renderSafely(template, sanitizeInputs(inputs));
   }
 }

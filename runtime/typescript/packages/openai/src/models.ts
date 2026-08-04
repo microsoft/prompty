@@ -5,20 +5,15 @@
  */
 
 import OpenAI from "openai";
-import { ModelInfo, ApiKeyConnection, ReferenceConnection, getConnection } from "@prompty/core";
+import {
+  ApiKeyConnection,
+  ModelInfo,
+  ReferenceConnection,
+  createModelInfo,
+  enrichModelInfo,
+  getConnection,
+} from "@prompty/core";
 import type { Connection } from "@prompty/core";
-
-/** Known model metadata for enrichment (context windows and modalities). */
-const KNOWN_MODELS: Record<string, { contextWindow?: number; inputModalities: string[]; outputModalities: string[] }> = {
-  "gpt-4o": { contextWindow: 128_000, inputModalities: ["text", "image"], outputModalities: ["text"] },
-  "gpt-4o-mini": { contextWindow: 128_000, inputModalities: ["text", "image"], outputModalities: ["text"] },
-  "gpt-4-turbo": { contextWindow: 128_000, inputModalities: ["text", "image"], outputModalities: ["text"] },
-  "gpt-4": { contextWindow: 8_192, inputModalities: ["text"], outputModalities: ["text"] },
-  "gpt-3.5-turbo": { contextWindow: 16_385, inputModalities: ["text"], outputModalities: ["text"] },
-  "text-embedding-3-small": { contextWindow: 8_191, inputModalities: ["text"], outputModalities: [] },
-  "text-embedding-3-large": { contextWindow: 8_191, inputModalities: ["text"], outputModalities: [] },
-  "dall-e-3": { inputModalities: ["text"], outputModalities: ["image"] },
-};
 
 /**
  * List models available from the OpenAI API.
@@ -32,29 +27,19 @@ export async function listModels(connection: Connection): Promise<ModelInfo[]> {
   const models: ModelInfo[] = [];
 
   for (const m of page.data) {
-    const known = findKnownModel(m.id);
-    models.push(
-      new ModelInfo({
-        id: m.id,
-        ownedBy: m.owned_by,
-        contextWindow: known?.contextWindow,
-        inputModalities: known?.inputModalities,
-        outputModalities: known?.outputModalities,
-      }),
-    );
+    models.push(modelInfoFromWire(m as unknown as Record<string, unknown>));
   }
 
   return models;
 }
 
-/** Match a model id against known models, supporting prefix matching for dated variants. */
-function findKnownModel(id: string): (typeof KNOWN_MODELS)[string] | undefined {
-  if (KNOWN_MODELS[id]) return KNOWN_MODELS[id];
-  // Try prefix match (e.g. "gpt-4o-2024-08-06" → "gpt-4o")
-  for (const key of Object.keys(KNOWN_MODELS)) {
-    if (id.startsWith(key + "-")) return KNOWN_MODELS[key];
-  }
-  return undefined;
+/** Map one raw OpenAI model response into the canonical generated model. */
+export function modelInfoFromWire(raw: Record<string, unknown>): ModelInfo {
+  return createModelInfo(enrichModelInfo("openai", {
+    id: typeof raw.id === "string" ? raw.id : "",
+    ownedBy: typeof raw.owned_by === "string" ? raw.owned_by : undefined,
+    additionalProperties: { ...raw },
+  }));
 }
 
 function buildClient(connection: Connection): OpenAI {

@@ -16,10 +16,11 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import { Message, text } from "../src/core/types.js";
-import { Prompty } from "@prompty/core";
+import { Prompty, Property, TextChunk } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 import { NunjucksRenderer } from "../src/renderers/nunjucks.js";
 import { PromptyChatParser } from "../src/parsers/prompty.js";
+import { Tracer } from "../src/tracing/tracer.js";
 
 // ---------------------------------------------------------------------------
 // Mock implementations
@@ -142,6 +143,72 @@ describe("Pipeline", () => {
       const result = await render(agent, { name: "World" });
       expect(result).toBe("Hi World");
     });
+
+    it("uses the canonical request-local marker for rich inputs", async () => {
+      const agent = makeAgent({ instructions: "{{conversation}}" });
+      agent.template = { format: { kind: "nunjucks" } } as any;
+      agent.inputs = [new Property({ name: "conversation", kind: "thread" })];
+      registerRenderer("nunjucks", new NunjucksRenderer());
+
+      const rendered = await render(agent, {
+        conversation: [{ role: "user", content: "prior message" }],
+      });
+
+      expect(rendered).toMatch(/^__PROMPTY_THREAD_[a-f0-9]{8}_conversation__$/);
+    });
+
+    it("sanitizes rich-input names with punctuation in trace data", async () => {
+      const events: [string, unknown][] = [];
+      Tracer.add("nonce-sanitization", () => (key, value) => {
+        events.push([key, value]);
+      });
+      const agent = makeAgent({ instructions: "{{conversation-history}}" });
+      agent.template = { format: { kind: "mock" } } as any;
+      agent.inputs = [
+        new Property({ name: "conversation-history", kind: "thread" }),
+      ];
+
+      try {
+        await render(agent, {
+          "conversation-history": [
+            { role: "user", content: "prior message" },
+          ],
+        });
+      } finally {
+        Tracer.remove("nonce-sanitization");
+      }
+
+      const traceData = JSON.stringify(events);
+      expect(traceData).toContain("[thread: conversation-history]");
+      expect(traceData).not.toContain("__PROMPTY_THREAD_");
+    });
+  });
+
+  describe("prepare()", () => {
+    it("keeps concurrent rich-input mappings and instructions isolated", async () => {
+      const instructions = "user:\n{{conversation}}";
+      const agent = makeAgent({ instructions });
+      agent.template = {
+        format: { kind: "nunjucks" },
+        parser: { kind: "prompty" },
+      } as any;
+      agent.inputs = [new Property({ name: "conversation", kind: "thread" })];
+      registerRenderer("nunjucks", new NunjucksRenderer());
+      registerParser("prompty", new PromptyChatParser());
+
+      const [first, second] = await Promise.all([
+        prepare(agent, { conversation: [{ role: "user", content: "first thread" }] }),
+        prepare(agent, { conversation: [{ role: "assistant", content: "second thread" }] }),
+      ]);
+
+      expect(first).toHaveLength(1);
+      expect(first[0].role).toBe("user");
+      expect(first[0].text).toBe("first thread");
+      expect(second).toHaveLength(1);
+      expect(second[0].role).toBe("assistant");
+      expect(second[0].text).toBe("second thread");
+      expect(agent.instructions).toBe(instructions);
+    });
   });
 
   describe("parse()", () => {
@@ -190,6 +257,158 @@ describe("Pipeline", () => {
   });
 
   describe("turn()", () => {
+    it("checks cancellation before preparing the prompt", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "missing" }, parser: { kind: "missing" } } as any;
+      (agent as any).model = { provider: "mock" };
+      const controller = new AbortController();
+      controller.abort();
+
+      await expect(
+        turn(agent, {}, { signal: controller.signal }),
+      ).rejects.toThrow("cancelled");
+    });
+
+    it("retries simple turns with the same prepared messages", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
+      (agent as any).model = { provider: "retrying-mock" };
+      const requests: Message[][] = [];
+
+      registerExecutor("retrying-mock", {
+        async execute(_agent, messages) {
+          requests.push(messages);
+          if (requests.length === 1) throw new Error("transient");
+          return { choices: [{ message: { content: "recovered" } }] };
+        },
+        formatToolMessages: new MockExecutor().formatToolMessages,
+      });
+      registerProcessor("retrying-mock", new MockProcessor());
+
+      const result = await turn(agent, {}, { maxLlmRetries: 2 });
+
+      expect(result).toBe("recovered");
+      expect(requests).toHaveLength(2);
+      expect(requests[0]).toBe(requests[1]);
+    });
+
+    it("activates agent mode for tools declared by the prompt", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
+      (agent as any).model = { provider: "asset-tool-mock" };
+      agent.tools = [{ name: "echo", kind: "function" }] as any;
+      let calls = 0;
+
+      registerExecutor("asset-tool-mock", {
+        async execute() {
+          calls++;
+          return calls === 1
+            ? {
+                choices: [{
+                  message: {
+                    content: null,
+                    tool_calls: [{
+                      id: "call-asset",
+                      function: { name: "echo", arguments: '{"value":"hello"}' },
+                    }],
+                  },
+                }],
+              }
+            : { choices: [{ message: { content: "done" } }] };
+        },
+        formatToolMessages: new MockExecutor().formatToolMessages,
+      });
+      registerProcessor("asset-tool-mock", new MockProcessor());
+
+      const result = await turn(agent, {}, {
+        tools: { echo: (value: unknown) => value },
+      });
+
+      expect(result).toBe("done");
+      expect(calls).toBe(2);
+    });
+
+    it("returns missing asset tool handlers to the model as failed tool results", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
+      (agent as any).model = { provider: "missing-asset-tool-mock" };
+      agent.tools = [{ name: "echo", kind: "function" }] as any;
+      const requests: Message[][] = [];
+
+      registerExecutor("missing-asset-tool-mock", {
+        async execute(_agent, messages) {
+          requests.push(messages);
+          return requests.length === 1
+            ? {
+                choices: [{
+                  message: {
+                    content: null,
+                    tool_calls: [{
+                      id: "call-missing",
+                      function: { name: "echo", arguments: '{"value":"hello"}' },
+                    }],
+                  },
+                }],
+              }
+            : { choices: [{ message: { content: "handled failure" } }] };
+        },
+        formatToolMessages: new MockExecutor().formatToolMessages,
+      });
+      registerProcessor("missing-asset-tool-mock", new MockProcessor());
+
+      const result = await turn(agent, {});
+
+      expect(result).toBe("handled failure");
+      expect(requests).toHaveLength(2);
+      expect(requests[1].some((message) => message.text.includes("no callable provided"))).toBe(true);
+    });
+
+    it("emits llm_complete only after a simple stream is exhausted", async () => {
+      const agent = makeAgent();
+      agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;
+      (agent as any).model = { provider: "streaming-mock" };
+      const events: string[] = [];
+
+      registerExecutor("streaming-mock", {
+        async execute() {
+          return {
+            async *[Symbol.asyncIterator]() {
+              yield { token: "Hello" };
+              yield { token: " world" };
+            },
+          };
+        },
+        formatToolMessages: new MockExecutor().formatToolMessages,
+      });
+      registerProcessor("streaming-mock", {
+        async process(_agent, response) {
+          const source = response as AsyncIterable<{ token: string }>;
+          return {
+            async *[Symbol.asyncIterator]() {
+              for await (const item of source) yield item.token;
+            },
+          };
+        },
+        async *processStream(response) {
+          for await (const item of response as AsyncIterable<{ token: string }>) {
+            yield new TextChunk({ value: item.token });
+          }
+        },
+      });
+
+      const result = await turn(agent, { name: "World" }, {
+        onEvent: (type) => events.push(type),
+      });
+      expect(events).not.toContain("llm_complete");
+
+      const chunks: unknown[] = [];
+      for await (const chunk of result as AsyncIterable<unknown>) chunks.push(chunk);
+
+      expect(chunks).toEqual(["Hello", " world"]);
+      expect(events).toContain("llm_complete");
+      expect(events.indexOf("llm_complete")).toBeLessThan(events.indexOf("turn_end"));
+    });
+
     it("runs a simple agent with no tool calls", async () => {
       const agent = makeAgent();
       agent.template = { format: { kind: "mock" }, parser: { kind: "mock" } } as any;

@@ -94,6 +94,41 @@ describe("Loader", () => {
     expect(agent.description).toBe("shared description");
   });
 
+  it.each([
+    ["yaml", "metadata.yaml"],
+    ["yml", "metadata.yml"],
+  ])("parses ${file:...} %s references as structured data", (_extension, fileName) => {
+    const root = mkdtempSync(join(tmpdir(), "prompty-loader-"));
+    const prompt = join(root, "structured-reference.prompty");
+    writeFileSync(join(root, fileName), "region: westus\nretries: 3\n", "utf-8");
+    writeFileSync(
+      prompt,
+      `---\nname: structured-reference\nmetadata: "\${file:${fileName}}"\n---\nHello\n`,
+      "utf-8",
+    );
+
+    const agent = load(prompt);
+
+    expect(agent.metadata).toMatchObject({ region: "westus", retries: 3 });
+  });
+
+  it("preserves JSON and text file reference behavior", () => {
+    const root = mkdtempSync(join(tmpdir(), "prompty-loader-"));
+    const prompt = join(root, "references.prompty");
+    writeFileSync(join(root, "metadata.json"), '{"region":"eastus","retries":2}', "utf-8");
+    writeFileSync(join(root, "description.txt"), "plain text", "utf-8");
+    writeFileSync(
+      prompt,
+      '---\nname: references\nmetadata: "${file:metadata.json}"\ndescription: "${file:description.txt}"\n---\nHello\n',
+      "utf-8",
+    );
+
+    const agent = load(prompt);
+
+    expect(agent.metadata).toMatchObject({ region: "eastus", retries: 2 });
+    expect(agent.description).toBe("plain text");
+  });
+
   it("rejects symlink escapes from the prompt directory", () => {
     const root = mkdtempSync(join(tmpdir(), "prompty-loader-"));
     const promptDir = join(root, "prompts");

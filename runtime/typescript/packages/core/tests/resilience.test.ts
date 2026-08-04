@@ -333,12 +333,15 @@ describe("LLM Call Retry (§9.10)", () => {
     expect(retryEvent!.data.message).toContain("attempt 2/3");
   });
 
-  it("does not retry in simple mode (no tools)", async () => {
+  it("retries in simple mode (no tools)", async () => {
     let callCount = 0;
     const failOnceExecutor: Executor = {
       async execute(): Promise<unknown> {
         callCount++;
-        throw new Error("API error");
+        if (callCount === 1) {
+          throw new Error("API error");
+        }
+        return { choices: [{ message: { role: "assistant", content: "Recovered" } }] };
       },
       formatToolMessages() { return []; },
     };
@@ -348,11 +351,11 @@ describe("LLM Call Retry (§9.10)", () => {
 
     const agent = makeAgent();
 
-    // No tools = simple mode, should NOT retry
-    await expect(
-      turn(agent, { name: "Test" }),
-    ).rejects.toThrow("API error");
-    expect(callCount).toBe(1); // Only called once, no retry
+    const promise = turn(agent, { name: "Test" }, { maxLlmRetries: 2 });
+    await vi.runAllTimersAsync();
+
+    await expect(promise).resolves.toBe("Recovered");
+    expect(callCount).toBe(2);
   });
 
   it("respects maxLlmRetries: 1 (no retries)", async () => {

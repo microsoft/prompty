@@ -7,8 +7,9 @@
  */
 
 export { AnthropicExecutor } from "./executor.js";
-export { AnthropicProcessor, processResponse } from "./processor.js";
+export { AnthropicProcessor, processResponse, processStream } from "./processor.js";
 export { buildChatArgs, messageToWire, toolsToWire, outputsToWire } from "./wire.js";
+export { listModels, modelInfoFromWire } from "./models.js";
 
 // Auto-register on import
 import { registerExecutor, registerProcessor } from "@prompty/core";

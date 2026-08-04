@@ -58,12 +58,15 @@ export {
   // Loader
   load,
   type LoadOptions,
+  createModelInfo,
+  enrichModelInfo,
 
   // Pipeline functions
   validateInputs,
   render,
   parse,
   process,
+  processStream,
   prepare,
   run,
   turn,
@@ -105,6 +108,11 @@ export {
   isStructuredResult,
   cast,
 } from "./core/index.js";
+
+export * from "./core/turn-engine-cancellation.js";
+export * from "./core/turn-engine-context.js";
+export * from "./core/turn-engine-ports.js";
+export * from "./core/turn-engine.js";
 
 // ---------------------------------------------------------------------------
 // Implementations (core-provided: renderers + parsers only)
@@ -197,6 +205,13 @@ export {
   PermissionDecision,
   HostToolRequest,
   HostToolResult,
+  StreamChunk,
+  TextChunk,
+  ThinkingChunk,
+  ToolChunk,
+  UsageChunk,
+  ErrorChunk,
+  InvocationUsage,
   type EventJournalWriter,
   type EventSink,
   type PermissionResolver,

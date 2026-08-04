@@ -9,7 +9,15 @@
 import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
-import { traceSpan } from "@prompty/core";
+import {
+  ErrorChunk,
+  InvocationUsage,
+  StreamChunk,
+  TextChunk,
+  ToolChunk,
+  UsageChunk,
+  traceSpan,
+} from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
 export class OpenAIProcessor implements Processor {
@@ -25,6 +33,10 @@ export class OpenAIProcessor implements Processor {
       return result;
     });
   }
+
+  processStream(response: AsyncIterable<unknown>): AsyncIterable<StreamChunk> {
+    return processStream(response);
+  }
 }
 
 /**
@@ -35,7 +47,7 @@ export function processResponse(agent: Prompty, response: unknown): unknown {
 
   // Streaming response — return content-extracting async generator
   if (isAsyncIterable(response)) {
-    return streamGenerator(response);
+    return legacyStreamGenerator(processStream(response));
   }
 
   const r = response as Record<string, unknown>;
@@ -90,54 +102,157 @@ function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
  *
  * Matches the Python `_stream_generator` / `_async_stream_generator`.
  */
-async function* streamGenerator(
+export async function* processStream(
   response: AsyncIterable<unknown>,
-): AsyncGenerator<string | ToolCall> {
+): AsyncGenerator<StreamChunk> {
   const toolCallAcc: Map<number, { id: string; name: string; arguments: string }> = new Map();
+  let usage: InvocationUsage | undefined;
 
-  for await (const chunk of response) {
-    const c = chunk as Record<string, unknown>;
-    const choices = c.choices as Record<string, unknown>[] | undefined;
-    if (!choices || choices.length === 0) continue;
+  try {
+    for await (const chunk of response) {
+      const c = chunk as Record<string, unknown>;
+      const error = c.error as Record<string, unknown> | undefined;
+      if (error) {
+        yield new ErrorChunk({
+          message: typeof error.message === "string" ? error.message : "OpenAI stream failed",
+        });
+        return;
+      }
 
-    const delta = (choices[0] as Record<string, unknown>).delta as Record<string, unknown> | undefined;
-    if (!delta) continue;
-
-    // Content
-    if (delta.content != null) {
-      yield delta.content as string;
-    }
-
-    // Tool call deltas — accumulate index-keyed partial chunks
-    const tcDeltas = delta.tool_calls as Record<string, unknown>[] | undefined;
-    if (tcDeltas) {
-      for (const tcDelta of tcDeltas) {
-        const idx = tcDelta.index as number;
-        if (!toolCallAcc.has(idx)) {
-          toolCallAcc.set(idx, { id: "", name: "", arguments: "" });
+      const eventType = c.type as string | undefined;
+      if (eventType === "response.output_text.delta" && typeof c.delta === "string" && c.delta) {
+        yield new TextChunk({ value: c.delta });
+      } else if (
+        (eventType === "response.output_item.added" || eventType === "response.output_item.done") &&
+        isRecord(c.item) &&
+        c.item.type === "function_call"
+      ) {
+        const idx = typeof c.output_index === "number" ? c.output_index : toolCallAcc.size;
+        toolCallAcc.set(idx, {
+          id: stringValue(c.item.call_id ?? c.item.id),
+          name: stringValue(c.item.name),
+          arguments: stringValue(c.item.arguments),
+        });
+      } else if (eventType === "response.function_call_arguments.delta") {
+        appendResponsesArguments(toolCallAcc, c, false);
+      } else if (eventType === "response.function_call_arguments.done") {
+        appendResponsesArguments(toolCallAcc, c, true);
+      } else if (eventType === "response.completed" && isRecord(c.response)) {
+        usage = usageFromWire(c.response.usage);
+        const output = c.response.output;
+        if (Array.isArray(output)) {
+          for (const [idx, item] of output.entries()) {
+            if (isRecord(item) && item.type === "function_call") {
+              toolCallAcc.set(idx, {
+                id: stringValue(item.call_id ?? item.id),
+                name: stringValue(item.name),
+                arguments: stringValue(item.arguments),
+              });
+            }
+          }
         }
-        const acc = toolCallAcc.get(idx)!;
-        if (tcDelta.id) acc.id = tcDelta.id as string;
-        const fn = tcDelta.function as Record<string, unknown> | undefined;
-        if (fn) {
-          if (fn.name) acc.name = fn.name as string;
-          if (fn.arguments) acc.arguments += fn.arguments as string;
+      } else if (eventType === "response.refusal.delta" && typeof c.delta === "string" && c.delta) {
+        yield new ErrorChunk({ message: `Model refused: ${c.delta}` });
+        return;
+      }
+
+      usage = usageFromWire(c.usage) ?? usage;
+
+      const choices = c.choices as Record<string, unknown>[] | undefined;
+      if (choices && choices.length > 0) {
+        const delta = choices[0].delta as Record<string, unknown> | undefined;
+        if (delta) {
+          if (typeof delta.content === "string" && delta.content) {
+            yield new TextChunk({ value: delta.content });
+          }
+
+          const tcDeltas = delta.tool_calls as Record<string, unknown>[] | undefined;
+          if (tcDeltas) {
+            for (const tcDelta of tcDeltas) {
+              const idx = typeof tcDelta.index === "number" ? tcDelta.index : 0;
+              const acc = toolCallAcc.get(idx) ?? { id: "", name: "", arguments: "" };
+              if (tcDelta.id) acc.id = stringValue(tcDelta.id);
+              const fn = tcDelta.function as Record<string, unknown> | undefined;
+              if (fn) {
+                if (fn.name) acc.name = stringValue(fn.name);
+                if (fn.arguments) acc.arguments += stringValue(fn.arguments);
+              }
+              toolCallAcc.set(idx, acc);
+            }
+          }
+
+          if (typeof delta.refusal === "string" && delta.refusal) {
+            yield new ErrorChunk({ message: `Model refused: ${delta.refusal}` });
+            return;
+          }
         }
       }
     }
-
-    // Refusal
-    if (delta.refusal != null) {
-      throw new Error(`Model refused: ${delta.refusal}`);
-    }
+  } catch (error) {
+    yield new ErrorChunk({
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return;
   }
 
-  // Yield accumulated tool calls at the end of the stream
   const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
   for (const idx of sortedIndices) {
     const tc = toolCallAcc.get(idx)!;
-    yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
+    yield ToolChunk.load({ kind: "tool", toolCall: tc });
   }
+  if (usage) {
+    yield new UsageChunk({ usage });
+  }
+}
+
+async function* legacyStreamGenerator(
+  chunks: AsyncIterable<StreamChunk>,
+): AsyncGenerator<string | ToolCall> {
+  for await (const chunk of chunks) {
+    if (chunk instanceof TextChunk) {
+      yield chunk.value;
+    } else if (chunk instanceof ToolChunk) {
+      yield chunk.toolCall;
+    } else if (chunk instanceof ErrorChunk) {
+      throw new Error(chunk.message);
+    }
+  }
+}
+
+function appendResponsesArguments(
+  calls: Map<number, { id: string; name: string; arguments: string }>,
+  chunk: Record<string, unknown>,
+  replace: boolean,
+): void {
+  const callId = stringValue(chunk.call_id);
+  const entry = [...calls.values()].find((call) => call.id === callId);
+  if (!entry) return;
+  const value = stringValue(replace ? chunk.arguments : chunk.delta);
+  entry.arguments = replace ? value : entry.arguments + value;
+}
+
+function usageFromWire(value: unknown): InvocationUsage | undefined {
+  if (!isRecord(value)) return undefined;
+  const input = numberValue(value.input_tokens ?? value.prompt_tokens);
+  const output = numberValue(value.output_tokens ?? value.completion_tokens);
+  if (input === undefined && output === undefined) return undefined;
+  return new InvocationUsage({
+    inputTokens: input ?? 0,
+    outputTokens: output ?? 0,
+    totalTokens: numberValue(value.total_tokens) ?? (input ?? 0) + (output ?? 0),
+  });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function stringValue(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 // ---------------------------------------------------------------------------

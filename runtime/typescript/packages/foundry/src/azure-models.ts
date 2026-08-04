@@ -5,7 +5,15 @@
  */
 
 import { AzureOpenAI } from "openai";
-import { ModelInfo, ApiKeyConnection, FoundryConnection, ReferenceConnection, getConnection } from "@prompty/core";
+import {
+  ApiKeyConnection,
+  FoundryConnection,
+  ModelInfo,
+  ReferenceConnection,
+  createModelInfo,
+  enrichModelInfo,
+  getConnection,
+} from "@prompty/core";
 import type { Connection } from "@prompty/core";
 
 interface FoundryDeployment {
@@ -69,15 +77,7 @@ async function listAzureOpenAIModels(client: AzureOpenAI): Promise<ModelInfo[]> 
   const models: ModelInfo[] = [];
 
   for (const m of page.data) {
-    const raw = m as unknown as Record<string, unknown>;
-    models.push(
-      new ModelInfo({
-        id: m.id,
-        ownedBy: m.owned_by,
-        // Azure may return maxContextLength in capabilities
-        contextWindow: typeof raw["maxContextLength"] === "number" ? raw["maxContextLength"] : undefined,
-      }),
-    );
+    models.push(catalogModelToModelInfo(m as unknown as Record<string, unknown>));
   }
 
   return models;
@@ -102,19 +102,64 @@ async function listFoundryDeployments(
   }
 
   const data = (await response.json()) as FoundryDeploymentsResponse;
-  return (data.value ?? []).map((deployment) => {
-    const capabilities = deployment.properties?.capabilities ?? deployment.properties?.model?.capabilities;
-    return new ModelInfo({
-      id: deployment.name,
-      displayName: deployment.properties?.model?.name,
-      ownedBy: deployment.properties?.model?.publisher ?? "azure",
-      contextWindow: getNumber(capabilities, ["maxContextLength", "contextWindow", "context_length"])
-        ?? deployment.properties?.model?.maxContextLength,
-      inputModalities: getStringArray(capabilities, ["inputModalities", "input_modalities", "supportedInputModalities"]),
-      outputModalities: getStringArray(capabilities, ["outputModalities", "output_modalities", "supportedOutputModalities"]),
-      additionalProperties: deployment as unknown as Record<string, unknown>,
-    });
-  });
+  return (data.value ?? []).map((deployment) =>
+    deploymentToModelInfo(deployment as unknown as Record<string, unknown>));
+}
+
+/** Map one Foundry deployment response into the canonical generated model. */
+export function deploymentToModelInfo(raw: Record<string, unknown>): ModelInfo {
+  const properties = asRecord(raw.properties);
+  const model = asRecord(properties?.model);
+  const capabilities =
+    asRecord(properties?.capabilities) ??
+    asRecord(model?.capabilities) ??
+    asRecord(raw.capabilities);
+
+  return createModelInfo(enrichModelInfo("foundry", {
+    id: typeof raw.name === "string" ? raw.name : "",
+    displayName:
+      stringValue(raw.modelName) ??
+      stringValue(model?.name),
+    ownedBy:
+      stringValue(raw.modelPublisher) ??
+      stringValue(model?.publisher) ??
+      "azure",
+    contextWindow:
+      getNumber(capabilities, ["maxContextLength", "contextWindow", "context_length"]) ??
+      getNumber(model, ["maxContextLength"]) ??
+      getNumber(raw, ["maxContextLength"]),
+    inputModalities: getStringArray(capabilities, [
+      "inputModalities",
+      "input_modalities",
+      "supportedInputModalities",
+    ]),
+    outputModalities: getStringArray(capabilities, [
+      "outputModalities",
+      "output_modalities",
+      "supportedOutputModalities",
+    ]),
+    additionalProperties: { ...raw },
+  }));
+}
+
+/** Map one Azure OpenAI catalog response into the canonical generated model. */
+export function catalogModelToModelInfo(raw: Record<string, unknown>): ModelInfo {
+  return createModelInfo(enrichModelInfo("foundry", {
+    id: typeof raw.id === "string" ? raw.id : "",
+    ownedBy: typeof raw.owned_by === "string" ? raw.owned_by : undefined,
+    contextWindow: getNumber(raw, ["maxContextLength"]),
+    additionalProperties: { ...raw },
+  }));
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
 }
 
 function getNumber(source: Record<string, unknown> | undefined, keys: string[]): number | undefined {
