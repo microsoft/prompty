@@ -136,20 +136,34 @@ public final class FoundryArm {
   // ---------------------------------------------------------------------------------------------
 
   /**
+   * One page read against the control plane.
+   *
+   * <p>Taken as a parameter so the paging loop can be driven without a network, the same way {@link
+   * FoundryOAuth} takes its token endpoint rather than reaching for the transport directly.
+   */
+  @FunctionalInterface
+  interface PageEndpoint {
+    Object get(String url);
+  }
+
+  /**
    * Read every page of an ARM list endpoint.
    *
    * <p>ARM returns absolute {@code nextLink} URLs, so each page dictates where the next one is
    * rather than the caller computing offsets.
    */
-  @SuppressWarnings("unchecked")
   static List<Map<String, Object>> fetchAll(String token, String firstUrl) {
+    return fetchAll(bearerEndpoint(token), firstUrl);
+  }
+
+  /** {@link #fetchAll(String, String)} with its transport supplied. */
+  @SuppressWarnings("unchecked")
+  static List<Map<String, Object>> fetchAll(PageEndpoint endpoint, String firstUrl) {
     List<Map<String, Object>> items = new ArrayList<>();
     String next = firstUrl;
 
     while (next != null && !next.isEmpty()) {
-      Object body =
-          Http.getJson(
-              PROVIDER, next, Map.of("Authorization", "Bearer " + token), REQUEST_TIMEOUT);
+      Object body = endpoint.get(next);
       if (!(body instanceof Map<?, ?> page)) {
         break;
       }
@@ -168,11 +182,22 @@ public final class FoundryArm {
 
   /** {@link #fetchAll} with failure treated as an empty page, for the soft-failing project probes. */
   private static List<Map<String, Object>> fetchAllOrEmpty(String token, String url) {
+    return fetchAllOrEmpty(bearerEndpoint(token), url);
+  }
+
+  /** {@link #fetchAllOrEmpty(String, String)} with its transport supplied. */
+  static List<Map<String, Object>> fetchAllOrEmpty(PageEndpoint endpoint, String url) {
     try {
-      return fetchAll(token, url);
+      return fetchAll(endpoint, url);
     } catch (RuntimeException e) {
       return List.of();
     }
+  }
+
+  /** The real transport: a bearer-authenticated control-plane GET. */
+  private static PageEndpoint bearerEndpoint(String token) {
+    return url ->
+        Http.getJson(PROVIDER, url, Map.of("Authorization", "Bearer " + token), REQUEST_TIMEOUT);
   }
 
   // ---------------------------------------------------------------------------------------------

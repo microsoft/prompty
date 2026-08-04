@@ -3,12 +3,17 @@ package com.microsoft.prompty.foundry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.prompty.model.AiResourceInfo;
 import com.microsoft.prompty.model.ProjectInfo;
 import com.microsoft.prompty.model.SubscriptionInfo;
 import com.microsoft.prompty.model.TypraJson;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,9 +23,10 @@ import org.junit.jupiter.api.Test;
  * Covers the ARM discovery mappers: which resources are offerable, which endpoint a caller should
  * use, and how a project's identity is derived from an ARM payload.
  *
- * <p>The paging loop needs a live control plane, so the tests here work on the parsing that turns
- * ARM's payloads into the provider-neutral model — which is where the decisions that can silently
- * produce an unusable picker entry actually live.
+ * <p>Two things are covered: the paging loop, driven through an injected transport so a multi-page
+ * response can be exercised without a control plane, and the parsing that turns ARM's payloads into
+ * the provider-neutral model — which is where the decisions that can silently produce an unusable
+ * picker entry actually live.
  */
 @DisplayName("Foundry ARM discovery")
 final class FoundryArmTest {
@@ -283,6 +289,197 @@ final class FoundryArmTest {
       assertTrue(
           String.valueOf(saved.get("serviceUrl")).contains("services.ai.azure.com"),
           "the project-style host should survive the round trip: " + saved);
+    }
+  }
+
+  @Nested
+  @DisplayName("paging")
+  class Paging {
+
+    /** Records the URLs asked for and replays a scripted page per call. */
+    private static final class ScriptedPages implements FoundryArm.PageEndpoint {
+      private final List<String> requested = new ArrayList<>();
+      private final Deque<String> pages = new ArrayDeque<>();
+
+      ScriptedPages(String... bodies) {
+        for (String body : bodies) {
+          pages.add(body);
+        }
+      }
+
+      @Override
+      public Object get(String url) {
+        requested.add(url);
+        if (pages.isEmpty()) {
+          throw new IllegalStateException("asked for an unscripted page: " + url);
+        }
+        return TypraJson.parse(pages.removeFirst());
+      }
+    }
+
+    @Test
+    void aSinglePageIsReturnedWhole() {
+      ScriptedPages pages = new ScriptedPages("{\"value\":[{\"name\":\"a\"},{\"name\":\"b\"}]}");
+      List<Map<String, Object>> items = FoundryArm.fetchAll(pages, "https://arm/first");
+
+      assertEquals(2, items.size());
+      assertEquals("a", items.get(0).get("name"));
+      assertEquals(List.of("https://arm/first"), pages.requested);
+    }
+
+    @Test
+    void nextLinkIsFollowedAndResultsAccumulateInOrder() {
+      // The whole point of the loop: a caller must not have to know a response was split.
+      ScriptedPages pages =
+          new ScriptedPages(
+              "{\"value\":[{\"name\":\"a\"}],\"nextLink\":\"https://arm/p2\"}",
+              "{\"value\":[{\"name\":\"b\"}],\"nextLink\":\"https://arm/p3\"}",
+              "{\"value\":[{\"name\":\"c\"}]}");
+
+      List<Map<String, Object>> items = FoundryArm.fetchAll(pages, "https://arm/p1");
+
+      assertEquals(
+          List.of("a", "b", "c"), items.stream().map(item -> item.get("name")).toList());
+      // ARM hands back absolute URLs, so each page must dictate the next request verbatim.
+      assertEquals(
+          List.of("https://arm/p1", "https://arm/p2", "https://arm/p3"), pages.requested);
+    }
+
+    @Test
+    void anEmptyNextLinkTerminatesRatherThanRequestingIt() {
+      // ARM writes "" as often as it omits the key; treating it as a URL would fetch the wrong host.
+      ScriptedPages pages = new ScriptedPages("{\"value\":[{\"name\":\"a\"}],\"nextLink\":\"\"}");
+
+      List<Map<String, Object>> items = FoundryArm.fetchAll(pages, "https://arm/first");
+
+      assertEquals(1, items.size());
+      assertEquals(1, pages.requested.size());
+    }
+
+    @Test
+    void aNonStringNextLinkTerminates() {
+      ScriptedPages pages = new ScriptedPages("{\"value\":[{\"name\":\"a\"}],\"nextLink\":42}");
+
+      assertEquals(1, FoundryArm.fetchAll(pages, "https://arm/first").size());
+      assertEquals(1, pages.requested.size());
+    }
+
+    @Test
+    void aPageWithNoValueContributesNothingButStillPages() {
+      ScriptedPages pages =
+          new ScriptedPages(
+              "{\"nextLink\":\"https://arm/p2\"}", "{\"value\":[{\"name\":\"a\"}]}");
+
+      List<Map<String, Object>> items = FoundryArm.fetchAll(pages, "https://arm/p1");
+
+      assertEquals(1, items.size());
+      assertEquals(2, pages.requested.size());
+    }
+
+    @Test
+    void aNonObjectBodyStopsTheLoopAndKeepsWhatWasRead() {
+      ScriptedPages pages =
+          new ScriptedPages("{\"value\":[{\"name\":\"a\"}],\"nextLink\":\"https://arm/p2\"}", "\"nonsense\"");
+
+      List<Map<String, Object>> items = FoundryArm.fetchAll(pages, "https://arm/p1");
+
+      // A page that cannot be read is the end of the road, but it does not discard earlier pages.
+      assertEquals(1, items.size());
+      assertEquals(2, pages.requested.size());
+    }
+
+    @Test
+    void nonObjectEntriesAreSkipped() {
+      // Deliberate, documented divergence from the Rust reference, not an accident of typing.
+      //
+      // Rust keeps every `value` entry and maps S1 projects infallibly, so a stray null becomes a
+      // project with empty fields — which then makes the project list non-empty and suppresses the
+      // classic-hub fallback that would have found the real projects. Dropping the entry here keeps
+      // that fallback reachable. ARM does not emit such payloads, so this is malformed-input only;
+      // it is filed as a cross-runtime follow-up against the Rust side rather than replicated.
+      ScriptedPages pages = new ScriptedPages("{\"value\":[{\"name\":\"a\"},\"stray\",7]}");
+
+      assertEquals(1, FoundryArm.fetchAll(pages, "https://arm/first").size());
+    }
+
+    @Test
+    void aTransportFailurePropagatesOutOfTheStrictFetch() {
+      // The strict path backs subscription and resource listing, where an empty list and a failed
+      // call mean very different things: swallowing the failure would show a picker with no
+      // subscriptions rather than telling the caller the lookup did not happen.
+      FoundryArm.PageEndpoint failing =
+          url -> {
+            throw new IllegalStateException("403 Forbidden");
+          };
+
+      assertThrows(
+          IllegalStateException.class, () -> FoundryArm.fetchAll(failing, "https://arm/first"));
+    }
+
+    @Test
+    void aFailureOnALaterPagePropagatesRatherThanReturningAPartialList() {
+      // A truncated list is the dangerous case: it looks authoritative while missing entries.
+      FoundryArm.PageEndpoint failsOnSecondPage =
+          new FoundryArm.PageEndpoint() {
+            private int calls;
+
+            @Override
+            public Object get(String url) {
+              if (calls++ == 0) {
+                return TypraJson.parse("{\"value\":[{\"name\":\"a\"}],\"nextLink\":\"https://arm/p2\"}");
+              }
+              throw new IllegalStateException("500 Internal Server Error");
+            }
+          };
+
+      assertThrows(
+          IllegalStateException.class, () -> FoundryArm.fetchAll(failsOnSecondPage, "https://arm/p1"));
+    }
+
+    @Test
+    void aFirstUrlThatIsEmptyNeverCallsTheTransport() {
+      ScriptedPages pages = new ScriptedPages();
+
+      assertTrue(FoundryArm.fetchAll(pages, "").isEmpty());
+      assertTrue(pages.requested.isEmpty());
+    }
+
+    @Test
+    void theSoftFailingProbeSwallowsATransportFailure() {
+      // A tenant that denies one project provider is ordinary; it must not fail the whole lookup.
+      FoundryArm.PageEndpoint failing =
+          url -> {
+            throw new RuntimeException("403 Forbidden");
+          };
+
+      assertTrue(FoundryArm.fetchAllOrEmpty(failing, "https://arm/projects").isEmpty());
+    }
+
+    @Test
+    void theSoftFailingProbeDiscardsPagesReadBeforeTheFailure() {
+      // Half a list is worse than none: it would look authoritative while silently missing entries.
+      FoundryArm.PageEndpoint failsOnSecondPage =
+          new FoundryArm.PageEndpoint() {
+            private int calls;
+
+            @Override
+            public Object get(String url) {
+              if (calls++ == 0) {
+                return TypraJson.parse(
+                    "{\"value\":[{\"name\":\"a\"}],\"nextLink\":\"https://arm/p2\"}");
+              }
+              throw new RuntimeException("500 Internal Server Error");
+            }
+          };
+
+      assertTrue(FoundryArm.fetchAllOrEmpty(failsOnSecondPage, "https://arm/p1").isEmpty());
+    }
+
+    @Test
+    void theSoftFailingProbeReturnsPagesWhenNothingFails() {
+      ScriptedPages pages = new ScriptedPages("{\"value\":[{\"name\":\"a\"}]}");
+
+      assertEquals(1, FoundryArm.fetchAllOrEmpty(pages, "https://arm/projects").size());
     }
   }
 
