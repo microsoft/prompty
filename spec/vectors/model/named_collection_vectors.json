@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "description": "Cross-runtime named-collection load/save/reload contracts. Canonical serialization uses a name-keyed object only when every parsed name is non-empty and unique; otherwise it uses a whole-collection array fallback without omission, collision, or synthetic names. Array-valued entries in name-keyed object form are rejected recursively, while arrays in declared entry fields remain valid.",
+  "description": "Cross-runtime named-collection load/save/reload contracts. Canonical serialization uses a name-keyed object only when every parsed name is non-empty and unique; otherwise it uses a whole-collection array fallback without omission, collision, or synthetic names. Immediate primitive Property values infer kind and default without leaking direct-coercion example semantics. Array-valued entries in name-keyed object form are rejected recursively, while arrays in declared entry fields remain valid.",
   "vectors": [
     {
       "name": "unique_names_use_canonical_object_form",
@@ -217,6 +217,102 @@
             "items": {
               "kind": "string"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "string_scalar_in_name_keyed_inputs_infers_property",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "string-scalar-input",
+        "inputs": {
+          "city": "Seattle"
+        }
+      },
+      "expected": {
+        "collectionFormat": "object",
+        "absentEntryFields": [
+          "example"
+        ],
+        "entries": [
+          {
+            "name": "city",
+            "kind": "string",
+            "default": "Seattle"
+          }
+        ]
+      }
+    },
+    {
+      "name": "integer_scalar_in_name_keyed_inputs_infers_property",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "integer-scalar-input",
+        "inputs": {
+          "city": 3
+        }
+      },
+      "expected": {
+        "collectionFormat": "object",
+        "absentEntryFields": [
+          "example"
+        ],
+        "entries": [
+          {
+            "name": "city",
+            "kind": "integer",
+            "default": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "float_scalar_in_name_keyed_inputs_infers_property",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "float-scalar-input",
+        "inputs": {
+          "city": 1.5
+        }
+      },
+      "expected": {
+        "collectionFormat": "object",
+        "absentEntryFields": [
+          "example"
+        ],
+        "entries": [
+          {
+            "name": "city",
+            "kind": "float",
+            "default": 1.5
+          }
+        ]
+      }
+    },
+    {
+      "name": "boolean_scalar_in_name_keyed_inputs_infers_property",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "boolean-scalar-input",
+        "inputs": {
+          "city": true
+        }
+      },
+      "expected": {
+        "collectionFormat": "object",
+        "absentEntryFields": [
+          "example"
+        ],
+        "entries": [
+          {
+            "name": "city",
+            "kind": "boolean",
+            "default": true
           }
         ]
       }

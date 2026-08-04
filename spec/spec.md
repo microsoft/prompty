@@ -436,6 +436,13 @@ The normative load/save/reload and rejection cases are
 
 **Scalar shorthand**: When a property value is a plain scalar instead of a `Property`
 object, it MUST be interpreted as `Property(kind: <inferred>, default: <value>)`.
+This applies to every immediate string, integer, float, or boolean value in the
+name-keyed object form of a `Property` collection. The object key supplies `name`.
+Implementations MUST NOT reinterpret the scalar as the `kind` field, reject a valid
+primitive scalar, or silently produce an empty `kind`. At a name-keyed collection
+boundary, this normalization to `default` MUST occur before direct generated-model
+`@coerce` handling; the direct-coercion `example` behavior MUST NOT apply to the
+collection entry, and `example` MUST remain unset.
 
 ```yaml
 # Shorthand

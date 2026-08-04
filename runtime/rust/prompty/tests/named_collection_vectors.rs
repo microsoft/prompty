@@ -105,6 +105,18 @@ fn assert_collection(vector_name: &str, collection: &Value, expected: &Value) {
         expected_entries.len(),
         "[{vector_name}] named collection entry count changed"
     );
+    if let Some(absent_fields) = expected["absentEntryFields"].as_array() {
+        for entry in &actual_entries {
+            for field in absent_fields {
+                let field = field.as_str().expect("absent entry field must be a string");
+                assert!(
+                    entry.get(field).is_none(),
+                    "[{vector_name}] entry {:?} unexpectedly populated field {field:?}",
+                    entry["name"]
+                );
+            }
+        }
+    }
 
     if expected["preserveOrder"].as_bool() == Some(true) {
         for (index, expected_entry) in expected_entries.iter().enumerate() {
@@ -186,6 +198,88 @@ fn named_collection_roundtrip_vectors() {
             .unwrap_or_else(|| panic!("[{name}] reload lost collection {collection_path:?}"));
         assert_collection(name, reloaded_collection, &vector["expected"]);
     }
+}
+
+#[test]
+fn name_keyed_property_scalars_infer_kind_and_default_without_degradation() {
+    let vector_names = [
+        "string_scalar_in_name_keyed_inputs_infers_property",
+        "integer_scalar_in_name_keyed_inputs_infers_property",
+        "float_scalar_in_name_keyed_inputs_infers_property",
+        "boolean_scalar_in_name_keyed_inputs_infers_property",
+    ];
+    let all_vectors = vectors();
+    let mut failures = Vec::new();
+
+    for vector_name in vector_names {
+        let vector = all_vectors
+            .iter()
+            .find(|candidate| candidate["name"] == vector_name)
+            .unwrap_or_else(|| panic!("missing named collection vector {vector_name}"));
+        let json = serde_json::to_string(&vector["input"])
+            .expect("named collection vector input must be JSON-compatible");
+        let loaded = match Prompty::from_json(&json, &LoadContext::default()) {
+            Ok(loaded) => loaded,
+            Err(error) => {
+                failures.push(format!("[{vector_name}] valid scalar failed: {error}"));
+                continue;
+            }
+        };
+        let saved = loaded.to_value(&SaveContext::default());
+        let collection_path = vector["collectionPath"]
+            .as_str()
+            .expect("scalar vector must declare collectionPath");
+        let collection = match saved.get(collection_path) {
+            Some(collection) => collection,
+            None => {
+                failures.push(format!(
+                    "[{vector_name}] missing saved collection {collection_path:?}"
+                ));
+                continue;
+            }
+        };
+        let actual_entries = semantic_entries(collection);
+        let expected_entry = &vector["expected"]["entries"][0];
+        let expected_name = expected_entry["name"]
+            .as_str()
+            .expect("expected scalar entry name must be a string");
+        let actual_entry = match actual_entries
+            .iter()
+            .find(|entry| entry["name"] == expected_name)
+        {
+            Some(entry) => entry,
+            None => {
+                failures.push(format!(
+                    "[{vector_name}] missing scalar entry {expected_name:?}"
+                ));
+                continue;
+            }
+        };
+
+        let expected_kind = &expected_entry["kind"];
+        if actual_entry["kind"].as_str().unwrap_or_default().is_empty() {
+            failures.push(format!("[{vector_name}] silently produced an empty kind"));
+        } else if actual_entry["kind"] != *expected_kind {
+            failures.push(format!(
+                "[{vector_name}] expected kind {expected_kind}, got {}",
+                actual_entry["kind"]
+            ));
+        }
+        if actual_entry["default"] != expected_entry["default"] {
+            failures.push(format!(
+                "[{vector_name}] expected default {}, got {}",
+                expected_entry["default"], actual_entry["default"]
+            ));
+        }
+        if let Some(example) = actual_entry.get("example") {
+            failures.push(format!(
+                "[{vector_name}] collection shorthand unexpectedly populated example {}",
+                example
+            ));
+        }
+    }
+
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 #[test]
