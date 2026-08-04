@@ -32,5 +32,13 @@ options:
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"
         import-path: "prompty::model"
+      - type: Swift
+        output-dir: "../runtime/swift/prompty-model"
+        package-name: "PromptyModel"
+        # test-dir is intentionally omitted: @typra/emitter@0.4.2 emits Swift
+        # tests that do not compile (optionals left unwrapped, struct-style
+        # member access on polymorphic enums, compound values compared to
+        # strings). Reported upstream; restore test-dir once fixed. Model
+        # round-trip coverage lives in runtime/swift/prompty meanwhile.
       - type: markdown
         output-dir: "../web/src/content/docs/reference"

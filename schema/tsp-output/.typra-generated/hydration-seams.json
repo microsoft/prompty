@@ -406,6 +406,86 @@
     },
     {
       "contract": "ModelLister",
+      "target": "swift",
+      "group": "model",
+      "symbol": "ModelLister",
+      "generatedSource": "Sources/PromptyModel/model/model_lister.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "CheckpointStore",
+      "generatedSource": "Sources/PromptyModel/pipeline/checkpoint_store.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "Sources/PromptyModel/pipeline/event_journal_writer.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "EventSink",
+      "generatedSource": "Sources/PromptyModel/pipeline/event_sink.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "Executor",
+      "generatedSource": "Sources/PromptyModel/pipeline/executor.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "Sources/PromptyModel/pipeline/host_tool_executor.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "Parser",
+      "generatedSource": "Sources/PromptyModel/pipeline/parser.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "PermissionResolver",
+      "generatedSource": "Sources/PromptyModel/pipeline/permission_resolver.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "Processor",
+      "generatedSource": "Sources/PromptyModel/pipeline/processor.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "swift",
+      "group": "pipeline",
+      "symbol": "Renderer",
+      "generatedSource": "Sources/PromptyModel/pipeline/renderer.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
       "target": "typescript",
       "group": "model",
       "symbol": "ModelLister",

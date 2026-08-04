@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { patchSwiftEmitterDefects } from "./patch-swift-emitter-defects.mjs";
 
 const metadataRoot = join("tsp-output", ".typra-generated");
 const manifestPath = join(metadataRoot, "manifest.json");
@@ -12,6 +13,7 @@ if (existsSync(manifestPath)) {
 
 trimEmptyPythonGeneratedTests(join("..", "runtime", "python", "prompty", "tests", "model"));
 trimTrailingWhitespace(join("..", "runtime", "go", "prompty", "model"));
+patchSwiftEmitterDefects();
 
 function trimEmptyPythonGeneratedTests(root) {
   if (!existsSync(root)) {
