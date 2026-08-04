@@ -80,12 +80,12 @@ export class Message implements MessageHelpers {
     this.metadata = init?.metadata ?? {};
   }
 
-  /** Concatenate all TextPart values into a single string. */
+  /** Concatenate all TextPart values joined by newline. */
   get text(): string {
     return this.parts
       .filter((p): p is TextPart => p.kind === "text")
       .map((p) => p.value)
-      .join("");
+      .join("\n");
   }
 
   /**
@@ -94,8 +94,8 @@ export class Message implements MessageHelpers {
    * - If multimodal, return an array of content objects.
    */
   toTextContent(): string | Record<string, unknown>[] {
-    if (this.parts.length === 1 && this.parts[0].kind === "text") {
-      return (this.parts[0] as TextPart).value;
+    if (this.parts.every((part) => part.kind === "text")) {
+      return this.text;
     }
     return this.parts.map(partToWireContent);
   }
