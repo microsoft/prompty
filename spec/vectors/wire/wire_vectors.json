@@ -436,6 +436,65 @@
     }
   },
   {
+    "name": "structured_output_nested_optional",
+    "description": "§7.1.4/§7.1.6 — OpenAI strict mode recursively requires every object property and represents optional fields as nullable.",
+    "input": {
+      "provider": "openai",
+      "apiType": "chat",
+      "model_id": "gpt-4o-mini",
+      "messages": [
+        {
+          "role": "user",
+          "content": [{ "kind": "text", "value": "Choose a visual style." }]
+        }
+      ],
+      "tools": [],
+      "options": {},
+      "outputs": [
+        {
+          "name": "style",
+          "kind": "object",
+          "required": true,
+          "properties": [
+            { "name": "color", "kind": "string", "required": true },
+            { "name": "border", "kind": "string", "required": false }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "request_body": {
+        "model": "gpt-4o-mini",
+        "messages": [
+          { "role": "user", "content": "Choose a visual style." }
+        ],
+        "response_format": {
+          "type": "json_schema",
+          "json_schema": {
+            "name": "structured_output",
+            "strict": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "style": {
+                  "type": "object",
+                  "properties": {
+                    "color": { "type": "string" },
+                    "border": { "type": ["string", "null"] }
+                  },
+                  "required": ["color", "border"],
+                  "additionalProperties": false
+                }
+              },
+              "required": ["style"],
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  },
+  {
     "name": "kind_to_json_type_mapping",
     "description": "§7.1.4 — All Property kind values mapped to JSON Schema types: string→string, integer→integer, float→number, boolean→boolean, array→array, object→object.",
     "input": {
