@@ -394,6 +394,66 @@ const patches = [
 ///   0.4.6 — additionally fixes inherited `extends` fields, but carries the same
 ///           C# break plus dropped `= []` on 13 TypeScript fields that declare an
 ///           explicit `= #[]` default.
+///   0.4.7 — the strongest Swift release measured. Native output fails with just
+///           6 primary unique errors, all `Connection has no member 'unknown'`,
+///           all in tools/tool.swift, from the
+///           `connection: Connection = .unknown([:])` defaults on the Mcp,
+///           OpenApi and Custom tool structs. Applying only the three
+///           `Connection` patches below takes `swift build` to exit 0, so 13 of
+///           the 16 literal patches are fixed and those three are the whole
+///           compile-blocking residual. The eight base-field injections are
+///           redundant here for the fields they restore: with only the
+///           `Connection` patch applied,
+///           `testPropertyBaseFieldsRoundTripOnEverySubtype` and
+///           `testToolBaseFieldsRoundTripOnEverySubtype` both pass against
+///           native output. All six `Connection` subtypes additionally declare
+///           `authenticationMode` and `usageDescription`, which 0.4.2 declares
+///           on none, so
+///           `GeneratedModelRoundTripTests.testConnectionBaseFieldsAreDroppedOnEverySubtype`
+///           fires 12 failures here. That is the characterization test working
+///           as designed, not a regression: it signals the behaviour it pins has
+///           improved and should become a preservation assertion on adoption.
+///
+///           Rejected on a defect earlier probes did not catch, because they did
+///           not exercise this path — this was the first probe to run the shared
+///           spec vectors against native output rather than stopping at
+///           compilation. `tool.tsp:18` declares
+///           `alias Bindings = Record<Binding> | Named<Binding, ...>`, a union of
+///           a name-keyed map and a named list. The emitter implements only the
+///           `Named<>` arm — `bindings` loads through `TypraRuntime.array`, so
+///           the `Record<>` map form throws `Expected array for field bindings.`
+///           Two shared vectors fail as a result, `tools_function_load` and
+///           `tools_bindings_stripped`, and the consumer suite reports 77
+///           executed with 15 failures across 4 tests: 12 from the
+///           characterization test above, and one each from
+///           `testToolBindingsLoadFromMapForm`, `LoadVectorTests` and
+///           `WireVectorTests`, all three the same map arm. Verified by
+///           execution, not inference: the list form, and the `@coerce` scalar
+///           shorthand within it, both load correctly; the map form and the
+///           shorthand nested inside it both throw. The missing arm is carried
+///           by `toolBase.load` above, keyed off `mapping.keys.sorted()` with the
+///           map key supplying `binding.name`; the sort is what makes output
+///           deterministic. So the five `Tool` injections are only redundant for
+///           the fields they restore — retiring them as base-field duplicates
+///           would also delete this map handling, which native 0.4.7 does not
+///           replace.
+///
+///           Two notes for the entries around this one. First, the `Record<>` map
+///           arm was not exercised by the 0.4.5, 0.4.8, 0.4.9 or 0.4.10 probes,
+///           which measured compilation and, at 0.4.10, `load`/`save` on
+///           hand-built values — so read 0.4.10's "lone residual" as scoped to
+///           what that probe covered, not as excluding this. Its status there is
+///           unmeasured and must be checked before adoption. Second, the
+///           compiler-breaking named-dict forwarders that rejected 0.4.9 and
+///           0.4.10 (`item.name = name`, `Property.shorthandProperty` against the
+///           polymorphic enums) did not manifest in compiled 0.4.7 output; that
+///           is a compile-level observation only, and establishing when they were
+///           introduced needs a generated-source diff, not this build result.
+///           The generated `test-dir` is 45 primary unique errors across five
+///           files, the same total as 0.4.9 and 0.4.10, with `ConformanceTests`
+///           clean — identities were not diffed against those releases, so do not
+///           read the equal totals as the same failures.
+///           C#, TypeScript, Go and Rust were not measured at 0.4.7.
 ///   0.4.8 — Swift is close to clean: native output compiles to exactly 30
 ///           errors, all `Connection has no member 'unknown'`, all in tool.swift.
 ///           Probe-patching only that case makes the model package compile, so
@@ -436,7 +496,10 @@ const patches = [
 ///           `case unknown([String: Any])` and its `save` arm. The lone residual
 ///           is `Connection.load`'s `default:`, which still throws
 ///           `unknownDiscriminator` instead of returning `.unknown`, leaving
-///           that case declared but unreachable by the loader.
+///           that case declared but unreachable by the loader. Read that
+///           "lone residual" as scoped to what this probe measured — it did not
+///           run the spec vectors against native output, so it did not test the
+///           `Record<Binding>` map arm described in the 0.4.7 entry above.
 ///           Rejected because the 0.4.9 named-dict defect persists, though much
 ///           reduced: `item.name = name` and `Property.shorthandProperty` are
 ///           still emitted against the polymorphic enums, now costing 10 errors
