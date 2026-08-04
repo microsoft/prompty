@@ -33,7 +33,21 @@ final class ReadmeSnippetTests: XCTestCase {
       return raw
     }
 
+    func toolLoop(
+      agent: Prompty, raw: Any?, inputs: [String: Any],
+      myTools: [String: ([String: Any]) throws -> String]
+    ) throws -> [String] {
+      var results: [String] = []
+      for call in Pipeline.toolCalls(in: raw) {
+        let args = Pipeline.boundArguments(agent, call: call, inputs: inputs)
+        let result = try myTools[call.name]!(args)
+        results.append(result)
+      }
+      return results
+    }
+
     XCTAssertNotNil(quickStart)
     XCTAssertNotNil(stages)
+    XCTAssertNotNil(toolLoop)
   }
 }

@@ -252,6 +252,80 @@ public enum Pipeline {
     return calls.count == entries.count ? calls : []
   }
 
+  // MARK: - Tool bindings
+
+  /// Inject bound parameters into a tool call's arguments (spec §9.6).
+  ///
+  /// Bindings are the second half of a two-part contract. Wire conversion
+  /// strips every bound parameter from the schema sent to the model (§2.9.1.1),
+  /// so the model never sees — and never supplies — them. This restores those
+  /// parameters from the prompt's own inputs before the tool runs. Without it a
+  /// bound parameter is stripped and never replaced, and the tool is invoked
+  /// with an argument missing.
+  ///
+  /// Each binding names a parameter (`binding.name`) and the input to read it
+  /// from (`binding.input`). A binding whose input is absent is skipped rather
+  /// than injected as null, so a partially supplied set of inputs degrades to
+  /// the arguments the model provided instead of failing the call.
+  ///
+  /// Bindings take precedence over anything the model produced for the same
+  /// parameter (§2.9.1.3) — that is the point of binding it.
+  ///
+  /// Unknown tool names and tools without bindings pass through untouched, so
+  /// this is safe to call unconditionally on every tool call.
+  public static func applyBindings(
+    _ agent: Prompty,
+    toolName: String,
+    arguments: [String: Any],
+    inputs: [String: Any]
+  ) -> [String: Any] {
+    guard let tool = agent.tools?.first(where: { $0.name == toolName }) else { return arguments }
+
+    let bindings = tool.bindings
+    guard !bindings.isEmpty else { return arguments }
+
+    var merged = arguments
+    for binding in bindings where !binding.name.isEmpty {
+      guard let value = inputs[binding.input] else { continue }
+      merged[binding.name] = value
+    }
+    return merged
+  }
+
+  /// ``applyBindings(_:toolName:arguments:inputs:)`` for a decoded tool call.
+  ///
+  /// Call this at dispatch time, on the arguments handed to the tool — not on
+  /// the recorded call. `ToolCall` is deliberately left untouched: a bound value
+  /// is hidden from the model on purpose (it may be a user id, a tenant, or a
+  /// credential), and rewriting the call would feed that value straight back
+  /// into the assistant tool-call history that ``toolMessages(_:results:)``
+  /// sends on the next round.
+  ///
+  /// Bindings apply only when the payload is a JSON object, matching the
+  /// reference implementation: an array, a scalar, or malformed JSON is not an
+  /// argument object, so it is passed through rather than replaced by one that
+  /// contains only the bound values.
+  public static func boundArguments(
+    _ agent: Prompty,
+    call: ToolCall,
+    inputs: [String: Any]
+  ) -> [String: Any] {
+    let decoded = call.argumentValues
+    guard isArgumentObject(call.arguments) else { return decoded }
+    return applyBindings(agent, toolName: call.name, arguments: decoded, inputs: inputs)
+  }
+
+  /// Whether a raw arguments payload is a JSON object bindings may be added to.
+  ///
+  /// Providers send an empty payload for a call with no arguments, which is an
+  /// empty object in every meaningful sense — and is exactly the case where a
+  /// tool's only parameters are bound ones.
+  private static func isArgumentObject(_ raw: String) -> Bool {
+    let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    if trimmed.isEmpty { return true }
+    return JSONSupport.parse(json: trimmed) is [String: Any]
+  }
+
   // MARK: - Internals
 
   /// Strict mode defaults to on — role-marker injection is the risk being
@@ -391,6 +465,11 @@ public func invoke(_ agent: Prompty, inputs: [String: Any] = [:]) async throws -
 }
 public func invoke(path: String, inputs: [String: Any] = [:]) async throws -> Any? {
   try await Pipeline.invoke(path: path, inputs: inputs)
+}
+public func boundArguments(
+  _ agent: Prompty, call: ToolCall, inputs: [String: Any] = [:]
+) -> [String: Any] {
+  Pipeline.boundArguments(agent, call: call, inputs: inputs)
 }
 public func registerDefaults() {
   Registry.shared.registerDefaults()

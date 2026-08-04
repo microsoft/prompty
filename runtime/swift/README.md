@@ -51,6 +51,48 @@ let messages = try await Pipeline.prepare(agent, inputs: inputs)  // render + pa
 let raw      = try await Pipeline.run(agent, messages: messages)  // execute + process
 ```
 
+### Tool calls
+
+When a prompt declares tools, the host drives the loop. Read the calls, then ask
+for the arguments the tool should actually receive — that second step is where
+tool bindings are applied:
+
+```swift
+let raw = try await Pipeline.run(agent, messages: messages)
+
+for call in Pipeline.toolCalls(in: raw) {
+  let args = Pipeline.boundArguments(agent, call: call, inputs: inputs)
+  let result = try myTools[call.name]!(args)
+  results.append(result)
+}
+```
+
+The recorded `call` is left as the provider sent it. That matters: a bound value
+is hidden from the model on purpose, and `Pipeline.toolMessages` replays the
+call's own `arguments` on the next round, so writing the value back into the
+call would hand the model exactly what the binding withheld.
+
+A parameter listed under a tool's `bindings` is deliberately hidden from the
+model, and the runtime supplies it from the prompt's own inputs instead:
+
+```yaml
+tools:
+  - name: get_weather
+    kind: function
+    bindings:
+      unit:
+        input: preferred_unit   # the model never sees `unit`; this fills it in
+```
+
+`Pipeline.toolCalls(in:)` always returns the model's arguments untouched, so
+`Pipeline.boundArguments(_:call:inputs:)` at the dispatch site is what makes a
+binding take effect. Skipping it leaves the bound parameter missing entirely —
+it was already stripped from the schema, so the model never supplied it.
+
+Bindings are applied only when the provider's payload is a JSON object (or is
+empty, which is the no-argument call). An array, a scalar, or malformed JSON is
+passed through rather than replaced by an object holding only the bound values.
+
 Streaming, structured output and tool calls are covered in
 [`Tests/PromptyTests/LiveOpenAITests.swift`](prompty/Tests/PromptyTests/LiveOpenAITests.swift),
 which exercises each of them against the real API.

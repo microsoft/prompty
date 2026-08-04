@@ -91,16 +91,29 @@ extension Tool {
     return value
   }
 
+  /// The tool's declared bindings, whichever concrete kind it is.
+  ///
+  /// `bindings` is inherited by every tool kind, but the generated `Tool` enum
+  /// reaches it only through its payload, so the switch lives here once.
+  public var bindings: [Binding] {
+    switch self {
+    case .functionTool(let tool): return tool.bindings ?? []
+    case .mcpTool(let tool): return tool.bindings ?? []
+    case .openApiTool(let tool): return tool.bindings ?? []
+    case .promptyTool(let tool): return tool.bindings ?? []
+    case .customTool(let tool): return tool.bindings ?? []
+    }
+  }
+
   /// Parameter names bound to inputs. Bound parameters are stripped from the
   /// schema sent to the provider — the runtime supplies them instead.
+  ///
+  /// An unnamed binding targets no parameter, so it strips nothing; that is the
+  /// same binding ``Pipeline/applyBindings(_:toolName:arguments:inputs:)``
+  /// declines to inject, and the two must agree or a parameter would be removed
+  /// from the schema and never restored.
   public var boundParameterNames: Set<String> {
-    switch self {
-    case .functionTool(let tool): return Set((tool.bindings ?? []).map(\.name))
-    case .mcpTool(let tool): return Set((tool.bindings ?? []).map(\.name))
-    case .openApiTool(let tool): return Set((tool.bindings ?? []).map(\.name))
-    case .promptyTool(let tool): return Set((tool.bindings ?? []).map(\.name))
-    case .customTool(let tool): return Set((tool.bindings ?? []).map(\.name))
-    }
+    Set(bindings.map(\.name).filter { !$0.isEmpty })
   }
 
   /// The declared function parameters, for `function` tools.

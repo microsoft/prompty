@@ -371,6 +371,64 @@ final class LoadVectorTests: XCTestCase {
         }
       }
     }
+    try validateBindings(tool, expected: expected, index: index)
+  }
+
+  /// Bindings are declared either as a `Record<Binding>` map — where the key
+  /// supplies the binding name — or as an already-named list. Both normalize to
+  /// the same loaded shape, so both expectation forms are checked here against
+  /// binding *identity* rather than the emitter's chosen representation.
+  ///
+  /// Without this the vectors' `bindings` expectations are inert: every other
+  /// field is opt-in by key, so an unchecked key silently passes no matter what
+  /// the loader produced.
+  private static func validateBindings(
+    _ tool: Tool, expected: [String: Any], index: Int
+  ) throws {
+    guard let declared = expected["bindings"] else { return }
+    let label = "tools[\(index)].bindings"
+    let actual = tool.bindings
+
+    /// Compare one expected binding, whose spec is either `{input: ...}` or a
+    /// bare input name.
+    func check(name: String, spec: Any) throws {
+      guard let binding = actual.first(where: { $0.name == name }) else {
+        throw VectorFailure(
+          "\(label) missing '\(name)'; got \(actual.map(\.name).sorted())")
+      }
+      let input = (spec as? [String: Any])?["input"] ?? spec
+      guard let input = input as? String else {
+        throw VectorFailure("\(label)[\(name)] expectation has no string 'input'")
+      }
+      try expectEqual(binding.input, input, "\(label)[\(name)].input")
+    }
+
+    if let map = declared as? [String: Any] {
+      try expect(
+        actual.count == map.count,
+        "\(label) count: expected \(map.count), got \(actual.count)")
+      for (name, spec) in map {
+        try check(name: name, spec: spec)
+      }
+      return
+    }
+
+    if let list = declared as? [[String: Any]] {
+      try expect(
+        actual.count == list.count,
+        "\(label) count: expected \(list.count), got \(actual.count)")
+      for entry in list {
+        guard let name = entry["name"] as? String else {
+          throw VectorFailure("\(label) list entry has no string 'name': \(entry)")
+        }
+        try check(name: name, spec: entry)
+      }
+      return
+    }
+
+    // Fail closed: an unrecognized shape must not be silently unchecked, which
+    // is exactly how this expectation went unverified in the first place.
+    throw VectorFailure("\(label) expectation is neither a map nor a list: \(declared)")
   }
 }
 func withEnvironment<T>(_ values: [String: Any], _ body: () throws -> T) rethrows -> T {
