@@ -71,7 +71,7 @@ def test_load_json_prompty():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -148,14 +148,14 @@ def test_load_yaml_prompty():
 
       As the assistant, you answer questions briefly, succinctly,
 
-      and in a personable manner using markdown and even add some\
+      and in a personable manner using markdown and even add some
 
       personal flair with appropriate emojis.
 
 
       # Customer
 
-      You are helping {{firstName}} {{lastName}} to find answers to\
+      You are helping {{firstName}} {{lastName}} to find answers to
 
       their questions. Use their name to address them in your responses.
 
@@ -252,7 +252,7 @@ def test_roundtrip_json_prompty():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -345,7 +345,7 @@ def test_to_json_prompty():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -422,7 +422,7 @@ def test_to_yaml_prompty():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -497,7 +497,7 @@ def test_load_json_prompty_1():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -574,14 +574,14 @@ def test_load_yaml_prompty_1():
 
       As the assistant, you answer questions briefly, succinctly,
 
-      and in a personable manner using markdown and even add some\
+      and in a personable manner using markdown and even add some
 
       personal flair with appropriate emojis.
 
 
       # Customer
 
-      You are helping {{firstName}} {{lastName}} to find answers to\
+      You are helping {{firstName}} {{lastName}} to find answers to
 
       their questions. Use their name to address them in your responses.
 
@@ -677,7 +677,7 @@ def test_roundtrip_json_prompty_1():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -769,7 +769,7 @@ def test_to_json_prompty_1():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -845,7 +845,7 @@ def test_to_yaml_prompty_1():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -922,7 +922,7 @@ def test_load_json_prompty_2():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -999,14 +999,14 @@ def test_load_yaml_prompty_2():
 
       As the assistant, you answer questions briefly, succinctly,
 
-      and in a personable manner using markdown and even add some\
+      and in a personable manner using markdown and even add some
 
       personal flair with appropriate emojis.
 
 
       # Customer
 
-      You are helping {{firstName}} {{lastName}} to find answers to\
+      You are helping {{firstName}} {{lastName}} to find answers to
 
       their questions. Use their name to address them in your responses.
 
@@ -1104,7 +1104,7 @@ def test_roundtrip_json_prompty_2():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -1198,7 +1198,7 @@ def test_to_json_prompty_2():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -1276,7 +1276,7 @@ def test_to_yaml_prompty_2():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -1352,7 +1352,7 @@ def test_load_json_prompty_3():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -1429,14 +1429,14 @@ def test_load_yaml_prompty_3():
 
       As the assistant, you answer questions briefly, succinctly,
 
-      and in a personable manner using markdown and even add some\
+      and in a personable manner using markdown and even add some
 
       personal flair with appropriate emojis.
 
 
       # Customer
 
-      You are helping {{firstName}} {{lastName}} to find answers to\
+      You are helping {{firstName}} {{lastName}} to find answers to
 
       their questions. Use their name to address them in your responses.
 
@@ -1533,7 +1533,7 @@ def test_roundtrip_json_prompty_3():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -1626,7 +1626,7 @@ def test_to_json_prompty_3():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -1703,7 +1703,7 @@ def test_to_yaml_prompty_3():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -1782,7 +1782,7 @@ def test_load_json_prompty_4():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -1859,14 +1859,14 @@ def test_load_yaml_prompty_4():
 
       As the assistant, you answer questions briefly, succinctly,
 
-      and in a personable manner using markdown and even add some\
+      and in a personable manner using markdown and even add some
 
       personal flair with appropriate emojis.
 
 
       # Customer
 
-      You are helping {{firstName}} {{lastName}} to find answers to\
+      You are helping {{firstName}} {{lastName}} to find answers to
 
       their questions. Use their name to address them in your responses.
 
@@ -1966,7 +1966,7 @@ def test_roundtrip_json_prompty_4():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -2062,7 +2062,7 @@ def test_to_json_prompty_4():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -2142,7 +2142,7 @@ def test_to_yaml_prompty_4():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -2220,7 +2220,7 @@ def test_load_json_prompty_5():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -2297,14 +2297,14 @@ def test_load_yaml_prompty_5():
 
       As the assistant, you answer questions briefly, succinctly,
 
-      and in a personable manner using markdown and even add some\
+      and in a personable manner using markdown and even add some
 
       personal flair with appropriate emojis.
 
 
       # Customer
 
-      You are helping {{firstName}} {{lastName}} to find answers to\
+      You are helping {{firstName}} {{lastName}} to find answers to
 
       their questions. Use their name to address them in your responses.
 
@@ -2403,7 +2403,7 @@ def test_roundtrip_json_prompty_5():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -2498,7 +2498,7 @@ def test_to_json_prompty_5():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -2577,7 +2577,7 @@ def test_to_yaml_prompty_5():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -2657,7 +2657,7 @@ def test_load_json_prompty_6():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -2734,14 +2734,14 @@ def test_load_yaml_prompty_6():
 
       As the assistant, you answer questions briefly, succinctly,
 
-      and in a personable manner using markdown and even add some\
+      and in a personable manner using markdown and even add some
 
       personal flair with appropriate emojis.
 
 
       # Customer
 
-      You are helping {{firstName}} {{lastName}} to find answers to\
+      You are helping {{firstName}} {{lastName}} to find answers to
 
       their questions. Use their name to address them in your responses.
 
@@ -2842,7 +2842,7 @@ def test_roundtrip_json_prompty_6():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -2939,7 +2939,7 @@ def test_to_json_prompty_6():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -3020,7 +3020,7 @@ def test_to_yaml_prompty_6():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -3099,7 +3099,7 @@ def test_load_json_prompty_7():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -3176,14 +3176,14 @@ def test_load_yaml_prompty_7():
 
       As the assistant, you answer questions briefly, succinctly,
 
-      and in a personable manner using markdown and even add some\
+      and in a personable manner using markdown and even add some
 
       personal flair with appropriate emojis.
 
 
       # Customer
 
-      You are helping {{firstName}} {{lastName}} to find answers to\
+      You are helping {{firstName}} {{lastName}} to find answers to
 
       their questions. Use their name to address them in your responses.
 
@@ -3283,7 +3283,7 @@ def test_roundtrip_json_prompty_7():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -3379,7 +3379,7 @@ def test_to_json_prompty_7():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
@@ -3459,7 +3459,7 @@ def test_to_yaml_prompty_7():
         "format": "mustache",
         "parser": "prompty"
       },
-      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+      "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     }
     """
     data = json.loads(json_data, strict=False)
