@@ -34,9 +34,26 @@ import java.util.regex.Pattern;
  */
 public final class PromptyChatParser implements Parser {
 
+  /**
+   * Matches a role marker line, with an optional attribute block.
+   *
+   * <p>The attribute loop is written to be unambiguous, because Java's regex engine backtracks. A
+   * value is either a quoted run or a run containing no quote, comma or {@code ]}, so no character
+   * can be attributed to two different iterations of the loop, and the possessive quantifiers stop
+   * the engine from ever trying. The obvious formulation — a single {@code "?[^"]*"?} value class —
+   * lets the value swallow the separator and the closing bracket, which makes an unterminated block
+   * such as {@code user[a= a= a= …} split in exponentially many ways and hang the matcher.
+   *
+   * <p>The Rust, Python and TypeScript runtimes all carry that formulation. Rust is safe only by
+   * accident: its {@code regex} crate is a non-backtracking automaton. Python and TypeScript use
+   * backtracking engines and appear to share this exposure. C# is unaffected — it matches the block
+   * as a single lazy group instead.
+   */
   private static final Pattern BOUNDARY =
       Pattern.compile(
-          "^\\s*#?\\s*(system|user|assistant)(\\[(\\w+\\s*=\\s*\"?[^\"]*\"?\\s*,?\\s*)+\\])?\\s*:\\s*$",
+          "^\\s*#?\\s*(system|user|assistant)"
+              + "(\\[(?:\\w++\\s*+=\\s*+(?:\"[^\"]*+\"|[^\",\\]]*+)\\s*+,?\\s*+)+\\])?"
+              + "\\s*:\\s*$",
           Pattern.CASE_INSENSITIVE);
 
   private static final Pattern ATTRIBUTE = Pattern.compile("(\\w+)\\s*=\\s*\"?([^\",\\]]*)\"?");
