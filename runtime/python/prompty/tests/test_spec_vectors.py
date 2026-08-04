@@ -493,21 +493,96 @@ def _check_tools(actual: list, expected: list[dict], errors: list[str]):
             act_val = getattr(act, "mode", None)
             if act_val != exp["mode"]:
                 errors.append(f"  {prefix}.mode: {act_val!r} != expected {exp['mode']!r}")
+        act_bindings = getattr(act, "bindings", []) or []
+        if act_bindings and "bindings" not in exp:
+            errors.append(f"  {prefix}.bindings: expected bindings key is missing")
         if "bindings" in exp:
-            act_bindings = getattr(act, "bindings", []) or []
             exp_bindings = exp["bindings"]
+            if isinstance(exp_bindings, list):
+                exp_bindings = {
+                    binding["name"]: {key: value for key, value in binding.items() if key != "name"}
+                    for binding in exp_bindings
+                }
             if isinstance(exp_bindings, dict):
                 for bname, bval in exp_bindings.items():
                     found = [b for b in act_bindings if b.name == bname]
                     if not found:
                         errors.append(f"  {prefix}.bindings: missing binding '{bname}'")
                     else:
-                        if isinstance(bval, dict) and "input" in bval:
-                            if found[0].input != bval["input"]:
-                                errors.append(
-                                    f"  {prefix}.bindings.{bname}.input: "
-                                    f"{found[0].input!r} != expected {bval['input']!r}"
-                                )
+                        expected_input = bval.get("input") if isinstance(bval, dict) else bval
+                        if expected_input is not None and found[0].input != expected_input:
+                            errors.append(
+                                f"  {prefix}.bindings.{bname}.input: {found[0].input!r} != expected {expected_input!r}"
+                            )
+                expected_names = set(exp_bindings)
+                for unexpected_name in sorted({binding.name for binding in act_bindings} - expected_names):
+                    errors.append(f"  {prefix}.bindings: unexpected binding '{unexpected_name}'")
+
+
+def test_function_tool_bindings_expectation_is_required() -> None:
+    """Fail when a vector drops the expectation for loaded FunctionTool bindings."""
+    actual = [
+        FunctionTool(
+            name="get_weather",
+            bindings=[Binding(name="unit", input="preferred_unit")],
+        )
+    ]
+    errors: list[str] = []
+
+    _check_tools(actual, [{"name": "get_weather", "kind": "function"}], errors)
+
+    assert errors == ["  tools[0].bindings: expected bindings key is missing"]
+
+
+@pytest.mark.parametrize(
+    "bindings",
+    [
+        {"unit": {"input": "preferred_unit"}},
+        {"unit": "preferred_unit"},
+        [{"name": "unit", "input": "preferred_unit"}],
+    ],
+)
+def test_function_tool_bindings_expectation_accepts_equivalent_forms(bindings: dict | list[dict]) -> None:
+    """Accept the canonical map forms and equivalent array form for bindings expectations."""
+    actual = [
+        FunctionTool(
+            name="get_weather",
+            bindings=[Binding(name="unit", input="preferred_unit")],
+        )
+    ]
+    errors: list[str] = []
+
+    _check_tools(actual, [{"name": "get_weather", "kind": "function", "bindings": bindings}], errors)
+
+    assert errors == []
+
+
+def test_function_tool_bindings_expectation_rejects_unexpected_actual_binding() -> None:
+    """Fail when the expected bindings cover only a subset of loaded FunctionTool bindings."""
+    actual = [
+        FunctionTool(
+            name="get_weather",
+            bindings=[
+                Binding(name="unit", input="preferred_unit"),
+                Binding(name="location", input="preferred_location"),
+            ],
+        )
+    ]
+    errors: list[str] = []
+
+    _check_tools(
+        actual,
+        [
+            {
+                "name": "get_weather",
+                "kind": "function",
+                "bindings": {"unit": {"input": "preferred_unit"}},
+            }
+        ],
+        errors,
+    )
+
+    assert errors == ["  tools[0].bindings: unexpected binding 'location'"]
 
 
 def _check_template(actual: Template | None, expected: dict, errors: list[str]):
