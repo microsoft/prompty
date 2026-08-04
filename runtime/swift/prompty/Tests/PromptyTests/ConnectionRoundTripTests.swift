@@ -334,6 +334,11 @@ final class ConnectionRoundTripTests: XCTestCase {
   ///
   /// Both are exercised as unknowns deliberately. A known tool would let this
   /// pass even if `Tool` → `CustomTool` were completely broken.
+  ///
+  /// On its own this establishes *coexistence*, not independence: it would
+  /// still pass if the wildcard only fired while an unknown connection happened
+  /// to be present. `testCustomToolResolvesWithoutAnUnknownConnection` closes
+  /// that direction; the two are only meaningful together.
   func testUnknownConnectionIsIndependentOfCustomTool() throws {
     let connection: [String: Any] = [
       "kind": "future-auth", "endpoint": "https://future.example.com",
@@ -353,9 +358,17 @@ final class ConnectionRoundTripTests: XCTestCase {
       "instructions": "user:\nhi",
     ])
 
+    // Guard rather than assert: a plain count assertion does not stop the test,
+    // so a dropped tool would trap on the subscripts below instead of failing.
     let tools = try XCTUnwrap(agent.tools)
-    XCTAssertEqual(tools.count, 2)
+    guard tools.count == 2 else {
+      return XCTFail("a tool was dropped on load: \(tools)")
+    }
 
+    // Subscripts are safe *here*: this list came straight from an input array,
+    // which preserves declaration order. The post-reload list below has no such
+    // guarantee, which is why it is searched by name instead.
+    //
     // The unknown tool took the Tool wildcard path.
     guard case .customTool(let custom) = tools[0] else {
       return XCTFail("an unknown tool kind did not become a CustomTool: \(tools[0])")
@@ -376,14 +389,96 @@ final class ConnectionRoundTripTests: XCTestCase {
     XCTAssertEqual(raw["endpoint"] as? String, "https://future.example.com")
 
     // Both survive a document save/reload together.
+    //
+    // These lookups are by name on purpose: this test asserts *identity* — that
+    // both tools come back as themselves — and deliberately says nothing about
+    // reload order. A document save may key tools by name rather than emitting
+    // an ordered array, and a candidate emitter that does so was measured
+    // returning both tools intact but alphabetically re-sorted, which failed a
+    // positional `.first` check here for a reason unrelated to Connection/Tool
+    // independence. Whether object-form order is contractual is an open
+    // cross-runtime question; if it is ever ruled load-bearing it belongs in a
+    // dedicated ordering test, not smuggled into this one. So: keep these
+    // lookups by name, and do not "simplify" them back to subscripts.
     let reloaded = try Prompty.load(try agent.save())
-    guard case .customTool = try XCTUnwrap(reloaded.tools?.first) else {
-      return XCTFail("CustomTool did not survive the document round trip")
+    let reloadedTools = try XCTUnwrap(reloaded.tools)
+    XCTAssertEqual(reloadedTools.count, 2, "a tool was dropped by the document round trip")
+
+    let reloadedCustom = reloadedTools.first { tool in
+      if case .customTool(let candidate) = tool { return candidate.name == "unknown_kind_tool" }
+      return false
     }
+    guard case .customTool(let roundTripped)? = reloadedCustom else {
+      return XCTFail("CustomTool did not survive the document round trip: \(reloadedTools)")
+    }
+    XCTAssertEqual(
+      roundTripped.kind, "some-future-tool",
+      "the tool discriminator was lost on reload")
+
+    // The known tool survives as itself, so the wildcard did not widen to
+    // swallow it on the way back in.
+    XCTAssertTrue(
+      reloadedTools.contains { tool in
+        if case .functionTool(let candidate) = tool { return candidate.name == "known_fn" }
+        return false
+      },
+      "a known function tool did not survive the document round trip: \(reloadedTools)")
+
     guard case .unknown(let reloadedRaw) = try XCTUnwrap(reloaded.model.connection) else {
       return XCTFail("unknown connection did not survive the document round trip")
     }
     XCTAssertEqual(try canonical(reloadedRaw), try canonical(connection))
+  }
+
+  /// The `Tool` wildcard fires with an entirely ordinary connection present.
+  ///
+  /// This is the other half of `testUnknownConnectionIsIndependentOfCustomTool`.
+  /// That test shows both unknowns resolving side by side, which alone would
+  /// still pass if `CustomTool` resolution were somehow conditioned on an
+  /// unknown connection being in the document. Here the connection is a known,
+  /// fully typed `key` connection, so nothing unknown exists anywhere except
+  /// the tool kind — if the wildcard still fires and survives a round trip, the
+  /// two mechanisms genuinely do not depend on each other.
+  func testCustomToolResolvesWithoutAnUnknownConnection() throws {
+    let agent = try Prompty.load([
+      "kind": "prompt",
+      "name": "tool-wildcard-alone",
+      "model": [
+        "id": "gpt-4o-mini", "apiType": "chat",
+        "connection": ["kind": "key", "endpoint": "https://known.example.com", "apiKey": "sk-x"],
+      ],
+      "tools": [
+        ["name": "unknown_kind_tool", "kind": "some-future-tool", "description": "forward compat"]
+      ],
+      "instructions": "user:\nhi",
+    ])
+
+    // Precondition: nothing about the connection is unknown, so a passing
+    // wildcard assertion below cannot be attributed to unknown-connection
+    // handling. A failure here means the fixture stopped testing what it says.
+    guard case .apiKeyConnection = try XCTUnwrap(agent.model.connection) else {
+      return XCTFail(
+        "fixture no longer isolates the tool wildcard — the connection is not a known key "
+          + "connection: \(String(describing: agent.model.connection))")
+    }
+
+    let tools = try XCTUnwrap(agent.tools)
+    guard tools.count == 1, case .customTool(let custom) = tools[0] else {
+      return XCTFail("the Tool wildcard did not fire without an unknown connection: \(tools)")
+    }
+    XCTAssertEqual(custom.kind, "some-future-tool", "the tool discriminator was not preserved")
+
+    let reloadedTools = try XCTUnwrap(try Prompty.load(try agent.save()).tools)
+    let survived = reloadedTools.first { tool in
+      if case .customTool(let candidate) = tool { return candidate.name == "unknown_kind_tool" }
+      return false
+    }
+    guard case .customTool(let roundTripped)? = survived else {
+      return XCTFail("CustomTool did not survive the document round trip: \(reloadedTools)")
+    }
+    XCTAssertEqual(
+      roundTripped.kind, "some-future-tool",
+      "the tool discriminator was lost on reload")
   }
 
   /// An unknown connection nested in a Prompty survives a full document
