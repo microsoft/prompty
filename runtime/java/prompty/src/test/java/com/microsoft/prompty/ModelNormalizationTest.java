@@ -103,6 +103,49 @@ class ModelNormalizationTest {
 
       assertTrue(error.getMessage().contains("'inputs'"), error.getMessage());
       assertTrue(error.getMessage().contains("firstName"), error.getMessage());
+      // The canonical `recursive-array-valued-entry-rejection` contract requires the
+      // diagnostic to name the category as well as the path.
+      assertTrue(error.getMessage().contains("array"), error.getMessage());
+    }
+
+    @Test
+    @DisplayName("an array-valued entry is rejected at every nested collection boundary")
+    void rejectsNestedArrayValuesRecursively() {
+      // `recursive-array-valued-entry-rejection` applies at every named-collection
+      // boundary, not just the top-level one, so the two reachable nested boundaries
+      // are asserted directly: a collection inside a list element, and one reached
+      // through a subclass field.
+      IllegalArgumentException insideListElement =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  Prompty.fromJson(
+                      """
+                      {
+                        "kind": "prompt",
+                        "tools": [{"name": "t", "kind": "function", "parameters": {"toolArg": [1, 2]}}]
+                      }
+                      """));
+
+      assertTrue(insideListElement.getMessage().contains("'parameters'"), insideListElement.getMessage());
+      assertTrue(insideListElement.getMessage().contains("toolArg"), insideListElement.getMessage());
+      assertTrue(insideListElement.getMessage().contains("array"), insideListElement.getMessage());
+
+      IllegalArgumentException throughSubclass =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  Prompty.fromJson(
+                      """
+                      {
+                        "kind": "prompt",
+                        "inputs": {"cfg": {"kind": "object", "properties": {"nestedField": [1, 2]}}}
+                      }
+                      """));
+
+      assertTrue(throughSubclass.getMessage().contains("'properties'"), throughSubclass.getMessage());
+      assertTrue(throughSubclass.getMessage().contains("nestedField"), throughSubclass.getMessage());
+      assertTrue(throughSubclass.getMessage().contains("array"), throughSubclass.getMessage());
     }
 
     @Test
@@ -306,6 +349,38 @@ class ModelNormalizationTest {
 
       List<?> saved = assertInstanceOf(List.class, inputs, "unnamed members cannot be keyed by name");
       assertEquals(2, saved.size());
+    }
+
+    @Test
+    @DisplayName("duplicate names silently drop an entry on save")
+    void duplicateNamesCollapseOnSave() {
+      // Documents a divergence from the canonical `named-collection-lossless-fallback`
+      // contract, which requires the name-keyed object form only when every name is
+      // non-empty *and* unique, and the whole ordered array otherwise. Java currently
+      // applies that fallback to unnamed entries (above) but not to duplicates: both
+      // entries load, then the save keys them onto one name and the earlier payload is
+      // overwritten. Invert this test when the emitter detects duplicates before
+      // building the map -- `saved` should then be a two-element List.
+      Prompty prompty =
+          Prompty.fromJson(
+              """
+              {
+                "kind": "prompt",
+                "inputs": [
+                  {"name": "a", "kind": "string"},
+                  {"name": "a", "kind": "integer"}
+                ]
+              }
+              """);
+
+      assertEquals(2, prompty.inputs.size(), "both entries must survive the load");
+
+      Object inputs = prompty.save(new SaveContext()).get("inputs");
+
+      Map<?, ?> saved = assertInstanceOf(Map.class, inputs);
+      assertEquals(1, saved.size(), "the collision is the divergence being recorded");
+      Map<?, ?> survivor = assertInstanceOf(Map.class, saved.get("a"));
+      assertEquals("integer", survivor.get("kind"), "the later entry overwrites the earlier one");
     }
 
     @Test
