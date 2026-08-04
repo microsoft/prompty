@@ -611,6 +611,74 @@ class TestProcessor:
         result = await AnthropicProcessor().process_async(agent, response)
         assert result == "Hello!"
 
+    def test_streaming_text_and_tool_calls(self):
+        events = iter(
+            [
+                {
+                    "type": "content_block_delta",
+                    "index": 0,
+                    "delta": {"type": "text_delta", "text": "Hello"},
+                },
+                {
+                    "type": "content_block_start",
+                    "index": 1,
+                    "content_block": {"type": "tool_use", "id": "toolu_1", "name": "get_weather"},
+                },
+                {
+                    "type": "content_block_delta",
+                    "index": 1,
+                    "delta": {"type": "input_json_delta", "partial_json": '{"city":'},
+                },
+                {
+                    "type": "content_block_delta",
+                    "index": 1,
+                    "delta": {"type": "input_json_delta", "partial_json": '"Seattle"}'},
+                },
+            ]
+        )
+
+        chunks = list(AnthropicProcessor().process(_make_agent(), events))
+
+        assert chunks[0] == "Hello"
+        assert chunks[1].id == "toolu_1"
+        assert chunks[1].name == "get_weather"
+        assert chunks[1].arguments == '{"city":"Seattle"}'
+
+    @pytest.mark.asyncio
+    async def test_async_streaming_text_and_multiple_ordered_tools(self):
+        async def events():
+            for event in [
+                {
+                    "type": "content_block_start",
+                    "index": 2,
+                    "content_block": {"type": "tool_use", "id": "toolu_2", "name": "second"},
+                },
+                {
+                    "type": "content_block_delta",
+                    "index": 2,
+                    "delta": {"type": "input_json_delta", "partial_json": "{}"},
+                },
+                {
+                    "type": "content_block_start",
+                    "index": 1,
+                    "content_block": {"type": "tool_use", "id": "toolu_1", "name": "first"},
+                },
+                {
+                    "type": "content_block_delta",
+                    "index": 0,
+                    "delta": {"type": "text_delta", "text": "Working"},
+                },
+            ]:
+                yield event
+
+        stream = await AnthropicProcessor().process_async(_make_agent(), events())
+        chunks = [chunk async for chunk in stream]
+
+        assert chunks[0] == "Working"
+        assert [chunk.name for chunk in chunks[1:]] == ["first", "second"]
+        assert chunks[1].arguments == ""
+        assert chunks[2].arguments == "{}"
+
 
 # ---------------------------------------------------------------------------
 # Load from .prompty files

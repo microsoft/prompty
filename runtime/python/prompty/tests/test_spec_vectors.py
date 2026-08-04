@@ -301,7 +301,7 @@ def test_load_vector(vec: dict, tmp_path: Path):
             _assert_load_expected(agent, expected, name)
             return
 
-        pytest.skip(f"Unhandled load vector structure: {name}")
+        pytest.fail(f"Unhandled load vector structure: {name}")
 
     finally:
         # Restore env
@@ -609,19 +609,14 @@ def test_parse_vector(vec: dict):
     parser = PromptyChatParser()
     agent = Prompty(name="parse_test")
 
-    # Thread nonce expansion is a pipeline-level concern, not parser-level.
-    # The parser produces Message objects from rendered text.
-    if name == "thread_nonce_expansion":
-        # This vector tests pipeline-level thread expansion.
-        # The parser itself would just produce a message containing the nonce text.
-        # We test that the nonce text survives parsing, then pipeline expands it.
-        messages = parser._parse(agent, rendered)
-        # Verify the nonce marker is present in one of the messages
-        all_text = " ".join(m.text for m in messages)
-        assert "__PROMPTY_THREAD_" in all_text, f"Expected nonce marker in parsed output, got: {all_text!r}"
-        return
-
     messages = parser._parse(agent, rendered)
+    if name == "thread_nonce_expansion":
+        from prompty.core.pipeline import _expand_thread_markers, _inject_thread_markers
+
+        marker = "__PROMPTY_THREAD_abcd1234_conversation__"
+        marked = _inject_thread_markers(messages, {marker: "conversation"}, {"conversation": "thread"})
+        messages = _expand_thread_markers(marked, inp["thread_inputs"], {"conversation": "thread"})
+
     exp_messages = expected["messages"]
 
     assert len(messages) == len(exp_messages), (
@@ -682,7 +677,7 @@ def test_wire_vector(vec: dict):
     elif api_type == "responses":
         _check_wire_responses(agent, messages, exp_body, name)
     else:
-        pytest.skip(f"Unknown apiType for wire test: {api_type}")
+        pytest.fail(f"Unknown apiType for wire test: {api_type}")
 
 
 def _check_wire_chat(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
@@ -941,7 +936,7 @@ def test_process_vector(vec: dict):
     elif api_type == "responses":
         response = _make_responses_api_mock(response_data)
     else:
-        pytest.skip(f"Unknown apiType: {api_type}")
+        pytest.fail(f"Unknown apiType: {api_type}")
 
     result = _process_response(response, agent)
     exp_result = expected["result"]
@@ -978,13 +973,9 @@ def _compare_process_result(name: str, result: Any, exp_result: Any) -> None:
         )
     elif isinstance(exp_result, str):
         # Text content
-        if result is None and exp_result == "":
-            # Known gap: runtime returns None for null content, spec expects ""
-            pass
-        else:
-            assert result == exp_result, (
-                f"Process '{name}': text mismatch\n  actual:   {result!r}\n  expected: {exp_result!r}"
-            )
+        assert result == exp_result, (
+            f"Process '{name}': text mismatch\n  actual:   {result!r}\n  expected: {exp_result!r}"
+        )
     else:
         assert result == exp_result, f"Process '{name}': result mismatch: {result!r} != {exp_result!r}"
 
@@ -1035,6 +1026,24 @@ def test_agent_vector(vec: dict):
 
     # -- Build canned LLM responses --
     mock_responses = [_make_mock_chat_completion(step["llm_response"]) for step in sequence]
+    if name == "tool_not_registered_error":
+        # Rust and TypeScript intentionally treat a missing handler as a model-visible,
+        # non-fatal tool result even though this legacy vector still declares ValueError.
+        mock_responses.append(
+            _make_mock_chat_completion(
+                {
+                    "id": "chatcmpl-unknown-recovery",
+                    "object": "chat.completion",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": "I could not find that tool."},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                }
+            )
+        )
     response_iter = iter(mock_responses)
 
     # -- Mock executor: replays canned responses --
@@ -1190,18 +1199,12 @@ def _test_agent_error_real(
                 tools=tool_functions,
             )
     elif "not registered" in error_msg.lower() or "unknown_tool" in name:
-        # The tool_not_registered vector expects the loop to handle missing tools
-        # gracefully (not crash), returning an error message to the LLM.
-        # Our turn handles this by returning an error string as tool result.
-        # The vector just validates the loop doesn't crash — so run it.
-        try:
-            turn(
-                agent,
-                inputs=inp.get("parent_inputs"),
-                tools=tool_functions,
-            )
-        except (StopIteration, Exception):
-            pass  # Mock ran out of responses — that's fine for error vectors
+        result = turn(
+            agent,
+            inputs=inp.get("parent_inputs"),
+            tools=tool_functions,
+        )
+        assert result == "I could not find that tool."
     else:
         pytest.fail(f"Agent '{name}': unknown error type: {error_msg}")
 

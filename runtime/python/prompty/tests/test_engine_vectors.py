@@ -475,3 +475,215 @@ async def test_mismatched_tool_result_identity_fails_conversation_commit() -> No
     assert result.commit.status == "failed"
     assert result.commit.output["errorKind"] == "conversation_format_error"
     assert [message.role for message in result.commit.messages] == ["user"]
+
+
+@pytest.mark.asyncio
+async def test_model_invocation_retries_with_configured_attempt_budget() -> None:
+    attempts = 0
+    events: list[EngineEvent] = []
+
+    def invoke_model(request: ModelInvocationRequest) -> ModelInvocationResponse:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise RuntimeError("transient")
+        return ModelInvocationResponse(output="done")
+
+    engine = ReferenceTurnEngine(
+        invoke_model=invoke_model,
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name),
+        on_event=events.append,
+        next_id=_Ids(),
+    )
+    result = await engine.run_async(
+        "session-1",
+        "turn-1",
+        [Message.user("retry")],
+        max_model_attempts=2,
+    )
+
+    assert result.commit.status == "success"
+    assert result.commit.output == "done"
+    assert attempts == 2
+    assert [event.kind for event in events].count("model_invocation_started") == 2
+    failed = next(event for event in events if event.kind == "model_invocation_failed")
+    assert failed.payload["attempt"] == 0
+    assert failed.payload["exhausted"] is False
+
+
+@pytest.mark.asyncio
+async def test_zero_model_attempts_uses_default_retry_budget() -> None:
+    attempts = 0
+
+    def invoke_model(request: ModelInvocationRequest) -> ModelInvocationResponse:
+        nonlocal attempts
+        attempts += 1
+        raise RuntimeError("still failing")
+
+    engine = ReferenceTurnEngine(
+        invoke_model=invoke_model,
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name),
+        next_id=_Ids(),
+    )
+    result = await engine.run_async(
+        "session-1",
+        "turn-1",
+        [Message.user("retry")],
+        max_model_attempts=0,
+    )
+
+    assert result.commit.status == "failed"
+    assert attempts == 3
+
+
+@pytest.mark.asyncio
+async def test_resume_honors_max_model_attempts() -> None:
+    attempts = 0
+    checkpoint = EngineCheckpoint(
+        id="checkpoint-1",
+        session_id="session-1",
+        turn_id="turn-1",
+        run_id="run-1",
+        messages=[Message.user("retry")],
+        stable_prefix_messages=1,
+    )
+
+    def invoke_model(request: ModelInvocationRequest) -> ModelInvocationResponse:
+        nonlocal attempts
+        attempts += 1
+        raise RuntimeError("still failing")
+
+    engine = ReferenceTurnEngine(
+        invoke_model=invoke_model,
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name),
+        next_id=_Ids(),
+    )
+    result = await engine.resume_async(
+        ResumeContext(checkpoint=checkpoint, max_iterations=1, max_model_attempts=2)
+    )
+
+    assert result.commit.status == "failed"
+    assert result.commit.output["errorKind"] == "model_error"
+    assert attempts == 2
+
+
+@pytest.mark.asyncio
+async def test_indeterminate_model_failure_requires_reconciliation() -> None:
+    class IndeterminateModelError(RuntimeError):
+        outcome_unknown = True
+        metadata = {"requestId": "provider-request-1"}
+
+    checkpoints: list[EngineCheckpoint] = []
+    engine = ReferenceTurnEngine(
+        invoke_model=lambda request: (_ for _ in ()).throw(IndeterminateModelError("unknown outcome")),
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name),
+        save_checkpoint=checkpoints.append,
+        next_id=_Ids(),
+    )
+    result = await engine.run_async("session-1", "turn-1", [Message.user("reconcile")])
+
+    assert result.commit.status == "reconciliation_required"
+    assert result.commit.model_reconciliation is not None
+    assert result.commit.model_reconciliation.failed_attempt == 0
+    assert result.commit.model_reconciliation.metadata == {"requestId": "provider-request-1"}
+    assert checkpoints[-1].reconciliation_required is True
+    assert checkpoints[-1].resume_same_iteration is True
+
+
+@pytest.mark.asyncio
+async def test_indeterminate_model_checkpoint_retains_prior_tool_results() -> None:
+    class IndeterminateModelError(RuntimeError):
+        outcome_unknown = True
+
+    responses: deque[ModelInvocationResponse | Exception] = deque(
+        [
+            ModelInvocationResponse(tool_requests=[ModelToolRequest(id="call-1", name="echo")]),
+            IndeterminateModelError("unknown outcome"),
+        ]
+    )
+    checkpoints: list[EngineCheckpoint] = []
+
+    def invoke_model(request: ModelInvocationRequest) -> ModelInvocationResponse:
+        response = responses.popleft()
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+    engine = ReferenceTurnEngine(
+        invoke_model=invoke_model,
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name, output="echoed"),
+        save_checkpoint=checkpoints.append,
+        next_id=_Ids(),
+    )
+    result = await engine.run_async("session-1", "turn-1", [Message.user("echo")])
+
+    assert result.commit.status == "reconciliation_required"
+    assert [item.request_id for item in result.tool_results] == ["call-1"]
+    assert [item.request_id for item in checkpoints[-1].completed_tool_results] == ["call-1"]
+
+
+@pytest.mark.asyncio
+async def test_permission_callback_failure_commits_failed_turn() -> None:
+    events: list[EngineEvent] = []
+
+    def authorize(request: ModelToolRequest) -> EnginePermissionDecision:
+        raise RuntimeError("permission service unavailable")
+
+    engine = ReferenceTurnEngine(
+        invoke_model=lambda request: ModelInvocationResponse(
+            tool_requests=[ModelToolRequest(id="call-1", name="write")]
+        ),
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name),
+        authorize=authorize,
+        on_event=events.append,
+        next_id=_Ids(),
+    )
+    result = await engine.run_async("session-1", "turn-1", [Message.user("write")])
+
+    assert result.commit.status == "failed"
+    assert result.commit.output["errorKind"] == "permission_error"
+    assert events[-1].kind == "turn_failed"
+
+
+@pytest.mark.asyncio
+async def test_unknown_tool_is_terminal_configuration_failure() -> None:
+    def execute_tool(request: ModelToolRequest) -> ModelToolResult:
+        raise KeyError(f"unknown tool: {request.name}")
+
+    engine = ReferenceTurnEngine(
+        invoke_model=lambda request: ModelInvocationResponse(
+            tool_requests=[ModelToolRequest(id="call-1", name="missing")]
+        ),
+        execute_tool=execute_tool,
+        next_id=_Ids(),
+    )
+    result = await engine.run_async("session-1", "turn-1", [Message.user("missing")])
+
+    assert result.commit.status == "failed"
+    assert result.commit.output["errorKind"] == "tool_configuration_error"
+    assert result.tool_results == []
+
+
+@pytest.mark.asyncio
+async def test_portable_assistant_history_is_reused_after_tool_round() -> None:
+    requests: list[ModelInvocationRequest] = []
+
+    def invoke_model(request: ModelInvocationRequest) -> ModelInvocationResponse:
+        requests.append(request)
+        if len(requests) == 1:
+            return ModelInvocationResponse(
+                assistant_messages=[Message.assistant("calling")],
+                tool_requests=[ModelToolRequest(id="call-1", name="echo")],
+                next_context_state=InvocationContextState(portability="portable"),
+            )
+        return ModelInvocationResponse(output="done")
+
+    engine = ReferenceTurnEngine(
+        invoke_model=invoke_model,
+        execute_tool=lambda request: ModelToolResult(request_id=request.id, name=request.name, output="echoed"),
+        next_id=_Ids(),
+    )
+    result = await engine.run_async("session-1", "turn-1", [Message.user("echo")])
+
+    assert result.commit.status == "success"
+    assert [message.role for message in requests[1].context.messages] == ["user", "assistant", "tool"]

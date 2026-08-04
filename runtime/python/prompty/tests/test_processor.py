@@ -134,10 +134,10 @@ class TestOpenAIProcessor:
         result = self.processor.process(self.agent, "raw string")
         assert result == "raw string"
 
-    def test_none_content(self):
+    def test_none_content_returns_empty_string(self):
         response = _mock_chat_completion(content=None)
         result = self.processor.process(self.agent, response)
-        assert result is None
+        assert result == ""
 
 
 # ---------------------------------------------------------------------------
@@ -254,12 +254,12 @@ class TestStructuredOutput:
         assert isinstance(result, list)
         assert isinstance(result[0], ToolCall)
 
-    def test_none_content_not_json_parsed(self):
-        """None content should not be affected by outputs."""
+    def test_none_content_returns_empty_string_without_json_parsing(self):
+        """Null content follows the shared process contract even when outputs are configured."""
         agent = _make_agent_with_schema(properties=[{"name": "answer", "kind": "string"}])
         response = _mock_chat_completion(content=None)
         result = self.processor.process(agent, response)
-        assert result is None
+        assert result == ""
 
     @pytest.mark.asyncio
     async def test_async_json_parsed(self):

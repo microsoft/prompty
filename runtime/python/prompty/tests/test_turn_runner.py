@@ -337,3 +337,110 @@ async def test_turn_runner_matches_shared_golden_replay_vectors(tmp_path: Path) 
         )
 
         assert _normalize_journal(_records(journal_path)) == scenario["expected"], scenario["name"]
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_propagates_model_callback_failure_after_journaling_start(tmp_path: Path) -> None:
+    journal_path = tmp_path / "trace.jsonl"
+
+    def invoke_model(request: TurnModelRequest) -> TurnModelResponse:
+        raise RuntimeError("model unavailable")
+
+    runner = ReferenceTurnRunner(
+        event_sink=CollectingEventSink(),
+        journal=JsonlEventJournalWriter(journal_path),
+        checkpoint_store=InMemoryCheckpointStore(),
+        permission_resolver=AllowAllPermissionResolver(),
+        host_tool_executor=FunctionHostToolExecutor({}),
+        invoke_model=invoke_model,
+        now=lambda: "2026-06-28T00:00:00Z",
+        next_id=_fixed_ids(),
+    )
+
+    with pytest.raises(RuntimeError, match="model unavailable"):
+        await runner.run(RunTurnRequest(session_id="session-1", turn_id="turn-1"))
+
+    turn_types = [
+        record["event"]["type"]
+        for record in _records(journal_path)
+        if record["kind"] == "turn"
+    ]
+    assert turn_types == ["turn_start", "llm_start"]
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_propagates_raw_host_executor_failure(tmp_path: Path) -> None:
+    class FailingExecutor:
+        async def execute(self, request: HostToolRequest) -> HostToolResult:
+            raise RuntimeError("executor unavailable")
+
+    runner = ReferenceTurnRunner(
+        event_sink=CollectingEventSink(),
+        journal=JsonlEventJournalWriter(tmp_path / "trace.jsonl"),
+        checkpoint_store=InMemoryCheckpointStore(),
+        permission_resolver=AllowAllPermissionResolver(),
+        host_tool_executor=FailingExecutor(),
+        invoke_model=lambda request: TurnModelResponse(
+            tool_requests=[HostToolRequest(request_id="exec-1", tool_name="missing")]
+        ),
+        now=lambda: "2026-06-28T00:00:00Z",
+        next_id=_fixed_ids(),
+    )
+
+    with pytest.raises(RuntimeError, match="executor unavailable"):
+        await runner.run(RunTurnRequest(session_id="session-1", turn_id="turn-1"))
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_zero_iterations_commits_empty_success(tmp_path: Path) -> None:
+    model_calls = 0
+
+    def invoke_model(request: TurnModelRequest) -> TurnModelResponse:
+        nonlocal model_calls
+        model_calls += 1
+        return TurnModelResponse(output="unexpected")
+
+    runner = ReferenceTurnRunner(
+        event_sink=CollectingEventSink(),
+        journal=JsonlEventJournalWriter(tmp_path / "trace.jsonl"),
+        checkpoint_store=InMemoryCheckpointStore(),
+        permission_resolver=AllowAllPermissionResolver(),
+        host_tool_executor=FunctionHostToolExecutor({}),
+        invoke_model=invoke_model,
+        now=lambda: "2026-06-28T00:00:00Z",
+        next_id=_fixed_ids(),
+    )
+    result = await runner.run(
+        RunTurnRequest(
+            session_id="session-1",
+            turn_id="turn-1",
+            options=TurnOptions(max_iterations=0),
+        )
+    )
+
+    assert result.status == "success"
+    assert result.output is None
+    assert result.iterations == 0
+    assert result.checkpoints == []
+    assert model_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_generates_unique_event_ids_without_host_factory(tmp_path: Path) -> None:
+    journal_path = tmp_path / "trace.jsonl"
+    runner = ReferenceTurnRunner(
+        event_sink=CollectingEventSink(),
+        journal=JsonlEventJournalWriter(journal_path),
+        checkpoint_store=InMemoryCheckpointStore(),
+        permission_resolver=AllowAllPermissionResolver(),
+        host_tool_executor=FunctionHostToolExecutor({}),
+        invoke_model=lambda request: TurnModelResponse(output="done"),
+        now=lambda: "2026-06-28T00:00:00Z",
+    )
+
+    await runner.run(RunTurnRequest(session_id="session-1", turn_id="turn-1"))
+
+    event_ids = [record["event"]["id"] for record in _records(journal_path) if record["kind"] != "summary"]
+    assert len(event_ids) == len(set(event_ids))
+    assert event_ids[0] == "session-event-1"
+    assert event_ids[-1] == "session-event-7"

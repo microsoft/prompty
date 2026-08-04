@@ -70,6 +70,13 @@ class _TurnCancelled(Exception):
     pass
 
 
+class _TurnFailed(Exception):
+    def __init__(self, error_kind: str, source: Exception) -> None:
+        super().__init__(str(source))
+        self.error_kind = error_kind
+        self.source = source
+
+
 def save_engine_checkpoint(checkpoint: EngineCheckpoint) -> dict[str, Any]:
     """Serialize a checkpoint without collapsing ordered duplicate tool names."""
     return checkpoint.save(SaveContext(collection_format="array"))
@@ -118,6 +125,7 @@ class ReferenceTurnEngine:
         *,
         inputs: Any | None = None,
         max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+        max_model_attempts: int = 3,
         cancellation: CancellationToken | None = None,
         run_id: str | None = None,
         parent_run_id: str | None = None,
@@ -131,6 +139,7 @@ class ReferenceTurnEngine:
                 messages,
                 inputs=inputs,
                 max_iterations=max_iterations,
+                max_model_attempts=max_model_attempts,
                 cancellation=cancellation,
                 run_id=run_id,
                 parent_run_id=parent_run_id,
@@ -146,12 +155,14 @@ class ReferenceTurnEngine:
         *,
         inputs: Any | None = None,
         max_iterations: int = _DEFAULT_MAX_ITERATIONS,
+        max_model_attempts: int = 3,
         cancellation: CancellationToken | None = None,
         run_id: str | None = None,
         parent_run_id: str | None = None,
         delegation_depth: int = 0,
     ) -> TurnEngineResult:
         """Run a new turn and return its emitted commit, snapshots, and tool results."""
+        effective_model_attempts = max_model_attempts if max_model_attempts > 0 else 3
         self._start_run(
             session_id,
             turn_id,
@@ -164,6 +175,7 @@ class ReferenceTurnEngine:
             messages=list(messages),
             inputs=inputs,
             max_iterations=max_iterations,
+            max_model_attempts=effective_model_attempts,
             cancellation=cancellation,
             iteration=0,
             stable_prefix_messages=len(messages),
@@ -198,6 +210,7 @@ class ReferenceTurnEngine:
         await self._emit("turn_started", payload={"resumedFrom": checkpoint.id})
 
         max_iterations = context.max_iterations
+        max_model_attempts = context.max_model_attempts if context.max_model_attempts > 0 else 3
         snapshots: list[ModelInvocationContextSnapshot] = []
         tool_results = list(checkpoint.completed_tool_results)
         messages = list(checkpoint.messages)
@@ -261,6 +274,21 @@ class ReferenceTurnEngine:
                     snapshots,
                     tool_results,
                 )
+            except _TurnFailed as exc:
+                await self._emit(
+                    "turn_failed",
+                    iteration=checkpoint.iteration,
+                    payload={"errorKind": exc.error_kind, "message": str(exc)},
+                )
+                return self._failed(
+                    messages,
+                    checkpoint.completed_model_iterations,
+                    context_state,
+                    snapshots,
+                    tool_results,
+                    exc.source,
+                    error_kind=exc.error_kind,
+                )
             tool_results.extend(new_results)
             if any(result.outcome == "indeterminate" for result in new_results):
                 return await self._reconciliation_required(
@@ -314,6 +342,7 @@ class ReferenceTurnEngine:
             messages=messages,
             inputs=checkpoint.inputs,
             max_iterations=max_iterations,
+            max_model_attempts=max_model_attempts,
             cancellation=cancellation,
             iteration=iteration,
             stable_prefix_messages=checkpoint.stable_prefix_messages,
@@ -344,6 +373,7 @@ class ReferenceTurnEngine:
         messages: list[Message],
         inputs: Any | None,
         max_iterations: int,
+        max_model_attempts: int,
         cancellation: CancellationToken | None,
         iteration: int,
         stable_prefix_messages: int,
@@ -369,32 +399,86 @@ class ReferenceTurnEngine:
             )
             snapshots.append(snapshot)
             await self._emit("context_prepared", invocation_id=invocation_id, iteration=iteration)
-            await self._emit("model_invocation_started", invocation_id=invocation_id, iteration=iteration)
-            try:
-                response = await _resolve(self._invoke_model(ModelInvocationRequest(context=snapshot)))
-            except Exception as exc:
+            model_request = ModelInvocationRequest(context=snapshot)
+            response: ModelInvocationResponse | None = None
+            attempt_limit = max(1, max_model_attempts)
+            for attempt in range(attempt_limit):
+                if cancellation is not None and cancellation.is_cancelled:
+                    await self._emit("turn_cancelled", invocation_id=invocation_id, iteration=iteration)
+                    return self._cancelled(messages, iteration, context_state, snapshots, tool_results)
                 await self._emit(
-                    "model_invocation_failed",
+                    "model_invocation_started",
                     invocation_id=invocation_id,
                     iteration=iteration,
-                    payload={"errorKind": "model_error", "message": str(exc)},
+                    payload={"attempt": attempt},
                 )
-                await self._emit(
-                    "turn_failed",
-                    iteration=iteration,
-                    payload={"errorKind": "model_error", "message": str(exc)},
-                )
-                return self._failed(
-                    messages,
-                    iteration,
-                    context_state,
-                    snapshots,
-                    tool_results,
-                    exc,
-                    error_kind="model_error",
-                )
-            if not isinstance(response, ModelInvocationResponse):
-                raise TypeError("invoke_model must return ModelInvocationResponse")
+                try:
+                    candidate = await _resolve(self._invoke_model(model_request))
+                    if not isinstance(candidate, ModelInvocationResponse):
+                        raise TypeError("invoke_model must return ModelInvocationResponse")
+                    response = candidate
+                    break
+                except Exception as exc:
+                    outcome_unknown = bool(getattr(exc, "outcome_unknown", False))
+                    exhausted = outcome_unknown or attempt + 1 >= attempt_limit
+                    await self._emit(
+                        "model_invocation_failed",
+                        invocation_id=invocation_id,
+                        iteration=iteration,
+                        payload={
+                            "attempt": attempt,
+                            "exhausted": exhausted,
+                            "outcomeUnknown": outcome_unknown,
+                            "message": str(exc),
+                        },
+                    )
+                    if outcome_unknown:
+                        metadata = getattr(exc, "metadata", None)
+                        reconciliation = ModelReconciliationState(
+                            invocation_id=invocation_id,
+                            request=model_request,
+                            failed_attempt=attempt,
+                            message=str(exc),
+                            metadata=metadata if isinstance(metadata, dict) else None,
+                        )
+                        await self._checkpoint(
+                            iteration=iteration,
+                            messages=messages,
+                            stable_prefix_messages=stable_prefix_messages,
+                            inputs=inputs,
+                            context_state=context_state,
+                            completed_model_iterations=iteration,
+                            active_invocation_id=invocation_id,
+                            completed_tool_results=tool_results,
+                            reconciliation_required=True,
+                            model_reconciliation=reconciliation,
+                            resume_same_iteration=True,
+                        )
+                        return await self._reconciliation_required(
+                            messages=messages,
+                            iterations=iteration,
+                            context_state=context_state,
+                            snapshots=snapshots,
+                            tool_results=tool_results,
+                            model_reconciliation=reconciliation,
+                        )
+                    if exhausted:
+                        await self._emit(
+                            "turn_failed",
+                            iteration=iteration,
+                            payload={"errorKind": "model_error", "message": str(exc)},
+                        )
+                        return self._failed(
+                            messages,
+                            iteration,
+                            context_state,
+                            snapshots,
+                            tool_results,
+                            exc,
+                            error_kind="model_error",
+                        )
+            if response is None:
+                raise RuntimeError("Model invocation attempt loop completed without a response")
             await self._emit("model_invocation_completed", invocation_id=invocation_id, iteration=iteration)
 
             completed_iterations = iteration + 1
@@ -464,6 +548,22 @@ class ReferenceTurnEngine:
             except _TurnCancelled:
                 await self._emit("turn_cancelled", invocation_id=invocation_id, iteration=iteration)
                 return self._cancelled(messages, completed_iterations, context_state, snapshots, tool_results)
+            except _TurnFailed as exc:
+                await self._emit(
+                    "turn_failed",
+                    invocation_id=invocation_id,
+                    iteration=iteration,
+                    payload={"errorKind": exc.error_kind, "message": str(exc)},
+                )
+                return self._failed(
+                    messages,
+                    completed_iterations,
+                    context_state,
+                    snapshots,
+                    tool_results,
+                    exc.source,
+                    error_kind=exc.error_kind,
+                )
             tool_results.extend(round_results)
             if any(result.outcome == "indeterminate" for result in round_results):
                 return await self._reconciliation_required(
@@ -551,7 +651,10 @@ class ReferenceTurnEngine:
                 raise _TurnCancelled
 
             await self._emit("permission_requested", iteration=iteration, payload=request.save())
-            decision = await self._permission(request)
+            try:
+                decision = await self._permission(request)
+            except Exception as exc:
+                raise _TurnFailed("permission_error", exc) from exc
             await self._emit("permission_resolved", iteration=iteration, payload=decision.save())
             if not decision.approved:
                 result = ModelToolResult(
@@ -566,6 +669,8 @@ class ReferenceTurnEngine:
                 try:
                     result = await _resolve(self._execute_tool(request))
                 except Exception as exc:
+                    if isinstance(exc, KeyError) or getattr(exc, "error_kind", None) == "tool_configuration_error":
+                        raise _TurnFailed("tool_configuration_error", exc) from exc
                     result = ModelToolResult(
                         request_id=request.id,
                         name=request.name,
@@ -622,6 +727,8 @@ class ReferenceTurnEngine:
         pending_model_response: ModelInvocationResponse | None = None,
         active_invocation_id: str | None = None,
         reconciliation_required: bool = False,
+        model_reconciliation: ModelReconciliationState | None = None,
+        resume_same_iteration: bool = False,
     ) -> EngineCheckpoint:
         checkpoint = EngineCheckpoint(
             id=self._next_id("checkpoint"),
@@ -639,10 +746,12 @@ class ReferenceTurnEngine:
             completed_tool_results=list(completed_tool_results or []),
             completed_model_iterations=completed_model_iterations,
             reconciliation_required=reconciliation_required,
+            model_reconciliation=model_reconciliation,
             pending_output=pending_output,
             final_output_ready=final_output_ready,
             pending_model_response=pending_model_response,
             active_invocation_id=active_invocation_id,
+            resume_same_iteration=resume_same_iteration,
             context_state=context_state,
         )
         if self._save_checkpoint is not None:
