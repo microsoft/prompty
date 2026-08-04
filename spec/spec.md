@@ -453,6 +453,15 @@ Kind inference from scalar type: string → `"string"`, integer → `"integer"`,
 float → `"float"`, boolean → `"boolean"`, list → `"array"`, dict → `"object"`.
 The named-collection object-form exception for list values is defined above.
 
+This named-collection shorthand is distinct from direct generated-model coercion.
+When a generated `Property` loader receives a scalar as its complete input, the
+TypeSpec `@coerce` contract MUST infer the same scalar kind and store the scalar in
+`example`; it MUST NOT drop or coerce the value. JSON integer and fractional number
+inputs MUST remain distinguishable as `"integer"` and `"float"` respectively. The
+four primitive scalar branches are an atomic contract: string, integer, float, and
+boolean MUST all be supported. The normative acceptance vector is
+`spec/vectors/model/property_scalar_coercion_vectors.json`.
+
 ### §2.8 Template
 
 The `template` property selects the template engine and parser.
