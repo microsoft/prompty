@@ -72,7 +72,7 @@ public class AnthropicModelDiscoveryTests
         await server;
         Assert.Equal(2, models.Count);
         Assert.Equal("Claude First", models[0].DisplayName);
-        Assert.Equal("2025-01-01T00:00:00Z", models[1].AdditionalProperties!["created_at"].ToString());
+        Assert.Equal("2025-01-01T00:00:00Z", models[1].AdditionalProperties!["created_at"]?.ToString());
         Assert.Equal("?limit=100", requests[0].Query);
         Assert.Equal("?limit=100&after_id=claude-first", requests[1].Query);
         Assert.All(requests, request =>

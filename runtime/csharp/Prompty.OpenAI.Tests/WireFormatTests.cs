@@ -492,7 +492,7 @@ public class WireFormatTests
                 Options = new ModelOptions
                 {
                     Temperature = 0.2f,
-                    AdditionalProperties = new Dictionary<string, object>
+                    AdditionalProperties = new Dictionary<string, object?>
                     {
                         ["temperature"] = 0.9,
                         ["logprobs"] = true,
@@ -518,7 +518,7 @@ public class WireFormatTests
             {
                 Options = new ModelOptions
                 {
-                    AdditionalProperties = new Dictionary<string, object> { ["nested.option"] = true },
+                    AdditionalProperties = new Dictionary<string, object?> { ["nested.option"] = true },
                 },
             },
         };

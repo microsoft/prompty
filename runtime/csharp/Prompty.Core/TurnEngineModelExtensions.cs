@@ -24,7 +24,7 @@ public partial class Message
     {
         Role = Role.Tool,
         Parts = [new TextPart { Value = text }],
-        Metadata = new Dictionary<string, object> { ["tool_call_id"] = requestId },
+        Metadata = new Dictionary<string, object?> { ["tool_call_id"] = requestId },
     };
 }
 

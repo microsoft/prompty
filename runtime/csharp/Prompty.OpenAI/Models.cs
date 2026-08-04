@@ -57,7 +57,7 @@ public static class OpenAIModels
             {
                 Id = m.Id,
                 OwnedBy = m.OwnedBy,
-                AdditionalProperties = new Dictionary<string, object>
+                AdditionalProperties = new Dictionary<string, object?>
                 {
                     ["id"] = m.Id,
                     ["object"] = "model",

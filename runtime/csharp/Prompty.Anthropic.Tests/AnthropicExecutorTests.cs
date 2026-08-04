@@ -291,7 +291,7 @@ public class AnthropicExecutorTests
         {
             Role = Role.Tool,
             Parts = [new TextPart { Value = "result" }],
-            Metadata = new Dictionary<string, object> { ["tool_use_id"] = "call_2" },
+            Metadata = new Dictionary<string, object?> { ["tool_use_id"] = "call_2" },
         };
 
         var body = executor.BuildRequestBody(agent, [message], stream: false);

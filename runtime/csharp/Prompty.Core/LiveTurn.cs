@@ -187,7 +187,7 @@ internal static class LiveTurn
         };
     }
 
-    private static object? MetadataValue(IDictionary<string, object>? metadata, string key)
+    private static object? MetadataValue(IDictionary<string, object?>? metadata, string key)
         => metadata is not null && metadata.TryGetValue(key, out var value) ? value : null;
 
     private sealed class LiveFailureState
@@ -262,9 +262,9 @@ internal static class LiveTurn
                         Id = call.Id,
                         Name = call.Name,
                         Arguments = ParseArgumentsValue(call.Arguments),
-                        Metadata = new Dictionary<string, object> { ["argumentsText"] = call.Arguments },
+                        Metadata = new Dictionary<string, object?> { ["argumentsText"] = call.Arguments },
                     }).ToList(),
-                    Metadata = new Dictionary<string, object>
+                    Metadata = new Dictionary<string, object?>
                     {
                         ["rawResponse"] = rawResponse,
                         ["textContent"] = toolResult.Content ?? string.Empty,
@@ -282,7 +282,7 @@ internal static class LiveTurn
                     Portability = InvocationContextPortability.Portable,
                     DelegatedState = [],
                 },
-                Metadata = new Dictionary<string, object> { ["rawResponse"] = rawResponse },
+                Metadata = new Dictionary<string, object?> { ["rawResponse"] = rawResponse },
             };
         }
 
@@ -493,7 +493,7 @@ internal static class LiveTurn
             {
                 Messages = messages,
                 StablePrefixMessages = stablePrefix,
-                Metadata = new Dictionary<string, object>
+                Metadata = new Dictionary<string, object?>
                 {
                     ["steeringCount"] = steeringMessages.Count,
                     ["trimmedCount"] = trimmed,

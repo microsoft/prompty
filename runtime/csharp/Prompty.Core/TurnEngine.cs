@@ -685,7 +685,7 @@ public sealed class TurnEngine
     private async Task<EngineCheckpoint> PersistPolicyUpdateAsync(
         TurnState state,
         string invocationId,
-        IDictionary<string, object>? metadata)
+        IDictionary<string, object?>? metadata)
     {
         var sequence = state.Sequence + 1;
         state.PolicyAppliedForIteration = true;

@@ -54,7 +54,7 @@ public class TurnRunnerTests
                 sink.SessionEvents.Select(sessionEvent => sessionEvent.Type).ToArray());
             var checkpoint = await checkpointStore.LoadAsync("session-1", "turn-1-checkpoint-0");
             Assert.NotNull(checkpoint);
-            Assert.True((bool)checkpoint.State!["stable"]);
+            Assert.True(Assert.IsType<bool>(checkpoint.State!["stable"]));
             Assert.True(checkpoint.State.ContainsKey("nullable"));
             Assert.Null(checkpoint.State["nullable"]);
             var turnStart = sink.TurnEvents.Single(turnEvent => turnEvent.Type == TurnEventType.TurnStart);
