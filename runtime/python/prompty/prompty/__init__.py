@@ -117,6 +117,7 @@ __all__ = [
     "InMemoryCheckpointStore",
     "JsonlEventJournalWriter",
     "ReferenceReplayVerifier",
+    "ReferenceTurnEngine",
     "ReferenceTurnRunner",
     "RunTurnRequest",
     "RunTurnResult",
@@ -127,6 +128,8 @@ __all__ = [
     "cast",
     "bind_tools",
     "tool",
+    "load_engine_checkpoint",
+    "save_engine_checkpoint",
     # Backward-compat aliases
     "AzureExecutor",
     "AzureProcessor",
@@ -174,11 +177,14 @@ from .harness import (
     InMemoryCheckpointStore,
     JsonlEventJournalWriter,
     ReferenceReplayVerifier,
+    ReferenceTurnEngine,
     ReferenceTurnRunner,
     RunTurnRequest,
     RunTurnResult,
     TurnModelRequest,
     TurnModelResponse,
+    load_engine_checkpoint,
+    save_engine_checkpoint,
 )
 
 # Pipeline (via backward-compat shim)
