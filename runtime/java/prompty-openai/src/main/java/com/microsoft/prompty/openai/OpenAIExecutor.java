@@ -308,7 +308,7 @@ public class OpenAIExecutor implements Executor {
       endpoint = Environment.lookup("OPENAI_BASE_URL").filter(v -> !v.isEmpty()).orElse(DEFAULT_ENDPOINT);
     }
 
-    String base = endpoint.endsWith("/") ? endpoint.substring(0, endpoint.length() - 1) : endpoint;
+    String base = Connections.trimTrailingSlashes(endpoint);
     // A proxy base is commonly written with the version already on it; appending another would
     // produce /v1/v1/chat/completions.
     if (base.endsWith("/v1") && path.startsWith("/v1")) {

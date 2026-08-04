@@ -1,4 +1,4 @@
-package com.microsoft.prompty.openai;
+package com.microsoft.prompty.anthropic;
 
 import com.microsoft.prompty.SpecVectors;
 import com.microsoft.prompty.VectorAgents;
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
 /**
- * Grades the OpenAI wire conversion against the shared {@code spec/vectors/wire} suite.
+ * Grades the Anthropic wire conversion against the shared {@code spec/vectors/wire} suite.
  *
  * <p>These are the same fixtures every other runtime is measured by, so a vector that passes here
  * is evidence of cross-runtime agreement rather than merely of internal consistency.
@@ -26,7 +26,7 @@ class WireVectorsTest {
       Map<String, Object> input = SpecVectors.map(vector, "input");
 
       // Vectors for other providers are graded by those providers' suites.
-      if (!"openai".equals(input.getOrDefault("provider", "openai"))) {
+      if (!"anthropic".equals(input.get("provider"))) {
         continue;
       }
 
@@ -36,19 +36,16 @@ class WireVectorsTest {
   }
 
   private static void runVector(String name, Map<String, Object> vector, Map<String, Object> input) {
-    Prompty agent = VectorAgents.buildAgent(input, "gpt-4", "openai");
+    Prompty agent = VectorAgents.buildAgent(input, "claude-3", "anthropic");
     List<Message> messages = VectorAgents.buildMessages(input);
     String apiType = String.valueOf(input.getOrDefault("apiType", "chat"));
 
-    Map<String, Object> actual =
-        switch (apiType) {
-          case "chat", "agent" -> Wire.buildChatArgs(agent, messages);
-          case "responses" -> Wire.buildResponsesArgs(agent, messages);
-          case "embedding" -> Wire.buildEmbeddingArgs(agent, messages);
-          case "image" -> Wire.buildImageArgs(agent, messages);
-          default -> throw new AssertionError("Unknown apiType: " + apiType);
-        };
+    // Anthropic exposes a single endpoint; anything else is a vector this provider cannot serve.
+    if (!"chat".equals(apiType) && !"agent".equals(apiType)) {
+      throw new AssertionError("Anthropic vectors must use apiType chat or agent, got: " + apiType);
+    }
 
+    Map<String, Object> actual = Wire.buildChatArgs(agent, messages);
     Object expected = SpecVectors.map(vector, "expected").get("request_body");
     SpecVectors.assertEquivalent(name, expected, actual);
   }

@@ -78,4 +78,22 @@ public final class Connections {
     }
     return current;
   }
+
+  /**
+   * Strip trailing slashes from an endpoint so a path can be appended to it.
+   *
+   * <p>Endpoints are typed by hand and pasted from consoles, so a trailing slash is common and
+   * occasionally there is more than one. Removing only the last would leave {@code https://host//v1},
+   * which some gateways route differently from {@code https://host/v1} and others reject outright.
+   */
+  public static String trimTrailingSlashes(String endpoint) {
+    if (endpoint == null) {
+      return "";
+    }
+    int end = endpoint.length();
+    while (end > 0 && endpoint.charAt(end - 1) == '/') {
+      end--;
+    }
+    return endpoint.substring(0, end);
+  }
 }

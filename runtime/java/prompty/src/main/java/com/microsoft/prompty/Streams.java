@@ -238,6 +238,32 @@ public final class Streams {
     return current;
   }
 
+  /**
+   * Copy a JSON-shaped tree so the result shares no mutable node with the original.
+   *
+   * <p>Response fragments get stored into conversation metadata that outlives the response they came
+   * from. Copying only the outer container would leave the nested maps aliased, so a caller that
+   * reuses or mutates its response could still rewrite a message already sent. Scalars and strings
+   * are immutable and are shared as-is.
+   */
+  public static Object deepCopy(Object value) {
+    if (value instanceof Map<?, ?> map) {
+      Map<String, Object> copy = new java.util.LinkedHashMap<>();
+      for (Map.Entry<?, ?> entry : map.entrySet()) {
+        copy.put(String.valueOf(entry.getKey()), deepCopy(entry.getValue()));
+      }
+      return copy;
+    }
+    if (value instanceof List<?> list) {
+      List<Object> copy = new java.util.ArrayList<>(list.size());
+      for (Object element : list) {
+        copy.add(deepCopy(element));
+      }
+      return copy;
+    }
+    return value;
+  }
+
   private static int intValue(Object value) {
     return value instanceof Number number ? number.intValue() : 0;
   }

@@ -94,11 +94,77 @@ public final class SpecVectors {
    * null asserts only that the actual value is absent or null, which is how a vector says "this
    * field should not be populated" without having to describe the whole surrounding object.
    *
+   * <p>This is deliberately a <em>subset</em> match: a key the vector does not mention is not
+   * checked. That is what lets a load vector describe one corner of a prompt without restating the
+   * whole thing. Where a vector describes a complete artefact — a request body, a processed result —
+   * use {@link #assertEquivalent} instead, which also rejects fields the vector never asked for.
+   *
    * <p>Numbers compare by value rather than by boxed type, since JSON makes no distinction between
    * an integer parsed as {@code Long} and one parsed as {@code Integer}.
    */
   public static void assertMatches(String label, Object expected, Object actual) {
     assertMatches(label, "", expected, actual);
+  }
+
+  /**
+   * Assert that {@code actual} is exactly what {@code expected} describes, with no extra fields.
+   *
+   * <p>Same comparison as {@link #assertMatches} with one addition: objects must have exactly the
+   * same set of keys. A vector that fully describes a request body is also asserting that nothing
+   * else is sent, and a subset match would let a runtime add a spurious field to every request
+   * without a single test noticing.
+   *
+   * <p>This is the reference implementation's comparison but for one deliberate relaxation: numbers
+   * are compared to single precision rather than bit-exactly, because a 32-bit {@code temperature}
+   * cannot hold a value like 0.7 that the vector states in full precision. Every other difference
+   * fails here exactly as it would there.
+   */
+  public static void assertEquivalent(String label, Object expected, Object actual) {
+    assertSameKeys(label, "", expected, actual);
+    assertMatches(label, "", expected, actual);
+  }
+
+  /**
+   * Assert that every object in the two trees has the same key set.
+   *
+   * <p>Both directions matter. An unexpected key means the runtime sends something the vector never
+   * described; a missing one means it dropped a field the vector requires. {@link #assertMatches}
+   * catches neither on its own — it walks only the expected side, and it accepts an absent key
+   * wherever the vector states an explicit null.
+   */
+  private static void assertSameKeys(String label, String path, Object expected, Object actual) {
+    String where = label + (path.isEmpty() ? "" : " at " + path);
+
+    if (expected instanceof Map<?, ?> expectedMap) {
+      Object candidate = actual instanceof List<?> list ? asNamedMap(list) : actual;
+      if (!(candidate instanceof Map<?, ?> actualMap)) {
+        // The shape mismatch itself is reported by assertMatches, in better terms than here.
+        return;
+      }
+      for (Object key : actualMap.keySet()) {
+        assertTrue(
+            expectedMap.containsKey(key),
+            where + ": unexpected field '" + key + "' the vector does not describe");
+      }
+      for (Map.Entry<?, ?> entry : expectedMap.entrySet()) {
+        String key = String.valueOf(entry.getKey());
+        assertTrue(
+            actualMap.containsKey(key), where + ": missing field '" + key + "' the vector requires");
+        assertSameKeys(label, join(path, key), entry.getValue(), actualMap.get(key));
+      }
+      return;
+    }
+
+    if (expected instanceof List<?> expectedList) {
+      Object candidate = actual instanceof Map<?, ?> named ? asNamedList(named) : actual;
+      if (!(candidate instanceof List<?> actualList)) {
+        return;
+      }
+      int shared = Math.min(expectedList.size(), actualList.size());
+      for (int i = 0; i < shared; i++) {
+        assertSameKeys(label, path + "[" + i + "]", expectedList.get(i), actualList.get(i));
+      }
+    }
   }
 
   private static void assertMatches(String label, String path, Object expected, Object actual) {
