@@ -30,3 +30,7 @@ schema/tsp-output/.typra-generated/report.json
 .build/
 .swiftpm/
 Package.resolved
+
+# Written by the Swift CI workflow so the compiler identity can be folded into
+# the SwiftPM cache key; never produced by a normal local build.
+.swift-toolchain-stamp
