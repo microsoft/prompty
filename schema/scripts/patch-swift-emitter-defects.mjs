@@ -342,6 +342,18 @@ const patches = [
 ///           typed factories, placeholder types, suffix loss) and would cut this
 ///           shim to 345 lines, but reshapes the C# generated-test string
 ///           literals and breaks 16 `*Yaml*` tests in Prompty.Core.Tests.
+///   0.4.5 — probed because it was announced as carrying the Swift
+///           generated-test fixes. It predates 0.4.6 and 0.4.9, so it lacks the
+///           inherited `extends` fields fix noted below and still omits
+///           `Connection.unknown`: native output is 30 errors, all `Connection
+///           has no member 'unknown'`, in tool.swift. Probe-patching only that
+///           case makes the library compile and then yields 228 test-build
+///           error lines, 57 unique, across six files, against 0.4.9's 180 and
+///           45 across five. The sixth is tools/ToolTests.swift, whose eight
+///           errors are all `FunctionTool` missing `name` and `description`.
+///           `ReferenceConnection` likewise drops `authenticationMode` and
+///           `usageDescription`, but silently, as defect 10 describes. Rejected
+///           on Swift alone, so the other runtimes were not measured here.
 ///   0.4.6 — additionally fixes inherited `extends` fields, but carries the same
 ///           C# break plus dropped `= []` on 13 TypeScript fields that declare an
 ///           explicit `= #[]` default.
@@ -375,13 +387,13 @@ const patches = [
 ///           could compile, it produced the same 180 test errors as 0.4.8, so
 ///           restoring it stays blocked too. The 0.4.6 TypeScript `= []`
 ///           regression persists.
-/// Compare failing test *identities*, not counts: the evaluated 0.4.3, 0.4.6,
-/// and 0.4.8 releases each leave the C# failure count at 16 while swapping
-/// `*Json*` for `*Yaml*`. On Windows those are two unrelated causes — the
-/// baseline `*Json*` failures are a local CRLF artifact, while the new `*Yaml*`
-/// ones come from a trailing space at schema/model/agent/agent.tsp:166 that
-/// escaped expected-value literals preserve and verbatim input-YAML literals
-/// drop. 0.4.9 resolves that asymmetry.
+/// Compare failing test *identities*, not counts: the 0.4.3, 0.4.6, and 0.4.8
+/// releases evaluated against C# each leave its failure count at 16 while
+/// swapping `*Json*` for `*Yaml*`. On Windows those are two unrelated causes —
+/// the baseline `*Json*` failures are a local CRLF artifact, while the new
+/// `*Yaml*` ones come from a trailing space at schema/model/agent/agent.tsp:166
+/// that escaped expected-value literals preserve and verbatim input-YAML
+/// literals drop. 0.4.9 resolves that asymmetry.
 const PINNED_EMITTER_VERSION = "0.4.2";
 
 function assertPinnedEmitterVersion() {
