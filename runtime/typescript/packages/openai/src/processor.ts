@@ -9,6 +9,7 @@
 import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
+import { FailureChunk, StreamFailure } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
@@ -86,16 +87,27 @@ function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
  * - `delta.content` — yields content strings
  * - `delta.tool_calls` — accumulates partial tool call chunks,
  *   yields ToolCall objects when the stream ends
- * - `delta.refusal` — throws Error with the refusal message
+ * - `delta.refusal` — yields a determinate FailureChunk
  *
  * Matches the Python `_stream_generator` / `_async_stream_generator`.
  */
 async function* streamGenerator(
   response: AsyncIterable<unknown>,
-): AsyncGenerator<string | ToolCall> {
+): AsyncGenerator<string | ToolCall | FailureChunk> {
   const toolCallAcc: Map<number, { id: string; name: string; arguments: string }> = new Map();
+  const iterator = response[Symbol.asyncIterator]();
 
-  for await (const chunk of response) {
+  while (true) {
+    let next: IteratorResult<unknown>;
+    try {
+      next = await iterator.next();
+    } catch (error) {
+      yield failureChunk("indeterminate", errorMessage(error));
+      return;
+    }
+    if (next.done) break;
+
+    const chunk = next.value;
     const c = chunk as Record<string, unknown>;
     const choices = c.choices as Record<string, unknown>[] | undefined;
     if (!choices || choices.length === 0) continue;
@@ -128,7 +140,8 @@ async function* streamGenerator(
 
     // Refusal
     if (delta.refusal != null) {
-      throw new Error(`Model refused: ${delta.refusal}`);
+      yield failureChunk("determinate", `Model refused: ${delta.refusal}`);
+      return;
     }
   }
 
@@ -138,6 +151,16 @@ async function* streamGenerator(
     const tc = toolCallAcc.get(idx)!;
     yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
   }
+}
+
+function failureChunk(outcome: "determinate" | "indeterminate", message: string): FailureChunk {
+  return new FailureChunk({
+    failure: new StreamFailure({ outcome, message }),
+  });
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 // ---------------------------------------------------------------------------

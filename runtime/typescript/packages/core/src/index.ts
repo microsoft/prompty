@@ -69,6 +69,7 @@ export {
   turn,
   invoke,
   resolveBindings,
+  StreamFailureError,
   type TurnOptions,
   type InvokeOptions,
 
@@ -197,6 +198,10 @@ export {
   PermissionDecision,
   HostToolRequest,
   HostToolResult,
+  StreamChunk,
+  ErrorChunk,
+  FailureChunk,
+  StreamFailure,
   type EventJournalWriter,
   type EventSink,
   type PermissionResolver,

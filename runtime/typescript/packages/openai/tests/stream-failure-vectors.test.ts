@@ -1,0 +1,59 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+import { FailureChunk, Prompty, StreamChunk } from "@prompty/core";
+import { describe, expect, it } from "vitest";
+
+import { processResponse } from "../src/processor.js";
+
+interface StreamFailureVector {
+  name: string;
+  input: {
+    provider: string;
+    events: Array<{ kind: "provider"; value: Record<string, unknown> } | { kind: "transportError"; message: string }>;
+  };
+  expected: { chunks: unknown[] };
+}
+
+function loadVectors(): StreamFailureVector[] {
+  const path = resolve(import.meta.dirname, "../../../../../spec/vectors/process/stream_failure_vectors.json");
+  return JSON.parse(readFileSync(path, "utf8")) as StreamFailureVector[];
+}
+
+function responseFromVector(vector: StreamFailureVector): AsyncIterable<unknown> {
+  return {
+    async *[Symbol.asyncIterator](): AsyncIterator<unknown> {
+      for (const event of vector.input.events) {
+        if (event.kind === "transportError") {
+          throw new Error(event.message);
+        }
+        yield event.value;
+      }
+    },
+  };
+}
+
+describe("OpenAI classified stream failure vectors", () => {
+  for (const vector of loadVectors()) {
+    it(vector.name, async () => {
+      expect(vector.input.provider).toBe("openai");
+      const agent = new Prompty({ name: "stream-vector", model: "gpt-test" });
+      const processed = processResponse(agent, responseFromVector(vector));
+      const actual: unknown[] = [];
+
+      for await (const item of processed as AsyncIterable<unknown>) {
+        if (item instanceof FailureChunk) {
+          const saved = item.save();
+          const loaded = StreamChunk.load(saved);
+          expect(loaded).toBeInstanceOf(FailureChunk);
+          expect(loaded.save()).toEqual(saved);
+          actual.push(saved);
+        } else {
+          actual.push({ kind: "text", value: item });
+        }
+      }
+
+      expect(actual).toEqual(vector.expected.chunks);
+    });
+  }
+});

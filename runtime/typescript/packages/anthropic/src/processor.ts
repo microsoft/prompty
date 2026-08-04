@@ -13,6 +13,7 @@
 import type { Prompty } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
+import { FailureChunk, StreamFailure } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
@@ -78,13 +79,29 @@ function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
  */
 async function* streamGenerator(
   response: AsyncIterable<unknown>,
-): AsyncGenerator<string | ToolCall> {
+): AsyncGenerator<string | ToolCall | FailureChunk> {
   const toolCallAcc: Map<
     number,
     { id: string; name: string; arguments: string }
   > = new Map();
+  const iterator = response[Symbol.asyncIterator]();
 
-  for await (const event of response) {
+  while (true) {
+    let next: IteratorResult<unknown>;
+    try {
+      next = await iterator.next();
+    } catch (error) {
+      yield new FailureChunk({
+        failure: new StreamFailure({
+          outcome: "indeterminate",
+          message: error instanceof Error ? error.message : String(error),
+        }),
+      });
+      return;
+    }
+    if (next.done) break;
+
+    const event = next.value;
     const e = event as Record<string, unknown>;
     const eventType = e.type as string | undefined;
 
