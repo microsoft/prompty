@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using System.ClientModel;
+using System.Text.Json;
 using OpenAI;
 using OpenAI.Models;
 using Prompty.Core;
@@ -8,28 +9,26 @@ using Prompty.Core;
 namespace Prompty.OpenAI;
 
 /// <summary>
+/// OpenAI implementation of the generated model-listing protocol.
+/// </summary>
+public sealed class OpenAIModelLister : IModelLister
+{
+    /// <inheritdoc />
+    public async Task<List<ModelInfo>> ListModelsAsync(object connection)
+    {
+        if (connection is not Connection typedConnection)
+            throw new ArgumentException("OpenAI model listing requires a generated Connection.", nameof(connection));
+
+        return [.. await OpenAIModels.ListModelsAsync(typedConnection)];
+    }
+}
+
+/// <summary>
 /// Model discovery for OpenAI — lists available models and enriches
 /// sparse API responses with known context window and modality metadata.
 /// </summary>
 public static class OpenAIModels
 {
-    /// <summary>
-    /// Known model metadata used to enrich the sparse data returned by GET /v1/models.
-    /// Keys are sorted by descending length so prefix matching finds the most specific
-    /// match first (e.g. "gpt-4o-mini" before "gpt-4o" before "gpt-4").
-    /// </summary>
-    private static readonly (string Key, int? ContextWindow, string[] Inputs, string[] Outputs)[] KnownModels =
-    [
-        ("text-embedding-3-large", 8191, ["text"], []),
-        ("text-embedding-3-small", 8191, ["text"], []),
-        ("gpt-3.5-turbo", 16385, ["text"], ["text"]),
-        ("gpt-4o-mini", 128000, ["text", "image"], ["text"]),
-        ("gpt-4-turbo", 128000, ["text", "image"], ["text"]),
-        ("dall-e-3", null, ["text"], ["image"]),
-        ("gpt-4o", 128000, ["text", "image"], ["text"]),
-        ("gpt-4", 8192, ["text"], ["text"]),
-    ];
-
     /// <summary>
     /// List models available from an OpenAI endpoint using connection credentials.
     /// </summary>
@@ -58,8 +57,15 @@ public static class OpenAIModels
             {
                 Id = m.Id,
                 OwnedBy = m.OwnedBy,
+                AdditionalProperties = new Dictionary<string, object>
+                {
+                    ["id"] = m.Id,
+                    ["object"] = "model",
+                    ["created"] = m.CreatedAt.ToUnixTimeSeconds(),
+                    ["owned_by"] = m.OwnedBy,
+                },
             };
-            Enrich(info);
+            ModelDiscovery.Enrich("openai", info);
             models.Add(info);
         }
 
@@ -73,17 +79,22 @@ public static class OpenAIModels
     /// </summary>
     internal static void Enrich(ModelInfo info)
     {
-        foreach (var (key, contextWindow, inputs, outputs) in KnownModels)
+        ModelDiscovery.Enrich("openai", info);
+    }
+
+    /// <summary>
+    /// Map a raw OpenAI model payload to the generated provider-neutral contract.
+    /// </summary>
+    public static ModelInfo MapModel(JsonElement model)
+    {
+        var info = new ModelInfo
         {
-            if (string.Equals(info.Id, key, StringComparison.OrdinalIgnoreCase)
-                || info.Id.StartsWith(key + "-", StringComparison.OrdinalIgnoreCase))
-            {
-                info.ContextWindow = contextWindow;
-                info.InputModalities = inputs;
-                info.OutputModalities = outputs;
-                return;
-            }
-        }
+            Id = model.TryGetProperty("id", out var id) ? id.GetString() ?? string.Empty : string.Empty,
+            OwnedBy = model.TryGetProperty("owned_by", out var ownedBy) ? ownedBy.GetString() : null,
+            AdditionalProperties = ModelDiscovery.PreserveRaw(model),
+        };
+        ModelDiscovery.Enrich("openai", info);
+        return info;
     }
 
     private static OpenAIClient CreateClient(Connection connection)

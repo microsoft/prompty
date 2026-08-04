@@ -21,6 +21,7 @@
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="..\icon.png" Pack="true" PackagePath="\" />
+    <EmbeddedResource Include="Data\model_capabilities.json" />
   </ItemGroup>
 
   <ItemGroup>
