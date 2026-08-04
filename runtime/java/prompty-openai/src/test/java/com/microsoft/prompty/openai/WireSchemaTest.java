@@ -45,6 +45,45 @@ class WireSchemaTest {
     return castMap(schema);
   }
 
+  /**
+   * Build a prompt whose declared outputs are the given properties, and return the schema handed to
+   * {@code response_format}. Structured output is always strict, so this is the second way into the
+   * same recursive property walk that {@link #functionParametersSchema} reaches through tools.
+   */
+  private static Map<String, Object> outputsSchema(List<Object> outputs) {
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "structured-output-test");
+    data.put("kind", "prompt");
+    data.put("instructions", "test");
+    data.put("model", Map.of("id", "gpt-4", "provider", "openai"));
+    data.put("outputs", outputs);
+
+    Prompty agent = Prompty.load(data, new LoadContext());
+    Map<String, Object> request = Wire.buildChatArgs(agent, List.of());
+    Object schema = Streams.pointer(request, "response_format", "json_schema", "schema");
+    return castMap(schema);
+  }
+
+  /**
+   * The nested shape the cross-runtime vector pins down: an object with one genuinely required
+   * member and one optional one. Strict mode has to name both in {@code required} and express the
+   * optional one as a nullable union instead of omitting it.
+   */
+  private static List<Object> requiredColorOptionalBorder() {
+    return List.of(
+        Map.of(
+            "name",
+            "row",
+            "kind",
+            "object",
+            "required",
+            true,
+            "properties",
+            List.of(
+                Map.of("name", "color", "kind", "string", "required", true),
+                Map.of("name", "border", "kind", "string", "required", false))));
+  }
+
   @SuppressWarnings("unchecked")
   private static Map<String, Object> castMap(Object value) {
     return (Map<String, Object>) assertInstanceOf(Map.class, value);
@@ -62,6 +101,71 @@ class WireSchemaTest {
 
   private static Object at(Object root, Object... path) {
     return Streams.pointer(root, path);
+  }
+
+  /**
+   * The exact case the cross-runtime vector pins: a nested object with a required {@code color} and
+   * an optional {@code border}. Strict mode must name both in {@code required}; {@code border}
+   * stays semantically optional by gaining a null branch.
+   */
+  @Test
+  void strictNestedObjectRequiresEveryKeyAndNullsTheOptionalOnes() {
+    Map<String, Object> schema = functionParametersSchema(requiredColorOptionalBorder());
+
+    assertEquals(
+        List.of("color", "border"),
+        at(schema, "properties", "row", "required"),
+        "strict mode must name every nested key, not just the genuinely required ones");
+    assertEquals("string", at(schema, "properties", "row", "properties", "color", "type"));
+    assertEquals(
+        List.of("string", "null"),
+        at(schema, "properties", "row", "properties", "border", "type"),
+        "the optional key keeps its optionality as a null branch");
+    assertEquals(false, at(schema, "properties", "row", "additionalProperties"));
+    assertNoEmptyType(schema);
+  }
+
+  /**
+   * Structured output reaches the same recursion through {@code response_format} rather than a
+   * tool, and is always strict, so the nested rule has to hold there too.
+   */
+  @Test
+  void structuredOutputAppliesTheSameNestedRuleAsTools() {
+    Map<String, Object> schema = outputsSchema(requiredColorOptionalBorder());
+
+    assertEquals(List.of("row"), at(schema, "required"));
+    assertEquals(List.of("color", "border"), at(schema, "properties", "row", "required"));
+    assertEquals(
+        List.of("string", "null"), at(schema, "properties", "row", "properties", "border", "type"));
+    assertNoEmptyType(schema);
+  }
+
+  /** Without strict, a nested object still lists only what the author actually marked required. */
+  @Test
+  void withoutStrictNestedRequiredStaysExactlyAsDeclared() {
+    Map<String, Object> tool = new LinkedHashMap<>();
+    tool.put("name", "set_row_visual");
+    tool.put("kind", "function");
+    tool.put("parameters", requiredColorOptionalBorder());
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("name", "non-strict-test");
+    data.put("kind", "prompt");
+    data.put("instructions", "test");
+    data.put("model", Map.of("id", "gpt-4", "provider", "openai"));
+    data.put("tools", List.of(tool));
+
+    Prompty agent = Prompty.load(data, new LoadContext());
+    Map<String, Object> schema =
+        castMap(
+            Streams.pointer(
+                Wire.buildChatArgs(agent, List.of()), "tools", 0, "function", "parameters"));
+
+    assertEquals(List.of("color"), at(schema, "properties", "row", "required"));
+    assertEquals(
+        "string",
+        at(schema, "properties", "row", "properties", "border", "type"),
+        "outside strict mode an optional key is not widened to a nullable union");
   }
 
   @Test
@@ -117,11 +221,10 @@ class WireSchemaTest {
                                             false)))))))));
 
     assertEquals("object", at(schema, "properties", "row", "type"));
-    // Nested objects list only their genuinely required members, matching every other runtime.
-    // OpenAI's strict mode actually wants every key listed at every level, so a nested optional
-    // yields a schema the API rejects — but that rule lives in the shared spec, so it is reported
-    // upstream rather than fixed in one runtime, which would break cross-runtime agreement.
-    assertEquals(List.of("color", "fill"), at(schema, "properties", "row", "required"));
+    // Strict mode lists every key at every depth — `border` is optional but still required-listed,
+    // with its optionality carried by the null branch asserted below. Dropping it produces a schema
+    // OpenAI rejects outright.
+    assertEquals(List.of("color", "border", "fill"), at(schema, "properties", "row", "required"));
     assertEquals(
         List.of("string", "null"), at(schema, "properties", "row", "properties", "color", "type"));
 
@@ -135,8 +238,9 @@ class WireSchemaTest {
 
     assertEquals("string", at(schema, "properties", "row", "properties", "fill", "anyOf", 0, "type"));
     assertEquals("object", at(schema, "properties", "row", "properties", "fill", "anyOf", 1, "type"));
+    // The same rule applies inside a union branch, which is its own recursion path.
     assertEquals(
-        List.of("theme"),
+        List.of("theme", "tint"),
         at(schema, "properties", "row", "properties", "fill", "anyOf", 1, "required"));
 
     assertNoEmptyType(schema);

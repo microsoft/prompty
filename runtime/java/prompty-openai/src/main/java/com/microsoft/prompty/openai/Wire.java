@@ -396,7 +396,11 @@ public final class Wire {
           }
           boolean isRequired = Boolean.TRUE.equals(child.required);
           nested.put(child.name, propertySchema(child, !isRequired, strict));
-          if (isRequired) {
+          // Strict mode applies at every depth, not just the top level: OpenAI rejects a schema
+          // whose nested object omits a key from `required`. Optionality survives as nullability,
+          // added by the sibling overload above, so `border` becomes ["string", "null"] rather
+          // than disappearing from the list.
+          if (strict || isRequired) {
             required.add(child.name);
           }
         }
