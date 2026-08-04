@@ -94,8 +94,8 @@ public static class WireFormat
         var part = ChatMessageContentPart.CreateInputAudioPart(
             BinaryData.FromBytes(bytes),
             format == "mp3" ? ChatInputAudioFormat.Mp3 : ChatInputAudioFormat.Wav);
-        part.Patch.Set("$.input_audio.data"u8, audio.Source);
-        part.Patch.Set("$.input_audio.format"u8, format);
+        part.Patch.Set("$.input_audio.data"u8, BinaryData.FromObjectAsJson(audio.Source).ToMemory().Span);
+        part.Patch.Set("$.input_audio.format"u8, BinaryData.FromObjectAsJson(format).ToMemory().Span);
         return part;
     }
 

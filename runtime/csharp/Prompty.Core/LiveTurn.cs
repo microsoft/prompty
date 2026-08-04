@@ -87,6 +87,7 @@ internal static class LiveTurn
         ArgumentNullException.ThrowIfNull(agent);
         ArgumentNullException.ThrowIfNull(request);
         options ??= new TurnEnginePipelineOptions();
+        var inputs = NormalizeInputs(request.Inputs);
 
         var provider = agent.Model?.Provider ?? "openai";
         var executor = InvokerRegistry.GetExecutor(provider);
@@ -106,14 +107,14 @@ internal static class LiveTurn
             Tools = new LiveToolPort(
                 agent,
                 options.Tools,
-                request.Inputs as Dictionary<string, object?>,
+                inputs,
                 authorization,
                 options.OnEvent),
             Clock = new LiveClock(),
             Ids = new LiveIds(),
             Policy = new LivePolicyPort(
                 agent,
-                request.Inputs as Dictionary<string, object?>,
+                inputs,
                 options.ContextBudget,
                 options.Guardrails,
                 options.Steering,
@@ -145,6 +146,21 @@ internal static class LiveTurn
             EngineTurnStatus.Failed or EngineTurnStatus.ReconciliationRequired =>
                 throw MapFailure(result, request.MaxModelAttempts, agentMode, failures),
             _ => throw new InvalidOperationException($"Unsupported engine status '{result.Commit.Status}'."),
+        };
+    }
+
+    private static Dictionary<string, object?>? NormalizeInputs(object? inputs)
+    {
+        return inputs switch
+        {
+            null => null,
+            Dictionary<string, object?> values => values,
+            IReadOnlyDictionary<string, object?> values => values.ToDictionary(),
+            JsonElement { ValueKind: JsonValueKind.Object } value =>
+                value.Deserialize<Dictionary<string, object?>>(),
+            _ => throw new ArgumentException(
+                "Turn engine inputs must be a string-keyed dictionary or JSON object.",
+                nameof(inputs)),
         };
     }
 

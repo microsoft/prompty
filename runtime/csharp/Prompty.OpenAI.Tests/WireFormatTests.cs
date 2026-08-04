@@ -75,6 +75,56 @@ public class WireFormatTests
     }
 
     [Fact]
+    public void MessageToWire_AudioDataUri_PreservesSource()
+    {
+        var msg = new Message
+        {
+            Role = Role.User,
+            Parts =
+            [
+                new AudioPart
+                {
+                    Source = "data:audio/wav;base64,YXVkaW8=",
+                    MediaType = "audio/wav",
+                },
+            ],
+        };
+
+        var result = WireFormat.MessageToWire(msg);
+        var data = ModelReaderWriter.Write(result, ModelReaderWriterOptions.Json);
+        using var json = JsonDocument.Parse(data.ToStream());
+        var inputAudio = json.RootElement.GetProperty("content")[0].GetProperty("input_audio");
+
+        Assert.Equal("data:audio/wav;base64,YXVkaW8=", inputAudio.GetProperty("data").GetString());
+        Assert.Equal("wav", inputAudio.GetProperty("format").GetString());
+    }
+
+    [Fact]
+    public void MessageToWire_AudioUrl_PreservesSource()
+    {
+        var msg = new Message
+        {
+            Role = Role.User,
+            Parts =
+            [
+                new AudioPart
+                {
+                    Source = "https://example.com/audio.wav",
+                    MediaType = "audio/wav",
+                },
+            ],
+        };
+
+        var result = WireFormat.MessageToWire(msg);
+        var data = ModelReaderWriter.Write(result, ModelReaderWriterOptions.Json);
+        using var json = JsonDocument.Parse(data.ToStream());
+        var inputAudio = json.RootElement.GetProperty("content")[0].GetProperty("input_audio");
+
+        Assert.Equal("https://example.com/audio.wav", inputAudio.GetProperty("data").GetString());
+        Assert.Equal("wav", inputAudio.GetProperty("format").GetString());
+    }
+
+    [Fact]
     public void MessageToWire_AssistantMessage_ReturnsAssistantChatMessage()
     {
         var msg = new Message

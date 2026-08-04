@@ -78,6 +78,21 @@ public sealed class LiveTurnIntegrationTests : IDisposable
     }
 
     [Fact]
+    public async Task TurnWithEngineRequest_RejectsNonObjectInputs()
+    {
+        var executor = new QueueExecutor("unused");
+        InvokerRegistry.RegisterExecutor(Provider, executor);
+        var request = NewRequest("invalid-input-session", "invalid-input-turn");
+        request.Inputs = "not-an-input-object";
+
+        var error = await Assert.ThrowsAsync<ArgumentException>(() =>
+            Pipeline.TurnWithEngineRequestAsync(NewAgent(), request));
+
+        Assert.Contains("string-keyed dictionary or JSON object", error.Message, StringComparison.Ordinal);
+        Assert.Equal(0, executor.InvocationCount);
+    }
+
+    [Fact]
     public async Task TurnAsync_RejectsParallelToolsBeforeInvokingProvider()
     {
         var executor = new QueueExecutor("unused");
