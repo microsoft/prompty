@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { normalizeJavaOutput, normalizeJavaTests } from "./normalize-java-output.mjs";
+
 const metadataRoot = join("tsp-output", ".typra-generated");
 const manifestPath = join(metadataRoot, "manifest.json");
 
@@ -12,6 +14,35 @@ if (existsSync(manifestPath)) {
 
 trimEmptyPythonGeneratedTests(join("..", "runtime", "python", "prompty", "tests", "model"));
 trimTrailingWhitespace(join("..", "runtime", "go", "prompty", "model"));
+
+const javaModelRoot = join(
+  "..",
+  "runtime",
+  "java",
+  "prompty",
+  "src",
+  "main",
+  "java",
+  "com",
+  "microsoft",
+  "prompty",
+  "model",
+);
+const javaTestRoot = join(
+  "..",
+  "runtime",
+  "java",
+  "prompty",
+  "src",
+  "test",
+  "java",
+  "com",
+  "microsoft",
+  "prompty",
+  "model",
+);
+const typeSpecRoot = "model";
+normalizeJavaTests(javaTestRoot, normalizeJavaOutput(javaModelRoot, typeSpecRoot));
 
 function trimEmptyPythonGeneratedTests(root) {
   if (!existsSync(root)) {

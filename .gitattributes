@@ -14,6 +14,7 @@
 *.rs    text eol=lf
 *.go    text eol=lf
 *.cs    text eol=lf
+*.java  text eol=lf
 *.tsp   text eol=lf
 *.astro text eol=lf
 *.css   text eol=lf
@@ -36,6 +37,9 @@
 # --- Project files ---
 *.csproj    text eol=lf
 *.sln       text eol=lf
+*.gradle    text eol=lf
+*.kts       text eol=lf
+*.properties text eol=lf
 *.ps1       text eol=lf
 *.bat       text eol=lf
 
@@ -51,6 +55,7 @@ Dockerfile      text eol=lf
 # --- Truly binary files --- keep as-is
 *.png   binary
 *.exe   binary
+*.jar   binary
 *.svg   text eol=lf
 
 # --- Lock files: text but don't diff ---

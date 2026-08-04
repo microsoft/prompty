@@ -3054,6 +3054,1666 @@
       "marker": true
     },
     {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AiResourceInfo.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnonymousConnection.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicImageBlock.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicImageSource.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicMessagesRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicMessagesResponse.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicTextBlock.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicToolDefinition.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicToolResultBlock.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicToolUseBlock.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicUsage.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AnthropicWireMessage.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ApiKeyConnection.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ArrayProperty.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AudioPart.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AuthenticationMode.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AuthorizationCodeFlow.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Binding.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Checkpoint.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CheckpointStore.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CompactionCompletePayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CompactionConfig.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CompactionFailedPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CompactionStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Connection.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ContentPart.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ContextCandidate.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ContextRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CustomTool.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/DelegatedStateReference.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/DeviceAuthorization.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/DoneEventPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EngineCheckpoint.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EngineEvent.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EngineEventKind.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EnginePermissionDecision.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EngineTurnStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ErrorChunk.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ErrorEventPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EventJournalWriter.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EventSink.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Executor.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/FileNotFoundError.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/FilePart.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/FinalOutputPolicyRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/FinalOutputPolicyResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/FormatConfig.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/FoundryConnection.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/FunctionTool.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/GuardrailResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HarnessContext.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HookEndPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HookEndScope.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HookStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HookStartScope.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HostPolicyRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HostPolicyResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HostToolExecutor.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HostToolRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HostToolResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ImagePart.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvocationContextDecision.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvocationContextDisposition.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvocationContextPortability.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvocationContextState.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvocationUsage.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvokerError.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/LlmCompletePayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/LlmStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/LoadContext.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/McpApprovalMode.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/McpApprovalModeKind.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/McpTool.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/MemoryCategory.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/MemoryEntry.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/MemoryStore.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Message.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/MessagesUpdatedPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Model.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelInfo.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelInvocationContextSnapshot.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelInvocationRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelInvocationResponse.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelLister.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelOptions.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelReconciliationState.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelToolOutcome.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelToolRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelToolResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/OAuthConnection.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/OAuthToken.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ObjectProperty.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/OpenApiTool.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Parser.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ParserConfig.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/PermissionCompletedPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/PermissionDecision.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/PermissionRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/PermissionRequestedPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/PermissionResolver.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Processor.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ProjectInfo.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Prompty.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/PromptyTool.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Property.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RedactedField.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RedactionMetadata.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RedactionMode.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReferenceConnection.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RemoteConnection.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Renderer.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayJournalRecord.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayMismatch.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayRecordKind.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayRecordStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayVerificationRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayVerificationResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayVerificationStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ResumeContext.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RetryPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RetryPolicyRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Role.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RunTurnRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RunTurnResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RunTurnStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SaveContext.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionEndPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionEndStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionEvent.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionEventType.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionFileRef.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionRef.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionSummary.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionSummaryStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionTrace.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionWarningPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/StatusEventPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/StreamChunk.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/StreamOptions.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SubscriptionInfo.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Template.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TextChunk.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TextPart.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ThinkingChunk.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ThinkingEventPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ThreadMarker.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TokenEventPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TokenUsage.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Tool.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolCall.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolCallCompletePayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolCallStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolChunk.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolContext.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolDispatchResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolExecutionCompletePayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolExecutionStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolResultPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolResultStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TraceFile.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TraceSpan.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TraceTime.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TrajectoryEvent.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnCommit.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnEndPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnEngineResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnEvent.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnEventType.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnModelRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnModelResponse.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnOptions.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnSummary.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnTrace.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TypraJson.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TypraMaps.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TypraYaml.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/UnionProperty.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/UsageChunk.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ValidationError.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ValidationResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AiResourceInfoGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnonymousConnectionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicImageBlockGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicImageSourceGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicMessagesRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicMessagesResponseGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicTextBlockGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicToolDefinitionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicToolResultBlockGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicToolUseBlockGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicUsageGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicWireMessageGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ApiKeyConnectionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ArrayPropertyGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AudioPartGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AuthorizationCodeFlowGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/BindingGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CheckpointGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CompactionCompletePayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CompactionConfigGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CompactionFailedPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CompactionStartPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ConnectionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ContentPartGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ContextCandidateGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ContextRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CustomToolGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/DelegatedStateReferenceGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/DeviceAuthorizationGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/DoneEventPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/EngineCheckpointGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/EngineEventGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/EnginePermissionDecisionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ErrorChunkGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ErrorEventPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FileNotFoundErrorGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FilePartGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FinalOutputPolicyRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FinalOutputPolicyResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FormatConfigGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FoundryConnectionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FunctionToolGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/GuardrailResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HarnessContextGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HookEndPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HookStartPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HostPolicyRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HostPolicyResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HostToolRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HostToolResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ImagePartGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/InvocationContextDecisionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/InvocationContextStateGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/InvocationUsageGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/InvokerErrorGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/LlmCompletePayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/LlmStartPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/McpApprovalModeGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/McpToolGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/MemoryEntryGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/MemoryStoreGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/MessageGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/MessagesUpdatedPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelInfoGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelInvocationContextSnapshotGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelInvocationRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelInvocationResponseGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelOptionsGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelReconciliationStateGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelToolRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ModelToolResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/OAuthConnectionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/OAuthTokenGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ObjectPropertyGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/OpenApiToolGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ParserConfigGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PermissionCompletedPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PermissionDecisionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PermissionRequestedPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PermissionRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ProjectInfoGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PromptyGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PromptyToolGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PropertyGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RedactedFieldGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RedactionMetadataGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReferenceConnectionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RemoteConnectionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReplayJournalRecordGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReplayMismatchGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReplayVerificationRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReplayVerificationResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ResumeContextGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RetryPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RetryPolicyRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RunTurnRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RunTurnResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionEndPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionEventGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionFileRefGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionRefGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionStartPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionSummaryGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionTraceGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionWarningPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/StatusEventPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/StreamChunkGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/StreamOptionsGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SubscriptionInfoGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TemplateGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TextChunkGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TextPartGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ThinkingChunkGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ThinkingEventPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ThreadMarkerGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TokenEventPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TokenUsageGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolCallCompletePayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolCallGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolCallStartPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolChunkGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolContextGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolDispatchResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolExecutionCompletePayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolExecutionStartPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolResultPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TraceFileGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TraceSpanGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TraceTimeGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TrajectoryEventGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnCommitGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnEndPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnEngineResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnEventGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnModelRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnModelResponseGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnOptionsGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnStartPayloadGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnSummaryGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnTraceGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TypraGeneratedTests.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/UnionPropertyGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/UsageChunkGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ValidationErrorGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ValidationResultGeneratedTest.java",
+      "marker": true
+    },
+    {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/__init__.py",
       "marker": true
