@@ -1,0 +1,287 @@
+{
+  "version": "1",
+  "description": "Cross-runtime named-collection load/save/reload contracts. Canonical serialization uses a name-keyed object only when every parsed name is non-empty and unique; otherwise it uses a whole-collection array fallback without omission, collision, or synthetic names. Array-valued entries in name-keyed object form are rejected recursively, while arrays in declared entry fields remain valid.",
+  "vectors": [
+    {
+      "name": "unique_names_use_canonical_object_form",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "unique-names",
+        "inputs": [
+          {
+            "name": "alpha",
+            "kind": "string",
+            "description": "first entry"
+          },
+          {
+            "name": "beta",
+            "kind": "boolean",
+            "required": true
+          }
+        ]
+      },
+      "expected": {
+        "collectionFormat": "object",
+        "entries": [
+          {
+            "name": "alpha",
+            "kind": "string",
+            "description": "first entry"
+          },
+          {
+            "name": "beta",
+            "kind": "boolean",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "missing_and_empty_names_use_lossless_array_fallback",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "unnamed-inputs",
+        "inputs": [
+          {
+            "name": "head",
+            "kind": "string",
+            "description": "preserve the named head"
+          },
+          {
+            "kind": "integer",
+            "default": 7
+          },
+          {
+            "name": "",
+            "kind": "boolean",
+            "example": false
+          },
+          {
+            "name": "tail",
+            "kind": "array",
+            "default": [
+              1,
+              null,
+              {
+                "nested": [
+                  "x",
+                  2
+                ]
+              }
+            ],
+            "items": {
+              "kind": "object"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "collectionFormat": "array",
+        "preserveOrder": true,
+        "entries": [
+          {
+            "name": "head",
+            "kind": "string",
+            "description": "preserve the named head"
+          },
+          {
+            "name": "",
+            "kind": "integer",
+            "default": 7
+          },
+          {
+            "name": "",
+            "kind": "boolean",
+            "example": false
+          },
+          {
+            "name": "tail",
+            "kind": "array",
+            "default": [
+              1,
+              null,
+              {
+                "nested": [
+                  "x",
+                  2
+                ]
+              }
+            ],
+            "items": {
+              "kind": "object"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "duplicate_names_use_lossless_array_fallback",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "duplicate-inputs",
+        "inputs": [
+          {
+            "name": "same",
+            "kind": "string",
+            "description": "first duplicate"
+          },
+          {
+            "name": "same",
+            "kind": "integer",
+            "default": 2
+          }
+        ]
+      },
+      "expected": {
+        "collectionFormat": "array",
+        "preserveOrder": true,
+        "entries": [
+          {
+            "name": "same",
+            "kind": "string",
+            "description": "first duplicate"
+          },
+          {
+            "name": "same",
+            "kind": "integer",
+            "default": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "empty_object_key_reloads_as_unnamed_array_entry",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "empty-object-key",
+        "inputs": {
+          "": {
+            "kind": "string",
+            "description": "preserve empty key payload"
+          },
+          "tail": {
+            "kind": "boolean"
+          }
+        }
+      },
+      "expected": {
+        "collectionFormat": "array",
+        "entries": [
+          {
+            "name": "",
+            "kind": "string",
+            "description": "preserve empty key payload"
+          },
+          {
+            "name": "tail",
+            "kind": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "name": "array_in_declared_property_field_remains_valid",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "declared-array-field",
+        "inputs": {
+          "aliases": {
+            "kind": "array",
+            "default": [
+              "Ada",
+              "Grace",
+              null
+            ],
+            "items": {
+              "kind": "string"
+            }
+          }
+        }
+      },
+      "expected": {
+        "collectionFormat": "object",
+        "entries": [
+          {
+            "name": "aliases",
+            "kind": "array",
+            "default": [
+              "Ada",
+              "Grace",
+              null
+            ],
+            "items": {
+              "kind": "string"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "scalar_array_shorthand_in_name_keyed_inputs_is_rejected",
+      "operation": "load-error",
+      "input": {
+        "name": "invalid-scalar-array-shorthand",
+        "inputs": {
+          "arrayDefault": [
+            1,
+            "two",
+            null
+          ]
+        }
+      },
+      "expected": {
+        "error": "invalid-named-collection-entry",
+        "path": "inputs.arrayDefault",
+        "valueCategory": "array"
+      }
+    },
+    {
+      "name": "array_value_in_name_keyed_inputs_is_rejected",
+      "operation": "load-error",
+      "input": {
+        "name": "invalid-top-level-array",
+        "inputs": {
+          "arrayEntry": [
+            {
+              "kind": "string"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "error": "invalid-named-collection-entry",
+        "path": "inputs.arrayEntry",
+        "valueCategory": "array"
+      }
+    },
+    {
+      "name": "array_value_in_nested_properties_is_rejected",
+      "operation": "load-error",
+      "input": {
+        "name": "invalid-recursive-array",
+        "inputs": {
+          "profile": {
+            "kind": "object",
+            "properties": {
+              "arrayEntry": [
+                {
+                  "kind": "string"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "expected": {
+        "error": "invalid-named-collection-entry",
+        "path": "inputs.profile.properties.arrayEntry",
+        "valueCategory": "array"
+      }
+    }
+  ]
+}

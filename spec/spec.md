@@ -346,6 +346,53 @@ schema is a `Property` object:
 Rich kinds (`thread`, `image`, `file`, `audio`) receive special handling during
 rendering — see §5 for details.
 
+#### Named collection encoding
+
+Named collections such as `Properties`, `Tools`, `Bindings`, and `Connections` accept
+either a flat array of entries or a name-keyed object. Names are opaque parsed strings:
+implementations MUST NOT trim, case-fold, or Unicode-normalize them before comparison.
+Missing `name` and an explicit empty `name` are the same unnamed state because `name`
+defaults to `""`.
+
+The canonical serialization is a name-keyed object when every entry has a non-empty
+name and all names are unique by exact parsed-string comparison. Otherwise, the
+serializer MUST encode the entire collection as an array, preserving entry order and
+every entry's payload. The canonical array form MUST omit an empty `name`. An explicit
+array-format option MAY force array encoding for a losslessly object-encodable
+collection, but an object-format option MUST NOT override the lossless fallback.
+
+Implementations MUST NOT omit unnamed entries, overwrite duplicate names, or invent
+synthetic keys such as `_unnamed`, indexes, or suffixed names. Loading either canonical
+form and then saving and reloading it MUST preserve the same entries and payloads.
+Array fallback MUST preserve model entry order; object ordering is not semantically
+significant.
+
+At every named-collection boundary, recursively:
+
+- The array form is the collection itself: a flat array of entries.
+- In the name-keyed object form, each key maps to exactly one entry.
+- An array used as the immediate value of a name-keyed entry is structurally invalid.
+  It MUST be rejected at the first invalid value and MUST NOT be skipped, flattened,
+  stringified, or coerced into a default entry.
+- The native load error MUST identify the full collection path, including the offending
+  key, and identify the invalid value category as `array`.
+
+This validation is schema-aware and applies after JSON/YAML parsing and reference
+resolution. It does not reject the outer flat array form or arrays in declared fields
+inside a valid entry, such as `Property.default`. In particular, list shorthand is not
+available as the immediate value of a name-keyed `Property` entry because it is
+ambiguous with an invalid nested collection. Use the expanded form instead:
+
+```yaml
+inputs:
+  aliases:
+    kind: array
+    default: [Ada, Grace]
+```
+
+The normative load/save/reload and rejection cases are
+`spec/vectors/model/named_collection_vectors.json`.
+
 **Scalar shorthand**: When a property value is a plain scalar instead of a `Property`
 object, it MUST be interpreted as `Property(kind: <inferred>, default: <value>)`.
 
@@ -363,6 +410,7 @@ inputs:
 
 Kind inference from scalar type: string → `"string"`, integer → `"integer"`,
 float → `"float"`, boolean → `"boolean"`, list → `"array"`, dict → `"object"`.
+The named-collection object-form exception for list values is defined above.
 
 ### §2.8 Template
 
