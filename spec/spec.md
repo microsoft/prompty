@@ -1285,6 +1285,20 @@ ToolResult:
   parts:     ContentPart[]    // Rich content from tool execution
 ```
 
+`ContentPart` is a closed, exact, case-sensitive discriminated union. A typed
+`ContentPart` load MUST reject any `kind` other than `text`, `image`, `audio`, or
+`file`, including case-only variants such as `Text`. Implementations MUST NOT create an
+unknown fallback variant, preserve the unknown payload as a `ContentPart`, or coerce it
+to a known/default kind. The rejection MUST be classified as an unknown-discriminator
+load error and report both the discriminator field (`kind`) and the exact offending
+string value. Runtimes MAY use their native load-error type, but its diagnostic or
+structured data MUST expose equivalent information.
+
+This strict contract is distinct from the intentionally open discriminator contracts:
+an unknown tool kind loads as `CustomTool` under §2.9, and an unknown connection kind
+is preserved under §2.5. The shared acceptance vectors are in
+`spec/vectors/model/content_part_discriminator_vectors.json`.
+
 **ToolResult** enables tools to return rich content (text, images, files, audio)
 rather than plain strings. Implementations MUST support conversion from a plain
 string to a `ToolResult` containing a single `TextPart` for backward compatibility

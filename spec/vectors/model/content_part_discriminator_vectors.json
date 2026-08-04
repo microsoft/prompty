@@ -1,0 +1,45 @@
+{
+  "version": "1",
+  "description": "Cross-runtime strict ContentPart discriminator contracts. ContentPart is closed and case-sensitive: unknown kinds are rejected rather than preserved like unknown Connection values or dispatched like unknown Tool values.",
+  "vectors": [
+    {
+      "name": "known_text_content_part_loads",
+      "operation": "load",
+      "input": {
+        "kind": "text",
+        "value": "hello"
+      },
+      "expected": {
+        "kind": "text",
+        "value": "hello"
+      }
+    },
+    {
+      "name": "unknown_content_part_kind_is_rejected",
+      "operation": "load-error",
+      "input": {
+        "kind": "video",
+        "source": "https://example.test/video.mp4",
+        "durationSeconds": 3
+      },
+      "expected": {
+        "error": "unknown-discriminator",
+        "discriminator": "kind",
+        "value": "video"
+      }
+    },
+    {
+      "name": "content_part_case_collision_is_rejected",
+      "operation": "load-error",
+      "input": {
+        "kind": "Text",
+        "value": "case-sensitive"
+      },
+      "expected": {
+        "error": "unknown-discriminator",
+        "discriminator": "kind",
+        "value": "Text"
+      }
+    }
+  ]
+}
