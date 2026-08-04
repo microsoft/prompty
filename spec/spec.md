@@ -285,6 +285,20 @@ Connection types are discriminated by the `kind` field:
 | `foundry`     | `endpoint`                     | Microsoft Foundry connection             |
 | `oauth`       | `endpoint`, `authenticationMode` | OAuth-based authentication            |
 
+The `kind` discriminator is open for forward compatibility. Known-kind matching is
+exact and case-sensitive, so a value such as `Reference` is an unknown kind rather than
+the known `reference` kind. When a runtime loads a connection whose string `kind` is
+not listed above, it MUST preserve that exact discriminator and every JSON-compatible
+property in the connection payload through a load → save → reload cycle.
+Implementations MUST NOT coerce an unknown connection to a known/default connection
+kind or discard its additional payload. This passthrough requirement applies to unknown
+connection kinds; known connection kinds retain their schema-defined fields. The shared
+acceptance vector is `spec/vectors/model/connection_roundtrip_vectors.json`.
+
+This contract is independent of tool dispatch. An unknown tool `kind` continues to load
+as `CustomTool` under §2.9; an unknown connection remains an unknown `Connection` and
+does not imply `CustomTool`.
+
 ### §2.6 ModelOptions
 
 | Property                  | Type       | Description                                |
