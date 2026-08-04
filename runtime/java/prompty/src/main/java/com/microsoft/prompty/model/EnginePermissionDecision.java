@@ -27,6 +27,7 @@ public class EnginePermissionDecision {
     EnginePermissionDecision.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(EnginePermissionDecision result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("approved") && map.get("approved") != null) {
       result.approved = (map.get("approved") instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(map.get("approved"))));
@@ -40,7 +41,6 @@ public class EnginePermissionDecision {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

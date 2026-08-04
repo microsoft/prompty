@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ObjectProperty extends Property {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public List<Property> properties = new ArrayList<>();
 
@@ -26,23 +27,19 @@ public class ObjectProperty extends Property {
     ObjectProperty.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ObjectProperty result, Map<?, ?> map, LoadContext ctx) {
     Property.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("properties") && map.get("properties") != null) {
       result.properties = ModelCollections.loadList(
           map.get("properties"), "properties", Property.SHORTHAND_PROPERTY, Property::load, ctx);
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     ObjectProperty obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.properties != null) {
       result.put("properties", ModelCollections.saveList(
           obj.properties, Property.SHORTHAND_PROPERTY, item -> item.save(ctx), ctx));

@@ -26,6 +26,7 @@ public class Template {
     Template.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(Template result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("format") && map.get("format") != null) {
       result.format = FormatConfig.load(map.get("format"), ctx);
@@ -34,7 +35,6 @@ public class Template {
       result.parser = ParserConfig.load(map.get("parser"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

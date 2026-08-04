@@ -28,6 +28,7 @@ public class LlmCompletePayload {
     LlmCompletePayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(LlmCompletePayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("requestId") && map.get("requestId") != null) {
       result.requestId = String.valueOf(map.get("requestId"));
@@ -42,7 +43,6 @@ public class LlmCompletePayload {
       result.durationMs = (map.get("durationMs") instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(map.get("durationMs"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

@@ -27,6 +27,7 @@ public class ValidationError {
     ValidationError.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ValidationError result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("message") && map.get("message") != null) {
       result.message = String.valueOf(map.get("message"));
@@ -38,7 +39,6 @@ public class ValidationError {
       result.constraint = String.valueOf(map.get("constraint"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

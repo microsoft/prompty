@@ -25,12 +25,12 @@ public class CompactionStartPayload {
     CompactionStartPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(CompactionStartPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("droppedCount") && map.get("droppedCount") != null) {
       result.droppedCount = (map.get("droppedCount") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("droppedCount"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

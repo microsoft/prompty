@@ -32,6 +32,7 @@ public class TurnSummary {
     TurnSummary.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(TurnSummary result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("turnId") && map.get("turnId") != null) {
       result.turnId = String.valueOf(map.get("turnId"));
@@ -58,7 +59,6 @@ public class TurnSummary {
       result.durationMs = (map.get("durationMs") instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(map.get("durationMs"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

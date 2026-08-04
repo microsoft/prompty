@@ -2,58 +2,65 @@
 //
 // TEMPORARY SHIM — remove once @typra/emitter's Java backend is fixed.
 //
-// The Java language backend of @typra/emitter@0.4.2 emits source that does not
-// compile and that diverges from the C#/Rust/Go/Python backends. This module
-// applies a fixed, deterministic set of rewrites so the emitted model remains
-// the single canonical model layer for the Java runtime (no hand-written
-// duplicate model code, no manual edits to generated files).
+// The Java language backend of @typra/emitter emits source that diverges from
+// the C#/Rust/Go/Python backends. This module applies a fixed, deterministic set
+// of rewrites so the emitted model remains the single canonical model layer for
+// the Java runtime (no hand-written duplicate model code, no manual edits to
+// generated files).
 //
-// Defects addressed (reported upstream):
+// Pinned emitter: @typra/emitter@0.4.3.
 //
-//   J1  `default` is a Java reserved word but is emitted verbatim as a field
-//       name on `Property`.
-//   J2  `@abstract` models are emitted as `abstract class` yet their own
-//       `load()` fallback calls `new X()`; the `Tool` dispatch also omits the
-//       wildcard `*` catch-all subtype.
-//   J3  Enum-typed fields are assigned raw `String` values in `@factory`
-//       bodies and in shorthand `load()` paths.
-//   J4  `Long`/`Double`/`Float` fields are initialized with `int` literals.
-//   J6  Enum type names are emitted in lowerCamelCase.
-//   J7  Enums are emitted package-private alongside a public class in the same
-//       compilation unit, which is not legal Java.
-//   J8  Derived-class `load()` never populates base-class properties, and
-//       re-declares the discriminator field so it shadows the base field.
+// Residual defects still present in 0.4.3 (reported upstream):
+//
 //   J9  Named collections are not normalized between their dictionary and list
-//       forms on load, and `collectionFormat` is not honoured on save.
-//   J10 Generated tests dot into `List<>` fields as if they were maps.
-//   J11 Generated tests double-escape expected string literals.
-//   J12 Generated tests compare object-valued fields against scalar wire values.
-//   J13 `Property.load` emits two consecutive `instanceof Number` branches, so
-//       the integer branch is unreachable.
-//   J14 Derived `save()` runs the `postSave` hook again after the base class has
-//       already run it.
+//       forms on load, and `collectionFormat` is not honoured on save. Without
+//       this, `Tool.bindings` saves as an array and the shared vector
+//       `spec/vectors/agent/agent_vectors.json` fails (`missing field 'unit'`).
+//   J11 Generated tests double-escape expected string literals, so the
+//       expectation never matches the value the model actually loads.
+//   J12 Generated tests dereference object-valued fields as if they were maps
+//       (`instance1.bindings.input` against a `List<Binding>`), which does not
+//       compile. Reported upstream as J20; it is the same defect class.
+//   J13 The `float` and `integer` scalar shorthand branches are both guarded by
+//       a bare `data instanceof Number`, so the integer branch is unreachable
+//       and every numeric shorthand loads as a float.
+//   J14 A derived `save()` runs the `postSave` hook at every level of the
+//       inheritance chain, post-processing an incomplete dictionary and then the
+//       complete one again. C# runs it exactly once, in the base class.
 //   J15 `SaveContext` lacks the `collectionFormat` and `useShorthand` knobs the
-//       other backends expose.
+//       other backends expose, so callers cannot select the object wire form.
 //   J16 Optional properties that declare a TypeSpec default are materialized
 //       eagerly, so `save()` emits keys the C#, Rust and Go runtimes omit.
 //   J17 Required enum-typed properties are initialized to `null` and saved
 //       behind a null check, so a required enum can vanish from the wire data.
 //       C# and Rust seed them with the first declared constant and always emit
 //       them.
+//   J21 Generated tests compare enum-typed fields against their raw wire string
+//       (`"always"`) but stringify the Java constant name (`ALWAYS`), so every
+//       enum-valued assertion fails.
+//
+// Fixed upstream in 0.4.3 and removed from this shim: J1 (`default` reserved
+// word — now emitted as `defaultValue`), J2 (abstract-base instantiation and
+// the missing `*` wildcard subtype — `CustomTool` dispatch is now emitted),
+// J3 (raw `String` assigned to enum fields — factories now use `fromValue`),
+// J4 (`int` literals for boxed `Long`/`Double`/`Float`), J6/J7 (lowerCamelCase
+// and package-private enums — now PascalCase standalone public files),
+// J8 (derived `load()` not populating base properties — `loadBaseInto` is now
+// emitted natively), J10 (tests dotting into `List<>` fields),
+// J18 (deep polymorphic downcasts) and
+// J19 (`.value` appended to discriminator fields). The generated-test runner is
+// likewise now emitted upstream as `TypraGeneratedTests`, so this shim no longer
+// synthesizes a registry; `GeneratedExamplesTest` drives that output directly.
 //
 // Every rewrite below is structural and idempotent: running the emitter and
 // this shim again from a clean tree produces byte-identical output.
 //
-// J5 — `@method` stubs are emitted without an extension seam (Rust emits a
-// trait, C# emits partial `*Helpers` classes) — is deliberately NOT addressed
-// here. Those helpers are hand-written in the runtime package instead, so the
-// generated model layer stays untouched.
+// J5 — `@method` stubs — is deliberately NOT addressed here. The emitter now
+// emits a `${TypeName}Methods` extension seam, created only when missing and
+// never overwritten, which is where the hand-written implementations live.
 
-import { existsSync, readdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-
-/** Subtypes selected when a discriminated union sees an unknown discriminator. */
-const WILDCARD_SUBTYPE = { Tool: "CustomTool" };
 
 export function normalizeJavaOutput(root, specRoot) {
   if (!existsSync(root)) {
@@ -69,9 +76,6 @@ export function normalizeJavaOutput(root, specRoot) {
 
   const optional = readOptionalProperties(specRoot);
   const namedCollections = readNamedCollectionFields(specRoot);
-  const enumRenames = extractEnums(root, units);
-  applyRenames(units, enumRenames);
-  const enumNames = collectEnumNames(units);
   const enumDefaults = collectEnumDefaults(units);
 
   const classes = indexClasses(units);
@@ -81,22 +85,15 @@ export function normalizeJavaOutput(root, specRoot) {
     namedDictionarySave: 0,
     derivedSave: 0,
     scalarShorthand: 0,
-    loadBodies: 0,
     optionalDefaults: 0,
     requiredEnums: 0,
-    wildcard: 0,
-    misses: [],
     problems: [],
   };
 
   for (const [name, unit] of units) {
     let text = unit.text;
-    text = fixReservedFieldNames(text);
-    text = fixNumericDefaults(text);
     text = clearOptionalDefaults(text, optional.get(name), stats);
     text = fixRequiredEnumDefaults(text, optional.get(name), enumDefaults, stats);
-    text = fixDiscriminatorDispatch(text, name, stats);
-    text = fixEnumAssignments(text, classes.get(name), enumNames);
     text = fixScalarShorthandDispatch(text, stats);
     const named = new Map();
     text = fixNamedDictionaryLoads(text, units, stats, named);
@@ -108,14 +105,13 @@ export function normalizeJavaOutput(root, specRoot) {
   extendSaveContext(units, stats);
   writeSupportClasses(root, units);
 
-  reshapeLoadMethods(units, classes, stats);
   assertRewritesApplied(stats, classes);
 
   for (const unit of units.values()) {
     writeFileSync(unit.path, unit.text);
   }
 
-  return { renames: enumRenames, classes: described };
+  return { classes: described };
 }
 
 /**
@@ -275,68 +271,6 @@ function describeClasses(classes) {
   return described;
 }
 
-// ---------------------------------------------------------------------------
-// J6 + J7 — hoist enums into their own public compilation units
-// ---------------------------------------------------------------------------
-
-function extractEnums(root, units) {
-  const renames = new Map();
-  const header = "// <auto-generated by typra-emitter>\n// Code generated by Typra emitter; DO NOT EDIT.\n";
-
-  for (const unit of units.values()) {
-    const lines = unit.text.split("\n");
-    const kept = [];
-    let index = 0;
-    while (index < lines.length) {
-      const match = /^enum (\w+) \{$/u.exec(lines[index]);
-      if (!match) {
-        kept.push(lines[index]);
-        index += 1;
-        continue;
-      }
-      const end = lines.indexOf("}", index);
-      const original = match[1];
-      const renamed = original[0].toUpperCase() + original.slice(1);
-      if (renamed !== original) {
-        renames.set(original, renamed);
-      }
-      const body = lines.slice(index + 1, end).join("\n");
-      const source = `${header}package com.microsoft.prompty.model;\n\npublic enum ${renamed} {\n${body}\n}\n`;
-      units.set(renamed, { path: join(root, `${renamed}.java`), text: source });
-      // Drop the enum block plus the blank line that follows it.
-      index = end + 1;
-      if (lines[index] === "") {
-        index += 1;
-      }
-    }
-    unit.text = kept.join("\n");
-  }
-
-  return renames;
-}
-
-function applyRenames(units, renames) {
-  if (renames.size === 0) {
-    return;
-  }
-  for (const unit of units.values()) {
-    let text = unit.text;
-    for (const [from, to] of renames) {
-      text = withLiteralsMasked(text, (code) => code.replace(new RegExp(`\\b${from}\\b`, "gu"), to));
-    }
-    unit.text = text;
-  }
-}
-
-function collectEnumNames(units) {
-  const names = new Set();
-  for (const [name, unit] of units) {
-    if (/^public enum (\w+) \{$/mu.test(unit.text)) {
-      names.add(name);
-    }
-  }
-  return names;
-}
 
 /**
  * Maps each generated enum to its first declared constant, which is the value
@@ -389,108 +323,6 @@ function fixRequiredEnumDefaults(text, optional, enumDefaults, stats) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// J1 — reserved-word field names
-// ---------------------------------------------------------------------------
-
-const RESERVED_FIELDS = { default: "defaultValue" };
-
-function fixReservedFieldNames(text) {
-  return withLiteralsMasked(text, (code) => {
-    let result = code;
-    for (const [reserved, replacement] of Object.entries(RESERVED_FIELDS)) {
-      // Declaration: `public Object default = null;`
-      result = result.replace(
-        new RegExp(`^(\\s*public\\s+[\\w<>,\\[\\]. ]+?\\s+)${reserved}(\\s*=)`, "gmu"),
-        `$1${replacement}$2`,
-      );
-      // Field access: `result.default`, `obj.default`, `this.default`
-      result = result.replace(new RegExp(`\\.${reserved}\\b(?!\\s*:)`, "gu"), `.${replacement}`);
-    }
-    return result;
-  });
-}
-
-/**
- * Runs `transform` over the source with every string literal, text block, char
- * literal and comment replaced by an opaque placeholder, then restores them.
- *
- * Rewrites that target Java identifiers must never see literal or comment text:
- * `default` is both a reserved field name and a substring of real payload data
- * (for example the OAuth scope `https://cognitiveservices.azure.com/.default`).
- */
-function withLiteralsMasked(text, transform) {
-  const stash = [];
-  const masked = text.replace(
-    /"""[\s\S]*?"""|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\]|\\.)*'|\/\*[\s\S]*?\*\/|\/\/[^\n]*/gu,
-    (match) => {
-      stash.push(match);
-      return `\u0000MASK${stash.length - 1}\u0000`;
-    },
-  );
-  return transform(masked).replace(/\u0000MASK(\d+)\u0000/gu, (_whole, index) => stash[Number(index)]);
-}
-
-// ---------------------------------------------------------------------------
-// J4 — boxed numeric literal defaults
-// ---------------------------------------------------------------------------
-
-function fixNumericDefaults(text) {
-  return text
-    .replace(/^(\s*public Long \w+ = -?\d+)(;)$/gmu, "$1L$2")
-    .replace(/^(\s*public Double \w+ = -?\d+)(;)$/gmu, "$1.0$2")
-    .replace(/^(\s*public Float \w+ = -?\d+)(;)$/gmu, "$1f$2");
-}
-
-// ---------------------------------------------------------------------------
-// J2 — discriminated-union dispatch semantics
-// ---------------------------------------------------------------------------
-
-function fixDiscriminatorDispatch(text, className, stats) {
-  let result = text.replace(
-    /switch \(String\.valueOf\(discriminator\)\) \{/gu,
-    "switch (String.valueOf(discriminator).toLowerCase(java.util.Locale.ROOT)) {",
-  );
-
-  const wildcard = WILDCARD_SUBTYPE[className];
-  if (wildcard && result.includes("Object discriminator = dispatchMap.get(")) {
-    result = result.replace(
-      /(\n\s*)default:\n\s*break;\n/u,
-      (whole, prefix) => {
-        stats.wildcard += 1;
-        return `${prefix}default:\n            return ${wildcard}.load(data, ctx);\n`;
-      },
-    );
-  }
-  return result;
-}
-
-// ---------------------------------------------------------------------------
-// J3 — enum-typed fields assigned raw strings
-// ---------------------------------------------------------------------------
-
-function fixEnumAssignments(text, info, enumNames) {
-  if (!info || info.enumFields.size === 0) {
-    return text;
-  }
-  let result = text;
-  for (const [field, type] of info.enumFields) {
-    if (!enumNames.has(type)) {
-      continue;
-    }
-    // Shorthand load path: `result.kind = String.valueOf(data);`
-    result = result.replace(
-      new RegExp(`(\\bresult\\.${field} = )String\\.valueOf\\(data\\);`, "gu"),
-      `$1${type}.fromValue(String.valueOf(data));`,
-    );
-    // Factory bodies: `this.role = "assistant";`
-    result = result.replace(
-      new RegExp(`(\\bthis\\.${field} = )"([^"]*)";`, "gu"),
-      `$1${type}.fromValue("$2");`,
-    );
-  }
-  return result;
-}
 
 // ---------------------------------------------------------------------------
 // J9 — named-dictionary properties are not normalized into lists
@@ -792,11 +624,6 @@ final class ModelCollections {
  */
 function assertRewritesApplied(stats, classes) {
   const problems = [];
-  if (stats.misses.length > 0) {
-    problems.push(
-      `these classes declare load() but their field-population block was not recognised: ${stats.misses.join(", ")}`,
-    );
-  }
   problems.push(...stats.problems);
   for (const [key, minimum] of Object.entries(EXPECTED_MINIMUMS)) {
     if (stats[key] < minimum) {
@@ -835,16 +662,7 @@ const EXPECTED_MINIMUMS = {
   // ReplayVerificationResult.status, RunTurnResult.status, SessionEvent.type,
   // TurnCommit.status and TurnEvent.type.
   requiredEnums: 11,
-  wildcard: 1,
-  loadBodies: 100,
 };
-
-// ---------------------------------------------------------------------------
-// J8 — base-property population and shadowed discriminator fields
-// ---------------------------------------------------------------------------
-
-const LOAD_BODY_RE =
-  /(\n {4}if \(!\(data instanceof Map<\?, \?> map\)\) \{\n {6}return ctx\.processOutput\(new (\w+)\(\)\);\n {4}\}\n {4}\2 result = new \2\(\);\n)([\s\S]*?)(\n {4}return ctx\.processOutput\(result\);\n {2}\})/u;
 
 function indexClasses(units) {
   const classes = new Map();
@@ -873,78 +691,6 @@ function indexClasses(units) {
   return classes;
 }
 
-function reshapeLoadMethods(units, classes, stats) {
-  // Pass 1 — split each class's field-population block into `loadBaseInto`.
-  for (const [name, info] of classes) {
-    const unit = units.get(name);
-    const match = LOAD_BODY_RE.exec(unit.text);
-    if (!match) {
-      if (unit.text.includes(`public static ${name} load(Object input, LoadContext context) {`)) {
-        stats.misses.push(name);
-      }
-      continue;
-    }
-    const [whole, prologue, , body, epilogue] = match;
-    info.hasLoadBody = true;
-    stats.loadBodies += 1;
-
-    const chain = info.base ? `    ${info.base}.loadBaseInto(result, map, ctx);\n` : "";
-
-    const helper =
-      `\n  static void loadBaseInto(${name} result, Map<?, ?> map, LoadContext ctx) {\n` +
-      `${chain}${body.replace(/^\n/u, "")}\n  }\n`;
-
-    let replacement;
-    if (info.isAbstract) {
-      replacement =
-        `\n    throw new IllegalArgumentException(` +
-        `"Missing ${name} discriminator property: 'kind'");\n  }`;
-    } else {
-      replacement =
-        `${prologue}    ${name}.loadBaseInto(result, map, ctx);${epilogue}`;
-    }
-
-    unit.text = unit.text.replace(whole, `${replacement}${helper}`);
-  }
-
-  // Pass 2 — remove shadowed field declarations, seeding defaults in the ctor.
-  for (const [name, info] of classes) {
-    if (!info.base) {
-      continue;
-    }
-    const baseInfo = classes.get(info.base);
-    if (!baseInfo) {
-      continue;
-    }
-    const unit = units.get(name);
-    let text = unit.text;
-    const seeds = [];
-    for (const [field, { type, initializer }] of info.fields) {
-      const baseField = baseInfo.fields.get(field);
-      if (!baseField || baseField.type !== type) {
-        continue;
-      }
-      text = text.replace(
-        new RegExp(`^ {2}public ${escapeRe(type)} ${field} = .+;\\n`, "mu"),
-        "",
-      );
-      if (initializer !== "null") {
-        seeds.push(`    this.${field} = ${initializer};`);
-      }
-    }
-    if (seeds.length > 0) {
-      text = text.replace(
-        new RegExp(`^ {2}public ${name}\\(\\) \\{ \\}$`, "mu"),
-        `  public ${name}() {\n${seeds.join("\n")}\n  }`,
-      );
-    }
-    unit.text = text;
-  }
-}
-
-function escapeRe(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-}
 
 // ---------------------------------------------------------------------------
 // Generated tests
@@ -961,11 +707,9 @@ export function normalizeJavaTests(root, model) {
   if (!existsSync(root)) {
     return;
   }
-  const renames = model?.renames ?? new Map();
   const classes = model?.classes ?? new Map();
-  const stats = { doubleEscaped: 0 };
+  const stats = { doubleEscaped: 0, enumAssertions: 0 };
 
-  const runnable = [];
   for (const name of readdirSync(root)) {
     if (!name.endsWith("GeneratedTest.java")) {
       continue;
@@ -973,42 +717,12 @@ export function normalizeJavaTests(root, model) {
     const path = join(root, name);
     let text = readFileSync(path, "utf8");
 
-    for (const [from, to] of renames) {
-      text = withLiteralsMasked(text, (code) => code.replace(new RegExp(`\\b${from}\\b`, "gu"), to));
-    }
-    text = fixReservedFieldNames(text);
-    text = relaxEnumAssertions(text);
+    text = relaxEnumAssertions(text, stats);
     text = fixDoubleEscapedExpectations(text, stats);
     text = dropStructuredAssertions(text, classes, name.replace(/GeneratedTest\.java$/u, ""));
 
-    const body = /\n {2}static void run\(\) \{\n([\s\S]*?)\n {2}\}\n/u.exec(text);
-    if (!body || body[1].trim() === "") {
-      unlinkSync(path);
-      continue;
-    }
-
     writeFileSync(path, text);
-    runnable.push(name.replace(/\.java$/u, ""));
   }
-
-  runnable.sort();
-  const entries = runnable.map((name) => `    cases.put("${name}", ${name}::run);`).join("\n");
-  writeFileSync(
-    join(root, `${REGISTRY_CLASS}.java`),
-    "// <auto-generated by typra-emitter>\n" +
-      "// Code generated by Typra emitter; DO NOT EDIT.\n" +
-      "package com.microsoft.prompty.model;\n\n" +
-      "import java.util.LinkedHashMap;\n" +
-      "import java.util.Map;\n\n" +
-      `public final class ${REGISTRY_CLASS} {\n` +
-      `  private ${REGISTRY_CLASS}() { }\n\n` +
-      "  public static Map<String, Runnable> all() {\n" +
-      "    Map<String, Runnable> cases = new LinkedHashMap<>();\n" +
-      `${entries}\n` +
-      "    return cases;\n" +
-      "  }\n" +
-      "}\n",
-  );
 
   // If the emitter ever stops double-escaping, this pass would start decoding
   // legitimate literals. Fail loudly rather than silently corrupting them.
@@ -1019,11 +733,19 @@ export function normalizeJavaTests(root, model) {
         `  The @typra/emitter Java backend changed; review schema/scripts/normalize-java-output.mjs.`,
     );
   }
+  if (stats.enumAssertions < MINIMUM_ENUM_ASSERTIONS) {
+    throw new Error(
+      `Java test normalization no longer matches emitter output:\n` +
+        `  - relaxed ${stats.enumAssertions} enum assertion helpers, expected at least ${MINIMUM_ENUM_ASSERTIONS}\n` +
+        `  The @typra/emitter Java backend changed; review schema/scripts/normalize-java-output.mjs.`,
+    );
+  }
 }
 
 const MINIMUM_DOUBLE_ESCAPED = 5;
 
-const REGISTRY_CLASS = "GeneratedModelExamples";
+// One helper per generated example class that declares the assertEquals shim.
+const MINIMUM_ENUM_ASSERTIONS = 100;
 
 /**
  * Expected values passed to `assertEquals` are escaped twice: once for the wire
@@ -1098,6 +820,10 @@ function javaEscape(value) {
  * models as object references, but the emitter still generates assertions that
  * compare them against scalar wire values. Resolve each accessor chain against
  * the model and drop only the assertions whose target is not a scalar.
+ *
+ * Unlike the other rewrites this carries no count floor, because the Java
+ * compiler is the guard: leaving a structured assertion in place fails to
+ * compile, and dropping a scalar one would fail the assertion it replaced.
  */
 function dropStructuredAssertions(text, classes, rootClass) {
   const fields = classes.get(rootClass);
@@ -1152,12 +878,17 @@ function isScalarPath(classes, className, path) {
  * Generated examples compare enum-typed fields against their raw wire strings.
  * Teach the emitted `assertEquals` helper to unwrap enum constants first.
  */
-function relaxEnumAssertions(text) {
+function relaxEnumAssertions(text, stats) {
+  const anchor = /( {2}private static void assertEquals\(Object expected, Object actual, String message\) \{\n)/u;
+  if (!anchor.test(text)) {
+    return text;
+  }
+  stats.enumAssertions += 1;
   return text.replace(
-    /( {2}private static void assertEquals\(Object expected, Object actual, String message\) \{\n)/u,
+    anchor,
     "$1    expected = unwrapEnum(expected);\n    actual = unwrapEnum(actual);\n",
   ).replace(
-    /( {2}private static void assertEquals\(Object expected, Object actual, String message\) \{\n)/u,
+    anchor,
     "  private static Object unwrapEnum(Object value) {\n" +
       "    if (value == null || !value.getClass().isEnum()) return value;\n" +
       "    try {\n" +

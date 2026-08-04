@@ -28,6 +28,7 @@ public class ContextCandidate {
     ContextCandidate.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ContextCandidate result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("id") && map.get("id") != null) {
       result.id = String.valueOf(map.get("id"));
@@ -45,7 +46,6 @@ public class ContextCandidate {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

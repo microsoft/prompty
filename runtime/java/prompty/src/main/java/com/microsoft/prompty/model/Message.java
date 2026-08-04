@@ -10,7 +10,7 @@ import java.util.Map;
 public class Message {
   public static final String SHORTHAND_PROPERTY = null;
 
-  public Role role = Role.USER;
+  public Role role = Role.fromValue("user");
   public List<ContentPart> parts = new ArrayList<>();
   public Map<String, Object> metadata = new LinkedHashMap<>();
 
@@ -27,6 +27,7 @@ public class Message {
     Message.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(Message result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("role") && map.get("role") != null) {
       result.role = Role.fromValue(String.valueOf(map.get("role")));
@@ -41,7 +42,6 @@ public class Message {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
@@ -94,11 +94,11 @@ public class Message {
   }
 
   public Object toTextContent() {
-    throw new UnsupportedOperationException("Implement this helper outside generated code.");
+    return MessageMethods.toTextContent(this);
   }
 
   public String text() {
-    throw new UnsupportedOperationException("Implement this helper outside generated code.");
+    return MessageMethods.text(this);
   }
 
   private static Map<String, Object> copyMap(Map<?, ?> source) {

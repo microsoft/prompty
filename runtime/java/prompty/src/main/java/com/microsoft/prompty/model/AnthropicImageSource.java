@@ -27,6 +27,7 @@ public class AnthropicImageSource {
     AnthropicImageSource.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicImageSource result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("type") && map.get("type") != null) {
       result.type = String.valueOf(map.get("type"));
@@ -38,7 +39,6 @@ public class AnthropicImageSource {
       result.data = String.valueOf(map.get("data"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

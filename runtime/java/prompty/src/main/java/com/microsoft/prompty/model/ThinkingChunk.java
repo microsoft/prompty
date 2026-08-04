@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ThinkingChunk extends StreamChunk {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public String value = "";
 
@@ -26,22 +27,18 @@ public class ThinkingChunk extends StreamChunk {
     ThinkingChunk.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ThinkingChunk result, Map<?, ?> map, LoadContext ctx) {
     StreamChunk.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("value") && map.get("value") != null) {
       result.value = String.valueOf(map.get("value"));
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     ThinkingChunk obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.value != null) result.put("value", serializeScalar(obj.value));
     return result;
   }

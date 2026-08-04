@@ -25,12 +25,12 @@ public class ModelInvocationRequest {
     ModelInvocationRequest.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ModelInvocationRequest result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("context") && map.get("context") != null) {
       result.context = ModelInvocationContextSnapshot.load(map.get("context"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

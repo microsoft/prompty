@@ -33,6 +33,7 @@ public class AnthropicMessagesRequest {
     AnthropicMessagesRequest.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicMessagesRequest result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("model") && map.get("model") != null) {
       result.model = String.valueOf(map.get("model"));
@@ -69,7 +70,6 @@ public class AnthropicMessagesRequest {
           map.get("tools"), "tools", AnthropicToolDefinition.SHORTHAND_PROPERTY, AnthropicToolDefinition::load, ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

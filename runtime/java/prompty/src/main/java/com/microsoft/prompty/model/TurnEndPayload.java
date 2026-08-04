@@ -28,6 +28,7 @@ public class TurnEndPayload {
     TurnEndPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(TurnEndPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("iterations") && map.get("iterations") != null) {
       result.iterations = (map.get("iterations") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("iterations"))));
@@ -42,7 +43,6 @@ public class TurnEndPayload {
       result.durationMs = (map.get("durationMs") instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(map.get("durationMs"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

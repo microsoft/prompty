@@ -26,6 +26,7 @@ public class FinalOutputPolicyResult {
     FinalOutputPolicyResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(FinalOutputPolicyResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("output") && map.get("output") != null) {
       result.output = map.get("output");
@@ -36,7 +37,6 @@ public class FinalOutputPolicyResult {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

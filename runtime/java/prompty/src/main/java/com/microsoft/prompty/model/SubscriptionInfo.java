@@ -27,6 +27,7 @@ public class SubscriptionInfo {
     SubscriptionInfo.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(SubscriptionInfo result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("subscriptionId") && map.get("subscriptionId") != null) {
       result.subscriptionId = String.valueOf(map.get("subscriptionId"));
@@ -38,7 +39,6 @@ public class SubscriptionInfo {
       result.state = String.valueOf(map.get("state"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

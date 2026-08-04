@@ -28,6 +28,7 @@ public class MessagesUpdatedPayload {
     MessagesUpdatedPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(MessagesUpdatedPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("messages") && map.get("messages") != null) {
       result.messages = ModelCollections.loadList(
@@ -44,7 +45,6 @@ public class MessagesUpdatedPayload {
       result.removed = (map.get("removed") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("removed"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

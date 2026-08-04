@@ -29,6 +29,7 @@ public class OAuthToken {
     OAuthToken.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(OAuthToken result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("accessToken") && map.get("accessToken") != null) {
       result.accessToken = String.valueOf(map.get("accessToken"));
@@ -46,7 +47,6 @@ public class OAuthToken {
       result.scope = String.valueOf(map.get("scope"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

@@ -35,6 +35,7 @@ public class SessionTrace {
     SessionTrace.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(SessionTrace result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("version") && map.get("version") != null) {
       result.version = String.valueOf(map.get("version"));
@@ -76,7 +77,6 @@ public class SessionTrace {
       result.summary = SessionSummary.load(map.get("summary"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

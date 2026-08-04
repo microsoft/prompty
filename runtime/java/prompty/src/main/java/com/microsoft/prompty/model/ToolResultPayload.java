@@ -26,6 +26,7 @@ public class ToolResultPayload {
     ToolResultPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ToolResultPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("name") && map.get("name") != null) {
       result.name = String.valueOf(map.get("name"));
@@ -34,7 +35,6 @@ public class ToolResultPayload {
       result.result = ToolResult.load(map.get("result"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

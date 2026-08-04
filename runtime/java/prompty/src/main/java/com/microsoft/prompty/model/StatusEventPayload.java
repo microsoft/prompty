@@ -25,12 +25,12 @@ public class StatusEventPayload {
     StatusEventPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(StatusEventPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("message") && map.get("message") != null) {
       result.message = String.valueOf(map.get("message"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

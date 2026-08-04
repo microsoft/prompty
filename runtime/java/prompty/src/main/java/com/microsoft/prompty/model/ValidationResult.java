@@ -26,6 +26,7 @@ public class ValidationResult {
     ValidationResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ValidationResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("valid") && map.get("valid") != null) {
       result.valid = (map.get("valid") instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(map.get("valid"))));
@@ -35,7 +36,6 @@ public class ValidationResult {
           map.get("errors"), "errors", ValidationError.SHORTHAND_PROPERTY, ValidationError::load, ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

@@ -27,6 +27,7 @@ public class InvokerError {
     InvokerError.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(InvokerError result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("message") && map.get("message") != null) {
       result.message = String.valueOf(map.get("message"));
@@ -38,7 +39,6 @@ public class InvokerError {
       result.key = String.valueOf(map.get("key"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

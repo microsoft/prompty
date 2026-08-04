@@ -27,6 +27,7 @@ public class TurnStartPayload {
     TurnStartPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(TurnStartPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("agent") && map.get("agent") != null) {
       result.agent = String.valueOf(map.get("agent"));
@@ -40,7 +41,6 @@ public class TurnStartPayload {
       result.maxIterations = (map.get("maxIterations") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("maxIterations"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

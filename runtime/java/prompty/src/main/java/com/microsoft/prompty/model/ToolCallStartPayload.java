@@ -27,6 +27,7 @@ public class ToolCallStartPayload {
     ToolCallStartPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ToolCallStartPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("id") && map.get("id") != null) {
       result.id = String.valueOf(map.get("id"));
@@ -38,7 +39,6 @@ public class ToolCallStartPayload {
       result.arguments = String.valueOf(map.get("arguments"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

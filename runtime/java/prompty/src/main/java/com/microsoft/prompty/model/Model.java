@@ -34,6 +34,7 @@ public class Model {
     Model.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(Model result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("id") && map.get("id") != null) {
       result.id = String.valueOf(map.get("id"));
@@ -51,7 +52,6 @@ public class Model {
       result.options = ModelOptions.load(map.get("options"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

@@ -31,6 +31,7 @@ public class AnthropicMessagesResponse {
     AnthropicMessagesResponse.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicMessagesResponse result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("id") && map.get("id") != null) {
       result.id = String.valueOf(map.get("id"));
@@ -59,7 +60,6 @@ public class AnthropicMessagesResponse {
       result.usage = AnthropicUsage.load(map.get("usage"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

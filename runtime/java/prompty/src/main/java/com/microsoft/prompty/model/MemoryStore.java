@@ -25,13 +25,13 @@ public class MemoryStore {
     MemoryStore.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(MemoryStore result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("entries") && map.get("entries") != null) {
       result.entries = ModelCollections.loadList(
           map.get("entries"), "entries", MemoryEntry.SHORTHAND_PROPERTY, MemoryEntry::load, ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

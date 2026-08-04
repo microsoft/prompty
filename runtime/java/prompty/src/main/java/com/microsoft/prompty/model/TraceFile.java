@@ -27,6 +27,7 @@ public class TraceFile {
     TraceFile.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(TraceFile result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("runtime") && map.get("runtime") != null) {
       result.runtime = String.valueOf(map.get("runtime"));
@@ -38,7 +39,6 @@ public class TraceFile {
       result.trace = TraceSpan.load(map.get("trace"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

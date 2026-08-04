@@ -30,6 +30,7 @@ public class AiResourceInfo {
     AiResourceInfo.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AiResourceInfo result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("name") && map.get("name") != null) {
       result.name = String.valueOf(map.get("name"));
@@ -50,7 +51,6 @@ public class AiResourceInfo {
       result.serviceUrl = String.valueOf(map.get("serviceUrl"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

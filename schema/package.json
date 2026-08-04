@@ -8,11 +8,12 @@
     "format:rust": "cargo fmt --all --manifest-path ../runtime/rust/prompty/Cargo.toml",
     "generate": "node scripts/clean-java-output.mjs && npx tsp compile model/main.tsp --config tspconfig.yaml && node scripts/normalize-typra-output.mjs",
     "verify:typra": "node scripts/verify-typra.mjs",
+    "test:scripts": "node --test \"scripts/*.test.mjs\"",
     "build": "npm run format:tsp && npm run generate && npm run format:rust"
   },
   "dependencies": {
     "@typespec/compiler": "1.10.0",
     "@typespec/json-schema": "1.10.0",
-    "@typra/emitter": "0.4.2"
+    "@typra/emitter": "0.4.3"
   }
 }

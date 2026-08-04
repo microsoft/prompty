@@ -28,6 +28,7 @@ public class LlmStartPayload {
     LlmStartPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(LlmStartPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("provider") && map.get("provider") != null) {
       result.provider = String.valueOf(map.get("provider"));
@@ -42,7 +43,6 @@ public class LlmStartPayload {
       result.attempt = (map.get("attempt") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("attempt"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

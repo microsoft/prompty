@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PromptyTool extends Tool {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public String path = "";
   public String mode = "single";
@@ -27,11 +28,9 @@ public class PromptyTool extends Tool {
     PromptyTool.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(PromptyTool result, Map<?, ?> map, LoadContext ctx) {
     Tool.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("path") && map.get("path") != null) {
       result.path = String.valueOf(map.get("path"));
     }
@@ -40,12 +39,10 @@ public class PromptyTool extends Tool {
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     PromptyTool obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.path != null) result.put("path", serializeScalar(obj.path));
     if (obj.mode != null) result.put("mode", serializeScalar(obj.mode));
     return result;

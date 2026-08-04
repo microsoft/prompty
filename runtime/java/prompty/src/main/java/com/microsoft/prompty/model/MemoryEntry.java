@@ -11,7 +11,7 @@ public class MemoryEntry {
   public static final String SHORTHAND_PROPERTY = null;
 
   public String content = "";
-  public MemoryCategory category = MemoryCategory.CORE;
+  public MemoryCategory category = MemoryCategory.fromValue("core");
   public String createdAt = null;
   public List<String> tags = null;
 
@@ -28,6 +28,7 @@ public class MemoryEntry {
     MemoryEntry.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(MemoryEntry result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("content") && map.get("content") != null) {
       result.content = String.valueOf(map.get("content"));
@@ -47,7 +48,6 @@ public class MemoryEntry {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

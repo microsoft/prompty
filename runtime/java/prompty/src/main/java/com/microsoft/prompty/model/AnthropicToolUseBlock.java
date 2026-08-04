@@ -28,6 +28,7 @@ public class AnthropicToolUseBlock {
     AnthropicToolUseBlock.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicToolUseBlock result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("type") && map.get("type") != null) {
       result.type = String.valueOf(map.get("type"));
@@ -44,7 +45,6 @@ public class AnthropicToolUseBlock {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

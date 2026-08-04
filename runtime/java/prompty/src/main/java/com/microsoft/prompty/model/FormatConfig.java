@@ -32,6 +32,7 @@ public class FormatConfig {
     FormatConfig.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(FormatConfig result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("kind") && map.get("kind") != null) {
       result.kind = String.valueOf(map.get("kind"));
@@ -45,7 +46,6 @@ public class FormatConfig {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

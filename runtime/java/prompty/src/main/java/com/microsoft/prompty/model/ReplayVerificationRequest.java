@@ -26,6 +26,7 @@ public class ReplayVerificationRequest {
     ReplayVerificationRequest.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ReplayVerificationRequest result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("expected") && map.get("expected") != null) {
       result.expected = ModelCollections.loadList(
@@ -36,7 +37,6 @@ public class ReplayVerificationRequest {
           map.get("actual"), "actual", ReplayJournalRecord.SHORTHAND_PROPERTY, ReplayJournalRecord::load, ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

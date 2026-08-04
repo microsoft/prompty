@@ -32,6 +32,7 @@ public class McpApprovalMode {
     McpApprovalMode.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(McpApprovalMode result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("kind") && map.get("kind") != null) {
       result.kind = McpApprovalModeKind.fromValue(String.valueOf(map.get("kind")));
@@ -53,7 +54,6 @@ public class McpApprovalMode {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

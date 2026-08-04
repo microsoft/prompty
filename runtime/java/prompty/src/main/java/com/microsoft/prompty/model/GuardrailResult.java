@@ -27,6 +27,7 @@ public class GuardrailResult {
     GuardrailResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(GuardrailResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("allowed") && map.get("allowed") != null) {
       result.allowed = (map.get("allowed") instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(map.get("allowed"))));
@@ -38,7 +39,6 @@ public class GuardrailResult {
       result.rewrite = map.get("rewrite");
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

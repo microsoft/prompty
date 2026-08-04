@@ -27,6 +27,7 @@ public class TokenUsage {
     TokenUsage.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(TokenUsage result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("promptTokens") && map.get("promptTokens") != null) {
       result.promptTokens = (map.get("promptTokens") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("promptTokens"))));
@@ -38,7 +39,6 @@ public class TokenUsage {
       result.totalTokens = (map.get("totalTokens") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("totalTokens"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

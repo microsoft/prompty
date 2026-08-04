@@ -31,6 +31,7 @@ public class PermissionCompletedPayload {
     PermissionCompletedPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(PermissionCompletedPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("requestId") && map.get("requestId") != null) {
       result.requestId = String.valueOf(map.get("requestId"));
@@ -56,7 +57,6 @@ public class PermissionCompletedPayload {
       result.redaction = RedactionMetadata.load(map.get("redaction"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

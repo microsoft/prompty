@@ -30,6 +30,7 @@ public class DeviceAuthorization {
     DeviceAuthorization.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(DeviceAuthorization result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("deviceCode") && map.get("deviceCode") != null) {
       result.deviceCode = String.valueOf(map.get("deviceCode"));
@@ -50,7 +51,6 @@ public class DeviceAuthorization {
       result.message = String.valueOf(map.get("message"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

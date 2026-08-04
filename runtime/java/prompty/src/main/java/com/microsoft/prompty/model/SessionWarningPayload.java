@@ -27,6 +27,7 @@ public class SessionWarningPayload {
     SessionWarningPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(SessionWarningPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("warningType") && map.get("warningType") != null) {
       result.warningType = String.valueOf(map.get("warningType"));
@@ -40,7 +41,6 @@ public class SessionWarningPayload {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

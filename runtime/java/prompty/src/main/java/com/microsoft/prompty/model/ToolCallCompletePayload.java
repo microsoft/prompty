@@ -30,6 +30,7 @@ public class ToolCallCompletePayload {
     ToolCallCompletePayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ToolCallCompletePayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("id") && map.get("id") != null) {
       result.id = String.valueOf(map.get("id"));
@@ -50,7 +51,6 @@ public class ToolCallCompletePayload {
       result.errorKind = String.valueOf(map.get("errorKind"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

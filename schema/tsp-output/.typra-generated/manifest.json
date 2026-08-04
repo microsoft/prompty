@@ -3130,6 +3130,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AuthenticationMode.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AuthorizationCodeFlow.java",
       "marker": true
     },
@@ -3220,7 +3225,17 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EngineEventKind.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EnginePermissionDecision.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/EngineTurnStatus.java",
       "marker": true
     },
     {
@@ -3300,7 +3315,17 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HookEndScope.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HookStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/HookStartScope.java",
       "marker": true
     },
     {
@@ -3340,6 +3365,16 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvocationContextDisposition.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvocationContextPortability.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/InvocationContextState.java",
       "marker": true
     },
@@ -3375,7 +3410,17 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/McpApprovalModeKind.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/McpTool.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/MemoryCategory.java",
       "marker": true
     },
     {
@@ -3436,6 +3481,11 @@
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelReconciliationState.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ModelToolOutcome.java",
       "marker": true
     },
     {
@@ -3540,6 +3590,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RedactionMode.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReferenceConnection.java",
       "marker": true
     },
@@ -3565,12 +3620,27 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayRecordKind.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayRecordStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayVerificationRequest.java",
       "marker": true
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayVerificationResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayVerificationStatus.java",
       "marker": true
     },
     {
@@ -3590,12 +3660,22 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Role.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RunTurnRequest.java",
       "marker": true
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RunTurnResult.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RunTurnStatus.java",
       "marker": true
     },
     {
@@ -3610,7 +3690,17 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionEndStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionEvent.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionEventType.java",
       "marker": true
     },
     {
@@ -3631,6 +3721,11 @@
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionSummary.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/SessionSummaryStatus.java",
       "marker": true
     },
     {
@@ -3760,6 +3855,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ToolResultStatus.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TraceFile.java",
       "marker": true
     },
@@ -3800,6 +3900,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnEventType.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnModelRequest.java",
       "marker": true
     },
@@ -3816,6 +3921,11 @@
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnStartPayload.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/TurnStatus.java",
       "marker": true
     },
     {

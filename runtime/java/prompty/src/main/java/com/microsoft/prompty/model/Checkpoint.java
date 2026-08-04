@@ -35,6 +35,7 @@ public class Checkpoint {
     Checkpoint.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(Checkpoint result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("id") && map.get("id") != null) {
       result.id = String.valueOf(map.get("id"));
@@ -74,7 +75,6 @@ public class Checkpoint {
       result.redaction = RedactionMetadata.load(map.get("redaction"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

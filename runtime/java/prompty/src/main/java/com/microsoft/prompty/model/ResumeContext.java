@@ -29,6 +29,7 @@ public class ResumeContext {
     ResumeContext.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ResumeContext result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("checkpoint") && map.get("checkpoint") != null) {
       result.checkpoint = EngineCheckpoint.load(map.get("checkpoint"), ctx);
@@ -48,7 +49,6 @@ public class ResumeContext {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

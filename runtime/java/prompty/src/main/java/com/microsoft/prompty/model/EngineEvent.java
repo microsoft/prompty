@@ -36,6 +36,7 @@ public class EngineEvent {
     EngineEvent.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(EngineEvent result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("sequence") && map.get("sequence") != null) {
       result.sequence = (map.get("sequence") instanceof Number n ? n.longValue() : Long.parseLong(String.valueOf(map.get("sequence"))));
@@ -74,7 +75,6 @@ public class EngineEvent {
       result.payload = map.get("payload");
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

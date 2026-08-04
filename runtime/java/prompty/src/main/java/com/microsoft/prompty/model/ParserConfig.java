@@ -31,6 +31,7 @@ public class ParserConfig {
     ParserConfig.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ParserConfig result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("kind") && map.get("kind") != null) {
       result.kind = String.valueOf(map.get("kind"));
@@ -41,7 +42,6 @@ public class ParserConfig {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

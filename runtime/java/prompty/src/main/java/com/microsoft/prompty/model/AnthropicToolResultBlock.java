@@ -27,6 +27,7 @@ public class AnthropicToolResultBlock {
     AnthropicToolResultBlock.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicToolResultBlock result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("type") && map.get("type") != null) {
       result.type = String.valueOf(map.get("type"));
@@ -38,7 +39,6 @@ public class AnthropicToolResultBlock {
       result.content = String.valueOf(map.get("content"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

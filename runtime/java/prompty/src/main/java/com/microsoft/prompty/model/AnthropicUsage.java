@@ -26,6 +26,7 @@ public class AnthropicUsage {
     AnthropicUsage.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicUsage result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("input_tokens") && map.get("input_tokens") != null) {
       result.input_tokens = (map.get("input_tokens") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("input_tokens"))));
@@ -34,7 +35,6 @@ public class AnthropicUsage {
       result.output_tokens = (map.get("output_tokens") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("output_tokens"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

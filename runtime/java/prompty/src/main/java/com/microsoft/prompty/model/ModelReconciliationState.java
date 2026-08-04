@@ -29,6 +29,7 @@ public class ModelReconciliationState {
     ModelReconciliationState.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ModelReconciliationState result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("invocationId") && map.get("invocationId") != null) {
       result.invocationId = String.valueOf(map.get("invocationId"));
@@ -48,7 +49,6 @@ public class ModelReconciliationState {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

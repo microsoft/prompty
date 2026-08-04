@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ArrayProperty extends Property {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public Property items = null;
 
@@ -26,22 +27,18 @@ public class ArrayProperty extends Property {
     ArrayProperty.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ArrayProperty result, Map<?, ?> map, LoadContext ctx) {
     Property.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("items") && map.get("items") != null) {
       result.items = Property.load(map.get("items"), ctx);
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     ArrayProperty obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.items != null) result.put("items", obj.items.save(ctx));
     return result;
   }

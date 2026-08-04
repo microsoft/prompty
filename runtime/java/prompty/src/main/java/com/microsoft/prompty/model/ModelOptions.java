@@ -34,6 +34,7 @@ public class ModelOptions {
     ModelOptions.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ModelOptions result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("frequencyPenalty") && map.get("frequencyPenalty") != null) {
       result.frequencyPenalty = (map.get("frequencyPenalty") instanceof Number n ? n.floatValue() : Float.parseFloat(String.valueOf(map.get("frequencyPenalty"))));
@@ -73,7 +74,6 @@ public class ModelOptions {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

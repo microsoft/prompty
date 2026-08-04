@@ -37,14 +37,14 @@ public abstract class StreamChunk {
         }
       }
     }
-    throw new IllegalArgumentException("Missing StreamChunk discriminator property: 'kind'");
+    throw new IllegalArgumentException("Cannot instantiate abstract StreamChunk; expected a matching 'kind' discriminator.");
   }
+
   static void loadBaseInto(StreamChunk result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("kind") && map.get("kind") != null) {
       result.kind = String.valueOf(map.get("kind"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

@@ -35,14 +35,14 @@ public abstract class ContentPart {
         }
       }
     }
-    throw new IllegalArgumentException("Missing ContentPart discriminator property: 'kind'");
+    throw new IllegalArgumentException("Cannot instantiate abstract ContentPart; expected a matching 'kind' discriminator.");
   }
+
   static void loadBaseInto(ContentPart result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("kind") && map.get("kind") != null) {
       result.kind = String.valueOf(map.get("kind"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

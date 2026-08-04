@@ -30,6 +30,7 @@ public class SessionSummary {
     SessionSummary.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(SessionSummary result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("sessionId") && map.get("sessionId") != null) {
       result.sessionId = String.valueOf(map.get("sessionId"));
@@ -50,7 +51,6 @@ public class SessionSummary {
       result.durationMs = (map.get("durationMs") instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(map.get("durationMs"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

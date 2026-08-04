@@ -28,6 +28,7 @@ public class ReplayMismatch {
     ReplayMismatch.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ReplayMismatch result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("index") && map.get("index") != null) {
       result.index = (map.get("index") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("index"))));
@@ -42,7 +43,6 @@ public class ReplayMismatch {
       result.message = String.valueOf(map.get("message"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

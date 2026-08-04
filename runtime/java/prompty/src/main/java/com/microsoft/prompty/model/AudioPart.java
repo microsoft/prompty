@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class AudioPart extends ContentPart {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public String source = "";
   public String mediaType = null;
@@ -27,11 +28,9 @@ public class AudioPart extends ContentPart {
     AudioPart.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AudioPart result, Map<?, ?> map, LoadContext ctx) {
     ContentPart.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("source") && map.get("source") != null) {
       result.source = String.valueOf(map.get("source"));
     }
@@ -40,12 +39,10 @@ public class AudioPart extends ContentPart {
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     AudioPart obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.source != null) result.put("source", serializeScalar(obj.source));
     if (obj.mediaType != null) result.put("mediaType", serializeScalar(obj.mediaType));
     return result;

@@ -25,12 +25,12 @@ public class ThinkingEventPayload {
     ThinkingEventPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ThinkingEventPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("token") && map.get("token") != null) {
       result.token = String.valueOf(map.get("token"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

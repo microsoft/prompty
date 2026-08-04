@@ -27,6 +27,7 @@ public class InvocationUsage {
     InvocationUsage.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(InvocationUsage result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("inputTokens") && map.get("inputTokens") != null) {
       result.inputTokens = (map.get("inputTokens") instanceof Number n ? n.longValue() : Long.parseLong(String.valueOf(map.get("inputTokens"))));
@@ -38,7 +39,6 @@ public class InvocationUsage {
       result.totalTokens = (map.get("totalTokens") instanceof Number n ? n.longValue() : Long.parseLong(String.valueOf(map.get("totalTokens"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

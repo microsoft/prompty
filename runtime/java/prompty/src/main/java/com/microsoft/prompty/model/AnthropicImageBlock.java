@@ -26,6 +26,7 @@ public class AnthropicImageBlock {
     AnthropicImageBlock.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicImageBlock result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("type") && map.get("type") != null) {
       result.type = String.valueOf(map.get("type"));
@@ -34,7 +35,6 @@ public class AnthropicImageBlock {
       result.source = AnthropicImageSource.load(map.get("source"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

@@ -27,6 +27,7 @@ public class RedactedField {
     RedactedField.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(RedactedField result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("path") && map.get("path") != null) {
       result.path = String.valueOf(map.get("path"));
@@ -38,7 +39,6 @@ public class RedactedField {
       result.reason = String.valueOf(map.get("reason"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

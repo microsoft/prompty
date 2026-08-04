@@ -26,6 +26,7 @@ public class AuthorizationCodeFlow {
     AuthorizationCodeFlow.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AuthorizationCodeFlow result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("authUrl") && map.get("authUrl") != null) {
       result.authUrl = String.valueOf(map.get("authUrl"));
@@ -34,7 +35,6 @@ public class AuthorizationCodeFlow {
       result.codeVerifier = String.valueOf(map.get("codeVerifier"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

@@ -10,7 +10,7 @@ import java.util.Map;
 public class InvocationContextState {
   public static final String SHORTHAND_PROPERTY = null;
 
-  public InvocationContextPortability portability = InvocationContextPortability.PORTABLE;
+  public InvocationContextPortability portability = InvocationContextPortability.fromValue("portable");
   public List<DelegatedStateReference> delegatedState = null;
 
   public InvocationContextState() { }
@@ -26,6 +26,7 @@ public class InvocationContextState {
     InvocationContextState.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(InvocationContextState result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("portability") && map.get("portability") != null) {
       result.portability = InvocationContextPortability.fromValue(String.valueOf(map.get("portability")));
@@ -35,7 +36,6 @@ public class InvocationContextState {
           map.get("delegatedState"), "delegatedState", DelegatedStateReference.SHORTHAND_PROPERTY, DelegatedStateReference::load, ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

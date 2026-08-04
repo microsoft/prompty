@@ -30,6 +30,7 @@ public class ModelToolResult {
     ModelToolResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ModelToolResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("requestId") && map.get("requestId") != null) {
       result.requestId = String.valueOf(map.get("requestId"));
@@ -52,7 +53,6 @@ public class ModelToolResult {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

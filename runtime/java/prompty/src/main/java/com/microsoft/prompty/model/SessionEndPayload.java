@@ -28,6 +28,7 @@ public class SessionEndPayload {
     SessionEndPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(SessionEndPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("sessionId") && map.get("sessionId") != null) {
       result.sessionId = String.valueOf(map.get("sessionId"));
@@ -42,7 +43,6 @@ public class SessionEndPayload {
       result.durationMs = (map.get("durationMs") instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(map.get("durationMs"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

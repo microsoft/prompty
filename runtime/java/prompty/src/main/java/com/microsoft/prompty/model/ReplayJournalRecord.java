@@ -36,6 +36,7 @@ public class ReplayJournalRecord {
     ReplayJournalRecord.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ReplayJournalRecord result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("kind") && map.get("kind") != null) {
       result.kind = ReplayRecordKind.fromValue(String.valueOf(map.get("kind")));
@@ -74,7 +75,6 @@ public class ReplayJournalRecord {
       result.checkpoints = (map.get("checkpoints") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("checkpoints"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

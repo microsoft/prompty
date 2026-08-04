@@ -28,6 +28,7 @@ public class ReplayVerificationResult {
     ReplayVerificationResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ReplayVerificationResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("status") && map.get("status") != null) {
       result.status = ReplayVerificationStatus.fromValue(String.valueOf(map.get("status")));
@@ -43,7 +44,6 @@ public class ReplayVerificationResult {
       result.actualCount = (map.get("actualCount") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("actualCount"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

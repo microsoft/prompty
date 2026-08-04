@@ -26,6 +26,7 @@ public class DoneEventPayload {
     DoneEventPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(DoneEventPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("response") && map.get("response") != null) {
       result.response = map.get("response");
@@ -35,7 +36,6 @@ public class DoneEventPayload {
           map.get("messages"), "messages", Message.SHORTHAND_PROPERTY, Message::load, ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

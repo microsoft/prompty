@@ -26,6 +26,7 @@ public class AnthropicWireMessage {
     AnthropicWireMessage.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicWireMessage result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("role") && map.get("role") != null) {
       result.role = String.valueOf(map.get("role"));
@@ -39,7 +40,6 @@ public class AnthropicWireMessage {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

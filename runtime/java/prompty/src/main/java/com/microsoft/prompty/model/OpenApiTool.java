@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class OpenApiTool extends Tool {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public Connection connection = null;
   public String specification = "";
@@ -27,11 +28,9 @@ public class OpenApiTool extends Tool {
     OpenApiTool.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(OpenApiTool result, Map<?, ?> map, LoadContext ctx) {
     Tool.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("connection") && map.get("connection") != null) {
       result.connection = Connection.load(map.get("connection"), ctx);
     }
@@ -40,12 +39,10 @@ public class OpenApiTool extends Tool {
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     OpenApiTool obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.connection != null) result.put("connection", obj.connection.save(ctx));
     if (obj.specification != null) result.put("specification", serializeScalar(obj.specification));
     return result;

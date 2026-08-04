@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class FunctionTool extends Tool {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public List<Property> parameters = new ArrayList<>();
   public Boolean strict = null;
@@ -27,11 +28,9 @@ public class FunctionTool extends Tool {
     FunctionTool.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(FunctionTool result, Map<?, ?> map, LoadContext ctx) {
     Tool.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("parameters") && map.get("parameters") != null) {
       result.parameters = ModelCollections.loadList(
           map.get("parameters"), "parameters", Property.SHORTHAND_PROPERTY, Property::load, ctx);
@@ -41,12 +40,10 @@ public class FunctionTool extends Tool {
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     FunctionTool obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.parameters != null) {
       result.put("parameters", ModelCollections.saveList(
           obj.parameters, Property.SHORTHAND_PROPERTY, item -> item.save(ctx), ctx));

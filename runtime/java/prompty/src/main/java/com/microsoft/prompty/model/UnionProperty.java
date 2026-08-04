@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class UnionProperty extends Property {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public List<Property> oneOf = null;
   public List<Property> anyOf = null;
@@ -27,11 +28,9 @@ public class UnionProperty extends Property {
     UnionProperty.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(UnionProperty result, Map<?, ?> map, LoadContext ctx) {
     Property.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("oneOf") && map.get("oneOf") != null) {
       result.oneOf = ModelCollections.loadList(
           map.get("oneOf"), "oneOf", Property.SHORTHAND_PROPERTY, Property::load, ctx);
@@ -42,12 +41,10 @@ public class UnionProperty extends Property {
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     UnionProperty obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.oneOf != null) {
       List<Object> items = new ArrayList<>();
       for (Property item : obj.oneOf) items.add(item.save(ctx));

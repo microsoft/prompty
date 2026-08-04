@@ -27,6 +27,7 @@ public class ToolDispatchResult {
     ToolDispatchResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ToolDispatchResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("toolCallId") && map.get("toolCallId") != null) {
       result.toolCallId = String.valueOf(map.get("toolCallId"));
@@ -38,7 +39,6 @@ public class ToolDispatchResult {
       result.result = ToolResult.load(map.get("result"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

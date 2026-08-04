@@ -31,6 +31,7 @@ public class TurnOptions {
     TurnOptions.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(TurnOptions result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("maxIterations") && map.get("maxIterations") != null) {
       result.maxIterations = (map.get("maxIterations") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("maxIterations"))));
@@ -54,7 +55,6 @@ public class TurnOptions {
       result.compaction = CompactionConfig.load(map.get("compaction"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

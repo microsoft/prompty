@@ -27,6 +27,7 @@ public class HostPolicyResult {
     HostPolicyResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(HostPolicyResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("messages") && map.get("messages") != null) {
       result.messages = ModelCollections.loadList(
@@ -41,7 +42,6 @@ public class HostPolicyResult {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

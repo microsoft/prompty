@@ -26,6 +26,7 @@ public class FileNotFoundError {
     FileNotFoundError.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(FileNotFoundError result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("message") && map.get("message") != null) {
       result.message = String.valueOf(map.get("message"));
@@ -34,7 +35,6 @@ public class FileNotFoundError {
       result.path = String.valueOf(map.get("path"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

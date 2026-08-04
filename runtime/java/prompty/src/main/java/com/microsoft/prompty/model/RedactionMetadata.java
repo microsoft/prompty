@@ -27,6 +27,7 @@ public class RedactionMetadata {
     RedactionMetadata.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(RedactionMetadata result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("sanitized") && map.get("sanitized") != null) {
       result.sanitized = (map.get("sanitized") instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(map.get("sanitized"))));
@@ -39,7 +40,6 @@ public class RedactionMetadata {
       result.policy = String.valueOf(map.get("policy"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

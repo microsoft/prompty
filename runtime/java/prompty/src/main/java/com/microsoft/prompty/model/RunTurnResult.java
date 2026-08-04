@@ -31,6 +31,7 @@ public class RunTurnResult {
     RunTurnResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(RunTurnResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("sessionId") && map.get("sessionId") != null) {
       result.sessionId = String.valueOf(map.get("sessionId"));
@@ -56,7 +57,6 @@ public class RunTurnResult {
           map.get("checkpoints"), "checkpoints", Checkpoint.SHORTHAND_PROPERTY, Checkpoint::load, ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

@@ -32,6 +32,7 @@ public class HookEndPayload {
     HookEndPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(HookEndPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("hookInvocationId") && map.get("hookInvocationId") != null) {
       result.hookInvocationId = String.valueOf(map.get("hookInvocationId"));
@@ -60,7 +61,6 @@ public class HookEndPayload {
       result.redaction = RedactionMetadata.load(map.get("redaction"), ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

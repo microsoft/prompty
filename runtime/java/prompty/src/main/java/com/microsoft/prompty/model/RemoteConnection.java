@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class RemoteConnection extends Connection {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public String name = "";
   public String endpoint = "";
@@ -27,11 +28,9 @@ public class RemoteConnection extends Connection {
     RemoteConnection.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(RemoteConnection result, Map<?, ?> map, LoadContext ctx) {
     Connection.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("name") && map.get("name") != null) {
       result.name = String.valueOf(map.get("name"));
     }
@@ -40,12 +39,10 @@ public class RemoteConnection extends Connection {
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     RemoteConnection obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.name != null) result.put("name", serializeScalar(obj.name));
     if (obj.endpoint != null) result.put("endpoint", serializeScalar(obj.endpoint));
     return result;

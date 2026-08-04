@@ -27,6 +27,7 @@ public class HarnessContext {
     HarnessContext.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(HarnessContext result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("cwd") && map.get("cwd") != null) {
       result.cwd = String.valueOf(map.get("cwd"));
@@ -40,7 +41,6 @@ public class HarnessContext {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

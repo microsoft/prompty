@@ -28,6 +28,7 @@ public class RetryPolicyRequest {
     RetryPolicyRequest.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(RetryPolicyRequest result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("failedAttempts") && map.get("failedAttempts") != null) {
       result.failedAttempts = (map.get("failedAttempts") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("failedAttempts"))));
@@ -42,7 +43,6 @@ public class RetryPolicyRequest {
       result.reason = String.valueOf(map.get("reason"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

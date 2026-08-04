@@ -30,6 +30,7 @@ public class InvocationContextDecision {
     InvocationContextDecision.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(InvocationContextDecision result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("candidateId") && map.get("candidateId") != null) {
       result.candidateId = String.valueOf(map.get("candidateId"));
@@ -52,7 +53,6 @@ public class InvocationContextDecision {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

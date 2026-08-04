@@ -38,8 +38,9 @@ public abstract class Tool {
         }
       }
     }
-    throw new IllegalArgumentException("Missing Tool discriminator property: 'kind'");
+    throw new IllegalArgumentException("Cannot instantiate abstract Tool; expected a matching 'kind' discriminator.");
   }
+
   static void loadBaseInto(Tool result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("name") && map.get("name") != null) {
       result.name = String.valueOf(map.get("name"));
@@ -55,7 +56,6 @@ public abstract class Tool {
           map.get("bindings"), "bindings", Binding.SHORTHAND_PROPERTY, Binding::load, ctx);
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

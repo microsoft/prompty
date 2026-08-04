@@ -29,6 +29,7 @@ public class SessionRef {
     SessionRef.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(SessionRef result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("sessionId") && map.get("sessionId") != null) {
       result.sessionId = String.valueOf(map.get("sessionId"));
@@ -46,7 +47,6 @@ public class SessionRef {
       result.createdAt = String.valueOf(map.get("createdAt"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

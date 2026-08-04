@@ -27,6 +27,7 @@ public class CompactionCompletePayload {
     CompactionCompletePayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(CompactionCompletePayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("removed") && map.get("removed") != null) {
       result.removed = (map.get("removed") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("removed"))));
@@ -38,7 +39,6 @@ public class CompactionCompletePayload {
       result.summaryLength = (map.get("summaryLength") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("summaryLength"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

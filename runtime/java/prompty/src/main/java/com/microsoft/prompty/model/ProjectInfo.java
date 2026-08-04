@@ -27,6 +27,7 @@ public class ProjectInfo {
     ProjectInfo.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ProjectInfo result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("name") && map.get("name") != null) {
       result.name = String.valueOf(map.get("name"));
@@ -38,7 +39,6 @@ public class ProjectInfo {
       result.endpoint = String.valueOf(map.get("endpoint"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

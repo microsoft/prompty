@@ -31,6 +31,7 @@ public class PermissionRequest {
     PermissionRequest.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(PermissionRequest result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("requestId") && map.get("requestId") != null) {
       result.requestId = String.valueOf(map.get("requestId"));
@@ -58,7 +59,6 @@ public class PermissionRequest {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

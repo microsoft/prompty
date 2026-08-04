@@ -29,6 +29,7 @@ public class RetryPayload {
     RetryPayload.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(RetryPayload result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("operation") && map.get("operation") != null) {
       result.operation = String.valueOf(map.get("operation"));
@@ -46,7 +47,6 @@ public class RetryPayload {
       result.reason = String.valueOf(map.get("reason"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

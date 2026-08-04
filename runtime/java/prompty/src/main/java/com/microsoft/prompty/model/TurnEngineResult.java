@@ -28,6 +28,7 @@ public class TurnEngineResult {
     TurnEngineResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(TurnEngineResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("commit") && map.get("commit") != null) {
       result.commit = TurnCommit.load(map.get("commit"), ctx);
@@ -44,7 +45,6 @@ public class TurnEngineResult {
       result.postCommitError = String.valueOf(map.get("postCommitError"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

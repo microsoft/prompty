@@ -26,6 +26,7 @@ public class AnthropicTextBlock {
     AnthropicTextBlock.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnthropicTextBlock result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("type") && map.get("type") != null) {
       result.type = String.valueOf(map.get("type"));
@@ -34,7 +35,6 @@ public class AnthropicTextBlock {
       result.text = String.valueOf(map.get("text"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

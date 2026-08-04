@@ -29,6 +29,7 @@ public class ToolResult {
     ToolResult.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ToolResult result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("parts") && map.get("parts") != null) {
       result.parts = ModelCollections.loadList(
@@ -47,7 +48,6 @@ public class ToolResult {
       result.durationMs = (map.get("durationMs") instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(map.get("durationMs"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
@@ -94,7 +94,7 @@ public class ToolResult {
   }
 
   public String text() {
-    throw new UnsupportedOperationException("Implement this helper outside generated code.");
+    return ToolResultMethods.text(this);
   }
 
   private static Map<String, Object> copyMap(Map<?, ?> source) {

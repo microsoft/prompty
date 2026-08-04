@@ -45,10 +45,11 @@ part of the generation pipeline, not a manual edit — running the pipeline twic
 from a clean tree produces byte-identical output.
 
 The emitter also produces example-driven suites next to the model. They are
-surfaced to JUnit through the generated `GeneratedModelExamples` registry and
-executed by `GeneratedModelExamplesTest`. `ModelNormalizationTest` covers the
-behaviour the shim adds on top of the emitter output, which the generated
-examples do not exercise.
+package-private, so `GeneratedExamplesTest` discovers the compiled
+`*GeneratedTest` classes by reflection and runs each as a named dynamic test,
+which keeps the suite in step with the schema without a checked-in registry.
+`ModelNormalizationTest` covers the behaviour the shim adds on top of the
+emitter output, which the generated examples do not exercise.
 
 ## Building
 

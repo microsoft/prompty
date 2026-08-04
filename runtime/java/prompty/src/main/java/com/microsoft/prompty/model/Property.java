@@ -71,6 +71,7 @@ public class Property {
     Property.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(Property result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("name") && map.get("name") != null) {
       result.name = String.valueOf(map.get("name"));
@@ -102,7 +103,6 @@ public class Property {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

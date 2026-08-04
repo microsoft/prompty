@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class UsageChunk extends StreamChunk {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public InvocationUsage usage = null;
 
@@ -26,22 +27,18 @@ public class UsageChunk extends StreamChunk {
     UsageChunk.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(UsageChunk result, Map<?, ?> map, LoadContext ctx) {
     StreamChunk.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("usage") && map.get("usage") != null) {
       result.usage = InvocationUsage.load(map.get("usage"), ctx);
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     UsageChunk obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.usage != null) result.put("usage", obj.usage.save(ctx));
     return result;
   }

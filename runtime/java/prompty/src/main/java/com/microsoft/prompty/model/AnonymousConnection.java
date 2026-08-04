@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class AnonymousConnection extends Connection {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public String endpoint = "";
 
@@ -26,22 +27,18 @@ public class AnonymousConnection extends Connection {
     AnonymousConnection.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(AnonymousConnection result, Map<?, ?> map, LoadContext ctx) {
     Connection.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("endpoint") && map.get("endpoint") != null) {
       result.endpoint = String.valueOf(map.get("endpoint"));
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     AnonymousConnection obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.endpoint != null) result.put("endpoint", serializeScalar(obj.endpoint));
     return result;
   }

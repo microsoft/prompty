@@ -28,6 +28,7 @@ public class DelegatedStateReference {
     DelegatedStateReference.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(DelegatedStateReference result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("provider") && map.get("provider") != null) {
       result.provider = String.valueOf(map.get("provider"));
@@ -44,7 +45,6 @@ public class DelegatedStateReference {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

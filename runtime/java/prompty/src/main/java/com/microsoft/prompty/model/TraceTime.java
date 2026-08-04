@@ -12,7 +12,7 @@ public class TraceTime {
 
   public String start = "";
   public String end = "";
-  public Double duration = 0.0;
+  public Double duration = 0.0d;
 
   public TraceTime() { }
 
@@ -27,6 +27,7 @@ public class TraceTime {
     TraceTime.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(TraceTime result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("start") && map.get("start") != null) {
       result.start = String.valueOf(map.get("start"));
@@ -38,7 +39,6 @@ public class TraceTime {
       result.duration = (map.get("duration") instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(map.get("duration"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

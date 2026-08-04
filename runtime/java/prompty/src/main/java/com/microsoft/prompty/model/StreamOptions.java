@@ -25,12 +25,12 @@ public class StreamOptions {
     StreamOptions.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(StreamOptions result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("includeUsage") && map.get("includeUsage") != null) {
       result.includeUsage = (map.get("includeUsage") instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(map.get("includeUsage"))));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

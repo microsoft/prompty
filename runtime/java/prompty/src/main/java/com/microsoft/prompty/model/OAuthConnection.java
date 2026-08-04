@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class OAuthConnection extends Connection {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public String endpoint = "";
   public String clientId = "";
@@ -30,11 +31,9 @@ public class OAuthConnection extends Connection {
     OAuthConnection.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(OAuthConnection result, Map<?, ?> map, LoadContext ctx) {
     Connection.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("endpoint") && map.get("endpoint") != null) {
       result.endpoint = String.valueOf(map.get("endpoint"));
     }
@@ -57,12 +56,10 @@ public class OAuthConnection extends Connection {
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     OAuthConnection obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.endpoint != null) result.put("endpoint", serializeScalar(obj.endpoint));
     if (obj.clientId != null) result.put("clientId", serializeScalar(obj.clientId));
     if (obj.clientSecret != null) result.put("clientSecret", serializeScalar(obj.clientSecret));

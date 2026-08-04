@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ToolChunk extends StreamChunk {
+  public static final String SHORTHAND_PROPERTY = null;
 
   public ToolCall toolCall = null;
 
@@ -26,22 +27,18 @@ public class ToolChunk extends StreamChunk {
     ToolChunk.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(ToolChunk result, Map<?, ?> map, LoadContext ctx) {
     StreamChunk.loadBaseInto(result, map, ctx);
-    if (map.containsKey("kind") && map.get("kind") != null) {
-      result.kind = String.valueOf(map.get("kind"));
-    }
     if (map.containsKey("toolCall") && map.get("toolCall") != null) {
       result.toolCall = ToolCall.load(map.get("toolCall"), ctx);
     }
   }
 
-
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     ToolChunk obj = ctx.processObject(this);
     Map<String, Object> result = super.save(ctx);
-    if (obj.kind != null) result.put("kind", serializeScalar(obj.kind));
     if (obj.toolCall != null) result.put("toolCall", obj.toolCall.save(ctx));
     return result;
   }

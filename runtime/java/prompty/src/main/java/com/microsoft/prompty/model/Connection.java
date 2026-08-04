@@ -41,8 +41,9 @@ public abstract class Connection {
         }
       }
     }
-    throw new IllegalArgumentException("Missing Connection discriminator property: 'kind'");
+    throw new IllegalArgumentException("Cannot instantiate abstract Connection; expected a matching 'kind' discriminator.");
   }
+
   static void loadBaseInto(Connection result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("kind") && map.get("kind") != null) {
       result.kind = String.valueOf(map.get("kind"));
@@ -54,7 +55,6 @@ public abstract class Connection {
       result.usageDescription = String.valueOf(map.get("usageDescription"));
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;

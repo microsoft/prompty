@@ -27,6 +27,7 @@ public class CompactionConfig {
     CompactionConfig.loadBaseInto(result, map, ctx);
     return ctx.processOutput(result);
   }
+
   static void loadBaseInto(CompactionConfig result, Map<?, ?> map, LoadContext ctx) {
     if (map.containsKey("strategy") && map.get("strategy") != null) {
       result.strategy = String.valueOf(map.get("strategy"));
@@ -40,7 +41,6 @@ public class CompactionConfig {
       }
     }
   }
-
 
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
