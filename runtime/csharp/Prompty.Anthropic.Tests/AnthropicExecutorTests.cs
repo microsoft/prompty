@@ -207,6 +207,59 @@ public class AnthropicExecutorTests
     }
 
     [Fact]
+    public async Task FormatToolMessages_ReconstructsStreamingToolAndThinkingBlocks()
+    {
+        var executor = new Anthropic.AnthropicExecutor();
+        var stream = new PromptyStream(StreamEvents(
+            """{"type":"content_block_start","index":0,"content_block":{"type":"thinking","thinking":"","signature":""}}""",
+            """{"type":"content_block_delta","index":0,"delta":{"type":"thinking_delta","thinking":"I should look."}}""",
+            """{"type":"content_block_delta","index":0,"delta":{"type":"signature_delta","signature":"signed"}}""",
+            """{"type":"content_block_start","index":1,"content_block":{"type":"text","text":""}}""",
+            """{"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"Checking "}}""",
+            """{"type":"content_block_delta","index":1,"delta":{"type":"text_delta","text":"now."}}""",
+            """{"type":"content_block_start","index":2,"content_block":{"type":"tool_use","id":"call_1","name":"lookup","input":{}}}""",
+            """{"type":"content_block_delta","index":2,"delta":{"type":"input_json_delta","partial_json":"{\"key\":\"value\"}"}}"""));
+        await foreach (var _ in stream)
+        {
+        }
+
+        var messages = executor.FormatToolMessages(
+            stream,
+            [new ToolCall { Id = "call_1", Name = "lookup", Arguments = """{"key":"value"}""" }],
+            ["result"]);
+        var content = Assert.IsType<List<Dictionary<string, object?>>>(messages[0].Metadata["content"]);
+
+        Assert.Equal("thinking", content[0]["type"]?.ToString());
+        Assert.Equal("I should look.", content[0]["thinking"]);
+        Assert.Equal("signed", content[0]["signature"]);
+        Assert.Equal("text", content[1]["type"]?.ToString());
+        Assert.Equal("Checking now.", content[1]["text"]);
+        Assert.Equal("tool_use", content[2]["type"]?.ToString());
+        Assert.Equal("call_1", content[2]["id"]?.ToString());
+        Assert.Equal("""{"key":"value"}""", Assert.IsType<JsonElement>(content[2]["input"]).GetRawText());
+    }
+
+    [Fact]
+    public async Task FormatToolMessages_PreservesValidInitialInputWhenStreamEndsMidJson()
+    {
+        var executor = new Anthropic.AnthropicExecutor();
+        var stream = new PromptyStream(StreamEvents(
+            """{"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"call_1","name":"lookup","input":{}}}""",
+            """{"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"key\":"}}"""));
+        await foreach (var _ in stream)
+        {
+        }
+
+        var messages = executor.FormatToolMessages(
+            stream,
+            [new ToolCall { Id = "call_1", Name = "lookup", Arguments = """{"key":""" }],
+            ["invalid arguments"]);
+        var content = Assert.IsType<List<Dictionary<string, object?>>>(messages[0].Metadata["content"]);
+
+        Assert.Equal("{}", Assert.IsType<JsonElement>(content[0]["input"]).GetRawText());
+    }
+
+    [Fact]
     public void BuildRequestBody_SingleToolResultMetadata_PreservesCorrelation()
     {
         var executor = new Anthropic.AnthropicExecutor();
@@ -223,5 +276,15 @@ public class AnthropicExecutorTests
         var content = Assert.IsType<List<Dictionary<string, object?>>>(wireMessages[0]["content"]);
 
         Assert.Equal("call_2", content[0]["tool_use_id"]);
+    }
+
+    private static async IAsyncEnumerable<object> StreamEvents(params string[] events)
+    {
+        foreach (var json in events)
+        {
+            await Task.Yield();
+            using var document = JsonDocument.Parse(json);
+            yield return document.RootElement.Clone();
+        }
     }
 }

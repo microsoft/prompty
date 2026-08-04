@@ -372,6 +372,11 @@ public class AnthropicExecutor : IExecutor
 
     private static object GetRawContent(object rawResponse)
     {
+        if (rawResponse is PromptyStream stream)
+        {
+            return ReconstructStreamContent(stream.Items);
+        }
+
         if (rawResponse is JsonElement { ValueKind: JsonValueKind.Object } element
             && element.TryGetProperty("content", out var content))
         {
@@ -386,5 +391,106 @@ public class AnthropicExecutor : IExecutor
         }
 
         return Array.Empty<object>();
+    }
+
+    private static List<Dictionary<string, object?>> ReconstructStreamContent(IReadOnlyList<object> items)
+    {
+        var blocks = new SortedDictionary<int, Dictionary<string, object?>>();
+        var textDeltas = new Dictionary<int, List<string>>();
+        var thinkingDeltas = new Dictionary<int, List<string>>();
+        var signatureDeltas = new Dictionary<int, List<string>>();
+        var inputDeltas = new Dictionary<int, List<string>>();
+
+        foreach (var item in items)
+        {
+            if (item is not JsonElement evt
+                || !evt.TryGetProperty("type", out var eventType))
+            {
+                continue;
+            }
+
+            if (eventType.GetString() == "content_block_start"
+                && evt.TryGetProperty("index", out var startIndex)
+                && evt.TryGetProperty("content_block", out var contentBlock))
+            {
+                blocks[startIndex.GetInt32()] =
+                    JsonSerializer.Deserialize<Dictionary<string, object?>>(contentBlock.GetRawText()) ?? [];
+                continue;
+            }
+
+            if (eventType.GetString() != "content_block_delta"
+                || !evt.TryGetProperty("index", out var deltaIndex)
+                || !evt.TryGetProperty("delta", out var delta)
+                || !delta.TryGetProperty("type", out var deltaType))
+            {
+                continue;
+            }
+
+            var index = deltaIndex.GetInt32();
+            switch (deltaType.GetString())
+            {
+                case "text_delta":
+                    AppendDelta(textDeltas, index, delta, "text");
+                    break;
+                case "thinking_delta":
+                    AppendDelta(thinkingDeltas, index, delta, "thinking");
+                    break;
+                case "signature_delta":
+                    AppendDelta(signatureDeltas, index, delta, "signature");
+                    break;
+                case "input_json_delta":
+                    AppendDelta(inputDeltas, index, delta, "partial_json");
+                    break;
+            }
+        }
+
+        foreach (var (index, block) in blocks)
+        {
+            if (textDeltas.TryGetValue(index, out var text))
+            {
+                block["text"] = string.Concat(text);
+            }
+            if (thinkingDeltas.TryGetValue(index, out var thinking))
+            {
+                block["thinking"] = string.Concat(thinking);
+            }
+            if (signatureDeltas.TryGetValue(index, out var signature))
+            {
+                block["signature"] = string.Concat(signature);
+            }
+            if (inputDeltas.TryGetValue(index, out var input))
+            {
+                var json = string.Concat(input);
+                try
+                {
+                    block["input"] = JsonSerializer.Deserialize<object>(json) ?? new Dictionary<string, object?>();
+                }
+                catch (JsonException)
+                {
+                    // Keep the valid initial input block when the provider stops mid-JSON.
+                }
+            }
+        }
+
+        return blocks.Values.ToList();
+    }
+
+    private static void AppendDelta(
+        Dictionary<int, List<string>> target,
+        int index,
+        JsonElement delta,
+        string property)
+    {
+        if (!delta.TryGetProperty(property, out var value)
+            || string.IsNullOrEmpty(value.GetString()))
+        {
+            return;
+        }
+        if (!target.TryGetValue(index, out var values))
+        {
+            values = [];
+            target[index] = values;
+        }
+        values.Add(value.GetString()!);
     }
 }
