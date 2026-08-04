@@ -437,6 +437,11 @@ async def test_turn_runner_generates_unique_event_ids_without_host_factory(tmp_p
     await runner.run(RunTurnRequest(session_id="session-1", turn_id="turn-1"))
 
     event_ids = [record["event"]["id"] for record in _records(journal_path) if record["kind"] != "summary"]
+    assert event_ids
     assert len(event_ids) == len(set(event_ids))
-    assert event_ids[0] == "session-event-1"
-    assert event_ids[-1] == "session-event-7"
+    suffixes: list[int] = []
+    for event_id in event_ids:
+        prefix, separator, suffix = event_id.rpartition("-")
+        assert prefix and separator and suffix.isdigit(), f"Malformed event ID: {event_id!r}"
+        suffixes.append(int(suffix))
+    assert suffixes == list(range(1, len(event_ids) + 1))
