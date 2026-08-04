@@ -139,6 +139,13 @@ class TestOpenAIProcessor:
         result = self.processor.process(self.agent, response)
         assert result == ""
 
+    @pytest.mark.parametrize("content", [[], {}])
+    def test_falsy_non_none_content_is_preserved(self, content):
+        response = _mock_chat_completion()
+        response.choices[0].message.content = content
+        result = self.processor.process(self.agent, response)
+        assert result is content
+
 
 # ---------------------------------------------------------------------------
 # FoundryProcessor

@@ -140,7 +140,7 @@ def _process_chat_completion(response: Any) -> Any:
     if message.content is None and isinstance(refusal, str):
         return refusal
 
-    return message.content or ""
+    return "" if message.content is None else message.content
 
 
 def _process_embedding(response: Any) -> Any:
