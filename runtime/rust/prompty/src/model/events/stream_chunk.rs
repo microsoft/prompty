@@ -13,6 +13,8 @@ use super::super::context::{LoadContext, SaveContext};
 
 use super::super::model::invocation_usage::InvocationUsage;
 
+use super::stream_failure::StreamFailure;
+
 use super::super::conversation::tool_call::ToolCall;
 
 /// Variant-specific data for [`StreamChunk`], discriminated by `kind`.
@@ -42,6 +44,11 @@ pub enum StreamChunkKind {
     ErrorChunk {
         /// The error message
         message: String,
+    },
+    /// `kind` = `"failure"`
+    FailureChunk {
+        /// The classified stream failure
+        failure: StreamFailure,
     },
 }
 
@@ -119,6 +126,13 @@ impl StreamChunk {
                     .unwrap_or_default()
                     .to_string(),
             },
+            "failure" => StreamChunkKind::FailureChunk {
+                failure: value
+                    .get("failure")
+                    .filter(|v| v.is_object() || v.is_array() || v.is_string())
+                    .map(|v| StreamFailure::load_from_value(v, ctx))
+                    .unwrap_or_default(),
+            },
             _ => StreamChunkKind::default(),
         };
         Self { kind: kind }
@@ -132,6 +146,7 @@ impl StreamChunk {
             StreamChunkKind::ToolChunk { .. } => "tool",
             StreamChunkKind::UsageChunk { .. } => "usage",
             StreamChunkKind::ErrorChunk { .. } => "error",
+            StreamChunkKind::FailureChunk { .. } => "failure",
         }
     }
 
@@ -182,6 +197,12 @@ impl StreamChunk {
                         "message".to_string(),
                         serde_json::Value::String(message.clone()),
                     );
+                }
+            }
+            StreamChunkKind::FailureChunk { failure, .. } => {
+                let nested = failure.to_value(ctx);
+                if !nested.is_null() {
+                    result.insert("failure".to_string(), nested);
                 }
             }
         }

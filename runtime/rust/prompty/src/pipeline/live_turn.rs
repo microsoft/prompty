@@ -1404,9 +1404,30 @@ mod tests {
     use crate::types::StreamFailure;
 
     const RESPONSES_STREAM_PROVIDER: &str = "live-responses-stream-test";
+    const DETERMINATE_STREAM_PROVIDER: &str = "live-determinate-stream-test";
     const INDETERMINATE_STREAM_PROVIDER: &str = "live-indeterminate-stream-test";
     const POST_OPEN_INDETERMINATE_STREAM_PROVIDER: &str =
         "live-post-open-indeterminate-stream-test";
+
+    fn stream_failure_vector(name: &str) -> Value {
+        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("..")
+            .join("..")
+            .join("..")
+            .join("spec")
+            .join("vectors")
+            .join("process")
+            .join("stream_failure_vectors.json");
+        let vectors: Vec<Value> = serde_json::from_str(
+            &std::fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("Failed to read {}: {error}", path.display())),
+        )
+        .expect("Invalid stream failure vectors");
+        vectors
+            .into_iter()
+            .find(|vector| vector["name"] == name)
+            .unwrap_or_else(|| panic!("Missing stream failure vector '{name}'"))
+    }
     static INDETERMINATE_STREAM_OPEN_CALLS: AtomicU64 = AtomicU64::new(0);
     static INDETERMINATE_NON_STREAM_CALLS: AtomicU64 = AtomicU64::new(0);
 
@@ -1866,11 +1887,37 @@ mod tests {
 
     struct ResponsesStreamProcessor;
 
+    struct DeterminateStreamExecutor;
+
+    struct DeterminateStreamProcessor;
+
     struct IndeterminateStreamExecutor;
 
     struct PostOpenIndeterminateStreamExecutor;
 
     struct PostOpenIndeterminateStreamProcessor;
+
+    #[async_trait]
+    impl Executor for DeterminateStreamExecutor {
+        async fn execute(
+            &self,
+            _agent: &Prompty,
+            _messages: &[Message],
+        ) -> Result<Value, InvokerError> {
+            unreachable!("the test exercises the streaming path")
+        }
+
+        async fn execute_stream_with_context(
+            &self,
+            _agent: &Prompty,
+            _request: &ModelInvocationRequest,
+            _cancellation: &CancellationToken,
+        ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
+            Ok(Box::pin(futures::stream::iter(vec![json!({
+                "refusal": "I cannot help with that"
+            })])))
+        }
+    }
 
     #[async_trait]
     impl Executor for IndeterminateStreamExecutor {
@@ -2023,6 +2070,22 @@ mod tests {
         }
     }
 
+    #[async_trait]
+    impl Processor for DeterminateStreamProcessor {
+        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+            unreachable!("the test exercises the streaming path")
+        }
+
+        fn process_stream(
+            &self,
+            _stream: Pin<Box<dyn Stream<Item = Value> + Send>>,
+        ) -> Result<Pin<Box<dyn Stream<Item = StreamChunk> + Send>>, InvokerError> {
+            Ok(Box::pin(futures::stream::iter(vec![StreamChunk::Failure(
+                StreamFailure::Determinate("Model refused: I cannot help with that".to_string()),
+            )])))
+        }
+    }
+
     fn responses_agent() -> Prompty {
         Prompty::load_from_value(
             &json!({
@@ -2137,6 +2200,8 @@ mod tests {
 
     #[tokio::test]
     async fn post_open_indeterminate_stream_requires_reconciliation_without_success_commit() {
+        let vector = stream_failure_vector("partial_text_then_indeterminate_failure");
+        let expected = &vector["expected"];
         registry::register_executor(
             POST_OPEN_INDETERMINATE_STREAM_PROVIDER,
             PostOpenIndeterminateStreamExecutor,
@@ -2174,6 +2239,7 @@ mod tests {
             Some(
                 TurnOptions::builder()
                     .durability(durability.clone())
+                    .max_llm_retries(1)
                     .on_event(Box::new(move |event| {
                         captured_events
                             .lock()
@@ -2188,15 +2254,19 @@ mod tests {
 
         assert!(matches!(error, InvokerError::ExecuteIndeterminate { .. }));
         let events = events.lock().expect("event lock poisoned");
-        assert!(
-            events
-                .iter()
-                .any(|event| { matches!(event, AgentEvent::Token(value) if value == "partial") })
-        );
-        assert!(
-            !events
-                .iter()
-                .any(|event| matches!(event, AgentEvent::Done { .. }))
+        assert!(events.iter().any(|event| {
+            matches!(
+                event,
+                AgentEvent::Token(value)
+                    if Some(value.as_str()) == expected["partialText"].as_str()
+            )
+        }));
+        let completion_committed = events
+            .iter()
+            .any(|event| matches!(event, AgentEvent::Done { .. }));
+        assert_eq!(
+            completion_committed,
+            expected["completionCommitted"].as_bool().unwrap()
         );
         drop(events);
         let checkpoint = durability
@@ -2206,9 +2276,80 @@ mod tests {
             .last()
             .cloned()
             .expect("indeterminate invocation must persist a reconciliation checkpoint");
-        assert!(checkpoint.reconciliation_required);
+        assert_eq!(
+            checkpoint.reconciliation_required,
+            expected["requiresReconciliation"].as_bool().unwrap()
+        );
         assert!(!checkpoint.final_output_ready);
         assert!(checkpoint.pending_output.is_none());
+    }
+
+    #[tokio::test]
+    async fn determinate_stream_failure_does_not_reconcile_or_commit_completion() {
+        let vector = stream_failure_vector("stream_refusal_is_determinate");
+        let expected = &vector["expected"];
+        registry::register_executor(DETERMINATE_STREAM_PROVIDER, DeterminateStreamExecutor);
+        registry::register_processor(DETERMINATE_STREAM_PROVIDER, DeterminateStreamProcessor);
+        let durability = Arc::new(CheckpointRecorder::default());
+        let events = Arc::new(Mutex::new(Vec::new()));
+        let captured_events = events.clone();
+
+        let error = turn_with_engine_request(
+            &Prompty::load_from_value(
+                &json!({
+                    "kind": "prompt",
+                    "name": "determinate-stream-failure",
+                    "instructions": "test",
+                    "model": {
+                        "id": "gpt-test",
+                        "provider": DETERMINATE_STREAM_PROVIDER,
+                        "options": {
+                            "additionalProperties": {"stream": true}
+                        }
+                    }
+                }),
+                &LoadContext::default(),
+            ),
+            TurnEngineRequest::new(
+                "determinate-stream-session",
+                "determinate-stream-turn",
+                vec![Message::with_text(crate::types::Role::User, "hello")],
+            ),
+            Some(
+                TurnOptions::builder()
+                    .durability(durability.clone())
+                    .max_llm_retries(1)
+                    .on_event(Box::new(move |event| {
+                        captured_events
+                            .lock()
+                            .expect("event lock poisoned")
+                            .push(event);
+                    }))
+                    .build(),
+            ),
+        )
+        .await
+        .expect_err("determinate stream failure must fail the turn");
+
+        assert!(!matches!(error, InvokerError::ExecuteIndeterminate { .. }));
+        let completion_committed = events
+            .lock()
+            .expect("event lock poisoned")
+            .iter()
+            .any(|event| matches!(event, AgentEvent::Done { .. }));
+        assert_eq!(
+            completion_committed,
+            expected["completionCommitted"].as_bool().unwrap()
+        );
+        assert_eq!(
+            durability
+                .checkpoints
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|checkpoint| checkpoint.reconciliation_required),
+            expected["requiresReconciliation"].as_bool().unwrap()
+        );
     }
 
     #[tokio::test]

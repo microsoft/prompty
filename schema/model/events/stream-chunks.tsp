@@ -7,7 +7,31 @@ namespace Prompty;
 /**
  * The kind discriminator for stream chunks.
  */
-alias StreamChunkType = "text" | "thinking" | "tool" | "usage" | "error";
+alias StreamChunkType =
+  | "text"
+  | "thinking"
+  | "tool"
+  | "usage"
+  | "error"
+  | "failure";
+
+/**
+ * Whether a stream failure has a known provider outcome.
+ */
+alias StreamFailureOutcome = "determinate" | "indeterminate";
+
+/**
+ * A classified terminal failure from an LLM response stream.
+ */
+model StreamFailure {
+  @doc("Whether the provider outcome is known or requires reconciliation")
+  @sample(#{ outcome: "indeterminate" })
+  outcome: StreamFailureOutcome;
+
+  @doc("The human-readable failure message")
+  @sample(#{ message: "SSE stream error: connection reset" })
+  message: string;
+}
 
 /**
  * A chunk of data from a streaming LLM response. Stream chunks are
@@ -83,4 +107,22 @@ model ErrorChunk extends StreamChunk {
   @doc("The error message")
   @sample(#{ message: "Rate limit exceeded" })
   message: string;
+}
+
+/**
+ * A classified failure chunk from the LLM response stream.
+ */
+model FailureChunk extends StreamChunk {
+  @doc("The kind identifier for classified failure chunks")
+  @sample(#{ kind: "failure" })
+  kind: "failure";
+
+  @doc("The classified stream failure")
+  @sample(#{
+    failure: #{
+      outcome: "indeterminate",
+      message: "SSE stream error: connection reset",
+    },
+  })
+  failure: StreamFailure;
 }

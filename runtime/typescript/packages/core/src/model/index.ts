@@ -86,6 +86,7 @@ export { SessionFileRef } from "./events/session-file-ref";
 export { SessionRef } from "./events/session-ref";
 export { SessionSummary } from "./events/session-summary";
 export { SessionTrace } from "./events/session-trace";
+export { StreamFailure } from "./events/stream-failure";
 export {
   StreamChunk,
   TextChunk,
@@ -93,6 +94,7 @@ export {
   ToolChunk,
   UsageChunk,
   ErrorChunk,
+  FailureChunk,
 } from "./events/stream-chunk";
 
 export { MemoryEntry } from "./memory/memory-entry";

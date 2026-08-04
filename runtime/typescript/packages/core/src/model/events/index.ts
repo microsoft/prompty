@@ -45,6 +45,7 @@ export { SessionFileRef } from "./session-file-ref";
 export { SessionRef } from "./session-ref";
 export { SessionSummary } from "./session-summary";
 export { SessionTrace } from "./session-trace";
+export { StreamFailure } from "./stream-failure";
 export {
   StreamChunk,
   TextChunk,
@@ -52,4 +53,5 @@ export {
   ToolChunk,
   UsageChunk,
   ErrorChunk,
+  FailureChunk,
 } from "./stream-chunk";

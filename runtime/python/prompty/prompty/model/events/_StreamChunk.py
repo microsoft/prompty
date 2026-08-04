@@ -12,6 +12,7 @@ from typing import Any, ClassVar
 from .._context import LoadContext, SaveContext
 from ..conversation._ToolCall import ToolCall
 from ..model._InvocationUsage import InvocationUsage
+from ._StreamFailure import StreamFailure
 
 
 @dataclass
@@ -70,6 +71,8 @@ class StreamChunk(ABC):
                 return UsageChunk.load(data, context)
             elif discriminator_value == "error":
                 return ErrorChunk.load(data, context)
+            elif discriminator_value == "failure":
+                return FailureChunk.load(data, context)
 
             else:
                 raise ValueError(f"Unknown StreamChunk discriminator value: {discriminator_value}")
@@ -571,6 +574,98 @@ class ErrorChunk(StreamChunk):
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ErrorChunk instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class FailureChunk(StreamChunk):
+    """A classified failure chunk from the LLM response stream.
+
+    Attributes
+    ----------
+    kind : str
+        The kind identifier for classified failure chunks
+    failure : StreamFailure
+        The classified stream failure
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="failure")
+    failure: StreamFailure = field(default_factory=StreamFailure)
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "FailureChunk":
+        """Load a FailureChunk instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            FailureChunk: The loaded FailureChunk instance.
+
+        """
+
+        if context is not None:
+            data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for FailureChunk: {data}")
+
+        # create new instance
+        instance = FailureChunk()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if data is not None and "failure" in data:
+            instance.failure = StreamFailure.load(data["failure"], context)
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the FailureChunk instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        if obj.failure is not None:
+            result["failure"] = obj.failure.save(context)
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the FailureChunk instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the FailureChunk instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

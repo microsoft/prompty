@@ -40,6 +40,7 @@ mod session_trace_test;
 mod session_warning_payload_test;
 mod status_event_payload_test;
 mod stream_chunk_test;
+mod stream_failure_test;
 mod thinking_event_payload_test;
 mod token_event_payload_test;
 mod tool_call_complete_payload_test;

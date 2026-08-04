@@ -4,6 +4,7 @@
 
 import { LoadContext, SaveContext } from "../context";
 import { InvocationUsage } from "../model/invocation-usage";
+import { StreamFailure } from "./stream-failure";
 import { ToolCall } from "../conversation/tool-call";
 
 export abstract class StreamChunk {
@@ -56,6 +57,8 @@ export abstract class StreamChunk {
           return UsageChunk.load(data, context);
         case "error":
           return ErrorChunk.load(data, context);
+        case "failure":
+          return FailureChunk.load(data, context);
         default:
           throw new Error(
             `Unknown StreamChunk discriminator value: ${discriminator}`,
@@ -525,6 +528,94 @@ export class ErrorChunk extends StreamChunk {
     const { parse } = require("yaml");
     const data = parse(yaml);
     return ErrorChunk.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class FailureChunk extends StreamChunk {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  kind: string = "failure";
+  failure!: StreamFailure;
+
+  constructor(init?: Partial<FailureChunk>) {
+    super(init);
+    this.kind = init?.kind ?? "failure";
+    if (init?.failure !== undefined) {
+      this.failure = init.failure;
+    }
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FailureChunk {
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new FailureChunk();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+    if (data["failure"] !== undefined && data["failure"] !== null) {
+      instance.failure = StreamFailure.load(
+        data["failure"] as Record<string, unknown>,
+        context,
+      );
+    }
+
+    if (context) {
+      return context.processOutput(instance) as FailureChunk;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+    if (obj.failure !== undefined && obj.failure !== null) {
+      result["failure"] = obj.failure.save(context);
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): FailureChunk {
+    const data = JSON.parse(json);
+    return FailureChunk.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): FailureChunk {
+    const { parse } = require("yaml");
+    const data = parse(yaml);
+    return FailureChunk.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

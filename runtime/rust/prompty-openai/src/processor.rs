@@ -617,8 +617,10 @@ impl futures::Stream for OpenAIStreamProcessor {
                                 if let Some(refusal) = chunk.get("delta").and_then(Value::as_str) {
                                     if !refusal.is_empty() {
                                         this.phase = StreamPhase::Done;
-                                        return std::task::Poll::Ready(Some(StreamChunk::Error(
-                                            format!("Model refused: {refusal}"),
+                                        return std::task::Poll::Ready(Some(StreamChunk::Failure(
+                                            StreamFailure::Determinate(format!(
+                                                "Model refused: {refusal}"
+                                            )),
                                         )));
                                     }
                                 }
@@ -679,8 +681,10 @@ impl futures::Stream for OpenAIStreamProcessor {
                             if let Some(refusal) = delta.get("refusal").and_then(Value::as_str) {
                                 if !refusal.is_empty() {
                                     this.phase = StreamPhase::Done;
-                                    return std::task::Poll::Ready(Some(StreamChunk::Error(
-                                        format!("Model refused: {refusal}"),
+                                    return std::task::Poll::Ready(Some(StreamChunk::Failure(
+                                        StreamFailure::Determinate(format!(
+                                            "Model refused: {refusal}"
+                                        )),
                                     )));
                                 }
                             }
@@ -1292,14 +1296,14 @@ mod tests {
         let chunks = vec![json!({"choices": [{"delta": {"refusal": "I cannot help with that"}}]})];
         let inner = futures::stream::iter(chunks);
         let mut stream = process_stream(inner);
-        let mut errors = Vec::new();
+        let mut failures = Vec::new();
         while let Some(chunk) = stream.next().await {
-            if let StreamChunk::Error(message) = chunk {
-                errors.push(message);
+            if let StreamChunk::Failure(StreamFailure::Determinate(message)) = chunk {
+                failures.push(message);
             }
         }
-        assert_eq!(errors.len(), 1);
-        assert!(errors[0].contains("refused"));
+        assert_eq!(failures.len(), 1);
+        assert!(failures[0].contains("refused"));
     }
 
     #[tokio::test]
