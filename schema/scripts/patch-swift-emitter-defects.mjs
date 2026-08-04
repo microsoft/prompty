@@ -410,6 +410,49 @@ const patches = [
 ///           could compile, it produced the same 180 test errors as 0.4.8, so
 ///           restoring it stays blocked too. The 0.4.6 TypeScript `= []`
 ///           regression persists.
+///  0.4.10 — the closest to adoptable so far: 23 of the 24 patch sites below are
+///           fixed upstream, against 13 at 0.4.5. Every base-field injection is
+///           fixed upstream — `ArrayProperty`, `ObjectProperty`, `UnionProperty`
+///           carry the `Property` fields and all five `Tool` subtypes carry
+///           `name`, `description`, `bindings` — and, unlike earlier attempts,
+///           those fields appear in the memberwise `init`, which would also
+///           settle the known limitation recorded at the top of this file. Note
+///           that nothing here is retired today: this repo stays pinned to
+///           0.4.2, so all 24 patches still apply. `Connection` gains
+///           `case unknown([String: Any])` and its `save` arm. The lone residual
+///           is `Connection.load`'s `default:`, which still throws
+///           `unknownDiscriminator` instead of returning `.unknown`, leaving
+///           that case declared but unreachable by the loader.
+///           Rejected because the 0.4.9 named-dict defect persists, though much
+///           reduced: `item.name = name` and `Property.shorthandProperty` are
+///           still emitted against the polymorphic enums, now costing 10 errors
+///           confined to agent/prompty.swift where 0.4.9 cost 48 across three
+///           files. core/property.swift and tools/tool.swift no longer fail;
+///           the probe did not establish why, so do not assume the base-field
+///           fix is the cause. Hand-synthesising the enum-level forwarders, plus
+///           the one-line `Connection` change, takes `swift build` from 10
+///           errors to exit 0. That measures compilation only — the forwarders
+///           are themselves a workaround, and with the generated tests still
+///           unusable nothing here demonstrates behavioural correctness, so
+///           deleting this shim needs both fixes upstream *and* a green
+///           generated-test run. It is the first release where that outcome
+///           looks reachable, which is why 0.4.10 is worth re-probing rather
+///           than skipping. The generated `test-dir` remains unusable: 45
+///           primary unique errors across five files (PromptyTests 16,
+///           ModelTests 12, PropertyTests 8, McpApprovalModeTests 5,
+///           ConnectionTests 4) against 0.4.5's 49 across five. Treat that as a
+///           count, not a trend — failure identities were not diffed. ToolTests
+///           is clean here, but it was already clean in the 0.4.5 49-error
+///           measurement; its eight failures belong to a less-patched 0.4.5
+///           probe and are not a 0.4.10 improvement. At least four of the
+///           ModelTests failures are ours, not the emitter's — see the
+///           `@sample` defect at schema/model/model/model.tsp L86/L93.
+///           C# and TypeScript were not re-measured at 0.4.10.
+///           Contract note: `Tool` now emits both `customTool(CustomTool)` and
+///           `unknown([String: Any])`, but `load`'s `default:` routes to
+///           `.customTool`, so `.unknown` is unreachable through `load` — it is
+///           still manually constructible, but it forces any exhaustive
+///           consumer `switch` without a catch-all arm to grow one.
 /// Compare failing test *identities*, not counts: the 0.4.3, 0.4.6, and 0.4.8
 /// releases evaluated against C# each leave its failure count at 16 while
 /// swapping `*Json*` for `*Yaml*`. On Windows those are two unrelated causes —
@@ -417,6 +460,14 @@ const patches = [
 /// `*Yaml*` ones come from a trailing space at schema/model/agent/agent.tsp:166
 /// that escaped expected-value literals preserve and verbatim input-YAML
 /// literals drop. 0.4.9 resolves that asymmetry.
+///
+/// Confirm every "still residual" verdict by reading generated source, never by
+/// matching the `find` anchors below. Those anchors are only a hypothesis about
+/// a release: at 0.4.5 they were reliable, but at 0.4.10 they reported all eight
+/// base-field injections as unfixed when the source proves otherwise, because
+/// the structural anchors `injectBaseFields` keys off had moved. Two distinct
+/// false-negative mechanisms are now known — shifted structural anchors, and the
+/// pre-wrapped `replace` text described above the Defects 4 + 5 group.
 const PINNED_EMITTER_VERSION = "0.4.2";
 
 function assertPinnedEmitterVersion() {
