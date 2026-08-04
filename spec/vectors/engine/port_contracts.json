@@ -1,6 +1,9 @@
 {
   "version": "1",
   "legacyHarnessSha256": "c534140f1aae07034cedea13feec3d66a9acbc0df46869858753aef39e24fe69",
+  "nativeErrors": [
+    "PortError"
+  ],
   "protocols": {
     "EnginePermissionPort": {
       "methods": {

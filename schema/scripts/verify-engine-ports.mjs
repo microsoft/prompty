@@ -43,6 +43,13 @@ function verifyLegacyHarness() {
 
 function verifyExportSurfaces() {
   for (const target of surfaces.targets) {
+    for (const nativeError of vector.nativeErrors) {
+      assert(
+        !target.rootExports.includes(nativeError),
+        `${target.target}: ${nativeError} must remain a native runtime error`,
+      );
+    }
+
     for (const [protocolName, expectedProtocol] of Object.entries(
       vector.protocols,
     )) {
