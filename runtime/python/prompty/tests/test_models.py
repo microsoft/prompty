@@ -1,4 +1,10 @@
-"""Tests for provider list_models() — OpenAI and Foundry (Azure)."""
+"""Tests for provider list_models() — OpenAI and Foundry (Azure).
+
+Enrichment-table-specific behavior (longest-prefix matching, token-boundary rules,
+fill-only-missing semantics) is covered by ``tests/test_model_capabilities.py``. This file
+focuses on the provider wire-mapping functions and the ``list_models``/``list_models_async``
+client-orchestration behavior.
+"""
 
 from __future__ import annotations
 
@@ -13,15 +19,14 @@ from prompty.providers.foundry.models import (
     _map_model as foundry_map_model,
 )
 from prompty.providers.foundry.models import (
+    catalog_model_to_model_info,
+    deployment_to_model_info,
+)
+from prompty.providers.foundry.models import (
     list_models as foundry_list_models,
 )
 from prompty.providers.foundry.models import (
     list_models_async as foundry_list_models_async,
-)
-from prompty.providers.openai.models import (
-    _KNOWN_MODELS,
-    _enrich,
-    _map_model,
 )
 from prompty.providers.openai.models import (
     list_models as openai_list_models,
@@ -29,6 +34,7 @@ from prompty.providers.openai.models import (
 from prompty.providers.openai.models import (
     list_models_async as openai_list_models_async,
 )
+from prompty.providers.openai.models import model_info_from_wire
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -52,72 +58,41 @@ def _make_connection(api_key: str = "sk-test") -> ApiKeyConnection:
 # ===========================================================================
 
 
-class TestOpenAIMapModel:
-    """Test _map_model produces correct ModelInfo from SDK objects."""
+class TestOpenAIModelInfoFromWire:
+    """Test model_info_from_wire produces correct, enriched ModelInfo from raw dicts."""
 
     def test_basic_mapping(self) -> None:
-        m = _fake_model("gpt-4o", "openai")
-        info = _map_model(m)
+        info = model_info_from_wire({"id": "gpt-4o", "owned_by": "openai"})
         assert isinstance(info, ModelInfo)
         assert info.id == "gpt-4o"
         assert info.owned_by == "openai"
 
     def test_missing_owned_by(self) -> None:
-        m = SimpleNamespace(id="custom-model")
-        info = _map_model(m)
+        info = model_info_from_wire({"id": "custom-model"})
         assert info.id == "custom-model"
         assert info.owned_by is None
 
-
-class TestOpenAIEnrich:
-    """Test enrichment from the built-in KNOWN_MODELS table."""
-
     def test_enriches_known_model(self) -> None:
-        info = ModelInfo(id="gpt-4o")
-        enriched = _enrich("gpt-4o", info)
-        assert enriched.context_window == 128_000
-        assert enriched.input_modalities == ["text", "image"]
-        assert enriched.output_modalities == ["text"]
-
-    def test_enriches_embedding_model(self) -> None:
-        info = ModelInfo(id="text-embedding-3-small")
-        enriched = _enrich("text-embedding-3-small", info)
-        assert enriched.context_window == 8_191
-        assert enriched.input_modalities == ["text"]
-        assert enriched.output_modalities == []
-
-    def test_enriches_image_model(self) -> None:
-        info = ModelInfo(id="dall-e-3")
-        enriched = _enrich("dall-e-3", info)
-        assert enriched.context_window is None
-        assert enriched.output_modalities == ["image"]
+        info = model_info_from_wire({"id": "gpt-4o", "owned_by": "openai"})
+        assert info.context_window == 128_000
+        assert info.input_modalities == ["text", "image"]
+        assert info.output_modalities == ["text"]
 
     def test_unknown_model_not_enriched(self) -> None:
-        info = ModelInfo(id="ft:gpt-4o:my-org:custom")
-        enriched = _enrich("ft:gpt-4o:my-org:custom", info)
-        assert enriched.context_window is None
-        assert enriched.input_modalities == []
-        assert enriched.output_modalities == []
+        info = model_info_from_wire({"id": "ft:gpt-4o:my-org:custom", "owned_by": "user-org"})
+        assert info.context_window is None
+        assert info.input_modalities is None
+        assert info.output_modalities is None
 
-    def test_does_not_overwrite_existing_values(self) -> None:
-        info = ModelInfo(id="gpt-4o", context_window=999, input_modalities=["audio"])
-        enriched = _enrich("gpt-4o", info)
-        assert enriched.context_window == 999
-        assert enriched.input_modalities == ["audio"]
+    def test_additional_properties_preserves_raw_payload(self) -> None:
+        raw = {"id": "gpt-4o", "owned_by": "openai", "created": 12345}
+        info = model_info_from_wire(raw)
+        assert info.additional_properties == raw
 
-    def test_known_models_table_has_expected_entries(self) -> None:
-        expected = [
-            "gpt-4o",
-            "gpt-4o-mini",
-            "gpt-4-turbo",
-            "gpt-4",
-            "gpt-3.5-turbo",
-            "text-embedding-3-small",
-            "text-embedding-3-large",
-            "dall-e-3",
-        ]
-        for model_id in expected:
-            assert model_id in _KNOWN_MODELS, f"{model_id} missing from KNOWN_MODELS"
+    def test_rejects_non_rust_scalar_field_types(self) -> None:
+        info = model_info_from_wire({"id": 42, "owned_by": ["openai"]})
+        assert info.id == ""
+        assert info.owned_by is None
 
 
 class TestOpenAIListModels:
@@ -207,11 +182,122 @@ class TestFoundryMapModel:
         info = foundry_map_model(m)
         assert info.context_window is None
 
-    def test_modalities_are_empty(self) -> None:
+    def test_modalities_default_to_none_when_not_supplied(self) -> None:
+        # Foundry has no dataset entries in spec/data/model_capabilities.json, so
+        # enrichment is a guaranteed no-op and unset fields stay None (not the buggy `[]`
+        # default the generated ModelInfo constructor would otherwise apply).
         m = _fake_model("gpt-4o", "azure", max_context_length=128_000)
         info = foundry_map_model(m)
-        assert info.input_modalities == []
+        assert info.input_modalities is None
+        assert info.output_modalities is None
+
+
+class TestFoundryCatalogModelToModelInfo:
+    """Test catalog_model_to_model_info produces correct ModelInfo from raw catalog dicts."""
+
+    def test_basic_mapping(self) -> None:
+        info = catalog_model_to_model_info({"id": "gpt-4", "owned_by": "openai", "maxContextLength": 8192})
+        assert info.id == "gpt-4"
+        assert info.owned_by == "openai"
+        assert info.context_window == 8192
+
+    def test_additional_properties_preserves_raw_payload(self) -> None:
+        raw = {"id": "gpt-4", "owned_by": "openai", "maxContextLength": 8192, "status": "succeeded"}
+        info = catalog_model_to_model_info(raw)
+        assert info.additional_properties == raw
+
+    def test_rejects_non_rust_catalog_field_types(self) -> None:
+        info = catalog_model_to_model_info({"id": 42, "owned_by": ["openai"], "maxContextLength": "8192"})
+        assert info.id == ""
+        assert info.owned_by is None
+        assert info.context_window is None
+
+
+class TestFoundryDeploymentToModelInfo:
+    """Test deployment_to_model_info handles both flat and nested-ARM deployment shapes."""
+
+    def test_flat_shape(self) -> None:
+        raw = {
+            "name": "chat-prod",
+            "modelName": "gpt-4o",
+            "modelPublisher": "OpenAI",
+            "capabilities": {"chatCompletion": "true"},
+        }
+        info = deployment_to_model_info(raw)
+        assert info.id == "chat-prod"
+        assert info.display_name == "gpt-4o"
+        assert info.owned_by == "OpenAI"
+
+    def test_nested_arm_shape(self) -> None:
+        raw = {
+            "name": "my-gpt4",
+            "properties": {
+                "model": {"name": "gpt-4", "publisher": "OpenAI", "maxContextLength": 8192},
+                "capabilities": {
+                    "supportedInputModalities": ["text"],
+                    "supportedOutputModalities": ["text"],
+                },
+            },
+        }
+        info = deployment_to_model_info(raw)
+        assert info.id == "my-gpt4"
+        assert info.display_name == "gpt-4"
+        assert info.owned_by == "OpenAI"
+        assert info.context_window == 8192
+        assert info.input_modalities == ["text"]
+        assert info.output_modalities == ["text"]
+
+    def test_matches_rust_coercion_and_fallback_semantics(self) -> None:
+        raw = {
+            "name": "deployment",
+            "modelName": "",
+            "modelPublisher": "",
+            "maxContextLength": 4096,
+            "properties": {
+                "model": {"name": "fallback-name", "publisher": "fallback-publisher", "maxContextLength": 2048},
+                "capabilities": {
+                    "maxContextLength": 8.5,
+                    "contextWindow": "not-an-integer",
+                    "inputModalities": ["text", 7, None],
+                    "outputModalities": [],
+                },
+            },
+        }
+
+        info = deployment_to_model_info(raw)
+
+        assert info.display_name == ""
+        assert info.owned_by == ""
+        assert info.context_window == 2048
+        assert info.input_modalities == ["text"]
         assert info.output_modalities == []
+
+    def test_preserves_zero_context_window(self) -> None:
+        info = deployment_to_model_info(
+            {
+                "name": "deployment",
+                "maxContextLength": 4096,
+                "capabilities": {"maxContextLength": 0},
+            }
+        )
+        assert info.context_window == 0
+
+    def test_matches_rust_whitespace_and_empty_string_parsing(self) -> None:
+        info = deployment_to_model_info(
+            {
+                "name": "deployment",
+                "properties": {
+                    "model": {"maxContextLength": 2048},
+                    "capabilities": {
+                        "maxContextLength": " 8192 ",
+                        "inputModalities": "",
+                        "input_modalities": ["text"],
+                    },
+                },
+            }
+        )
+        assert info.context_window == 2048
+        assert info.input_modalities == []
 
 
 class TestFoundryListModels:

@@ -16,6 +16,7 @@ from .discovery import (
 )
 from .guardrails import GuardrailError, GuardrailResult, Guardrails
 from .loader import default_save_context, load, load_async
+from .model_capabilities import ModelCapabilities, enrich, lookup
 from .pipeline import (
     ExecuteError,
     invoke,
