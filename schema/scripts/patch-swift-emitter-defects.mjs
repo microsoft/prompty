@@ -336,7 +336,7 @@ const patches = [
 /// the exact byte sequences that version emits, so a different version must not
 /// be silently patched — it needs a re-review (and is quite possibly fixed).
 ///
-/// Releases evaluated and rejected so far, both because the emitter is shared
+/// Releases evaluated and rejected so far, all because the emitter is shared
 /// and a bump regenerates every runtime:
 ///   0.4.3 — fixes five Swift source-generator defects (Tool wildcard, indirect,
 ///           typed factories, placeholder types, suffix loss) and would cut this
@@ -345,8 +345,22 @@ const patches = [
 ///   0.4.6 — additionally fixes inherited `extends` fields, but carries the same
 ///           C# break plus dropped `= []` on 13 TypeScript fields that declare an
 ///           explicit `= #[]` default.
-/// Compare failing test *identities*, not counts: both releases happen to leave
-/// the C# failure count unchanged while swapping `*Json*` failures for `*Yaml*`.
+///   0.4.8 — Swift is close to clean: native output compiles to exactly 30
+///           errors, all `Connection has no member 'unknown'`, all in tool.swift.
+///           Probe-patching only that case makes the model package compile, so
+///           this shim would likely collapse to a single patch — but "compiles"
+///           is not "correct" (see defect 10 above: silently dropped fields
+///           produce no diagnostics), so retiring any patch still requires
+///           `swift build --build-tests` *and* `swift test` to confirm the
+///           round-trip behaviour it guards. Rejected regardless: the C# break
+///           below reproduces at 0.4.8 (verified locally). The 0.4.6 TypeScript
+///           regression was not re-verified at 0.4.8.
+/// Compare failing test *identities*, not counts: every one of these releases
+/// leaves the C# failure count at 16 while swapping `*Json*` for `*Yaml*`. On
+/// Windows those are two unrelated causes — the baseline `*Json*` failures are a
+/// local CRLF artifact, while the new `*Yaml*` ones come from a trailing space at
+/// schema/model/agent/agent.tsp:166 that escaped expected-value literals preserve
+/// and verbatim input-YAML literals drop.
 const PINNED_EMITTER_VERSION = "0.4.2";
 
 function assertPinnedEmitterVersion() {
