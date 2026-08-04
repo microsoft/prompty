@@ -22,7 +22,6 @@ from ..model import (
     ModelToolRequest,
     ModelToolResult,
     ResumeContext,
-    SaveContext,
     TextPart,
     TurnCommit,
     TurnEngineResult,
@@ -93,8 +92,8 @@ class _TurnFailed(Exception):
 
 
 def save_engine_checkpoint(checkpoint: EngineCheckpoint) -> dict[str, Any]:
-    """Serialize a checkpoint without collapsing ordered duplicate tool names."""
-    return checkpoint.save(SaveContext(collection_format="array"))
+    """Serialize a checkpoint using the emitted durable collection shape."""
+    return checkpoint.save()
 
 
 def load_engine_checkpoint(data: dict[str, Any]) -> EngineCheckpoint:

@@ -42,6 +42,40 @@ def _roundtrip_checkpoint(checkpoint: EngineCheckpoint) -> EngineCheckpoint:
     return load_engine_checkpoint(json.loads(json.dumps(saved)))
 
 
+def test_checkpoint_default_save_roundtrip_preserves_duplicate_tool_names() -> None:
+    checkpoint = EngineCheckpoint(
+        pending_tool_requests=[
+            ModelToolRequest(id="call-1", name="same"),
+            ModelToolRequest(id="call-2", name="same"),
+        ],
+        completed_tool_results=[
+            ModelToolResult(request_id="call-1", name="same", output="first"),
+            ModelToolResult(request_id="call-2", name="same", output="second"),
+        ],
+    )
+
+    saved = checkpoint.save()
+    loaded = EngineCheckpoint.load(json.loads(json.dumps(saved)))
+
+    assert saved["pendingToolRequests"] == [
+        {"id": "call-1", "name": "same"},
+        {"id": "call-2", "name": "same"},
+    ]
+    assert save_engine_checkpoint(checkpoint) == saved
+    assert [(item.id, item.name) for item in loaded.pending_tool_requests] == [
+        ("call-1", "same"),
+        ("call-2", "same"),
+    ]
+    assert [(item["requestId"], item["name"]) for item in saved["completedToolResults"]] == [
+        ("call-1", "same"),
+        ("call-2", "same"),
+    ]
+    assert [(item.request_id, item.name) for item in loaded.completed_tool_results] == [
+        ("call-1", "same"),
+        ("call-2", "same"),
+    ]
+
+
 class _Ids:
     def __init__(self) -> None:
         self._counts: Counter[str] = Counter()
