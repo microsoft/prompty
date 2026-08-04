@@ -56,6 +56,13 @@ const swiftSources = join("..", "runtime", "swift", "prompty-model", "Sources", 
 // does not. These are applied structurally (locate the struct, insert at its
 // declaration / load / save anchors) rather than via literal find-and-replace,
 // because the surrounding emitter output differs for every subtype.
+//
+// `Connection` subtypes are hit by the same emitter defect but are deliberately
+// out of scope: the runtime never reads their inherited fields, so no vector
+// regresses without them. The generated tests do assert them, though
+// (`ReferenceConnection.authenticationMode` / `.usageDescription`), so
+// restoring `test-dir` needs the upstream `extends` fix — not more injections
+// here.
 const propertyBase = {
   decls:
     '  public var name: String = ""\n' +
@@ -287,6 +294,12 @@ const patches = [
   },
 
   // --- Defects 4 + 5: protocol signature type mapping and arity ------------
+// Note for whoever retires these: the `parser.swift` `replace` below is
+// pre-wrapped to the width `swift-format` produces. A fixed emitter emits the
+// same signature on one line, which matches neither `find` nor `replace`, so
+// this patch reports "output changed" rather than "already applied". That is a
+// false negative — compare the signatures, not the line breaks, before
+// concluding the emitter still has the defect.
   {
     file: join("pipeline", "parser.swift"),
     find: "  func preRender(template: String) throws -> Unknown\n" +
@@ -352,8 +365,18 @@ const patches = [
 ///           45 across five. The sixth is tools/ToolTests.swift, whose eight
 ///           errors are all `FunctionTool` missing `name` and `description`.
 ///           `ReferenceConnection` likewise drops `authenticationMode` and
-///           `usageDescription`, but silently, as defect 10 describes. Rejected
-///           on Swift alone, so the other runtimes were not measured here.
+///           `usageDescription`, but silently, as defect 10 describes.
+///           Re-probed patch by patch: of this shim's 24 patch sites, 13 are
+///           fixed upstream (defects 2, 3, 4 and 5, plus defect 1 for `Tool`)
+///           and 11 are residual — the three `Connection.unknown` patches and
+///           all eight base-field injections. Applying only those 11 to native
+///           0.4.5 output compiles the library, clears `ToolTests` entirely,
+///           leaves 49 unique test-build errors across five files, and passes
+///           all 76 runtime tests including live E2E. 0.4.5 would therefore
+///           retire 13 of the 24 patch sites but not the shim itself: the eight
+///           residual injections keep the structural machinery, which is the
+///           bulk of the code here. Rejected on Swift alone, so the other
+///           runtimes were not measured here.
 ///   0.4.6 — additionally fixes inherited `extends` fields, but carries the same
 ///           C# break plus dropped `= []` on 13 TypeScript fields that declare an
 ///           explicit `= #[]` default.
