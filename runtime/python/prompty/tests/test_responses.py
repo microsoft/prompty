@@ -231,7 +231,9 @@ class TestOutputSchemaToResponsesWire:
         assert schema["type"] == "object"
         assert "temperature" in schema["properties"]
         assert "condition" in schema["properties"]
-        assert schema["properties"]["temperature"]["type"] == "integer"
+        assert schema["properties"]["temperature"]["type"] == ["integer", "null"]
+        assert schema["properties"]["condition"]["type"] == ["string", "null"]
+        assert schema["required"] == ["temperature", "condition"]
         assert schema["additionalProperties"] is False
 
 
