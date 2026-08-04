@@ -109,4 +109,54 @@ class SpecVectorsTest {
     // of a prompt without restating the whole thing.
     SpecVectors.assertMatches("test", Map.of("model", "gpt-4"), Map.of("model", "gpt-4", "x", 1));
   }
+
+  @Test
+  void anExpectedNullIsSatisfiedByAnEmptyCollection() {
+    // The generated models materialize optional collections, so a `tools` the wire never supplied
+    // arrives as an empty list and saves as `[]` rather than vanishing. The reference runtimes do
+    // the same — Rust inserts the saved collection unconditionally and C# guards only on non-null —
+    // so a vector stating `"tools": null` has to accept it, exactly as Rust's `as_tools()` and
+    // Python's length check do.
+    Map<String, Object> expected = new LinkedHashMap<>();
+    expected.put("tools", null);
+
+    SpecVectors.assertMatches("test", expected, Map.of("tools", List.of()));
+    SpecVectors.assertMatches("test", expected, Map.of("tools", Map.of()));
+  }
+
+  @Test
+  void anExpectedNullIsStillRejectedByACollectionThatHasEntries() {
+    // The relaxation must not reach a collection carrying real content: that is a runtime emitting
+    // something the vector says should not be there, which is the defect this comparison exists to
+    // catch.
+    Map<String, Object> expected = new LinkedHashMap<>();
+    expected.put("tools", null);
+
+    assertThrows(
+        AssertionFailedError.class,
+        () -> SpecVectors.assertMatches("test", expected, Map.of("tools", List.of("search"))));
+    assertThrows(
+        AssertionFailedError.class,
+        () -> SpecVectors.assertMatches("test", expected, Map.of("tools", Map.of("a", 1))));
+  }
+
+  @Test
+  void anExpectedNullIsStillRejectedByAnEmptyString() {
+    // An empty string is a value, not an absence. A runtime that sends `""` where the vector says
+    // nothing should be sent is disagreeing, and widening absence to cover it would hide that.
+    Map<String, Object> expected = new LinkedHashMap<>();
+    expected.put("instructions", null);
+
+    assertThrows(
+        AssertionFailedError.class,
+        () -> SpecVectors.assertMatches("test", expected, Map.of("instructions", "")));
+  }
+
+  @Test
+  void theKeySetCheckIsNotRelaxedByTheEmptyCollectionAllowance() {
+    // assertEquivalent still rejects a key the vector never mentions, even when the value is an
+    // empty collection. Only an explicit `null` in the vector opts into the allowance; a vector that
+    // omits the key entirely is still asserting the field is not sent at all.
+    rejects(Map.of("model", "gpt-4"), Map.of("model", "gpt-4", "tools", List.of()));
+  }
 }

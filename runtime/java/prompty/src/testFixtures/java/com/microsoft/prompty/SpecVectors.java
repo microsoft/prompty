@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -110,8 +111,11 @@ public final class SpecVectors {
    * Assert that {@code actual} contains everything {@code expected} specifies.
    *
    * <p>Maps are matched key by key and lists element by element; scalars must be equal. An expected
-   * null asserts only that the actual value is absent or null, which is how a vector says "this
-   * field should not be populated" without having to describe the whole surrounding object.
+   * null asserts only that the actual value carries nothing, which is how a vector says "this field
+   * should not be populated" without having to describe the whole surrounding object. Null, an empty
+   * list and an empty map all satisfy it: the generated models materialize optional collections, so
+   * a field the wire never supplied still arrives as an empty collection rather than disappearing.
+   * An empty string is <em>not</em> absent — it is a value a vector has to state explicitly.
    *
    * <p>This is deliberately a <em>subset</em> match: a key the vector does not mention is not
    * checked. That is what lets a load vector describe one corner of a prompt without restating the
@@ -133,10 +137,13 @@ public final class SpecVectors {
    * else is sent, and a subset match would let a runtime add a spurious field to every request
    * without a single test noticing.
    *
-   * <p>This is the reference implementation's comparison but for one deliberate relaxation: numbers
+   * <p>This is the reference implementation's comparison but for two deliberate relaxations. Numbers
    * are compared to single precision rather than bit-exactly, because a 32-bit {@code temperature}
-   * cannot hold a value like 0.7 that the vector states in full precision. Every other difference
-   * fails here exactly as it would there.
+   * cannot hold a value like 0.7 that the vector states in full precision. An expected null is
+   * satisfied by an empty collection as well as by a missing value, for the reason given on {@link
+   * #assertMatches}. Note that the key-set check is not relaxed: a vector that omits a key entirely
+   * still rejects a runtime that emits it, even as an empty collection. Every other difference fails
+   * here exactly as it would there.
    */
   public static void assertEquivalent(String label, Object expected, Object actual) {
     assertSameKeys(label, "", expected, actual);
@@ -190,7 +197,14 @@ public final class SpecVectors {
     String where = label + (path.isEmpty() ? "" : " at " + path);
 
     if (expected == null) {
-      assertTrue(actual == null, where + ": expected absent, got " + actual);
+      // A vector writes `null` for "this field carries nothing". Runtimes are free to spell that as
+      // an absent value or as an empty collection: the models materialize optional collections
+      // (`tools?: Tool[] = #[]` becomes an empty list, matching C#, TypeScript and Rust), so an
+      // empty list or map means the same thing to a caller as no list at all. The reference
+      // implementation reconciles the two at this same seam — Rust's `as_tools()` reports `None`
+      // for an empty vector, and Python checks length rather than identity. A non-empty value is
+      // still a real difference and fails here.
+      assertTrue(isAbsent(actual), where + ": expected absent or empty, got " + describe(actual));
       return;
     }
 
@@ -277,6 +291,28 @@ public final class SpecVectors {
 
   private static String describe(Object value) {
     return value == null ? "null" : value.getClass().getSimpleName() + " " + value;
+  }
+
+  /**
+   * Report whether a saved value carries nothing, which a vector writes as {@code null}.
+   *
+   * <p>An empty list or map counts as absent. Optional collections are materialized by the
+   * generated models, so a field the wire never supplied still saves as an empty collection rather
+   * than disappearing; treating that as a difference would fail every vector that states an optional
+   * collection as null. A collection with entries in it is a real difference and is not absent, and
+   * an empty string is a value rather than an absence.
+   */
+  private static boolean isAbsent(Object value) {
+    if (value == null) {
+      return true;
+    }
+    if (value instanceof Collection<?> collection) {
+      return collection.isEmpty();
+    }
+    if (value instanceof Map<?, ?> map) {
+      return map.isEmpty();
+    }
+    return false;
   }
 
   // ---------------------------------------------------------------- error matching
