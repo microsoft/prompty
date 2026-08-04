@@ -183,11 +183,11 @@ public sealed class TurnEngine
                 }
                 catch (ToolPermissionFailure error)
                 {
-                    return await CommitFailedAsync(state, "permission_error", error.Source.Message, cancellationToken).ConfigureAwait(false);
+                    return await CommitFailedAsync(state, "permission_error", error.Error.Message, cancellationToken).ConfigureAwait(false);
                 }
                 catch (ToolConfigurationFailure error)
                 {
-                    return await CommitFailedAsync(state, "tool_configuration_error", error.Source.Message, cancellationToken).ConfigureAwait(false);
+                    return await CommitFailedAsync(state, "tool_configuration_error", error.Error.Message, cancellationToken).ConfigureAwait(false);
                 }
 
                 var outcomeUnknown = toolResult.Outcome == ModelToolOutcome.Indeterminate;
@@ -1073,15 +1073,15 @@ public sealed class TurnEngine
     }
 
     /// <summary>Signals that <see cref="IEnginePermissionPort.AuthorizeAsync"/> itself failed.</summary>
-    private sealed class ToolPermissionFailure(PortError source) : Exception(source.Message)
+    private sealed class ToolPermissionFailure(PortError error) : Exception(error.Message)
     {
-        public PortError Source { get; } = source;
+        public PortError Error { get; } = error;
     }
 
     /// <summary>Signals that <see cref="IEngineToolPort.ExecuteAsync"/> failed with a configuration error.</summary>
-    private sealed class ToolConfigurationFailure(PortError source) : Exception(source.Message)
+    private sealed class ToolConfigurationFailure(PortError error) : Exception(error.Message)
     {
-        public PortError Source { get; } = source;
+        public PortError Error { get; } = error;
     }
 
     /// <summary>Prevents observational stream failures from changing semantic model execution.</summary>

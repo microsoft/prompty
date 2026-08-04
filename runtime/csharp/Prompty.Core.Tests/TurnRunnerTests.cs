@@ -24,7 +24,7 @@ public class TurnRunnerTests
                 new FunctionHostToolExecutor(new Dictionary<string, HostToolHandler>()),
                 request => Task.FromResult(new TurnModelResponse
                 {
-                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs["name"]}" },
+                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs!["name"]}" },
                     CheckpointState = new Dictionary<string, object> { ["stable"] = true }
                 }),
                 FixedClock(),
@@ -97,7 +97,7 @@ public class TurnRunnerTests
 
                     return Task.FromResult(new TurnModelResponse
                     {
-                        Output = new Dictionary<string, object?> { ["toolResult"] = request.ToolResults[0].Result }
+                        Output = new Dictionary<string, object?> { ["toolResult"] = request.ToolResults![0].Result }
                     });
                 },
                 FixedClock(),
@@ -106,7 +106,7 @@ public class TurnRunnerTests
             var result = await runner.RunAsync(new RunTurnRequest { SessionId = "session-1", TurnId = "turn-1" });
 
             Assert.Equal(5, Assert.IsType<Dictionary<string, object?>>(result.Output)["toolResult"]);
-            Assert.True(result.ToolResults[0].Success);
+            Assert.True(result.ToolResults![0].Success);
             Assert.Equal(
                 [
                     TurnEventType.TurnStart,
@@ -158,7 +158,7 @@ public class TurnRunnerTests
 
                     return Task.FromResult(new TurnModelResponse
                     {
-                        Output = new Dictionary<string, object?> { ["denied"] = request.ToolResults[0].ErrorKind }
+                        Output = new Dictionary<string, object?> { ["denied"] = request.ToolResults![0].ErrorKind }
                     });
                 },
                 FixedClock(),
@@ -204,7 +204,7 @@ public class TurnRunnerTests
                         });
                     }
 
-                    return Task.FromResult(new TurnModelResponse { Output = request.ToolResults[0].Save() });
+                    return Task.FromResult(new TurnModelResponse { Output = request.ToolResults![0].Save() });
                 },
                 FixedClock(),
                 FixedIds());
@@ -318,7 +318,7 @@ public class TurnRunnerTests
             {
                 return Task.FromResult(new TurnModelResponse
                 {
-                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs["name"]}" },
+                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs!["name"]}" },
                     CheckpointState = new Dictionary<string, object> { ["stable"] = true }
                 });
             }
@@ -344,8 +344,8 @@ public class TurnRunnerTests
             {
                 Output = new Dictionary<string, object?>
                 {
-                    ["toolResult"] = request.ToolResults[0].Result,
-                    ["errorKind"] = request.ToolResults[0].ErrorKind
+                    ["toolResult"] = request.ToolResults![0].Result,
+                    ["errorKind"] = request.ToolResults![0].ErrorKind
                 }
             });
         };

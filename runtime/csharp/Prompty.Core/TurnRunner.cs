@@ -209,7 +209,12 @@ public sealed class ReferenceTurnRunner
         return result;
     }
 
-    private void RecordTurn(TurnEventType type, string turnId, int iteration, IDictionary<string, object> payload)
+    private void RecordTurn<TPayload>(
+        TurnEventType type,
+        string turnId,
+        int iteration,
+        IDictionary<string, TPayload> payload)
+        where TPayload : class?
     {
         var turnEvent = new TurnEvent
         {
@@ -218,7 +223,7 @@ public sealed class ReferenceTurnRunner
             Timestamp = _now(),
             TurnId = turnId,
             Iteration = iteration,
-            Payload = payload
+            Payload = payload.ToDictionary(entry => entry.Key, entry => (object)entry.Value!)
         };
         _eventSink.EmitTurn(turnEvent);
         _journal.AppendTurn(turnEvent);
