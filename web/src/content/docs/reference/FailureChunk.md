@@ -35,6 +35,14 @@ classDiagram
     FailureChunk *-- StreamFailure
 ```
 
+## Yaml Example
+
+```yaml
+failure:
+  outcome: indeterminate
+  message: "SSE stream error: connection reset"
+```
+
 ## Properties
 
 | Name | Type | Description |

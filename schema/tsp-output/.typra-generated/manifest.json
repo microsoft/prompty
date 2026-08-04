@@ -4005,6 +4005,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/events/test_failure_chunk.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/events/test_harness_context.py",
       "marker": true
     },

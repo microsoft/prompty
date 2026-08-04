@@ -117,5 +117,11 @@ model FailureChunk extends StreamChunk {
   kind: "failure";
 
   @doc("The classified stream failure")
+  @sample(#{
+    failure: #{
+      outcome: "indeterminate",
+      message: "SSE stream error: connection reset",
+    },
+  })
   failure: StreamFailure;
 }
