@@ -285,6 +285,26 @@ public class SpecVectorTests
         }
     }
 
+    [Fact]
+    public void FunctionToolLoadVector_DeclaresBindingsExpectation()
+    {
+        var vector = LoadVectors("load")
+            .Single(vector => vector.GetProperty("name").GetString() == "tools_function_load");
+        var expectedTool = vector.GetProperty("expected")
+            .GetProperty("tools")
+            .EnumerateArray()
+            .Single(tool =>
+                tool.GetProperty("kind").GetString() == "function" &&
+                tool.GetProperty("name").GetString() == "get_weather");
+
+        Assert.True(
+            expectedTool.TryGetProperty("bindings", out var bindings),
+            "tools_function_load must declare expected FunctionTool bindings");
+        Assert.True(
+            bindings.ValueKind is JsonValueKind.Object or JsonValueKind.Array,
+            "FunctionTool bindings expectations must use the equivalent map or list wire form");
+    }
+
     // =========================================================================
     // Helpers
     // =========================================================================
