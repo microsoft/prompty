@@ -671,6 +671,10 @@ final class ModelCollections {
         String key = String.valueOf(entry.getKey());
         Object value = entry.getValue();
         if (isSequence(value)) {
+          // Rust silently skips an array-valued entry here, which turns a malformed document
+          // into an empty list and hides the mistake until the tool is called and its arguments
+          // are missing. C# rejects it; this follows C#, because a schema that was written wrong
+          // is worth surfacing at load time.
           throw new IllegalArgumentException(
               "Invalid '" + property + "' format: key '" + key + "' has an array value. '" + property
                   + "' must be a flat list of objects or a name-keyed dict - not a nested {" + key
