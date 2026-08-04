@@ -190,6 +190,44 @@ public class LoaderTests
         Assert.Contains("Hello world.", agent.Instructions);
     }
 
+    [Fact]
+    public void Load_WithoutFrontmatter_TreatsEntireFileAsInstructions()
+    {
+        var root = Directory.CreateTempSubdirectory("prompty-loader-");
+        try
+        {
+            var path = Path.Combine(root.FullName, "body-only.prompty");
+            File.WriteAllText(path, "system:\nYou are helpful.");
+
+            var agent = PromptyLoader.Load(path);
+
+            Assert.Equal("system:\nYou are helpful.", agent.Instructions);
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_MissingClosingFrontmatterDelimiter_Throws()
+    {
+        var root = Directory.CreateTempSubdirectory("prompty-loader-");
+        try
+        {
+            var path = Path.Combine(root.FullName, "invalid.prompty");
+            File.WriteAllText(path, "---\nname: invalid\nsystem:\nHello");
+
+            var error = Assert.Throws<InvalidOperationException>(() => PromptyLoader.Load(path));
+
+            Assert.Contains("closing delimiter", error.Message);
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
     // --- Env resolution ---
 
     [Fact]
@@ -222,6 +260,31 @@ public class LoaderTests
         var conn = (ApiKeyConnection)agent.Model!.Connection!;
 
         Assert.Equal("https://fallback.openai.azure.com", conn.Endpoint);
+    }
+
+    [Fact]
+    public void Load_EnvResolution_RecursesThroughMetadataAndArrays()
+    {
+        Environment.SetEnvironmentVariable("PROMPTY_NESTED_VALUE", "resolved");
+        var root = Directory.CreateTempSubdirectory("prompty-loader-");
+        try
+        {
+            var path = Path.Combine(root.FullName, "nested.prompty");
+            File.WriteAllText(
+                path,
+                "---\nname: nested\nmetadata:\n  nested:\n    values:\n      - ${env:PROMPTY_NESTED_VALUE}\n---\nHello");
+
+            var agent = PromptyLoader.Load(path);
+            var nested = Assert.IsAssignableFrom<System.Collections.IDictionary>(agent.Metadata!["nested"]);
+            var values = Assert.IsAssignableFrom<System.Collections.IList>(nested["values"]);
+
+            Assert.Equal("resolved", values[0]);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PROMPTY_NESTED_VALUE", null);
+            root.Delete(recursive: true);
+        }
     }
 
     [Fact]

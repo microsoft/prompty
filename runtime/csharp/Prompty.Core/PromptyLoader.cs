@@ -65,13 +65,9 @@ public static class PromptyLoader
         // 1. Split frontmatter + body
         var data = FrontmatterParser.Parse(contents);
 
-        // 2. Load via typed model with ${env:}/${file:} resolution
-        var ctx = new LoadContext
-        {
-            PreProcess = ReferenceResolver.CreatePreProcess(fullPath, options?.AllowedFileRoots),
-        };
-
-        var agent = Prompty.Load(data, ctx);
+        // 2. Resolve the complete untyped tree before generated model loading.
+        data = ReferenceResolver.CreatePreProcess(fullPath, options?.AllowedFileRoots)(data);
+        var agent = Prompty.Load(data, new LoadContext());
 
         // 3. Attach source path in metadata
         agent.Metadata ??= new Dictionary<string, object>();

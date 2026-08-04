@@ -13,10 +13,12 @@ namespace Prompty.Core;
 public partial class PromptyChatParser : IParser, IPreRenderable
 {
     /// <summary>
-    /// Regex matching role marker lines: "role:" or "role[attrs]:"
+    /// Regex matching canonical role marker lines with optional heading syntax and attributes.
     /// Captures role name and optional attributes.
     /// </summary>
-    [GeneratedRegex(@"^(system|user|assistant|developer|tool)(\[.*?\])?:\s*$", RegexOptions.Multiline)]
+    [GeneratedRegex(
+        @"^\s*#?\s*(system|user|assistant)(\[(?:\w+\s*=\s*""?[^""]*""?\s*,?\s*)+\])?\s*:\s*$",
+        RegexOptions.IgnoreCase | RegexOptions.Multiline)]
     private static partial Regex RoleMarkerRegex();
 
     /// <summary>
@@ -52,7 +54,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
 
         var sanitized = RoleMarkerRegex().Replace(template, match =>
         {
-            var role = match.Groups[1].Value;
+            var role = match.Groups[1].Value.ToLowerInvariant();
             var existingAttrs = match.Groups[2].Value; // e.g. "[key=val]" or ""
             if (string.IsNullOrEmpty(existingAttrs))
                 return $"{role}[nonce=\"{nonce}\"]:\n";
@@ -93,10 +95,21 @@ public partial class PromptyChatParser : IParser, IPreRenderable
             var match = RoleMarkerRegex().Match(line);
             if (match.Success)
             {
-                // Flush previous message
                 if (currentRole is not null)
                 {
-                    messages.Add(CreateMessage(currentRole, currentContent, currentAttrs));
+                    messages.Add(CreateMessage(currentRole, currentContent, currentAttrs, validateNonce: true));
+                }
+                else if (currentContent.Count > 0)
+                {
+                    var leadingText = string.Join("\n", currentContent).Trim('\r', '\n');
+                    if (!string.IsNullOrEmpty(leadingText))
+                    {
+                        messages.Add(new Message
+                        {
+                            Role = Role.System,
+                            Parts = [new TextPart { Value = leadingText }]
+                        });
+                    }
                 }
 
                 currentRole = match.Groups[1].Value;
@@ -112,7 +125,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
         // Flush last message
         if (currentRole is not null)
         {
-            messages.Add(CreateMessage(currentRole, currentContent, currentAttrs));
+            messages.Add(CreateMessage(currentRole, currentContent, currentAttrs, validateNonce: true));
         }
         else if (currentContent.Count > 0)
         {
@@ -135,17 +148,20 @@ public partial class PromptyChatParser : IParser, IPreRenderable
     // Helpers
     // -----------------------------------------------------------------------
 
-    private Message CreateMessage(string role, List<string> contentLines, Dictionary<string, string>? attrs)
+    private Message CreateMessage(
+        string role,
+        List<string> contentLines,
+        Dictionary<string, string>? attrs,
+        bool validateNonce)
     {
-        // Validate nonce if strict mode was used
-        if (_renderNonce.Value is not null && attrs is not null)
+        if (validateNonce && _renderNonce.Value is not null)
         {
-            if (!attrs.TryGetValue("nonce", out var foundNonce) || foundNonce != _renderNonce.Value)
+            if (attrs is null || !attrs.TryGetValue("nonce", out var foundNonce) || foundNonce != _renderNonce.Value)
             {
                 throw new InvalidOperationException(
                     $"Role marker injection detected: nonce mismatch for '{role}:' marker.");
             }
-            attrs.Remove("nonce"); // Don't pass nonce through to metadata
+            attrs.Remove("nonce");
         }
 
         var text = string.Join("\n", contentLines);

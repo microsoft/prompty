@@ -59,12 +59,6 @@ public class SpecVectorTests
         var mustacheRenderer = new MustacheRenderer();
         var failures = new List<string>();
 
-        // Known Jinja2.NET compatibility issues
-        var knownSkips = new HashSet<string>
-        {
-            "for_loop", // Jinja2.NET strips whitespace inside for loops differently
-        };
-
         foreach (var vec in vectors)
         {
             var name = vec.GetProperty("name").GetString()!;
@@ -77,10 +71,6 @@ public class SpecVectorTests
 
             // Skip vectors with non-standard expected format
             if (!expected.TryGetProperty("rendered", out var renderedEl))
-                continue;
-
-            // Skip known compatibility issues
-            if (knownSkips.Contains(name))
                 continue;
 
             var template = input.GetProperty("template").GetString()!;
