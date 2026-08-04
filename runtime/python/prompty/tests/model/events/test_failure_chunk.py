@@ -9,6 +9,7 @@ from prompty.model import FailureChunk
 def test_load_json_failurechunk():
     json_data = r"""
     {
+      "kind": "failure",
       "failure": {
         "outcome": "indeterminate",
         "message": "SSE stream error: connection reset"
@@ -18,10 +19,12 @@ def test_load_json_failurechunk():
     data = json.loads(json_data, strict=False)
     instance = FailureChunk.load(data)
     assert instance is not None
+    assert instance.kind == "failure"
 
 
 def test_load_yaml_failurechunk():
     yaml_data = r"""
+    kind: failure
     failure:
       outcome: indeterminate
       message: "SSE stream error: connection reset"
@@ -30,12 +33,14 @@ def test_load_yaml_failurechunk():
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FailureChunk.load(data)
     assert instance is not None
+    assert instance.kind == "failure"
 
 
 def test_roundtrip_json_failurechunk():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
+      "kind": "failure",
       "failure": {
         "outcome": "indeterminate",
         "message": "SSE stream error: connection reset"
@@ -47,12 +52,14 @@ def test_roundtrip_json_failurechunk():
     saved_data = instance.save()
     reloaded = FailureChunk.load(saved_data)
     assert reloaded is not None
+    assert reloaded.kind == "failure"
 
 
 def test_to_json_failurechunk():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
+      "kind": "failure",
       "failure": {
         "outcome": "indeterminate",
         "message": "SSE stream error: connection reset"
@@ -71,6 +78,7 @@ def test_to_yaml_failurechunk():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
+      "kind": "failure",
       "failure": {
         "outcome": "indeterminate",
         "message": "SSE stream error: connection reset"

@@ -114,6 +114,7 @@ model ErrorChunk extends StreamChunk {
  */
 model FailureChunk extends StreamChunk {
   @doc("The kind identifier for classified failure chunks")
+  @sample(#{ kind: "failure" })
   kind: "failure";
 
   @doc("The classified stream failure")

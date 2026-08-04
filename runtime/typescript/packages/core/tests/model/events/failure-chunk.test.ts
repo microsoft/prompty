@@ -19,31 +19,35 @@ describe("FailureChunk", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "failure": {\n    "outcome": "indeterminate",\n    "message": "SSE stream error: connection reset"\n  }\n}`;
+      const json = `{\n  "kind": "failure",\n  "failure": {\n    "outcome": "indeterminate",\n    "message": "SSE stream error: connection reset"\n  }\n}`;
       const instance = FailureChunk.fromJson(json);
       expect(instance).toBeDefined();
+      expect(instance.kind).toEqual("failure");
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "failure": {\n    "outcome": "indeterminate",\n    "message": "SSE stream error: connection reset"\n  }\n}`;
+      const json = `{\n  "kind": "failure",\n  "failure": {\n    "outcome": "indeterminate",\n    "message": "SSE stream error: connection reset"\n  }\n}`;
       const instance = FailureChunk.fromJson(json);
       const output = instance.toJson();
       const reloaded = FailureChunk.fromJson(output);
+      expect(reloaded.kind).toEqual(instance.kind);
     });
   });
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `failure:\n  outcome: indeterminate\n  message: "SSE stream error: connection reset"\n`;
+      const yaml = `kind: failure\nfailure:\n  outcome: indeterminate\n  message: "SSE stream error: connection reset"\n`;
       const instance = FailureChunk.fromYaml(yaml);
       expect(instance).toBeDefined();
+      expect(instance.kind).toEqual("failure");
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `failure:\n  outcome: indeterminate\n  message: "SSE stream error: connection reset"\n`;
+      const yaml = `kind: failure\nfailure:\n  outcome: indeterminate\n  message: "SSE stream error: connection reset"\n`;
       const instance = FailureChunk.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = FailureChunk.fromYaml(output);
+      expect(reloaded.kind).toEqual(instance.kind);
     });
   });
 

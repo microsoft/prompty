@@ -12,6 +12,7 @@ public class FailureChunkConversionTests
     public void LoadYamlInput()
     {
         string yamlData = """
+kind: failure
 failure:
   outcome: indeterminate
   message: "SSE stream error: connection reset"
@@ -21,6 +22,7 @@ failure:
         var instance = FailureChunk.FromYaml(yamlData);
 
         Assert.NotNull(instance);
+        Assert.Equal("failure", instance.Kind);
     }
 
     [Fact]
@@ -28,6 +30,7 @@ failure:
     {
         string jsonData = """
 {
+  "kind": "failure",
   "failure": {
     "outcome": "indeterminate",
     "message": "SSE stream error: connection reset"
@@ -37,6 +40,7 @@ failure:
 
         var instance = FailureChunk.FromJson(jsonData);
         Assert.NotNull(instance);
+        Assert.Equal("failure", instance.Kind);
     }
 
     [Fact]
@@ -45,6 +49,7 @@ failure:
         // Test that FromJson -> ToJson -> FromJson produces equivalent data
         string jsonData = """
 {
+  "kind": "failure",
   "failure": {
     "outcome": "indeterminate",
     "message": "SSE stream error: connection reset"
@@ -60,6 +65,7 @@ failure:
 
         var reloaded = FailureChunk.FromJson(json);
         Assert.NotNull(reloaded);
+        Assert.Equal("failure", reloaded.Kind);
     }
 
     [Fact]
@@ -67,6 +73,7 @@ failure:
     {
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
+kind: failure
 failure:
   outcome: indeterminate
   message: "SSE stream error: connection reset"
@@ -81,6 +88,7 @@ failure:
 
         var reloaded = FailureChunk.FromYaml(yaml);
         Assert.NotNull(reloaded);
+        Assert.Equal("failure", reloaded.Kind);
     }
 
     [Fact]
@@ -88,6 +96,7 @@ failure:
     {
         string jsonData = """
 {
+  "kind": "failure",
   "failure": {
     "outcome": "indeterminate",
     "message": "SSE stream error: connection reset"
@@ -107,6 +116,7 @@ failure:
     public void ToYamlProducesValidYaml()
     {
         string yamlData = """
+kind: failure
 failure:
   outcome: indeterminate
   message: "SSE stream error: connection reset"

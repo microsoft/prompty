@@ -38,6 +38,7 @@ classDiagram
 ## Yaml Example
 
 ```yaml
+kind: failure
 failure:
   outcome: indeterminate
   message: "SSE stream error: connection reset"

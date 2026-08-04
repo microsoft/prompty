@@ -16,6 +16,7 @@ import (
 func TestFailureChunkLoadJSON(t *testing.T) {
 	jsonData := `
 {
+  "kind": "failure",
   "failure": {
     "outcome": "indeterminate",
     "message": "SSE stream error: connection reset"
@@ -32,7 +33,9 @@ func TestFailureChunkLoadJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FailureChunk: %v", err)
 	}
-	_ = instance // No scalar properties to validate
+	if instance.Kind != "failure" {
+		t.Errorf(`Expected Kind to be "failure", got %v`, instance.Kind)
+	}
 	if instance.Failure.Outcome != "indeterminate" {
 		t.Errorf(`Expected Failure.Outcome to be "indeterminate", got %v`, instance.Failure.Outcome)
 	}
@@ -44,6 +47,7 @@ func TestFailureChunkLoadJSON(t *testing.T) {
 // TestFailureChunkLoadYAML tests loading FailureChunk from YAML
 func TestFailureChunkLoadYAML(t *testing.T) {
 	yamlData := `
+kind: failure
 failure:
   outcome: indeterminate
   message: "SSE stream error: connection reset"
@@ -59,7 +63,9 @@ failure:
 	if err != nil {
 		t.Fatalf("Failed to load FailureChunk: %v", err)
 	}
-	_ = instance // No scalar properties to validate
+	if instance.Kind != "failure" {
+		t.Errorf(`Expected Kind to be "failure", got %v`, instance.Kind)
+	}
 	if instance.Failure.Outcome != "indeterminate" {
 		t.Errorf(`Expected Failure.Outcome to be "indeterminate", got %v`, instance.Failure.Outcome)
 	}
@@ -72,6 +78,7 @@ failure:
 func TestFailureChunkFromJSON(t *testing.T) {
 	jsonData := `
 {
+  "kind": "failure",
   "failure": {
     "outcome": "indeterminate",
     "message": "SSE stream error: connection reset"
@@ -83,7 +90,9 @@ func TestFailureChunkFromJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to load FailureChunk from JSON helper: %v", err)
 	}
-	_ = instance // No scalar properties to validate
+	if instance.Kind != "failure" {
+		t.Errorf(`Expected Kind to be "failure", got %v`, instance.Kind)
+	}
 	if instance.Failure.Outcome != "indeterminate" {
 		t.Errorf(`Expected Failure.Outcome to be "indeterminate", got %v`, instance.Failure.Outcome)
 	}
@@ -95,6 +104,7 @@ func TestFailureChunkFromJSON(t *testing.T) {
 // TestFailureChunkFromYAML tests loading FailureChunk through the generated YAML helper
 func TestFailureChunkFromYAML(t *testing.T) {
 	yamlData := `
+kind: failure
 failure:
   outcome: indeterminate
   message: "SSE stream error: connection reset"
@@ -105,7 +115,9 @@ failure:
 	if err != nil {
 		t.Fatalf("Failed to load FailureChunk from YAML helper: %v", err)
 	}
-	_ = instance // No scalar properties to validate
+	if instance.Kind != "failure" {
+		t.Errorf(`Expected Kind to be "failure", got %v`, instance.Kind)
+	}
 	if instance.Failure.Outcome != "indeterminate" {
 		t.Errorf(`Expected Failure.Outcome to be "indeterminate", got %v`, instance.Failure.Outcome)
 	}
@@ -118,6 +130,7 @@ failure:
 func TestFailureChunkRoundtrip(t *testing.T) {
 	jsonData := `
 {
+  "kind": "failure",
   "failure": {
     "outcome": "indeterminate",
     "message": "SSE stream error: connection reset"
@@ -141,7 +154,9 @@ func TestFailureChunkRoundtrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload FailureChunk: %v", err)
 	}
-	_ = reloaded // No scalar properties to validate
+	if reloaded.Kind != "failure" {
+		t.Errorf(`Expected Kind to be "failure", got %v`, reloaded.Kind)
+	}
 	if reloaded.Failure.Outcome != "indeterminate" {
 		t.Errorf(`Expected Failure.Outcome to be "indeterminate", got %v`, reloaded.Failure.Outcome)
 	}
@@ -154,6 +169,7 @@ func TestFailureChunkRoundtrip(t *testing.T) {
 func TestFailureChunkToJSON(t *testing.T) {
 	jsonData := `
 {
+  "kind": "failure",
   "failure": {
     "outcome": "indeterminate",
     "message": "SSE stream error: connection reset"
@@ -184,7 +200,9 @@ func TestFailureChunkToJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
-	_ = reloaded // No scalar properties to validate
+	if reloaded.Kind != "failure" {
+		t.Errorf(`Expected Kind to be "failure", got %v`, reloaded.Kind)
+	}
 	if reloaded.Failure.Outcome != "indeterminate" {
 		t.Errorf(`Expected Failure.Outcome to be "indeterminate", got %v`, reloaded.Failure.Outcome)
 	}
@@ -197,6 +215,7 @@ func TestFailureChunkToJSON(t *testing.T) {
 func TestFailureChunkToYAML(t *testing.T) {
 	jsonData := `
 {
+  "kind": "failure",
   "failure": {
     "outcome": "indeterminate",
     "message": "SSE stream error: connection reset"
@@ -227,7 +246,9 @@ func TestFailureChunkToYAML(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
-	_ = reloaded // No scalar properties to validate
+	if reloaded.Kind != "failure" {
+		t.Errorf(`Expected Kind to be "failure", got %v`, reloaded.Kind)
+	}
 	if reloaded.Failure.Outcome != "indeterminate" {
 		t.Errorf(`Expected Failure.Outcome to be "indeterminate", got %v`, reloaded.Failure.Outcome)
 	}
