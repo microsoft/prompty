@@ -96,6 +96,35 @@ fn assert_collection(vector_name: &str, collection: &Value, expected: &Value) {
         "[{vector_name}] canonical collection format changed"
     );
 
+    if let Some(wire_entries) = expected["wireEntries"].as_array() {
+        let entries = collection
+            .as_array()
+            .unwrap_or_else(|| panic!("[{vector_name}] wire entry assertions require array form"));
+        for assertion in wire_entries {
+            let index = assertion["index"]
+                .as_u64()
+                .expect("wire entry assertion must declare an index")
+                as usize;
+            let entry = entries
+                .get(index)
+                .unwrap_or_else(|| panic!("[{vector_name}] missing wire entry at index {index}"))
+                .as_object()
+                .unwrap_or_else(|| {
+                    panic!("[{vector_name}] wire entry at index {index} must be an object")
+                });
+            for field in assertion["absentFields"]
+                .as_array()
+                .expect("wire entry assertion must declare absentFields")
+            {
+                let field = field.as_str().expect("wire absent field must be a string");
+                assert!(
+                    !entry.contains_key(field),
+                    "[{vector_name}] wire entry {index} unexpectedly serialized field {field:?}"
+                );
+            }
+        }
+    }
+
     let actual_entries = semantic_entries(collection);
     let expected_entries = expected["entries"]
         .as_array()
@@ -198,6 +227,48 @@ fn named_collection_roundtrip_vectors() {
             .unwrap_or_else(|| panic!("[{name}] reload lost collection {collection_path:?}"));
         assert_collection(name, reloaded_collection, &vector["expected"]);
     }
+}
+
+#[test]
+fn unnamed_composite_omits_empty_name_stably() {
+    let vector_name = "unnamed_composite_omits_empty_name_stably";
+    let vector = vectors()
+        .into_iter()
+        .find(|vector| vector["name"] == vector_name)
+        .expect("missing unnamed composite vector");
+    let json = serde_json::to_string(&vector["input"])
+        .expect("unnamed composite vector input must be JSON-compatible");
+    let loaded = Prompty::from_json(&json, &LoadContext::default())
+        .unwrap_or_else(|error| panic!("[{vector_name}] valid collection failed: {error}"));
+
+    assert_eq!(
+        loaded.inputs.len(),
+        1,
+        "[{vector_name}] load changed the entry count"
+    );
+    assert_eq!(
+        loaded.inputs[0].name, "",
+        "[{vector_name}] absent wire name did not materialize as an empty in-memory name"
+    );
+
+    let saved = loaded.to_value(&SaveContext::default());
+    let collection = saved
+        .get("inputs")
+        .expect("[unnamed_composite_omits_empty_name_stably] first save lost inputs");
+    assert_collection(vector_name, collection, &vector["expected"]);
+
+    let saved_json = serde_json::to_string(&saved).expect("first save must remain JSON-compatible");
+    let reloaded = Prompty::from_json(&saved_json, &LoadContext::default())
+        .unwrap_or_else(|error| panic!("[{vector_name}] first save failed to reload: {error}"));
+    assert_eq!(
+        reloaded.inputs[0].name, "",
+        "[{vector_name}] reload changed the unnamed in-memory state"
+    );
+    let resaved = reloaded.to_value(&SaveContext::default());
+    let reloaded_collection = resaved
+        .get("inputs")
+        .expect("[unnamed_composite_omits_empty_name_stably] reload/save lost inputs");
+    assert_collection(vector_name, reloaded_collection, &vector["expected"]);
 }
 
 #[test]

@@ -153,6 +153,51 @@
       }
     },
     {
+      "name": "unnamed_composite_omits_empty_name_stably",
+      "operation": "load-save-reload",
+      "collectionPath": "inputs",
+      "input": {
+        "name": "unnamed-composite",
+        "inputs": [
+          {
+            "kind": "object",
+            "description": "preserve unnamed composite payload",
+            "properties": {
+              "nested": {
+                "kind": "string",
+                "default": "kept"
+              }
+            }
+          }
+        ]
+      },
+      "expected": {
+        "collectionFormat": "array",
+        "preserveOrder": true,
+        "wireEntries": [
+          {
+            "index": 0,
+            "absentFields": [
+              "name"
+            ]
+          }
+        ],
+        "entries": [
+          {
+            "name": "",
+            "kind": "object",
+            "description": "preserve unnamed composite payload",
+            "properties": {
+              "nested": {
+                "kind": "string",
+                "default": "kept"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "empty_object_key_reloads_as_unnamed_array_entry",
       "operation": "load-save-reload",
       "collectionPath": "inputs",
