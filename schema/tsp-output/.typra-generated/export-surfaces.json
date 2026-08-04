@@ -73,6 +73,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -152,6 +153,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -446,6 +448,13 @@
           "protocol": false
         },
         {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "events/StreamChunk.cs",
+          "protocol": false
+        },
+        {
           "name": "HarnessContext",
           "kind": "value",
           "group": "events",
@@ -618,6 +627,13 @@
           "kind": "value",
           "group": "events",
           "source": "events/StreamChunk.cs",
+          "protocol": false
+        },
+        {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "events",
+          "source": "events/StreamFailure.cs",
           "protocol": false
         },
         {
@@ -1377,6 +1393,7 @@
             "DoneEventPayload",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "HarnessContext",
             "HookEndPayload",
             "HookStartPayload",
@@ -1402,6 +1419,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "TextChunk",
             "ThinkingChunk",
             "ThinkingEventPayload",
@@ -1452,6 +1470,7 @@
             "SessionWarningPayload.cs",
             "StatusEventPayload.cs",
             "StreamChunk.cs",
+            "StreamFailure.cs",
             "ThinkingEventPayload.cs",
             "TokenEventPayload.cs",
             "ToolCallCompletePayload.cs",
@@ -1989,6 +2008,7 @@
         "events/SessionWarningPayload.cs",
         "events/StatusEventPayload.cs",
         "events/StreamChunk.cs",
+        "events/StreamFailure.cs",
         "events/ThinkingEventPayload.cs",
         "events/TokenEventPayload.cs",
         "events/ToolCallCompletePayload.cs",
@@ -2122,6 +2142,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -2201,6 +2222,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -2495,6 +2517,13 @@
           "protocol": false
         },
         {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "stream_chunk.go",
+          "protocol": false
+        },
+        {
           "name": "HarnessContext",
           "kind": "value",
           "group": "events",
@@ -2667,6 +2696,13 @@
           "kind": "value",
           "group": "events",
           "source": "stream_chunk.go",
+          "protocol": false
+        },
+        {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "events",
+          "source": "stream_failure.go",
           "protocol": false
         },
         {
@@ -3426,6 +3462,7 @@
             "DoneEventPayload",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "HarnessContext",
             "HookEndPayload",
             "HookStartPayload",
@@ -3451,6 +3488,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "TextChunk",
             "ThinkingChunk",
             "ThinkingEventPayload",
@@ -3501,6 +3539,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "thinking_event_payload",
             "token_event_payload",
             "tool_call_complete_payload",
@@ -4092,6 +4131,7 @@
         "session_warning_payload.go",
         "status_event_payload.go",
         "stream_chunk.go",
+        "stream_failure.go",
         "stream_options.go",
         "subscription_info.go",
         "template.go",
@@ -4170,6 +4210,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -4249,6 +4290,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -4543,6 +4585,13 @@
           "protocol": false
         },
         {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamChunk",
+          "protocol": false
+        },
+        {
           "name": "HarnessContext",
           "kind": "value",
           "group": "events",
@@ -4715,6 +4764,13 @@
           "kind": "value",
           "group": "events",
           "source": "StreamChunk",
+          "protocol": false
+        },
+        {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "events",
+          "source": "StreamFailure",
           "protocol": false
         },
         {
@@ -5474,6 +5530,7 @@
             "DoneEventPayload",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "HarnessContext",
             "HookEndPayload",
             "HookStartPayload",
@@ -5499,6 +5556,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "TextChunk",
             "ThinkingChunk",
             "ThinkingEventPayload",
@@ -5549,6 +5607,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "thinking_event_payload",
             "token_event_payload",
             "tool_call_complete_payload",
@@ -6140,6 +6199,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -6219,6 +6279,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -6298,6 +6359,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -6592,6 +6654,13 @@
           "protocol": false
         },
         {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "events",
+          "source": ".events",
+          "protocol": false
+        },
+        {
           "name": "HarnessContext",
           "kind": "value",
           "group": "events",
@@ -6761,6 +6830,13 @@
         },
         {
           "name": "StreamChunk",
+          "kind": "value",
+          "group": "events",
+          "source": ".events",
+          "protocol": false
+        },
+        {
+          "name": "StreamFailure",
           "kind": "value",
           "group": "events",
           "source": ".events",
@@ -7523,6 +7599,7 @@
             "DoneEventPayload",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "HarnessContext",
             "HookEndPayload",
             "HookStartPayload",
@@ -7548,6 +7625,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "TextChunk",
             "ThinkingChunk",
             "ThinkingEventPayload",
@@ -7598,6 +7676,7 @@
             "_SessionWarningPayload",
             "_StatusEventPayload",
             "_StreamChunk",
+            "_StreamFailure",
             "_ThinkingEventPayload",
             "_TokenEventPayload",
             "_ToolCallCompletePayload",
@@ -8146,6 +8225,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -8225,6 +8305,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -8519,6 +8600,13 @@
           "protocol": false
         },
         {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "events::stream_chunk",
+          "protocol": false
+        },
+        {
           "name": "HarnessContext",
           "kind": "value",
           "group": "events",
@@ -8691,6 +8779,13 @@
           "kind": "value",
           "group": "events",
           "source": "events::stream_chunk",
+          "protocol": false
+        },
+        {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "events",
+          "source": "events::stream_failure",
           "protocol": false
         },
         {
@@ -9450,6 +9545,7 @@
             "DoneEventPayload",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "HarnessContext",
             "HookEndPayload",
             "HookStartPayload",
@@ -9475,6 +9571,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "TextChunk",
             "ThinkingChunk",
             "ThinkingEventPayload",
@@ -9525,6 +9622,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "thinking_event_payload",
             "token_event_payload",
             "tool_call_complete_payload",
@@ -10075,6 +10173,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -10154,6 +10253,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -10448,6 +10548,13 @@
           "protocol": false
         },
         {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "./events/stream-chunk",
+          "protocol": false
+        },
+        {
           "name": "HarnessContext",
           "kind": "value",
           "group": "events",
@@ -10620,6 +10727,13 @@
           "kind": "value",
           "group": "events",
           "source": "./events/stream-chunk",
+          "protocol": false
+        },
+        {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "events",
+          "source": "./events/stream-failure",
           "protocol": false
         },
         {
@@ -11379,6 +11493,7 @@
             "DoneEventPayload",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "HarnessContext",
             "HookEndPayload",
             "HookStartPayload",
@@ -11404,6 +11519,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "TextChunk",
             "ThinkingChunk",
             "ThinkingEventPayload",
@@ -11454,6 +11570,7 @@
             "session-warning-payload",
             "status-event-payload",
             "stream-chunk",
+            "stream-failure",
             "thinking-event-payload",
             "token-event-payload",
             "tool-call-complete-payload",
@@ -11991,6 +12108,7 @@
         "./events/session-warning-payload",
         "./events/status-event-payload",
         "./events/stream-chunk",
+        "./events/stream-failure",
         "./events/thinking-event-payload",
         "./events/token-event-payload",
         "./events/tool-call-complete-payload",

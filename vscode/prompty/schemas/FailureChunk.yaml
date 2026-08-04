@@ -1,0 +1,17 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FailureChunk.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: failure
+    description: The kind identifier for classified failure chunks
+  failure:
+    $ref: StreamFailure.yaml
+    description: The classified stream failure
+required:
+  - kind
+  - failure
+allOf:
+  - $ref: StreamChunk.yaml
+description: A classified failure chunk from the LLM response stream.

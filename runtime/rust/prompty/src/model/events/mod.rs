@@ -138,5 +138,8 @@ pub use session_summary::*;
 pub mod session_trace;
 pub use session_trace::*;
 
+pub mod stream_failure;
+pub use stream_failure::*;
+
 pub mod stream_chunk;
 pub use stream_chunk::*;
