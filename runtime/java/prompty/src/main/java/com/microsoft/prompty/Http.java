@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -68,8 +69,26 @@ public final class Http {
    * @param provider the provider name, used only to attribute failures
    */
   public static Object getJson(String provider, String url, Map<String, String> headers) {
+    return getJson(provider, url, headers, null);
+  }
+
+  /**
+   * As {@link #getJson(String, String, Map)}, with a bound on the whole exchange.
+   *
+   * <p>The client-level timeout only covers establishing the connection, so a server that accepts a
+   * connection and then stalls holds the caller indefinitely. That is tolerable where the caller is
+   * waiting on a model anyway, and not tolerable for control-plane calls made while a person waits
+   * on a picker — hence a bound the caller chooses rather than one imposed on every read.
+   *
+   * @param timeout the limit on the complete exchange, or null for none
+   */
+  public static Object getJson(
+      String provider, String url, Map<String, String> headers, Duration timeout) {
     HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(url)).GET();
     headers.forEach(builder::header);
+    if (timeout != null) {
+      builder.timeout(timeout);
+    }
 
     HttpResponse<String> response;
     try {
@@ -104,6 +123,66 @@ public final class Http {
       checkStatus(provider, response.statusCode(), readAll(response.body()));
     }
     return new SseIterator(response.body());
+  }
+
+  /**
+   * POST a form-encoded body and return the raw status and body.
+   *
+   * <p>OAuth token endpoints speak {@code application/x-www-form-urlencoded} rather than JSON, and
+   * unlike every other call here a non-success status is not necessarily a failure: the device-code
+   * grant reports "the user has not finished signing in yet" as an HTTP error with a machine-readable
+   * body. Deciding what a status means is therefore left to the caller, and this method throws only
+   * when the exchange never completed at all.
+   */
+  public static FormResult postForm(String provider, String url, Map<String, String> form) {
+    HttpRequest.Builder builder =
+        HttpRequest.newBuilder(URI.create(url))
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .timeout(Duration.ofSeconds(30))
+            .POST(HttpRequest.BodyPublishers.ofString(encodeForm(form), StandardCharsets.UTF_8));
+
+    try {
+      HttpResponse<String> response = CLIENT.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+      return new FormResult(response.statusCode(), response.body() == null ? "" : response.body());
+    } catch (IOException e) {
+      throw classifyTransportFailure(provider, e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw InvokerException.cancelled("Interrupted while calling " + provider);
+    }
+  }
+
+  /** The status and body of a form POST, before any interpretation. */
+  public record FormResult(int status, String body) {
+
+    /** Whether the status is in the 2xx range. */
+    public boolean isSuccess() {
+      return status >= 200 && status < 300;
+    }
+  }
+
+  /**
+   * Encode a map as {@code application/x-www-form-urlencoded}.
+   *
+   * <p>Public because the same encoding serves both a form body and a URL query string — OAuth needs
+   * one of each, and they must agree on how a space is written.
+   *
+   * <p>{@link URLEncoder} writes a space as {@code +}, which is what this media type specifies and
+   * what the Rust runtime's form serializer also emits — the two must agree, because a scope such as
+   * {@code "https://ai.azure.com/.default offline_access"} contains one.
+   */
+  public static String encodeForm(Map<String, String> form) {
+    StringBuilder encoded = new StringBuilder();
+    for (Map.Entry<String, String> entry : form.entrySet()) {
+      if (encoded.length() > 0) {
+        encoded.append('&');
+      }
+      encoded
+          .append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
+          .append('=')
+          .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+    }
+    return encoded.toString();
   }
 
   private static <T> HttpResponse<T> send(

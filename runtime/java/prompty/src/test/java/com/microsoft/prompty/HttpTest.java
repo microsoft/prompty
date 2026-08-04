@@ -62,6 +62,67 @@ class HttpTest {
     return chunks;
   }
 
+  /** Echo back the request's Content-Type and body so a form POST can be inspected as sent. */
+  private void echoRequest(String path, int status) {
+    server.createContext(
+        path,
+        exchange -> {
+          String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+          String requestBody =
+              new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+          byte[] bytes =
+              (contentType + "\n" + requestBody).getBytes(StandardCharsets.UTF_8);
+          exchange.sendResponseHeaders(status, bytes.length);
+          try (OutputStream out = exchange.getResponseBody()) {
+            out.write(bytes);
+          }
+        });
+  }
+
+  @Test
+  void formPostsUseTheFormMediaTypeAndEncoding() {
+    echoRequest("/form", 200);
+
+    Http.FormResult result =
+        Http.postForm(
+            "test",
+            baseUrl + "/form",
+            new java.util.LinkedHashMap<>(
+                Map.of("grant_type", "authorization_code", "code", "a b&c")));
+
+    assertTrue(result.isSuccess());
+    String[] lines = result.body().split("\n", 2);
+    // OAuth token endpoints reject a JSON body outright, so the media type is not incidental.
+    assertEquals("application/x-www-form-urlencoded", lines[0]);
+    assertTrue(lines[1].contains("grant_type=authorization_code"), "body was: " + lines[1]);
+    // A space becomes '+' and an ampersand must be escaped, or it would split the field.
+    assertTrue(lines[1].contains("code=a+b%26c"), "body was: " + lines[1]);
+  }
+
+  @Test
+  void formPostsReturnErrorStatusesInsteadOfThrowing() {
+    respond("/pending", 400, "{\"error\":\"authorization_pending\"}");
+
+    // A device-code poll reports "not yet" as an HTTP error, so throwing here would make the
+    // ordinary path of a sign-in indistinguishable from a failure.
+    Http.FormResult result = Http.postForm("test", baseUrl + "/pending", Map.of());
+
+    assertEquals(400, result.status());
+    assertFalse(result.isSuccess());
+    assertTrue(result.body().contains("authorization_pending"));
+  }
+
+  @Test
+  void formPostsStillRaiseWhenTheExchangeNeverHappens() {
+    assertThrows(
+        InvokerException.class, () -> Http.postForm("test", "http://127.0.0.1:1/never", Map.of()));
+  }
+
+  @Test
+  void anEmptyFormEncodesToAnEmptyBody() {
+    assertEquals("", Http.encodeForm(Map.of()));
+  }
+
   @Test
   void jsonResponsesAreParsed() {
     respond("/ok", 200, "{\"answer\":42}");
