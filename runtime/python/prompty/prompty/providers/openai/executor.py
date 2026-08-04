@@ -223,9 +223,7 @@ def _property_to_json_schema(prop: Any, *, optional: bool = False, strict: bool 
             props: dict[str, Any] = {}
             required: list[str] = []
             for p in prop.properties:
-                props[p.name] = _property_to_json_schema(
-                    p, optional=strict and not bool(p.required), strict=strict
-                )
+                props[p.name] = _property_to_json_schema(p, optional=strict and not bool(p.required), strict=strict)
                 if strict or p.required:
                     required.append(p.name)
             schema["properties"] = props
@@ -366,9 +364,7 @@ def _responses_tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
             if tool.description:
                 tool_def["description"] = tool.description
             if hasattr(tool, "parameters") and tool.parameters:
-                tool_def["parameters"] = _schema_to_wire(
-                    tool.parameters, strict=bool(getattr(tool, "strict", False))
-                )
+                tool_def["parameters"] = _schema_to_wire(tool.parameters, strict=bool(getattr(tool, "strict", False)))
             if hasattr(tool, "strict") and tool.strict:
                 tool_def["strict"] = True
                 if "parameters" in tool_def:
