@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -33,7 +33,7 @@ class TurnModelResponse:
 
     output: Any | None = None
     usage: InvocationUsage | None = None
-    tool_requests: list[HostToolRequest] = field(default_factory=list)
+    tool_requests: list[HostToolRequest] | None = None
     checkpoint_state: dict[str, Any] | None = None
 
     @staticmethod
@@ -90,7 +90,7 @@ class TurnModelResponse:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

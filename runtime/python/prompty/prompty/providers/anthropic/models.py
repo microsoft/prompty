@@ -1,14 +1,12 @@
-"""OpenAI model discovery — list available models from the OpenAI API.
+"""Anthropic model discovery — list available models from the Anthropic API.
 
 Provides :func:`list_models` and :func:`list_models_async` which call
 ``client.models.list()`` and map the results to :class:`ModelInfo` objects.
 
-OpenAI's ``/v1/models`` returns only ``id``/``owned_by``, so capability fields
-(context window, modalities) are filled from the shared
-``spec/data/model_capabilities.json`` dataset via
-:func:`prompty.core.model_capabilities.enrich`. That primitive applies the
-cross-runtime fill-only-missing rule: any field OpenAI *did* supply is
-preserved. Mirrors ``runtime/rust/prompty-openai/src/models.rs``.
+Anthropic supplies capability fields directly (when present), so enrichment
+from the shared ``spec/data/model_capabilities.json`` dataset is applied only
+as a fill-only-missing fallback (provider-supplied fields always win).
+Mirrors ``runtime/rust/prompty-anthropic/src/models.rs``.
 """
 
 from __future__ import annotations
@@ -26,22 +24,35 @@ __all__ = ["list_models", "list_models_async", "model_info_from_wire"]
 # ---------------------------------------------------------------------------
 
 
-def model_info_from_wire(raw: dict[str, Any]) -> ModelInfo:
-    """Map one raw OpenAI ``/v1/models`` entry into the provider-neutral ``ModelInfo`` contract.
+def _string_array(raw: dict[str, Any], key: str) -> list[str] | None:
+    value = raw.get(key)
+    if not isinstance(value, list):
+        return None
+    return [item for item in value if isinstance(item, str)]
 
-    This is the single source of truth for the OpenAI wire -> ``ModelInfo`` mapping and is
+
+def model_info_from_wire(raw: dict[str, Any]) -> ModelInfo:
+    """Map one raw Anthropic ``/v1/models`` entry into the provider-neutral ``ModelInfo`` contract.
+
+    This is the single source of truth for the Anthropic wire -> ``ModelInfo`` mapping and is
     exercised by the shared ``spec/vectors/discovery`` vectors so every runtime converges on the
-    same canonical shape. Enrichment from the shared capability dataset is applied here; discovery
-    vectors deliberately use ids outside that dataset to assert the pure wire mapping.
+    same canonical shape.
     """
     model_id = raw.get("id")
-    owned_by = raw.get("owned_by")
+    display_name = raw.get("display_name")
+    context_window = raw.get("context_length")
     info = ModelInfo(
         id=model_id if isinstance(model_id, str) else "",
-        owned_by=owned_by if isinstance(owned_by, str) else None,
+        display_name=display_name if isinstance(display_name, str) else None,
+        owned_by="anthropic",
+        context_window=context_window
+        if isinstance(context_window, int) and not isinstance(context_window, bool)
+        else None,
+        input_modalities=_string_array(raw, "input_modalities"),
+        output_modalities=_string_array(raw, "output_modalities"),
         additional_properties=dict(raw),
     )
-    enrich("openai", info)
+    enrich("anthropic", info)
     return info
 
 
@@ -51,7 +62,7 @@ def model_info_from_wire(raw: dict[str, Any]) -> ModelInfo:
 
 
 def _build_client_kwargs(connection: Connection) -> dict[str, Any]:
-    """Extract kwargs for ``OpenAI(...)`` from a connection."""
+    """Extract kwargs for ``Anthropic(...)`` from a connection."""
     kwargs: dict[str, Any] = {}
     if isinstance(connection, ApiKeyConnection):
         if connection.api_key:
@@ -62,7 +73,7 @@ def _build_client_kwargs(connection: Connection) -> dict[str, Any]:
 
 
 def _model_to_dict(m: Any) -> dict[str, Any]:
-    """Normalize an OpenAI SDK model object (or plain dict/test double) into a raw dict."""
+    """Normalize an Anthropic SDK model object (or plain dict/test double) into a raw dict."""
     if isinstance(m, dict):
         return dict(m)
     if hasattr(m, "model_dump"):
@@ -71,10 +82,14 @@ def _model_to_dict(m: Any) -> dict[str, Any]:
 
 
 def _model_items(response: Any) -> list[Any]:
-    """Return model objects from OpenAI SDK list responses."""
-    data = getattr(response, "data", None)
-    if data is not None:
-        return list(data)
+    """Return model objects from Anthropic SDK list responses (auto-paginating iterables)."""
+    return list(response)
+
+
+async def _model_items_async(response: Any) -> list[Any]:
+    """Return all model objects from an async auto-paginating SDK response."""
+    if hasattr(response, "__aiter__"):
+        return [item async for item in response]
     return list(response)
 
 
@@ -84,7 +99,7 @@ def _model_items(response: Any) -> list[Any]:
 
 
 def list_models(connection: Connection) -> list[ModelInfo]:
-    """List models available from the OpenAI API.
+    """List models available from the Anthropic API.
 
     Parameters
     ----------
@@ -96,16 +111,16 @@ def list_models(connection: Connection) -> list[ModelInfo]:
     list[ModelInfo]
         Available models, enriched with known metadata where possible.
     """
-    from openai import OpenAI
+    from anthropic import Anthropic
 
     if isinstance(connection, ReferenceConnection):
         from ...core.connections import get_connection
 
         client = get_connection(connection.name)
     else:
-        client = OpenAI(**_build_client_kwargs(connection))
+        client = Anthropic(**_build_client_kwargs(connection))
 
-    response = client.models.list()
+    response = client.models.list(limit=100)
     return [model_info_from_wire(_model_to_dict(m)) for m in _model_items(response)]
 
 
@@ -122,14 +137,14 @@ async def list_models_async(connection: Connection) -> list[ModelInfo]:
     list[ModelInfo]
         Available models, enriched with known metadata where possible.
     """
-    from openai import AsyncOpenAI
+    from anthropic import AsyncAnthropic
 
     if isinstance(connection, ReferenceConnection):
         from ...core.connections import get_connection
 
         client = get_connection(connection.name)
     else:
-        client = AsyncOpenAI(**_build_client_kwargs(connection))
+        client = AsyncAnthropic(**_build_client_kwargs(connection))
 
-    response = await client.models.list()
-    return [model_info_from_wire(_model_to_dict(m)) for m in _model_items(response)]
+    response = await client.models.list(limit=100)
+    return [model_info_from_wire(_model_to_dict(m)) for m in await _model_items_async(response)]

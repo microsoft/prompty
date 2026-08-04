@@ -33,7 +33,7 @@ class ReplayVerificationResult:
     _shorthand_property: ClassVar[str | None] = None
 
     status: ReplayVerificationStatus = field(default="passed")
-    mismatches: list[ReplayMismatch] = field(default_factory=list)
+    mismatches: list[ReplayMismatch] | None = None
     expected_count: int = field(default=0)
     actual_count: int = field(default=0)
 
@@ -91,7 +91,7 @@ class ReplayVerificationResult:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

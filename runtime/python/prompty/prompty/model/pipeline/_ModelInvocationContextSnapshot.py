@@ -52,7 +52,7 @@ class ModelInvocationContextSnapshot:
     invocation_id: str = field(default="")
     iteration: int = field(default=0)
     messages: list[Message] = field(default_factory=list)
-    decisions: list[InvocationContextDecision] = field(default_factory=list)
+    decisions: list[InvocationContextDecision] | None = None
     stable_prefix_messages: int = field(default=0)
     context_state: InvocationContextState = field(default_factory=InvocationContextState)
     metadata: dict[str, Any] | None = None
@@ -121,7 +121,7 @@ class ModelInvocationContextSnapshot:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
@@ -146,7 +146,7 @@ class ModelInvocationContextSnapshot:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

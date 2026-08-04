@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -48,7 +48,7 @@ class ModelOptions:
     temperature: float | None = None
     top_k: int | None = None
     top_p: float | None = None
-    stop_sequences: list[str] = field(default_factory=list)
+    stop_sequences: list[str] | None = None
     allow_multiple_tool_calls: bool | None = None
     additional_properties: dict[str, Any] | None = None
 

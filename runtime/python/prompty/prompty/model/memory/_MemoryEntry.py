@@ -43,7 +43,7 @@ class MemoryEntry:
     content: str = field(default="")
     category: MemoryCategory = field(default="core")
     created_at: str | None = None
-    tags: list[str] = field(default_factory=list)
+    tags: list[str] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "MemoryEntry":

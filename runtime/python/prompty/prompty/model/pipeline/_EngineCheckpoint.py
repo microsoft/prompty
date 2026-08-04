@@ -91,8 +91,8 @@ class EngineCheckpoint:
     stable_prefix_messages: int = field(default=0)
     inputs: Any | None = None
     active_invocation_id: str | None = None
-    pending_tool_requests: list[ModelToolRequest] = field(default_factory=list)
-    completed_tool_results: list[ModelToolResult] = field(default_factory=list)
+    pending_tool_requests: list[ModelToolRequest] | None = None
+    completed_tool_results: list[ModelToolResult] | None = None
     completed_model_iterations: int = field(default=0)
     reconciliation_required: bool = field(default=False)
     model_reconciliation: ModelReconciliationState | None = None
@@ -200,7 +200,7 @@ class EngineCheckpoint:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
@@ -225,28 +225,8 @@ class EngineCheckpoint:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # The schema declares an ordered collection, so preserve array format
+        return [item.save(context) for item in items]
 
     @staticmethod
     def load_completed_tool_results(data: dict | list, context: LoadContext | None) -> list[ModelToolResult]:
@@ -270,28 +250,8 @@ class EngineCheckpoint:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # The schema declares an ordered collection, so preserve array format
+        return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the EngineCheckpoint instance to a dictionary.

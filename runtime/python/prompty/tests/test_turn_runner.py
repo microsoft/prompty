@@ -247,7 +247,9 @@ async def test_turn_runner_records_denied_permission_without_executing_tool(tmp_
     assert result.output == {"denied": "permission_denied"}
     assert result.tool_results[0].success is False
     assert result.tool_results[0].error_kind == "permission_denied"
-    assert "tool_execution_start" not in [event.type for event in sink.turn_events]
+    event_types = [event.type for event in sink.turn_events]
+    assert "tool_execution_start" not in event_types
+    assert event_types[event_types.index("permission_completed") + 1] == "tool_result"
 
 
 @pytest.mark.asyncio
@@ -335,3 +337,111 @@ async def test_turn_runner_matches_shared_golden_replay_vectors(tmp_path: Path) 
         )
 
         assert _normalize_journal(_records(journal_path)) == scenario["expected"], scenario["name"]
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_propagates_model_callback_failure_after_journaling_start(tmp_path: Path) -> None:
+    journal_path = tmp_path / "trace.jsonl"
+
+    def invoke_model(request: TurnModelRequest) -> TurnModelResponse:
+        raise RuntimeError("model unavailable")
+
+    runner = ReferenceTurnRunner(
+        event_sink=CollectingEventSink(),
+        journal=JsonlEventJournalWriter(journal_path),
+        checkpoint_store=InMemoryCheckpointStore(),
+        permission_resolver=AllowAllPermissionResolver(),
+        host_tool_executor=FunctionHostToolExecutor({}),
+        invoke_model=invoke_model,
+        now=lambda: "2026-06-28T00:00:00Z",
+        next_id=_fixed_ids(),
+    )
+
+    with pytest.raises(RuntimeError, match="model unavailable"):
+        await runner.run(RunTurnRequest(session_id="session-1", turn_id="turn-1"))
+
+    turn_types = [record["event"]["type"] for record in _records(journal_path) if record["kind"] == "turn"]
+    assert turn_types == ["turn_start", "llm_start"]
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_propagates_raw_host_executor_failure(tmp_path: Path) -> None:
+    class FailingExecutor:
+        async def execute(self, request: HostToolRequest) -> HostToolResult:
+            raise RuntimeError("executor unavailable")
+
+    runner = ReferenceTurnRunner(
+        event_sink=CollectingEventSink(),
+        journal=JsonlEventJournalWriter(tmp_path / "trace.jsonl"),
+        checkpoint_store=InMemoryCheckpointStore(),
+        permission_resolver=AllowAllPermissionResolver(),
+        host_tool_executor=FailingExecutor(),
+        invoke_model=lambda request: TurnModelResponse(
+            tool_requests=[HostToolRequest(request_id="exec-1", tool_name="missing")]
+        ),
+        now=lambda: "2026-06-28T00:00:00Z",
+        next_id=_fixed_ids(),
+    )
+
+    with pytest.raises(RuntimeError, match="executor unavailable"):
+        await runner.run(RunTurnRequest(session_id="session-1", turn_id="turn-1"))
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_zero_iterations_commits_empty_success(tmp_path: Path) -> None:
+    model_calls = 0
+
+    def invoke_model(request: TurnModelRequest) -> TurnModelResponse:
+        nonlocal model_calls
+        model_calls += 1
+        return TurnModelResponse(output="unexpected")
+
+    runner = ReferenceTurnRunner(
+        event_sink=CollectingEventSink(),
+        journal=JsonlEventJournalWriter(tmp_path / "trace.jsonl"),
+        checkpoint_store=InMemoryCheckpointStore(),
+        permission_resolver=AllowAllPermissionResolver(),
+        host_tool_executor=FunctionHostToolExecutor({}),
+        invoke_model=invoke_model,
+        now=lambda: "2026-06-28T00:00:00Z",
+        next_id=_fixed_ids(),
+    )
+    result = await runner.run(
+        RunTurnRequest(
+            session_id="session-1",
+            turn_id="turn-1",
+            options=TurnOptions(max_iterations=0),
+        )
+    )
+
+    assert result.status == "success"
+    assert result.output is None
+    assert result.iterations == 0
+    assert result.checkpoints == []
+    assert model_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_turn_runner_generates_unique_event_ids_without_host_factory(tmp_path: Path) -> None:
+    journal_path = tmp_path / "trace.jsonl"
+    runner = ReferenceTurnRunner(
+        event_sink=CollectingEventSink(),
+        journal=JsonlEventJournalWriter(journal_path),
+        checkpoint_store=InMemoryCheckpointStore(),
+        permission_resolver=AllowAllPermissionResolver(),
+        host_tool_executor=FunctionHostToolExecutor({}),
+        invoke_model=lambda request: TurnModelResponse(output="done"),
+        now=lambda: "2026-06-28T00:00:00Z",
+    )
+
+    await runner.run(RunTurnRequest(session_id="session-1", turn_id="turn-1"))
+
+    event_ids = [record["event"]["id"] for record in _records(journal_path) if record["kind"] != "summary"]
+    assert event_ids
+    assert len(event_ids) == len(set(event_ids))
+    suffixes: list[int] = []
+    for event_id in event_ids:
+        prefix, separator, suffix = event_id.rpartition("-")
+        assert prefix and separator and suffix.isdigit(), f"Malformed event ID: {event_id!r}"
+        suffixes.append(int(suffix))
+    assert suffixes == list(range(1, len(event_ids) + 1))

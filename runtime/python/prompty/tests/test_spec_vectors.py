@@ -301,7 +301,7 @@ def test_load_vector(vec: dict, tmp_path: Path):
             _assert_load_expected(agent, expected, name)
             return
 
-        pytest.skip(f"Unhandled load vector structure: {name}")
+        pytest.fail(f"Unhandled load vector structure: {name}")
 
     finally:
         # Restore env
@@ -493,21 +493,96 @@ def _check_tools(actual: list, expected: list[dict], errors: list[str]):
             act_val = getattr(act, "mode", None)
             if act_val != exp["mode"]:
                 errors.append(f"  {prefix}.mode: {act_val!r} != expected {exp['mode']!r}")
+        act_bindings = getattr(act, "bindings", []) or []
+        if act_bindings and "bindings" not in exp:
+            errors.append(f"  {prefix}.bindings: expected bindings key is missing")
         if "bindings" in exp:
-            act_bindings = getattr(act, "bindings", []) or []
             exp_bindings = exp["bindings"]
+            if isinstance(exp_bindings, list):
+                exp_bindings = {
+                    binding["name"]: {key: value for key, value in binding.items() if key != "name"}
+                    for binding in exp_bindings
+                }
             if isinstance(exp_bindings, dict):
                 for bname, bval in exp_bindings.items():
                     found = [b for b in act_bindings if b.name == bname]
                     if not found:
                         errors.append(f"  {prefix}.bindings: missing binding '{bname}'")
                     else:
-                        if isinstance(bval, dict) and "input" in bval:
-                            if found[0].input != bval["input"]:
-                                errors.append(
-                                    f"  {prefix}.bindings.{bname}.input: "
-                                    f"{found[0].input!r} != expected {bval['input']!r}"
-                                )
+                        expected_input = bval.get("input") if isinstance(bval, dict) else bval
+                        if expected_input is not None and found[0].input != expected_input:
+                            errors.append(
+                                f"  {prefix}.bindings.{bname}.input: {found[0].input!r} != expected {expected_input!r}"
+                            )
+                expected_names = set(exp_bindings)
+                for unexpected_name in sorted({binding.name for binding in act_bindings} - expected_names):
+                    errors.append(f"  {prefix}.bindings: unexpected binding '{unexpected_name}'")
+
+
+def test_function_tool_bindings_expectation_is_required() -> None:
+    """Fail when a vector drops the expectation for loaded FunctionTool bindings."""
+    actual = [
+        FunctionTool(
+            name="get_weather",
+            bindings=[Binding(name="unit", input="preferred_unit")],
+        )
+    ]
+    errors: list[str] = []
+
+    _check_tools(actual, [{"name": "get_weather", "kind": "function"}], errors)
+
+    assert errors == ["  tools[0].bindings: expected bindings key is missing"]
+
+
+@pytest.mark.parametrize(
+    "bindings",
+    [
+        {"unit": {"input": "preferred_unit"}},
+        {"unit": "preferred_unit"},
+        [{"name": "unit", "input": "preferred_unit"}],
+    ],
+)
+def test_function_tool_bindings_expectation_accepts_equivalent_forms(bindings: dict | list[dict]) -> None:
+    """Accept the canonical map forms and equivalent array form for bindings expectations."""
+    actual = [
+        FunctionTool(
+            name="get_weather",
+            bindings=[Binding(name="unit", input="preferred_unit")],
+        )
+    ]
+    errors: list[str] = []
+
+    _check_tools(actual, [{"name": "get_weather", "kind": "function", "bindings": bindings}], errors)
+
+    assert errors == []
+
+
+def test_function_tool_bindings_expectation_rejects_unexpected_actual_binding() -> None:
+    """Fail when the expected bindings cover only a subset of loaded FunctionTool bindings."""
+    actual = [
+        FunctionTool(
+            name="get_weather",
+            bindings=[
+                Binding(name="unit", input="preferred_unit"),
+                Binding(name="location", input="preferred_location"),
+            ],
+        )
+    ]
+    errors: list[str] = []
+
+    _check_tools(
+        actual,
+        [
+            {
+                "name": "get_weather",
+                "kind": "function",
+                "bindings": {"unit": {"input": "preferred_unit"}},
+            }
+        ],
+        errors,
+    )
+
+    assert errors == ["  tools[0].bindings: unexpected binding 'location'"]
 
 
 def _check_template(actual: Template | None, expected: dict, errors: list[str]):
@@ -609,19 +684,14 @@ def test_parse_vector(vec: dict):
     parser = PromptyChatParser()
     agent = Prompty(name="parse_test")
 
-    # Thread nonce expansion is a pipeline-level concern, not parser-level.
-    # The parser produces Message objects from rendered text.
-    if name == "thread_nonce_expansion":
-        # This vector tests pipeline-level thread expansion.
-        # The parser itself would just produce a message containing the nonce text.
-        # We test that the nonce text survives parsing, then pipeline expands it.
-        messages = parser._parse(agent, rendered)
-        # Verify the nonce marker is present in one of the messages
-        all_text = " ".join(m.text for m in messages)
-        assert "__PROMPTY_THREAD_" in all_text, f"Expected nonce marker in parsed output, got: {all_text!r}"
-        return
-
     messages = parser._parse(agent, rendered)
+    if name == "thread_nonce_expansion":
+        from prompty.core.pipeline import _expand_thread_markers, _inject_thread_markers
+
+        marker = "__PROMPTY_THREAD_abcd1234_conversation__"
+        marked = _inject_thread_markers(messages, {marker: "conversation"}, {"conversation": "thread"})
+        messages = _expand_thread_markers(marked, inp["thread_inputs"], {"conversation": "thread"})
+
     exp_messages = expected["messages"]
 
     assert len(messages) == len(exp_messages), (
@@ -682,7 +752,7 @@ def test_wire_vector(vec: dict):
     elif api_type == "responses":
         _check_wire_responses(agent, messages, exp_body, name)
     else:
-        pytest.skip(f"Unknown apiType for wire test: {api_type}")
+        pytest.fail(f"Unknown apiType for wire test: {api_type}")
 
 
 def _check_wire_chat(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
@@ -941,7 +1011,7 @@ def test_process_vector(vec: dict):
     elif api_type == "responses":
         response = _make_responses_api_mock(response_data)
     else:
-        pytest.skip(f"Unknown apiType: {api_type}")
+        pytest.fail(f"Unknown apiType: {api_type}")
 
     result = _process_response(response, agent)
     exp_result = expected["result"]
@@ -978,13 +1048,9 @@ def _compare_process_result(name: str, result: Any, exp_result: Any) -> None:
         )
     elif isinstance(exp_result, str):
         # Text content
-        if result is None and exp_result == "":
-            # Known gap: runtime returns None for null content, spec expects ""
-            pass
-        else:
-            assert result == exp_result, (
-                f"Process '{name}': text mismatch\n  actual:   {result!r}\n  expected: {exp_result!r}"
-            )
+        assert result == exp_result, (
+            f"Process '{name}': text mismatch\n  actual:   {result!r}\n  expected: {exp_result!r}"
+        )
     else:
         assert result == exp_result, f"Process '{name}': result mismatch: {result!r} != {exp_result!r}"
 
@@ -1035,6 +1101,24 @@ def test_agent_vector(vec: dict):
 
     # -- Build canned LLM responses --
     mock_responses = [_make_mock_chat_completion(step["llm_response"]) for step in sequence]
+    if name == "tool_not_registered_error":
+        # Rust and TypeScript intentionally treat a missing handler as a model-visible,
+        # non-fatal tool result even though this legacy vector still declares ValueError.
+        mock_responses.append(
+            _make_mock_chat_completion(
+                {
+                    "id": "chatcmpl-unknown-recovery",
+                    "object": "chat.completion",
+                    "choices": [
+                        {
+                            "index": 0,
+                            "message": {"role": "assistant", "content": "I could not find that tool."},
+                            "finish_reason": "stop",
+                        }
+                    ],
+                }
+            )
+        )
     response_iter = iter(mock_responses)
 
     # -- Mock executor: replays canned responses --
@@ -1190,18 +1274,12 @@ def _test_agent_error_real(
                 tools=tool_functions,
             )
     elif "not registered" in error_msg.lower() or "unknown_tool" in name:
-        # The tool_not_registered vector expects the loop to handle missing tools
-        # gracefully (not crash), returning an error message to the LLM.
-        # Our turn handles this by returning an error string as tool result.
-        # The vector just validates the loop doesn't crash — so run it.
-        try:
-            turn(
-                agent,
-                inputs=inp.get("parent_inputs"),
-                tools=tool_functions,
-            )
-        except (StopIteration, Exception):
-            pass  # Mock ran out of responses — that's fine for error vectors
+        result = turn(
+            agent,
+            inputs=inp.get("parent_inputs"),
+            tools=tool_functions,
+        )
+        assert result == "I could not find that tool."
     else:
         pytest.fail(f"Agent '{name}': unknown error type: {error_msg}")
 

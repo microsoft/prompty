@@ -8,6 +8,7 @@ from .adapters import (
     InMemoryCheckpointStore,
     JsonlEventJournalWriter,
 )
+from .engine import ReferenceTurnEngine, load_engine_checkpoint, save_engine_checkpoint
 from .replay_verifier import ReferenceReplayVerifier
 from .turn_runner import (
     ReferenceTurnRunner,
@@ -25,9 +26,12 @@ __all__ = [
     "InMemoryCheckpointStore",
     "JsonlEventJournalWriter",
     "ReferenceReplayVerifier",
+    "ReferenceTurnEngine",
     "ReferenceTurnRunner",
     "RunTurnRequest",
     "RunTurnResult",
     "TurnModelRequest",
     "TurnModelResponse",
+    "load_engine_checkpoint",
+    "save_engine_checkpoint",
 ]

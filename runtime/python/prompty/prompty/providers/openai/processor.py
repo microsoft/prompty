@@ -140,12 +140,7 @@ def _process_chat_completion(response: Any) -> Any:
     if message.content is None and isinstance(refusal, str):
         return refusal
 
-    # Refusal — when content is null but the model refused
-    refusal = getattr(message, "refusal", None)
-    if message.content is None and isinstance(refusal, str):
-        return refusal
-
-    return message.content
+    return "" if message.content is None else message.content
 
 
 def _process_embedding(response: Any) -> Any:

@@ -51,7 +51,7 @@ class TraceSpan:
     error: str | None = None
     __usage: TokenUsage | None = None
     attributes: dict[str, Any] | None = None
-    __frames: list[Any] = field(default_factory=list)
+    __frames: list[Any] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "TraceSpan":

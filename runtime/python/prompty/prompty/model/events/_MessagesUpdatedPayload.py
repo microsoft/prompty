@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -30,9 +30,9 @@ class MessagesUpdatedPayload:
 
     _shorthand_property: ClassVar[str | None] = None
 
-    messages: list[Message] = field(default_factory=list)
+    messages: list[Message] | None = None
     reason: str | None = None
-    appended: list[Message] = field(default_factory=list)
+    appended: list[Message] | None = None
     removed: int | None = None
 
     @staticmethod
@@ -87,7 +87,7 @@ class MessagesUpdatedPayload:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
@@ -110,7 +110,7 @@ class MessagesUpdatedPayload:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -29,7 +29,7 @@ class RedactionMetadata:
     _shorthand_property: ClassVar[str | None] = None
 
     sanitized: bool | None = None
-    fields: list[RedactedField] = field(default_factory=list)
+    fields: list[RedactedField] | None = None
     policy: str | None = None
 
     @staticmethod
@@ -82,7 +82,7 @@ class RedactionMetadata:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

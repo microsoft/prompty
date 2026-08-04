@@ -18,6 +18,7 @@ import urllib.request
 from collections.abc import Callable
 from typing import Any
 
+from ...core.model_capabilities import enrich
 from ...model import (
     ApiKeyConnection,
     Connection,
@@ -26,7 +27,12 @@ from ...model import (
     ReferenceConnection,
 )
 
-__all__ = ["list_models", "list_models_async"]
+__all__ = [
+    "catalog_model_to_model_info",
+    "deployment_to_model_info",
+    "list_models",
+    "list_models_async",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -121,51 +127,116 @@ def _get_token_callback(client: Any) -> Callable[[], str]:
 
 
 def _extract_capabilities(deployment: dict[str, Any]) -> dict[str, Any]:
-    properties = deployment.get("properties") or {}
-    model = properties.get("model") or {}
-    return properties.get("capabilities") or model.get("capabilities") or {}
+    properties = deployment.get("properties")
+    properties = properties if isinstance(properties, dict) else {}
+    model = properties.get("model")
+    model = model if isinstance(model, dict) else {}
+    for source in (properties, model, deployment):
+        if "capabilities" in source:
+            capabilities = source["capabilities"]
+            return capabilities if isinstance(capabilities, dict) else {}
+    return {}
 
 
 def _get_number(source: dict[str, Any], *keys: str) -> int | None:
     for key in keys:
         value = source.get(key)
-        if isinstance(value, int | float):
-            return int(value)
-        if isinstance(value, str) and value.strip():
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            signless = value[1:] if value.startswith(("+", "-")) else value
+            if not signless or any(character < "0" or character > "9" for character in signless):
+                continue
             try:
-                return int(float(value))
+                return int(value)
             except ValueError:
                 continue
     return None
 
 
-def _get_str_list(source: dict[str, Any], *keys: str) -> list[str]:
+def _get_string(source: dict[str, Any], *keys: str) -> str | None:
+    for key in keys:
+        value = source.get(key)
+        if isinstance(value, str):
+            return value
+    return None
+
+
+def _get_str_list(source: dict[str, Any], *keys: str) -> list[str] | None:
     for key in keys:
         value = source.get(key)
         if isinstance(value, list):
-            return [str(item) for item in value]
-        if isinstance(value, str) and value.strip():
+            return [item for item in value if isinstance(item, str)]
+        if isinstance(value, str):
             return [item.strip() for item in value.split(",") if item.strip()]
-    return []
+    return None
 
 
 def _map_deployment(deployment: dict[str, Any]) -> ModelInfo:
-    """Map a Foundry deployment object to ModelInfo."""
-    properties = deployment.get("properties") or {}
-    model = properties.get("model") or {}
+    """Map a Foundry deployment object to ModelInfo.
+
+    Handles both the flat ``/deployments?api-version=v1`` data-plane shape and the nested ARM
+    management-plane shape. This is the single source of truth for the Foundry deployment wire ->
+    ``ModelInfo`` mapping and is exercised by the shared ``spec/vectors/discovery`` vectors.
+    """
+    properties = deployment.get("properties")
+    properties = properties if isinstance(properties, dict) else {}
+    model = properties.get("model")
+    model = model if isinstance(model, dict) else {}
     capabilities = _extract_capabilities(deployment)
-    return ModelInfo(
-        id=str(deployment.get("name", "")),
-        display_name=model.get("name"),
-        owned_by=model.get("publisher") or "azure",
-        context_window=_get_number(capabilities, "maxContextLength", "contextWindow", "context_length")
-        or _get_number(model, "maxContextLength"),
+    display_name = _get_string(deployment, "modelName")
+    if display_name is None:
+        display_name = _get_string(model, "name")
+    owned_by = _get_string(deployment, "modelPublisher")
+    if owned_by is None:
+        owned_by = _get_string(model, "publisher")
+    if owned_by is None:
+        owned_by = "azure"
+    context_window = _get_number(capabilities, "maxContextLength", "contextWindow", "context_length")
+    if context_window is None:
+        context_window = _get_number(model, "maxContextLength")
+    if context_window is None:
+        context_window = _get_number(deployment, "maxContextLength")
+    info = ModelInfo(
+        id=_get_string(deployment, "name") or "",
+        display_name=display_name,
+        owned_by=owned_by,
+        context_window=context_window,
         input_modalities=_get_str_list(capabilities, "inputModalities", "input_modalities", "supportedInputModalities"),
         output_modalities=_get_str_list(
             capabilities, "outputModalities", "output_modalities", "supportedOutputModalities"
         ),
-        additional_properties=deployment,
+        additional_properties=dict(deployment),
     )
+    enrich("foundry", info)
+    return info
+
+
+def deployment_to_model_info(raw: dict[str, Any]) -> ModelInfo:
+    """Map one raw Foundry data-plane/ARM deployment object into the provider-neutral ``ModelInfo``.
+
+    Exercised by the shared ``spec/vectors/discovery`` vectors so every runtime converges on the
+    same canonical mapping.
+    """
+    return _map_deployment(raw)
+
+
+def catalog_model_to_model_info(raw: dict[str, Any]) -> ModelInfo:
+    """Map one raw Azure OpenAI model-catalog entry into the provider-neutral ``ModelInfo``.
+
+    Exercised by the shared ``spec/vectors/discovery`` vectors.
+    """
+    context_window = raw.get("maxContextLength")
+    if not isinstance(context_window, int) or isinstance(context_window, bool):
+        context_window = None
+    info = ModelInfo(
+        id=_get_string(raw, "id") or "",
+        owned_by=_get_string(raw, "owned_by"),
+        context_window=context_window,
+        additional_properties=dict(raw),
+    )
+    enrich("foundry", info)
+    return info
 
 
 def _list_foundry_deployments(project_endpoint: str, get_token: Callable[[], str]) -> list[ModelInfo]:
@@ -203,14 +274,30 @@ def _build_foundry_deployment_client(connection: FoundryConnection) -> dict[str,
     return {"project_endpoint": connection.endpoint, "get_token": get_token}
 
 
+def _model_to_dict(m: Any) -> dict[str, Any]:
+    """Normalize an Azure OpenAI SDK model object (or plain dict/test double) into a raw dict."""
+    if isinstance(m, dict):
+        return dict(m)
+    if hasattr(m, "model_dump"):
+        return m.model_dump(mode="json")
+    return dict(vars(m))
+
+
 def _map_model(m: Any) -> ModelInfo:
-    """Map an Azure OpenAI SDK model object to ModelInfo."""
-    context_window = getattr(m, "max_context_length", None)
-    return ModelInfo(
+    """Map an Azure OpenAI SDK model object to ModelInfo.
+
+    The SDK exposes ``max_context_length`` as a Python attribute (unlike the raw wire's
+    ``maxContextLength`` used by :func:`catalog_model_to_model_info` / discovery vectors), so this
+    reads SDK attributes directly rather than delegating to the raw-dict mapper.
+    """
+    info = ModelInfo(
         id=m.id,
         owned_by=getattr(m, "owned_by", None),
-        context_window=context_window,
+        context_window=getattr(m, "max_context_length", None),
+        additional_properties=_model_to_dict(m),
     )
+    enrich("foundry", info)
+    return info
 
 
 def _model_items(response: Any) -> list[Any]:

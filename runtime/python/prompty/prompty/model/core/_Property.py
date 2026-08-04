@@ -49,7 +49,7 @@ class Property:
     nullable: bool | None = None
     default: Any | None = None
     example: Any | None = None
-    enum_values: list[Any] = field(default_factory=list)
+    enum_values: list[Any] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Property":
@@ -453,8 +453,8 @@ class UnionProperty(Property):
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="union")
-    one_of: list[Property] = field(default_factory=list)
-    any_of: list[Property] = field(default_factory=list)
+    one_of: list[Property] | None = None
+    any_of: list[Property] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "UnionProperty":
@@ -506,7 +506,7 @@ class UnionProperty(Property):
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
@@ -529,7 +529,7 @@ class UnionProperty(Property):
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
