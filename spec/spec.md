@@ -246,6 +246,47 @@ correspond to the TypeSpec-generated data model.
 Unknown top-level properties SHOULD be preserved in `metadata` or ignored. Implementations
 MUST NOT raise an error for unknown properties.
 
+#### `Record<unknown>` value nullability
+
+`Record<unknown>` has two independent nullability axes:
+
+1. The model property's optionality controls whether the record itself may be absent.
+2. The `unknown` value type permits every JSON-compatible value, including explicit
+   `null`, at any nesting depth.
+
+After YAML parsing, YAML null forms have the same explicit-null semantics as JSON
+`null`.
+
+An implementation MUST preserve null-valued keys through load → save → reload. It MUST
+NOT drop a key whose value is `null`, coerce that value to an empty object or another
+sentinel, or conflate the present-null state with an absent key. Nested objects and arrays
+MUST apply the same rule recursively.
+
+This contract applies to every `Record<unknown>` surface. The following generated fields
+are specifically covered by the shared acceptance vectors because they cross canonical
+runtime boundaries:
+
+| Model | Field | Record presence |
+| ----- | ----- | --------------- |
+| `Message` | `metadata` | Required |
+| `Prompty` | `metadata` | Optional |
+| `ModelInfo` | `additionalProperties` | Optional |
+| `TurnModelRequest` | `inputs` | Optional |
+| `RunTurnRequest` | `inputs` | Optional |
+| `TurnModelResponse` | `checkpointState` | Optional |
+| `HostToolRequest` | `arguments` | Optional |
+| `TurnEvent` | `payload` | Required |
+| `SessionEvent` | `payload` | Required |
+
+Language bindings MUST retain both axes. For example, the conforming C# mapping is
+`IDictionary<string, object?>` for a required record and
+`IDictionary<string, object?>?` for an optional record. Mapping a
+`Record<unknown>` value as non-null `object` changes the schema contract and is
+non-conformant. Nullable annotations do not add a wire or model field.
+
+The normative shared vectors are
+`spec/vectors/model/record_unknown_nullability_vectors.json`.
+
 ### §2.4 Model
 
 The `model` property configures the LLM provider and parameters.

@@ -46,7 +46,7 @@ model ModelInfo {
   @sample(#{ outputModalities: #["text"] })
   outputModalities?: string[];
 
-  @doc("Additional provider-specific properties")
+  @doc("Additional provider-specific properties. Values may be explicit null.")
   @sample(#{ additionalProperties: #{ supportsStreaming: true } })
   additionalProperties?: Record<unknown>;
 }

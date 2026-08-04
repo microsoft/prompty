@@ -42,7 +42,7 @@ model Message {
   @sample(#{ parts: #[#{ kind: "text", value: "Hello!" }] })
   parts: ContentPart[];
 
-  @doc("Optional metadata associated with the message")
+  @doc("Optional metadata associated with the message. Values may be explicit null.")
   @sample(#{ metadata: #{ source: "user-input" } })
   metadata: Record<unknown> = #{};
 }
