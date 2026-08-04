@@ -251,6 +251,28 @@ describe("Spec Vectors: Load", () => {
 
     it(`[${vec.name}] ${vec.description}`, testFn);
   }
+
+  it("requires binding expectations for binding-bearing FunctionTools", () => {
+    const vector = vectors.find((vec: any) => vec.name === "tools_function_load");
+    expect(vector).toBeDefined();
+    const expected = structuredClone(vector.expected);
+    delete expected.tools[0].bindings;
+    const agent = load(resolve(FIXTURES_DIR, vector.input.fixture));
+
+    expect(() => validateAgentFields(agent, expected, vector.name)).toThrowError(
+      /must declare expected bindings/,
+    );
+  });
+
+  it("accepts equivalent list-form binding expectations", () => {
+    const vector = vectors.find((vec: any) => vec.name === "tools_function_load");
+    expect(vector).toBeDefined();
+    const expected = structuredClone(vector.expected);
+    expected.tools[0].bindings = [{ name: "unit", input: "preferred_unit" }];
+    const agent = load(resolve(FIXTURES_DIR, vector.input.fixture));
+
+    expect(() => validateAgentFields(agent, expected, vector.name)).not.toThrow();
+  });
 });
 
 /**
@@ -332,6 +354,29 @@ function resolveFileRefs(data: any, files: Record<string, unknown>): void {
       resolveFileRefs(value, files);
     }
   }
+}
+
+function normalizeBindings(bindings: unknown): Array<{ name: string; input: unknown }> {
+  if (Array.isArray(bindings)) {
+    return bindings
+      .map((binding: { name?: unknown; input?: unknown }) => ({
+        name: String(binding.name),
+        input: binding.input,
+      }))
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }
+  if (typeof bindings !== "object" || bindings === null) {
+    return [];
+  }
+  return Object.entries(bindings)
+    .map(([name, value]) => ({
+      name,
+      input:
+        typeof value === "object" && value !== null && "input" in value
+          ? (value as { input: unknown }).input
+          : value,
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name));
 }
 
 function validateAgentFields(agent: Prompty, expected: any, vecName: string): void {
@@ -429,17 +474,15 @@ function validateAgentFields(agent: Prompty, expected: any, vecName: string): vo
             if (ep.enumValues !== undefined) expect(ap.enumValues).toEqual(ep.enumValues);
           }
         }
+        const actualBindings = normalizeBindings((at as FunctionTool).bindings);
+        if (actualBindings.length > 0) {
+          expect(
+            et.bindings,
+            `[${vecName}] tool '${et.name ?? i}' must declare expected bindings`,
+          ).toBeDefined();
+        }
         if (et.bindings !== undefined) {
-          const atBindings = (at as any).bindings as Array<{name: string; input: string}>;
-          expect(atBindings).toBeDefined();
-          expect(atBindings.length).toBeGreaterThan(0);
-          for (const [bk, bv] of Object.entries(et.bindings as Record<string, any>)) {
-            const found = atBindings.find((b: any) => b.name === bk);
-            expect(found).toBeDefined();
-            if (bv.input !== undefined) {
-              expect(found!.input).toBe(bv.input);
-            }
-          }
+          expect(actualBindings).toEqual(normalizeBindings(et.bindings));
         }
         if (et.serverName !== undefined) {
           expect((at as any).serverName).toBe(et.serverName);
