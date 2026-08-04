@@ -1496,17 +1496,18 @@ A `list[Property]` (used for `inputs`, `outputs`, and `FunctionTool.parameters`)
 MUST be converted to a JSON Schema object for wire transmission:
 
 ```
-function schema_to_wire(properties: list[Property]) → dict:
+function schema_to_wire(properties: list[Property], strict: bool = false) → dict:
   schema = { type: "object", properties: {}, required: [] }
 
   for prop in properties:
-    prop_schema = property_to_json_schema(prop)
+    optional = strict and not prop.required
+    prop_schema = property_to_json_schema(prop, strict, optional)
     if prop.description:
       prop_schema.description = prop.description
     if prop.enumValues:
       prop_schema.enum = prop.enumValues
     schema.properties[prop.name] = prop_schema
-    if prop.required:
+    if strict or prop.required:
       schema.required.append(prop.name)
 
   if schema.required is empty:
@@ -1516,9 +1517,13 @@ function schema_to_wire(properties: list[Property]) → dict:
 ```
 
 `property_to_json_schema` MUST recursively convert array items and object
-properties. Object `required` arrays MUST contain only children whose
-`Property.required` is true. For a concrete property with `nullable: true`,
-the JSON Schema `type` MUST include both the concrete type and `"null"`.
+properties. Outside provider strict mode, object `required` arrays MUST contain
+only children whose `Property.required` is true. In OpenAI strict mode, this
+rule MUST apply recursively: every property of every object MUST appear in that
+object's `required` array, and a property whose `Property.required` is not true
+MUST be represented as nullable. For a concrete property, nullability is
+represented by a JSON Schema `type` containing both the concrete type and
+`"null"`.
 
 `kind: "union"` represents a portable union property. Exactly one of its
 `oneOf` and `anyOf` arrays MUST be nonempty; implementations MUST reject
