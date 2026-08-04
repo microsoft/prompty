@@ -22,10 +22,9 @@ func TestModelLoadJSON(t *testing.T) {
   "connection": {
     "kind": "key",
     "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-    "key": "{your-api-key}"
+    "apiKey": "{your-api-key}"
   },
   "options": {
-    "type": "chat",
     "temperature": 0.7,
     "maxOutputTokens": 1000
   }
@@ -60,6 +59,9 @@ func TestModelLoadJSON(t *testing.T) {
 	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
 	}
+	if connectionValue.ApiKey != "{your-api-key}" {
+		t.Errorf(`Expected ApiKey to be "{your-api-key}", got %v`, connectionValue.ApiKey)
+	}
 }
 
 // TestModelLoadYAML tests loading Model from YAML
@@ -71,9 +73,8 @@ apiType: chat
 connection:
   kind: key
   endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-  key: "{your-api-key}"
+  apiKey: "{your-api-key}"
 options:
-  type: chat
   temperature: 0.7
   maxOutputTokens: 1000
 
@@ -107,6 +108,9 @@ options:
 	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
 	}
+	if connectionValue.ApiKey != "{your-api-key}" {
+		t.Errorf(`Expected ApiKey to be "{your-api-key}", got %v`, connectionValue.ApiKey)
+	}
 }
 
 // TestModelFromJSON tests loading Model through the generated JSON helper
@@ -119,10 +123,9 @@ func TestModelFromJSON(t *testing.T) {
   "connection": {
     "kind": "key",
     "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-    "key": "{your-api-key}"
+    "apiKey": "{your-api-key}"
   },
   "options": {
-    "type": "chat",
     "temperature": 0.7,
     "maxOutputTokens": 1000
   }
@@ -152,6 +155,9 @@ func TestModelFromJSON(t *testing.T) {
 	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
 	}
+	if connectionValue.ApiKey != "{your-api-key}" {
+		t.Errorf(`Expected ApiKey to be "{your-api-key}", got %v`, connectionValue.ApiKey)
+	}
 }
 
 // TestModelFromYAML tests loading Model through the generated YAML helper
@@ -163,9 +169,8 @@ apiType: chat
 connection:
   kind: key
   endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-  key: "{your-api-key}"
+  apiKey: "{your-api-key}"
 options:
-  type: chat
   temperature: 0.7
   maxOutputTokens: 1000
 
@@ -194,6 +199,9 @@ options:
 	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
 	}
+	if connectionValue.ApiKey != "{your-api-key}" {
+		t.Errorf(`Expected ApiKey to be "{your-api-key}", got %v`, connectionValue.ApiKey)
+	}
 }
 
 // TestModelRoundtrip tests load -> save -> load produces equivalent data
@@ -206,10 +214,9 @@ func TestModelRoundtrip(t *testing.T) {
   "connection": {
     "kind": "key",
     "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-    "key": "{your-api-key}"
+    "apiKey": "{your-api-key}"
   },
   "options": {
-    "type": "chat",
     "temperature": 0.7,
     "maxOutputTokens": 1000
   }
@@ -251,6 +258,9 @@ func TestModelRoundtrip(t *testing.T) {
 	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
 	}
+	if connectionValue.ApiKey != "{your-api-key}" {
+		t.Errorf(`Expected ApiKey to be "{your-api-key}", got %v`, connectionValue.ApiKey)
+	}
 }
 
 // TestModelToJSON tests that ToJSON produces valid JSON
@@ -263,10 +273,9 @@ func TestModelToJSON(t *testing.T) {
   "connection": {
     "kind": "key",
     "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-    "key": "{your-api-key}"
+    "apiKey": "{your-api-key}"
   },
   "options": {
-    "type": "chat",
     "temperature": 0.7,
     "maxOutputTokens": 1000
   }
@@ -315,6 +324,9 @@ func TestModelToJSON(t *testing.T) {
 	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
 	}
+	if connectionValue.ApiKey != "{your-api-key}" {
+		t.Errorf(`Expected ApiKey to be "{your-api-key}", got %v`, connectionValue.ApiKey)
+	}
 }
 
 // TestModelToYAML tests that ToYAML produces valid YAML
@@ -327,10 +339,9 @@ func TestModelToYAML(t *testing.T) {
   "connection": {
     "kind": "key",
     "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-    "key": "{your-api-key}"
+    "apiKey": "{your-api-key}"
   },
   "options": {
-    "type": "chat",
     "temperature": 0.7,
     "maxOutputTokens": 1000
   }
@@ -378,6 +389,9 @@ func TestModelToYAML(t *testing.T) {
 	}
 	if connectionValue.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, connectionValue.Endpoint)
+	}
+	if connectionValue.ApiKey != "{your-api-key}" {
+		t.Errorf(`Expected ApiKey to be "{your-api-key}", got %v`, connectionValue.ApiKey)
 	}
 }
 

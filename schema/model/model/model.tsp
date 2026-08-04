@@ -83,14 +83,12 @@ model Model {
     connection: #{
       kind: "key",
       endpoint: "https://{your-custom-endpoint}.openai.azure.com/",
-      key: "{your-api-key}",
+      apiKey: "{your-api-key}",
     },
   })
   connection?: Connection;
 
   @doc("Additional options for the model")
-  @sample(#{
-    options: #{ type: "chat", temperature: 0.7, maxOutputTokens: 1000 },
-  })
+  @sample(#{ options: #{ temperature: 0.7, maxOutputTokens: 1000 } })
   options?: ModelOptions;
 }

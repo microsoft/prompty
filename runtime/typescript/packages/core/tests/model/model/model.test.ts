@@ -19,7 +19,7 @@ describe("Model", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "id": "gpt-35-turbo",\n  "provider": "foundry",\n  "apiType": "chat",\n  "connection": {\n    "kind": "key",\n    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n    "key": "{your-api-key}"\n  },\n  "options": {\n    "type": "chat",\n    "temperature": 0.7,\n    "maxOutputTokens": 1000\n  }\n}`;
+      const json = `{\n  "id": "gpt-35-turbo",\n  "provider": "foundry",\n  "apiType": "chat",\n  "connection": {\n    "kind": "key",\n    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n    "apiKey": "{your-api-key}"\n  },\n  "options": {\n    "temperature": 0.7,\n    "maxOutputTokens": 1000\n  }\n}`;
       const instance = Model.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("gpt-35-turbo");
@@ -28,7 +28,7 @@ describe("Model", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "id": "gpt-35-turbo",\n  "provider": "foundry",\n  "apiType": "chat",\n  "connection": {\n    "kind": "key",\n    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n    "key": "{your-api-key}"\n  },\n  "options": {\n    "type": "chat",\n    "temperature": 0.7,\n    "maxOutputTokens": 1000\n  }\n}`;
+      const json = `{\n  "id": "gpt-35-turbo",\n  "provider": "foundry",\n  "apiType": "chat",\n  "connection": {\n    "kind": "key",\n    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n    "apiKey": "{your-api-key}"\n  },\n  "options": {\n    "temperature": 0.7,\n    "maxOutputTokens": 1000\n  }\n}`;
       const instance = Model.fromJson(json);
       const output = instance.toJson();
       const reloaded = Model.fromJson(output);
@@ -40,7 +40,7 @@ describe("Model", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `id: gpt-35-turbo\nprovider: foundry\napiType: chat\nconnection:\n  kind: key\n  endpoint: "https://{your-custom-endpoint}.openai.azure.com/"\n  key: "{your-api-key}"\noptions:\n  type: chat\n  temperature: 0.7\n  maxOutputTokens: 1000\n`;
+      const yaml = `id: gpt-35-turbo\nprovider: foundry\napiType: chat\nconnection:\n  kind: key\n  endpoint: "https://{your-custom-endpoint}.openai.azure.com/"\n  apiKey: "{your-api-key}"\noptions:\n  temperature: 0.7\n  maxOutputTokens: 1000\n`;
       const instance = Model.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("gpt-35-turbo");
@@ -49,7 +49,7 @@ describe("Model", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `id: gpt-35-turbo\nprovider: foundry\napiType: chat\nconnection:\n  kind: key\n  endpoint: "https://{your-custom-endpoint}.openai.azure.com/"\n  key: "{your-api-key}"\noptions:\n  type: chat\n  temperature: 0.7\n  maxOutputTokens: 1000\n`;
+      const yaml = `id: gpt-35-turbo\nprovider: foundry\napiType: chat\nconnection:\n  kind: key\n  endpoint: "https://{your-custom-endpoint}.openai.azure.com/"\n  apiKey: "{your-api-key}"\noptions:\n  temperature: 0.7\n  maxOutputTokens: 1000\n`;
       const instance = Model.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Model.fromYaml(output);

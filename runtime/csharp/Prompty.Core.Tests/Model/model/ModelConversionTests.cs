@@ -18,9 +18,8 @@ apiType: chat
 connection:
   kind: key
   endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-  key: "{your-api-key}"
+  apiKey: "{your-api-key}"
 options:
-  type: chat
   temperature: 0.7
   maxOutputTokens: 1000
 
@@ -45,10 +44,9 @@ options:
   "connection": {
     "kind": "key",
     "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-    "key": "{your-api-key}"
+    "apiKey": "{your-api-key}"
   },
   "options": {
-    "type": "chat",
     "temperature": 0.7,
     "maxOutputTokens": 1000
   }
@@ -74,10 +72,9 @@ options:
   "connection": {
     "kind": "key",
     "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-    "key": "{your-api-key}"
+    "apiKey": "{your-api-key}"
   },
   "options": {
-    "type": "chat",
     "temperature": 0.7,
     "maxOutputTokens": 1000
   }
@@ -108,9 +105,8 @@ apiType: chat
 connection:
   kind: key
   endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-  key: "{your-api-key}"
+  apiKey: "{your-api-key}"
 options:
-  type: chat
   temperature: 0.7
   maxOutputTokens: 1000
 
@@ -140,10 +136,9 @@ options:
   "connection": {
     "kind": "key",
     "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-    "key": "{your-api-key}"
+    "apiKey": "{your-api-key}"
   },
   "options": {
-    "type": "chat",
     "temperature": 0.7,
     "maxOutputTokens": 1000
   }
@@ -168,9 +163,8 @@ apiType: chat
 connection:
   kind: key
   endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-  key: "{your-api-key}"
+  apiKey: "{your-api-key}"
 options:
-  type: chat
   temperature: 0.7
   maxOutputTokens: 1000
 

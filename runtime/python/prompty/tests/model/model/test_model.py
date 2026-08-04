@@ -15,10 +15,9 @@ def test_load_json_model():
       "connection": {
         "kind": "key",
         "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-        "key": "{your-api-key}"
+        "apiKey": "{your-api-key}"
       },
       "options": {
-        "type": "chat",
         "temperature": 0.7,
         "maxOutputTokens": 1000
       }
@@ -40,9 +39,8 @@ def test_load_yaml_model():
     connection:
       kind: key
       endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-      key: "{your-api-key}"
+      apiKey: "{your-api-key}"
     options:
-      type: chat
       temperature: 0.7
       maxOutputTokens: 1000
 
@@ -65,10 +63,9 @@ def test_roundtrip_json_model():
       "connection": {
         "kind": "key",
         "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-        "key": "{your-api-key}"
+        "apiKey": "{your-api-key}"
       },
       "options": {
-        "type": "chat",
         "temperature": 0.7,
         "maxOutputTokens": 1000
       }
@@ -94,10 +91,9 @@ def test_to_json_model():
       "connection": {
         "kind": "key",
         "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-        "key": "{your-api-key}"
+        "apiKey": "{your-api-key}"
       },
       "options": {
-        "type": "chat",
         "temperature": 0.7,
         "maxOutputTokens": 1000
       }
@@ -121,10 +117,9 @@ def test_to_yaml_model():
       "connection": {
         "kind": "key",
         "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-        "key": "{your-api-key}"
+        "apiKey": "{your-api-key}"
       },
       "options": {
-        "type": "chat",
         "temperature": 0.7,
         "maxOutputTokens": 1000
       }
