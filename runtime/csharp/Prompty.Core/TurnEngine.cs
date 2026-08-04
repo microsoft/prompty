@@ -141,11 +141,6 @@ public sealed class TurnEngine
 
         while (state.Iteration < state.MaxIterations)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
-                return await CommitCancelledAsync(state, cancellationToken).ConfigureAwait(false);
-            }
-
             if (state.PendingToolRequests.Count == 0 && state.PendingModelResponse is not null)
             {
                 var invocationId = state.ActiveInvocationId ?? _effects.Ids.NextId("invocation");
@@ -164,6 +159,11 @@ public sealed class TurnEngine
                 state.ActiveInvocationId = null;
                 state.Iteration += 1;
                 continue;
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return await CommitCancelledAsync(state, cancellationToken).ConfigureAwait(false);
             }
 
             if (state.PendingToolRequests.Count > 0)

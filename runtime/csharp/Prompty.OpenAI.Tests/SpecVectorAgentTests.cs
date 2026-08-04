@@ -369,7 +369,16 @@ public class SpecVectorAgentTests : IDisposable
         }
 
         // Execute and verify
-        if (expected.TryGetProperty("error", out var errorProp))
+        if (expected.TryGetProperty("rust_expected_error", out var rustError)
+            && rustError.GetString()?.Contains("parallel_tool_calls=true", StringComparison.Ordinal) == true)
+        {
+            var error = await Assert.ThrowsAsync<ArgumentException>(() =>
+                Pipeline.TurnAsync(agent, tools: toolFunctions, onEvent: onEvent,
+                    cancellationToken: cts?.Token ?? default, contextBudget: contextBudget,
+                    guardrails: guardrails, steering: steering, parallelToolCalls: parallelToolCalls));
+            Assert.Contains("sequentially", error.Message);
+        }
+        else if (expected.TryGetProperty("error", out var errorProp))
         {
             var errorMsg = errorProp.GetString() ?? "";
             if (errorMsg == "CancelledError" || errorMsg.Contains("cancelled", StringComparison.OrdinalIgnoreCase))

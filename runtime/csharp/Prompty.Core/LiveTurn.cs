@@ -353,8 +353,6 @@ internal static class LiveTurn
                 });
                 output = $"Error: Tool '{request.Name}' failed: {error.Message}";
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
             var failed = output.StartsWith("Error:", StringComparison.Ordinal);
             return new ModelToolResult
             {
@@ -652,22 +650,17 @@ internal static class LiveTurn
                 case EngineEventKind.ToolExecutionCompleted:
                     if (payload?.GetValueOrDefault("toolResult") is ModelToolResult result)
                     {
+                        AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult, new Dictionary<string, object?>
+                        {
+                            ["tool"] = result.Name,
+                            ["result"] = result.ModelText(),
+                        });
                         AgentEvents.EmitEvent(onEvent, AgentEventType.ToolCallComplete, new Dictionary<string, object?>
                         {
                             ["name"] = result.Name,
                             ["success"] = result.Outcome == ModelToolOutcome.Success,
                             ["result"] = result.ModelText(),
                             ["errorKind"] = result.ErrorKind,
-                        });
-                    }
-                    break;
-                case EngineEventKind.ToolResultCommitted:
-                    if (payload?.GetValueOrDefault("toolResult") is ModelToolResult committedResult)
-                    {
-                        AgentEvents.EmitEvent(onEvent, AgentEventType.ToolResult, new Dictionary<string, object?>
-                        {
-                            ["tool"] = committedResult.Name,
-                            ["result"] = committedResult.ModelText(),
                         });
                     }
                     break;
