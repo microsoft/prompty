@@ -257,7 +257,8 @@ public class PromptyChatParserTests
         var plainMessages = await parser.ParseAsync(CreateAgent(), "user:\nRecovered", null);
 
         Assert.NotNull(error);
-        Assert.Contains("nonce mismatch", error.Message);
+        var nonNullError = error!;
+        Assert.Contains("nonce mismatch", nonNullError.Message);
         Assert.Single(plainMessages);
         Assert.Equal("Recovered", plainMessages[0].Text);
     }
