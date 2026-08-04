@@ -237,6 +237,54 @@ final class OpenAILiveTest {
     System.out.println("[openai] structured -> " + fields);
   }
 
+  /**
+   * A nested optional field is the shape that motivated recursive strict widening: OpenAI rejects a
+   * strict schema whose nested object leaves a key out of {@code required}, so this asserts against
+   * the service what {@code WireSchemaTest} asserts against the wire builder. The optional key is
+   * genuinely absent from the prompt, so a faithful schema must let the model return null for it
+   * rather than force a fabricated value.
+   */
+  @Test
+  void structuredOutputHandlesNestedOptionalFields() {
+    LiveEnv.require("OPENAI_API_KEY");
+
+    Prompty agent =
+        LiveEnv.agent(
+            new LiveEnv.Spec("openai", modelId())
+                .chat(
+                    "Extract structured data from the user's message.",
+                    "Ada Lovelace lives in London. Her postcode is not mentioned.")
+                .options(Map.of("temperature", 0))
+                .outputs(
+                    List.of(
+                        Map.of("name", "name", "kind", "string", "required", true),
+                        Map.of(
+                            "name",
+                            "address",
+                            "kind",
+                            "object",
+                            "required",
+                            true,
+                            "properties",
+                            List.of(
+                                Map.of("name", "city", "kind", "string", "required", true),
+                                Map.of(
+                                    "name", "postcode", "kind", "string", "required", false))))));
+
+    Object result = Pipeline.invoke(agent, Map.of());
+
+    Map<?, ?> fields = assertInstanceOf(Map.class, result, "structured output should yield a map");
+    Map<?, ?> address =
+        assertInstanceOf(Map.class, fields.get("address"), "missing nested object in " + fields);
+    assertTrue(
+        String.valueOf(address.get("city")).toLowerCase().contains("london"),
+        "expected the nested required field to be extracted but got: " + address);
+    assertTrue(
+        address.containsKey("postcode"),
+        "strict mode names every nested key, so the optional one must still come back: " + address);
+    System.out.println("[openai] nested structured -> " + fields);
+  }
+
   // ------------------------------------------------------------------ tool calling
 
   @Test
