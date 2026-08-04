@@ -23,7 +23,7 @@ pub use processor::{
 };
 pub use wire::{
     SchemaError, build_chat_args, build_embedding_args, build_image_args, build_responses_args,
-    format_tool_messages, message_to_wire, tools_to_wire,
+    enable_streaming, format_tool_messages, message_to_wire, tools_to_wire,
 };
 
 /// Register the OpenAI executor and processor in the global registry.
