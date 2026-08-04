@@ -14,6 +14,13 @@ namespace Prompty.Core;
 // ModelToolRequest/Result, EnginePermissionDecision, EngineEvent, EngineCheckpoint,
 // TurnCommit, ...) directly. This mirrors the Rust reference engine's runtime-local
 // traits in runtime/rust/prompty/src/engine/ports.rs.
+//
+// Cancellation is intentionally a runtime seam, not serialized model data. The
+// canonical engine checks it at semantic boundaries and passes the native token to
+// these runtime-local ports. Generated protocols such as IExecutor do not yet accept
+// native cancellation, so adapters over them can only observe cancellation before or
+// after an in-flight call (and while draining a stream). Durability writes remain
+// deliberately non-cancellable once persistence starts.
 // -----------------------------------------------------------------------
 
 /// <summary>An ephemeral, non-durable chunk streamed while a model invocation is in flight.</summary>

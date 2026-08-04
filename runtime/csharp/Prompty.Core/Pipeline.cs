@@ -218,6 +218,11 @@ public static class Pipeline
     /// Conversational round-trip through the canonical durable turn engine.
     /// If no tools are provided, the engine performs a single Prepare → Execute → Process pass.
     /// </summary>
+    /// <remarks>
+    /// Cancellation is cooperative at engine phase boundaries. The current generated provider and
+    /// tool protocols do not expose a native <see cref="CancellationToken"/>, so an in-flight
+    /// non-streaming provider or tool call may finish before cancellation is observed.
+    /// </remarks>
     public static async Task<object> TurnAsync(
         Prompty agent,
         Dictionary<string, object?>? inputs = null,
@@ -265,6 +270,10 @@ public static class Pipeline
     /// <summary>
     /// Executes or resumes a turn through the canonical engine using caller-owned durability and effect ports.
     /// </summary>
+    /// <remarks>
+    /// Runtime-local effect ports receive the native token. Adapters over generated protocols remain
+    /// boundary-cancellable until the schema/emitter supports language-native cancellation seams.
+    /// </remarks>
     public static Task<object> TurnWithEngineRequestAsync(
         Prompty agent,
         TurnEngineRequest request,
