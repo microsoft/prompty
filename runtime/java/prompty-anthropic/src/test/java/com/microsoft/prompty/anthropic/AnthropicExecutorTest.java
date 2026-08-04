@@ -107,6 +107,9 @@ class AnthropicExecutorTest {
 
   @Test
   void aMissingKeyFailsWithAMessageThatNamesBothPlacesToPutOne() {
+    // Masked rather than left to chance: a machine that exports ANTHROPIC_API_KEY for live runs
+    // would otherwise satisfy the lookup and leave no absence to assert on.
+    Environment.mask("ANTHROPIC_API_KEY");
     InvokerException failure =
         assertThrows(InvokerException.class, () -> executor.apiKey(agentWithConnection(null)));
     assertTrue(failure.getMessage().contains("ANTHROPIC_API_KEY"));

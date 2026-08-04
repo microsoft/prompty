@@ -165,6 +165,9 @@ class FoundryModelListerTest {
 
     @Test
     void anAbsentCatalogEndpointIsRejected() {
+      // The catalog URL does fall back to AZURE_OPENAI_ENDPOINT, so the absence has to be
+      // asserted against a masked name rather than a merely unset one.
+      Environment.mask("AZURE_OPENAI_ENDPOINT");
       assertThrows(InvokerException.class, () -> FoundryModelLister.catalogUrl(Map.of()));
     }
   }
@@ -204,6 +207,7 @@ class FoundryModelListerTest {
 
     @Test
     void aMissingDeploymentTokenNamesTheWayToGetOne() {
+      com.microsoft.prompty.Environment.mask("AZURE_INFERENCE_CREDENTIAL");
       InvokerException error =
           assertThrows(
               InvokerException.class, () -> FoundryModelLister.deploymentToken(Map.of()));

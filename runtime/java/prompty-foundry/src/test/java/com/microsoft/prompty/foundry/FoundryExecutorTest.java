@@ -148,6 +148,7 @@ class FoundryExecutorTest {
 
   @Test
   void aMissingEndpointIsReportedRatherThanGuessed() {
+    Environment.mask("AZURE_OPENAI_ENDPOINT");
     Map<String, Object> model = new LinkedHashMap<>(Map.of("id", "gpt-4o-mini"));
     InvokerException error =
         assertThrows(
@@ -157,6 +158,7 @@ class FoundryExecutorTest {
 
   @Test
   void aMissingDeploymentIsReportedRatherThanGuessed() {
+    Environment.mask("AZURE_OPENAI_DEPLOYMENT");
     Map<String, Object> model = new LinkedHashMap<>(keyModel());
     model.remove("id");
     InvokerException error =
@@ -184,6 +186,7 @@ class FoundryExecutorTest {
 
   @Test
   void aMissingApiKeyIsReportedRatherThanSentEmpty() {
+    Environment.mask("AZURE_OPENAI_API_KEY");
     Map<String, Object> model = keyModel();
     model.put(
         "connection", Map.of("kind", "key", "endpoint", "https://myresource.openai.azure.com"));
@@ -202,6 +205,10 @@ class FoundryExecutorTest {
   @Test
   void aMissingFoundryTokenIsReportedRatherThanFallingBackToAKey() {
     // An api-key would be silently rejected by the Foundry surface, so the absence is reported.
+    // The token is masked rather than merely cleared: a machine that exports
+    // AZURE_INFERENCE_CREDENTIAL for live runs would otherwise satisfy the lookup and there would
+    // be no absence left to assert on.
+    Environment.mask("AZURE_INFERENCE_CREDENTIAL");
     Environment.set("AZURE_OPENAI_API_KEY", "not-a-token");
     InvokerException error =
         assertThrows(InvokerException.class, () -> executor.authHeaders(agent(foundryModel())));

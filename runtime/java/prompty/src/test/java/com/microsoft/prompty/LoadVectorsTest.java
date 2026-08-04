@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.yaml.snakeyaml.DumperOptions;
@@ -27,6 +29,9 @@ import org.yaml.snakeyaml.Yaml;
  * matter which language reads it.
  */
 class LoadVectorsTest {
+
+  /** Finds the names a vector reads through {@code ${env:NAME}} or {@code ${env:NAME:default}}. */
+  private static final Pattern ENV_REFERENCE = Pattern.compile("\\$\\{env:([A-Za-z_][A-Za-z0-9_]*)");
 
   @TestFactory
   List<DynamicTest> loadVectors() {
@@ -43,7 +48,7 @@ class LoadVectorsTest {
     Map<String, Object> expected = SpecVectors.map(testCase, "expected");
     Map<String, Object> env = SpecVectors.map(input, "env");
 
-    List<String> applied = setEnv(env);
+    List<String> applied = setEnv(input, env);
     try {
       if (expected.containsKey("error")) {
         runErrorCase(name, input, expected);
@@ -183,11 +188,24 @@ class LoadVectorsTest {
 
   // ---------------------------------------------------------------- environment
 
-  private static List<String> setEnv(Map<String, Object> env) {
+  private static List<String> setEnv(Map<String, Object> input, Map<String, Object> env) {
     List<String> keys = new ArrayList<>();
     for (Map.Entry<String, Object> entry : env.entrySet()) {
       Environment.set(entry.getKey(), String.valueOf(entry.getValue()));
       keys.add(entry.getKey());
+    }
+
+    // A vector that references a variable it does not supply -- `${env:NONEXISTENT}` -- is asserting
+    // that the variable is unset. Say so explicitly: a JVM cannot remove a name from its own
+    // environment, so without a mask the assertion would quietly evaporate on any machine that
+    // happens to export it.
+    Matcher references = ENV_REFERENCE.matcher(String.valueOf(input));
+    while (references.find()) {
+      String name = references.group(1);
+      if (!env.containsKey(name)) {
+        Environment.mask(name);
+        keys.add(name);
+      }
     }
     return keys;
   }

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.microsoft.prompty.model.ErrorChunk;
 import com.microsoft.prompty.model.LoadContext;
@@ -35,6 +36,13 @@ import org.junit.jupiter.api.Test;
  * concerns, so they are pinned down here.
  */
 class RuntimeTest {
+
+  /**
+   * A name no real process supplies, used with {@link System#setProperty} to stand in for an ambient
+   * value. Writing it as a property rather than reaching for a real variable such as {@code PATH}
+   * keeps these tests deterministic on a machine started with an unusual environment.
+   */
+  private static final String AMBIENT = "PROMPTY_TEST_AMBIENT_VALUE";
 
   // ---------------------------------------------------------------- cancellation
 
@@ -163,13 +171,86 @@ class RuntimeTest {
 
   @Test
   void explicitValuesOutrankTheAmbientEnvironment() {
-    Environment.set("PROMPTY_TEST_VALUE", "explicit");
+    // A system property is the ambient layer that a test can actually control: the process
+    // environment proper cannot be written from inside a JVM.
+    System.setProperty(AMBIENT, "ambient");
     try {
-      assertEquals("explicit", Environment.lookup("PROMPTY_TEST_VALUE").orElseThrow());
+      assertEquals("ambient", Environment.lookup(AMBIENT).orElseThrow());
+
+      Environment.set(AMBIENT, "explicit");
+      assertEquals("explicit", Environment.lookup(AMBIENT).orElseThrow());
+
+      Environment.clear(AMBIENT);
+      assertEquals(
+          "ambient", Environment.lookup(AMBIENT).orElseThrow(), "clearing should restore the fallback");
     } finally {
-      Environment.clear("PROMPTY_TEST_VALUE");
+      Environment.clear(AMBIENT);
+      System.clearProperty(AMBIENT);
     }
-    assertTrue(Environment.lookup("PROMPTY_TEST_VALUE").isEmpty(), "clearing should remove the value");
+  }
+
+  @Test
+  void maskingReportsANameAsUnsetEvenWhenTheProcessSuppliesIt() {
+    // A JVM cannot unset its own environment, so the mask is the only way to express "absent".
+    System.setProperty(AMBIENT, "ambient");
+    try {
+      assertTrue(Environment.lookup(AMBIENT).isPresent(), "the ambient value should be visible");
+
+      Environment.mask(AMBIENT);
+      assertTrue(Environment.lookup(AMBIENT).isEmpty(), "masking should hide the ambient value");
+
+      Environment.clear(AMBIENT);
+      assertTrue(Environment.lookup(AMBIENT).isPresent(), "clearing should restore the fallback");
+    } finally {
+      Environment.clear(AMBIENT);
+      System.clearProperty(AMBIENT);
+    }
+  }
+
+  @Test
+  void maskingAlsoHidesAVariableInheritedFromTheProcess() {
+    // The system-property case above cannot prove this one: only a real inherited variable
+    // exercises the last link in the chain, which is the one a host actually wants to suppress.
+    String inherited = System.getenv().keySet().stream().findFirst().orElse(null);
+    assumeTrue(inherited != null, "the process was started with an empty environment");
+    try {
+      assertTrue(Environment.lookup(inherited).isPresent(), "the process supplies " + inherited);
+      Environment.mask(inherited);
+      assertTrue(Environment.lookup(inherited).isEmpty(), "masking should hide " + inherited);
+    } finally {
+      Environment.clear(inherited);
+    }
+    assertTrue(Environment.lookup(inherited).isPresent(), "clearing should restore the fallback");
+  }
+
+  @Test
+  void anExplicitValueOutranksAMaskWhicheverOrderTheyArriveIn() {
+    try {
+      Environment.mask(AMBIENT);
+      Environment.set(AMBIENT, "explicit");
+      assertEquals(
+          "explicit", Environment.lookup(AMBIENT).orElseThrow(), "setting a value should lift the mask");
+
+      Environment.mask(AMBIENT);
+      assertTrue(Environment.lookup(AMBIENT).isEmpty(), "masking should drop a value set earlier");
+    } finally {
+      Environment.clear(AMBIENT);
+    }
+  }
+
+  @Test
+  void clearAllLiftsMasksAsWellAsValues() {
+    System.setProperty(AMBIENT, "ambient");
+    try {
+      Environment.mask(AMBIENT);
+      assertTrue(Environment.lookup(AMBIENT).isEmpty());
+
+      Environment.clearAll();
+      assertTrue(Environment.lookup(AMBIENT).isPresent(), "clearAll should lift the mask too");
+    } finally {
+      Environment.clear(AMBIENT);
+      System.clearProperty(AMBIENT);
+    }
   }
 
   // ---------------------------------------------------------------- structured results

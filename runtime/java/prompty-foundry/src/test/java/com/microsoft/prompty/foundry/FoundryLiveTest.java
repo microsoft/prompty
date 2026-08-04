@@ -119,33 +119,21 @@ final class FoundryLiveTest {
   void aMissingFoundryCredentialFailsBeforeAnyRequestIsSent() {
     LiveEnv.require("FOUNDRY_PROJECT_ENDPOINT");
 
-    // The credential is restored afterwards because `.env` supplies it as an override, and clearing
-    // one without putting it back would make a later test in this class skip for want of a
-    // credential the machine actually has.
-    String saved = com.microsoft.prompty.Environment.lookup("AZURE_INFERENCE_CREDENTIAL").orElse(null);
+    // Masking is what makes this test mean something: the credential is genuinely present on this
+    // machine, and a JVM cannot remove it from its own environment. Without the mask the request
+    // would authenticate and there would be no absence to assert on.
     RuntimeException failure = null;
-    String credential;
     try {
-      com.microsoft.prompty.Environment.clear("AZURE_INFERENCE_CREDENTIAL");
-      credential = LiveEnv.get("AZURE_INFERENCE_CREDENTIAL", "");
+      com.microsoft.prompty.Environment.mask("AZURE_INFERENCE_CREDENTIAL");
       try {
         Pipeline.invoke(foundryAgent("Hello", Map.of("maxOutputTokens", 5)), Map.of());
       } catch (RuntimeException e) {
         failure = e;
       }
     } finally {
-      if (saved != null) {
-        com.microsoft.prompty.Environment.set("AZURE_INFERENCE_CREDENTIAL", saved);
-      }
+      com.microsoft.prompty.Environment.clear("AZURE_INFERENCE_CREDENTIAL");
     }
 
-    if (!credential.isBlank()) {
-      // The credential lives in the real process environment, which `clear` cannot remove, so the
-      // request was legitimately authenticated and there is no absence to assert on. This test only
-      // does real work when the credential arrives as an override -- a green result here is not
-      // evidence that the missing-credential path behaves correctly.
-      return;
-    }
     assertNotNull(failure, "a missing credential should fail rather than send an anonymous request");
     String message = String.valueOf(failure.getMessage());
     assertTrue(

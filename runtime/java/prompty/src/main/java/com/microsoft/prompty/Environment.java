@@ -15,37 +15,66 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Explicit overrides win so that a caller who has deliberately supplied a value is never
  * second-guessed by the ambient environment.
+ *
+ * <p>{@link #mask} is the other half of that control: a JVM cannot remove a variable from its own
+ * environment, so without it a caller could add a value but never state that one is deliberately
+ * absent. That asymmetry leaves behaviour at the mercy of whatever the surrounding machine happens
+ * to export -- a test for "no credential is configured" would pass on a clean machine and fail on a
+ * developer's, and a host that wants to run a prompt without inheriting an ambient key could not
+ * say so.
  */
 public final class Environment {
 
-  private static final Map<String, String> OVERRIDES = new ConcurrentHashMap<>();
+  /**
+   * Decisions that outrank the surrounding process, keyed by name.
+   *
+   * <p>A present optional is a value supplied through {@link #set}; an empty one is a mask. Holding
+   * both states in one entry is what makes each of {@link #set}, {@link #mask} and {@link #clear} a
+   * single map mutation, so a concurrent {@link #lookup} always sees one decision or the other and
+   * never a gap in which the ambient value shows through.
+   */
+  private static final Map<String, Optional<String>> DECISIONS = new ConcurrentHashMap<>();
 
   private Environment() {}
 
-  /** Supply a value for {@code name}, taking precedence over system properties and the process environment. */
+  /**
+   * Supply a value for {@code name}, taking precedence over system properties and the process
+   * environment. A null value drops any decision recorded here, exactly as {@link #clear} does.
+   */
   public static void set(String name, String value) {
     if (value == null) {
-      OVERRIDES.remove(name);
+      DECISIONS.remove(name);
     } else {
-      OVERRIDES.put(name, value);
+      DECISIONS.put(name, Optional.of(value));
     }
   }
 
-  /** Remove a value previously supplied through {@link #set}. */
+  /**
+   * Report {@code name} as unset, whatever the system properties and process environment say.
+   *
+   * <p>This is not the same as {@link #clear}: clearing drops a decision made here and lets
+   * resolution fall back to the surrounding process, whereas masking stops that fallback. Undo it
+   * with {@link #clear} or {@link #set}; whichever of {@code set} and {@code mask} runs last wins.
+   */
+  public static void mask(String name) {
+    DECISIONS.put(name, Optional.empty());
+  }
+
+  /** Remove a value previously supplied through {@link #set}, or a mask applied by {@link #mask}. */
   public static void clear(String name) {
-    OVERRIDES.remove(name);
+    DECISIONS.remove(name);
   }
 
-  /** Remove every value previously supplied through {@link #set}. */
+  /** Remove every value supplied through {@link #set} and every mask applied by {@link #mask}. */
   public static void clearAll() {
-    OVERRIDES.clear();
+    DECISIONS.clear();
   }
 
-  /** Look up {@code name}, or an empty optional if it is set nowhere. */
+  /** Look up {@code name}, or an empty optional if it is set nowhere or has been masked. */
   public static Optional<String> lookup(String name) {
-    String override = OVERRIDES.get(name);
-    if (override != null) {
-      return Optional.of(override);
+    Optional<String> decision = DECISIONS.get(name);
+    if (decision != null) {
+      return decision;
     }
     String property = System.getProperty(name);
     if (property != null) {
