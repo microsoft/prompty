@@ -51,6 +51,16 @@ class WireSchemaTest {
    * same recursive property walk that {@link #functionParametersSchema} reaches through tools.
    */
   private static Map<String, Object> outputsSchema(List<Object> outputs) {
+    return castMap(outputsResponseFormat(outputs).get("schema"));
+  }
+
+  /**
+   * The {@code json_schema} envelope around the structured-output schema. Recursive widening is
+   * conditional on strict mode, so the envelope having to declare {@code strict} is part of the same
+   * contract: if it ever stopped doing so, every nested key would still be listed as required and
+   * the request would be wrong while the schema assertions carried on passing.
+   */
+  private static Map<String, Object> outputsResponseFormat(List<Object> outputs) {
     Map<String, Object> data = new LinkedHashMap<>();
     data.put("name", "structured-output-test");
     data.put("kind", "prompt");
@@ -60,8 +70,7 @@ class WireSchemaTest {
 
     Prompty agent = Prompty.load(data, new LoadContext());
     Map<String, Object> request = Wire.buildChatArgs(agent, List.of());
-    Object schema = Streams.pointer(request, "response_format", "json_schema", "schema");
-    return castMap(schema);
+    return castMap(Streams.pointer(request, "response_format", "json_schema"));
   }
 
   /**
@@ -131,13 +140,29 @@ class WireSchemaTest {
    */
   @Test
   void structuredOutputAppliesTheSameNestedRuleAsTools() {
-    Map<String, Object> schema = outputsSchema(requiredColorOptionalBorder());
+    Map<String, Object> responseFormat = outputsResponseFormat(requiredColorOptionalBorder());
+    Map<String, Object> schema = castMap(responseFormat.get("schema"));
 
     assertEquals(List.of("row"), at(schema, "required"));
-    assertEquals(List.of("color", "border"), at(schema, "properties", "row", "required"));
     assertEquals(
-        List.of("string", "null"), at(schema, "properties", "row", "properties", "border", "type"));
+        List.of("color", "border"),
+        at(schema, "properties", "row", "required"),
+        "structured output reaches the nested walk through response_format, so it must widen too");
+    assertEquals("string", at(schema, "properties", "row", "properties", "color", "type"));
+    assertEquals(
+        List.of("string", "null"),
+        at(schema, "properties", "row", "properties", "border", "type"),
+        "the optional key keeps its optionality as a null branch");
+    // The tool path asserts this already; graded here as well because a nested object that omits it
+    // is rejected by the API, and the two paths could regress independently.
+    assertEquals(false, at(schema, "properties", "row", "additionalProperties"));
+    assertEquals(false, at(schema, "additionalProperties"));
     assertNoEmptyType(schema);
+
+    assertEquals(
+        true,
+        responseFormat.get("strict"),
+        "widening every nested key is only correct while the envelope declares strict mode");
   }
 
   /** Without strict, a nested object still lists only what the author actually marked required. */
