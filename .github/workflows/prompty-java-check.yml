@@ -1,0 +1,49 @@
+name: prompty Java build and test
+on:
+  pull_request:
+    paths:
+      - 'runtime/java/**'
+      - '.github/workflows/prompty-java-check.yml'
+
+  workflow_call:
+
+jobs:
+  java-tests:
+    name: test Java on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: runtime/java
+    steps:
+      - uses: actions/checkout@v5
+
+      # The Gradle toolchain pins Java 21, so this is the version that actually
+      # compiles and runs the tests on every platform.
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Live provider tests are tagged "live" and are excluded unless
+      # -PliveTests is passed, so this is the offline suite. It needs no
+      # secrets and is therefore safe on pull requests from forks.
+      - name: Build and test
+        run: ./gradlew build --console=plain
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: java-test-reports-${{ matrix.os }}
+          path: runtime/java/*/build/reports/tests/test
+          if-no-files-found: ignore

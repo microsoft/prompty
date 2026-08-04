@@ -28,11 +28,19 @@ jobs:
       matrix:
         include:
           - language: actions
+            build-mode: none
           - language: csharp
+            build-mode: autobuild
           - language: go
+            build-mode: autobuild
+          - language: java-kotlin
+            build-mode: none
           - language: javascript-typescript
+            build-mode: none
           - language: python
+            build-mode: none
           - language: rust
+            build-mode: none
 
     steps:
       - name: Checkout repository
@@ -42,10 +50,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-
-      - name: Autobuild
-        if: matrix.language == 'csharp' || matrix.language == 'go' || matrix.language == 'rust'
-        uses: github/codeql-action/autobuild@v4
+          build-mode: ${{ matrix.build-mode }}
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
