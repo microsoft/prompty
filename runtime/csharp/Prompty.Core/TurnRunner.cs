@@ -189,7 +189,7 @@ public sealed class ReferenceTurnRunner
 
         if (!decision.Approved)
         {
-            return new HostToolResult
+            var deniedResult = new HostToolResult
             {
                 RequestId = toolRequest.RequestId,
                 ToolCallId = toolRequest.ToolCallId,
@@ -198,6 +198,8 @@ public sealed class ReferenceTurnRunner
                 ErrorKind = "permission_denied",
                 Result = new Dictionary<string, object?> { ["message"] = decision.Reason ?? "Permission denied" }
             };
+            RecordTurn(TurnEventType.ToolResult, turnId, iteration, deniedResult.Save());
+            return deniedResult;
         }
 
         RecordTurn(TurnEventType.ToolExecutionStart, turnId, iteration, toolRequest.Save());

@@ -185,7 +185,7 @@ export class ReferenceTurnRunner {
     this.recordTurn("permission_completed", turnId, iteration, decision.save());
 
     if (!decision.approved) {
-      return new HostToolResult({
+      const result = new HostToolResult({
         requestId: toolRequest.requestId,
         toolCallId: toolRequest.toolCallId,
         toolName: toolRequest.toolName,
@@ -193,6 +193,8 @@ export class ReferenceTurnRunner {
         errorKind: "permission_denied",
         result: { message: decision.reason ?? "Permission denied" },
       });
+      this.recordTurn("tool_result", turnId, iteration, result.save());
+      return result;
     }
 
     this.recordTurn("tool_execution_start", turnId, iteration, toolRequest.save());
