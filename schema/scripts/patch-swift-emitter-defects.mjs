@@ -24,9 +24,17 @@
 //   5. Protocol signatures drop `[]` (array) and `?` (optional) type suffixes.
 //  10. Fields inherited via `extends` are dropped from derived structs, so
 //      `ArrayProperty` / `ObjectProperty` / `UnionProperty` silently lose every
-//      base `Property` field (`name`, `description`, `required`, `nullable`,
+//      base `Property` field (`description`, `required`, `nullable`,
 //      `default`, `example`, `enumValues`) and every `Tool` subtype loses
-//      `name` / `description` / `bindings`, on both load and save.
+//      `description` / `bindings`, on both load and save.
+//
+//      `name` is injected alongside those, but for a *different* reason: it is
+//      not declared by `model Property` or `model Tool` at all. It arrives via
+//      the `Named<...>` spread (`schema/model/core/core.tsp`), which the emitter
+//      also drops. An upstream fix to `extends` inheritance therefore restores
+//      everything listed above *except* `name` — do not remove the `name`
+//      injection on the strength of an `extends` fix alone. Confirm it against
+//      regenerated output first.
 //
 // Known limitation: injected base fields are added as properties and wired into
 // `load` / `save`, but not into the generated memberwise `init`. Constructing a
