@@ -168,6 +168,49 @@ describe("canonical turn-engine shared vectors", () => {
       durability.events.map((_, index) => index + 1),
     );
   });
+
+  it("journals denied tools as committed results without execution events", async () => {
+    const durability = new RecordingDurabilityPort();
+    const tools = new ScriptedToolPort(async () => {
+      throw new Error("denied tools must not execute");
+    });
+    const engine = new TurnEngine(new ContextPipeline(), {
+      model: new ScriptedModelPort([
+        response({
+          tools: [{ id: "call-denied", name: "protected", arguments: {} }],
+        }),
+        response({ output: "Permission was denied" }),
+      ]),
+      tools,
+      permission: new SelectivePermissionPort(new Set(["protected"])),
+      durability,
+      clock: new DeterministicClock(),
+      ids: new DeterministicIds(),
+    });
+
+    const result = await engine.run(
+      new TurnEngineRequest({
+        sessionId: "session-denied",
+        turnId: "turn-denied",
+        messages: [Message.user("Read the protected resource")],
+      }),
+    );
+
+    expect(tools.requests).toHaveLength(0);
+    expect(result.toolResults).toEqual([
+      expect.objectContaining({
+        requestId: "call-denied",
+        outcome: "failed",
+        errorKind: "permission_denied",
+      }),
+    ]);
+    const eventKinds = durability.events.map((event) => event.kind);
+    expect(
+      eventKinds.filter((kind) => kind === "tool_result_committed"),
+    ).toHaveLength(1);
+    expect(eventKinds).not.toContain("tool_execution_started");
+    expect(eventKinds).not.toContain("tool_execution_completed");
+  });
 });
 
 function toMessage(message: VectorMessage): Message {
