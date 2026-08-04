@@ -72,6 +72,25 @@ public final class SpecVectors {
     return cases;
   }
 
+  /**
+   * Read the cases from a vector file that wraps them under a named key.
+   *
+   * <p>Some suites are a bare array; the newer ones carry a description alongside the cases, which
+   * is worth keeping because it states the contract the vectors are asserting.
+   */
+  @SuppressWarnings("unchecked")
+  public static List<Map<String, Object>> readCases(String relativePath, String key) {
+    Object parsed = read(relativePath);
+    if (!(parsed instanceof Map<?, ?> root) || !(root.get(key) instanceof List<?> list)) {
+      throw new IllegalStateException(relativePath + " has no '" + key + "' array");
+    }
+    List<Map<String, Object>> cases = new ArrayList<>(list.size());
+    for (Object item : list) {
+      cases.add((Map<String, Object>) item);
+    }
+    return cases;
+  }
+
   /** A map-valued member of {@code value}, or an empty map when absent. */
   @SuppressWarnings("unchecked")
   public static Map<String, Object> map(Map<String, Object> value, String key) {

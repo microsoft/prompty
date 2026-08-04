@@ -60,6 +60,37 @@ public final class Http {
   }
 
   /**
+   * GET a URL and decode the JSON reply.
+   *
+   * <p>Unlike a POST, a read has no effect to duplicate, so every failure here is determinate: the
+   * caller may retry freely.
+   *
+   * @param provider the provider name, used only to attribute failures
+   */
+  public static Object getJson(String provider, String url, Map<String, String> headers) {
+    HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(url)).GET();
+    headers.forEach(builder::header);
+
+    HttpResponse<String> response;
+    try {
+      response = CLIENT.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+    } catch (IOException e) {
+      throw InvokerException.execute("HTTP request failed: " + e, e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw InvokerException.cancelled("Interrupted while calling " + provider);
+    }
+
+    checkStatus(provider, response.statusCode(), response.body());
+    try {
+      return TypraJson.parse(response.body());
+    } catch (RuntimeException e) {
+      throw InvokerException.execute(
+          "Failed to parse " + provider + " response: " + e.getMessage(), e);
+    }
+  }
+
+  /**
    * POST a JSON body and read the reply as a stream of server-sent events.
    *
    * <p>The returned iterator holds an open connection. It closes itself once the stream ends, but a
