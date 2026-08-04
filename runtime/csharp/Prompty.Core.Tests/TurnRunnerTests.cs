@@ -168,6 +168,10 @@ public class TurnRunnerTests
 
             Assert.Equal("permission_denied", Assert.IsType<Dictionary<string, object?>>(result.Output)["denied"]);
             Assert.DoesNotContain(sink.TurnEvents, turnEvent => turnEvent.Type == TurnEventType.ToolExecutionStart);
+            Assert.Contains(
+                sink.TurnEvents,
+                turnEvent => turnEvent.Type == TurnEventType.ToolResult
+                    && turnEvent.Payload["errorKind"] as string == "permission_denied");
         }
         finally
         {
