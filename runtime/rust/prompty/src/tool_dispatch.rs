@@ -1050,7 +1050,8 @@ mod tests {
         let agent = agent_with_tools(serde_json::json!([{
             "name": "my_mcp_tool",
             "kind": "mcp",
-            "serverName": "test-server"
+            "serverName": "test-server",
+            "connection": { "kind": "reference", "name": "test-mcp" }
         }]));
 
         let tc = make_tool_call("my_mcp_tool", "{}");
@@ -1070,7 +1071,8 @@ mod tests {
         // Agent has a tool with unknown kind — should fall through to "*" wildcard
         let agent = agent_with_tools(serde_json::json!([{
             "name": "my_exotic_tool",
-            "kind": "exotic_provider"
+            "kind": "exotic_provider",
+            "connection": { "kind": "reference", "name": "exotic" }
         }]));
 
         let tc = make_tool_call("my_exotic_tool", "{}");

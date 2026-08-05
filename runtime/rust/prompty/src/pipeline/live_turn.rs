@@ -2070,7 +2070,19 @@ mod tests {
             skip_output_guardrail: Arc::new(AtomicBool::new(false)),
             failures: Arc::new(LiveFailureState::default()),
         };
-        let request = ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default());
+        let request = ModelInvocationRequest::load_from_value(
+            &json!({
+                "context": {
+                    "id": "context:inv_streamed_tool_round",
+                    "sessionId": "sess_streamed_tool_round",
+                    "turnId": "turn_streamed_tool_round",
+                    "invocationId": "inv_streamed_tool_round",
+                    "iteration": 0,
+                    "contextState": {}
+                }
+            }),
+            &LoadContext::default(),
+        );
 
         let response = port
             .invoke(
