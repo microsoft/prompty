@@ -16,7 +16,7 @@ properties:
   inputs:
     $ref: RecordUnknown.yaml
     default: {}
-    description: Inputs supplied to the deterministic single-turn run
+    description: Inputs supplied to the deterministic single-turn run. Values may be explicit null.
   options:
     $ref: TurnOptions.yaml
     description: Canonical turn execution options

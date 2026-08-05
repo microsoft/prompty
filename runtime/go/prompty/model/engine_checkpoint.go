@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -29,8 +30,8 @@ type EngineCheckpoint struct {
 	StablePrefixMessages      int32                     `json:"stablePrefixMessages" yaml:"stablePrefixMessages"`
 	Inputs                    *interface{}              `json:"inputs,omitempty" yaml:"inputs,omitempty"`
 	ActiveInvocationId        *string                   `json:"activeInvocationId,omitempty" yaml:"activeInvocationId,omitempty"`
-	PendingToolRequests       []ModelToolRequest        `json:"pendingToolRequests,omitempty" yaml:"pendingToolRequests,omitempty"`
-	CompletedToolResults      []ModelToolResult         `json:"completedToolResults,omitempty" yaml:"completedToolResults,omitempty"`
+	PendingToolRequests       []ModelToolRequest        `json:"pendingToolRequests" yaml:"pendingToolRequests"`
+	CompletedToolResults      []ModelToolResult         `json:"completedToolResults" yaml:"completedToolResults"`
 	CompletedModelIterations  int32                     `json:"completedModelIterations" yaml:"completedModelIterations"`
 	ReconciliationRequired    bool                      `json:"reconciliationRequired" yaml:"reconciliationRequired"`
 	ModelReconciliation       *ModelReconciliationState `json:"modelReconciliation,omitempty" yaml:"modelReconciliation,omitempty"`
@@ -40,15 +41,25 @@ type EngineCheckpoint struct {
 	ResumeSameIteration       bool                      `json:"resumeSameIteration" yaml:"resumeSameIteration"`
 	PolicyAppliedForIteration bool                      `json:"policyAppliedForIteration" yaml:"policyAppliedForIteration"`
 	ContextState              InvocationContextState    `json:"contextState" yaml:"contextState"`
-	Metadata                  map[string]interface{}    `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata                  map[string]interface{}    `json:"metadata" yaml:"metadata"`
 }
 
 // LoadEngineCheckpoint creates a EngineCheckpoint from a map[string]interface{}
 func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint, error) {
-	result := EngineCheckpoint{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := EngineCheckpoint{
+		Messages:             []Message{},
+		PendingToolRequests:  []ModelToolRequest{},
+		CompletedToolResults: []ModelToolResult{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["contextState"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("contextState").Path)
+		}
 		if val, ok := m["id"]; ok && val != nil {
 			result.Id = string(val.(string))
 		}
@@ -112,7 +123,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages"))
 						if err != nil {
 							return result, err
 						}
@@ -147,7 +158,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.PendingToolRequests = make([]ModelToolRequest, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelToolRequest(item, ctx)
+						loaded, err := LoadModelToolRequest(item, ctx.At("pendingToolRequests"))
 						if err != nil {
 							return result, err
 						}
@@ -161,7 +172,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.CompletedToolResults = make([]ModelToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelToolResult(item, ctx)
+						loaded, err := LoadModelToolResult(item, ctx.At("completedToolResults"))
 						if err != nil {
 							return result, err
 						}
@@ -189,7 +200,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 		}
 		if val, ok := m["modelReconciliation"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadModelReconciliationState(m, ctx)
+				loaded, err := LoadModelReconciliationState(m, ctx.At("modelReconciliation"))
 				if err != nil {
 					return result, err
 				}
@@ -204,7 +215,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 		}
 		if val, ok := m["pendingModelResponse"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadModelInvocationResponse(m, ctx)
+				loaded, err := LoadModelInvocationResponse(m, ctx.At("pendingModelResponse"))
 				if err != nil {
 					return result, err
 				}
@@ -219,7 +230,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 		}
 		if val, ok := m["contextState"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadInvocationContextState(m, ctx)
+				loaded, err := LoadInvocationContextState(m, ctx.At("contextState"))
 				if err != nil {
 					return result, err
 				}

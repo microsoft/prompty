@@ -23,9 +23,7 @@ describe("AnthropicToolDefinition", () => {
       const instance = AnthropicToolDefinition.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("get_weather");
-      expect(instance.description).toEqual(
-        "Get the current weather for a city",
-      );
+      expect(instance.description).toEqual("Get the current weather for a city");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -44,9 +42,7 @@ describe("AnthropicToolDefinition", () => {
       const instance = AnthropicToolDefinition.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("get_weather");
-      expect(instance.description).toEqual(
-        "Get the current weather for a city",
-      );
+      expect(instance.description).toEqual("Get the current weather for a city");
     });
 
     it("should round-trip YAML - example 1", () => {

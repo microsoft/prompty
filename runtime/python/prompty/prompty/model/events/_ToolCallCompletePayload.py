@@ -52,8 +52,9 @@ class ToolCallCompletePayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolCallCompletePayload: {data}")
@@ -68,7 +69,7 @@ class ToolCallCompletePayload:
         if data is not None and "success" in data:
             instance.success = data["success"]
         if data is not None and "result" in data:
-            instance.result = ToolResult.load(data["result"], context)
+            instance.result = ToolResult.load(data["result"], context.at("result"))
         if data is not None and "durationMs" in data:
             instance.duration_ms = data["durationMs"]
         if data is not None and "errorKind" in data:
@@ -76,6 +77,8 @@ class ToolCallCompletePayload:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolCallCompletePayload instance to a dictionary.
@@ -88,6 +91,7 @@ class ToolCallCompletePayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

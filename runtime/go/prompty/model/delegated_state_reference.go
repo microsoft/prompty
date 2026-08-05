@@ -16,11 +16,14 @@ type DelegatedStateReference struct {
 	Provider string                 `json:"provider" yaml:"provider"`
 	Kind     string                 `json:"kind" yaml:"kind"`
 	Id       string                 `json:"id" yaml:"id"`
-	Metadata map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadDelegatedStateReference creates a DelegatedStateReference from a map[string]interface{}
 func LoadDelegatedStateReference(data interface{}, ctx *LoadContext) (DelegatedStateReference, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := DelegatedStateReference{}
 
 	// Load from map

@@ -29,7 +29,7 @@ class TurnModelRequest:
     iteration : int
         Zero-based model loop iteration
     inputs : Optional[dict[str, Any]]
-        Inputs supplied to the deterministic single-turn run
+        Inputs supplied to the deterministic single-turn run. Values may be explicit null.
     options : Optional[TurnOptions]
         Canonical turn execution options
     tool_results : Optional[list[HostToolResult]]
@@ -43,7 +43,7 @@ class TurnModelRequest:
     iteration: int = field(default=0)
     inputs: dict[str, Any] | None = None
     options: TurnOptions | None = None
-    tool_results: list[HostToolResult] = field(default_factory=list)
+    tool_results: list[HostToolResult] | None = field(default_factory=list)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "TurnModelRequest":
@@ -56,8 +56,9 @@ class TurnModelRequest:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnModelRequest: {data}")
@@ -74,36 +75,40 @@ class TurnModelRequest:
         if data is not None and "inputs" in data:
             instance.inputs = data["inputs"]
         if data is not None and "options" in data:
-            instance.options = TurnOptions.load(data["options"], context)
+            instance.options = TurnOptions.load(data["options"], context.at("options"))
         if data is not None and "toolResults" in data:
-            instance.tool_results = TurnModelRequest.load_tool_results(data["toolResults"], context)
+            instance.tool_results = TurnModelRequest.load_tool_results(data["toolResults"], context.at("toolResults"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_tool_results(data: dict | list, context: LoadContext | None) -> list[HostToolResult]:
+        if context is None:
+            context = LoadContext(path="toolResults")
         if isinstance(data, dict):
             # convert simple named toolResults to list of HostToolResult
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(HostToolResult.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "requestId": v})
-            data = result
+                    result.append(HostToolResult.load({"name": k, "requestId": v}, context.at(k)))
+            return result
         return [HostToolResult.load(item, context) for item in data]
 
     @staticmethod
-    def save_tool_results(
-        items: list[HostToolResult], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tool_results(items: list[HostToolResult], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -117,6 +122,7 @@ class TurnModelRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

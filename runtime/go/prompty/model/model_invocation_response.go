@@ -18,15 +18,21 @@ import (
 type ModelInvocationResponse struct {
 	Output            *interface{}            `json:"output,omitempty" yaml:"output,omitempty"`
 	Usage             *InvocationUsage        `json:"usage,omitempty" yaml:"usage,omitempty"`
-	AssistantMessages []Message               `json:"assistantMessages,omitempty" yaml:"assistantMessages,omitempty"`
-	ToolRequests      []ModelToolRequest      `json:"toolRequests,omitempty" yaml:"toolRequests,omitempty"`
+	AssistantMessages []Message               `json:"assistantMessages" yaml:"assistantMessages"`
+	ToolRequests      []ModelToolRequest      `json:"toolRequests" yaml:"toolRequests"`
 	NextContextState  *InvocationContextState `json:"nextContextState,omitempty" yaml:"nextContextState,omitempty"`
-	Metadata          map[string]interface{}  `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata          map[string]interface{}  `json:"metadata" yaml:"metadata"`
 }
 
 // LoadModelInvocationResponse creates a ModelInvocationResponse from a map[string]interface{}
 func LoadModelInvocationResponse(data interface{}, ctx *LoadContext) (ModelInvocationResponse, error) {
-	result := ModelInvocationResponse{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := ModelInvocationResponse{
+		AssistantMessages: []Message{},
+		ToolRequests:      []ModelToolRequest{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -35,7 +41,7 @@ func LoadModelInvocationResponse(data interface{}, ctx *LoadContext) (ModelInvoc
 		}
 		if val, ok := m["usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadInvocationUsage(m, ctx)
+				loaded, err := LoadInvocationUsage(m, ctx.At("usage"))
 				if err != nil {
 					return result, err
 				}
@@ -47,7 +53,7 @@ func LoadModelInvocationResponse(data interface{}, ctx *LoadContext) (ModelInvoc
 				result.AssistantMessages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("assistantMessages"))
 						if err != nil {
 							return result, err
 						}
@@ -61,7 +67,7 @@ func LoadModelInvocationResponse(data interface{}, ctx *LoadContext) (ModelInvoc
 				result.ToolRequests = make([]ModelToolRequest, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelToolRequest(item, ctx)
+						loaded, err := LoadModelToolRequest(item, ctx.At("toolRequests"))
 						if err != nil {
 							return result, err
 						}
@@ -72,7 +78,7 @@ func LoadModelInvocationResponse(data interface{}, ctx *LoadContext) (ModelInvoc
 		}
 		if val, ok := m["nextContextState"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadInvocationContextState(m, ctx)
+				loaded, err := LoadInvocationContextState(m, ctx.At("nextContextState"))
 				if err != nil {
 					return result, err
 				}

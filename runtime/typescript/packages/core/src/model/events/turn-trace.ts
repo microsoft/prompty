@@ -32,6 +32,7 @@ export class TurnTrace {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): TurnTrace {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -44,23 +45,14 @@ export class TurnTrace {
     if (data["runtime"] !== undefined && data["runtime"] !== null) {
       instance.runtime = String(data["runtime"]);
     }
-    if (
-      data["promptyVersion"] !== undefined &&
-      data["promptyVersion"] !== null
-    ) {
+    if (data["promptyVersion"] !== undefined && data["promptyVersion"] !== null) {
       instance.promptyVersion = String(data["promptyVersion"]);
     }
     if (data["events"] !== undefined && data["events"] !== null) {
-      instance.events = TurnTrace.loadEvents(
-        data["events"] as unknown[],
-        context,
-      );
+      instance.events = TurnTrace.loadEvents(data["events"] as unknown[], context.at("events"));
     }
     if (data["summary"] !== undefined && data["summary"] !== null) {
-      instance.summary = TurnSummary.load(
-        data["summary"] as Record<string, unknown>,
-        context,
-      );
+      instance.summary = TurnSummary.load(data["summary"] as Record<string, unknown>, context.at("summary"));
     }
 
     if (context) {
@@ -69,37 +61,32 @@ export class TurnTrace {
     return instance;
   }
 
-  static loadEvents(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): TurnEvent[] {
+  static loadEvents(data: Record<string, unknown>[] | unknown[], context?: LoadContext): TurnEvent[] {
+    context ??= new LoadContext({ path: "events" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: TurnEvent[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(TurnEvent.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, id: v });
+          result.push(TurnEvent.load({ name: k, "id": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      TurnEvent.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => TurnEvent.load(item as Record<string, unknown>, context));
   }
 
-  static saveEvents(
-    items: TurnEvent[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveEvents(items: TurnEvent[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion

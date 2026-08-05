@@ -21,6 +21,9 @@ type ValidationResult struct {
 
 // LoadValidationResult creates a ValidationResult from a map[string]interface{}
 func LoadValidationResult(data interface{}, ctx *LoadContext) (ValidationResult, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ValidationResult{}
 
 	// Load from map
@@ -33,7 +36,7 @@ func LoadValidationResult(data interface{}, ctx *LoadContext) (ValidationResult,
 				result.Errors = make([]ValidationError, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadValidationError(item, ctx)
+						loaded, err := LoadValidationError(item, ctx.At("errors"))
 						if err != nil {
 							return result, err
 						}

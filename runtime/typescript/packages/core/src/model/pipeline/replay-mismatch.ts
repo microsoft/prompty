@@ -26,10 +26,8 @@ export class ReplayMismatch {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ReplayMismatch {
+  static load(data: Record<string, unknown>, context?: LoadContext): ReplayMismatch {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -40,16 +38,10 @@ export class ReplayMismatch {
       instance.index = Number(data["index"]);
     }
     if (data["expected"] !== undefined && data["expected"] !== null) {
-      instance.expected = ReplayJournalRecord.load(
-        data["expected"] as Record<string, unknown>,
-        context,
-      );
+      instance.expected = ReplayJournalRecord.load(data["expected"] as Record<string, unknown>, context.at("expected"));
     }
     if (data["actual"] !== undefined && data["actual"] !== null) {
-      instance.actual = ReplayJournalRecord.load(
-        data["actual"] as Record<string, unknown>,
-        context,
-      );
+      instance.actual = ReplayJournalRecord.load(data["actual"] as Record<string, unknown>, context.at("actual"));
     }
     if (data["message"] !== undefined && data["message"] !== null) {
       instance.message = String(data["message"]);

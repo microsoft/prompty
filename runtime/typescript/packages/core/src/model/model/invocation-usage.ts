@@ -19,10 +19,8 @@ export class InvocationUsage {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): InvocationUsage {
+  static load(data: Record<string, unknown>, context?: LoadContext): InvocationUsage {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -77,9 +75,9 @@ export class InvocationUsage {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      inputTokens: { openai: "prompt_tokens", anthropic: "input_tokens" },
-      outputTokens: { openai: "completion_tokens", anthropic: "output_tokens" },
-      totalTokens: { openai: "total_tokens" },
+      "inputTokens": { "openai": "prompt_tokens", "anthropic": "input_tokens" },
+      "outputTokens": { "openai": "completion_tokens", "anthropic": "output_tokens" },
+      "totalTokens": { "openai": "total_tokens" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

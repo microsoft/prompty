@@ -23,9 +23,7 @@ describe("ToolResult", () => {
       const instance = ToolResult.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.errorKind).toEqual("missing_tool");
-      expect(instance.errorMessage).toEqual(
-        "Tool 'get_weather' is not registered",
-      );
+      expect(instance.errorMessage).toEqual("Tool 'get_weather' is not registered");
       expect(instance.durationMs).toEqual(42);
     });
 
@@ -46,9 +44,7 @@ describe("ToolResult", () => {
       const instance = ToolResult.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.errorKind).toEqual("missing_tool");
-      expect(instance.errorMessage).toEqual(
-        "Tool 'get_weather' is not registered",
-      );
+      expect(instance.errorMessage).toEqual("Tool 'get_weather' is not registered");
       expect(instance.durationMs).toEqual(42);
     });
 

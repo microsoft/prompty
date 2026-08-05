@@ -23,9 +23,7 @@ describe("FoundryConnection", () => {
       const instance = FoundryConnection.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("foundry");
-      expect(instance.endpoint).toEqual(
-        "https://myresource.services.ai.azure.com/api/projects/myproject",
-      );
+      expect(instance.endpoint).toEqual("https://myresource.services.ai.azure.com/api/projects/myproject");
       expect(instance.name).toEqual("my-openai-connection");
       expect(instance.connectionType).toEqual("model");
     });
@@ -48,9 +46,7 @@ describe("FoundryConnection", () => {
       const instance = FoundryConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("foundry");
-      expect(instance.endpoint).toEqual(
-        "https://myresource.services.ai.azure.com/api/projects/myproject",
-      );
+      expect(instance.endpoint).toEqual("https://myresource.services.ai.azure.com/api/projects/myproject");
       expect(instance.name).toEqual("my-openai-connection");
       expect(instance.connectionType).toEqual("model");
     });

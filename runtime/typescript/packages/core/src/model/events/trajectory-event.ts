@@ -48,10 +48,8 @@ export class TrajectoryEvent {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): TrajectoryEvent {
+  static load(data: Record<string, unknown>, context?: LoadContext): TrajectoryEvent {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -83,10 +81,7 @@ export class TrajectoryEvent {
       instance.createdAt = String(data["createdAt"]);
     }
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
-      instance.redaction = RedactionMetadata.load(
-        data["redaction"] as Record<string, unknown>,
-        context,
-      );
+      instance.redaction = RedactionMetadata.load(data["redaction"] as Record<string, unknown>, context.at("redaction"));
     }
 
     if (context) {

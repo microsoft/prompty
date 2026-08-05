@@ -59,11 +59,14 @@ class ContextRequest:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ContextRequest: {data}")
+        if ("contextState" not in data or data["contextState"] is None):
+            raise ValueError(f"{context.at('contextState').path}: missing required field")
 
         # create new instance
         instance = ContextRequest()
@@ -77,30 +80,36 @@ class ContextRequest:
         if data is not None and "iteration" in data:
             instance.iteration = data["iteration"]
         if data is not None and "messages" in data:
-            instance.messages = ContextRequest.load_messages(data["messages"], context)
+            instance.messages = ContextRequest.load_messages(data["messages"], context.at("messages"))
         if data is not None and "stablePrefixMessages" in data:
             instance.stable_prefix_messages = data["stablePrefixMessages"]
         if data is not None and "contextState" in data:
-            instance.context_state = InvocationContextState.load(data["contextState"], context)
+            instance.context_state = InvocationContextState.load(data["contextState"], context.at("contextState"))
         if data is not None and "inputs" in data:
             instance.inputs = data["inputs"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
+        if context is None:
+            context = LoadContext(path="messages")
         if isinstance(data, dict):
             # convert simple named messages to list of Message
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Message.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
+                    result.append(Message.load({"name": k, "role": v}, context.at(k)))
+            return result
         return [Message.load(item, context) for item in data]
 
     @staticmethod
@@ -108,7 +117,7 @@ class ContextRequest:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -122,6 +131,7 @@ class ContextRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

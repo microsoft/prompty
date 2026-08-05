@@ -19,10 +19,8 @@ export class InvokerError {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): InvokerError {
+  static load(data: Record<string, unknown>, context?: LoadContext): InvokerError {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

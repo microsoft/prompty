@@ -33,7 +33,7 @@ class ReplayVerificationResult:
     _shorthand_property: ClassVar[str | None] = None
 
     status: ReplayVerificationStatus = field(default="passed")
-    mismatches: list[ReplayMismatch] = field(default_factory=list)
+    mismatches: list[ReplayMismatch] | None = field(default_factory=list)
     expected_count: int = field(default=0)
     actual_count: int = field(default=0)
 
@@ -48,8 +48,9 @@ class ReplayVerificationResult:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ReplayVerificationResult: {data}")
@@ -60,7 +61,7 @@ class ReplayVerificationResult:
         if data is not None and "status" in data:
             instance.status = data["status"]
         if data is not None and "mismatches" in data:
-            instance.mismatches = ReplayVerificationResult.load_mismatches(data["mismatches"], context)
+            instance.mismatches = ReplayVerificationResult.load_mismatches(data["mismatches"], context.at("mismatches"))
         if data is not None and "expectedCount" in data:
             instance.expected_count = data["expectedCount"]
         if data is not None and "actualCount" in data:
@@ -69,29 +70,33 @@ class ReplayVerificationResult:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_mismatches(data: dict | list, context: LoadContext | None) -> list[ReplayMismatch]:
+        if context is None:
+            context = LoadContext(path="mismatches")
         if isinstance(data, dict):
             # convert simple named mismatches to list of ReplayMismatch
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ReplayMismatch.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "index": v})
-            data = result
+                    result.append(ReplayMismatch.load({"name": k, "index": v}, context.at(k)))
+            return result
         return [ReplayMismatch.load(item, context) for item in data]
 
     @staticmethod
-    def save_mismatches(
-        items: list[ReplayMismatch], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_mismatches(items: list[ReplayMismatch], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -105,6 +110,7 @@ class ReplayVerificationResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

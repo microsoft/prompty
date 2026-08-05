@@ -73,7 +73,10 @@ temperature: 0.7
 top_p: 0.9
 top_k: 40
 stop_sequences:
-  - "\n\nHuman:"
+  - |-
+
+
+    Human:
 
 `
 	var data map[string]interface{}
@@ -168,7 +171,10 @@ temperature: 0.7
 top_p: 0.9
 top_k: 40
 stop_sequences:
-  - "\n\nHuman:"
+  - |-
+
+
+    Human:
 
 `
 

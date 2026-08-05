@@ -22,6 +22,9 @@ type TokenUsage struct {
 
 // LoadTokenUsage creates a TokenUsage from a map[string]interface{}
 func LoadTokenUsage(data interface{}, ctx *LoadContext) (TokenUsage, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TokenUsage{}
 
 	// Load from map

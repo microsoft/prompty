@@ -13,7 +13,8 @@ from ..conversation._Message import Message
 
 @runtime_checkable
 class Parser(Protocol):
-    """Parses rendered prompt text into an array of structured messages with role markers."""
+    """Parses rendered prompt text into an array of structured messages with role markers.
+    """
 
     def pre_render(self, template: str) -> Any | None:
         """Pre-process a template before rendering, returning modified template and context"""

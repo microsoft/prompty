@@ -47,14 +47,16 @@ class Connection(ABC):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Connection: {data}")
 
         # load polymorphic Connection instance
         instance = Connection.load_kind(data, context)
+
 
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
@@ -66,11 +68,14 @@ class Connection(ABC):
             instance = context.process_output(instance)
         return instance
 
+
+
+
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "Connection":
         # load polymorphic Connection instance
         if data is not None and "kind" in data:
-            discriminator_value = str(data["kind"]).lower()
+            discriminator_value = str(data["kind"])
             if discriminator_value == "reference":
                 return ReferenceConnection.load(data, context)
             elif discriminator_value == "remote":
@@ -85,9 +90,11 @@ class Connection(ABC):
                 return FoundryConnection.load(data, context)
 
             else:
-                raise ValueError(f"Unknown Connection discriminator value: {discriminator_value}")
+                raise ValueError(f"Unknown Connection discriminator field 'kind' value: {discriminator_value}")
         else:
+
             raise ValueError("Missing Connection discriminator property: 'kind'")
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Connection instance to a dictionary.
@@ -100,6 +107,7 @@ class Connection(ABC):
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -140,6 +148,8 @@ class Connection(ABC):
         return context.to_json(self.save(context), indent)
 
 
+
+
 @dataclass
 class ReferenceConnection(Connection):
     """Connection configuration for AI services using named connections.
@@ -171,8 +181,9 @@ class ReferenceConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ReferenceConnection: {data}")
@@ -190,6 +201,8 @@ class ReferenceConnection(Connection):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ReferenceConnection instance to a dictionary.
         Args:
@@ -202,8 +215,10 @@ class ReferenceConnection(Connection):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -239,6 +254,8 @@ class ReferenceConnection(Connection):
         return context.to_json(self.save(context), indent)
 
 
+
+
 @dataclass
 class RemoteConnection(Connection):
     """Connection configuration for AI services using named connections.
@@ -270,8 +287,9 @@ class RemoteConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for RemoteConnection: {data}")
@@ -289,6 +307,8 @@ class RemoteConnection(Connection):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the RemoteConnection instance to a dictionary.
         Args:
@@ -301,8 +321,10 @@ class RemoteConnection(Connection):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -338,6 +360,8 @@ class RemoteConnection(Connection):
         return context.to_json(self.save(context), indent)
 
 
+
+
 @dataclass
 class ApiKeyConnection(Connection):
     """Connection configuration for AI services using API keys.
@@ -369,8 +393,9 @@ class ApiKeyConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ApiKeyConnection: {data}")
@@ -388,6 +413,8 @@ class ApiKeyConnection(Connection):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ApiKeyConnection instance to a dictionary.
         Args:
@@ -400,8 +427,10 @@ class ApiKeyConnection(Connection):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -437,6 +466,8 @@ class ApiKeyConnection(Connection):
         return context.to_json(self.save(context), indent)
 
 
+
+
 @dataclass
 class AnonymousConnection(Connection):
     """
@@ -465,8 +496,9 @@ class AnonymousConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnonymousConnection: {data}")
@@ -482,6 +514,8 @@ class AnonymousConnection(Connection):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnonymousConnection instance to a dictionary.
         Args:
@@ -494,8 +528,10 @@ class AnonymousConnection(Connection):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -529,6 +565,8 @@ class AnonymousConnection(Connection):
         return context.to_json(self.save(context), indent)
 
 
+
+
 @dataclass
 class OAuthConnection(Connection):
     """Connection configuration using OAuth 2.0 client credentials.
@@ -558,7 +596,7 @@ class OAuthConnection(Connection):
     client_id: str = field(default="")
     client_secret: str = field(default="")
     token_url: str = field(default="")
-    scopes: list[str] = field(default_factory=list)
+    scopes: list[str] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "OAuthConnection":
@@ -571,8 +609,9 @@ class OAuthConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for OAuthConnection: {data}")
@@ -596,6 +635,8 @@ class OAuthConnection(Connection):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the OAuthConnection instance to a dictionary.
         Args:
@@ -608,8 +649,10 @@ class OAuthConnection(Connection):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -651,6 +694,8 @@ class OAuthConnection(Connection):
         return context.to_json(self.save(context), indent)
 
 
+
+
 @dataclass
 class FoundryConnection(Connection):
     """Connection configuration for Microsoft Foundry projects.
@@ -687,8 +732,9 @@ class FoundryConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FoundryConnection: {data}")
@@ -708,6 +754,8 @@ class FoundryConnection(Connection):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FoundryConnection instance to a dictionary.
         Args:
@@ -720,8 +768,10 @@ class FoundryConnection(Connection):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind

@@ -39,8 +39,9 @@ class ParserConfig:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         # handle alternate representations
         if isinstance(data, str):
@@ -64,6 +65,8 @@ class ParserConfig:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ParserConfig instance to a dictionary.
         Args:
@@ -75,6 +78,7 @@ class ParserConfig:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

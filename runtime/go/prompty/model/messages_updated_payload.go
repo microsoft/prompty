@@ -21,6 +21,9 @@ type MessagesUpdatedPayload struct {
 
 // LoadMessagesUpdatedPayload creates a MessagesUpdatedPayload from a map[string]interface{}
 func LoadMessagesUpdatedPayload(data interface{}, ctx *LoadContext) (MessagesUpdatedPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := MessagesUpdatedPayload{}
 
 	// Load from map
@@ -30,7 +33,7 @@ func LoadMessagesUpdatedPayload(data interface{}, ctx *LoadContext) (MessagesUpd
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages"))
 						if err != nil {
 							return result, err
 						}
@@ -48,7 +51,7 @@ func LoadMessagesUpdatedPayload(data interface{}, ctx *LoadContext) (MessagesUpd
 				result.Appended = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("appended"))
 						if err != nil {
 							return result, err
 						}

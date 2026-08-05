@@ -44,9 +44,7 @@ describe("ModelOptions", () => {
       expect(reloaded.temperature).toEqual(instance.temperature);
       expect(reloaded.topK).toEqual(instance.topK);
       expect(reloaded.topP).toEqual(instance.topP);
-      expect(reloaded.allowMultipleToolCalls).toEqual(
-        instance.allowMultipleToolCalls,
-      );
+      expect(reloaded.allowMultipleToolCalls).toEqual(instance.allowMultipleToolCalls);
     });
   });
 
@@ -77,9 +75,7 @@ describe("ModelOptions", () => {
       expect(reloaded.temperature).toEqual(instance.temperature);
       expect(reloaded.topK).toEqual(instance.topK);
       expect(reloaded.topP).toEqual(instance.topP);
-      expect(reloaded.allowMultipleToolCalls).toEqual(
-        instance.allowMultipleToolCalls,
-      );
+      expect(reloaded.allowMultipleToolCalls).toEqual(instance.allowMultipleToolCalls);
     });
   });
 

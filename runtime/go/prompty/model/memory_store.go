@@ -23,6 +23,9 @@ type MemoryStore struct {
 
 // LoadMemoryStore creates a MemoryStore from a map[string]interface{}
 func LoadMemoryStore(data interface{}, ctx *LoadContext) (MemoryStore, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := MemoryStore{}
 
 	// Load from map
@@ -32,7 +35,7 @@ func LoadMemoryStore(data interface{}, ctx *LoadContext) (MemoryStore, error) {
 				result.Entries = make([]MemoryEntry, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMemoryEntry(item, ctx)
+						loaded, err := LoadMemoryEntry(item, ctx.At("entries"))
 						if err != nil {
 							return result, err
 						}

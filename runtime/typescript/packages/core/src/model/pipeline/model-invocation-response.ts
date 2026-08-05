@@ -25,12 +25,8 @@ export class ModelInvocationResponse {
     if (init?.usage !== undefined) {
       this.usage = init.usage;
     }
-    if (init?.assistantMessages !== undefined) {
-      this.assistantMessages = init.assistantMessages;
-    }
-    if (init?.toolRequests !== undefined) {
-      this.toolRequests = init.toolRequests;
-    }
+    this.assistantMessages = init?.assistantMessages ?? [];
+    this.toolRequests = init?.toolRequests ?? [];
     if (init?.nextContextState !== undefined) {
       this.nextContextState = init.nextContextState;
     }
@@ -41,10 +37,8 @@ export class ModelInvocationResponse {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ModelInvocationResponse {
+  static load(data: Record<string, unknown>, context?: LoadContext): ModelInvocationResponse {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -55,35 +49,16 @@ export class ModelInvocationResponse {
       instance.output = data["output"] as unknown;
     }
     if (data["usage"] !== undefined && data["usage"] !== null) {
-      instance.usage = InvocationUsage.load(
-        data["usage"] as Record<string, unknown>,
-        context,
-      );
+      instance.usage = InvocationUsage.load(data["usage"] as Record<string, unknown>, context.at("usage"));
     }
-    if (
-      data["assistantMessages"] !== undefined &&
-      data["assistantMessages"] !== null
-    ) {
-      instance.assistantMessages =
-        ModelInvocationResponse.loadAssistantMessages(
-          data["assistantMessages"] as unknown[],
-          context,
-        );
+    if (data["assistantMessages"] !== undefined && data["assistantMessages"] !== null) {
+      instance.assistantMessages = ModelInvocationResponse.loadAssistantMessages(data["assistantMessages"] as unknown[], context.at("assistantMessages"));
     }
     if (data["toolRequests"] !== undefined && data["toolRequests"] !== null) {
-      instance.toolRequests = ModelInvocationResponse.loadToolRequests(
-        data["toolRequests"] as unknown[],
-        context,
-      );
+      instance.toolRequests = ModelInvocationResponse.loadToolRequests(data["toolRequests"] as unknown[], context.at("toolRequests"));
     }
-    if (
-      data["nextContextState"] !== undefined &&
-      data["nextContextState"] !== null
-    ) {
-      instance.nextContextState = InvocationContextState.load(
-        data["nextContextState"] as Record<string, unknown>,
-        context,
-      );
+    if (data["nextContextState"] !== undefined && data["nextContextState"] !== null) {
+      instance.nextContextState = InvocationContextState.load(data["nextContextState"] as Record<string, unknown>, context.at("nextContextState"));
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
@@ -95,101 +70,60 @@ export class ModelInvocationResponse {
     return instance;
   }
 
-  static loadAssistantMessages(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Message[] {
+  static loadAssistantMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+    context ??= new LoadContext({ path: "assistantMessages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, "role": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Message.load(item as Record<string, unknown>, context));
   }
 
-  static saveAssistantMessages(
-    items: Message[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveAssistantMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
-  static loadToolRequests(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): ModelToolRequest[] {
+  static loadToolRequests(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ModelToolRequest[] {
+    context ??= new LoadContext({ path: "toolRequests" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ModelToolRequest[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(ModelToolRequest.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, id: v });
+          result.push(ModelToolRequest.load({ name: k, "id": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ModelToolRequest.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => ModelToolRequest.load(item as Record<string, unknown>, context));
   }
 
-  static saveToolRequests(
-    items: ModelToolRequest[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveToolRequests(items: ModelToolRequest[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
-    if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
-    }
-
-    // Object format: use name as key
-    const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context) as Record<string, unknown>;
-      const name = itemData["name"] as string | undefined;
-      delete itemData["name"];
-      if (name) {
-        // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof ModelToolRequest)
-          .shorthandProperty;
-        if (
-          context.useShorthand &&
-          shorthand &&
-          Object.keys(itemData).length === 1 &&
-          shorthand in itemData
-        ) {
-          result[name] = itemData[shorthand];
-          continue;
-        }
-        result[name] = itemData;
-      } else {
-        // No name, fall back to array format for this item
-        if (!result["_unnamed"]) {
-          result["_unnamed"] = [];
-        }
-        (result["_unnamed"] as unknown[]).push(itemData);
-      }
-    }
-    return result;
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -211,17 +145,10 @@ export class ModelInvocationResponse {
       result["usage"] = obj.usage.save(context);
     }
     if (obj.assistantMessages !== undefined && obj.assistantMessages !== null) {
-      result["assistantMessages"] =
-        ModelInvocationResponse.saveAssistantMessages(
-          obj.assistantMessages,
-          context,
-        );
+      result["assistantMessages"] = ModelInvocationResponse.saveAssistantMessages(obj.assistantMessages, context);
     }
     if (obj.toolRequests !== undefined && obj.toolRequests !== null) {
-      result["toolRequests"] = ModelInvocationResponse.saveToolRequests(
-        obj.toolRequests,
-        context,
-      );
+      result["toolRequests"] = ModelInvocationResponse.saveToolRequests(obj.toolRequests, context);
     }
     if (obj.nextContextState !== undefined && obj.nextContextState !== null) {
       result["nextContextState"] = obj.nextContextState.save(context);
@@ -246,27 +173,15 @@ export class ModelInvocationResponse {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): ModelInvocationResponse {
+  static fromJson(json: string, context?: LoadContext): ModelInvocationResponse {
     const data = JSON.parse(json);
-    return ModelInvocationResponse.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ModelInvocationResponse.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): ModelInvocationResponse {
+  static fromYaml(yaml: string, context?: LoadContext): ModelInvocationResponse {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ModelInvocationResponse.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ModelInvocationResponse.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

@@ -28,9 +28,7 @@ export class ModelInvocationContextSnapshot {
     this.invocationId = init?.invocationId ?? "";
     this.iteration = init?.iteration ?? 0;
     this.messages = init?.messages ?? [];
-    if (init?.decisions !== undefined) {
-      this.decisions = init.decisions;
-    }
+    this.decisions = init?.decisions ?? [];
     this.stablePrefixMessages = init?.stablePrefixMessages ?? 0;
     if (init?.contextState !== undefined) {
       this.contextState = init.contextState;
@@ -42,14 +40,15 @@ export class ModelInvocationContextSnapshot {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ModelInvocationContextSnapshot {
+  static load(data: Record<string, unknown>, context?: LoadContext): ModelInvocationContextSnapshot {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if ((data["contextState"] === undefined || data["contextState"] === null)) {
+      throw new Error(`${context.at("contextState").path}: missing required field`);
+    }
     const instance = new ModelInvocationContextSnapshot();
 
     if (data["id"] !== undefined && data["id"] !== null) {
@@ -68,28 +67,16 @@ export class ModelInvocationContextSnapshot {
       instance.iteration = Number(data["iteration"]);
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = ModelInvocationContextSnapshot.loadMessages(
-        data["messages"] as unknown[],
-        context,
-      );
+      instance.messages = ModelInvocationContextSnapshot.loadMessages(data["messages"] as unknown[], context.at("messages"));
     }
     if (data["decisions"] !== undefined && data["decisions"] !== null) {
-      instance.decisions = ModelInvocationContextSnapshot.loadDecisions(
-        data["decisions"] as unknown[],
-        context,
-      );
+      instance.decisions = ModelInvocationContextSnapshot.loadDecisions(data["decisions"] as unknown[], context.at("decisions"));
     }
-    if (
-      data["stablePrefixMessages"] !== undefined &&
-      data["stablePrefixMessages"] !== null
-    ) {
+    if (data["stablePrefixMessages"] !== undefined && data["stablePrefixMessages"] !== null) {
       instance.stablePrefixMessages = Number(data["stablePrefixMessages"]);
     }
     if (data["contextState"] !== undefined && data["contextState"] !== null) {
-      instance.contextState = InvocationContextState.load(
-        data["contextState"] as Record<string, unknown>,
-        context,
-      );
+      instance.contextState = InvocationContextState.load(data["contextState"] as Record<string, unknown>, context.at("contextState"));
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
@@ -101,70 +88,60 @@ export class ModelInvocationContextSnapshot {
     return instance;
   }
 
-  static loadMessages(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Message[] {
+  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, "role": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Message.load(item as Record<string, unknown>, context));
   }
 
-  static saveMessages(
-    items: Message[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
-  static loadDecisions(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): InvocationContextDecision[] {
+  static loadDecisions(data: Record<string, unknown>[] | unknown[], context?: LoadContext): InvocationContextDecision[] {
+    context ??= new LoadContext({ path: "decisions" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: InvocationContextDecision[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(InvocationContextDecision.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, candidateId: v });
+          result.push(InvocationContextDecision.load({ name: k, "candidateId": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      InvocationContextDecision.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => InvocationContextDecision.load(item as Record<string, unknown>, context));
   }
 
-  static saveDecisions(
-    items: InvocationContextDecision[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveDecisions(items: InvocationContextDecision[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -195,21 +172,12 @@ export class ModelInvocationContextSnapshot {
       result["iteration"] = obj.iteration;
     }
     if (obj.messages !== undefined && obj.messages !== null) {
-      result["messages"] = ModelInvocationContextSnapshot.saveMessages(
-        obj.messages,
-        context,
-      );
+      result["messages"] = ModelInvocationContextSnapshot.saveMessages(obj.messages, context);
     }
     if (obj.decisions !== undefined && obj.decisions !== null) {
-      result["decisions"] = ModelInvocationContextSnapshot.saveDecisions(
-        obj.decisions,
-        context,
-      );
+      result["decisions"] = ModelInvocationContextSnapshot.saveDecisions(obj.decisions, context);
     }
-    if (
-      obj.stablePrefixMessages !== undefined &&
-      obj.stablePrefixMessages !== null
-    ) {
+    if (obj.stablePrefixMessages !== undefined && obj.stablePrefixMessages !== null) {
       result["stablePrefixMessages"] = obj.stablePrefixMessages;
     }
     if (obj.contextState !== undefined && obj.contextState !== null) {
@@ -235,27 +203,15 @@ export class ModelInvocationContextSnapshot {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): ModelInvocationContextSnapshot {
+  static fromJson(json: string, context?: LoadContext): ModelInvocationContextSnapshot {
     const data = JSON.parse(json);
-    return ModelInvocationContextSnapshot.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ModelInvocationContextSnapshot.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): ModelInvocationContextSnapshot {
+  static fromYaml(yaml: string, context?: LoadContext): ModelInvocationContextSnapshot {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ModelInvocationContextSnapshot.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ModelInvocationContextSnapshot.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

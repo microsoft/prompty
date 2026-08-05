@@ -27,20 +27,14 @@ export class RunTurnResult {
       this.output = init.output;
     }
     this.iterations = init?.iterations ?? 0;
-    if (init?.toolResults !== undefined) {
-      this.toolResults = init.toolResults;
-    }
-    if (init?.checkpoints !== undefined) {
-      this.checkpoints = init.checkpoints;
-    }
+    this.toolResults = init?.toolResults ?? [];
+    this.checkpoints = init?.checkpoints ?? [];
   }
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): RunTurnResult {
+  static load(data: Record<string, unknown>, context?: LoadContext): RunTurnResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -63,16 +57,10 @@ export class RunTurnResult {
       instance.iterations = Number(data["iterations"]);
     }
     if (data["toolResults"] !== undefined && data["toolResults"] !== null) {
-      instance.toolResults = RunTurnResult.loadToolResults(
-        data["toolResults"] as unknown[],
-        context,
-      );
+      instance.toolResults = RunTurnResult.loadToolResults(data["toolResults"] as unknown[], context.at("toolResults"));
     }
     if (data["checkpoints"] !== undefined && data["checkpoints"] !== null) {
-      instance.checkpoints = RunTurnResult.loadCheckpoints(
-        data["checkpoints"] as unknown[],
-        context,
-      );
+      instance.checkpoints = RunTurnResult.loadCheckpoints(data["checkpoints"] as unknown[], context.at("checkpoints"));
     }
 
     if (context) {
@@ -81,70 +69,60 @@ export class RunTurnResult {
     return instance;
   }
 
-  static loadToolResults(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): HostToolResult[] {
+  static loadToolResults(data: Record<string, unknown>[] | unknown[], context?: LoadContext): HostToolResult[] {
+    context ??= new LoadContext({ path: "toolResults" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: HostToolResult[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(HostToolResult.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, requestId: v });
+          result.push(HostToolResult.load({ name: k, "requestId": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      HostToolResult.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => HostToolResult.load(item as Record<string, unknown>, context));
   }
 
-  static saveToolResults(
-    items: HostToolResult[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveToolResults(items: HostToolResult[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
-  static loadCheckpoints(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Checkpoint[] {
+  static loadCheckpoints(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Checkpoint[] {
+    context ??= new LoadContext({ path: "checkpoints" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Checkpoint[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(Checkpoint.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, id: v });
+          result.push(Checkpoint.load({ name: k, "id": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Checkpoint.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Checkpoint.load(item as Record<string, unknown>, context));
   }
 
-  static saveCheckpoints(
-    items: Checkpoint[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveCheckpoints(items: Checkpoint[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -175,16 +153,10 @@ export class RunTurnResult {
       result["iterations"] = obj.iterations;
     }
     if (obj.toolResults !== undefined && obj.toolResults !== null) {
-      result["toolResults"] = RunTurnResult.saveToolResults(
-        obj.toolResults,
-        context,
-      );
+      result["toolResults"] = RunTurnResult.saveToolResults(obj.toolResults, context);
     }
     if (obj.checkpoints !== undefined && obj.checkpoints !== null) {
-      result["checkpoints"] = RunTurnResult.saveCheckpoints(
-        obj.checkpoints,
-        context,
-      );
+      result["checkpoints"] = RunTurnResult.saveCheckpoints(obj.checkpoints, context);
     }
 
     if (context) {

@@ -15,10 +15,8 @@ export class ThinkingEventPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ThinkingEventPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): ThinkingEventPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

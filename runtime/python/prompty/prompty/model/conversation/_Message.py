@@ -26,7 +26,7 @@ class Message:
     parts : list[ContentPart]
         The content parts of the message
     metadata : dict[str, Any]
-        Optional metadata associated with the message
+        Optional metadata associated with the message. Values may be explicit null.
     """
 
     _shorthand_property: ClassVar[str | None] = None
@@ -46,8 +46,9 @@ class Message:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Message: {data}")
@@ -58,26 +59,32 @@ class Message:
         if data is not None and "role" in data:
             instance.role = data["role"]
         if data is not None and "parts" in data:
-            instance.parts = Message.load_parts(data["parts"], context)
+            instance.parts = Message.load_parts(data["parts"], context.at("parts"))
         if data is not None and "metadata" in data:
             instance.metadata = data["metadata"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
+        if context is None:
+            context = LoadContext(path="parts")
         if isinstance(data, dict):
             # convert simple named parts to list of ContentPart
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ContentPart.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
+                    result.append(ContentPart.load({"name": k, "kind": v}, context.at(k)))
+            return result
         return [ContentPart.load(item, context) for item in data]
 
     @staticmethod
@@ -85,7 +92,7 @@ class Message:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -99,6 +106,7 @@ class Message:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -138,6 +146,7 @@ class Message:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
 
+
     @classmethod
     def assistant(cls, text: str) -> "Message":
         """Create a Message with preset field values."""
@@ -152,6 +161,8 @@ class Message:
     def user(cls, text: str) -> "Message":
         """Create a Message with preset field values."""
         return Message(role="user", parts=[TextPart(value=text)])
+
+
 
 
 @runtime_checkable

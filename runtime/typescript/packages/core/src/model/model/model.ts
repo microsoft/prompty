@@ -6,12 +6,7 @@ import { LoadContext, SaveContext } from "../context";
 import { Connection } from "../connection/connection";
 import { ModelOptions } from "./model-options";
 
-export type apiType =
-  | "chat"
-  | "embedding"
-  | "image"
-  | "responses"
-  | (string & {});
+export type apiType = "chat" | "embedding" | "image" | "responses" | (string & {});
 
 export class Model {
   static readonly shorthandProperty: string | undefined = "id";
@@ -41,6 +36,7 @@ export class Model {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): Model {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -67,16 +63,10 @@ export class Model {
       instance.apiType = String(data["apiType"]) as apiType;
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(
-        data["connection"] as Record<string, unknown>,
-        context,
-      );
+      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context.at("connection"));
     }
     if (data["options"] !== undefined && data["options"] !== null) {
-      instance.options = ModelOptions.load(
-        data["options"] as Record<string, unknown>,
-        context,
-      );
+      instance.options = ModelOptions.load(data["options"] as Record<string, unknown>, context.at("options"));
     }
 
     if (context) {

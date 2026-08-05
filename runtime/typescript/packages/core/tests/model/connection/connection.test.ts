@@ -5,17 +5,6 @@
 import { Connection } from "../../../src/model/index";
 
 describe("Connection", () => {
-  describe("construction", () => {
-    it("should create a new instance with defaults", () => {
-      const instance = new Connection();
-      expect(instance).toBeDefined();
-    });
-
-    it("should create a new instance with partial initialization", () => {
-      const instance = new Connection({});
-      expect(instance).toBeDefined();
-    });
-  });
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
@@ -24,9 +13,7 @@ describe("Connection", () => {
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("reference");
       expect(instance.authenticationMode).toEqual("system");
-      expect(instance.usageDescription).toEqual(
-        "This will allow the agent to respond to an email on your behalf",
-      );
+      expect(instance.usageDescription).toEqual("This will allow the agent to respond to an email on your behalf");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -47,9 +34,7 @@ describe("Connection", () => {
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("reference");
       expect(instance.authenticationMode).toEqual("system");
-      expect(instance.usageDescription).toEqual(
-        "This will allow the agent to respond to an email on your behalf",
-      );
+      expect(instance.usageDescription).toEqual("This will allow the agent to respond to an email on your behalf");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -62,4 +47,5 @@ describe("Connection", () => {
       expect(reloaded.usageDescription).toEqual(instance.usageDescription);
     });
   });
+
 });

@@ -10,32 +10,7 @@ from typing import Any, ClassVar, Literal
 
 from .._context import LoadContext, SaveContext
 
-TurnEventType = Literal[
-    "turn_start",
-    "turn_end",
-    "llm_start",
-    "llm_complete",
-    "retry",
-    "permission_requested",
-    "permission_completed",
-    "token",
-    "thinking",
-    "tool_call_start",
-    "tool_call_complete",
-    "tool_execution_start",
-    "tool_execution_complete",
-    "tool_result",
-    "hook_start",
-    "hook_end",
-    "status",
-    "messages_updated",
-    "done",
-    "error",
-    "cancelled",
-    "compaction_start",
-    "compaction_complete",
-    "compaction_failed",
-]
+TurnEventType = Literal["turn_start", "turn_end", "llm_start", "llm_complete", "retry", "permission_requested", "permission_completed", "token", "thinking", "tool_call_start", "tool_call_complete", "tool_execution_start", "tool_execution_complete", "tool_result", "hook_start", "hook_end", "status", "messages_updated", "done", "error", "cancelled", "compaction_start", "compaction_complete", "compaction_failed"]
 
 
 @dataclass
@@ -61,7 +36,7 @@ class TurnEvent:
     span_id : Optional[str]
         Trace span identifier associated with this event
     payload : dict[str, Any]
-        Event-specific payload. Use the typed payload model matching 'type'.
+        Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
     """
 
     _shorthand_property: ClassVar[str | None] = None
@@ -86,8 +61,9 @@ class TurnEvent:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnEvent: {data}")
@@ -115,6 +91,8 @@ class TurnEvent:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TurnEvent instance to a dictionary.
         Args:
@@ -126,6 +104,7 @@ class TurnEvent:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

@@ -17,10 +17,8 @@ export class ThreadMarker {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ThreadMarker {
+  static load(data: Record<string, unknown>, context?: LoadContext): ThreadMarker {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

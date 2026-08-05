@@ -39,8 +39,9 @@ class AuthorizationCodeFlow:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AuthorizationCodeFlow: {data}")
@@ -56,6 +57,8 @@ class AuthorizationCodeFlow:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AuthorizationCodeFlow instance to a dictionary.
         Args:
@@ -67,6 +70,7 @@ class AuthorizationCodeFlow:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

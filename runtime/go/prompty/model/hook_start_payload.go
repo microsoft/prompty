@@ -30,6 +30,9 @@ type HookStartPayload struct {
 
 // LoadHookStartPayload creates a HookStartPayload from a map[string]interface{}
 func LoadHookStartPayload(data interface{}, ctx *LoadContext) (HookStartPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := HookStartPayload{}
 
 	// Load from map
@@ -51,7 +54,7 @@ func LoadHookStartPayload(data interface{}, ctx *LoadContext) (HookStartPayload,
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
 				if err != nil {
 					return result, err
 				}

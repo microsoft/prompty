@@ -30,6 +30,9 @@ type TurnEndPayload struct {
 
 // LoadTurnEndPayload creates a TurnEndPayload from a map[string]interface{}
 func LoadTurnEndPayload(data interface{}, ctx *LoadContext) (TurnEndPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TurnEndPayload{}
 
 	// Load from map

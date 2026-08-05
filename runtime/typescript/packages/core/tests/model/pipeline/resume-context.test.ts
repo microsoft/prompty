@@ -30,9 +30,7 @@ describe("ResumeContext", () => {
       const instance = ResumeContext.fromJson(json);
       const output = instance.toJson();
       const reloaded = ResumeContext.fromJson(output);
-      expect(reloaded.lastJournalSequence).toEqual(
-        instance.lastJournalSequence,
-      );
+      expect(reloaded.lastJournalSequence).toEqual(instance.lastJournalSequence);
     });
   });
 
@@ -49,9 +47,7 @@ describe("ResumeContext", () => {
       const instance = ResumeContext.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ResumeContext.fromYaml(output);
-      expect(reloaded.lastJournalSequence).toEqual(
-        instance.lastJournalSequence,
-      );
+      expect(reloaded.lastJournalSequence).toEqual(instance.lastJournalSequence);
     });
   });
 

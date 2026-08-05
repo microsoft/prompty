@@ -11,8 +11,8 @@ export class ModelInfo {
   displayName?: string | undefined;
   ownedBy?: string | undefined;
   contextWindow?: number | undefined;
-  inputModalities?: string[] = [];
-  outputModalities?: string[] = [];
+  inputModalities?: string[];
+  outputModalities?: string[];
   additionalProperties?: Record<string, unknown> | undefined;
 
   constructor(init?: Partial<ModelInfo>) {
@@ -40,6 +40,7 @@ export class ModelInfo {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): ModelInfo {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -58,30 +59,14 @@ export class ModelInfo {
     if (data["contextWindow"] !== undefined && data["contextWindow"] !== null) {
       instance.contextWindow = Number(data["contextWindow"]);
     }
-    if (
-      data["inputModalities"] !== undefined &&
-      data["inputModalities"] !== null
-    ) {
-      instance.inputModalities = (data["inputModalities"] as unknown[]).map(
-        (v) => String(v),
-      );
+    if (data["inputModalities"] !== undefined && data["inputModalities"] !== null) {
+      instance.inputModalities = (data["inputModalities"] as unknown[]).map(v => String(v));
     }
-    if (
-      data["outputModalities"] !== undefined &&
-      data["outputModalities"] !== null
-    ) {
-      instance.outputModalities = (data["outputModalities"] as unknown[]).map(
-        (v) => String(v),
-      );
+    if (data["outputModalities"] !== undefined && data["outputModalities"] !== null) {
+      instance.outputModalities = (data["outputModalities"] as unknown[]).map(v => String(v));
     }
-    if (
-      data["additionalProperties"] !== undefined &&
-      data["additionalProperties"] !== null
-    ) {
-      instance.additionalProperties = data["additionalProperties"] as Record<
-        string,
-        unknown
-      >;
+    if (data["additionalProperties"] !== undefined && data["additionalProperties"] !== null) {
+      instance.additionalProperties = data["additionalProperties"] as Record<string, unknown>;
     }
 
     if (context) {
@@ -120,10 +105,7 @@ export class ModelInfo {
     if (obj.outputModalities !== undefined && obj.outputModalities !== null) {
       result["outputModalities"] = obj.outputModalities;
     }
-    if (
-      obj.additionalProperties !== undefined &&
-      obj.additionalProperties !== null
-    ) {
+    if (obj.additionalProperties !== undefined && obj.additionalProperties !== null) {
       result["additionalProperties"] = obj.additionalProperties;
     }
 
@@ -137,12 +119,12 @@ export class ModelInfo {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      id: { openai: "id", anthropic: "id" },
-      displayName: { anthropic: "display_name" },
-      ownedBy: { openai: "owned_by" },
-      contextWindow: { anthropic: "context_length" },
-      inputModalities: { anthropic: "input_modalities" },
-      outputModalities: { anthropic: "output_modalities" },
+      "id": { "openai": "id", "anthropic": "id" },
+      "displayName": { "anthropic": "display_name" },
+      "ownedBy": { "openai": "owned_by" },
+      "contextWindow": { "anthropic": "context_length" },
+      "inputModalities": { "anthropic": "input_modalities" },
+      "outputModalities": { "anthropic": "output_modalities" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

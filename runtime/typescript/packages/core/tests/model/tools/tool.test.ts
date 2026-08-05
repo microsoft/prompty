@@ -5,17 +5,6 @@
 import { Tool } from "../../../src/model/index";
 
 describe("Tool", () => {
-  describe("construction", () => {
-    it("should create a new instance with defaults", () => {
-      const instance = new Tool();
-      expect(instance).toBeDefined();
-    });
-
-    it("should create a new instance with partial initialization", () => {
-      const instance = new Tool({});
-      expect(instance).toBeDefined();
-    });
-  });
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
@@ -58,4 +47,5 @@ describe("Tool", () => {
       expect(reloaded.description).toEqual(instance.description);
     });
   });
+
 });

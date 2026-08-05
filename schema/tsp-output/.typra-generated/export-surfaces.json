@@ -17,8 +17,8 @@
       },
       {
         "name": "@typra/emitter",
-        "version": "0.4.2",
-        "supportedRange": "0.4.2",
+        "version": "0.4.18",
+        "supportedRange": "0.4.18",
         "supported": true
       }
     ]
@@ -66,8 +66,12 @@
         "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -859,6 +863,13 @@
           "protocol": false
         },
         {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "pipeline/EngineDurabilityPort.cs",
+          "protocol": true
+        },
+        {
           "name": "EngineEvent",
           "kind": "value",
           "group": "pipeline",
@@ -871,6 +882,27 @@
           "group": "pipeline",
           "source": "pipeline/EnginePermissionDecision.cs",
           "protocol": false
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "pipeline/EnginePermissionPort.cs",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "pipeline/EnginePostCommitPort.cs",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "pipeline/EngineToolPort.cs",
+          "protocol": true
         },
         {
           "name": "EventJournalWriter",
@@ -1512,8 +1544,12 @@
             "ContextRequest",
             "DelegatedStateReference",
             "EngineCheckpoint",
+            "EngineDurabilityPort",
             "EngineEvent",
             "EnginePermissionDecision",
+            "EnginePermissionPort",
+            "EnginePostCommitPort",
+            "EngineToolPort",
             "EventJournalWriter",
             "EventSink",
             "Executor",
@@ -1555,8 +1591,12 @@
             "ContextRequest.cs",
             "DelegatedStateReference.cs",
             "EngineCheckpoint.cs",
+            "EngineDurabilityPort.cs",
             "EngineEvent.cs",
             "EnginePermissionDecision.cs",
+            "EnginePermissionPort.cs",
+            "EnginePostCommitPort.cs",
+            "EngineToolPort.cs",
             "EventJournalWriter.cs",
             "EventSink.cs",
             "Executor.cs",
@@ -1691,7 +1731,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1708,7 +1751,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -1718,7 +1764,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -1727,7 +1776,104 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "pipeline",
+          "symbol": "EngineDurabilityPort",
+          "source": "pipeline/EngineDurabilityPort.cs",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "pipeline",
+          "symbol": "EnginePermissionPort",
+          "source": "pipeline/EnginePermissionPort.cs",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "pipeline",
+          "symbol": "EnginePostCommitPort",
+          "source": "pipeline/EnginePostCommitPort.cs",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "pipeline",
+          "symbol": "EngineToolPort",
+          "source": "pipeline/EngineToolPort.cs",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1744,7 +1890,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -1753,7 +1902,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -1762,7 +1914,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1779,7 +1934,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -1788,7 +1946,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1806,7 +1967,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -1816,7 +1980,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -1828,7 +1995,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1845,7 +2015,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1864,7 +2037,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -1873,7 +2049,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1890,7 +2069,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1908,7 +2090,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -1917,7 +2102,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1936,7 +2124,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -2019,8 +2210,12 @@
         "pipeline/ContextRequest.cs",
         "pipeline/DelegatedStateReference.cs",
         "pipeline/EngineCheckpoint.cs",
+        "pipeline/EngineDurabilityPort.cs",
         "pipeline/EngineEvent.cs",
         "pipeline/EnginePermissionDecision.cs",
+        "pipeline/EnginePermissionPort.cs",
+        "pipeline/EnginePostCommitPort.cs",
+        "pipeline/EngineToolPort.cs",
         "pipeline/EventJournalWriter.cs",
         "pipeline/EventSink.cs",
         "pipeline/Executor.cs",
@@ -2115,8 +2310,12 @@
         "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -2908,6 +3107,13 @@
           "protocol": false
         },
         {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "engine_durability_port.go",
+          "protocol": true
+        },
+        {
           "name": "EngineEvent",
           "kind": "value",
           "group": "pipeline",
@@ -2920,6 +3126,27 @@
           "group": "pipeline",
           "source": "engine_permission_decision.go",
           "protocol": false
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "engine_permission_port.go",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "engine_post_commit_port.go",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "engine_tool_port.go",
+          "protocol": true
         },
         {
           "name": "EventJournalWriter",
@@ -3561,8 +3788,12 @@
             "ContextRequest",
             "DelegatedStateReference",
             "EngineCheckpoint",
+            "EngineDurabilityPort",
             "EngineEvent",
             "EnginePermissionDecision",
+            "EnginePermissionPort",
+            "EnginePostCommitPort",
+            "EngineToolPort",
             "EventJournalWriter",
             "EventSink",
             "Executor",
@@ -3604,8 +3835,12 @@
             "context_request",
             "delegated_state_reference",
             "engine_checkpoint",
+            "engine_durability_port",
             "engine_event",
             "engine_permission_decision",
+            "engine_permission_port",
+            "engine_post_commit_port",
+            "engine_tool_port",
             "event_journal_writer",
             "event_sink",
             "executor",
@@ -3740,7 +3975,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3757,7 +3995,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -3767,7 +4008,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -3776,7 +4020,104 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "pipeline",
+          "symbol": "EngineDurabilityPort",
+          "source": "engine_durability_port.go",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "pipeline",
+          "symbol": "EnginePermissionPort",
+          "source": "engine_permission_port.go",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "pipeline",
+          "symbol": "EnginePostCommitPort",
+          "source": "engine_post_commit_port.go",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "pipeline",
+          "symbol": "EngineToolPort",
+          "source": "engine_tool_port.go",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3793,7 +4134,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -3802,7 +4146,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -3811,7 +4158,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3828,7 +4178,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -3837,7 +4190,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3855,7 +4211,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -3865,7 +4224,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -3877,7 +4239,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3894,7 +4259,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3913,7 +4281,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -3922,7 +4293,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3939,7 +4313,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3957,7 +4334,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -3966,7 +4346,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3985,7 +4368,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -4018,8 +4404,12 @@
         "device_authorization.go",
         "done_event_payload.go",
         "engine_checkpoint.go",
+        "engine_durability_port.go",
         "engine_event.go",
         "engine_permission_decision.go",
+        "engine_permission_port.go",
+        "engine_post_commit_port.go",
+        "engine_tool_port.go",
         "error_event_payload.go",
         "event_journal_writer.go",
         "event_sink.go",
@@ -4163,8 +4553,12 @@
         "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -4956,6 +5350,13 @@
           "protocol": false
         },
         {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "EngineDurabilityPort",
+          "protocol": true
+        },
+        {
           "name": "EngineEvent",
           "kind": "value",
           "group": "pipeline",
@@ -4968,6 +5369,27 @@
           "group": "pipeline",
           "source": "EnginePermissionDecision",
           "protocol": false
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "EnginePermissionPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "EnginePostCommitPort",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "EngineToolPort",
+          "protocol": true
         },
         {
           "name": "EventJournalWriter",
@@ -5609,8 +6031,12 @@
             "ContextRequest",
             "DelegatedStateReference",
             "EngineCheckpoint",
+            "EngineDurabilityPort",
             "EngineEvent",
             "EnginePermissionDecision",
+            "EnginePermissionPort",
+            "EnginePostCommitPort",
+            "EngineToolPort",
             "EventJournalWriter",
             "EventSink",
             "Executor",
@@ -5652,8 +6078,12 @@
             "context_request",
             "delegated_state_reference",
             "engine_checkpoint",
+            "engine_durability_port",
             "engine_event",
             "engine_permission_decision",
+            "engine_permission_port",
+            "engine_post_commit_port",
+            "engine_tool_port",
             "event_journal_writer",
             "event_sink",
             "executor",
@@ -5788,7 +6218,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5805,7 +6238,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -5815,7 +6251,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -5824,7 +6263,104 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "pipeline",
+          "symbol": "EngineDurabilityPort",
+          "source": "EngineDurabilityPort",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "pipeline",
+          "symbol": "EnginePermissionPort",
+          "source": "EnginePermissionPort",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "pipeline",
+          "symbol": "EnginePostCommitPort",
+          "source": "EnginePostCommitPort",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "pipeline",
+          "symbol": "EngineToolPort",
+          "source": "EngineToolPort",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5841,7 +6377,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -5850,7 +6389,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -5859,7 +6401,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5876,7 +6421,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -5885,7 +6433,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5903,7 +6454,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -5913,7 +6467,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -5925,7 +6482,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5942,7 +6502,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5961,7 +6524,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -5970,7 +6536,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5987,7 +6556,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -6005,7 +6577,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -6014,7 +6589,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -6033,7 +6611,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -6066,8 +6647,12 @@
         "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
@@ -6212,8 +6797,12 @@
         "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -7005,6 +7594,13 @@
           "protocol": false
         },
         {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": true
+        },
+        {
           "name": "EngineEvent",
           "kind": "value",
           "group": "pipeline",
@@ -7017,6 +7613,27 @@
           "group": "pipeline",
           "source": ".pipeline",
           "protocol": false
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": ".pipeline",
+          "protocol": true
         },
         {
           "name": "EventJournalWriter",
@@ -7658,8 +8275,12 @@
             "ContextRequest",
             "DelegatedStateReference",
             "EngineCheckpoint",
+            "EngineDurabilityPort",
             "EngineEvent",
             "EnginePermissionDecision",
+            "EnginePermissionPort",
+            "EnginePostCommitPort",
+            "EngineToolPort",
             "EventJournalWriter",
             "EventSink",
             "Executor",
@@ -7701,8 +8322,12 @@
             "_ContextRequest",
             "_DelegatedStateReference",
             "_EngineCheckpoint",
+            "_EngineDurabilityPort",
             "_EngineEvent",
             "_EnginePermissionDecision",
+            "_EnginePermissionPort",
+            "_EnginePostCommitPort",
+            "_EngineToolPort",
             "_EventJournalWriter",
             "_EventSink",
             "_Executor",
@@ -7837,7 +8462,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7854,7 +8482,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -7864,7 +8495,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -7873,7 +8507,104 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "pipeline",
+          "symbol": "EngineDurabilityPort",
+          "source": ".pipeline",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "pipeline",
+          "symbol": "EnginePermissionPort",
+          "source": ".pipeline",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "pipeline",
+          "symbol": "EnginePostCommitPort",
+          "source": ".pipeline",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "pipeline",
+          "symbol": "EngineToolPort",
+          "source": ".pipeline",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7890,7 +8621,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -7899,7 +8633,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -7908,7 +8645,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7925,7 +8665,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -7934,7 +8677,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7952,7 +8698,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -7962,7 +8711,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -7974,7 +8726,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7991,7 +8746,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -8010,7 +8768,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -8019,7 +8780,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -8036,7 +8800,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -8054,7 +8821,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -8063,7 +8833,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -8082,7 +8855,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -8139,8 +8915,12 @@
         "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -8932,6 +9712,13 @@
           "protocol": false
         },
         {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "pipeline::engine_durability_port",
+          "protocol": true
+        },
+        {
           "name": "EngineEvent",
           "kind": "value",
           "group": "pipeline",
@@ -8944,6 +9731,27 @@
           "group": "pipeline",
           "source": "pipeline::engine_permission_decision",
           "protocol": false
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "pipeline::engine_permission_port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "pipeline::engine_post_commit_port",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "pipeline::engine_tool_port",
+          "protocol": true
         },
         {
           "name": "EventJournalWriter",
@@ -9585,8 +10393,12 @@
             "ContextRequest",
             "DelegatedStateReference",
             "EngineCheckpoint",
+            "EngineDurabilityPort",
             "EngineEvent",
             "EnginePermissionDecision",
+            "EnginePermissionPort",
+            "EnginePostCommitPort",
+            "EngineToolPort",
             "EventJournalWriter",
             "EventSink",
             "Executor",
@@ -9628,8 +10440,12 @@
             "context_request",
             "delegated_state_reference",
             "engine_checkpoint",
+            "engine_durability_port",
             "engine_event",
             "engine_permission_decision",
+            "engine_permission_port",
+            "engine_post_commit_port",
+            "engine_tool_port",
             "event_journal_writer",
             "event_sink",
             "executor",
@@ -9764,7 +10580,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9781,7 +10600,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -9791,7 +10613,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -9800,7 +10625,104 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "pipeline",
+          "symbol": "EngineDurabilityPort",
+          "source": "pipeline::engine_durability_port",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "pipeline",
+          "symbol": "EnginePermissionPort",
+          "source": "pipeline::engine_permission_port",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "pipeline",
+          "symbol": "EnginePostCommitPort",
+          "source": "pipeline::engine_post_commit_port",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "pipeline",
+          "symbol": "EngineToolPort",
+          "source": "pipeline::engine_tool_port",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9817,7 +10739,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -9826,7 +10751,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -9835,7 +10763,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9852,7 +10783,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -9861,7 +10795,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9879,7 +10816,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -9889,7 +10829,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -9901,7 +10844,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9918,7 +10864,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9937,7 +10886,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -9946,7 +10898,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9963,7 +10918,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9981,7 +10939,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -9990,7 +10951,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -10009,7 +10973,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -10068,8 +11035,12 @@
         "DeviceAuthorization",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -10861,6 +11832,13 @@
           "protocol": false
         },
         {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "./pipeline/engine-durability-port",
+          "protocol": true
+        },
+        {
           "name": "EngineEvent",
           "kind": "value",
           "group": "pipeline",
@@ -10873,6 +11851,27 @@
           "group": "pipeline",
           "source": "./pipeline/engine-permission-decision",
           "protocol": false
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "./pipeline/engine-permission-port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "./pipeline/engine-post-commit-port",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "./pipeline/engine-tool-port",
+          "protocol": true
         },
         {
           "name": "EventJournalWriter",
@@ -11514,8 +12513,12 @@
             "ContextRequest",
             "DelegatedStateReference",
             "EngineCheckpoint",
+            "EngineDurabilityPort",
             "EngineEvent",
             "EnginePermissionDecision",
+            "EnginePermissionPort",
+            "EnginePostCommitPort",
+            "EngineToolPort",
             "EventJournalWriter",
             "EventSink",
             "Executor",
@@ -11557,8 +12560,12 @@
             "context-request",
             "delegated-state-reference",
             "engine-checkpoint",
+            "engine-durability-port",
             "engine-event",
             "engine-permission-decision",
+            "engine-permission-port",
+            "engine-post-commit-port",
+            "engine-tool-port",
             "event-journal-writer",
             "event-sink",
             "executor",
@@ -11693,7 +12700,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11710,7 +12720,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -11720,7 +12733,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -11729,7 +12745,104 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "pipeline",
+          "symbol": "EngineDurabilityPort",
+          "source": "./pipeline/engine-durability-port",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "pipeline",
+          "symbol": "EnginePermissionPort",
+          "source": "./pipeline/engine-permission-port",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "pipeline",
+          "symbol": "EnginePostCommitPort",
+          "source": "./pipeline/engine-post-commit-port",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "pipeline",
+          "symbol": "EngineToolPort",
+          "source": "./pipeline/engine-tool-port",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11746,7 +12859,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -11755,7 +12871,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -11764,7 +12883,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11781,7 +12903,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -11790,7 +12915,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11808,7 +12936,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -11818,7 +12949,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -11830,7 +12964,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11847,7 +12984,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11866,7 +13006,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -11875,7 +13018,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11892,7 +13038,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11910,7 +13059,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -11919,7 +13071,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11938,7 +13093,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -12021,8 +13179,12 @@
         "./pipeline/context-request",
         "./pipeline/delegated-state-reference",
         "./pipeline/engine-checkpoint",
+        "./pipeline/engine-durability-port",
         "./pipeline/engine-event",
         "./pipeline/engine-permission-decision",
+        "./pipeline/engine-permission-port",
+        "./pipeline/engine-post-commit-port",
+        "./pipeline/engine-tool-port",
         "./pipeline/event-journal-writer",
         "./pipeline/event-sink",
         "./pipeline/executor",

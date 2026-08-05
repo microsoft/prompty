@@ -20,24 +20,22 @@ export class AnthropicImageBlock {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): AnthropicImageBlock {
+  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicImageBlock {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if ((data["source"] === undefined || data["source"] === null)) {
+      throw new Error(`${context.at("source").path}: missing required field`);
+    }
     const instance = new AnthropicImageBlock();
 
     if (data["type"] !== undefined && data["type"] !== null) {
       instance.type = String(data["type"]);
     }
     if (data["source"] !== undefined && data["source"] !== null) {
-      instance.source = AnthropicImageSource.load(
-        data["source"] as Record<string, unknown>,
-        context,
-      );
+      instance.source = AnthropicImageSource.load(data["source"] as Record<string, unknown>, context.at("source"));
     }
 
     if (context) {

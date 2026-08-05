@@ -20,6 +20,9 @@ type ProjectInfo struct {
 
 // LoadProjectInfo creates a ProjectInfo from a map[string]interface{}
 func LoadProjectInfo(data interface{}, ctx *LoadContext) (ProjectInfo, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ProjectInfo{}
 
 	// Load from map

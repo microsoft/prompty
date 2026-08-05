@@ -26,11 +26,14 @@ type InvocationContextDecision struct {
 	Reason          string                       `json:"reason" yaml:"reason"`
 	Rank            *int32                       `json:"rank,omitempty" yaml:"rank,omitempty"`
 	EstimatedTokens *int32                       `json:"estimatedTokens,omitempty" yaml:"estimatedTokens,omitempty"`
-	Metadata        map[string]interface{}       `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata        map[string]interface{}       `json:"metadata" yaml:"metadata"`
 }
 
 // LoadInvocationContextDecision creates a InvocationContextDecision from a map[string]interface{}
 func LoadInvocationContextDecision(data interface{}, ctx *LoadContext) (InvocationContextDecision, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := InvocationContextDecision{}
 
 	// Load from map

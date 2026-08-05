@@ -42,8 +42,8 @@ class ModelInvocationResponse:
 
     output: Any | None = None
     usage: InvocationUsage | None = None
-    assistant_messages: list[Message] = field(default_factory=list)
-    tool_requests: list[ModelToolRequest] = field(default_factory=list)
+    assistant_messages: list[Message] | None = field(default_factory=list)
+    tool_requests: list[ModelToolRequest] | None = field(default_factory=list)
     next_context_state: InvocationContextState | None = None
     metadata: dict[str, Any] | None = None
 
@@ -58,8 +58,9 @@ class ModelInvocationResponse:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelInvocationResponse: {data}")
@@ -70,90 +71,74 @@ class ModelInvocationResponse:
         if data is not None and "output" in data:
             instance.output = data["output"]
         if data is not None and "usage" in data:
-            instance.usage = InvocationUsage.load(data["usage"], context)
+            instance.usage = InvocationUsage.load(data["usage"], context.at("usage"))
         if data is not None and "assistantMessages" in data:
-            instance.assistant_messages = ModelInvocationResponse.load_assistant_messages(
-                data["assistantMessages"], context
-            )
+            instance.assistant_messages = ModelInvocationResponse.load_assistant_messages(data["assistantMessages"], context.at("assistantMessages"))
         if data is not None and "toolRequests" in data:
-            instance.tool_requests = ModelInvocationResponse.load_tool_requests(data["toolRequests"], context)
+            instance.tool_requests = ModelInvocationResponse.load_tool_requests(data["toolRequests"], context.at("toolRequests"))
         if data is not None and "nextContextState" in data:
-            instance.next_context_state = InvocationContextState.load(data["nextContextState"], context)
+            instance.next_context_state = InvocationContextState.load(data["nextContextState"], context.at("nextContextState"))
         if data is not None and "metadata" in data:
             instance.metadata = data["metadata"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_assistant_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
+        if context is None:
+            context = LoadContext(path="assistantMessages")
         if isinstance(data, dict):
             # convert simple named assistantMessages to list of Message
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Message.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
+                    result.append(Message.load({"name": k, "role": v}, context.at(k)))
+            return result
         return [Message.load(item, context) for item in data]
 
     @staticmethod
-    def save_assistant_messages(
-        items: list[Message], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_assistant_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_tool_requests(data: dict | list, context: LoadContext | None) -> list[ModelToolRequest]:
+        if context is None:
+            context = LoadContext(path="toolRequests")
         if isinstance(data, dict):
             # convert simple named toolRequests to list of ModelToolRequest
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ModelToolRequest.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
-            data = result
+                    result.append(ModelToolRequest.load({"name": k, "id": v}, context.at(k)))
+            return result
         return [ModelToolRequest.load(item, context) for item in data]
 
     @staticmethod
-    def save_tool_requests(
-        items: list[ModelToolRequest], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tool_requests(items: list[ModelToolRequest], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # The schema declares an ordered collection, so preserve array format
+        return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ModelInvocationResponse instance to a dictionary.
@@ -167,6 +152,7 @@ class ModelInvocationResponse:
         if context is not None:
             obj = context.process_object(obj)
 
+
         result: dict[str, Any] = {}
 
         if obj.output is not None:
@@ -174,9 +160,7 @@ class ModelInvocationResponse:
         if obj.usage is not None:
             result["usage"] = obj.usage.save(context)
         if obj.assistant_messages is not None:
-            result["assistantMessages"] = ModelInvocationResponse.save_assistant_messages(
-                obj.assistant_messages, context
-            )
+            result["assistantMessages"] = ModelInvocationResponse.save_assistant_messages(obj.assistant_messages, context)
         if obj.tool_requests is not None:
             result["toolRequests"] = ModelInvocationResponse.save_tool_requests(obj.tool_requests, context)
         if obj.next_context_state is not None:

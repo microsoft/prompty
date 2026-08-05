@@ -12,7 +12,8 @@ from ..events._Checkpoint import Checkpoint
 
 @runtime_checkable
 class CheckpointStore(Protocol):
-    """Stores and retrieves resumable session checkpoints."""
+    """Stores and retrieves resumable session checkpoints.
+    """
 
     def save(self, checkpoint: Checkpoint) -> Checkpoint:
         """Persist a session checkpoint and return the stored checkpoint"""

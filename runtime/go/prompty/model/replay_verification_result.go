@@ -22,14 +22,19 @@ const (
 
 type ReplayVerificationResult struct {
 	Status        ReplayVerificationStatus `json:"status" yaml:"status"`
-	Mismatches    []ReplayMismatch         `json:"mismatches,omitempty" yaml:"mismatches,omitempty"`
+	Mismatches    []ReplayMismatch         `json:"mismatches" yaml:"mismatches"`
 	ExpectedCount int32                    `json:"expectedCount" yaml:"expectedCount"`
 	ActualCount   int32                    `json:"actualCount" yaml:"actualCount"`
 }
 
 // LoadReplayVerificationResult creates a ReplayVerificationResult from a map[string]interface{}
 func LoadReplayVerificationResult(data interface{}, ctx *LoadContext) (ReplayVerificationResult, error) {
-	result := ReplayVerificationResult{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := ReplayVerificationResult{
+		Mismatches: []ReplayMismatch{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -41,7 +46,7 @@ func LoadReplayVerificationResult(data interface{}, ctx *LoadContext) (ReplayVer
 				result.Mismatches = make([]ReplayMismatch, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadReplayMismatch(item, ctx)
+						loaded, err := LoadReplayMismatch(item, ctx.At("mismatches"))
 						if err != nil {
 							return result, err
 						}

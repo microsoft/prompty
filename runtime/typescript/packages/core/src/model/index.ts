@@ -7,37 +7,18 @@ export { LoadContext, SaveContext } from "./context";
 export { Prompty } from "./agent/prompty";
 export { GuardrailResult } from "./agent/guardrail-result";
 
-export {
-  Connection,
-  ReferenceConnection,
-  RemoteConnection,
-  ApiKeyConnection,
-  AnonymousConnection,
-  OAuthConnection,
-  FoundryConnection,
-} from "./connection/connection";
+export { Connection, ReferenceConnection, RemoteConnection, ApiKeyConnection, AnonymousConnection, OAuthConnection, FoundryConnection } from "./connection/connection";
 export { OAuthToken } from "./connection/o-auth-token";
 export { DeviceAuthorization } from "./connection/device-authorization";
 export { AuthorizationCodeFlow } from "./connection/authorization-code-flow";
 
-export {
-  ContentPart,
-  TextPart,
-  ImagePart,
-  FilePart,
-  AudioPart,
-} from "./conversation/content-part";
+export { ContentPart, TextPart, ImagePart, FilePart, AudioPart } from "./conversation/content-part";
 export { Message } from "./conversation/message";
 export { ToolResult } from "./conversation/tool-result";
 export { ToolCall } from "./conversation/tool-call";
 export { ThreadMarker } from "./conversation/thread-marker";
 
-export {
-  Property,
-  ArrayProperty,
-  ObjectProperty,
-  UnionProperty,
-} from "./core/property";
+export { Property, ArrayProperty, ObjectProperty, UnionProperty } from "./core/property";
 export { InvokerError } from "./core/invoker-error";
 export { ValidationError } from "./core/validation-error";
 export { FileNotFoundError } from "./core/file-not-found-error";
@@ -86,14 +67,7 @@ export { SessionFileRef } from "./events/session-file-ref";
 export { SessionRef } from "./events/session-ref";
 export { SessionSummary } from "./events/session-summary";
 export { SessionTrace } from "./events/session-trace";
-export {
-  StreamChunk,
-  TextChunk,
-  ThinkingChunk,
-  ToolChunk,
-  UsageChunk,
-  ErrorChunk,
-} from "./events/stream-chunk";
+export { StreamChunk, TextChunk, ThinkingChunk, ToolChunk, UsageChunk, ErrorChunk } from "./events/stream-chunk";
 
 export { MemoryEntry } from "./memory/memory-entry";
 export { MemoryStore } from "./memory/memory-store";
@@ -123,6 +97,10 @@ export { EngineCheckpoint } from "./pipeline/engine-checkpoint";
 export { ResumeContext } from "./pipeline/resume-context";
 export { TurnCommit } from "./pipeline/turn-commit";
 export { TurnEngineResult } from "./pipeline/turn-engine-result";
+export type { EnginePermissionPort } from "./pipeline/engine-permission-port";
+export type { EngineToolPort } from "./pipeline/engine-tool-port";
+export type { EngineDurabilityPort } from "./pipeline/engine-durability-port";
+export type { EnginePostCommitPort } from "./pipeline/engine-post-commit-port";
 export { HostPolicyRequest } from "./pipeline/host-policy-request";
 export { HostPolicyResult } from "./pipeline/host-policy-result";
 export { FinalOutputPolicyRequest } from "./pipeline/final-output-policy-request";
@@ -157,14 +135,7 @@ export { ParserConfig } from "./template/parser-config";
 export { Template } from "./template/template";
 
 export { Binding } from "./tools/binding";
-export {
-  Tool,
-  FunctionTool,
-  CustomTool,
-  McpTool,
-  OpenApiTool,
-  PromptyTool,
-} from "./tools/tool";
+export { Tool, FunctionTool, CustomTool, McpTool, OpenApiTool, PromptyTool } from "./tools/tool";
 export { McpApprovalMode } from "./tools/mcp-approval-mode";
 export { ToolContext } from "./tools/tool-context";
 export { ToolDispatchResult } from "./tools/tool-dispatch-result";

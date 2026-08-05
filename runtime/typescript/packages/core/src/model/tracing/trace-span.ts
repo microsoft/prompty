@@ -17,7 +17,7 @@ export class TraceSpan {
   error?: string | undefined;
   __usage?: TokenUsage | undefined;
   attributes?: Record<string, unknown> | undefined;
-  __frames?: unknown[] = [];
+  __frames?: unknown[];
 
   constructor(init?: Partial<TraceSpan>) {
     this.name = init?.name ?? "";
@@ -50,20 +50,21 @@ export class TraceSpan {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): TraceSpan {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if ((data["__time"] === undefined || data["__time"] === null)) {
+      throw new Error(`${context.at("__time").path}: missing required field`);
+    }
     const instance = new TraceSpan();
 
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
     if (data["__time"] !== undefined && data["__time"] !== null) {
-      instance.__time = TraceTime.load(
-        data["__time"] as Record<string, unknown>,
-        context,
-      );
+      instance.__time = TraceTime.load(data["__time"] as Record<string, unknown>, context.at("__time"));
     }
     if (data["signature"] !== undefined && data["signature"] !== null) {
       instance.signature = String(data["signature"]);
@@ -78,10 +79,7 @@ export class TraceSpan {
       instance.error = String(data["error"]);
     }
     if (data["__usage"] !== undefined && data["__usage"] !== null) {
-      instance.__usage = TokenUsage.load(
-        data["__usage"] as Record<string, unknown>,
-        context,
-      );
+      instance.__usage = TokenUsage.load(data["__usage"] as Record<string, unknown>, context.at("__usage"));
     }
     if (data["attributes"] !== undefined && data["attributes"] !== null) {
       instance.attributes = data["attributes"] as Record<string, unknown>;

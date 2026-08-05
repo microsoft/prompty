@@ -26,10 +26,8 @@ export class RunTurnRequest {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): RunTurnRequest {
+  static load(data: Record<string, unknown>, context?: LoadContext): RunTurnRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -46,10 +44,7 @@ export class RunTurnRequest {
       instance.inputs = data["inputs"] as Record<string, unknown>;
     }
     if (data["options"] !== undefined && data["options"] !== null) {
-      instance.options = TurnOptions.load(
-        data["options"] as Record<string, unknown>,
-        context,
-      );
+      instance.options = TurnOptions.load(data["options"] as Record<string, unknown>, context.at("options"));
     }
 
     if (context) {

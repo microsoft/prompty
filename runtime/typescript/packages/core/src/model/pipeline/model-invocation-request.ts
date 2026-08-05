@@ -18,21 +18,19 @@ export class ModelInvocationRequest {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ModelInvocationRequest {
+  static load(data: Record<string, unknown>, context?: LoadContext): ModelInvocationRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if ((data["context"] === undefined || data["context"] === null)) {
+      throw new Error(`${context.at("context").path}: missing required field`);
+    }
     const instance = new ModelInvocationRequest();
 
     if (data["context"] !== undefined && data["context"] !== null) {
-      instance.context = ModelInvocationContextSnapshot.load(
-        data["context"] as Record<string, unknown>,
-        context,
-      );
+      instance.context = ModelInvocationContextSnapshot.load(data["context"] as Record<string, unknown>, context.at("context"));
     }
 
     if (context) {
@@ -75,19 +73,13 @@ export class ModelInvocationRequest {
 
   static fromJson(json: string, context?: LoadContext): ModelInvocationRequest {
     const data = JSON.parse(json);
-    return ModelInvocationRequest.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ModelInvocationRequest.load(data as Record<string, unknown>, context);
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ModelInvocationRequest {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ModelInvocationRequest.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ModelInvocationRequest.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

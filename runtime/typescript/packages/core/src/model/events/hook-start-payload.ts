@@ -32,20 +32,15 @@ export class HookStartPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): HookStartPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): HookStartPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
     const instance = new HookStartPayload();
 
-    if (
-      data["hookInvocationId"] !== undefined &&
-      data["hookInvocationId"] !== null
-    ) {
+    if (data["hookInvocationId"] !== undefined && data["hookInvocationId"] !== null) {
       instance.hookInvocationId = String(data["hookInvocationId"]);
     }
     if (data["hookType"] !== undefined && data["hookType"] !== null) {
@@ -58,10 +53,7 @@ export class HookStartPayload {
       instance.input = data["input"] as Record<string, unknown>;
     }
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
-      instance.redaction = RedactionMetadata.load(
-        data["redaction"] as Record<string, unknown>,
-        context,
-      );
+      instance.redaction = RedactionMetadata.load(data["redaction"] as Record<string, unknown>, context.at("redaction"));
     }
 
     if (context) {

@@ -51,7 +51,7 @@ class TraceSpan:
     error: str | None = None
     __usage: TokenUsage | None = None
     attributes: dict[str, Any] | None = None
-    __frames: list[Any] = field(default_factory=list)
+    __frames: list[Any] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "TraceSpan":
@@ -64,11 +64,14 @@ class TraceSpan:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TraceSpan: {data}")
+        if ("__time" not in data or data["__time"] is None):
+            raise ValueError(f"{context.at('__time').path}: missing required field")
 
         # create new instance
         instance = TraceSpan()
@@ -76,7 +79,7 @@ class TraceSpan:
         if data is not None and "name" in data:
             instance.name = data["name"]
         if data is not None and "__time" in data:
-            instance.__time = TraceTime.load(data["__time"], context)
+            instance.__time = TraceTime.load(data["__time"], context.at("__time"))
         if data is not None and "signature" in data:
             instance.signature = data["signature"]
         if data is not None and "inputs" in data:
@@ -86,7 +89,7 @@ class TraceSpan:
         if data is not None and "error" in data:
             instance.error = data["error"]
         if data is not None and "__usage" in data:
-            instance.__usage = TokenUsage.load(data["__usage"], context)
+            instance.__usage = TokenUsage.load(data["__usage"], context.at("__usage"))
         if data is not None and "attributes" in data:
             instance.attributes = data["attributes"]
         if data is not None and "__frames" in data:
@@ -94,6 +97,8 @@ class TraceSpan:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TraceSpan instance to a dictionary.
@@ -106,6 +111,7 @@ class TraceSpan:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

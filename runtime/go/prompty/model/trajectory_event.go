@@ -26,6 +26,9 @@ type TrajectoryEvent struct {
 
 // LoadTrajectoryEvent creates a TrajectoryEvent from a map[string]interface{}
 func LoadTrajectoryEvent(data interface{}, ctx *LoadContext) (TrajectoryEvent, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TrajectoryEvent{}
 
 	// Load from map
@@ -74,7 +77,7 @@ func LoadTrajectoryEvent(data interface{}, ctx *LoadContext) (TrajectoryEvent, e
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
 				if err != nil {
 					return result, err
 				}

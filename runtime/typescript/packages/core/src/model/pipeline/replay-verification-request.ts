@@ -18,10 +18,8 @@ export class ReplayVerificationRequest {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ReplayVerificationRequest {
+  static load(data: Record<string, unknown>, context?: LoadContext): ReplayVerificationRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -29,16 +27,10 @@ export class ReplayVerificationRequest {
     const instance = new ReplayVerificationRequest();
 
     if (data["expected"] !== undefined && data["expected"] !== null) {
-      instance.expected = ReplayVerificationRequest.loadExpected(
-        data["expected"] as unknown[],
-        context,
-      );
+      instance.expected = ReplayVerificationRequest.loadExpected(data["expected"] as unknown[], context.at("expected"));
     }
     if (data["actual"] !== undefined && data["actual"] !== null) {
-      instance.actual = ReplayVerificationRequest.loadActual(
-        data["actual"] as unknown[],
-        context,
-      );
+      instance.actual = ReplayVerificationRequest.loadActual(data["actual"] as unknown[], context.at("actual"));
     }
 
     if (context) {
@@ -47,70 +39,60 @@ export class ReplayVerificationRequest {
     return instance;
   }
 
-  static loadExpected(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): ReplayJournalRecord[] {
+  static loadExpected(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ReplayJournalRecord[] {
+    context ??= new LoadContext({ path: "expected" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ReplayJournalRecord[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(ReplayJournalRecord.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, kind: v });
+          result.push(ReplayJournalRecord.load({ name: k, "kind": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ReplayJournalRecord.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => ReplayJournalRecord.load(item as Record<string, unknown>, context));
   }
 
-  static saveExpected(
-    items: ReplayJournalRecord[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveExpected(items: ReplayJournalRecord[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
-  static loadActual(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): ReplayJournalRecord[] {
+  static loadActual(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ReplayJournalRecord[] {
+    context ??= new LoadContext({ path: "actual" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ReplayJournalRecord[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(ReplayJournalRecord.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, kind: v });
+          result.push(ReplayJournalRecord.load({ name: k, "kind": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ReplayJournalRecord.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => ReplayJournalRecord.load(item as Record<string, unknown>, context));
   }
 
-  static saveActual(
-    items: ReplayJournalRecord[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveActual(items: ReplayJournalRecord[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -126,16 +108,10 @@ export class ReplayVerificationRequest {
     const result: Record<string, unknown> = {};
 
     if (obj.expected !== undefined && obj.expected !== null) {
-      result["expected"] = ReplayVerificationRequest.saveExpected(
-        obj.expected,
-        context,
-      );
+      result["expected"] = ReplayVerificationRequest.saveExpected(obj.expected, context);
     }
     if (obj.actual !== undefined && obj.actual !== null) {
-      result["actual"] = ReplayVerificationRequest.saveActual(
-        obj.actual,
-        context,
-      );
+      result["actual"] = ReplayVerificationRequest.saveActual(obj.actual, context);
     }
 
     if (context) {
@@ -154,27 +130,15 @@ export class ReplayVerificationRequest {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): ReplayVerificationRequest {
+  static fromJson(json: string, context?: LoadContext): ReplayVerificationRequest {
     const data = JSON.parse(json);
-    return ReplayVerificationRequest.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ReplayVerificationRequest.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): ReplayVerificationRequest {
+  static fromYaml(yaml: string, context?: LoadContext): ReplayVerificationRequest {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ReplayVerificationRequest.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ReplayVerificationRequest.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

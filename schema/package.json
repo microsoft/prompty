@@ -14,6 +14,6 @@
   "dependencies": {
     "@typespec/compiler": "1.10.0",
     "@typespec/json-schema": "1.10.0",
-    "@typra/emitter": "0.4.2"
+    "@typra/emitter": "0.4.15"
   }
 }

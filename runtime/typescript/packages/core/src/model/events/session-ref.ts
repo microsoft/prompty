@@ -29,10 +29,8 @@ export class SessionRef {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): SessionRef {
+  static load(data: Record<string, unknown>, context?: LoadContext): SessionRef {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

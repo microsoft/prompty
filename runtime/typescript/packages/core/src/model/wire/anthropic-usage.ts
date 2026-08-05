@@ -17,10 +17,8 @@ export class AnthropicUsage {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): AnthropicUsage {
+  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicUsage {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

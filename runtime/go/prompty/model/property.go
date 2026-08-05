@@ -6,6 +6,8 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
+	"sort"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,18 +22,43 @@ import (
 type Property struct {
 	Name        string        `json:"name" yaml:"name"`
 	Kind        string        `json:"kind" yaml:"kind"`
-	Description *string       `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    *bool         `json:"required,omitempty" yaml:"required,omitempty"`
-	Nullable    *bool         `json:"nullable,omitempty" yaml:"nullable,omitempty"`
-	Default     *interface{}  `json:"default,omitempty" yaml:"default,omitempty"`
-	Example     *interface{}  `json:"example,omitempty" yaml:"example,omitempty"`
-	EnumValues  []interface{} `json:"enumValues,omitempty" yaml:"enumValues,omitempty"`
+	Description *string       `json:"description" yaml:"description"`
+	Required    *bool         `json:"required" yaml:"required"`
+	Nullable    *bool         `json:"nullable" yaml:"nullable"`
+	Default     *interface{}  `json:"default" yaml:"default"`
+	Example     *interface{}  `json:"example" yaml:"example"`
+	EnumValues  []interface{} `json:"enumValues" yaml:"enumValues"`
+	raw         map[string]interface{}
+}
+
+func clonePropertyRawValue(value interface{}) interface{} {
+	switch value := value.(type) {
+	case map[string]interface{}:
+		result := make(map[string]interface{}, len(value))
+		for key, item := range value {
+			result[key] = clonePropertyRawValue(item)
+		}
+		return result
+	case []interface{}:
+		result := make([]interface{}, len(value))
+		for index, item := range value {
+			result[index] = clonePropertyRawValue(item)
+		}
+		return result
+	default:
+		return value
+	}
 }
 
 // LoadProperty creates a Property from a map[string]interface{}
 // Returns interface{} because this is a polymorphic base type that can resolve to different child types
 func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
-	result := Property{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := Property{
+		EnumValues: []interface{}{},
+	}
 
 	// Handle alternate scalar representations
 	switch v := data.(type) {
@@ -64,11 +91,7 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 					return LoadObjectProperty(data, ctx)
 				case "union":
 					return LoadUnionProperty(data, ctx)
-				default:
-					return result, nil
 				}
-			default:
-				return result, nil
 			}
 		}
 	}
@@ -104,6 +127,18 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 				result.EnumValues = arr
 			}
 		}
+		result.raw = make(map[string]interface{}, len(m))
+		for key, value := range m {
+			result.raw[key] = clonePropertyRawValue(value)
+		}
+		delete(result.raw, "name")
+		delete(result.raw, "kind")
+		delete(result.raw, "description")
+		delete(result.raw, "required")
+		delete(result.raw, "nullable")
+		delete(result.raw, "default")
+		delete(result.raw, "example")
+		delete(result.raw, "enumValues")
 	}
 
 	return result, nil
@@ -112,6 +147,9 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 // Save serializes Property to map[string]interface{}
 func (obj Property) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	for key, value := range obj.raw {
+		result[key] = clonePropertyRawValue(value)
+	}
 	result["name"] = obj.Name
 	result["kind"] = obj.Kind
 	if obj.Description != nil {
@@ -129,7 +167,9 @@ func (obj Property) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.Example != nil {
 		result["example"] = *obj.Example
 	}
-	result["enumValues"] = obj.EnumValues
+	if obj.EnumValues != nil {
+		result["enumValues"] = obj.EnumValues
+	}
 
 	return result
 }
@@ -180,21 +220,29 @@ func PropertyFromYAML(yamlStr string) (interface{}, error) {
 type ArrayProperty struct {
 	Name        string        `json:"name" yaml:"name"`
 	Kind        string        `json:"kind" yaml:"kind"`
-	Description *string       `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    *bool         `json:"required,omitempty" yaml:"required,omitempty"`
-	Nullable    *bool         `json:"nullable,omitempty" yaml:"nullable,omitempty"`
-	Default     *interface{}  `json:"default,omitempty" yaml:"default,omitempty"`
-	Example     *interface{}  `json:"example,omitempty" yaml:"example,omitempty"`
-	EnumValues  []interface{} `json:"enumValues,omitempty" yaml:"enumValues,omitempty"`
+	Description *string       `json:"description" yaml:"description"`
+	Required    *bool         `json:"required" yaml:"required"`
+	Nullable    *bool         `json:"nullable" yaml:"nullable"`
+	Default     *interface{}  `json:"default" yaml:"default"`
+	Example     *interface{}  `json:"example" yaml:"example"`
+	EnumValues  []interface{} `json:"enumValues" yaml:"enumValues"`
 	Items       interface{}   `json:"items" yaml:"items"`
 }
 
 // LoadArrayProperty creates a ArrayProperty from a map[string]interface{}
 func LoadArrayProperty(data interface{}, ctx *LoadContext) (ArrayProperty, error) {
-	result := ArrayProperty{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := ArrayProperty{
+		EnumValues: []interface{}{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["items"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("items").Path)
+		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
 		}
@@ -227,14 +275,14 @@ func LoadArrayProperty(data interface{}, ctx *LoadContext) (ArrayProperty, error
 		}
 		if val, ok := m["items"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadProperty(m, ctx)
+				loaded, err := LoadProperty(m, ctx.At("items"))
 				if err != nil {
 					return result, err
 				}
 				// Polymorphic type - keep as interface{}
 				result.Items = loaded
 			} else {
-				loaded, err := LoadProperty(val, ctx)
+				loaded, err := LoadProperty(val, ctx.At("items"))
 				if err != nil {
 					return result, err
 				}
@@ -266,7 +314,9 @@ func (obj ArrayProperty) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.Example != nil {
 		result["example"] = *obj.Example
 	}
-	result["enumValues"] = obj.EnumValues
+	if obj.EnumValues != nil {
+		result["enumValues"] = obj.EnumValues
+	}
 
 	// Handle polymorphic type via type switch
 	switch v := obj.Items.(type) {
@@ -325,18 +375,24 @@ func ArrayPropertyFromYAML(yamlStr string) (ArrayProperty, error) {
 type ObjectProperty struct {
 	Name        string        `json:"name" yaml:"name"`
 	Kind        string        `json:"kind" yaml:"kind"`
-	Description *string       `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    *bool         `json:"required,omitempty" yaml:"required,omitempty"`
-	Nullable    *bool         `json:"nullable,omitempty" yaml:"nullable,omitempty"`
-	Default     *interface{}  `json:"default,omitempty" yaml:"default,omitempty"`
-	Example     *interface{}  `json:"example,omitempty" yaml:"example,omitempty"`
-	EnumValues  []interface{} `json:"enumValues,omitempty" yaml:"enumValues,omitempty"`
+	Description *string       `json:"description" yaml:"description"`
+	Required    *bool         `json:"required" yaml:"required"`
+	Nullable    *bool         `json:"nullable" yaml:"nullable"`
+	Default     *interface{}  `json:"default" yaml:"default"`
+	Example     *interface{}  `json:"example" yaml:"example"`
+	EnumValues  []interface{} `json:"enumValues" yaml:"enumValues"`
 	Properties  []interface{} `json:"properties" yaml:"properties"`
 }
 
 // LoadObjectProperty creates a ObjectProperty from a map[string]interface{}
 func LoadObjectProperty(data interface{}, ctx *LoadContext) (ObjectProperty, error) {
-	result := ObjectProperty{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := ObjectProperty{
+		EnumValues: []interface{}{},
+		Properties: []interface{}{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -371,11 +427,41 @@ func LoadObjectProperty(data interface{}, ctx *LoadContext) (ObjectProperty, err
 			}
 		}
 		if val, ok := m["properties"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Properties = make([]interface{}, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("properties").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["example"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadProperty(item, ctx.At("properties").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Properties = append(result.Properties, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Properties = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx.At("properties"))
 						if err != nil {
 							return result, err
 						}
@@ -410,7 +496,9 @@ func (obj ObjectProperty) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.Example != nil {
 		result["example"] = *obj.Example
 	}
-	result["enumValues"] = obj.EnumValues
+	if obj.EnumValues != nil {
+		result["enumValues"] = obj.EnumValues
+	}
 	if obj.Properties != nil {
 		arr := make([]interface{}, len(obj.Properties))
 		for i, item := range obj.Properties {
@@ -424,7 +512,48 @@ func (obj ObjectProperty) Save(ctx *SaveContext) map[string]interface{} {
 				arr[i] = item
 			}
 		}
-		result["properties"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["example"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["properties"] = objectItems
+		} else {
+			result["properties"] = arr
+		}
 	}
 
 	return result
@@ -479,19 +608,24 @@ func ObjectPropertyFromYAML(yamlStr string) (ObjectProperty, error) {
 type UnionProperty struct {
 	Name        string        `json:"name" yaml:"name"`
 	Kind        string        `json:"kind" yaml:"kind"`
-	Description *string       `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    *bool         `json:"required,omitempty" yaml:"required,omitempty"`
-	Nullable    *bool         `json:"nullable,omitempty" yaml:"nullable,omitempty"`
-	Default     *interface{}  `json:"default,omitempty" yaml:"default,omitempty"`
-	Example     *interface{}  `json:"example,omitempty" yaml:"example,omitempty"`
-	EnumValues  []interface{} `json:"enumValues,omitempty" yaml:"enumValues,omitempty"`
+	Description *string       `json:"description" yaml:"description"`
+	Required    *bool         `json:"required" yaml:"required"`
+	Nullable    *bool         `json:"nullable" yaml:"nullable"`
+	Default     *interface{}  `json:"default" yaml:"default"`
+	Example     *interface{}  `json:"example" yaml:"example"`
+	EnumValues  []interface{} `json:"enumValues" yaml:"enumValues"`
 	OneOf       []interface{} `json:"oneOf,omitempty" yaml:"oneOf,omitempty"`
 	AnyOf       []interface{} `json:"anyOf,omitempty" yaml:"anyOf,omitempty"`
 }
 
 // LoadUnionProperty creates a UnionProperty from a map[string]interface{}
 func LoadUnionProperty(data interface{}, ctx *LoadContext) (UnionProperty, error) {
-	result := UnionProperty{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := UnionProperty{
+		EnumValues: []interface{}{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -530,7 +664,7 @@ func LoadUnionProperty(data interface{}, ctx *LoadContext) (UnionProperty, error
 				result.OneOf = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx.At("oneOf"))
 						if err != nil {
 							return result, err
 						}
@@ -545,7 +679,7 @@ func LoadUnionProperty(data interface{}, ctx *LoadContext) (UnionProperty, error
 				result.AnyOf = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx.At("anyOf"))
 						if err != nil {
 							return result, err
 						}
@@ -580,7 +714,9 @@ func (obj UnionProperty) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.Example != nil {
 		result["example"] = *obj.Example
 	}
-	result["enumValues"] = obj.EnumValues
+	if obj.EnumValues != nil {
+		result["enumValues"] = obj.EnumValues
+	}
 	if obj.OneOf != nil {
 		arr := make([]interface{}, len(obj.OneOf))
 		for i, item := range obj.OneOf {

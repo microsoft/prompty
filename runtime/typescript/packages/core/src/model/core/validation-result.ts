@@ -18,10 +18,8 @@ export class ValidationResult {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ValidationResult {
+  static load(data: Record<string, unknown>, context?: LoadContext): ValidationResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -32,10 +30,7 @@ export class ValidationResult {
       instance.valid = Boolean(data["valid"]);
     }
     if (data["errors"] !== undefined && data["errors"] !== null) {
-      instance.errors = ValidationResult.loadErrors(
-        data["errors"] as unknown[],
-        context,
-      );
+      instance.errors = ValidationResult.loadErrors(data["errors"] as unknown[], context.at("errors"));
     }
 
     if (context) {
@@ -44,37 +39,32 @@ export class ValidationResult {
     return instance;
   }
 
-  static loadErrors(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): ValidationError[] {
+  static loadErrors(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ValidationError[] {
+    context ??= new LoadContext({ path: "errors" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ValidationError[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(ValidationError.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, message: v });
+          result.push(ValidationError.load({ name: k, "message": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ValidationError.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => ValidationError.load(item as Record<string, unknown>, context));
   }
 
-  static saveErrors(
-    items: ValidationError[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveErrors(items: ValidationError[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion

@@ -19,10 +19,8 @@ export class ProjectInfo {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ProjectInfo {
+  static load(data: Record<string, unknown>, context?: LoadContext): ProjectInfo {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -77,9 +75,9 @@ export class ProjectInfo {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      name: { foundry: "name" },
-      displayName: { foundry: "display_name" },
-      endpoint: { foundry: "endpoint" },
+      "name": { "foundry": "name" },
+      "displayName": { "foundry": "display_name" },
+      "endpoint": { "foundry": "endpoint" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

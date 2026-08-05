@@ -43,11 +43,14 @@ class TraceFile:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TraceFile: {data}")
+        if ("trace" not in data or data["trace"] is None):
+            raise ValueError(f"{context.at('trace').path}: missing required field")
 
         # create new instance
         instance = TraceFile()
@@ -57,10 +60,12 @@ class TraceFile:
         if data is not None and "version" in data:
             instance.version = data["version"]
         if data is not None and "trace" in data:
-            instance.trace = TraceSpan.load(data["trace"], context)
+            instance.trace = TraceSpan.load(data["trace"], context.at("trace"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TraceFile instance to a dictionary.
@@ -73,6 +78,7 @@ class TraceFile:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

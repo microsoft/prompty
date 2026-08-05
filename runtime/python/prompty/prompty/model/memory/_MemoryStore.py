@@ -42,8 +42,9 @@ class MemoryStore:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for MemoryStore: {data}")
@@ -52,24 +53,30 @@ class MemoryStore:
         instance = MemoryStore()
 
         if data is not None and "entries" in data:
-            instance.entries = MemoryStore.load_entries(data["entries"], context)
+            instance.entries = MemoryStore.load_entries(data["entries"], context.at("entries"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_entries(data: dict | list, context: LoadContext | None) -> list[MemoryEntry]:
+        if context is None:
+            context = LoadContext(path="entries")
         if isinstance(data, dict):
             # convert simple named entries to list of MemoryEntry
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(MemoryEntry.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "content": v})
-            data = result
+                    result.append(MemoryEntry.load({"name": k, "content": v}, context.at(k)))
+            return result
         return [MemoryEntry.load(item, context) for item in data]
 
     @staticmethod
@@ -77,7 +84,7 @@ class MemoryStore:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -91,6 +98,7 @@ class MemoryStore:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

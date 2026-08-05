@@ -39,8 +39,9 @@ class Binding:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         # handle alternate representations
         if isinstance(data, str):
@@ -64,6 +65,8 @@ class Binding:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Binding instance to a dictionary.
         Args:
@@ -75,6 +78,7 @@ class Binding:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

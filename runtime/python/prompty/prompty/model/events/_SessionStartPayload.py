@@ -61,8 +61,9 @@ class SessionStartPayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for SessionStartPayload: {data}")
@@ -87,10 +88,12 @@ class SessionStartPayload:
         if data is not None and "reasoningEffort" in data:
             instance.reasoning_effort = data["reasoningEffort"]
         if data is not None and "context" in data:
-            instance.context = HarnessContext.load(data["context"], context)
+            instance.context = HarnessContext.load(data["context"], context.at("context"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the SessionStartPayload instance to a dictionary.
@@ -103,6 +106,7 @@ class SessionStartPayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

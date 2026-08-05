@@ -15,8 +15,7 @@ import (
 
 // LoadContext provides context for loading operations
 type LoadContext struct {
-	// Add any context fields needed for loading
-	// e.g., file paths, base directories, etc.
+	Path string
 }
 
 // NewLoadContext creates a new LoadContext
@@ -24,15 +23,26 @@ func NewLoadContext() *LoadContext {
 	return &LoadContext{}
 }
 
+// At creates a child context for a nested schema field.
+func (ctx *LoadContext) At(segment string) *LoadContext {
+	if ctx == nil || ctx.Path == "" {
+		return &LoadContext{Path: segment}
+	}
+	return &LoadContext{Path: ctx.Path + "." + segment}
+}
+
 // SaveContext provides context for saving operations
+const CollectionFormatObject = "object"
+const CollectionFormatArray = "array"
+
 type SaveContext struct {
-	// Add any context fields needed for saving
-	// e.g., output directories, formatting options, etc.
+	CollectionFormat string
+	UseShorthand     bool
 }
 
 // NewSaveContext creates a new SaveContext
 func NewSaveContext() *SaveContext {
-	return &SaveContext{}
+	return &SaveContext{CollectionFormat: CollectionFormatObject, UseShorthand: true}
 }
 
 // ptrOf returns a pointer to the given value. Used by factory functions

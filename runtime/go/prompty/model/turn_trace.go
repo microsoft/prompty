@@ -22,6 +22,9 @@ type TurnTrace struct {
 
 // LoadTurnTrace creates a TurnTrace from a map[string]interface{}
 func LoadTurnTrace(data interface{}, ctx *LoadContext) (TurnTrace, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TurnTrace{}
 
 	// Load from map
@@ -42,7 +45,7 @@ func LoadTurnTrace(data interface{}, ctx *LoadContext) (TurnTrace, error) {
 				result.Events = make([]TurnEvent, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadTurnEvent(item, ctx)
+						loaded, err := LoadTurnEvent(item, ctx.At("events"))
 						if err != nil {
 							return result, err
 						}
@@ -53,7 +56,7 @@ func LoadTurnTrace(data interface{}, ctx *LoadContext) (TurnTrace, error) {
 		}
 		if val, ok := m["summary"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTurnSummary(m, ctx)
+				loaded, err := LoadTurnSummary(m, ctx.At("summary"))
 				if err != nil {
 					return result, err
 				}

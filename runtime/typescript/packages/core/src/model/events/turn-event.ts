@@ -4,31 +4,7 @@
 
 import { LoadContext, SaveContext } from "../context";
 
-export type TurnEventType =
-  | "turn_start"
-  | "turn_end"
-  | "llm_start"
-  | "llm_complete"
-  | "retry"
-  | "permission_requested"
-  | "permission_completed"
-  | "token"
-  | "thinking"
-  | "tool_call_start"
-  | "tool_call_complete"
-  | "tool_execution_start"
-  | "tool_execution_complete"
-  | "tool_result"
-  | "hook_start"
-  | "hook_end"
-  | "status"
-  | "messages_updated"
-  | "done"
-  | "error"
-  | "cancelled"
-  | "compaction_start"
-  | "compaction_complete"
-  | "compaction_failed";
+export type TurnEventType = "turn_start" | "turn_end" | "llm_start" | "llm_complete" | "retry" | "permission_requested" | "permission_completed" | "token" | "thinking" | "tool_call_start" | "tool_call_complete" | "tool_execution_start" | "tool_execution_complete" | "tool_result" | "hook_start" | "hook_end" | "status" | "messages_updated" | "done" | "error" | "cancelled" | "compaction_start" | "compaction_complete" | "compaction_failed";
 
 export class TurnEvent {
   static readonly shorthandProperty: string | undefined = undefined;
@@ -64,6 +40,7 @@ export class TurnEvent {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): TurnEvent {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

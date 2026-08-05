@@ -31,6 +31,9 @@ type SessionEndPayload struct {
 
 // LoadSessionEndPayload creates a SessionEndPayload from a map[string]interface{}
 func LoadSessionEndPayload(data interface{}, ctx *LoadContext) (SessionEndPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := SessionEndPayload{}
 
 	// Load from map

@@ -91,8 +91,8 @@ class EngineCheckpoint:
     stable_prefix_messages: int = field(default=0)
     inputs: Any | None = None
     active_invocation_id: str | None = None
-    pending_tool_requests: list[ModelToolRequest] = field(default_factory=list)
-    completed_tool_results: list[ModelToolResult] = field(default_factory=list)
+    pending_tool_requests: list[ModelToolRequest] | None = field(default_factory=list)
+    completed_tool_results: list[ModelToolResult] | None = field(default_factory=list)
     completed_model_iterations: int = field(default=0)
     reconciliation_required: bool = field(default=False)
     model_reconciliation: ModelReconciliationState | None = None
@@ -115,11 +115,14 @@ class EngineCheckpoint:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for EngineCheckpoint: {data}")
+        if ("contextState" not in data or data["contextState"] is None):
+            raise ValueError(f"{context.at('contextState').path}: missing required field")
 
         # create new instance
         instance = EngineCheckpoint()
@@ -141,7 +144,7 @@ class EngineCheckpoint:
         if data is not None and "lastSequence" in data:
             instance.last_sequence = data["lastSequence"]
         if data is not None and "messages" in data:
-            instance.messages = EngineCheckpoint.load_messages(data["messages"], context)
+            instance.messages = EngineCheckpoint.load_messages(data["messages"], context.at("messages"))
         if data is not None and "stablePrefixMessages" in data:
             instance.stable_prefix_messages = data["stablePrefixMessages"]
         if data is not None and "inputs" in data:
@@ -149,50 +152,52 @@ class EngineCheckpoint:
         if data is not None and "activeInvocationId" in data:
             instance.active_invocation_id = data["activeInvocationId"]
         if data is not None and "pendingToolRequests" in data:
-            instance.pending_tool_requests = EngineCheckpoint.load_pending_tool_requests(
-                data["pendingToolRequests"], context
-            )
+            instance.pending_tool_requests = EngineCheckpoint.load_pending_tool_requests(data["pendingToolRequests"], context.at("pendingToolRequests"))
         if data is not None and "completedToolResults" in data:
-            instance.completed_tool_results = EngineCheckpoint.load_completed_tool_results(
-                data["completedToolResults"], context
-            )
+            instance.completed_tool_results = EngineCheckpoint.load_completed_tool_results(data["completedToolResults"], context.at("completedToolResults"))
         if data is not None and "completedModelIterations" in data:
             instance.completed_model_iterations = data["completedModelIterations"]
         if data is not None and "reconciliationRequired" in data:
             instance.reconciliation_required = data["reconciliationRequired"]
         if data is not None and "modelReconciliation" in data:
-            instance.model_reconciliation = ModelReconciliationState.load(data["modelReconciliation"], context)
+            instance.model_reconciliation = ModelReconciliationState.load(data["modelReconciliation"], context.at("modelReconciliation"))
         if data is not None and "pendingOutput" in data:
             instance.pending_output = data["pendingOutput"]
         if data is not None and "finalOutputReady" in data:
             instance.final_output_ready = data["finalOutputReady"]
         if data is not None and "pendingModelResponse" in data:
-            instance.pending_model_response = ModelInvocationResponse.load(data["pendingModelResponse"], context)
+            instance.pending_model_response = ModelInvocationResponse.load(data["pendingModelResponse"], context.at("pendingModelResponse"))
         if data is not None and "resumeSameIteration" in data:
             instance.resume_same_iteration = data["resumeSameIteration"]
         if data is not None and "policyAppliedForIteration" in data:
             instance.policy_applied_for_iteration = data["policyAppliedForIteration"]
         if data is not None and "contextState" in data:
-            instance.context_state = InvocationContextState.load(data["contextState"], context)
+            instance.context_state = InvocationContextState.load(data["contextState"], context.at("contextState"))
         if data is not None and "metadata" in data:
             instance.metadata = data["metadata"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
+        if context is None:
+            context = LoadContext(path="messages")
         if isinstance(data, dict):
             # convert simple named messages to list of Message
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Message.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
+                    result.append(Message.load({"name": k, "role": v}, context.at(k)))
+            return result
         return [Message.load(item, context) for item in data]
 
     @staticmethod
@@ -200,98 +205,62 @@ class EngineCheckpoint:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_pending_tool_requests(data: dict | list, context: LoadContext | None) -> list[ModelToolRequest]:
+        if context is None:
+            context = LoadContext(path="pendingToolRequests")
         if isinstance(data, dict):
             # convert simple named pendingToolRequests to list of ModelToolRequest
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ModelToolRequest.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
-            data = result
+                    result.append(ModelToolRequest.load({"name": k, "id": v}, context.at(k)))
+            return result
         return [ModelToolRequest.load(item, context) for item in data]
 
     @staticmethod
-    def save_pending_tool_requests(
-        items: list[ModelToolRequest], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_pending_tool_requests(items: list[ModelToolRequest], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # The schema declares an ordered collection, so preserve array format
+        return [item.save(context) for item in items]
 
     @staticmethod
     def load_completed_tool_results(data: dict | list, context: LoadContext | None) -> list[ModelToolResult]:
+        if context is None:
+            context = LoadContext(path="completedToolResults")
         if isinstance(data, dict):
             # convert simple named completedToolResults to list of ModelToolResult
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ModelToolResult.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "requestId": v})
-            data = result
+                    result.append(ModelToolResult.load({"name": k, "requestId": v}, context.at(k)))
+            return result
         return [ModelToolResult.load(item, context) for item in data]
 
     @staticmethod
-    def save_completed_tool_results(
-        items: list[ModelToolResult], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_completed_tool_results(items: list[ModelToolResult], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # The schema declares an ordered collection, so preserve array format
+        return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the EngineCheckpoint instance to a dictionary.
@@ -304,6 +273,7 @@ class EngineCheckpoint:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -332,13 +302,9 @@ class EngineCheckpoint:
         if obj.active_invocation_id is not None:
             result["activeInvocationId"] = obj.active_invocation_id
         if obj.pending_tool_requests is not None:
-            result["pendingToolRequests"] = EngineCheckpoint.save_pending_tool_requests(
-                obj.pending_tool_requests, context
-            )
+            result["pendingToolRequests"] = EngineCheckpoint.save_pending_tool_requests(obj.pending_tool_requests, context)
         if obj.completed_tool_results is not None:
-            result["completedToolResults"] = EngineCheckpoint.save_completed_tool_results(
-                obj.completed_tool_results, context
-            )
+            result["completedToolResults"] = EngineCheckpoint.save_completed_tool_results(obj.completed_tool_results, context)
         if obj.completed_model_iterations is not None:
             result["completedModelIterations"] = obj.completed_model_iterations
         if obj.reconciliation_required is not None:

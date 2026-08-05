@@ -35,14 +35,15 @@ export class ContextRequest {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ContextRequest {
+  static load(data: Record<string, unknown>, context?: LoadContext): ContextRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if ((data["contextState"] === undefined || data["contextState"] === null)) {
+      throw new Error(`${context.at("contextState").path}: missing required field`);
+    }
     const instance = new ContextRequest();
 
     if (data["sessionId"] !== undefined && data["sessionId"] !== null) {
@@ -58,22 +59,13 @@ export class ContextRequest {
       instance.iteration = Number(data["iteration"]);
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = ContextRequest.loadMessages(
-        data["messages"] as unknown[],
-        context,
-      );
+      instance.messages = ContextRequest.loadMessages(data["messages"] as unknown[], context.at("messages"));
     }
-    if (
-      data["stablePrefixMessages"] !== undefined &&
-      data["stablePrefixMessages"] !== null
-    ) {
+    if (data["stablePrefixMessages"] !== undefined && data["stablePrefixMessages"] !== null) {
       instance.stablePrefixMessages = Number(data["stablePrefixMessages"]);
     }
     if (data["contextState"] !== undefined && data["contextState"] !== null) {
-      instance.contextState = InvocationContextState.load(
-        data["contextState"] as Record<string, unknown>,
-        context,
-      );
+      instance.contextState = InvocationContextState.load(data["contextState"] as Record<string, unknown>, context.at("contextState"));
     }
     if (data["inputs"] !== undefined && data["inputs"] !== null) {
       instance.inputs = data["inputs"] as unknown;
@@ -85,37 +77,32 @@ export class ContextRequest {
     return instance;
   }
 
-  static loadMessages(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Message[] {
+  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, "role": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Message.load(item as Record<string, unknown>, context));
   }
 
-  static saveMessages(
-    items: Message[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -145,10 +132,7 @@ export class ContextRequest {
     if (obj.messages !== undefined && obj.messages !== null) {
       result["messages"] = ContextRequest.saveMessages(obj.messages, context);
     }
-    if (
-      obj.stablePrefixMessages !== undefined &&
-      obj.stablePrefixMessages !== null
-    ) {
+    if (obj.stablePrefixMessages !== undefined && obj.stablePrefixMessages !== null) {
       result["stablePrefixMessages"] = obj.stablePrefixMessages;
     }
     if (obj.contextState !== undefined && obj.contextState !== null) {

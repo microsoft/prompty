@@ -21,6 +21,9 @@ type ReplayMismatch struct {
 
 // LoadReplayMismatch creates a ReplayMismatch from a map[string]interface{}
 func LoadReplayMismatch(data interface{}, ctx *LoadContext) (ReplayMismatch, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ReplayMismatch{}
 
 	// Load from map
@@ -41,7 +44,7 @@ func LoadReplayMismatch(data interface{}, ctx *LoadContext) (ReplayMismatch, err
 		}
 		if val, ok := m["expected"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadReplayJournalRecord(m, ctx)
+				loaded, err := LoadReplayJournalRecord(m, ctx.At("expected"))
 				if err != nil {
 					return result, err
 				}
@@ -50,7 +53,7 @@ func LoadReplayMismatch(data interface{}, ctx *LoadContext) (ReplayMismatch, err
 		}
 		if val, ok := m["actual"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadReplayJournalRecord(m, ctx)
+				loaded, err := LoadReplayJournalRecord(m, ctx.At("actual"))
 				if err != nil {
 					return result, err
 				}

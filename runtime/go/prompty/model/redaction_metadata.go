@@ -13,13 +13,16 @@ import (
 // RedactionMetadata represents Metadata describing whether and how a payload was sanitized.
 
 type RedactionMetadata struct {
-	Sanitized *bool           `json:"sanitized,omitempty" yaml:"sanitized,omitempty"`
+	Sanitized *bool           `json:"sanitized" yaml:"sanitized"`
 	Fields    []RedactedField `json:"fields,omitempty" yaml:"fields,omitempty"`
 	Policy    *string         `json:"policy,omitempty" yaml:"policy,omitempty"`
 }
 
 // LoadRedactionMetadata creates a RedactionMetadata from a map[string]interface{}
 func LoadRedactionMetadata(data interface{}, ctx *LoadContext) (RedactionMetadata, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := RedactionMetadata{}
 
 	// Load from map
@@ -33,7 +36,7 @@ func LoadRedactionMetadata(data interface{}, ctx *LoadContext) (RedactionMetadat
 				result.Fields = make([]RedactedField, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadRedactedField(item, ctx)
+						loaded, err := LoadRedactedField(item, ctx.At("fields"))
 						if err != nil {
 							return result, err
 						}

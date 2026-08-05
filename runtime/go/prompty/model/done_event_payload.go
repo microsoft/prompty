@@ -19,6 +19,9 @@ type DoneEventPayload struct {
 
 // LoadDoneEventPayload creates a DoneEventPayload from a map[string]interface{}
 func LoadDoneEventPayload(data interface{}, ctx *LoadContext) (DoneEventPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := DoneEventPayload{}
 
 	// Load from map
@@ -31,7 +34,7 @@ func LoadDoneEventPayload(data interface{}, ctx *LoadContext) (DoneEventPayload,
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages"))
 						if err != nil {
 							return result, err
 						}

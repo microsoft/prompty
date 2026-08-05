@@ -25,6 +25,9 @@ type TurnSummary struct {
 
 // LoadTurnSummary creates a TurnSummary from a map[string]interface{}
 func LoadTurnSummary(data interface{}, ctx *LoadContext) (TurnSummary, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TurnSummary{}
 
 	// Load from map
@@ -93,7 +96,7 @@ func LoadTurnSummary(data interface{}, ctx *LoadContext) (TurnSummary, error) {
 		}
 		if val, ok := m["usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTokenUsage(m, ctx)
+				loaded, err := LoadTokenUsage(m, ctx.At("usage"))
 				if err != nil {
 					return result, err
 				}

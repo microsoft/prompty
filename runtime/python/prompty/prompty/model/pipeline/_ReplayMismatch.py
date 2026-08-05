@@ -46,8 +46,9 @@ class ReplayMismatch:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ReplayMismatch: {data}")
@@ -58,14 +59,16 @@ class ReplayMismatch:
         if data is not None and "index" in data:
             instance.index = data["index"]
         if data is not None and "expected" in data:
-            instance.expected = ReplayJournalRecord.load(data["expected"], context)
+            instance.expected = ReplayJournalRecord.load(data["expected"], context.at("expected"))
         if data is not None and "actual" in data:
-            instance.actual = ReplayJournalRecord.load(data["actual"], context)
+            instance.actual = ReplayJournalRecord.load(data["actual"], context.at("actual"))
         if data is not None and "message" in data:
             instance.message = data["message"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ReplayMismatch instance to a dictionary.
@@ -78,6 +81,7 @@ class ReplayMismatch:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

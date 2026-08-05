@@ -16,12 +16,17 @@ type ContextCandidate struct {
 	Id       string                 `json:"id" yaml:"id"`
 	Source   string                 `json:"source" yaml:"source"`
 	Messages []Message              `json:"messages" yaml:"messages"`
-	Metadata map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadContextCandidate creates a ContextCandidate from a map[string]interface{}
 func LoadContextCandidate(data interface{}, ctx *LoadContext) (ContextCandidate, error) {
-	result := ContextCandidate{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := ContextCandidate{
+		Messages: []Message{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -36,7 +41,7 @@ func LoadContextCandidate(data interface{}, ctx *LoadContext) (ContextCandidate,
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages"))
 						if err != nil {
 							return result, err
 						}

@@ -54,8 +54,9 @@ class SessionSummary:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for SessionSummary: {data}")
@@ -72,12 +73,14 @@ class SessionSummary:
         if data is not None and "checkpoints" in data:
             instance.checkpoints = data["checkpoints"]
         if data is not None and "usage" in data:
-            instance.usage = TokenUsage.load(data["usage"], context)
+            instance.usage = TokenUsage.load(data["usage"], context.at("usage"))
         if data is not None and "durationMs" in data:
             instance.duration_ms = data["durationMs"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the SessionSummary instance to a dictionary.
@@ -90,6 +93,7 @@ class SessionSummary:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

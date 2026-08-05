@@ -23,9 +23,7 @@ describe("ModelReconciliationState", () => {
       const instance = ModelReconciliationState.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.invocationId).toEqual("inv_abc123");
-      expect(instance.message).toEqual(
-        "provider connection dropped after request was sent",
-      );
+      expect(instance.message).toEqual("provider connection dropped after request was sent");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -44,9 +42,7 @@ describe("ModelReconciliationState", () => {
       const instance = ModelReconciliationState.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.invocationId).toEqual("inv_abc123");
-      expect(instance.message).toEqual(
-        "provider connection dropped after request was sent",
-      );
+      expect(instance.message).toEqual("provider connection dropped after request was sent");
     });
 
     it("should round-trip YAML - example 1", () => {

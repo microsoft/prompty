@@ -19,14 +19,19 @@ type TurnModelRequest struct {
 	SessionId   string                 `json:"sessionId" yaml:"sessionId"`
 	TurnId      string                 `json:"turnId" yaml:"turnId"`
 	Iteration   int32                  `json:"iteration" yaml:"iteration"`
-	Inputs      map[string]interface{} `json:"inputs,omitempty" yaml:"inputs,omitempty"`
+	Inputs      map[string]interface{} `json:"inputs" yaml:"inputs"`
 	Options     *TurnOptions           `json:"options,omitempty" yaml:"options,omitempty"`
-	ToolResults []HostToolResult       `json:"toolResults,omitempty" yaml:"toolResults,omitempty"`
+	ToolResults []HostToolResult       `json:"toolResults" yaml:"toolResults"`
 }
 
 // LoadTurnModelRequest creates a TurnModelRequest from a map[string]interface{}
 func LoadTurnModelRequest(data interface{}, ctx *LoadContext) (TurnModelRequest, error) {
-	result := TurnModelRequest{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := TurnModelRequest{
+		ToolResults: []HostToolResult{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -57,7 +62,7 @@ func LoadTurnModelRequest(data interface{}, ctx *LoadContext) (TurnModelRequest,
 		}
 		if val, ok := m["options"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTurnOptions(m, ctx)
+				loaded, err := LoadTurnOptions(m, ctx.At("options"))
 				if err != nil {
 					return result, err
 				}
@@ -69,7 +74,7 @@ func LoadTurnModelRequest(data interface{}, ctx *LoadContext) (TurnModelRequest,
 				result.ToolResults = make([]HostToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadHostToolResult(item, ctx)
+						loaded, err := LoadHostToolResult(item, ctx.At("toolResults"))
 						if err != nil {
 							return result, err
 						}

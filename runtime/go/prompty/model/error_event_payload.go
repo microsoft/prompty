@@ -20,6 +20,9 @@ type ErrorEventPayload struct {
 
 // LoadErrorEventPayload creates a ErrorEventPayload from a map[string]interface{}
 func LoadErrorEventPayload(data interface{}, ctx *LoadContext) (ErrorEventPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ErrorEventPayload{}
 
 	// Load from map

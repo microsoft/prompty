@@ -21,6 +21,9 @@ type LlmStartPayload struct {
 
 // LoadLlmStartPayload creates a LlmStartPayload from a map[string]interface{}
 func LoadLlmStartPayload(data interface{}, ctx *LoadContext) (LlmStartPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := LlmStartPayload{}
 
 	// Load from map

@@ -43,7 +43,7 @@ class MemoryEntry:
     content: str = field(default="")
     category: MemoryCategory = field(default="core")
     created_at: str | None = None
-    tags: list[str] = field(default_factory=list)
+    tags: list[str] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "MemoryEntry":
@@ -56,8 +56,9 @@ class MemoryEntry:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for MemoryEntry: {data}")
@@ -77,6 +78,8 @@ class MemoryEntry:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the MemoryEntry instance to a dictionary.
         Args:
@@ -88,6 +91,7 @@ class MemoryEntry:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

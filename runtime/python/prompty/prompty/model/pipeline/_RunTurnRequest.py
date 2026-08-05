@@ -23,7 +23,7 @@ class RunTurnRequest:
     turn_id : str
         Stable turn identifier within the session
     inputs : Optional[dict[str, Any]]
-        Inputs supplied to the deterministic single-turn run
+        Inputs supplied to the deterministic single-turn run. Values may be explicit null.
     options : Optional[TurnOptions]
         Canonical turn execution options
     """
@@ -46,8 +46,9 @@ class RunTurnRequest:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for RunTurnRequest: {data}")
@@ -62,10 +63,12 @@ class RunTurnRequest:
         if data is not None and "inputs" in data:
             instance.inputs = data["inputs"]
         if data is not None and "options" in data:
-            instance.options = TurnOptions.load(data["options"], context)
+            instance.options = TurnOptions.load(data["options"], context.at("options"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the RunTurnRequest instance to a dictionary.
@@ -78,6 +81,7 @@ class RunTurnRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

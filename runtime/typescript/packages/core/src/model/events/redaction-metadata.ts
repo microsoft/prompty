@@ -9,7 +9,7 @@ export class RedactionMetadata {
   static readonly shorthandProperty: string | undefined = undefined;
 
   sanitized?: boolean | undefined;
-  fields?: RedactedField[] = [];
+  fields?: RedactedField[];
   policy?: string | undefined;
 
   constructor(init?: Partial<RedactionMetadata>) {
@@ -26,10 +26,8 @@ export class RedactionMetadata {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): RedactionMetadata {
+  static load(data: Record<string, unknown>, context?: LoadContext): RedactionMetadata {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -40,10 +38,7 @@ export class RedactionMetadata {
       instance.sanitized = Boolean(data["sanitized"]);
     }
     if (data["fields"] !== undefined && data["fields"] !== null) {
-      instance.fields = RedactionMetadata.loadFields(
-        data["fields"] as unknown[],
-        context,
-      );
+      instance.fields = RedactionMetadata.loadFields(data["fields"] as unknown[], context.at("fields"));
     }
     if (data["policy"] !== undefined && data["policy"] !== null) {
       instance.policy = String(data["policy"]);
@@ -55,37 +50,32 @@ export class RedactionMetadata {
     return instance;
   }
 
-  static loadFields(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): RedactedField[] {
+  static loadFields(data: Record<string, unknown>[] | unknown[], context?: LoadContext): RedactedField[] {
+    context ??= new LoadContext({ path: "fields" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: RedactedField[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(RedactedField.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, path: v });
+          result.push(RedactedField.load({ name: k, "path": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      RedactedField.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => RedactedField.load(item as Record<string, unknown>, context));
   }
 
-  static saveFields(
-    items: RedactedField[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveFields(items: RedactedField[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion

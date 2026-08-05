@@ -10,8 +10,8 @@ export class McpApprovalMode {
   static readonly shorthandProperty: string | undefined = "kind";
 
   kind: mcpApprovalModeKind = "always";
-  alwaysRequireApprovalTools?: string[] = [];
-  neverRequireApprovalTools?: string[] = [];
+  alwaysRequireApprovalTools?: string[];
+  neverRequireApprovalTools?: string[];
 
   constructor(init?: Partial<McpApprovalMode>) {
     this.kind = init?.kind ?? "always";
@@ -25,10 +25,8 @@ export class McpApprovalMode {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): McpApprovalMode {
+  static load(data: Record<string, unknown>, context?: LoadContext): McpApprovalMode {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -48,21 +46,11 @@ export class McpApprovalMode {
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]) as mcpApprovalModeKind;
     }
-    if (
-      data["alwaysRequireApprovalTools"] !== undefined &&
-      data["alwaysRequireApprovalTools"] !== null
-    ) {
-      instance.alwaysRequireApprovalTools = (
-        data["alwaysRequireApprovalTools"] as unknown[]
-      ).map((v) => String(v));
+    if (data["alwaysRequireApprovalTools"] !== undefined && data["alwaysRequireApprovalTools"] !== null) {
+      instance.alwaysRequireApprovalTools = (data["alwaysRequireApprovalTools"] as unknown[]).map(v => String(v));
     }
-    if (
-      data["neverRequireApprovalTools"] !== undefined &&
-      data["neverRequireApprovalTools"] !== null
-    ) {
-      instance.neverRequireApprovalTools = (
-        data["neverRequireApprovalTools"] as unknown[]
-      ).map((v) => String(v));
+    if (data["neverRequireApprovalTools"] !== undefined && data["neverRequireApprovalTools"] !== null) {
+      instance.neverRequireApprovalTools = (data["neverRequireApprovalTools"] as unknown[]).map(v => String(v));
     }
 
     if (context) {
@@ -86,16 +74,10 @@ export class McpApprovalMode {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-    if (
-      obj.alwaysRequireApprovalTools !== undefined &&
-      obj.alwaysRequireApprovalTools !== null
-    ) {
+    if (obj.alwaysRequireApprovalTools !== undefined && obj.alwaysRequireApprovalTools !== null) {
       result["alwaysRequireApprovalTools"] = obj.alwaysRequireApprovalTools;
     }
-    if (
-      obj.neverRequireApprovalTools !== undefined &&
-      obj.neverRequireApprovalTools !== null
-    ) {
+    if (obj.neverRequireApprovalTools !== undefined && obj.neverRequireApprovalTools !== null) {
       result["neverRequireApprovalTools"] = obj.neverRequireApprovalTools;
     }
 

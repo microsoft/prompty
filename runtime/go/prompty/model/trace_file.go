@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,10 +21,16 @@ type TraceFile struct {
 
 // LoadTraceFile creates a TraceFile from a map[string]interface{}
 func LoadTraceFile(data interface{}, ctx *LoadContext) (TraceFile, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TraceFile{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["trace"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("trace").Path)
+		}
 		if val, ok := m["runtime"]; ok && val != nil {
 			result.Runtime = string(val.(string))
 		}
@@ -32,7 +39,7 @@ func LoadTraceFile(data interface{}, ctx *LoadContext) (TraceFile, error) {
 		}
 		if val, ok := m["trace"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTraceSpan(m, ctx)
+				loaded, err := LoadTraceSpan(m, ctx.At("trace"))
 				if err != nil {
 					return result, err
 				}

@@ -34,6 +34,9 @@ type Model struct {
 
 // LoadModel creates a Model from a map[string]interface{}
 func LoadModel(data interface{}, ctx *LoadContext) (Model, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := Model{}
 
 	// Handle alternate scalar representations
@@ -58,7 +61,7 @@ func LoadModel(data interface{}, ctx *LoadContext) (Model, error) {
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadConnection(m, ctx)
+				loaded, err := LoadConnection(m, ctx.At("connection"))
 				if err != nil {
 					return result, err
 				}
@@ -68,7 +71,7 @@ func LoadModel(data interface{}, ctx *LoadContext) (Model, error) {
 		}
 		if val, ok := m["options"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadModelOptions(m, ctx)
+				loaded, err := LoadModelOptions(m, ctx.At("options"))
 				if err != nil {
 					return result, err
 				}

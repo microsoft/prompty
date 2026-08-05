@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -60,8 +60,9 @@ class TurnOptions:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnOptions: {data}")
@@ -82,10 +83,12 @@ class TurnOptions:
         if data is not None and "turn" in data:
             instance.turn = data["turn"]
         if data is not None and "compaction" in data:
-            instance.compaction = CompactionConfig.load(data["compaction"], context)
+            instance.compaction = CompactionConfig.load(data["compaction"], context.at("compaction"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TurnOptions instance to a dictionary.
@@ -98,6 +101,7 @@ class TurnOptions:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

@@ -33,10 +33,8 @@ export class InvocationContextDecision {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): InvocationContextDecision {
+  static load(data: Record<string, unknown>, context?: LoadContext): InvocationContextDecision {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -47,9 +45,7 @@ export class InvocationContextDecision {
       instance.candidateId = String(data["candidateId"]);
     }
     if (data["disposition"] !== undefined && data["disposition"] !== null) {
-      instance.disposition = String(
-        data["disposition"],
-      ) as InvocationContextDisposition;
+      instance.disposition = String(data["disposition"]) as InvocationContextDisposition;
     }
     if (data["reason"] !== undefined && data["reason"] !== null) {
       instance.reason = String(data["reason"]);
@@ -57,10 +53,7 @@ export class InvocationContextDecision {
     if (data["rank"] !== undefined && data["rank"] !== null) {
       instance.rank = Number(data["rank"]);
     }
-    if (
-      data["estimatedTokens"] !== undefined &&
-      data["estimatedTokens"] !== null
-    ) {
+    if (data["estimatedTokens"] !== undefined && data["estimatedTokens"] !== null) {
       instance.estimatedTokens = Number(data["estimatedTokens"]);
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
@@ -120,27 +113,15 @@ export class InvocationContextDecision {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): InvocationContextDecision {
+  static fromJson(json: string, context?: LoadContext): InvocationContextDecision {
     const data = JSON.parse(json);
-    return InvocationContextDecision.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return InvocationContextDecision.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): InvocationContextDecision {
+  static fromYaml(yaml: string, context?: LoadContext): InvocationContextDecision {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return InvocationContextDecision.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return InvocationContextDecision.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

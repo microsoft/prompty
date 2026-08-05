@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -46,8 +46,9 @@ class LlmCompletePayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for LlmCompletePayload: {data}")
@@ -60,12 +61,14 @@ class LlmCompletePayload:
         if data is not None and "serviceRequestId" in data:
             instance.service_request_id = data["serviceRequestId"]
         if data is not None and "usage" in data:
-            instance.usage = TokenUsage.load(data["usage"], context)
+            instance.usage = TokenUsage.load(data["usage"], context.at("usage"))
         if data is not None and "durationMs" in data:
             instance.duration_ms = data["durationMs"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the LlmCompletePayload instance to a dictionary.
@@ -78,6 +81,7 @@ class LlmCompletePayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

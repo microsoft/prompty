@@ -23,10 +23,14 @@ export class TraceFile {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): TraceFile {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if ((data["trace"] === undefined || data["trace"] === null)) {
+      throw new Error(`${context.at("trace").path}: missing required field`);
+    }
     const instance = new TraceFile();
 
     if (data["runtime"] !== undefined && data["runtime"] !== null) {
@@ -36,10 +40,7 @@ export class TraceFile {
       instance.version = String(data["version"]);
     }
     if (data["trace"] !== undefined && data["trace"] !== null) {
-      instance.trace = TraceSpan.load(
-        data["trace"] as Record<string, unknown>,
-        context,
-      );
+      instance.trace = TraceSpan.load(data["trace"] as Record<string, unknown>, context.at("trace"));
     }
 
     if (context) {

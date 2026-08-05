@@ -21,9 +21,7 @@ export class TurnModelResponse {
     if (init?.usage !== undefined) {
       this.usage = init.usage;
     }
-    if (init?.toolRequests !== undefined) {
-      this.toolRequests = init.toolRequests;
-    }
+    this.toolRequests = init?.toolRequests ?? [];
     if (init?.checkpointState !== undefined) {
       this.checkpointState = init.checkpointState;
     }
@@ -31,10 +29,8 @@ export class TurnModelResponse {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): TurnModelResponse {
+  static load(data: Record<string, unknown>, context?: LoadContext): TurnModelResponse {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -45,25 +41,13 @@ export class TurnModelResponse {
       instance.output = data["output"] as unknown;
     }
     if (data["usage"] !== undefined && data["usage"] !== null) {
-      instance.usage = InvocationUsage.load(
-        data["usage"] as Record<string, unknown>,
-        context,
-      );
+      instance.usage = InvocationUsage.load(data["usage"] as Record<string, unknown>, context.at("usage"));
     }
     if (data["toolRequests"] !== undefined && data["toolRequests"] !== null) {
-      instance.toolRequests = TurnModelResponse.loadToolRequests(
-        data["toolRequests"] as unknown[],
-        context,
-      );
+      instance.toolRequests = TurnModelResponse.loadToolRequests(data["toolRequests"] as unknown[], context.at("toolRequests"));
     }
-    if (
-      data["checkpointState"] !== undefined &&
-      data["checkpointState"] !== null
-    ) {
-      instance.checkpointState = data["checkpointState"] as Record<
-        string,
-        unknown
-      >;
+    if (data["checkpointState"] !== undefined && data["checkpointState"] !== null) {
+      instance.checkpointState = data["checkpointState"] as Record<string, unknown>;
     }
 
     if (context) {
@@ -72,37 +56,32 @@ export class TurnModelResponse {
     return instance;
   }
 
-  static loadToolRequests(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): HostToolRequest[] {
+  static loadToolRequests(data: Record<string, unknown>[] | unknown[], context?: LoadContext): HostToolRequest[] {
+    context ??= new LoadContext({ path: "toolRequests" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: HostToolRequest[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(HostToolRequest.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, requestId: v });
+          result.push(HostToolRequest.load({ name: k, "requestId": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      HostToolRequest.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => HostToolRequest.load(item as Record<string, unknown>, context));
   }
 
-  static saveToolRequests(
-    items: HostToolRequest[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveToolRequests(items: HostToolRequest[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -124,10 +103,7 @@ export class TurnModelResponse {
       result["usage"] = obj.usage.save(context);
     }
     if (obj.toolRequests !== undefined && obj.toolRequests !== null) {
-      result["toolRequests"] = TurnModelResponse.saveToolRequests(
-        obj.toolRequests,
-        context,
-      );
+      result["toolRequests"] = TurnModelResponse.saveToolRequests(obj.toolRequests, context);
     }
     if (obj.checkpointState !== undefined && obj.checkpointState !== null) {
       result["checkpointState"] = obj.checkpointState;

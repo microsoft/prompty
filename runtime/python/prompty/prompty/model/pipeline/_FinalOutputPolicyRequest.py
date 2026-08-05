@@ -52,8 +52,9 @@ class FinalOutputPolicyRequest:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FinalOutputPolicyRequest: {data}")
@@ -68,7 +69,7 @@ class FinalOutputPolicyRequest:
         if data is not None and "iteration" in data:
             instance.iteration = data["iteration"]
         if data is not None and "messages" in data:
-            instance.messages = FinalOutputPolicyRequest.load_messages(data["messages"], context)
+            instance.messages = FinalOutputPolicyRequest.load_messages(data["messages"], context.at("messages"))
         if data is not None and "output" in data:
             instance.output = data["output"]
         if data is not None and "inputs" in data:
@@ -77,19 +78,25 @@ class FinalOutputPolicyRequest:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
+        if context is None:
+            context = LoadContext(path="messages")
         if isinstance(data, dict):
             # convert simple named messages to list of Message
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Message.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
+                    result.append(Message.load({"name": k, "role": v}, context.at(k)))
+            return result
         return [Message.load(item, context) for item in data]
 
     @staticmethod
@@ -97,7 +104,7 @@ class FinalOutputPolicyRequest:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -111,6 +118,7 @@ class FinalOutputPolicyRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

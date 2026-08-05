@@ -5,15 +5,5 @@
 import { ContentPart } from "../../../src/model/index";
 
 describe("ContentPart", () => {
-  describe("construction", () => {
-    it("should create a new instance with defaults", () => {
-      const instance = new ContentPart();
-      expect(instance).toBeDefined();
-    });
 
-    it("should create a new instance with partial initialization", () => {
-      const instance = new ContentPart({});
-      expect(instance).toBeDefined();
-    });
-  });
 });

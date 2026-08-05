@@ -15,17 +15,13 @@ export class InvocationContextState {
 
   constructor(init?: Partial<InvocationContextState>) {
     this.portability = init?.portability ?? "portable";
-    if (init?.delegatedState !== undefined) {
-      this.delegatedState = init.delegatedState;
-    }
+    this.delegatedState = init?.delegatedState ?? [];
   }
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): InvocationContextState {
+  static load(data: Record<string, unknown>, context?: LoadContext): InvocationContextState {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -33,18 +29,10 @@ export class InvocationContextState {
     const instance = new InvocationContextState();
 
     if (data["portability"] !== undefined && data["portability"] !== null) {
-      instance.portability = String(
-        data["portability"],
-      ) as InvocationContextPortability;
+      instance.portability = String(data["portability"]) as InvocationContextPortability;
     }
-    if (
-      data["delegatedState"] !== undefined &&
-      data["delegatedState"] !== null
-    ) {
-      instance.delegatedState = InvocationContextState.loadDelegatedState(
-        data["delegatedState"] as unknown[],
-        context,
-      );
+    if (data["delegatedState"] !== undefined && data["delegatedState"] !== null) {
+      instance.delegatedState = InvocationContextState.loadDelegatedState(data["delegatedState"] as unknown[], context.at("delegatedState"));
     }
 
     if (context) {
@@ -53,37 +41,32 @@ export class InvocationContextState {
     return instance;
   }
 
-  static loadDelegatedState(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): DelegatedStateReference[] {
+  static loadDelegatedState(data: Record<string, unknown>[] | unknown[], context?: LoadContext): DelegatedStateReference[] {
+    context ??= new LoadContext({ path: "delegatedState" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: DelegatedStateReference[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(DelegatedStateReference.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, provider: v });
+          result.push(DelegatedStateReference.load({ name: k, "provider": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      DelegatedStateReference.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => DelegatedStateReference.load(item as Record<string, unknown>, context));
   }
 
-  static saveDelegatedState(
-    items: DelegatedStateReference[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveDelegatedState(items: DelegatedStateReference[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -102,10 +85,7 @@ export class InvocationContextState {
       result["portability"] = obj.portability;
     }
     if (obj.delegatedState !== undefined && obj.delegatedState !== null) {
-      result["delegatedState"] = InvocationContextState.saveDelegatedState(
-        obj.delegatedState,
-        context,
-      );
+      result["delegatedState"] = InvocationContextState.saveDelegatedState(obj.delegatedState, context);
     }
 
     if (context) {
@@ -126,19 +106,13 @@ export class InvocationContextState {
 
   static fromJson(json: string, context?: LoadContext): InvocationContextState {
     const data = JSON.parse(json);
-    return InvocationContextState.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return InvocationContextState.load(data as Record<string, unknown>, context);
   }
 
   static fromYaml(yaml: string, context?: LoadContext): InvocationContextState {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return InvocationContextState.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return InvocationContextState.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

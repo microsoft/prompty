@@ -17,19 +17,15 @@ export class ReplayVerificationResult {
 
   constructor(init?: Partial<ReplayVerificationResult>) {
     this.status = init?.status ?? "passed";
-    if (init?.mismatches !== undefined) {
-      this.mismatches = init.mismatches;
-    }
+    this.mismatches = init?.mismatches ?? [];
     this.expectedCount = init?.expectedCount ?? 0;
     this.actualCount = init?.actualCount ?? 0;
   }
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ReplayVerificationResult {
+  static load(data: Record<string, unknown>, context?: LoadContext): ReplayVerificationResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -40,10 +36,7 @@ export class ReplayVerificationResult {
       instance.status = String(data["status"]) as ReplayVerificationStatus;
     }
     if (data["mismatches"] !== undefined && data["mismatches"] !== null) {
-      instance.mismatches = ReplayVerificationResult.loadMismatches(
-        data["mismatches"] as unknown[],
-        context,
-      );
+      instance.mismatches = ReplayVerificationResult.loadMismatches(data["mismatches"] as unknown[], context.at("mismatches"));
     }
     if (data["expectedCount"] !== undefined && data["expectedCount"] !== null) {
       instance.expectedCount = Number(data["expectedCount"]);
@@ -58,37 +51,32 @@ export class ReplayVerificationResult {
     return instance;
   }
 
-  static loadMismatches(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): ReplayMismatch[] {
+  static loadMismatches(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ReplayMismatch[] {
+    context ??= new LoadContext({ path: "mismatches" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ReplayMismatch[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(ReplayMismatch.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, index: v });
+          result.push(ReplayMismatch.load({ name: k, "index": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ReplayMismatch.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => ReplayMismatch.load(item as Record<string, unknown>, context));
   }
 
-  static saveMismatches(
-    items: ReplayMismatch[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMismatches(items: ReplayMismatch[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -107,10 +95,7 @@ export class ReplayVerificationResult {
       result["status"] = obj.status;
     }
     if (obj.mismatches !== undefined && obj.mismatches !== null) {
-      result["mismatches"] = ReplayVerificationResult.saveMismatches(
-        obj.mismatches,
-        context,
-      );
+      result["mismatches"] = ReplayVerificationResult.saveMismatches(obj.mismatches, context);
     }
     if (obj.expectedCount !== undefined && obj.expectedCount !== null) {
       result["expectedCount"] = obj.expectedCount;
@@ -135,27 +120,15 @@ export class ReplayVerificationResult {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): ReplayVerificationResult {
+  static fromJson(json: string, context?: LoadContext): ReplayVerificationResult {
     const data = JSON.parse(json);
-    return ReplayVerificationResult.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ReplayVerificationResult.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): ReplayVerificationResult {
+  static fromYaml(yaml: string, context?: LoadContext): ReplayVerificationResult {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ReplayVerificationResult.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ReplayVerificationResult.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

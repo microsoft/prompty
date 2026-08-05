@@ -60,8 +60,9 @@ class HookEndPayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for HookEndPayload: {data}")
@@ -84,10 +85,12 @@ class HookEndPayload:
         if data is not None and "error" in data:
             instance.error = data["error"]
         if data is not None and "redaction" in data:
-            instance.redaction = RedactionMetadata.load(data["redaction"], context)
+            instance.redaction = RedactionMetadata.load(data["redaction"], context.at("redaction"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the HookEndPayload instance to a dictionary.
@@ -100,6 +103,7 @@ class HookEndPayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

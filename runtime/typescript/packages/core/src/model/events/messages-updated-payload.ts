@@ -8,9 +8,9 @@ import { Message } from "../conversation/message";
 export class MessagesUpdatedPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
-  messages?: Message[] = [];
+  messages?: Message[];
   reason?: string | undefined;
-  appended?: Message[] = [];
+  appended?: Message[];
   removed?: number | undefined;
 
   constructor(init?: Partial<MessagesUpdatedPayload>) {
@@ -30,10 +30,8 @@ export class MessagesUpdatedPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): MessagesUpdatedPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): MessagesUpdatedPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -41,19 +39,13 @@ export class MessagesUpdatedPayload {
     const instance = new MessagesUpdatedPayload();
 
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = MessagesUpdatedPayload.loadMessages(
-        data["messages"] as unknown[],
-        context,
-      );
+      instance.messages = MessagesUpdatedPayload.loadMessages(data["messages"] as unknown[], context.at("messages"));
     }
     if (data["reason"] !== undefined && data["reason"] !== null) {
       instance.reason = String(data["reason"]);
     }
     if (data["appended"] !== undefined && data["appended"] !== null) {
-      instance.appended = MessagesUpdatedPayload.loadAppended(
-        data["appended"] as unknown[],
-        context,
-      );
+      instance.appended = MessagesUpdatedPayload.loadAppended(data["appended"] as unknown[], context.at("appended"));
     }
     if (data["removed"] !== undefined && data["removed"] !== null) {
       instance.removed = Number(data["removed"]);
@@ -65,70 +57,60 @@ export class MessagesUpdatedPayload {
     return instance;
   }
 
-  static loadMessages(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Message[] {
+  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, "role": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Message.load(item as Record<string, unknown>, context));
   }
 
-  static saveMessages(
-    items: Message[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
-  static loadAppended(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Message[] {
+  static loadAppended(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+    context ??= new LoadContext({ path: "appended" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, "role": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Message.load(item as Record<string, unknown>, context));
   }
 
-  static saveAppended(
-    items: Message[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveAppended(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -144,19 +126,13 @@ export class MessagesUpdatedPayload {
     const result: Record<string, unknown> = {};
 
     if (obj.messages !== undefined && obj.messages !== null) {
-      result["messages"] = MessagesUpdatedPayload.saveMessages(
-        obj.messages,
-        context,
-      );
+      result["messages"] = MessagesUpdatedPayload.saveMessages(obj.messages, context);
     }
     if (obj.reason !== undefined && obj.reason !== null) {
       result["reason"] = obj.reason;
     }
     if (obj.appended !== undefined && obj.appended !== null) {
-      result["appended"] = MessagesUpdatedPayload.saveAppended(
-        obj.appended,
-        context,
-      );
+      result["appended"] = MessagesUpdatedPayload.saveAppended(obj.appended, context);
     }
     if (obj.removed !== undefined && obj.removed !== null) {
       result["removed"] = obj.removed;
@@ -180,19 +156,13 @@ export class MessagesUpdatedPayload {
 
   static fromJson(json: string, context?: LoadContext): MessagesUpdatedPayload {
     const data = JSON.parse(json);
-    return MessagesUpdatedPayload.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return MessagesUpdatedPayload.load(data as Record<string, unknown>, context);
   }
 
   static fromYaml(yaml: string, context?: LoadContext): MessagesUpdatedPayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return MessagesUpdatedPayload.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return MessagesUpdatedPayload.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

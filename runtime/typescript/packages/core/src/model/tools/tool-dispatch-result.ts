@@ -22,14 +22,15 @@ export class ToolDispatchResult {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ToolDispatchResult {
+  static load(data: Record<string, unknown>, context?: LoadContext): ToolDispatchResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if ((data["result"] === undefined || data["result"] === null)) {
+      throw new Error(`${context.at("result").path}: missing required field`);
+    }
     const instance = new ToolDispatchResult();
 
     if (data["toolCallId"] !== undefined && data["toolCallId"] !== null) {
@@ -39,10 +40,7 @@ export class ToolDispatchResult {
       instance.name = String(data["name"]);
     }
     if (data["result"] !== undefined && data["result"] !== null) {
-      instance.result = ToolResult.load(
-        data["result"] as Record<string, unknown>,
-        context,
-      );
+      instance.result = ToolResult.load(data["result"] as Record<string, unknown>, context.at("result"));
     }
 
     if (context) {

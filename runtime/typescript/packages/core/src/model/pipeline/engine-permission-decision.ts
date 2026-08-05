@@ -23,10 +23,8 @@ export class EnginePermissionDecision {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): EnginePermissionDecision {
+  static load(data: Record<string, unknown>, context?: LoadContext): EnginePermissionDecision {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -87,27 +85,15 @@ export class EnginePermissionDecision {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): EnginePermissionDecision {
+  static fromJson(json: string, context?: LoadContext): EnginePermissionDecision {
     const data = JSON.parse(json);
-    return EnginePermissionDecision.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return EnginePermissionDecision.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): EnginePermissionDecision {
+  static fromYaml(yaml: string, context?: LoadContext): EnginePermissionDecision {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return EnginePermissionDecision.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return EnginePermissionDecision.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

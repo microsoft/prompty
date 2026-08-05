@@ -36,8 +36,9 @@ class ThinkingEventPayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ThinkingEventPayload: {data}")
@@ -51,6 +52,8 @@ class ThinkingEventPayload:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ThinkingEventPayload instance to a dictionary.
         Args:
@@ -62,6 +65,7 @@ class ThinkingEventPayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

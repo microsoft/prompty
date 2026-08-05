@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -36,10 +37,18 @@ type TurnCommit struct {
 
 // LoadTurnCommit creates a TurnCommit from a map[string]interface{}
 func LoadTurnCommit(data interface{}, ctx *LoadContext) (TurnCommit, error) {
-	result := TurnCommit{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := TurnCommit{
+		Messages: []Message{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["contextState"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("contextState").Path)
+		}
 		if val, ok := m["sessionId"]; ok && val != nil {
 			result.SessionId = string(val.(string))
 		}
@@ -57,7 +66,7 @@ func LoadTurnCommit(data interface{}, ctx *LoadContext) (TurnCommit, error) {
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages"))
 						if err != nil {
 							return result, err
 						}
@@ -96,7 +105,7 @@ func LoadTurnCommit(data interface{}, ctx *LoadContext) (TurnCommit, error) {
 		}
 		if val, ok := m["contextState"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadInvocationContextState(m, ctx)
+				loaded, err := LoadInvocationContextState(m, ctx.At("contextState"))
 				if err != nil {
 					return result, err
 				}
@@ -105,7 +114,7 @@ func LoadTurnCommit(data interface{}, ctx *LoadContext) (TurnCommit, error) {
 		}
 		if val, ok := m["modelReconciliation"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadModelReconciliationState(m, ctx)
+				loaded, err := LoadModelReconciliationState(m, ctx.At("modelReconciliation"))
 				if err != nil {
 					return result, err
 				}

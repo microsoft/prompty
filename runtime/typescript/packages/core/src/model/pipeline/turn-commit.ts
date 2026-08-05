@@ -7,11 +7,7 @@ import { InvocationContextState } from "./invocation-context-state";
 import { Message } from "../conversation/message";
 import { ModelReconciliationState } from "./model-reconciliation-state";
 
-export type EngineTurnStatus =
-  | "success"
-  | "failed"
-  | "cancelled"
-  | "reconciliation_required";
+export type EngineTurnStatus = "success" | "failed" | "cancelled" | "reconciliation_required";
 
 export class TurnCommit {
   static readonly shorthandProperty: string | undefined = undefined;
@@ -46,14 +42,15 @@ export class TurnCommit {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): TurnCommit {
+  static load(data: Record<string, unknown>, context?: LoadContext): TurnCommit {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if ((data["contextState"] === undefined || data["contextState"] === null)) {
+      throw new Error(`${context.at("contextState").path}: missing required field`);
+    }
     const instance = new TurnCommit();
 
     if (data["sessionId"] !== undefined && data["sessionId"] !== null) {
@@ -69,10 +66,7 @@ export class TurnCommit {
       instance.output = data["output"] as unknown;
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = TurnCommit.loadMessages(
-        data["messages"] as unknown[],
-        context,
-      );
+      instance.messages = TurnCommit.loadMessages(data["messages"] as unknown[], context.at("messages"));
     }
     if (data["iterations"] !== undefined && data["iterations"] !== null) {
       instance.iterations = Number(data["iterations"]);
@@ -81,19 +75,10 @@ export class TurnCommit {
       instance.lastSequence = Number(data["lastSequence"]);
     }
     if (data["contextState"] !== undefined && data["contextState"] !== null) {
-      instance.contextState = InvocationContextState.load(
-        data["contextState"] as Record<string, unknown>,
-        context,
-      );
+      instance.contextState = InvocationContextState.load(data["contextState"] as Record<string, unknown>, context.at("contextState"));
     }
-    if (
-      data["modelReconciliation"] !== undefined &&
-      data["modelReconciliation"] !== null
-    ) {
-      instance.modelReconciliation = ModelReconciliationState.load(
-        data["modelReconciliation"] as Record<string, unknown>,
-        context,
-      );
+    if (data["modelReconciliation"] !== undefined && data["modelReconciliation"] !== null) {
+      instance.modelReconciliation = ModelReconciliationState.load(data["modelReconciliation"] as Record<string, unknown>, context.at("modelReconciliation"));
     }
 
     if (context) {
@@ -102,37 +87,32 @@ export class TurnCommit {
     return instance;
   }
 
-  static loadMessages(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Message[] {
+  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, "role": v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
-    );
+    return data.map(item => Message.load(item as Record<string, unknown>, context));
   }
 
-  static saveMessages(
-    items: Message[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -171,10 +151,7 @@ export class TurnCommit {
     if (obj.contextState !== undefined && obj.contextState !== null) {
       result["contextState"] = obj.contextState.save(context);
     }
-    if (
-      obj.modelReconciliation !== undefined &&
-      obj.modelReconciliation !== null
-    ) {
+    if (obj.modelReconciliation !== undefined && obj.modelReconciliation !== null) {
       result["modelReconciliation"] = obj.modelReconciliation.save(context);
     }
 
