@@ -241,13 +241,17 @@ fn unnamed_composite_omits_empty_name_stably() {
     let loaded = Prompty::from_json(&json, &LoadContext::default())
         .unwrap_or_else(|error| panic!("[{vector_name}] valid collection failed: {error}"));
 
+    let loaded_inputs = loaded
+        .inputs
+        .as_ref()
+        .unwrap_or_else(|| panic!("[{vector_name}] load lost inputs"));
     assert_eq!(
-        loaded.inputs.len(),
+        loaded_inputs.len(),
         1,
         "[{vector_name}] load changed the entry count"
     );
     assert_eq!(
-        loaded.inputs[0].name, "",
+        loaded_inputs[0].name, "",
         "[{vector_name}] absent wire name did not materialize as an empty in-memory name"
     );
 
@@ -260,8 +264,12 @@ fn unnamed_composite_omits_empty_name_stably() {
     let saved_json = serde_json::to_string(&saved).expect("first save must remain JSON-compatible");
     let reloaded = Prompty::from_json(&saved_json, &LoadContext::default())
         .unwrap_or_else(|error| panic!("[{vector_name}] first save failed to reload: {error}"));
+    let reloaded_inputs = reloaded
+        .inputs
+        .as_ref()
+        .unwrap_or_else(|| panic!("[{vector_name}] reload lost inputs"));
     assert_eq!(
-        reloaded.inputs[0].name, "",
+        reloaded_inputs[0].name, "",
         "[{vector_name}] reload changed the unnamed in-memory state"
     );
     let resaved = reloaded.to_value(&SaveContext::default());
