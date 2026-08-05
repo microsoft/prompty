@@ -38,6 +38,22 @@
 //      has no member 'unknown'`, at tool.swift:145/152/232/242/344/351 plus the
 //      two shim-injected arms in connection.swift.
 //
+//      1b is not merely a build break. `CustomTool.connection` is *required*
+//      (tool.tsp:98), but the generated loader only assigns it when the key is
+//      present (tool.swift:167-169), so an absent key leaves the synthesised
+//      `.unknown([:])` placeholder in place and `save` writes it unconditionally
+//      (tool.swift:198). Net effect: a missing required field is accepted
+//      without diagnostic and materialises in output as an empty, `kind`-less
+//      connection that is not a valid `Connection`.
+//
+//      Rust does not do this — it stores an absent connection as `Value::Null`
+//      and guards the write with `if !connection.is_null()` (tool.rs:176-179,
+//      327-329), omitting the key. So this is a Swift-specific divergence, and
+//      on any emitter that declares `case unknown` without also removing the
+//      bogus defaults, 1b degrades from a compile error into silent bad output.
+//      Report it with that consequence attached; "the shim already absorbs it"
+//      understates the impact. Measured by WildcardPreservationTests.swift.
+//
 //      The `case unknown` declaration and `save` arm patches are this shim's
 //      chosen workaround for 1b — declaring the case is the smallest edit that
 //      makes the six defaults legal, and the `save` arm is then required only
@@ -101,6 +117,36 @@
 //      builds, (ii) raw generated `load`/`save` preserve an unrecognised kind's
 //      discriminator and payload byte-for-byte, and (iii) the Swift suite plus
 //      the shared round-trip vector pass. Only then delete them.
+//
+//      Opening the discriminator is NOT the same as adding a typed wildcard
+//      subtype, and the difference is not cosmetic. Adding a `CustomTool`-style
+//      subtype (`schema/model/tools/tool.tsp:94`) is the obvious symmetry and
+//      gets proposed often. Measured on analogous inputs carrying the same
+//      unknown top-level fields (`extra`, `nested`):
+//
+//        typed subtype (Tool/CustomTool)   -> DROPS unknown fields; only the
+//                                             fields CustomTool declares
+//                                             survive
+//        raw passthrough (Connection)      -> preserves all, unrecognised
+//                                             discriminator included
+//
+//      State the conclusion at the width the evidence supports. What is
+//      measured is that a wildcard subtype declaring only *named* fields loses
+//      unknown ones — true by construction, and corroborated cross-runtime
+//      (Rust's `ToolKind::Custom` captures only `connection`/`options`/
+//      `kind_name`, tool.rs:175-185). It does NOT follow that any conceivable
+//      `Connection` wildcard must, since one could declare raw catch-all
+//      storage. So the point is not "subtype bad" but that the two shapes are
+//      not interchangeable and the declared shape decides whether unknown
+//      fields survive. Choosing the subtype shape without a catch-all would
+//      give up preservation this runtime provides today.
+//
+//      Do not overstate that as a spec violation: §2.3 (lines 246-247) permits
+//      unknown properties to be "preserved in `metadata` *or ignored*". Dropping
+//      them is legal; it is simply the weaker of two available guarantees.
+//      Pinned by WildcardPreservationTests.swift. Whether `CustomTool`'s own
+//      field-dropping is intended remains open, though Rust matching it suggests
+//      it is design rather than a Swift bug.
 //
 // Known limitation: injected base fields are added as properties and wired into
 // `load` / `save`, but not into the generated memberwise `init`. Constructing a
