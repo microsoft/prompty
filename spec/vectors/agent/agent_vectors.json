@@ -18,15 +18,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -79,15 +77,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -219,15 +215,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -393,39 +387,35 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city (returns Fahrenheit)",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         },
         {
           "name": "convert_temperature",
           "kind": "function",
           "description": "Convert a temperature between Fahrenheit and Celsius",
-          "parameters": {
-            "properties": [
-              {
-                "name": "value",
-                "kind": "float",
-                "required": true
-              },
-              {
-                "name": "from_unit",
-                "kind": "string",
-                "required": true
-              },
-              {
-                "name": "to_unit",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "value",
+              "kind": "float",
+              "required": true
+            },
+            {
+              "name": "from_unit",
+              "kind": "string",
+              "required": true
+            },
+            {
+              "name": "to_unit",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -565,15 +555,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -1071,20 +1059,18 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              },
-              {
-                "name": "unit",
-                "kind": "string",
-                "required": false
-              }
-            ]
-          },
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            },
+            {
+              "name": "unit",
+              "kind": "string",
+              "required": false
+            }
+          ],
           "bindings": {
             "unit": {
               "input": "preferred_unit"
@@ -1191,15 +1177,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -1268,15 +1252,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -1382,15 +1364,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -1527,9 +1507,7 @@
           "name": "clear_cache",
           "kind": "function",
           "description": "Clear the application cache, returns empty on success",
-          "parameters": {
-            "properties": []
-          }
+          "parameters": []
         }
       ],
       "tool_functions": {
@@ -1635,15 +1613,13 @@
           "name": "lookup",
           "kind": "function",
           "description": "Look up data",
-          "parameters": {
-            "properties": [
-              {
-                "name": "query",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "query",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -1738,15 +1714,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -1877,15 +1851,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -1948,15 +1920,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2067,15 +2037,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2121,15 +2089,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2253,15 +2219,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2408,15 +2372,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2527,15 +2489,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2611,15 +2571,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2691,15 +2649,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2740,15 +2696,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2811,29 +2765,25 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         },
         {
           "name": "dangerous_tool",
           "kind": "function",
           "description": "A dangerous operation that should be guarded",
-          "parameters": {
-            "properties": [
-              {
-                "name": "target",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "target",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -2960,15 +2910,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -3076,15 +3024,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -3277,15 +3223,13 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
@@ -3440,37 +3384,31 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         },
         {
           "name": "get_time",
           "kind": "function",
           "description": "Get the current time in a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         },
         {
           "name": "get_news",
           "kind": "function",
           "description": "Get the latest news headlines",
-          "parameters": {
-            "properties": []
-          }
+          "parameters": []
         }
       ],
       "tool_functions": {
@@ -3611,43 +3549,37 @@
           "name": "get_weather",
           "kind": "function",
           "description": "Get the current weather for a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         },
         {
           "name": "get_time",
           "kind": "function",
           "description": "Get the current time in a city",
-          "parameters": {
-            "properties": [
-              {
-                "name": "city",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "city",
+              "kind": "string",
+              "required": true
+            }
+          ]
         },
         {
           "name": "dangerous_tool",
           "kind": "function",
           "description": "A dangerous operation",
-          "parameters": {
-            "properties": [
-              {
-                "name": "target",
-                "kind": "string",
-                "required": true
-              }
-            ]
-          }
+          "parameters": [
+            {
+              "name": "target",
+              "kind": "string",
+              "required": true
+            }
+          ]
         }
       ],
       "tool_functions": {
