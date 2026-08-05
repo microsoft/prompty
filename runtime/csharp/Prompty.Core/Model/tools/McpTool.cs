@@ -52,7 +52,7 @@ public partial class McpTool : Tool
     /// <summary>
     /// The approval mode for the MCP tool
     /// </summary>
-    public McpApprovalMode ApprovalMode { get; set; }
+    public McpApprovalMode? ApprovalMode { get; set; }
 
     /// <summary>
     /// List of allowed operations or resources for the MCP tool
@@ -81,11 +81,6 @@ public partial class McpTool : Tool
         if ((!data.TryGetValue("connection", out var requiredConnectionValue) || requiredConnectionValue is null))
         {
             throw new ArgumentException($"{context!.At("connection").Path}: missing required field");
-        }
-
-        if ((!data.TryGetValue("approvalMode", out var requiredApprovalModeValue) || requiredApprovalModeValue is null))
-        {
-            throw new ArgumentException($"{context!.At("approvalMode").Path}: missing required field");
         }
 
         // Create new instance
@@ -182,7 +177,10 @@ public partial class McpTool : Tool
         }
 
 
-        result["approvalMode"] = obj.ApprovalMode?.Save(context);
+        if (obj.ApprovalMode is not null)
+        {
+            result["approvalMode"] = obj.ApprovalMode?.Save(context);
+        }
 
 
         if (obj.AllowedTools is not null)

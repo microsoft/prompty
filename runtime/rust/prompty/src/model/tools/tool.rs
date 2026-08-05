@@ -33,7 +33,7 @@ pub enum ToolKind {
         /// The description of the MCP tool
         server_description: Option<String>,
         /// The approval mode for the MCP tool
-        approval_mode: McpApprovalMode,
+        approval_mode: Option<McpApprovalMode>,
         /// List of allowed operations or resources for the MCP tool
         allowed_tools: Option<Vec<String>>,
     },
@@ -124,7 +124,7 @@ impl Tool {
                 connection: value.get("connection").cloned().unwrap_or(serde_json::Value::Null),
                 server_name: value.get("serverName").and_then(|v| v.as_str()).unwrap_or_default().to_string(),
                 server_description: value.get("serverDescription").and_then(|v| v.as_str()).map(|s| s.to_string()),
-                approval_mode: value.get("approvalMode").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| McpApprovalMode::load_from_value(v, ctx)).unwrap_or_default(),
+                approval_mode: value.get("approvalMode").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| McpApprovalMode::load_from_value(v, ctx)),
                 allowed_tools: value.get("allowedTools").and_then(|v| v.as_array()).map(|arr| arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect()),
             },
             "openapi" => ToolKind::OpenApi {
@@ -215,9 +215,9 @@ impl Tool {
                     .ok_or_else(|| format!("{}: missing required field", child_path))?;
                 Connection::validate_input_at(child, &child_path)?;
                 let child_path = if path.is_empty() { "approvalMode".to_string() } else { format!("{}.approvalMode", path) };
-                let child = value.get("approvalMode").filter(|candidate| !candidate.is_null())
-                    .ok_or_else(|| format!("{}: missing required field", child_path))?;
-                McpApprovalMode::validate_input_at(child, &child_path)?;
+                if let Some(child) = value.get("approvalMode") {
+                    McpApprovalMode::validate_input_at(child, &child_path)?;
+                }
             }
             "openapi" => {
                 let child_path = if path.is_empty() { "connection".to_string() } else { format!("{}.connection", path) };
@@ -285,11 +285,8 @@ impl Tool {
                 if let Some(val) = server_description {
                     result.insert("serverDescription".to_string(), serde_json::Value::String(val.clone()));
                 }
-                {
-                    let nested = approval_mode.to_value(ctx);
-                    if !nested.is_null() {
-                        result.insert("approvalMode".to_string(), nested);
-                    }
+                if let Some(val) = approval_mode {
+                    result.insert("approvalMode".to_string(), val.to_value(ctx));
                 }
                 if let Some(items) = allowed_tools.as_ref() {
                     result.insert("allowedTools".to_string(), serde_json::to_value(items).unwrap_or(serde_json::Value::Null));

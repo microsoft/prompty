@@ -491,7 +491,7 @@ class McpTool(Tool):
         The server name of the MCP tool
     server_description : Optional[str]
         The description of the MCP tool
-    approval_mode : McpApprovalMode
+    approval_mode : Optional[McpApprovalMode]
         The approval mode for the MCP tool
     allowed_tools : Optional[list[str]]
         List of allowed operations or resources for the MCP tool
@@ -503,7 +503,7 @@ class McpTool(Tool):
     connection: Connection = field(default_factory=Connection)
     server_name: str = field(default="")
     server_description: str | None = None
-    approval_mode: McpApprovalMode = field(default_factory=McpApprovalMode)
+    approval_mode: McpApprovalMode | None = None
     allowed_tools: list[str] | None = None
 
     @staticmethod
@@ -525,8 +525,6 @@ class McpTool(Tool):
             raise ValueError(f"Invalid data for McpTool: {data}")
         if ("connection" not in data or data["connection"] is None):
             raise ValueError(f"{context.at('connection').path}: missing required field")
-        if ("approvalMode" not in data or data["approvalMode"] is None):
-            raise ValueError(f"{context.at('approvalMode').path}: missing required field")
 
         # create new instance
         instance = McpTool()

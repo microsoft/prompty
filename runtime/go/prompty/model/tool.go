@@ -718,15 +718,15 @@ func CustomToolFromYAML(yamlStr string) (CustomTool, error) {
 // McpTool represents The MCP Server tool.
 
 type McpTool struct {
-	Name              string          `json:"name" yaml:"name"`
-	Kind              string          `json:"kind" yaml:"kind"`
-	Description       *string         `json:"description" yaml:"description"`
-	Bindings          []Binding       `json:"bindings" yaml:"bindings"`
-	Connection        interface{}     `json:"connection" yaml:"connection"`
-	ServerName        string          `json:"serverName" yaml:"serverName"`
-	ServerDescription *string         `json:"serverDescription,omitempty" yaml:"serverDescription,omitempty"`
-	ApprovalMode      McpApprovalMode `json:"approvalMode" yaml:"approvalMode"`
-	AllowedTools      []string        `json:"allowedTools,omitempty" yaml:"allowedTools,omitempty"`
+	Name              string           `json:"name" yaml:"name"`
+	Kind              string           `json:"kind" yaml:"kind"`
+	Description       *string          `json:"description" yaml:"description"`
+	Bindings          []Binding        `json:"bindings" yaml:"bindings"`
+	Connection        interface{}      `json:"connection" yaml:"connection"`
+	ServerName        string           `json:"serverName" yaml:"serverName"`
+	ServerDescription *string          `json:"serverDescription,omitempty" yaml:"serverDescription,omitempty"`
+	ApprovalMode      *McpApprovalMode `json:"approvalMode,omitempty" yaml:"approvalMode,omitempty"`
+	AllowedTools      []string         `json:"allowedTools,omitempty" yaml:"allowedTools,omitempty"`
 }
 
 // LoadMcpTool creates a McpTool from a map[string]interface{}
@@ -742,9 +742,6 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 	if m, ok := data.(map[string]interface{}); ok {
 		if requiredValue, exists := m["connection"]; !exists || requiredValue == nil {
 			return result, fmt.Errorf("%s: missing required field", ctx.At("connection").Path)
-		}
-		if requiredValue, exists := m["approvalMode"]; !exists || requiredValue == nil {
-			return result, fmt.Errorf("%s: missing required field", ctx.At("approvalMode").Path)
 		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
@@ -823,13 +820,13 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 				if err != nil {
 					return result, err
 				}
-				result.ApprovalMode = loaded
+				result.ApprovalMode = &loaded
 			} else {
 				loaded, err := LoadMcpApprovalMode(val, ctx.At("approvalMode"))
 				if err != nil {
 					return result, err
 				}
-				result.ApprovalMode = loaded
+				result.ApprovalMode = &loaded
 			}
 		}
 		if val, ok := m["allowedTools"]; ok && val != nil {
@@ -918,8 +915,9 @@ func (obj McpTool) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.ServerDescription != nil {
 		result["serverDescription"] = *obj.ServerDescription
 	}
-
-	result["approvalMode"] = obj.ApprovalMode.Save(ctx)
+	if obj.ApprovalMode != nil {
+		result["approvalMode"] = obj.ApprovalMode.Save(ctx)
+	}
 	if obj.AllowedTools != nil {
 		result["allowedTools"] = obj.AllowedTools
 	}

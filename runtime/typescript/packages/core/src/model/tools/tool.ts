@@ -513,7 +513,7 @@ export class McpTool extends Tool {
   connection!: Connection;
   serverName: string = "";
   serverDescription?: string | undefined;
-  approvalMode!: McpApprovalMode;
+  approvalMode?: McpApprovalMode | undefined;
   allowedTools?: string[];
 
   constructor(init?: Partial<McpTool>) {
@@ -545,11 +545,6 @@ export class McpTool extends Tool {
     if (data["connection"] === undefined || data["connection"] === null) {
       throw new Error(
         `${context.at("connection").path}: missing required field`,
-      );
-    }
-    if (data["approvalMode"] === undefined || data["approvalMode"] === null) {
-      throw new Error(
-        `${context.at("approvalMode").path}: missing required field`,
       );
     }
     const instance = new McpTool();
