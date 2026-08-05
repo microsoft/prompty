@@ -526,7 +526,19 @@ mod tests {
             .process_with_context(
                 &agent,
                 response,
-                &ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default()),
+                &ModelInvocationRequest::load_from_value(
+                    &json!({
+                        "context": {
+                            "id": "context:inv_test",
+                            "sessionId": "sess_test",
+                            "turnId": "turn_test",
+                            "invocationId": "inv_test",
+                            "iteration": 0,
+                            "contextState": {}
+                        }
+                    }),
+                    &LoadContext::default(),
+                ),
             )
             .await
             .unwrap();
