@@ -97,15 +97,15 @@ impl Property {
         if let Some(value) = value.as_bool() {
             return Property { kind: PropertyKind::Custom { kind_name: "boolean".to_string(), raw: serde_json::Map::new() }, example: Some(value.into()), ..Default::default() };
         }
-        if let Some(value) = value.as_f64().map(|value| value as f32) {
-            return Property { kind: PropertyKind::Custom { kind_name: "float".to_string(), raw: serde_json::Map::new() }, example: Some(value.into()), ..Default::default() };
+        if let Some(s) = value.as_str() {
+            let value = s.to_string();
+            return Property { kind: PropertyKind::Custom { kind_name: "string".to_string(), raw: serde_json::Map::new() }, example: Some(value.into()), ..Default::default() };
         }
         if let Some(value) = value.as_i64() {
             return Property { kind: PropertyKind::Custom { kind_name: "integer".to_string(), raw: serde_json::Map::new() }, example: Some(value.into()), ..Default::default() };
         }
-        if let Some(s) = value.as_str() {
-            let value = s.to_string();
-            return Property { kind: PropertyKind::Custom { kind_name: "string".to_string(), raw: serde_json::Map::new() }, example: Some(value.into()), ..Default::default() };
+        if let Some(value) = value.as_f64() {
+            return Property { kind: PropertyKind::Custom { kind_name: "float".to_string(), raw: serde_json::Map::new() }, example: Some(value.into()), ..Default::default() };
         }
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {
