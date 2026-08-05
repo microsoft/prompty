@@ -120,6 +120,14 @@ final class LoadVectorTests: XCTestCase {
         guard let name = entry["name"] as? String else {
           throw VectorFailure("bindings list entry has no string 'name': \(entry)")
         }
+        // Reject a duplicate rather than letting the later entry overwrite the
+        // earlier one. A silent collapse shrinks the expectation set, so the
+        // vector would keep passing while checking fewer bindings than it
+        // declares — the shared duplicate-name failure mode, applied to the
+        // expectation side.
+        guard pairs[name] == nil else {
+          throw VectorFailure("bindings list declares '\(name)' more than once")
+        }
         pairs[name] = try input(entry, for: name)
       }
     }

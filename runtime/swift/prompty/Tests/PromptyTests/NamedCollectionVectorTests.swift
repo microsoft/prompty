@@ -679,6 +679,110 @@ final class NamedCollectionVectorTests: XCTestCase {
       "ambiguous nameless children must not be paired to arbitrary keys")
   }
 
+  /// Duplicate names disqualify name-addressing entirely.
+  ///
+  /// Both saved children claim `alpha`, so building the index first would let
+  /// the second silently overwrite the first and the descent would then report
+  /// a gap found in whichever entry happened to survive. With duplicates
+  /// present there is no way to tell which `alpha` the contract meant, so
+  /// descending into the survivor is a guess dressed up as a match. The
+  /// pre-scan refuses the index and only the honest top-level gap is reported.
+  func testDuplicateNamesDisqualifyNameAddressing() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": ["alpha": ["kind": "object", "properties": ["leaf": ["kind": "string"]]]],
+    ]
+    // Two entries named `alpha`; only the second carries a nested collection,
+    // so a last-wins collapse would surface a gap the contract cannot attribute.
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        ["name": "alpha", "kind": "string"],
+        ["name": "alpha", "kind": "object", "properties": [["name": "leaf", "kind": "string"]]],
+      ],
+    ]
+
+    XCTAssertEqual(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe"),
+      ["probe.properties (save emits array, contract wants object)"],
+      "duplicate names must disqualify the name index instead of collapsing last-wins")
+  }
+
+  /// Duplicates must not decay into an elimination match.
+  ///
+  /// Refusing the index by returning an *empty* one would leave `alpha`
+  /// unmatched, and the lone nameless child would then look like its unique
+  /// elimination partner — so hiding `alpha` behind a duplicate would conjure a
+  /// match that direct addressing correctly denied. The nameless child here
+  /// belongs to neither `alpha`, so no nested gap may be reported.
+  func testDuplicateNamesAlsoSuppressEliminationPairing() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": ["alpha": ["kind": "object", "properties": ["leaf": ["kind": "string"]]]],
+    ]
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        ["name": "alpha", "kind": "string"],
+        ["name": "alpha", "kind": "string"],
+        ["kind": "object", "properties": [["name": "leaf", "kind": "string"]]],
+      ],
+    ]
+
+    XCTAssertEqual(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe"),
+      ["probe.properties (save emits array, contract wants object)"],
+      "an unaddressable collection must suppress elimination, not just name lookup")
+  }
+
+  /// A malformed `name` refuses the index rather than passing as nameless.
+  ///
+  /// A non-string `name` is dropped by the uniqueness scan yet is not nameless
+  /// either, so without an explicit refusal it vanishes from both pairing paths
+  /// and the *other* child is eliminated into `alpha` unopposed.
+  func testMalformedNameRefusesNameAddressing() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": ["alpha": ["kind": "object", "properties": ["leaf": ["kind": "string"]]]],
+    ]
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        ["name": 123, "kind": "string"],
+        ["kind": "object", "properties": [["name": "leaf", "kind": "string"]]],
+      ],
+    ]
+
+    XCTAssertEqual(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe"),
+      ["probe.properties (save emits array, contract wants object)"],
+      "a malformed name must refuse the index instead of counting as nameless")
+  }
+
+  /// Duplicate *expected* names cannot be matched against a keyed actual.
+  ///
+  /// The object form holds one `alpha`, so attributing it to both expected
+  /// occurrences would report the same nested gap twice against entries that
+  /// were never separately observed. Uniqueness is required on both sides.
+  func testDuplicateExpectedNamesRefuseObjectFormPairing() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        ["name": "alpha", "kind": "object", "properties": ["left": ["kind": "string"]]],
+        ["name": "alpha", "kind": "object", "properties": ["right": ["kind": "string"]]],
+      ],
+    ]
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": ["alpha": ["kind": "object", "properties": [["name": "leaf", "kind": "string"]]]],
+    ]
+
+    XCTAssertEqual(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe"),
+      [],
+      "a single actual child must not be attributed to several expected entries")
+  }
+
   /// Nested named collections are saved in alphabetical order.
   ///
   /// Object-form named collections are keyed rather than order-bearing, so
@@ -821,24 +925,32 @@ final class NamedCollectionVectorTests: XCTestCase {
       // guessed, since attributing a gap to an unproven key is exactly the
       // misattribution this pairing exists to avoid.
       let sortedKeys = expectedMap.keys.sorted()
-      let actualChildren = namedChildren(actual["properties"])
-      let actualList = (actual["properties"] as? [[String: Any]]) ?? []
-      // Absence of the key, not a failed String cast: a malformed `name` is a
-      // mismatch, so such a child is neither name-matched nor eliminated.
-      let namelessChildren = actualList.filter { $0["name"] == nil }
-      let unmatchedKeys = sortedKeys.filter { actualChildren[$0] == nil }
-      let eliminationChild =
-        (unmatchedKeys.count == 1 && namelessChildren.count == 1) ? namelessChildren[0] : nil
+      // A `nil` index means the collection is not soundly name-addressable —
+      // duplicate or malformed names. That has to suppress elimination as well,
+      // not just name lookup: an empty index would inflate `unmatchedKeys`
+      // until a lone nameless child looked like the unique partner of a lone
+      // unmatched key, binding a gap to a key that never owned it. Refusing
+      // both is the only reading that keeps "no proven owner" from decaying
+      // into "sole remaining candidate".
+      if let actualChildren = namedChildren(actual["properties"]) {
+        let actualList = (actual["properties"] as? [[String: Any]]) ?? []
+        // Absence of the key, not a failed String cast: a malformed `name` is
+        // handled by `namedChildren` refusing the whole index above.
+        let namelessChildren = actualList.filter { $0["name"] == nil }
+        let unmatchedKeys = sortedKeys.filter { actualChildren[$0] == nil }
+        let eliminationChild =
+          (unmatchedKeys.count == 1 && namelessChildren.count == 1) ? namelessChildren[0] : nil
 
-      for key in sortedKeys {
-        guard let expectedChild = expectedMap[key] as? [String: Any] else { continue }
-        var actualChild = actualChildren[key]
-        if actualChild == nil, unmatchedKeys.first == key {
-          actualChild = eliminationChild
+        for key in sortedKeys {
+          guard let expectedChild = expectedMap[key] as? [String: Any] else { continue }
+          var actualChild = actualChildren[key]
+          if actualChild == nil, unmatchedKeys.first == key {
+            actualChild = eliminationChild
+          }
+          guard let actualChild else { continue }
+          gaps += nestedObjectFormGaps(
+            expected: expectedChild, actual: actualChild, path: "\(path).properties.\(key)")
         }
-        guard let actualChild else { continue }
-        gaps += nestedObjectFormGaps(
-          expected: expectedChild, actual: actualChild, path: "\(path).properties.\(key)")
       }
     } else if let expectedList = expected["properties"] as? [[String: Any]] {
       if let actualList = actual["properties"] as? [[String: Any]] {
@@ -851,13 +963,22 @@ final class NamedCollectionVectorTests: XCTestCase {
             path: "\(path).properties[\(index)]")
         }
       } else {
-        let actualChildren = namedChildren(actual["properties"])
-        for (index, expectedChild) in expectedList.enumerated() {
-          guard let name = expectedChild["name"] as? String,
-            let actualChild = actualChildren[name]
-          else { continue }
-          gaps += nestedObjectFormGaps(
-            expected: expectedChild, actual: actualChild, path: "\(path).properties[\(index)]")
+        // Both sides must be unambiguous. Uniqueness of the *actual* keys is
+        // guaranteed by the object form, but the expected list can repeat a
+        // name, and each occurrence would then be attributed to the same single
+        // actual child — reporting a nested gap once per duplicate against
+        // entries that were never separately observed.
+        let expectedNames = expectedList.compactMap { $0["name"] as? String }
+        if let actualChildren = namedChildren(actual["properties"]),
+          Set(expectedNames).count == expectedNames.count
+        {
+          for (index, expectedChild) in expectedList.enumerated() {
+            guard let name = expectedChild["name"] as? String,
+              let actualChild = actualChildren[name]
+            else { continue }
+            gaps += nestedObjectFormGaps(
+              expected: expectedChild, actual: actualChild, path: "\(path).properties[\(index)]")
+          }
         }
       }
     }
@@ -872,8 +993,25 @@ final class NamedCollectionVectorTests: XCTestCase {
     return gaps
   }
 
-  /// Index a nested `properties` collection by name, whichever form it uses.
-  private static func namedChildren(_ value: Any?) -> [String: [String: Any]] {
+  /// Index a nested `properties` collection by name, or `nil` when the
+  /// collection cannot be soundly addressed by name at all.
+  ///
+  /// The list form is keyed only after a **uniqueness pre-scan**, mirroring the
+  /// shared save rule that duplicate names force the whole-array fallback
+  /// *before* any map construction. Building the map first and letting a later
+  /// entry overwrite an earlier one would silently drop a child.
+  ///
+  /// Refusal is `nil` rather than an empty index because the two mean opposite
+  /// things to the caller: an empty index says "this collection has no named
+  /// children", which leaves every expected key unmatched and therefore
+  /// eligible for elimination pairing. An unaddressable collection must
+  /// suppress that path too, or a lone nameless child would be bound to a key
+  /// that duplicates merely hid.
+  ///
+  /// A malformed `name` — present but not a string — also refuses the index. It
+  /// would otherwise fall out of the uniqueness scan while also not counting as
+  /// nameless, disappearing from both pairing paths without trace.
+  private static func namedChildren(_ value: Any?) -> [String: [String: Any]]? {
     if let map = value as? [String: Any] {
       var result: [String: [String: Any]] = [:]
       for (key, child) in map {
@@ -882,6 +1020,10 @@ final class NamedCollectionVectorTests: XCTestCase {
       return result
     }
     if let list = value as? [[String: Any]] {
+      let declared = list.filter { $0["name"] != nil }
+      let names = declared.compactMap { $0["name"] as? String }
+      guard names.count == declared.count else { return nil }
+      guard Set(names).count == names.count else { return nil }
       var result: [String: [String: Any]] = [:]
       for child in list {
         if let name = child["name"] as? String {
