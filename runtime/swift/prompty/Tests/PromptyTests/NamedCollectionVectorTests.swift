@@ -594,14 +594,101 @@ final class NamedCollectionVectorTests: XCTestCase {
       "the gap beneath an unnamed saved child must still be reported")
   }
 
+  /// A positional fallback never binds a child that names a different key.
+  ///
+  /// Object form is keyed, so position is only a sound last resort for an
+  /// entry that omits `name`. Binding a differently-named entry would descend
+  /// into an unrelated child and report its gaps against the wrong key.
+  func testPositionalFallbackRefusesDifferentlyNamedChild() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        "alpha": ["kind": "object", "properties": ["leaf": ["kind": "string"]]]
+      ],
+    ]
+    // The sole saved child names a different key and carries a nested gap of
+    // its own. Pairing it to `alpha` would misattribute that gap.
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        ["name": "beta", "kind": "object", "properties": [["name": "leaf", "kind": "string"]]]
+      ],
+    ]
+
+    XCTAssertEqual(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe"),
+      ["probe.properties (save emits array, contract wants object)"],
+      "a differently-named child must not be bound by position")
+  }
+
+  /// Elimination pairing finds a nameless child at a non-corresponding index.
+  ///
+  /// `alpha` resolves by name to index 1, leaving `beta` unmatched. Index-based
+  /// pairing would inspect index 1, find `alpha` there, and never reach the
+  /// nameless child at index 0 — silently losing beta's gap. Elimination pairs
+  /// the single unmatched key to the single nameless child regardless of where
+  /// it sits.
+  func testEliminationPairingIgnoresPosition() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        "alpha": ["kind": "string"],
+        "beta": ["kind": "object", "properties": ["leaf": ["kind": "string"]]],
+      ],
+    ]
+    // beta's child is saved first and unnamed; alpha's is saved second.
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        ["kind": "object", "properties": [["name": "leaf", "kind": "string"]]],
+        ["name": "alpha", "kind": "string"],
+      ],
+    ]
+
+    XCTAssertEqual(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe"),
+      [
+        "probe.properties (save emits array, contract wants object)",
+        "probe.properties.beta.properties (save emits array, contract wants object)",
+      ],
+      "a nameless child must be found by elimination, not by index")
+  }
+
+  /// Two nameless children are ambiguous, so neither is guessed.
+  ///
+  /// Attributing a gap to a key that cannot be established is the same
+  /// misattribution keyed pairing exists to prevent. The top-level array-form
+  /// gap is still reported, so the real problem stays visible.
+  func testAmbiguousNamelessChildrenAreNotGuessed() {
+    let nested: [String: Any] = ["kind": "object", "properties": ["leaf": ["kind": "string"]]]
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": ["alpha": nested, "beta": nested],
+    ]
+    let savedChild: [String: Any] = [
+      "kind": "object", "properties": [["name": "leaf", "kind": "string"]],
+    ]
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": [savedChild, savedChild],
+    ]
+
+    XCTAssertEqual(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe"),
+      ["probe.properties (save emits array, contract wants object)"],
+      "ambiguous nameless children must not be paired to arbitrary keys")
+  }
+
   /// Nested named collections are saved in alphabetical order.
   ///
-  /// `canonicalizeExpected` sorts a name-keyed expectation before `compare`
-  /// pairs it positionally, and the positional fallback in the descent above
-  /// assumes the same. Neither is safe unless the runtime really does order
-  /// nested collections by name, so pin it here: if the emitter ever switches
-  /// to declaration order, this fails directly instead of surfacing as a
-  /// confusing field mismatch somewhere downstream.
+  /// Object-form named collections are keyed rather than order-bearing, so
+  /// this is not a contract assertion about that form. It pins the *array*
+  /// save form the runtime currently emits, which does carry order:
+  /// `canonicalizeExpected` sorts a name-keyed expectation into a list before
+  /// `compare` pairs it positionally, and that pairing stays sound only while
+  /// the runtime orders nested collections by name. If the emitter ever
+  /// switches to declaration order, this fails directly instead of surfacing
+  /// as a confusing field mismatch somewhere downstream.
   func testNestedNamedCollectionsSaveInAlphabeticalOrder() throws {
     let input: [String: Any] = [
       "name": "v", "model": ["id": "gpt-4"],
@@ -724,19 +811,30 @@ final class NamedCollectionVectorTests: XCTestCase {
       if actual["properties"] is [Any] {
         gaps.append("\(path).properties (save emits array, contract wants object)")
       }
-      // Descend by name so the pairing survives either wire shape. When the
-      // actual side is the ordered fallback, a child that omits `name` cannot
-      // be found that way — the unnamed-composite case — so fall back to
-      // position. Both sides order named collections alphabetically, which
-      // `testNestedNamedCollectionsSaveInAlphabeticalOrder` pins.
+      // Descend by name: object-form named collections are keyed, not
+      // order-bearing, so a key is the only sound way to address a child.
+      // The one child a key cannot address is an entry that omits `name` in
+      // the array fallback (the unnamed-composite case). That entry is paired
+      // by ELIMINATION — a single unmatched key facing a single nameless
+      // child — never by index, because object form carries no positional
+      // identity. Anything more ambiguous is left unpaired rather than
+      // guessed, since attributing a gap to an unproven key is exactly the
+      // misattribution this pairing exists to avoid.
       let sortedKeys = expectedMap.keys.sorted()
       let actualChildren = namedChildren(actual["properties"])
-      let actualList = actual["properties"] as? [[String: Any]]
-      for (index, key) in sortedKeys.enumerated() {
+      let actualList = (actual["properties"] as? [[String: Any]]) ?? []
+      // Absence of the key, not a failed String cast: a malformed `name` is a
+      // mismatch, so such a child is neither name-matched nor eliminated.
+      let namelessChildren = actualList.filter { $0["name"] == nil }
+      let unmatchedKeys = sortedKeys.filter { actualChildren[$0] == nil }
+      let eliminationChild =
+        (unmatchedKeys.count == 1 && namelessChildren.count == 1) ? namelessChildren[0] : nil
+
+      for key in sortedKeys {
         guard let expectedChild = expectedMap[key] as? [String: Any] else { continue }
         var actualChild = actualChildren[key]
-        if actualChild == nil, let actualList, actualList.count == sortedKeys.count {
-          actualChild = actualList[index]
+        if actualChild == nil, unmatchedKeys.first == key {
+          actualChild = eliminationChild
         }
         guard let actualChild else { continue }
         gaps += nestedObjectFormGaps(
