@@ -157,6 +157,34 @@ final class OptionalCollectionPresenceTests: XCTestCase {
       saved["instructions"] as? String, "hello", "the prompt lost its instructions on save")
   }
 
+  /// The same rule for the other two document-level collections.
+  ///
+  /// `inputs` and `outputs` serialize through different paths than `tools` — the
+  /// empty-name save-form gate had to be proven separately on each for exactly
+  /// that reason — so absence has to be proven separately too. An
+  /// implementation can synthesize one while correctly omitting another.
+  func testAbsentInputsAndOutputsStayOmitted() throws {
+    let saved = try Prompty.load([
+      "kind": "prompt",
+      "name": "no-io",
+      "instructions": "hello",
+    ]).save()
+
+    XCTAssertNil(
+      saved["inputs"],
+      "an absent 'inputs' collection was synthesized as \(Spec.describe(saved["inputs"]))"
+    )
+    XCTAssertNil(
+      saved["outputs"],
+      "an absent 'outputs' collection was synthesized as \(Spec.describe(saved["outputs"]))"
+    )
+    // Positive control, as above: an empty save output would satisfy both
+    // assertions while proving nothing.
+    XCTAssertEqual(saved["name"] as? String, "no-io", "the prompt lost its name on save")
+    XCTAssertEqual(
+      saved["instructions"] as? String, "hello", "the prompt lost its instructions on save")
+  }
+
   // MARK: - Explicitly present empty may stay empty
 
   /// The permissive half. An author who writes `enumValues: []` has stated a
