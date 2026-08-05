@@ -60,6 +60,7 @@ export class Checkpoint {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): Checkpoint {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -102,7 +103,7 @@ export class Checkpoint {
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
       instance.redaction = RedactionMetadata.load(
         data["redaction"] as Record<string, unknown>,
-        context,
+        context.at("redaction"),
       );
     }
 

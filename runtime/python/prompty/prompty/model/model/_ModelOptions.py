@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -48,7 +48,7 @@ class ModelOptions:
     temperature: float | None = None
     top_k: int | None = None
     top_p: float | None = None
-    stop_sequences: list[str] = field(default_factory=list)
+    stop_sequences: list[str] | None = None
     allow_multiple_tool_calls: bool | None = None
     additional_properties: dict[str, Any] | None = None
 
@@ -63,8 +63,9 @@ class ModelOptions:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelOptions: {data}")

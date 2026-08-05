@@ -23,6 +23,7 @@ export class AnthropicToolResultBlock {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnthropicToolResultBlock {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

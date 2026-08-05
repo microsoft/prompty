@@ -21,6 +21,7 @@ export class AnthropicTextBlock {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnthropicTextBlock {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

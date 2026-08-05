@@ -30,6 +30,7 @@ export class ReplayMismatch {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ReplayMismatch {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -42,13 +43,13 @@ export class ReplayMismatch {
     if (data["expected"] !== undefined && data["expected"] !== null) {
       instance.expected = ReplayJournalRecord.load(
         data["expected"] as Record<string, unknown>,
-        context,
+        context.at("expected"),
       );
     }
     if (data["actual"] !== undefined && data["actual"] !== null) {
       instance.actual = ReplayJournalRecord.load(
         data["actual"] as Record<string, unknown>,
-        context,
+        context.at("actual"),
       );
     }
     if (data["message"] !== undefined && data["message"] !== null) {

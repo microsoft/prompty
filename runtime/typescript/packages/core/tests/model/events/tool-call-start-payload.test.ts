@@ -61,7 +61,9 @@ describe("ToolCallStartPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "call_abc123",\n  "name": "get_weather",\n  "arguments": "{\\"city\\": \\"Paris\\"}"\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolCallStartPayload.load(data);
       expect(instance).toBeDefined();
     });

@@ -21,6 +21,7 @@ export class AuthorizationCodeFlow {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AuthorizationCodeFlow {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

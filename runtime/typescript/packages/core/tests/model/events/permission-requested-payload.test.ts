@@ -69,7 +69,9 @@ describe("PermissionRequestedPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "requestId": "perm_abc123",\n  "toolCallId": "call_abc123",\n  "permission": "tool.execute",\n  "target": "shell",\n  "promptRequest": "Allow shell to run tests?"\n}`,
+      ) as Record<string, unknown>;
       const instance = PermissionRequestedPayload.load(data);
       expect(instance).toBeDefined();
     });

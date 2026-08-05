@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,18 +21,24 @@ type ResumeContext struct {
 	MaxIterations       int32                  `json:"maxIterations" yaml:"maxIterations"`
 	MaxModelAttempts    int32                  `json:"maxModelAttempts" yaml:"maxModelAttempts"`
 	LastJournalSequence int64                  `json:"lastJournalSequence" yaml:"lastJournalSequence"`
-	Metadata            map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata            map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadResumeContext creates a ResumeContext from a map[string]interface{}
 func LoadResumeContext(data interface{}, ctx *LoadContext) (ResumeContext, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ResumeContext{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["checkpoint"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("checkpoint").Path)
+		}
 		if val, ok := m["checkpoint"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadEngineCheckpoint(m, ctx)
+				loaded, err := LoadEngineCheckpoint(m, ctx.At("checkpoint"))
 				if err != nil {
 					return result, err
 				}

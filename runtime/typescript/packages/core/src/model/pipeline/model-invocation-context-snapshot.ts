@@ -28,9 +28,7 @@ export class ModelInvocationContextSnapshot {
     this.invocationId = init?.invocationId ?? "";
     this.iteration = init?.iteration ?? 0;
     this.messages = init?.messages ?? [];
-    if (init?.decisions !== undefined) {
-      this.decisions = init.decisions;
-    }
+    this.decisions = init?.decisions ?? [];
     this.stablePrefixMessages = init?.stablePrefixMessages ?? 0;
     if (init?.contextState !== undefined) {
       this.contextState = init.contextState;
@@ -46,10 +44,16 @@ export class ModelInvocationContextSnapshot {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ModelInvocationContextSnapshot {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["contextState"] === undefined || data["contextState"] === null) {
+      throw new Error(
+        `${context.at("contextState").path}: missing required field`,
+      );
+    }
     const instance = new ModelInvocationContextSnapshot();
 
     if (data["id"] !== undefined && data["id"] !== null) {
@@ -70,13 +74,13 @@ export class ModelInvocationContextSnapshot {
     if (data["messages"] !== undefined && data["messages"] !== null) {
       instance.messages = ModelInvocationContextSnapshot.loadMessages(
         data["messages"] as unknown[],
-        context,
+        context.at("messages"),
       );
     }
     if (data["decisions"] !== undefined && data["decisions"] !== null) {
       instance.decisions = ModelInvocationContextSnapshot.loadDecisions(
         data["decisions"] as unknown[],
-        context,
+        context.at("decisions"),
       );
     }
     if (
@@ -88,7 +92,7 @@ export class ModelInvocationContextSnapshot {
     if (data["contextState"] !== undefined && data["contextState"] !== null) {
       instance.contextState = InvocationContextState.load(
         data["contextState"] as Record<string, unknown>,
-        context,
+        context.at("contextState"),
       );
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
@@ -105,20 +109,31 @@ export class ModelInvocationContextSnapshot {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Message[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Message.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, role: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Message.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -138,20 +153,39 @@ export class ModelInvocationContextSnapshot {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): InvocationContextDecision[] {
+    context ??= new LoadContext({ path: "decisions" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: InvocationContextDecision[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            InvocationContextDecision.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, candidateId: v });
+          result.push(
+            InvocationContextDecision.load(
+              { name: k, candidateId: v },
+              context.at(k),
+            ),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      InvocationContextDecision.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      InvocationContextDecision.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 

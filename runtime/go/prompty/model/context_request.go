@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -25,10 +26,18 @@ type ContextRequest struct {
 
 // LoadContextRequest creates a ContextRequest from a map[string]interface{}
 func LoadContextRequest(data interface{}, ctx *LoadContext) (ContextRequest, error) {
-	result := ContextRequest{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := ContextRequest{
+		Messages: []Message{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["contextState"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("contextState").Path)
+		}
 		if val, ok := m["sessionId"]; ok && val != nil {
 			result.SessionId = string(val.(string))
 		}
@@ -57,7 +66,7 @@ func LoadContextRequest(data interface{}, ctx *LoadContext) (ContextRequest, err
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -82,7 +91,7 @@ func LoadContextRequest(data interface{}, ctx *LoadContext) (ContextRequest, err
 		}
 		if val, ok := m["contextState"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadInvocationContextState(m, ctx)
+				loaded, err := LoadInvocationContextState(m, ctx.At("contextState"))
 				if err != nil {
 					return result, err
 				}

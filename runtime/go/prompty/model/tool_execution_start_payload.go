@@ -26,6 +26,9 @@ type ToolExecutionStartPayload struct {
 
 // LoadToolExecutionStartPayload creates a ToolExecutionStartPayload from a map[string]interface{}
 func LoadToolExecutionStartPayload(data interface{}, ctx *LoadContext) (ToolExecutionStartPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ToolExecutionStartPayload{}
 
 	// Load from map
@@ -52,7 +55,7 @@ func LoadToolExecutionStartPayload(data interface{}, ctx *LoadContext) (ToolExec
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
 				if err != nil {
 					return result, err
 				}

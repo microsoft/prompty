@@ -19,6 +19,9 @@ type AnthropicUsage struct {
 
 // LoadAnthropicUsage creates a AnthropicUsage from a map[string]interface{}
 func LoadAnthropicUsage(data interface{}, ctx *LoadContext) (AnthropicUsage, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AnthropicUsage{}
 
 	// Load from map

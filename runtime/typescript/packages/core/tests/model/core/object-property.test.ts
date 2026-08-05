@@ -49,7 +49,9 @@ describe("ObjectProperty", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "properties": {\n    "property1": {\n      "kind": "string"\n    },\n    "property2": {\n      "kind": "number"\n    }\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ObjectProperty.load(data);
       expect(instance).toBeDefined();
     });

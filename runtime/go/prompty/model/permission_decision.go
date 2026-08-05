@@ -23,6 +23,9 @@ type PermissionDecision struct {
 
 // LoadPermissionDecision creates a PermissionDecision from a map[string]interface{}
 func LoadPermissionDecision(data interface{}, ctx *LoadContext) (PermissionDecision, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := PermissionDecision{}
 
 	// Load from map

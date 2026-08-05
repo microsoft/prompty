@@ -27,11 +27,14 @@ type ModelToolResult struct {
 	Outcome   ModelToolOutcome       `json:"outcome" yaml:"outcome"`
 	Output    *interface{}           `json:"output,omitempty" yaml:"output,omitempty"`
 	ErrorKind *string                `json:"errorKind,omitempty" yaml:"errorKind,omitempty"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadModelToolResult creates a ModelToolResult from a map[string]interface{}
 func LoadModelToolResult(data interface{}, ctx *LoadContext) (ModelToolResult, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ModelToolResult{}
 
 	// Load from map

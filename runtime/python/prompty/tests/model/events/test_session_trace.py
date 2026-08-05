@@ -12,7 +12,18 @@ def test_load_json_sessiontrace():
       "version": "1",
       "runtime": "typescript",
       "promptyVersion": "2.0.0",
-      "sessionId": "sess_abc123"
+      "sessionId": "sess_abc123",
+      "events": [
+        {
+          "id": "evt_abc123",
+          "type": "session_start",
+          "timestamp": "2026-06-09T20:00:00Z",
+          "sessionId": "sess_abc123",
+          "turnId": "turn_001",
+          "parentId": "evt_parent",
+          "spanId": "span_hook_001"
+        }
+      ]
     }
     """
     data = json.loads(json_data, strict=False)
@@ -30,6 +41,14 @@ def test_load_yaml_sessiontrace():
     runtime: typescript
     promptyVersion: 2.0.0
     sessionId: sess_abc123
+    events:
+      - id: evt_abc123
+        type: session_start
+        timestamp: "2026-06-09T20:00:00Z"
+        sessionId: sess_abc123
+        turnId: turn_001
+        parentId: evt_parent
+        spanId: span_hook_001
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -48,7 +67,18 @@ def test_roundtrip_json_sessiontrace():
       "version": "1",
       "runtime": "typescript",
       "promptyVersion": "2.0.0",
-      "sessionId": "sess_abc123"
+      "sessionId": "sess_abc123",
+      "events": [
+        {
+          "id": "evt_abc123",
+          "type": "session_start",
+          "timestamp": "2026-06-09T20:00:00Z",
+          "sessionId": "sess_abc123",
+          "turnId": "turn_001",
+          "parentId": "evt_parent",
+          "spanId": "span_hook_001"
+        }
+      ]
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -69,7 +99,18 @@ def test_to_json_sessiontrace():
       "version": "1",
       "runtime": "typescript",
       "promptyVersion": "2.0.0",
-      "sessionId": "sess_abc123"
+      "sessionId": "sess_abc123",
+      "events": [
+        {
+          "id": "evt_abc123",
+          "type": "session_start",
+          "timestamp": "2026-06-09T20:00:00Z",
+          "sessionId": "sess_abc123",
+          "turnId": "turn_001",
+          "parentId": "evt_parent",
+          "spanId": "span_hook_001"
+        }
+      ]
     }
     """
     data = json.loads(json_data, strict=False)
@@ -87,7 +128,18 @@ def test_to_yaml_sessiontrace():
       "version": "1",
       "runtime": "typescript",
       "promptyVersion": "2.0.0",
-      "sessionId": "sess_abc123"
+      "sessionId": "sess_abc123",
+      "events": [
+        {
+          "id": "evt_abc123",
+          "type": "session_start",
+          "timestamp": "2026-06-09T20:00:00Z",
+          "sessionId": "sess_abc123",
+          "turnId": "turn_001",
+          "parentId": "evt_parent",
+          "spanId": "span_hook_001"
+        }
+      ]
     }
     """
     data = json.loads(json_data, strict=False)

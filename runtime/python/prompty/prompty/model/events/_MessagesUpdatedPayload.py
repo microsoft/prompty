@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -30,9 +30,9 @@ class MessagesUpdatedPayload:
 
     _shorthand_property: ClassVar[str | None] = None
 
-    messages: list[Message] = field(default_factory=list)
+    messages: list[Message] | None = None
     reason: str | None = None
-    appended: list[Message] = field(default_factory=list)
+    appended: list[Message] | None = None
     removed: int | None = None
 
     @staticmethod
@@ -46,8 +46,9 @@ class MessagesUpdatedPayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for MessagesUpdatedPayload: {data}")
@@ -56,11 +57,11 @@ class MessagesUpdatedPayload:
         instance = MessagesUpdatedPayload()
 
         if data is not None and "messages" in data:
-            instance.messages = MessagesUpdatedPayload.load_messages(data["messages"], context)
+            instance.messages = MessagesUpdatedPayload.load_messages(data["messages"], context.at("messages"))
         if data is not None and "reason" in data:
             instance.reason = data["reason"]
         if data is not None and "appended" in data:
-            instance.appended = MessagesUpdatedPayload.load_appended(data["appended"], context)
+            instance.appended = MessagesUpdatedPayload.load_appended(data["appended"], context.at("appended"))
         if data is not None and "removed" in data:
             instance.removed = data["removed"]
         if context is not None:
@@ -69,48 +70,56 @@ class MessagesUpdatedPayload:
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
+        if context is None:
+            context = LoadContext(path="messages")
         if isinstance(data, dict):
             # convert simple named messages to list of Message
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Message.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
-        return [Message.load(item, context) for item in data]
+                    result.append(Message.load({"name": k, "role": v}, context.at(k)))
+            return result
+        return [Message.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_appended(data: dict | list, context: LoadContext | None) -> list[Message]:
+        if context is None:
+            context = LoadContext(path="appended")
         if isinstance(data, dict):
             # convert simple named appended to list of Message
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Message.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
-        return [Message.load(item, context) for item in data]
+                    result.append(Message.load({"name": k, "role": v}, context.at(k)))
+            return result
+        return [Message.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_appended(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

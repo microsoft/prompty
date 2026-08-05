@@ -54,8 +54,9 @@ class Model:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         # handle alternate representations
         if isinstance(data, str):
@@ -78,9 +79,9 @@ class Model:
         if data is not None and "apiType" in data:
             instance.api_type = data["apiType"]
         if data is not None and "connection" in data:
-            instance.connection = Connection.load(data["connection"], context)
+            instance.connection = Connection.load(data["connection"], context.at("connection"))
         if data is not None and "options" in data:
-            instance.options = ModelOptions.load(data["options"], context)
+            instance.options = ModelOptions.load(data["options"], context.at("options"))
         if context is not None:
             instance = context.process_output(instance)
         return instance

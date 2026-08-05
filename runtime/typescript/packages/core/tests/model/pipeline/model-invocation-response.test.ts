@@ -18,12 +18,6 @@ describe("ModelInvocationResponse", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = ModelInvocationResponse.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new ModelInvocationResponse();
       const data = instance.save();

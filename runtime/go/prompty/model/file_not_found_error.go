@@ -20,6 +20,9 @@ type FileNotFoundError struct {
 
 // LoadFileNotFoundError creates a FileNotFoundError from a map[string]interface{}
 func LoadFileNotFoundError(data interface{}, ctx *LoadContext) (FileNotFoundError, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := FileNotFoundError{}
 
 	// Load from map

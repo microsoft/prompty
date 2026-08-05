@@ -27,6 +27,9 @@ type ToolExecutionCompletePayload struct {
 
 // LoadToolExecutionCompletePayload creates a ToolExecutionCompletePayload from a map[string]interface{}
 func LoadToolExecutionCompletePayload(data interface{}, ctx *LoadContext) (ToolExecutionCompletePayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ToolExecutionCompletePayload{}
 
 	// Load from map
@@ -89,7 +92,7 @@ func LoadToolExecutionCompletePayload(data interface{}, ctx *LoadContext) (ToolE
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
 				if err != nil {
 					return result, err
 				}

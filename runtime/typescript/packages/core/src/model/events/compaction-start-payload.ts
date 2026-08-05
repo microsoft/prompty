@@ -19,6 +19,7 @@ export class CompactionStartPayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): CompactionStartPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

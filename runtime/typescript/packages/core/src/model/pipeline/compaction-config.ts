@@ -29,6 +29,7 @@ export class CompactionConfig {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): CompactionConfig {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

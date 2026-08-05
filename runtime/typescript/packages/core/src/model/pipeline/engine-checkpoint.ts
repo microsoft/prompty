@@ -57,12 +57,8 @@ export class EngineCheckpoint {
     if (init?.activeInvocationId !== undefined) {
       this.activeInvocationId = init.activeInvocationId;
     }
-    if (init?.pendingToolRequests !== undefined) {
-      this.pendingToolRequests = init.pendingToolRequests;
-    }
-    if (init?.completedToolResults !== undefined) {
-      this.completedToolResults = init.completedToolResults;
-    }
+    this.pendingToolRequests = init?.pendingToolRequests ?? [];
+    this.completedToolResults = init?.completedToolResults ?? [];
     this.completedModelIterations = init?.completedModelIterations ?? 0;
     this.reconciliationRequired = init?.reconciliationRequired ?? false;
     if (init?.modelReconciliation !== undefined) {
@@ -91,10 +87,16 @@ export class EngineCheckpoint {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): EngineCheckpoint {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["contextState"] === undefined || data["contextState"] === null) {
+      throw new Error(
+        `${context.at("contextState").path}: missing required field`,
+      );
+    }
     const instance = new EngineCheckpoint();
 
     if (data["id"] !== undefined && data["id"] !== null) {
@@ -127,7 +129,7 @@ export class EngineCheckpoint {
     if (data["messages"] !== undefined && data["messages"] !== null) {
       instance.messages = EngineCheckpoint.loadMessages(
         data["messages"] as unknown[],
-        context,
+        context.at("messages"),
       );
     }
     if (
@@ -151,7 +153,7 @@ export class EngineCheckpoint {
     ) {
       instance.pendingToolRequests = EngineCheckpoint.loadPendingToolRequests(
         data["pendingToolRequests"] as unknown[],
-        context,
+        context.at("pendingToolRequests"),
       );
     }
     if (
@@ -160,7 +162,7 @@ export class EngineCheckpoint {
     ) {
       instance.completedToolResults = EngineCheckpoint.loadCompletedToolResults(
         data["completedToolResults"] as unknown[],
-        context,
+        context.at("completedToolResults"),
       );
     }
     if (
@@ -183,7 +185,7 @@ export class EngineCheckpoint {
     ) {
       instance.modelReconciliation = ModelReconciliationState.load(
         data["modelReconciliation"] as Record<string, unknown>,
-        context,
+        context.at("modelReconciliation"),
       );
     }
     if (data["pendingOutput"] !== undefined && data["pendingOutput"] !== null) {
@@ -201,7 +203,7 @@ export class EngineCheckpoint {
     ) {
       instance.pendingModelResponse = ModelInvocationResponse.load(
         data["pendingModelResponse"] as Record<string, unknown>,
-        context,
+        context.at("pendingModelResponse"),
       );
     }
     if (
@@ -221,7 +223,7 @@ export class EngineCheckpoint {
     if (data["contextState"] !== undefined && data["contextState"] !== null) {
       instance.contextState = InvocationContextState.load(
         data["contextState"] as Record<string, unknown>,
-        context,
+        context.at("contextState"),
       );
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
@@ -238,20 +240,31 @@ export class EngineCheckpoint {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Message[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Message.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, role: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Message.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -271,20 +284,34 @@ export class EngineCheckpoint {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): ModelToolRequest[] {
+    context ??= new LoadContext({ path: "pendingToolRequests" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ModelToolRequest[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            ModelToolRequest.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, id: v });
+          result.push(ModelToolRequest.load({ name: k, id: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ModelToolRequest.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      ModelToolRequest.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -296,59 +323,44 @@ export class EngineCheckpoint {
       context = new SaveContext();
     }
 
-    if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
-    }
-
-    // Object format: use name as key
-    const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context) as Record<string, unknown>;
-      const name = itemData["name"] as string | undefined;
-      delete itemData["name"];
-      if (name) {
-        // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof ModelToolRequest)
-          .shorthandProperty;
-        if (
-          context.useShorthand &&
-          shorthand &&
-          Object.keys(itemData).length === 1 &&
-          shorthand in itemData
-        ) {
-          result[name] = itemData[shorthand];
-          continue;
-        }
-        result[name] = itemData;
-      } else {
-        // No name, fall back to array format for this item
-        if (!result["_unnamed"]) {
-          result["_unnamed"] = [];
-        }
-        (result["_unnamed"] as unknown[]).push(itemData);
-      }
-    }
-    return result;
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map((item) => item.save(context));
   }
 
   static loadCompletedToolResults(
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): ModelToolResult[] {
+    context ??= new LoadContext({ path: "completedToolResults" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ModelToolResult[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            ModelToolResult.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, requestId: v });
+          result.push(
+            ModelToolResult.load({ name: k, requestId: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ModelToolResult.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      ModelToolResult.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -360,39 +372,8 @@ export class EngineCheckpoint {
       context = new SaveContext();
     }
 
-    if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
-    }
-
-    // Object format: use name as key
-    const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context) as Record<string, unknown>;
-      const name = itemData["name"] as string | undefined;
-      delete itemData["name"];
-      if (name) {
-        // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof ModelToolResult)
-          .shorthandProperty;
-        if (
-          context.useShorthand &&
-          shorthand &&
-          Object.keys(itemData).length === 1 &&
-          shorthand in itemData
-        ) {
-          result[name] = itemData[shorthand];
-          continue;
-        }
-        result[name] = itemData;
-      } else {
-        // No name, fall back to array format for this item
-        if (!result["_unnamed"]) {
-          result["_unnamed"] = [];
-        }
-        (result["_unnamed"] as unknown[]).push(itemData);
-      }
-    }
-    return result;
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map((item) => item.save(context));
   }
 
   //#endregion

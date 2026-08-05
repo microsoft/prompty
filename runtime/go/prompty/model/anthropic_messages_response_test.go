@@ -18,7 +18,11 @@ func TestAnthropicMessagesResponseLoadJSON(t *testing.T) {
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 `
 	var data map[string]interface{}
@@ -48,6 +52,9 @@ func TestAnthropicMessagesResponseLoadYAML(t *testing.T) {
 id: msg_01XFDUDYJgAACzvnptvVoYEL
 model: claude-sonnet-4-20250514
 stop_reason: end_turn
+usage:
+  input_tokens: 150
+  output_tokens: 42
 
 `
 	var data map[string]interface{}
@@ -77,7 +84,11 @@ func TestAnthropicMessagesResponseFromJSON(t *testing.T) {
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 `
 
@@ -102,6 +113,9 @@ func TestAnthropicMessagesResponseFromYAML(t *testing.T) {
 id: msg_01XFDUDYJgAACzvnptvVoYEL
 model: claude-sonnet-4-20250514
 stop_reason: end_turn
+usage:
+  input_tokens: 150
+  output_tokens: 42
 
 `
 
@@ -126,7 +140,11 @@ func TestAnthropicMessagesResponseRoundtrip(t *testing.T) {
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 `
 	var data map[string]interface{}
@@ -163,7 +181,11 @@ func TestAnthropicMessagesResponseToJSON(t *testing.T) {
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 `
 	var data map[string]interface{}
@@ -207,7 +229,11 @@ func TestAnthropicMessagesResponseToYAML(t *testing.T) {
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 `
 	var data map[string]interface{}

@@ -21,6 +21,7 @@ export class AnthropicUsage {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnthropicUsage {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

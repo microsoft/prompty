@@ -17,7 +17,17 @@ func TestTraceFileLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 `
 	var data map[string]interface{}
@@ -36,6 +46,15 @@ func TestTraceFileLoadJSON(t *testing.T) {
 	if instance.Version != "2.0.0" {
 		t.Errorf(`Expected Version to be "2.0.0", got %v`, instance.Version)
 	}
+	if instance.Trace.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Name to be "prompty.core.pipeline.run", got %v`, instance.Trace.Name)
+	}
+	if instance.Trace.Signature == nil || *instance.Trace.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Signature to be "prompty.core.pipeline.run", got %v`, instance.Trace.Signature)
+	}
+	if instance.Trace.Error == nil || *instance.Trace.Error != "Connection refused" {
+		t.Errorf(`Expected Trace.Error to be "Connection refused", got %v`, instance.Trace.Error)
+	}
 }
 
 // TestTraceFileLoadYAML tests loading TraceFile from YAML
@@ -43,6 +62,14 @@ func TestTraceFileLoadYAML(t *testing.T) {
 	yamlData := `
 runtime: python
 version: 2.0.0
+trace:
+  name: prompty.core.pipeline.run
+  __time:
+    start: "2026-04-04T12:00:00Z"
+    end: "2026-04-04T12:00:01Z"
+    duration: 1000
+  signature: prompty.core.pipeline.run
+  error: Connection refused
 
 `
 	var data map[string]interface{}
@@ -61,6 +88,15 @@ version: 2.0.0
 	if instance.Version != "2.0.0" {
 		t.Errorf(`Expected Version to be "2.0.0", got %v`, instance.Version)
 	}
+	if instance.Trace.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Name to be "prompty.core.pipeline.run", got %v`, instance.Trace.Name)
+	}
+	if instance.Trace.Signature == nil || *instance.Trace.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Signature to be "prompty.core.pipeline.run", got %v`, instance.Trace.Signature)
+	}
+	if instance.Trace.Error == nil || *instance.Trace.Error != "Connection refused" {
+		t.Errorf(`Expected Trace.Error to be "Connection refused", got %v`, instance.Trace.Error)
+	}
 }
 
 // TestTraceFileFromJSON tests loading TraceFile through the generated JSON helper
@@ -68,7 +104,17 @@ func TestTraceFileFromJSON(t *testing.T) {
 	jsonData := `
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 `
 
@@ -82,6 +128,15 @@ func TestTraceFileFromJSON(t *testing.T) {
 	if instance.Version != "2.0.0" {
 		t.Errorf(`Expected Version to be "2.0.0", got %v`, instance.Version)
 	}
+	if instance.Trace.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Name to be "prompty.core.pipeline.run", got %v`, instance.Trace.Name)
+	}
+	if instance.Trace.Signature == nil || *instance.Trace.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Signature to be "prompty.core.pipeline.run", got %v`, instance.Trace.Signature)
+	}
+	if instance.Trace.Error == nil || *instance.Trace.Error != "Connection refused" {
+		t.Errorf(`Expected Trace.Error to be "Connection refused", got %v`, instance.Trace.Error)
+	}
 }
 
 // TestTraceFileFromYAML tests loading TraceFile through the generated YAML helper
@@ -89,6 +144,14 @@ func TestTraceFileFromYAML(t *testing.T) {
 	yamlData := `
 runtime: python
 version: 2.0.0
+trace:
+  name: prompty.core.pipeline.run
+  __time:
+    start: "2026-04-04T12:00:00Z"
+    end: "2026-04-04T12:00:01Z"
+    duration: 1000
+  signature: prompty.core.pipeline.run
+  error: Connection refused
 
 `
 
@@ -102,6 +165,15 @@ version: 2.0.0
 	if instance.Version != "2.0.0" {
 		t.Errorf(`Expected Version to be "2.0.0", got %v`, instance.Version)
 	}
+	if instance.Trace.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Name to be "prompty.core.pipeline.run", got %v`, instance.Trace.Name)
+	}
+	if instance.Trace.Signature == nil || *instance.Trace.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Signature to be "prompty.core.pipeline.run", got %v`, instance.Trace.Signature)
+	}
+	if instance.Trace.Error == nil || *instance.Trace.Error != "Connection refused" {
+		t.Errorf(`Expected Trace.Error to be "Connection refused", got %v`, instance.Trace.Error)
+	}
 }
 
 // TestTraceFileRoundtrip tests load -> save -> load produces equivalent data
@@ -109,7 +181,17 @@ func TestTraceFileRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 `
 	var data map[string]interface{}
@@ -135,6 +217,15 @@ func TestTraceFileRoundtrip(t *testing.T) {
 	if reloaded.Version != "2.0.0" {
 		t.Errorf(`Expected Version to be "2.0.0", got %v`, reloaded.Version)
 	}
+	if reloaded.Trace.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Name to be "prompty.core.pipeline.run", got %v`, reloaded.Trace.Name)
+	}
+	if reloaded.Trace.Signature == nil || *reloaded.Trace.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Signature to be "prompty.core.pipeline.run", got %v`, reloaded.Trace.Signature)
+	}
+	if reloaded.Trace.Error == nil || *reloaded.Trace.Error != "Connection refused" {
+		t.Errorf(`Expected Trace.Error to be "Connection refused", got %v`, reloaded.Trace.Error)
+	}
 }
 
 // TestTraceFileToJSON tests that ToJSON produces valid JSON
@@ -142,7 +233,17 @@ func TestTraceFileToJSON(t *testing.T) {
 	jsonData := `
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 `
 	var data map[string]interface{}
@@ -175,6 +276,15 @@ func TestTraceFileToJSON(t *testing.T) {
 	if reloaded.Version != "2.0.0" {
 		t.Errorf(`Expected Version to be "2.0.0", got %v`, reloaded.Version)
 	}
+	if reloaded.Trace.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Name to be "prompty.core.pipeline.run", got %v`, reloaded.Trace.Name)
+	}
+	if reloaded.Trace.Signature == nil || *reloaded.Trace.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Signature to be "prompty.core.pipeline.run", got %v`, reloaded.Trace.Signature)
+	}
+	if reloaded.Trace.Error == nil || *reloaded.Trace.Error != "Connection refused" {
+		t.Errorf(`Expected Trace.Error to be "Connection refused", got %v`, reloaded.Trace.Error)
+	}
 }
 
 // TestTraceFileToYAML tests that ToYAML produces valid YAML
@@ -182,7 +292,17 @@ func TestTraceFileToYAML(t *testing.T) {
 	jsonData := `
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 `
 	var data map[string]interface{}
@@ -214,6 +334,15 @@ func TestTraceFileToYAML(t *testing.T) {
 	}
 	if reloaded.Version != "2.0.0" {
 		t.Errorf(`Expected Version to be "2.0.0", got %v`, reloaded.Version)
+	}
+	if reloaded.Trace.Name != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Name to be "prompty.core.pipeline.run", got %v`, reloaded.Trace.Name)
+	}
+	if reloaded.Trace.Signature == nil || *reloaded.Trace.Signature != "prompty.core.pipeline.run" {
+		t.Errorf(`Expected Trace.Signature to be "prompty.core.pipeline.run", got %v`, reloaded.Trace.Signature)
+	}
+	if reloaded.Trace.Error == nil || *reloaded.Trace.Error != "Connection refused" {
+		t.Errorf(`Expected Trace.Error to be "Connection refused", got %v`, reloaded.Trace.Error)
 	}
 }
 

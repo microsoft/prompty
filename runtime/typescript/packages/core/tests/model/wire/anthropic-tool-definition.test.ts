@@ -61,7 +61,9 @@ describe("AnthropicToolDefinition", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "name": "get_weather",\n  "description": "Get the current weather for a city"\n}`,
+      ) as Record<string, unknown>;
       const instance = AnthropicToolDefinition.load(data);
       expect(instance).toBeDefined();
     });

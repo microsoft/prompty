@@ -26,10 +26,14 @@ export class ToolDispatchResult {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ToolDispatchResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["result"] === undefined || data["result"] === null) {
+      throw new Error(`${context.at("result").path}: missing required field`);
+    }
     const instance = new ToolDispatchResult();
 
     if (data["toolCallId"] !== undefined && data["toolCallId"] !== null) {
@@ -41,7 +45,7 @@ export class ToolDispatchResult {
     if (data["result"] !== undefined && data["result"] !== null) {
       instance.result = ToolResult.load(
         data["result"] as Record<string, unknown>,
-        context,
+        context.at("result"),
       );
     }
 

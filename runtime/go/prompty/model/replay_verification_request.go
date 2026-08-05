@@ -19,7 +19,13 @@ type ReplayVerificationRequest struct {
 
 // LoadReplayVerificationRequest creates a ReplayVerificationRequest from a map[string]interface{}
 func LoadReplayVerificationRequest(data interface{}, ctx *LoadContext) (ReplayVerificationRequest, error) {
-	result := ReplayVerificationRequest{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := ReplayVerificationRequest{
+		Expected: []ReplayJournalRecord{},
+		Actual:   []ReplayJournalRecord{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -28,7 +34,7 @@ func LoadReplayVerificationRequest(data interface{}, ctx *LoadContext) (ReplayVe
 				result.Expected = make([]ReplayJournalRecord, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadReplayJournalRecord(item, ctx)
+						loaded, err := LoadReplayJournalRecord(item, ctx.At("expected").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -42,7 +48,7 @@ func LoadReplayVerificationRequest(data interface{}, ctx *LoadContext) (ReplayVe
 				result.Actual = make([]ReplayJournalRecord, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadReplayJournalRecord(item, ctx)
+						loaded, err := LoadReplayJournalRecord(item, ctx.At("actual").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

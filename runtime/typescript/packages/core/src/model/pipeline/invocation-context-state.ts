@@ -15,9 +15,7 @@ export class InvocationContextState {
 
   constructor(init?: Partial<InvocationContextState>) {
     this.portability = init?.portability ?? "portable";
-    if (init?.delegatedState !== undefined) {
-      this.delegatedState = init.delegatedState;
-    }
+    this.delegatedState = init?.delegatedState ?? [];
   }
 
   //#region Load Methods
@@ -26,6 +24,7 @@ export class InvocationContextState {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): InvocationContextState {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -43,7 +42,7 @@ export class InvocationContextState {
     ) {
       instance.delegatedState = InvocationContextState.loadDelegatedState(
         data["delegatedState"] as unknown[],
-        context,
+        context.at("delegatedState"),
       );
     }
 
@@ -57,20 +56,39 @@ export class InvocationContextState {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): DelegatedStateReference[] {
+    context ??= new LoadContext({ path: "delegatedState" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: DelegatedStateReference[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            DelegatedStateReference.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, provider: v });
+          result.push(
+            DelegatedStateReference.load(
+              { name: k, provider: v },
+              context.at(k),
+            ),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      DelegatedStateReference.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      DelegatedStateReference.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 

@@ -27,6 +27,9 @@ type ModelOptions struct {
 
 // LoadModelOptions creates a ModelOptions from a map[string]interface{}
 func LoadModelOptions(data interface{}, ctx *LoadContext) (ModelOptions, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ModelOptions{}
 
 	// Load from map
@@ -186,7 +189,9 @@ func (obj ModelOptions) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.TopP != nil {
 		result["topP"] = *obj.TopP
 	}
-	result["stopSequences"] = obj.StopSequences
+	if obj.StopSequences != nil {
+		result["stopSequences"] = obj.StopSequences
+	}
 	if obj.AllowMultipleToolCalls != nil {
 		result["allowMultipleToolCalls"] = *obj.AllowMultipleToolCalls
 	}

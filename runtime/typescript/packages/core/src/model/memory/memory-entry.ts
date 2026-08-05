@@ -12,7 +12,7 @@ export class MemoryEntry {
   content: string = "";
   category: MemoryCategory = "core";
   createdAt?: string | undefined;
-  tags?: string[] = [];
+  tags?: string[];
 
   constructor(init?: Partial<MemoryEntry>) {
     this.content = init?.content ?? "";
@@ -31,6 +31,7 @@ export class MemoryEntry {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): MemoryEntry {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

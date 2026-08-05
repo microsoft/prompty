@@ -61,7 +61,9 @@ describe("AnonymousConnection", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "kind": "anonymous",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"\n}`,
+      ) as Record<string, unknown>;
       const instance = AnonymousConnection.load(data);
       expect(instance).toBeDefined();
     });

@@ -23,7 +23,12 @@ type HostPolicyRequest struct {
 
 // LoadHostPolicyRequest creates a HostPolicyRequest from a map[string]interface{}
 func LoadHostPolicyRequest(data interface{}, ctx *LoadContext) (HostPolicyRequest, error) {
-	result := HostPolicyRequest{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := HostPolicyRequest{
+		Messages: []Message{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -52,7 +57,7 @@ func LoadHostPolicyRequest(data interface{}, ctx *LoadContext) (HostPolicyReques
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

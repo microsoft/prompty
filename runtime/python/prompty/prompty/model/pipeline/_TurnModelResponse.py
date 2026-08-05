@@ -33,7 +33,7 @@ class TurnModelResponse:
 
     output: Any | None = None
     usage: InvocationUsage | None = None
-    tool_requests: list[HostToolRequest] = field(default_factory=list)
+    tool_requests: list[HostToolRequest] | None = field(default_factory=list)
     checkpoint_state: dict[str, Any] | None = None
 
     @staticmethod
@@ -47,8 +47,9 @@ class TurnModelResponse:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnModelResponse: {data}")
@@ -59,9 +60,11 @@ class TurnModelResponse:
         if data is not None and "output" in data:
             instance.output = data["output"]
         if data is not None and "usage" in data:
-            instance.usage = InvocationUsage.load(data["usage"], context)
+            instance.usage = InvocationUsage.load(data["usage"], context.at("usage"))
         if data is not None and "toolRequests" in data:
-            instance.tool_requests = TurnModelResponse.load_tool_requests(data["toolRequests"], context)
+            instance.tool_requests = TurnModelResponse.load_tool_requests(
+                data["toolRequests"], context.at("toolRequests")
+            )
         if data is not None and "checkpointState" in data:
             instance.checkpoint_state = data["checkpointState"]
         if context is not None:
@@ -70,18 +73,22 @@ class TurnModelResponse:
 
     @staticmethod
     def load_tool_requests(data: dict | list, context: LoadContext | None) -> list[HostToolRequest]:
+        if context is None:
+            context = LoadContext(path="toolRequests")
         if isinstance(data, dict):
             # convert simple named toolRequests to list of HostToolRequest
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(HostToolRequest.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "requestId": v})
-            data = result
-        return [HostToolRequest.load(item, context) for item in data]
+                    result.append(HostToolRequest.load({"name": k, "requestId": v}, context.at(k)))
+            return result
+        return [HostToolRequest.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tool_requests(
@@ -90,7 +97,7 @@ class TurnModelResponse:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

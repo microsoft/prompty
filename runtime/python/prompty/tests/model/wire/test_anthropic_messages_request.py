@@ -17,6 +17,12 @@ def test_load_json_anthropicmessagesrequest():
       "top_k": 40,
       "stop_sequences": [
         "\n\nHuman:"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": []
+        }
       ]
     }
     """
@@ -41,6 +47,9 @@ def test_load_yaml_anthropicmessagesrequest():
     top_k: 40
     stop_sequences:
       - "\n\nHuman:"
+    messages:
+      - role: user
+        content: []
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -66,6 +75,12 @@ def test_roundtrip_json_anthropicmessagesrequest():
       "top_k": 40,
       "stop_sequences": [
         "\n\nHuman:"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": []
+        }
       ]
     }
     """
@@ -94,6 +109,12 @@ def test_to_json_anthropicmessagesrequest():
       "top_k": 40,
       "stop_sequences": [
         "\n\nHuman:"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": []
+        }
       ]
     }
     """
@@ -117,6 +138,12 @@ def test_to_yaml_anthropicmessagesrequest():
       "top_k": 40,
       "stop_sequences": [
         "\n\nHuman:"
+      ],
+      "messages": [
+        {
+          "role": "user",
+          "content": []
+        }
       ]
     }
     """

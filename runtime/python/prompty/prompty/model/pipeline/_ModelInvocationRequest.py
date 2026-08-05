@@ -37,17 +37,20 @@ class ModelInvocationRequest:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelInvocationRequest: {data}")
+        if "context" not in data or data["context"] is None:
+            raise ValueError(f"{context.at('context').path}: missing required field")
 
         # create new instance
         instance = ModelInvocationRequest()
 
         if data is not None and "context" in data:
-            instance.context = ModelInvocationContextSnapshot.load(data["context"], context)
+            instance.context = ModelInvocationContextSnapshot.load(data["context"], context.at("context"))
         if context is not None:
             instance = context.process_output(instance)
         return instance

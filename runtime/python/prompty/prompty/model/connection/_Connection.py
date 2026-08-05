@@ -47,8 +47,9 @@ class Connection(ABC):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Connection: {data}")
@@ -70,7 +71,7 @@ class Connection(ABC):
     def load_kind(data: dict, context: LoadContext | None) -> "Connection":
         # load polymorphic Connection instance
         if data is not None and "kind" in data:
-            discriminator_value = str(data["kind"]).lower()
+            discriminator_value = str(data["kind"])
             if discriminator_value == "reference":
                 return ReferenceConnection.load(data, context)
             elif discriminator_value == "remote":
@@ -85,7 +86,7 @@ class Connection(ABC):
                 return FoundryConnection.load(data, context)
 
             else:
-                raise ValueError(f"Unknown Connection discriminator value: {discriminator_value}")
+                raise ValueError(f"Unknown Connection discriminator field 'kind' value: {discriminator_value}")
         else:
             raise ValueError("Missing Connection discriminator property: 'kind'")
 
@@ -171,8 +172,9 @@ class ReferenceConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ReferenceConnection: {data}")
@@ -270,8 +272,9 @@ class RemoteConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for RemoteConnection: {data}")
@@ -369,8 +372,9 @@ class ApiKeyConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ApiKeyConnection: {data}")
@@ -465,8 +469,9 @@ class AnonymousConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnonymousConnection: {data}")
@@ -558,7 +563,7 @@ class OAuthConnection(Connection):
     client_id: str = field(default="")
     client_secret: str = field(default="")
     token_url: str = field(default="")
-    scopes: list[str] = field(default_factory=list)
+    scopes: list[str] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "OAuthConnection":
@@ -571,8 +576,9 @@ class OAuthConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for OAuthConnection: {data}")
@@ -687,8 +693,9 @@ class FoundryConnection(Connection):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FoundryConnection: {data}")

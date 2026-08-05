@@ -17,8 +17,8 @@
       },
       {
         "name": "@typra/emitter",
-        "version": "0.4.2",
-        "supportedRange": "0.4.2",
+        "version": "0.4.20",
+        "supportedRange": "0.4.20",
         "supported": true
       }
     ]
@@ -1691,7 +1691,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1708,7 +1711,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -1718,7 +1724,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -1727,7 +1736,10 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1744,7 +1756,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -1753,7 +1768,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -1762,7 +1780,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1779,7 +1800,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -1788,7 +1812,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1806,7 +1833,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -1816,7 +1846,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -1828,7 +1861,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1845,7 +1881,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1864,7 +1903,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -1873,7 +1915,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1890,7 +1935,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1908,7 +1956,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -1917,7 +1968,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -1936,7 +1990,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -3740,7 +3797,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3757,7 +3817,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -3767,7 +3830,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -3776,7 +3842,10 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3793,7 +3862,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -3802,7 +3874,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -3811,7 +3886,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3828,7 +3906,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -3837,7 +3918,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3855,7 +3939,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -3865,7 +3952,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -3877,7 +3967,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3894,7 +3987,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3913,7 +4009,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -3922,7 +4021,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3939,7 +4041,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3957,7 +4062,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -3966,7 +4074,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -3985,7 +4096,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -5788,7 +5902,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5805,7 +5922,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -5815,7 +5935,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -5824,7 +5947,10 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5841,7 +5967,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -5850,7 +5979,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -5859,7 +5991,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5876,7 +6011,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -5885,7 +6023,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5903,7 +6044,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -5913,7 +6057,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -5925,7 +6072,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5942,7 +6092,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5961,7 +6114,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -5970,7 +6126,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -5987,7 +6146,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -6005,7 +6167,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -6014,7 +6179,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -6033,7 +6201,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -7837,7 +8008,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7854,7 +8028,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -7864,7 +8041,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -7873,7 +8053,10 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7890,7 +8073,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -7899,7 +8085,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -7908,7 +8097,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7925,7 +8117,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -7934,7 +8129,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7952,7 +8150,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -7962,7 +8163,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -7974,7 +8178,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -7991,7 +8198,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -8010,7 +8220,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -8019,7 +8232,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -8036,7 +8252,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -8054,7 +8273,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -8063,7 +8285,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -8082,7 +8307,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -9764,7 +9992,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9781,7 +10012,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -9791,7 +10025,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -9800,7 +10037,10 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9817,7 +10057,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -9826,7 +10069,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -9835,7 +10081,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9852,7 +10101,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -9861,7 +10113,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9879,7 +10134,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -9889,7 +10147,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -9901,7 +10162,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9918,7 +10182,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9937,7 +10204,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -9946,7 +10216,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9963,7 +10236,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9981,7 +10257,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -9990,7 +10269,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -10009,7 +10291,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }
@@ -11693,7 +11978,10 @@
                 "connection": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11710,7 +11998,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "load",
@@ -11720,7 +12011,10 @@
                 "sessionId": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "save",
@@ -11729,7 +12023,10 @@
                 "checkpoint": "Checkpoint"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11746,7 +12043,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "appendTurn",
@@ -11755,7 +12055,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "close",
@@ -11764,7 +12067,10 @@
                 "summary": "SessionSummary?"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11781,7 +12087,10 @@
                 "sessionEvent": "SessionEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "emitTurn",
@@ -11790,7 +12099,10 @@
                 "turnEvent": "TurnEvent"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11808,7 +12120,10 @@
                 "messages": "Message[]"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "executeStream",
@@ -11818,7 +12133,10 @@
                 "messages": "Message[]"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "formatToolMessages",
@@ -11830,7 +12148,10 @@
                 "toolResults": "string[]"
               },
               "optional": false,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11847,7 +12168,10 @@
                 "request": "HostToolRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11866,7 +12190,10 @@
                 "rendered": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "preRender",
@@ -11875,7 +12202,10 @@
                 "template": "string"
               },
               "optional": true,
-              "sync": true
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11892,7 +12222,10 @@
                 "request": "PermissionRequest"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11910,7 +12243,10 @@
                 "response": "unknown"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             },
             {
               "name": "processStream",
@@ -11919,7 +12255,10 @@
                 "stream": "unknown"
               },
               "optional": true,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11938,7 +12277,10 @@
                 "template": "string"
               },
               "optional": false,
-              "sync": false
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         }

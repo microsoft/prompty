@@ -15,8 +15,7 @@ import (
 
 // LoadContext provides context for loading operations
 type LoadContext struct {
-	// Add any context fields needed for loading
-	// e.g., file paths, base directories, etc.
+	Path string
 }
 
 // NewLoadContext creates a new LoadContext
@@ -24,15 +23,36 @@ func NewLoadContext() *LoadContext {
 	return &LoadContext{}
 }
 
+// At creates a child context for a nested schema field.
+func (ctx *LoadContext) At(segment string) *LoadContext {
+	if ctx == nil || ctx.Path == "" {
+		return &LoadContext{Path: segment}
+	}
+	return &LoadContext{Path: ctx.Path + "." + segment}
+}
+
+// AtIndex creates a child context for an array element. Rendered with bracket
+// notation (messages[3]) so an index is never confused with a map key of the
+// same name, which dot-joining would make ambiguous.
+func (ctx *LoadContext) AtIndex(index int) *LoadContext {
+	if ctx == nil {
+		return &LoadContext{Path: fmt.Sprintf("[%d]", index)}
+	}
+	return &LoadContext{Path: fmt.Sprintf("%s[%d]", ctx.Path, index)}
+}
+
 // SaveContext provides context for saving operations
+const CollectionFormatObject = "object"
+const CollectionFormatArray = "array"
+
 type SaveContext struct {
-	// Add any context fields needed for saving
-	// e.g., output directories, formatting options, etc.
+	CollectionFormat string
+	UseShorthand     bool
 }
 
 // NewSaveContext creates a new SaveContext
 func NewSaveContext() *SaveContext {
-	return &SaveContext{}
+	return &SaveContext{CollectionFormat: CollectionFormatObject, UseShorthand: true}
 }
 
 // ptrOf returns a pointer to the given value. Used by factory functions

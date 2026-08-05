@@ -19,13 +19,13 @@ describe("ToolContext", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "metadata": {\n    "userId": "user-123"\n  }\n}`;
+      const json = `{\n  "metadata": {\n    "userId": "user-123"\n  },\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ]\n}`;
       const instance = ToolContext.fromJson(json);
       expect(instance).toBeDefined();
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "metadata": {\n    "userId": "user-123"\n  }\n}`;
+      const json = `{\n  "metadata": {\n    "userId": "user-123"\n  },\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ]\n}`;
       const instance = ToolContext.fromJson(json);
       const output = instance.toJson();
       const reloaded = ToolContext.fromJson(output);
@@ -34,13 +34,13 @@ describe("ToolContext", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `metadata:\n  userId: user-123\n`;
+      const yaml = `metadata:\n  userId: user-123\nmessages:\n  - role: user\n    parts:\n      - kind: text\n        value: Hello!\n    metadata:\n      source: user-input\n`;
       const instance = ToolContext.fromYaml(yaml);
       expect(instance).toBeDefined();
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `metadata:\n  userId: user-123\n`;
+      const yaml = `metadata:\n  userId: user-123\nmessages:\n  - role: user\n    parts:\n      - kind: text\n        value: Hello!\n    metadata:\n      source: user-input\n`;
       const instance = ToolContext.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ToolContext.fromYaml(output);
@@ -49,7 +49,9 @@ describe("ToolContext", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "metadata": {\n    "userId": "user-123"\n  },\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolContext.load(data);
       expect(instance).toBeDefined();
     });

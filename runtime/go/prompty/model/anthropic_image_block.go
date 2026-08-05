@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,16 +21,22 @@ type AnthropicImageBlock struct {
 
 // LoadAnthropicImageBlock creates a AnthropicImageBlock from a map[string]interface{}
 func LoadAnthropicImageBlock(data interface{}, ctx *LoadContext) (AnthropicImageBlock, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AnthropicImageBlock{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["source"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("source").Path)
+		}
 		if val, ok := m["type"]; ok && val != nil {
 			result.Type = string(val.(string))
 		}
 		if val, ok := m["source"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadAnthropicImageSource(m, ctx)
+				loaded, err := LoadAnthropicImageSource(m, ctx.At("source"))
 				if err != nil {
 					return result, err
 				}

@@ -73,7 +73,9 @@ describe("OAuthConnection", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "kind": "oauth",\n  "endpoint": "https://api.example.com",\n  "clientId": "your-client-id",\n  "clientSecret": "your-client-secret",\n  "tokenUrl": "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",\n  "scopes": [\n    "https://cognitiveservices.azure.com/.default"\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = OAuthConnection.load(data);
       expect(instance).toBeDefined();
     });

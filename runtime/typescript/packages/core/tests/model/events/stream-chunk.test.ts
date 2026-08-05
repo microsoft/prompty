@@ -5,15 +5,7 @@
 import { StreamChunk } from "../../../src/model/index";
 
 describe("StreamChunk", () => {
-  describe("construction", () => {
-    it("should create a new instance with defaults", () => {
-      const instance = new StreamChunk();
-      expect(instance).toBeDefined();
-    });
-
-    it("should create a new instance with partial initialization", () => {
-      const instance = new StreamChunk({});
-      expect(instance).toBeDefined();
-    });
+  it("should be defined", () => {
+    expect(StreamChunk).toBeDefined();
   });
 });

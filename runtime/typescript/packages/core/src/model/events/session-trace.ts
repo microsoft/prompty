@@ -19,11 +19,11 @@ export class SessionTrace {
   promptyVersion?: string | undefined;
   sessionId?: string | undefined;
   events: SessionEvent[] = [];
-  turns?: TurnTrace[] = [];
-  checkpoints?: Checkpoint[] = [];
-  trajectory?: TrajectoryEvent[] = [];
-  files?: SessionFileRef[] = [];
-  refs?: SessionRef[] = [];
+  turns?: TurnTrace[];
+  checkpoints?: Checkpoint[];
+  trajectory?: TrajectoryEvent[];
+  files?: SessionFileRef[];
+  refs?: SessionRef[];
   summary?: SessionSummary | undefined;
 
   constructor(init?: Partial<SessionTrace>) {
@@ -64,6 +64,7 @@ export class SessionTrace {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): SessionTrace {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -88,40 +89,43 @@ export class SessionTrace {
     if (data["events"] !== undefined && data["events"] !== null) {
       instance.events = SessionTrace.loadEvents(
         data["events"] as unknown[],
-        context,
+        context.at("events"),
       );
     }
     if (data["turns"] !== undefined && data["turns"] !== null) {
       instance.turns = SessionTrace.loadTurns(
         data["turns"] as unknown[],
-        context,
+        context.at("turns"),
       );
     }
     if (data["checkpoints"] !== undefined && data["checkpoints"] !== null) {
       instance.checkpoints = SessionTrace.loadCheckpoints(
         data["checkpoints"] as unknown[],
-        context,
+        context.at("checkpoints"),
       );
     }
     if (data["trajectory"] !== undefined && data["trajectory"] !== null) {
       instance.trajectory = SessionTrace.loadTrajectory(
         data["trajectory"] as unknown[],
-        context,
+        context.at("trajectory"),
       );
     }
     if (data["files"] !== undefined && data["files"] !== null) {
       instance.files = SessionTrace.loadFiles(
         data["files"] as unknown[],
-        context,
+        context.at("files"),
       );
     }
     if (data["refs"] !== undefined && data["refs"] !== null) {
-      instance.refs = SessionTrace.loadRefs(data["refs"] as unknown[], context);
+      instance.refs = SessionTrace.loadRefs(
+        data["refs"] as unknown[],
+        context.at("refs"),
+      );
     }
     if (data["summary"] !== undefined && data["summary"] !== null) {
       instance.summary = SessionSummary.load(
         data["summary"] as Record<string, unknown>,
-        context,
+        context.at("summary"),
       );
     }
 
@@ -135,20 +139,34 @@ export class SessionTrace {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): SessionEvent[] {
+    context ??= new LoadContext({ path: "events" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: SessionEvent[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            SessionEvent.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, id: v });
+          result.push(SessionEvent.load({ name: k, id: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      SessionEvent.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      SessionEvent.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -168,20 +186,31 @@ export class SessionTrace {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): TurnTrace[] {
+    context ??= new LoadContext({ path: "turns" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: TurnTrace[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            TurnTrace.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, version: v });
+          result.push(TurnTrace.load({ name: k, version: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      TurnTrace.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      TurnTrace.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -201,20 +230,31 @@ export class SessionTrace {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Checkpoint[] {
+    context ??= new LoadContext({ path: "checkpoints" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Checkpoint[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Checkpoint.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, id: v });
+          result.push(Checkpoint.load({ name: k, id: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Checkpoint.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Checkpoint.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -234,20 +274,34 @@ export class SessionTrace {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): TrajectoryEvent[] {
+    context ??= new LoadContext({ path: "trajectory" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: TrajectoryEvent[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            TrajectoryEvent.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, id: v });
+          result.push(TrajectoryEvent.load({ name: k, id: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      TrajectoryEvent.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      TrajectoryEvent.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -267,20 +321,36 @@ export class SessionTrace {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): SessionFileRef[] {
+    context ??= new LoadContext({ path: "files" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: SessionFileRef[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            SessionFileRef.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, sessionId: v });
+          result.push(
+            SessionFileRef.load({ name: k, sessionId: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      SessionFileRef.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      SessionFileRef.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -300,20 +370,33 @@ export class SessionTrace {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): SessionRef[] {
+    context ??= new LoadContext({ path: "refs" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: SessionRef[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            SessionRef.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, sessionId: v });
+          result.push(
+            SessionRef.load({ name: k, sessionId: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      SessionRef.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      SessionRef.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 

@@ -12,7 +12,8 @@ def test_load_json_modelinvocationcontextsnapshot():
       "id": "context:inv_abc123",
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
-      "invocationId": "inv_abc123"
+      "invocationId": "inv_abc123",
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)
@@ -30,6 +31,7 @@ def test_load_yaml_modelinvocationcontextsnapshot():
     sessionId: sess_abc123
     turnId: turn_abc123
     invocationId: inv_abc123
+    contextState: {}
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -48,7 +50,8 @@ def test_roundtrip_json_modelinvocationcontextsnapshot():
       "id": "context:inv_abc123",
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
-      "invocationId": "inv_abc123"
+      "invocationId": "inv_abc123",
+      "contextState": {}
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -69,7 +72,8 @@ def test_to_json_modelinvocationcontextsnapshot():
       "id": "context:inv_abc123",
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
-      "invocationId": "inv_abc123"
+      "invocationId": "inv_abc123",
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)
@@ -87,7 +91,8 @@ def test_to_yaml_modelinvocationcontextsnapshot():
       "id": "context:inv_abc123",
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
-      "invocationId": "inv_abc123"
+      "invocationId": "inv_abc123",
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)

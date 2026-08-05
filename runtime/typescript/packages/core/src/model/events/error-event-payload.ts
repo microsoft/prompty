@@ -27,6 +27,7 @@ export class ErrorEventPayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ErrorEventPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

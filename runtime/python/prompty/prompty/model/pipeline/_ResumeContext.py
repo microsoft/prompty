@@ -52,17 +52,20 @@ class ResumeContext:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ResumeContext: {data}")
+        if "checkpoint" not in data or data["checkpoint"] is None:
+            raise ValueError(f"{context.at('checkpoint').path}: missing required field")
 
         # create new instance
         instance = ResumeContext()
 
         if data is not None and "checkpoint" in data:
-            instance.checkpoint = EngineCheckpoint.load(data["checkpoint"], context)
+            instance.checkpoint = EngineCheckpoint.load(data["checkpoint"], context.at("checkpoint"))
         if data is not None and "maxIterations" in data:
             instance.max_iterations = data["maxIterations"]
         if data is not None and "maxModelAttempts" in data:

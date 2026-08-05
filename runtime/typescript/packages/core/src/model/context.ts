@@ -11,6 +11,8 @@ import * as yaml from "yaml";
  * post-processing output data after instantiation.
  */
 export class LoadContext {
+  readonly path: string;
+
   /**
    * Optional callback to transform input data before parsing.
    */
@@ -22,12 +24,35 @@ export class LoadContext {
   postProcess?: (result: unknown) => unknown;
 
   constructor(init?: Partial<LoadContext>) {
+    this.path = init?.path ?? "";
     if (init?.preProcess) {
       this.preProcess = init.preProcess;
     }
+
     if (init?.postProcess) {
       this.postProcess = init.postProcess;
     }
+  }
+
+  at(segment: string): LoadContext {
+    return new LoadContext({
+      preProcess: this.preProcess,
+      postProcess: this.postProcess,
+      path: this.path ? `${this.path}.${segment}` : segment,
+    });
+  }
+
+  /**
+   * Descend into an array element. Rendered with bracket notation
+   * (`messages[3]`) so an index is never confused with a map key of the
+   * same name, which dot-joining would make ambiguous.
+   */
+  atIndex(index: number): LoadContext {
+    return new LoadContext({
+      preProcess: this.preProcess,
+      postProcess: this.postProcess,
+      path: `${this.path}[${index}]`,
+    });
   }
 
   /**

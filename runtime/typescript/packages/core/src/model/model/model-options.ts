@@ -14,7 +14,7 @@ export class ModelOptions {
   temperature?: number | undefined;
   topK?: number | undefined;
   topP?: number | undefined;
-  stopSequences?: string[] = [];
+  stopSequences?: string[];
   allowMultipleToolCalls?: boolean | undefined;
   additionalProperties?: Record<string, unknown> | undefined;
 
@@ -57,6 +57,7 @@ export class ModelOptions {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ModelOptions {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
