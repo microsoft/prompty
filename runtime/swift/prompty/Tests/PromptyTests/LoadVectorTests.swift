@@ -476,28 +476,51 @@ final class LoadVectorTests: XCTestCase {
   /// Without this the vectors' `bindings` expectations are inert: every other
   /// field is opt-in by key, so an unchecked key silently passes no matter what
   /// the loader produced.
-  private static func validateBindings(
+  ///
+  /// Name addressing is sound only while the expected names are unique and
+  /// non-empty. Object form cannot carry one key twice, and an empty key
+  /// disqualifies it as well, so either one proves the source used the array
+  /// fallback — the only ordered representation — and those entries are
+  /// compared positionally instead. Entries that qualify for object form stay
+  /// order- and representation-agnostic, because both forms are legal for them.
+  ///
+  /// Not `private`: `BindingExpectationPairingTests` drives this directly, since
+  /// no current fixture declares a duplicate binding name.
+  static func validateBindings(
     _ tool: Tool, expected: [String: Any], index: Int
   ) throws {
     guard let declared = expected["bindings"] else { return }
     let label = "tools[\(index)].bindings"
     let actual = tool.bindings
 
-    /// Compare one expected binding, whose spec is either `{input: ...}` or a
-    /// bare input name.
+    /// Read the expected input from either `{input: ...}` or a bare input name.
+    func expectedInput(_ spec: Any, _ entryLabel: String) throws -> String {
+      guard let input = ((spec as? [String: Any])?["input"] ?? spec) as? String else {
+        throw VectorFailure("\(entryLabel) expectation has no string 'input'")
+      }
+      return input
+    }
+
+    /// Compare one expected binding, addressed by name. Sound only where the
+    /// expected names are unique; the list branch handles the duplicate case.
     func check(name: String, spec: Any) throws {
       guard let binding = actual.first(where: { $0.name == name }) else {
         throw VectorFailure(
           "\(label) missing '\(name)'; got \(actual.map(\.name).sorted())")
       }
-      let input = (spec as? [String: Any])?["input"] ?? spec
-      guard let input = input as? String else {
-        throw VectorFailure("\(label)[\(name)] expectation has no string 'input'")
-      }
+      let input = try expectedInput(spec, "\(label)[\(name)]")
       try expectEqual(binding.input, input, "\(label)[\(name)].input")
     }
 
+    // Object keys are unique by construction, and every declared key must be
+    // found against a matching count, so a duplicate in `actual` cannot hide
+    // here: it either breaks the count or leaves an expected key missing.
     if let map = declared as? [String: Any] {
+      // An empty name disqualifies object form, so a map expectation carrying
+      // one is malformed rather than something to address by name.
+      guard !map.keys.contains("") else {
+        throw VectorFailure("\(label) map expectation has an empty key; that needs list form")
+      }
       try expect(
         actual.count == map.count,
         "\(label) count: expected \(map.count), got \(actual.count)")
@@ -511,11 +534,33 @@ final class LoadVectorTests: XCTestCase {
       try expect(
         actual.count == list.count,
         "\(label) count: expected \(list.count), got \(actual.count)")
-      for entry in list {
+
+      let names = try list.map { entry -> String in
         guard let name = entry["name"] as? String else {
           throw VectorFailure("\(label) list entry has no string 'name': \(entry)")
         }
-        try check(name: name, spec: entry)
+        return name
+      }
+
+      // Pre-scan before any name-addressed lookup. Object form cannot carry the
+      // same key twice, and an empty key disqualifies it too, so either one
+      // proves the source was the array fallback, which carries order — these
+      // entries are positional. Matching them by name would bind expectations
+      // to the same entry twice, or to an entry that merely shares a name,
+      // leaving the rest unverified while still reporting a pass.
+      let nameAddressable = Set(names).count == names.count && !names.contains("")
+      guard nameAddressable else {
+        for (position, entry) in list.enumerated() {
+          let entryLabel = "\(label)[\(position)]"
+          try expectEqual(actual[position].name, names[position], "\(entryLabel).name")
+          let input = try expectedInput(entry, entryLabel)
+          try expectEqual(actual[position].input, input, "\(entryLabel).input")
+        }
+        return
+      }
+
+      for (position, entry) in list.enumerated() {
+        try check(name: names[position], spec: entry)
       }
       return
     }
