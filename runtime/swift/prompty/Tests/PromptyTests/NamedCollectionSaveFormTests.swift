@@ -25,6 +25,15 @@ import XCTest
 ///   inputs. Note in particular that JSON permits `""` as an object key, so an
 ///   emitter could illegally object-encode the empty-name fixture and still
 ///   round-trip both entries — payload assertions alone would not catch it.
+///   Both disqualifiers are proven on `tools` *and* on `inputs`, which save
+///   through different paths and can therefore fail independently.
+///
+///   Payloads are compared as composite `name|value` entries, never as two
+///   independent projections: comparing names and values separately proves
+///   both multisets survived but not which value belongs to which name. Where
+///   a fixture repeats a name, the comparison is additionally positional,
+///   since exchanging the payloads of two identically-named entries leaves any
+///   sorted multiset unchanged and is observable only in order.
 ///
 /// - **Qualifying fixture** (unique names). Both forms are legal, so that test
 ///   asserts survival and payload only, never the form and never reload order.
@@ -172,8 +181,18 @@ final class NamedCollectionSaveFormTests: XCTestCase {
 
     let saved = try loaded.save()
     guard
-      requireArrayForm(saved, "inputs", because: "two inputs share the name 'dup'") != nil
+      let savedEntries = requireArrayForm(
+        saved, "inputs", because: "two inputs share the name 'dup'")
     else { return }
+
+    // Assert the *first* serialized output, not only the re-save below. A
+    // defect that reverses entries would reverse them once, reload in that
+    // order, then reverse them back on the second save — cancelling out and
+    // leaving a re-save-only assertion green while the first output violated
+    // the canonical order. Any involutive corruption hides the same way.
+    XCTAssertEqual(
+      propertySignatures(of: savedEntries), ["dup|a", "dup|b", "unique|c"],
+      "the first save lost, exchanged or reordered a duplicate-named input's default")
 
     let reloaded = try Prompty.load(saved)
     XCTAssertEqual(
@@ -182,14 +201,21 @@ final class NamedCollectionSaveFormTests: XCTestCase {
 
     // Re-save so payload can be compared without switching on the generated
     // Property enum, whose scalar case is the `.unknown` dictionary passthrough.
+    // This second check is retained because it catches reload-side corruption
+    // that the first-save assertion cannot see.
     let resaved = try reloaded.save()
     guard
       let entries = requireArrayForm(resaved, "inputs", because: "two inputs share the name 'dup'")
     else { return }
 
+    // Declaration order, not a sorted multiset. Both duplicates are named
+    // `dup`, so exchanging their defaults leaves the sorted multiset identical
+    // and would pass — the association is only observable positionally. Legal
+    // to assert here because the array form was required above, and the array
+    // fallback is the one representation canonical promises an order for.
     XCTAssertEqual(
-      propertySignatures(of: entries).sorted(), ["dup|a", "dup|b", "unique|c"],
-      "a duplicate-named input lost or swapped its default")
+      propertySignatures(of: entries), ["dup|a", "dup|b", "unique|c"],
+      "a duplicate-named input lost, exchanged or reordered its default across reload")
   }
 
   /// An empty name is the other disqualifier, and it needs the form assertion
@@ -218,6 +244,63 @@ final class NamedCollectionSaveFormTests: XCTestCase {
     XCTAssertEqual(
       toolSignatures(reloaded), ["|blank", "named|ok"],
       "the empty-named tool lost its name or payload, or the entries were reordered")
+  }
+
+  /// The empty-name disqualifier on the `inputs` path.
+  ///
+  /// `inputs` saves through a different path than `tools`, so each disqualifier
+  /// has to be proven on both collections independently — an implementation can
+  /// get one right and the other wrong. The duplicate-name case already is;
+  /// this closes the empty-name case.
+  ///
+  /// It is also the disqualifier least likely to be caught by accident. `""` is
+  /// a legal JSON object key, so an illegal object encoding round-trips both
+  /// entries cleanly and satisfies every payload assertion. Only the form check
+  /// rejects it.
+  func testEmptyPropertyNameForcesTheArrayFallback() throws {
+    let loaded = try Prompty.load([
+      "kind": "prompt",
+      "name": "empty-name-prop",
+      "model": ["id": "gpt-4o-mini", "apiType": "chat"],
+      "inputs": [
+        ["name": "", "kind": "string", "default": "blank"],
+        ["name": "named", "kind": "string", "default": "ok"],
+      ],
+      "instructions": "user:\nhi",
+    ])
+
+    XCTAssertEqual(loaded.inputs?.count, 2, "the fixture did not load two inputs to begin with")
+
+    let saved = try loaded.save()
+    guard
+      let savedEntries = requireArrayForm(
+        saved, "inputs", because: "one input has an empty name")
+    else { return }
+
+    // The first serialized output, for the same cancellation reason as the
+    // duplicate-name test: an involutive reordering defect would undo itself
+    // across the save/reload/save cycle below.
+    XCTAssertEqual(
+      propertySignatures(of: savedEntries), ["|blank", "named|ok"],
+      "the first save lost, exchanged or reordered the empty-named input")
+
+    let reloaded = try Prompty.load(saved)
+    XCTAssertEqual(
+      reloaded.inputs?.count, 2,
+      "an empty-named input was dropped on save/reload — saved as \(saveForm(saved, "inputs"))")
+
+    // Re-save for the same reason as the duplicate-name property test: a scalar
+    // `Property` resolves to the `.unknown` passthrough, so the saved
+    // dictionary is where the payload is legible. Retained alongside the
+    // first-save assertion because it catches reload-side corruption.
+    let resaved = try reloaded.save()
+    guard
+      let entries = requireArrayForm(resaved, "inputs", because: "one input has an empty name")
+    else { return }
+
+    XCTAssertEqual(
+      propertySignatures(of: entries), ["|blank", "named|ok"],
+      "the empty-named input lost its name or default, or the entries were reordered")
   }
 
   /// Where the array fallback is mandatory, order is part of the contract.
