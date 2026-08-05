@@ -17,7 +17,7 @@ export class Prompty {
   metadata?: Record<string, unknown> | undefined;
   inputs?: Property[];
   outputs?: Property[];
-  model!: Model;
+  model?: Model | undefined;
   tools?: Tool[] = [];
   template?: Template | undefined;
   instructions?: string | undefined;
@@ -59,9 +59,6 @@ export class Prompty {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if (data["model"] === undefined || data["model"] === null) {
-      throw new Error(`${context.at("model").path}: missing required field`);
-    }
     const instance = new Prompty();
 
     if (data["name"] !== undefined && data["name"] !== null) {

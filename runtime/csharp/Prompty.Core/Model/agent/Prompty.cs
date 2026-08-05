@@ -80,7 +80,7 @@ public partial class Prompty
     /// <summary>
     /// AI model configuration
     /// </summary>
-    public Model Model { get; set; }
+    public Model? Model { get; set; }
 
     /// <summary>
     /// Tools available for extended functionality
@@ -115,11 +115,6 @@ public partial class Prompty
             data = context.ProcessInput(data);
         }
 
-
-        if ((!data.TryGetValue("model", out var requiredModelValue) || requiredModelValue is null))
-        {
-            throw new ArgumentException($"{context!.At("model").Path}: missing required field");
-        }
 
         // Create new instance
         var instance = new Prompty();
@@ -402,7 +397,10 @@ public partial class Prompty
         }
 
 
-        result["model"] = obj.Model?.Save(context);
+        if (obj.Model is not null)
+        {
+            result["model"] = obj.Model?.Save(context);
+        }
 
 
         if (obj.Tools is not null)

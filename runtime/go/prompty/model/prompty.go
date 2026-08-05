@@ -32,7 +32,7 @@ type Prompty struct {
 	Metadata     map[string]interface{} `json:"metadata" yaml:"metadata"`
 	Inputs       []interface{}          `json:"inputs,omitempty" yaml:"inputs,omitempty"`
 	Outputs      []interface{}          `json:"outputs,omitempty" yaml:"outputs,omitempty"`
-	Model        Model                  `json:"model" yaml:"model"`
+	Model        *Model                 `json:"model,omitempty" yaml:"model,omitempty"`
 	Tools        []interface{}          `json:"tools" yaml:"tools"`
 	Template     *Template              `json:"template,omitempty" yaml:"template,omitempty"`
 	Instructions *string                `json:"instructions" yaml:"instructions"`
@@ -49,9 +49,6 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
-		if requiredValue, exists := m["model"]; !exists || requiredValue == nil {
-			return result, fmt.Errorf("%s: missing required field", ctx.At("model").Path)
-		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
 		}
@@ -164,13 +161,13 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 				if err != nil {
 					return result, err
 				}
-				result.Model = loaded
+				result.Model = &loaded
 			} else {
 				loaded, err := LoadModel(val, ctx.At("model"))
 				if err != nil {
 					return result, err
 				}
-				result.Model = loaded
+				result.Model = &loaded
 			}
 		}
 		if val, ok := m["tools"]; ok && val != nil {
@@ -361,8 +358,9 @@ func (obj Prompty) Save(ctx *SaveContext) map[string]interface{} {
 			result["outputs"] = arr
 		}
 	}
-
-	result["model"] = obj.Model.Save(ctx)
+	if obj.Model != nil {
+		result["model"] = obj.Model.Save(ctx)
+	}
 	if obj.Tools != nil {
 		arr := make([]interface{}, len(obj.Tools))
 		for i, item := range obj.Tools {

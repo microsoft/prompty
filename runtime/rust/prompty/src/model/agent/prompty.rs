@@ -29,7 +29,7 @@ pub struct Prompty {
     /// Expected output format and structure
     pub outputs: Option<Vec<Property>>,
     /// AI model configuration
-    pub model: Model,
+    pub model: Option<Model>,
     /// Tools available for extended functionality
     pub tools: Vec<Tool>,
     /// Template configuration for prompt rendering
@@ -75,7 +75,7 @@ impl Prompty {
             metadata: value.get("metadata").cloned().unwrap_or(serde_json::Value::Null),
             inputs: value.get("inputs").map(|v| Self::load_inputs(v, ctx)),
             outputs: value.get("outputs").map(|v| Self::load_outputs(v, ctx)),
-            model: value.get("model").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| Model::load_from_value(v, ctx)).unwrap_or_default(),
+            model: value.get("model").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| Model::load_from_value(v, ctx)),
             tools: value.get("tools").map(|v| Self::load_tools(v, ctx)).unwrap_or_default(),
             template: value.get("template").filter(|v| v.is_object() || v.is_array() || v.is_string()).map(|v| Template::load_from_value(v, ctx)),
             instructions: value.get("instructions").and_then(|v| v.as_str()).map(|s| s.to_string()),
@@ -140,9 +140,9 @@ impl Prompty {
             }
         }
         let child_path = if path.is_empty() { "model".to_string() } else { format!("{}.model", path) };
-        let child = value.get("model").filter(|candidate| !candidate.is_null())
-            .ok_or_else(|| format!("{}: missing required field", child_path))?;
-        Model::validate_input_at(child, &child_path)?;
+        if let Some(child) = value.get("model") {
+            Model::validate_input_at(child, &child_path)?;
+        }
         if let Some(collection) = value.get("tools") {
             let collection_path = if path.is_empty() { "tools".to_string() } else { format!("{}.tools", path) };
             match collection {
@@ -202,8 +202,8 @@ impl Prompty {
         if let Some(items) = self.outputs.as_ref() {
             result.insert("outputs".to_string(), Self::save_outputs(items, ctx));
         }
-        {
-            let nested = self.model.to_value(ctx);
+        if let Some(val) = self.model.as_ref() {
+            let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("model".to_string(), nested);
             }

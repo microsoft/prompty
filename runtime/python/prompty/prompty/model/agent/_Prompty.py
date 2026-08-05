@@ -44,7 +44,7 @@ class Prompty:
         Input parameters that participate in template rendering
     outputs : Optional[list[Property]]
         Expected output format and structure
-    model : Model
+    model : Optional[Model]
         AI model configuration
     tools : Optional[list[Tool]]
         Tools available for extended functionality
@@ -62,7 +62,7 @@ class Prompty:
     metadata: dict[str, Any] | None = None
     inputs: list[Property] | None = None
     outputs: list[Property] | None = None
-    model: Model = field(default_factory=Model)
+    model: Model | None = None
     tools: list[Tool] | None = field(default_factory=list)
     template: Template | None = None
     instructions: str | None = None
@@ -84,8 +84,6 @@ class Prompty:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Prompty: {data}")
-        if ("model" not in data or data["model"] is None):
-            raise ValueError(f"{context.at('model').path}: missing required field")
 
         # create new instance
         instance = Prompty()
