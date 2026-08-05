@@ -24,11 +24,12 @@ import XCTest
 ///
 /// These tests are meant to survive the emitter fix: they assert the required
 /// *behaviour*, not the shim. They deliberately avoid whole-dictionary equality,
-/// because a corrected emitter may legitimately start materializing schema
-/// defaults that a strict key-count comparison would reject for reasons
-/// unrelated to this defect. Of the inherited fields checked here, only
-/// `enumValues` carries such a default (`[]`), and that is the one case
-/// `assertInheritedFieldsPreserved` exempts when the source omitted it.
+/// so that unrelated additions to a saved payload do not fail a gate about
+/// inherited fields. They do *not* tolerate a materialized schema default
+/// standing in for an absent value: the canonical rule is that absent optional
+/// collections stay omitted and save never synthesizes an empty one, so
+/// `enumValues: []` appearing where the source wrote nothing is a violation
+/// rather than an equivalent. `OptionalCollectionPresenceTests` pins that rule.
 ///
 /// Known residual gap, deliberately not asserted here: the shim restores base
 /// fields to the stored properties but not to the generated memberwise `init`,
@@ -80,10 +81,14 @@ final class InheritedPropertyFieldTests: XCTestCase {
     line: UInt = #line
   ) {
     for key in Self.inheritedFields {
-      // A corrected emitter materializes the schema default for `enumValues`
-      // (`[]`) even when the source omitted it. That is not a lost field, so
-      // treat an empty array standing in for an absent value as preserved.
-      if expected[key] == nil, Self.isMaterializedEmptyDefault(actual[key]) { continue }
+      // An earlier revision exempted an empty `enumValues` standing in for an
+      // absent one, assuming a corrected emitter would materialize the schema
+      // default. The canonical rule inverts that: optional collection presence
+      // is semantic, so an absent collection must stay omitted and save must
+      // never synthesize an empty one from absent input. Materializing the
+      // default *is* the defect, so the exemption would have let a rule
+      // violation pass silently here. `OptionalCollectionPresenceTests` pins
+      // the rule directly; this assertion is now unconditional.
       XCTAssertTrue(
         Spec.equal(actual[key], expected[key]),
         """
@@ -94,15 +99,6 @@ final class InheritedPropertyFieldTests: XCTestCase {
         line: line
       )
     }
-  }
-
-  /// Whether a saved value is an empty array materialized from a schema default
-  /// — `enumValues` is the only inherited field carrying one — as opposed to
-  /// real data. Deliberately narrow: an empty *dictionary* is not exempted,
-  /// because no inherited field defaults to `{}`.
-  private static func isMaterializedEmptyDefault(_ value: Any?) -> Bool {
-    guard let list = value as? [Any] else { return false }
-    return list.isEmpty
   }
 
   /// Named collections save either as a name-keyed map — the default, where the
