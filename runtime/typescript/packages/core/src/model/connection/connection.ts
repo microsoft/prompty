@@ -12,6 +12,23 @@ export abstract class Connection {
   kind: string = "";
   authenticationMode?: AuthenticationMode | undefined;
   usageDescription?: string | undefined;
+  protected raw: Record<string, unknown> = {};
+
+  protected static cloneRawValue(value: unknown): unknown {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.cloneRawValue(item));
+    }
+    if (value !== null && typeof value === "object") {
+      const result: Record<string, unknown> = {};
+      for (const [key, item] of Object.entries(
+        value as Record<string, unknown>,
+      )) {
+        result[key] = this.cloneRawValue(item);
+      }
+      return result;
+    }
+    return value;
+  }
 
   constructor(init?: Partial<Connection>) {
     this.kind = init?.kind ?? "";
@@ -82,12 +99,10 @@ export abstract class Connection {
         case "foundry":
           return FoundryConnection.load(data, context);
         default:
-          throw new Error(
-            `Unknown Connection discriminator field 'kind' value: ${discriminator}`,
-          );
+          return UnknownConnection.load(data, context);
       }
     }
-    throw new Error("Missing Connection discriminator property: 'kind'");
+    return UnknownConnection.load(data, context);
   }
 
   //#endregion
@@ -100,7 +115,7 @@ export abstract class Connection {
       obj = context.processObject(obj) as this;
     }
 
-    const result: Record<string, unknown> = {};
+    const result = Connection.cloneRawValue(obj.raw) as Record<string, unknown>;
 
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
@@ -143,6 +158,27 @@ export abstract class Connection {
   }
 
   //#endregion
+}
+
+/**
+ * Carries a Connection whose discriminator value matches no known subtype.
+ *
+ * The unrecognized value stays on `kind` and every
+ * key the schema does not declare is preserved verbatim, so an unknown Connection
+ * survives a load/save round-trip unchanged.
+ */
+export class UnknownConnection extends Connection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): UnknownConnection {
+    const instance = new UnknownConnection();
+    instance.raw = Connection.cloneRawValue(data) as Record<string, unknown>;
+    delete instance.raw["kind"];
+    delete instance.raw["authenticationMode"];
+    delete instance.raw["usageDescription"];
+    return instance;
+  }
 }
 
 export class ReferenceConnection extends Connection {

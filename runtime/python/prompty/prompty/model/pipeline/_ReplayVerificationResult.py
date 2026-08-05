@@ -70,8 +70,6 @@ class ReplayVerificationResult:
             instance = context.process_output(instance)
         return instance
 
-
-
     @staticmethod
     def load_mismatches(data: dict | list, context: LoadContext | None) -> list[ReplayMismatch]:
         if context is None:
@@ -92,7 +90,9 @@ class ReplayVerificationResult:
         return [ReplayMismatch.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_mismatches(items: list[ReplayMismatch], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_mismatches(
+        items: list[ReplayMismatch], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -110,7 +110,6 @@ class ReplayVerificationResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

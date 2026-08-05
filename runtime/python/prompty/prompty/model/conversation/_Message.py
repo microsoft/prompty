@@ -66,8 +66,6 @@ class Message:
             instance = context.process_output(instance)
         return instance
 
-
-
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
         if context is None:
@@ -107,7 +105,6 @@ class Message:
         if context is not None:
             obj = context.process_object(obj)
 
-
         result: dict[str, Any] = {}
 
         if obj.role is not None:
@@ -146,7 +143,6 @@ class Message:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
 
-
     @classmethod
     def assistant(cls, text: str) -> "Message":
         """Create a Message with preset field values."""
@@ -161,8 +157,6 @@ class Message:
     def user(cls, text: str) -> "Message":
         """Create a Message with preset field values."""
         return Message(role="user", parts=[TextPart(value=text)])
-
-
 
 
 @runtime_checkable

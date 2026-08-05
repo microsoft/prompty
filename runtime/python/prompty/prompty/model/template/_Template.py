@@ -54,9 +54,9 @@ class Template:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Template: {data}")
-        if ("format" not in data or data["format"] is None):
+        if "format" not in data or data["format"] is None:
             raise ValueError(f"{context.at('format').path}: missing required field")
-        if ("parser" not in data or data["parser"] is None):
+        if "parser" not in data or data["parser"] is None:
             raise ValueError(f"{context.at('parser').path}: missing required field")
 
         # create new instance
@@ -70,8 +70,6 @@ class Template:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Template instance to a dictionary.
         Args:
@@ -83,7 +81,6 @@ class Template:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

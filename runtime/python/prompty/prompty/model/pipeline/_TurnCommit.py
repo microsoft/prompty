@@ -71,7 +71,7 @@ class TurnCommit:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnCommit: {data}")
-        if ("contextState" not in data or data["contextState"] is None):
+        if "contextState" not in data or data["contextState"] is None:
             raise ValueError(f"{context.at('contextState').path}: missing required field")
 
         # create new instance
@@ -94,12 +94,12 @@ class TurnCommit:
         if data is not None and "contextState" in data:
             instance.context_state = InvocationContextState.load(data["contextState"], context.at("contextState"))
         if data is not None and "modelReconciliation" in data:
-            instance.model_reconciliation = ModelReconciliationState.load(data["modelReconciliation"], context.at("modelReconciliation"))
+            instance.model_reconciliation = ModelReconciliationState.load(
+                data["modelReconciliation"], context.at("modelReconciliation")
+            )
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -139,7 +139,6 @@ class TurnCommit:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

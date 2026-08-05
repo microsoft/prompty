@@ -48,6 +48,26 @@ public abstract partial class Connection
     /// </summary>
     public string? UsageDescription { get; set; }
 
+    protected Dictionary<string, object?> _raw = new();
+
+    protected static object? CloneRawValue(object? value)
+    {
+        if (value is IDictionary<string, object?> dictionary)
+        {
+            return dictionary.ToDictionary(item => item.Key, item => CloneRawValue(item.Value));
+        }
+        if (value is System.Collections.IEnumerable items && value is not string)
+        {
+            var result = new List<object?>();
+            foreach (var item in items)
+            {
+                result.Add(CloneRawValue(item));
+            }
+            return result;
+        }
+        return value;
+    }
+
 
 
     #region Load Methods
@@ -110,11 +130,11 @@ public abstract partial class Connection
                 "anonymous" => AnonymousConnection.Load(data, context),
                 "oauth" => OAuthConnection.Load(data, context),
                 "foundry" => FoundryConnection.Load(data, context),
-                _ => throw new ArgumentException($"Unknown Connection discriminator field 'kind' value: {discriminator}"),
+                _ => UnknownConnection.Load(data, context),
             };
         }
 
-        throw new ArgumentException("Missing Connection discriminator property: 'kind'");
+        return UnknownConnection.Load(data, context);
 
     }
 
@@ -137,7 +157,7 @@ public abstract partial class Connection
         }
 
 
-        var result = new Dictionary<string, object?>();
+        var result = (Dictionary<string, object?>)CloneRawValue(obj._raw)!;
 
 
         result["kind"] = obj.Kind;
@@ -218,4 +238,26 @@ public abstract partial class Connection
     }
 
     #endregion
+}
+
+/// <summary>
+/// Carries a Connection whose discriminator value matches no known subtype.
+/// The unrecognized value stays on the discriminator property and every key the schema
+/// does not declare is preserved verbatim, so an unknown Connection survives a
+/// load/save round-trip unchanged.
+/// </summary>
+public sealed partial class UnknownConnection : Connection
+{
+    /// <summary>
+    /// Load an unrecognized Connection, retaining its complete payload.
+    /// </summary>
+    public static new UnknownConnection Load(Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        var instance = new UnknownConnection();
+        instance._raw = (Dictionary<string, object?>)CloneRawValue(data)!;
+        instance._raw.Remove("kind");
+        instance._raw.Remove("authenticationMode");
+        instance._raw.Remove("usageDescription");
+        return instance;
+    }
 }

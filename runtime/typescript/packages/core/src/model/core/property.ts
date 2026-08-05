@@ -15,9 +15,9 @@ export class Property {
   default?: unknown | undefined;
   example?: unknown | undefined;
   enumValues?: unknown[] = [];
-  private raw: Record<string, unknown> = {};
+  protected raw: Record<string, unknown> = {};
 
-  private static cloneRawValue(value: unknown): unknown {
+  protected static cloneRawValue(value: unknown): unknown {
     if (Array.isArray(value)) {
       return value.map((item) => this.cloneRawValue(item));
     }

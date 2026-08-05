@@ -11,7 +11,15 @@ from typing import Any, ClassVar, Literal
 from .._context import LoadContext, SaveContext
 from ._RedactionMetadata import RedactionMetadata
 
-SessionEventType = Literal["session_start", "session_end", "session_warning", "session_hook_start", "session_hook_end", "checkpoint_created", "trajectory_event"]
+SessionEventType = Literal[
+    "session_start",
+    "session_end",
+    "session_warning",
+    "session_hook_start",
+    "session_hook_end",
+    "checkpoint_created",
+    "trajectory_event",
+]
 
 
 @dataclass
@@ -95,8 +103,6 @@ class SessionEvent:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the SessionEvent instance to a dictionary.
         Args:
@@ -108,7 +114,6 @@ class SessionEvent:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

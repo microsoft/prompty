@@ -50,15 +50,11 @@ class StreamChunk(ABC):
         # load polymorphic StreamChunk instance
         instance = StreamChunk.load_kind(data, context)
 
-
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
-
 
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "StreamChunk":
@@ -79,9 +75,7 @@ class StreamChunk(ABC):
             else:
                 raise ValueError(f"Unknown StreamChunk discriminator field 'kind' value: {discriminator_value}")
         else:
-
             raise ValueError("Missing StreamChunk discriminator property: 'kind'")
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the StreamChunk instance to a dictionary.
@@ -94,7 +88,6 @@ class StreamChunk(ABC):
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -129,8 +122,6 @@ class StreamChunk(ABC):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -179,8 +170,6 @@ class TextChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TextChunk instance to a dictionary.
         Args:
@@ -193,10 +182,8 @@ class TextChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -228,8 +215,6 @@ class TextChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -278,8 +263,6 @@ class ThinkingChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ThinkingChunk instance to a dictionary.
         Args:
@@ -292,10 +275,8 @@ class ThinkingChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -327,8 +308,6 @@ class ThinkingChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -365,7 +344,7 @@ class ToolChunk(StreamChunk):
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolChunk: {data}")
-        if ("toolCall" not in data or data["toolCall"] is None):
+        if "toolCall" not in data or data["toolCall"] is None:
             raise ValueError(f"{context.at('toolCall').path}: missing required field")
 
         # create new instance
@@ -379,8 +358,6 @@ class ToolChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ToolChunk instance to a dictionary.
         Args:
@@ -393,10 +370,8 @@ class ToolChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -428,8 +403,6 @@ class ToolChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -466,7 +439,7 @@ class UsageChunk(StreamChunk):
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for UsageChunk: {data}")
-        if ("usage" not in data or data["usage"] is None):
+        if "usage" not in data or data["usage"] is None:
             raise ValueError(f"{context.at('usage').path}: missing required field")
 
         # create new instance
@@ -480,8 +453,6 @@ class UsageChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the UsageChunk instance to a dictionary.
         Args:
@@ -494,10 +465,8 @@ class UsageChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -529,8 +498,6 @@ class UsageChunk(StreamChunk):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -579,8 +546,6 @@ class ErrorChunk(StreamChunk):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ErrorChunk instance to a dictionary.
         Args:
@@ -593,10 +558,8 @@ class ErrorChunk(StreamChunk):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind

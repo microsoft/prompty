@@ -48,15 +48,11 @@ class ContentPart(ABC):
         # load polymorphic ContentPart instance
         instance = ContentPart.load_kind(data, context)
 
-
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
-
 
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "ContentPart":
@@ -75,9 +71,7 @@ class ContentPart(ABC):
             else:
                 raise ValueError(f"Unknown ContentPart discriminator field 'kind' value: {discriminator_value}")
         else:
-
             raise ValueError("Missing ContentPart discriminator property: 'kind'")
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ContentPart instance to a dictionary.
@@ -90,7 +84,6 @@ class ContentPart(ABC):
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -125,8 +118,6 @@ class ContentPart(ABC):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -175,8 +166,6 @@ class TextPart(ContentPart):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TextPart instance to a dictionary.
         Args:
@@ -189,10 +178,8 @@ class TextPart(ContentPart):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -224,8 +211,6 @@ class TextPart(ContentPart):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -284,8 +269,6 @@ class ImagePart(ContentPart):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ImagePart instance to a dictionary.
         Args:
@@ -298,10 +281,8 @@ class ImagePart(ContentPart):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -337,8 +318,6 @@ class ImagePart(ContentPart):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -392,8 +371,6 @@ class FilePart(ContentPart):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FilePart instance to a dictionary.
         Args:
@@ -406,10 +383,8 @@ class FilePart(ContentPart):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -443,8 +418,6 @@ class FilePart(ContentPart):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
-
-
 
 
 @dataclass
@@ -498,8 +471,6 @@ class AudioPart(ContentPart):
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AudioPart instance to a dictionary.
         Args:
@@ -512,10 +483,8 @@ class AudioPart(ContentPart):
         if context is not None:
             obj = context.process_object(obj)
 
-
         # Start with parent class properties
         result = super().save(context)
-
 
         if obj.kind is not None:
             result["kind"] = obj.kind

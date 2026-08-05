@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -97,8 +97,6 @@ class ModelOptions:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ModelOptions instance to a dictionary.
         Args:
@@ -110,7 +108,6 @@ class ModelOptions:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 
@@ -151,7 +148,11 @@ class ModelOptions:
         result: dict[str, Any] = {}
         wire_map: dict[str, dict[str, str]] = {
             "frequencyPenalty": {"openai": "frequency_penalty"},
-            "maxOutputTokens": {"openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens"},
+            "maxOutputTokens": {
+                "openai": "max_completion_tokens",
+                "responses": "max_output_tokens",
+                "anthropic": "max_tokens",
+            },
             "presencePenalty": {"openai": "presence_penalty"},
             "seed": {"openai": "seed"},
             "temperature": {"openai": "temperature", "responses": "temperature", "anthropic": "temperature"},

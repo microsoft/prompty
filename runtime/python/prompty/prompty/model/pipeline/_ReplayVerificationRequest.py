@@ -58,8 +58,6 @@ class ReplayVerificationRequest:
             instance = context.process_output(instance)
         return instance
 
-
-
     @staticmethod
     def load_expected(data: dict | list, context: LoadContext | None) -> list[ReplayJournalRecord]:
         if context is None:
@@ -80,7 +78,9 @@ class ReplayVerificationRequest:
         return [ReplayJournalRecord.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_expected(items: list[ReplayJournalRecord], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_expected(
+        items: list[ReplayJournalRecord], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -107,7 +107,9 @@ class ReplayVerificationRequest:
         return [ReplayJournalRecord.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_actual(items: list[ReplayJournalRecord], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_actual(
+        items: list[ReplayJournalRecord], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -125,7 +127,6 @@ class ReplayVerificationRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

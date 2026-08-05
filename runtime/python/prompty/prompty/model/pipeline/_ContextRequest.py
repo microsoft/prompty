@@ -65,7 +65,7 @@ class ContextRequest:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ContextRequest: {data}")
-        if ("contextState" not in data or data["contextState"] is None):
+        if "contextState" not in data or data["contextState"] is None:
             raise ValueError(f"{context.at('contextState').path}: missing required field")
 
         # create new instance
@@ -90,8 +90,6 @@ class ContextRequest:
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -131,7 +129,6 @@ class ContextRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

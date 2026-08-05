@@ -61,7 +61,7 @@ class AnthropicMessagesResponse:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicMessagesResponse: {data}")
-        if ("usage" not in data or data["usage"] is None):
+        if "usage" not in data or data["usage"] is None:
             raise ValueError(f"{context.at('usage').path}: missing required field")
 
         # create new instance
@@ -85,8 +85,6 @@ class AnthropicMessagesResponse:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnthropicMessagesResponse instance to a dictionary.
         Args:
@@ -98,7 +96,6 @@ class AnthropicMessagesResponse:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

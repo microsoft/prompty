@@ -58,7 +58,7 @@ class ModelReconciliationState:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelReconciliationState: {data}")
-        if ("request" not in data or data["request"] is None):
+        if "request" not in data or data["request"] is None:
             raise ValueError(f"{context.at('request').path}: missing required field")
 
         # create new instance
@@ -78,8 +78,6 @@ class ModelReconciliationState:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ModelReconciliationState instance to a dictionary.
         Args:
@@ -91,7 +89,6 @@ class ModelReconciliationState:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

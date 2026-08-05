@@ -86,8 +86,6 @@ class RunTurnResult:
             instance = context.process_output(instance)
         return instance
 
-
-
     @staticmethod
     def load_tool_results(data: dict | list, context: LoadContext | None) -> list[HostToolResult]:
         if context is None:
@@ -108,7 +106,9 @@ class RunTurnResult:
         return [HostToolResult.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_tool_results(items: list[HostToolResult], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tool_results(
+        items: list[HostToolResult], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -153,7 +153,6 @@ class RunTurnResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

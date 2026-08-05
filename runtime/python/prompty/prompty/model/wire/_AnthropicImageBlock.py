@@ -47,7 +47,7 @@ class AnthropicImageBlock:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicImageBlock: {data}")
-        if ("source" not in data or data["source"] is None):
+        if "source" not in data or data["source"] is None:
             raise ValueError(f"{context.at('source').path}: missing required field")
 
         # create new instance
@@ -61,8 +61,6 @@ class AnthropicImageBlock:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnthropicImageBlock instance to a dictionary.
         Args:
@@ -74,7 +72,6 @@ class AnthropicImageBlock:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

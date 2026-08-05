@@ -43,7 +43,7 @@ class ModelInvocationRequest:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelInvocationRequest: {data}")
-        if ("context" not in data or data["context"] is None):
+        if "context" not in data or data["context"] is None:
             raise ValueError(f"{context.at('context').path}: missing required field")
 
         # create new instance
@@ -54,8 +54,6 @@ class ModelInvocationRequest:
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ModelInvocationRequest instance to a dictionary.
@@ -68,7 +66,6 @@ class ModelInvocationRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

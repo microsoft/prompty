@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -67,8 +67,6 @@ class MessagesUpdatedPayload:
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -135,7 +133,6 @@ class MessagesUpdatedPayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

@@ -13,8 +13,7 @@ from ..events._PermissionRequest import PermissionRequest
 
 @runtime_checkable
 class PermissionResolver(Protocol):
-    """Resolves host permission requests for potentially sensitive actions.
-    """
+    """Resolves host permission requests for potentially sensitive actions."""
 
     def request(self, request: PermissionRequest) -> PermissionDecision:
         """Resolve a host permission request"""

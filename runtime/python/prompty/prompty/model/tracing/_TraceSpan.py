@@ -70,7 +70,7 @@ class TraceSpan:
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TraceSpan: {data}")
-        if ("__time" not in data or data["__time"] is None):
+        if "__time" not in data or data["__time"] is None:
             raise ValueError(f"{context.at('__time').path}: missing required field")
 
         # create new instance
@@ -98,8 +98,6 @@ class TraceSpan:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TraceSpan instance to a dictionary.
         Args:
@@ -111,7 +109,6 @@ class TraceSpan:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

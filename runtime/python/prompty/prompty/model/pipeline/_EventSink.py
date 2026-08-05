@@ -13,8 +13,7 @@ from ..events._TurnEvent import TurnEvent
 
 @runtime_checkable
 class EventSink(Protocol):
-    """Receives typed turn and session events from a harness.
-    """
+    """Receives typed turn and session events from a harness."""
 
     def emit_turn(self, turn_event: TurnEvent) -> bool:
         """Emit a typed turn event to a host sink"""

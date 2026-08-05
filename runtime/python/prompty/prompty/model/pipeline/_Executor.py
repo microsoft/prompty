@@ -7,33 +7,41 @@
 
 from typing import Any, Protocol, runtime_checkable
 
+from prompty.core.cancellation import CancellationToken
+
 from ..agent._Prompty import Prompty
 from ..conversation._Message import Message
 from ..conversation._ToolCall import ToolCall
-from prompty.core.cancellation import CancellationToken
 
 
 @runtime_checkable
 class Executor(Protocol):
-    """Calls an LLM provider with messages and returns the raw provider response.
-    """
+    """Calls an LLM provider with messages and returns the raw provider response."""
 
     def execute(self, agent: Prompty, messages: list[Message], cancellation: CancellationToken | None = None) -> Any:
         """Call an LLM provider with messages and return the raw response"""
         raise NotImplementedError
 
-    async def execute_async(self, agent: Prompty, messages: list[Message], cancellation: CancellationToken | None = None) -> Any:
+    async def execute_async(
+        self, agent: Prompty, messages: list[Message], cancellation: CancellationToken | None = None
+    ) -> Any:
         """Call an LLM provider with messages and return the raw response (async variant)"""
         raise NotImplementedError
 
-    def execute_stream(self, agent: Prompty, messages: list[Message], cancellation: CancellationToken | None = None) -> Any:
+    def execute_stream(
+        self, agent: Prompty, messages: list[Message], cancellation: CancellationToken | None = None
+    ) -> Any:
         """Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support."""
         return None
 
-    async def execute_stream_async(self, agent: Prompty, messages: list[Message], cancellation: CancellationToken | None = None) -> Any:
+    async def execute_stream_async(
+        self, agent: Prompty, messages: list[Message], cancellation: CancellationToken | None = None
+    ) -> Any:
         """Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. (async variant)"""
         return None
 
-    def format_tool_messages(self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None) -> list[Message]:
+    def format_tool_messages(
+        self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None
+    ) -> list[Message]:
         """Format tool call results into messages for the next iteration"""
         raise NotImplementedError
