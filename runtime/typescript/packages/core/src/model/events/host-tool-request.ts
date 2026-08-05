@@ -31,7 +31,10 @@ export class HostToolRequest {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): HostToolRequest {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): HostToolRequest {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -51,7 +54,10 @@ export class HostToolRequest {
     if (data["arguments"] !== undefined && data["arguments"] !== null) {
       instance.arguments = data["arguments"] as Record<string, unknown>;
     }
-    if (data["workingDirectory"] !== undefined && data["workingDirectory"] !== null) {
+    if (
+      data["workingDirectory"] !== undefined &&
+      data["workingDirectory"] !== null
+    ) {
       instance.workingDirectory = String(data["workingDirectory"]);
     }
 

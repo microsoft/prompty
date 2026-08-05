@@ -8,7 +8,17 @@ def test_load_json_tracefile():
     json_data = r'''
     {
       "runtime": "python",
-      "version": "2.0.0"
+      "version": "2.0.0",
+      "trace": {
+        "name": "prompty.core.pipeline.run",
+        "__time": {
+          "start": "2026-04-04T12:00:00Z",
+          "end": "2026-04-04T12:00:01Z",
+          "duration": 1000
+        },
+        "signature": "prompty.core.pipeline.run",
+        "error": "Connection refused"
+      }
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -21,6 +31,14 @@ def test_load_yaml_tracefile():
     yaml_data = r'''
     runtime: python
     version: 2.0.0
+    trace:
+      name: prompty.core.pipeline.run
+      __time:
+        start: "2026-04-04T12:00:00Z"
+        end: "2026-04-04T12:00:01Z"
+        duration: 1000
+      signature: prompty.core.pipeline.run
+      error: Connection refused
 
     '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -34,7 +52,17 @@ def test_roundtrip_json_tracefile():
     json_data = r'''
     {
       "runtime": "python",
-      "version": "2.0.0"
+      "version": "2.0.0",
+      "trace": {
+        "name": "prompty.core.pipeline.run",
+        "__time": {
+          "start": "2026-04-04T12:00:00Z",
+          "end": "2026-04-04T12:00:01Z",
+          "duration": 1000
+        },
+        "signature": "prompty.core.pipeline.run",
+        "error": "Connection refused"
+      }
     }
     '''
     original_data = json.loads(json_data, strict=False)
@@ -50,7 +78,17 @@ def test_to_json_tracefile():
     json_data = r'''
     {
       "runtime": "python",
-      "version": "2.0.0"
+      "version": "2.0.0",
+      "trace": {
+        "name": "prompty.core.pipeline.run",
+        "__time": {
+          "start": "2026-04-04T12:00:00Z",
+          "end": "2026-04-04T12:00:01Z",
+          "duration": 1000
+        },
+        "signature": "prompty.core.pipeline.run",
+        "error": "Connection refused"
+      }
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -65,7 +103,17 @@ def test_to_yaml_tracefile():
     json_data = r'''
     {
       "runtime": "python",
-      "version": "2.0.0"
+      "version": "2.0.0",
+      "trace": {
+        "name": "prompty.core.pipeline.run",
+        "__time": {
+          "start": "2026-04-04T12:00:00Z",
+          "end": "2026-04-04T12:00:01Z",
+          "duration": 1000
+        },
+        "signature": "prompty.core.pipeline.run",
+        "error": "Connection refused"
+      }
     }
     '''
     data = json.loads(json_data, strict=False)

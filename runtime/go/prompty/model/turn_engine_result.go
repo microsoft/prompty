@@ -49,7 +49,7 @@ func LoadTurnEngineResult(data interface{}, ctx *LoadContext) (TurnEngineResult,
 				result.Snapshots = make([]ModelInvocationContextSnapshot, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelInvocationContextSnapshot(item, ctx.At("snapshots"))
+						loaded, err := LoadModelInvocationContextSnapshot(item, ctx.At("snapshots").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -63,7 +63,7 @@ func LoadTurnEngineResult(data interface{}, ctx *LoadContext) (TurnEngineResult,
 				result.ToolResults = make([]ModelToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelToolResult(item, ctx.At("toolResults"))
+						loaded, err := LoadModelToolResult(item, ctx.At("toolResults").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

@@ -55,7 +55,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Events = make([]SessionEvent, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadSessionEvent(item, ctx.At("events"))
+						loaded, err := LoadSessionEvent(item, ctx.At("events").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -69,7 +69,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Turns = make([]TurnTrace, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadTurnTrace(item, ctx.At("turns"))
+						loaded, err := LoadTurnTrace(item, ctx.At("turns").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -83,7 +83,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Checkpoints = make([]Checkpoint, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadCheckpoint(item, ctx.At("checkpoints"))
+						loaded, err := LoadCheckpoint(item, ctx.At("checkpoints").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -97,7 +97,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Trajectory = make([]TrajectoryEvent, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadTrajectoryEvent(item, ctx.At("trajectory"))
+						loaded, err := LoadTrajectoryEvent(item, ctx.At("trajectory").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -111,7 +111,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Files = make([]SessionFileRef, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadSessionFileRef(item, ctx.At("files"))
+						loaded, err := LoadSessionFileRef(item, ctx.At("files").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -125,7 +125,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Refs = make([]SessionRef, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadSessionRef(item, ctx.At("refs"))
+						loaded, err := LoadSessionRef(item, ctx.At("refs").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

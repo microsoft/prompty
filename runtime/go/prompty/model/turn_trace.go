@@ -45,7 +45,7 @@ func LoadTurnTrace(data interface{}, ctx *LoadContext) (TurnTrace, error) {
 				result.Events = make([]TurnEvent, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadTurnEvent(item, ctx.At("events"))
+						loaded, err := LoadTurnEvent(item, ctx.At("events").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

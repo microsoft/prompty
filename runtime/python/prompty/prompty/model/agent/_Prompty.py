@@ -133,7 +133,7 @@ class Prompty:
                     # value is a scalar, use it as the primary property
                     result.append(Property.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [Property.load(item, context) for item in data]
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_inputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -185,7 +185,7 @@ class Prompty:
                     # value is a scalar, use it as the primary property
                     result.append(Property.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [Property.load(item, context) for item in data]
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_outputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -237,7 +237,7 @@ class Prompty:
                     # value is a scalar, use it as the primary property
                     result.append(Tool.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [Tool.load(item, context) for item in data]
+        return [Tool.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tools(items: list[Tool], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

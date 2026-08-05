@@ -77,7 +77,7 @@ class ReplayVerificationRequest:
                     # value is a scalar, use it as the primary property
                     result.append(ReplayJournalRecord.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [ReplayJournalRecord.load(item, context) for item in data]
+        return [ReplayJournalRecord.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_expected(items: list[ReplayJournalRecord], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -104,7 +104,7 @@ class ReplayVerificationRequest:
                     # value is a scalar, use it as the primary property
                     result.append(ReplayJournalRecord.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [ReplayJournalRecord.load(item, context) for item in data]
+        return [ReplayJournalRecord.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_actual(items: list[ReplayJournalRecord], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

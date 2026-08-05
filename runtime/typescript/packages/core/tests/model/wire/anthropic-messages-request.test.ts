@@ -19,7 +19,7 @@ describe("AnthropicMessagesRequest", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "model": "claude-sonnet-4-20250514",\n  "max_tokens": 4096,\n  "system": "You are a helpful assistant.",\n  "temperature": 0.7,\n  "top_p": 0.9,\n  "top_k": 40,\n  "stop_sequences": [\n    "\\n\\nHuman:"\n  ]\n}`;
+      const json = `{\n  "model": "claude-sonnet-4-20250514",\n  "max_tokens": 4096,\n  "system": "You are a helpful assistant.",\n  "temperature": 0.7,\n  "top_p": 0.9,\n  "top_k": 40,\n  "stop_sequences": [\n    "\\n\\nHuman:"\n  ],\n  "messages": [\n    {\n      "role": "user",\n      "content": []\n    }\n  ]\n}`;
       const instance = AnthropicMessagesRequest.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.model).toEqual("claude-sonnet-4-20250514");
@@ -31,7 +31,7 @@ describe("AnthropicMessagesRequest", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "model": "claude-sonnet-4-20250514",\n  "max_tokens": 4096,\n  "system": "You are a helpful assistant.",\n  "temperature": 0.7,\n  "top_p": 0.9,\n  "top_k": 40,\n  "stop_sequences": [\n    "\\n\\nHuman:"\n  ]\n}`;
+      const json = `{\n  "model": "claude-sonnet-4-20250514",\n  "max_tokens": 4096,\n  "system": "You are a helpful assistant.",\n  "temperature": 0.7,\n  "top_p": 0.9,\n  "top_k": 40,\n  "stop_sequences": [\n    "\\n\\nHuman:"\n  ],\n  "messages": [\n    {\n      "role": "user",\n      "content": []\n    }\n  ]\n}`;
       const instance = AnthropicMessagesRequest.fromJson(json);
       const output = instance.toJson();
       const reloaded = AnthropicMessagesRequest.fromJson(output);
@@ -46,7 +46,7 @@ describe("AnthropicMessagesRequest", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `model: claude-sonnet-4-20250514\nmax_tokens: 4096\nsystem: You are a helpful assistant.\ntemperature: 0.7\ntop_p: 0.9\ntop_k: 40\nstop_sequences:\n  - "\\n\\nHuman:"\n`;
+      const yaml = `model: claude-sonnet-4-20250514\nmax_tokens: 4096\nsystem: You are a helpful assistant.\ntemperature: 0.7\ntop_p: 0.9\ntop_k: 40\nstop_sequences:\n  - "\\n\\nHuman:"\nmessages:\n  - role: user\n    content: []\n`;
       const instance = AnthropicMessagesRequest.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.model).toEqual("claude-sonnet-4-20250514");
@@ -58,7 +58,7 @@ describe("AnthropicMessagesRequest", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `model: claude-sonnet-4-20250514\nmax_tokens: 4096\nsystem: You are a helpful assistant.\ntemperature: 0.7\ntop_p: 0.9\ntop_k: 40\nstop_sequences:\n  - "\\n\\nHuman:"\n`;
+      const yaml = `model: claude-sonnet-4-20250514\nmax_tokens: 4096\nsystem: You are a helpful assistant.\ntemperature: 0.7\ntop_p: 0.9\ntop_k: 40\nstop_sequences:\n  - "\\n\\nHuman:"\nmessages:\n  - role: user\n    content: []\n`;
       const instance = AnthropicMessagesRequest.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = AnthropicMessagesRequest.fromYaml(output);
@@ -73,7 +73,9 @@ describe("AnthropicMessagesRequest", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "model": "claude-sonnet-4-20250514",\n  "max_tokens": 4096,\n  "system": "You are a helpful assistant.",\n  "temperature": 0.7,\n  "top_p": 0.9,\n  "top_k": 40,\n  "stop_sequences": [\n    "\\n\\nHuman:"\n  ],\n  "messages": [\n    {\n      "role": "user",\n      "content": []\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = AnthropicMessagesRequest.load(data);
       expect(instance).toBeDefined();
     });

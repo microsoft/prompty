@@ -45,7 +45,10 @@ export class AnthropicMessagesRequest {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicMessagesRequest {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicMessagesRequest {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -57,7 +60,10 @@ export class AnthropicMessagesRequest {
       instance.model = String(data["model"]);
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = AnthropicMessagesRequest.loadMessages(data["messages"] as unknown[], context.at("messages"));
+      instance.messages = AnthropicMessagesRequest.loadMessages(
+        data["messages"] as unknown[],
+        context.at("messages"),
+      );
     }
     if (data["max_tokens"] !== undefined && data["max_tokens"] !== null) {
       instance.max_tokens = Number(data["max_tokens"]);
@@ -74,11 +80,19 @@ export class AnthropicMessagesRequest {
     if (data["top_k"] !== undefined && data["top_k"] !== null) {
       instance.top_k = Number(data["top_k"]);
     }
-    if (data["stop_sequences"] !== undefined && data["stop_sequences"] !== null) {
-      instance.stop_sequences = (data["stop_sequences"] as unknown[]).map(v => String(v));
+    if (
+      data["stop_sequences"] !== undefined &&
+      data["stop_sequences"] !== null
+    ) {
+      instance.stop_sequences = (data["stop_sequences"] as unknown[]).map((v) =>
+        String(v),
+      );
     }
     if (data["tools"] !== undefined && data["tools"] !== null) {
-      instance.tools = AnthropicMessagesRequest.loadTools(data["tools"] as unknown[], context.at("tools"));
+      instance.tools = AnthropicMessagesRequest.loadTools(
+        data["tools"] as unknown[],
+        context.at("tools"),
+      );
     }
 
     if (context) {
@@ -87,60 +101,105 @@ export class AnthropicMessagesRequest {
     return instance;
   }
 
-  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): AnthropicWireMessage[] {
+  static loadMessages(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): AnthropicWireMessage[] {
     context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
       const result: AnthropicWireMessage[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(AnthropicWireMessage.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            AnthropicWireMessage.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(AnthropicWireMessage.load({ name: k, "role": v }, context.at(k)));
+          result.push(
+            AnthropicWireMessage.load({ name: k, role: v }, context.at(k)),
+          );
         }
       }
       return result;
     }
-    return data.map(item => AnthropicWireMessage.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      AnthropicWireMessage.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static saveMessages(items: AnthropicWireMessage[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(
+    items: AnthropicWireMessage[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadTools(data: Record<string, unknown>[] | unknown[], context?: LoadContext): AnthropicToolDefinition[] {
+  static loadTools(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): AnthropicToolDefinition[] {
     context ??= new LoadContext({ path: "tools" });
     if (!Array.isArray(data)) {
       const result: AnthropicToolDefinition[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(AnthropicToolDefinition.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            AnthropicToolDefinition.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(AnthropicToolDefinition.load({ name: k, "description": v }, context.at(k)));
+          result.push(
+            AnthropicToolDefinition.load(
+              { name: k, description: v },
+              context.at(k),
+            ),
+          );
         }
       }
       return result;
     }
-    return data.map(item => AnthropicToolDefinition.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      AnthropicToolDefinition.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static saveTools(items: AnthropicToolDefinition[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveTools(
+    items: AnthropicToolDefinition[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -159,7 +218,10 @@ export class AnthropicMessagesRequest {
       result["model"] = obj.model;
     }
     if (obj.messages !== undefined && obj.messages !== null) {
-      result["messages"] = AnthropicMessagesRequest.saveMessages(obj.messages, context);
+      result["messages"] = AnthropicMessagesRequest.saveMessages(
+        obj.messages,
+        context,
+      );
     }
     if (obj.max_tokens !== undefined && obj.max_tokens !== null) {
       result["max_tokens"] = obj.max_tokens;
@@ -199,15 +261,27 @@ export class AnthropicMessagesRequest {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): AnthropicMessagesRequest {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): AnthropicMessagesRequest {
     const data = JSON.parse(json);
-    return AnthropicMessagesRequest.load(data as Record<string, unknown>, context);
+    return AnthropicMessagesRequest.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): AnthropicMessagesRequest {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): AnthropicMessagesRequest {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return AnthropicMessagesRequest.load(data as Record<string, unknown>, context);
+    return AnthropicMessagesRequest.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion

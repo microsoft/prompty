@@ -93,7 +93,7 @@ class TurnTrace:
                     # value is a scalar, use it as the primary property
                     result.append(TurnEvent.load({"name": k, "id": v}, context.at(k)))
             return result
-        return [TurnEvent.load(item, context) for item in data]
+        return [TurnEvent.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_events(items: list[TurnEvent], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

@@ -82,7 +82,7 @@ class RedactionMetadata:
                     # value is a scalar, use it as the primary property
                     result.append(RedactedField.load({"name": k, "path": v}, context.at(k)))
             return result
-        return [RedactedField.load(item, context) for item in data]
+        return [RedactedField.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_fields(items: list[RedactedField], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

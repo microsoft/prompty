@@ -7,5 +7,9 @@ import { TurnCommit } from "./turn-commit";
 /** Runs non-fatal host effects after a turn is durably committed. */
 export interface EnginePostCommitPort {
   /** Run one idempotent host effect after the turn is durably committed */
-  afterCommit(effectId: string, commit: TurnCommit, signal?: AbortSignal): Promise<void>;
+  afterCommit(
+    effectId: string,
+    commit: TurnCommit,
+    signal?: AbortSignal,
+  ): Promise<void>;
 }

@@ -89,7 +89,7 @@ class ReplayVerificationResult:
                     # value is a scalar, use it as the primary property
                     result.append(ReplayMismatch.load({"name": k, "index": v}, context.at(k)))
             return result
-        return [ReplayMismatch.load(item, context) for item in data]
+        return [ReplayMismatch.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_mismatches(items: list[ReplayMismatch], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

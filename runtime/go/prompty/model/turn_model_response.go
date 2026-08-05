@@ -47,7 +47,7 @@ func LoadTurnModelResponse(data interface{}, ctx *LoadContext) (TurnModelRespons
 				result.ToolRequests = make([]HostToolRequest, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadHostToolRequest(item, ctx.At("toolRequests"))
+						loaded, err := LoadHostToolRequest(item, ctx.At("toolRequests").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

@@ -17,7 +17,10 @@ export class AuthorizationCodeFlow {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AuthorizationCodeFlow {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AuthorizationCodeFlow {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -67,8 +70,8 @@ export class AuthorizationCodeFlow {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      "authUrl": { "foundry": "auth_url" },
-      "codeVerifier": { "foundry": "code_verifier" },
+      authUrl: { foundry: "auth_url" },
+      codeVerifier: { foundry: "code_verifier" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

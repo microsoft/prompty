@@ -19,7 +19,7 @@ describe("EngineCheckpoint", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "id": "ckpt_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "runId": "run_abc123"\n}`;
+      const json = `{\n  "id": "ckpt_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "runId": "run_abc123",\n  "contextState": {}\n}`;
       const instance = EngineCheckpoint.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("ckpt_abc123");
@@ -29,7 +29,7 @@ describe("EngineCheckpoint", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "id": "ckpt_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "runId": "run_abc123"\n}`;
+      const json = `{\n  "id": "ckpt_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "runId": "run_abc123",\n  "contextState": {}\n}`;
       const instance = EngineCheckpoint.fromJson(json);
       const output = instance.toJson();
       const reloaded = EngineCheckpoint.fromJson(output);
@@ -42,7 +42,7 @@ describe("EngineCheckpoint", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `id: ckpt_abc123\nsessionId: sess_abc123\nturnId: turn_abc123\nrunId: run_abc123\n`;
+      const yaml = `id: ckpt_abc123\nsessionId: sess_abc123\nturnId: turn_abc123\nrunId: run_abc123\ncontextState: {}\n`;
       const instance = EngineCheckpoint.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("ckpt_abc123");
@@ -52,7 +52,7 @@ describe("EngineCheckpoint", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `id: ckpt_abc123\nsessionId: sess_abc123\nturnId: turn_abc123\nrunId: run_abc123\n`;
+      const yaml = `id: ckpt_abc123\nsessionId: sess_abc123\nturnId: turn_abc123\nrunId: run_abc123\ncontextState: {}\n`;
       const instance = EngineCheckpoint.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = EngineCheckpoint.fromYaml(output);
@@ -65,7 +65,9 @@ describe("EngineCheckpoint", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "ckpt_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "runId": "run_abc123",\n  "contextState": {}\n}`,
+      ) as Record<string, unknown>;
       const instance = EngineCheckpoint.load(data);
       expect(instance).toBeDefined();
     });

@@ -25,7 +25,10 @@ export class TokenUsage {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): TokenUsage {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): TokenUsage {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -36,7 +39,10 @@ export class TokenUsage {
     if (data["promptTokens"] !== undefined && data["promptTokens"] !== null) {
       instance.promptTokens = Number(data["promptTokens"]);
     }
-    if (data["completionTokens"] !== undefined && data["completionTokens"] !== null) {
+    if (
+      data["completionTokens"] !== undefined &&
+      data["completionTokens"] !== null
+    ) {
       instance.completionTokens = Number(data["completionTokens"]);
     }
     if (data["totalTokens"] !== undefined && data["totalTokens"] !== null) {
@@ -81,9 +87,12 @@ export class TokenUsage {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      "promptTokens": { "openai": "prompt_tokens", "anthropic": "input_tokens" },
-      "completionTokens": { "openai": "completion_tokens", "anthropic": "output_tokens" },
-      "totalTokens": { "openai": "total_tokens" },
+      promptTokens: { openai: "prompt_tokens", anthropic: "input_tokens" },
+      completionTokens: {
+        openai: "completion_tokens",
+        anthropic: "output_tokens",
+      },
+      totalTokens: { openai: "total_tokens" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

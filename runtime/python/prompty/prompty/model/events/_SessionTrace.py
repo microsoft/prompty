@@ -128,7 +128,7 @@ class SessionTrace:
                     # value is a scalar, use it as the primary property
                     result.append(SessionEvent.load({"name": k, "id": v}, context.at(k)))
             return result
-        return [SessionEvent.load(item, context) for item in data]
+        return [SessionEvent.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_events(items: list[SessionEvent], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -155,7 +155,7 @@ class SessionTrace:
                     # value is a scalar, use it as the primary property
                     result.append(TurnTrace.load({"name": k, "version": v}, context.at(k)))
             return result
-        return [TurnTrace.load(item, context) for item in data]
+        return [TurnTrace.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_turns(items: list[TurnTrace], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -182,7 +182,7 @@ class SessionTrace:
                     # value is a scalar, use it as the primary property
                     result.append(Checkpoint.load({"name": k, "id": v}, context.at(k)))
             return result
-        return [Checkpoint.load(item, context) for item in data]
+        return [Checkpoint.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_checkpoints(items: list[Checkpoint], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -209,7 +209,7 @@ class SessionTrace:
                     # value is a scalar, use it as the primary property
                     result.append(TrajectoryEvent.load({"name": k, "id": v}, context.at(k)))
             return result
-        return [TrajectoryEvent.load(item, context) for item in data]
+        return [TrajectoryEvent.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_trajectory(items: list[TrajectoryEvent], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -236,7 +236,7 @@ class SessionTrace:
                     # value is a scalar, use it as the primary property
                     result.append(SessionFileRef.load({"name": k, "sessionId": v}, context.at(k)))
             return result
-        return [SessionFileRef.load(item, context) for item in data]
+        return [SessionFileRef.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_files(items: list[SessionFileRef], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -263,7 +263,7 @@ class SessionTrace:
                     # value is a scalar, use it as the primary property
                     result.append(SessionRef.load({"name": k, "sessionId": v}, context.at(k)))
             return result
-        return [SessionRef.load(item, context) for item in data]
+        return [SessionRef.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_refs(items: list[SessionRef], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

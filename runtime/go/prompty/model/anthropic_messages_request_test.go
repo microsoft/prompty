@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -24,6 +25,12 @@ func TestAnthropicMessagesRequestLoadJSON(t *testing.T) {
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 `
@@ -55,6 +62,10 @@ func TestAnthropicMessagesRequestLoadJSON(t *testing.T) {
 	if instance.TopK == nil || *instance.TopK != 40 {
 		t.Errorf(`Expected TopK to be 40, got %v`, instance.TopK)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertAnthropicMessagesRequestStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 	if len(instance.StopSequences) != 1 {
 		t.Fatalf("Expected StopSequences length to be 1, got %d", len(instance.StopSequences))
 	}
@@ -77,6 +88,9 @@ stop_sequences:
 
 
     Human:
+messages:
+  - role: user
+    content: []
 
 `
 	var data map[string]interface{}
@@ -107,6 +121,10 @@ stop_sequences:
 	if instance.TopK == nil || *instance.TopK != 40 {
 		t.Errorf(`Expected TopK to be 40, got %v`, instance.TopK)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertAnthropicMessagesRequestStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 	if len(instance.StopSequences) != 1 {
 		t.Fatalf("Expected StopSequences length to be 1, got %d", len(instance.StopSequences))
 	}
@@ -127,6 +145,12 @@ func TestAnthropicMessagesRequestFromJSON(t *testing.T) {
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 `
@@ -153,6 +177,10 @@ func TestAnthropicMessagesRequestFromJSON(t *testing.T) {
 	if instance.TopK == nil || *instance.TopK != 40 {
 		t.Errorf(`Expected TopK to be 40, got %v`, instance.TopK)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertAnthropicMessagesRequestStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 	if len(instance.StopSequences) != 1 {
 		t.Fatalf("Expected StopSequences length to be 1, got %d", len(instance.StopSequences))
 	}
@@ -175,6 +203,9 @@ stop_sequences:
 
 
     Human:
+messages:
+  - role: user
+    content: []
 
 `
 
@@ -200,6 +231,10 @@ stop_sequences:
 	if instance.TopK == nil || *instance.TopK != 40 {
 		t.Errorf(`Expected TopK to be 40, got %v`, instance.TopK)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertAnthropicMessagesRequestStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 	if len(instance.StopSequences) != 1 {
 		t.Fatalf("Expected StopSequences length to be 1, got %d", len(instance.StopSequences))
 	}
@@ -220,6 +255,12 @@ func TestAnthropicMessagesRequestRoundtrip(t *testing.T) {
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 `
@@ -258,6 +299,10 @@ func TestAnthropicMessagesRequestRoundtrip(t *testing.T) {
 	if reloaded.TopK == nil || *reloaded.TopK != 40 {
 		t.Errorf(`Expected TopK to be 40, got %v`, reloaded.TopK)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertAnthropicMessagesRequestStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 	if len(reloaded.StopSequences) != 1 {
 		t.Fatalf("Expected StopSequences length to be 1, got %d", len(reloaded.StopSequences))
 	}
@@ -278,6 +323,12 @@ func TestAnthropicMessagesRequestToJSON(t *testing.T) {
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 `
@@ -323,6 +374,10 @@ func TestAnthropicMessagesRequestToJSON(t *testing.T) {
 	if reloaded.TopK == nil || *reloaded.TopK != 40 {
 		t.Errorf(`Expected TopK to be 40, got %v`, reloaded.TopK)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertAnthropicMessagesRequestStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 	if len(reloaded.StopSequences) != 1 {
 		t.Fatalf("Expected StopSequences length to be 1, got %d", len(reloaded.StopSequences))
 	}
@@ -343,6 +398,12 @@ func TestAnthropicMessagesRequestToYAML(t *testing.T) {
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 `
@@ -388,6 +449,10 @@ func TestAnthropicMessagesRequestToYAML(t *testing.T) {
 	if reloaded.TopK == nil || *reloaded.TopK != 40 {
 		t.Errorf(`Expected TopK to be 40, got %v`, reloaded.TopK)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertAnthropicMessagesRequestStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 	if len(reloaded.StopSequences) != 1 {
 		t.Fatalf("Expected StopSequences length to be 1, got %d", len(reloaded.StopSequences))
 	}
@@ -400,5 +465,41 @@ func TestAnthropicMessagesRequestToYAML(t *testing.T) {
 func TestAnthropicMessagesRequestFromJSONInvalid(t *testing.T) {
 	if _, err := prompty.AnthropicMessagesRequestFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertAnthropicMessagesRequestStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

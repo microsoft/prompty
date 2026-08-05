@@ -19,7 +19,8 @@ func TestModelInvocationContextSnapshotLoadJSON(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -53,6 +54,7 @@ id: "context:inv_abc123"
 sessionId: sess_abc123
 turnId: turn_abc123
 invocationId: inv_abc123
+contextState: {}
 
 `
 	var data map[string]interface{}
@@ -86,7 +88,8 @@ func TestModelInvocationContextSnapshotFromJSON(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 `
 
@@ -115,6 +118,7 @@ id: "context:inv_abc123"
 sessionId: sess_abc123
 turnId: turn_abc123
 invocationId: inv_abc123
+contextState: {}
 
 `
 
@@ -143,7 +147,8 @@ func TestModelInvocationContextSnapshotRoundtrip(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -184,7 +189,8 @@ func TestModelInvocationContextSnapshotToJSON(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -232,7 +238,8 @@ func TestModelInvocationContextSnapshotToYAML(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}

@@ -19,7 +19,10 @@ export class ValidationError {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ValidationError {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ValidationError {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

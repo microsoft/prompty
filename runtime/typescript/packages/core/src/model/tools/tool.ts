@@ -46,7 +46,10 @@ export abstract class Tool {
       instance.description = String(data["description"]);
     }
     if (data["bindings"] !== undefined && data["bindings"] !== null) {
-      instance.bindings = Tool.loadBindings(data["bindings"] as unknown[], context.at("bindings"));
+      instance.bindings = Tool.loadBindings(
+        data["bindings"] as unknown[],
+        context.at("bindings"),
+      );
     }
 
     if (context) {
@@ -55,7 +58,10 @@ export abstract class Tool {
     return instance;
   }
 
-  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Tool {
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): Tool {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue);
@@ -75,31 +81,49 @@ export abstract class Tool {
     throw new Error("Missing Tool discriminator property: 'kind'");
   }
 
-  static loadBindings(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Binding[] {
+  static loadBindings(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Binding[] {
     context ??= new LoadContext({ path: "bindings" });
     if (!Array.isArray(data)) {
       const result: Binding[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Binding.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Binding.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Binding.load({ name: k, "input": v }, context.at(k)));
+          result.push(Binding.load({ name: k, input: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Binding.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Binding.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveBindings(items: Binding[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveBindings(
+    items: Binding[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
-    const serialized = items.map(item => ({ ...item.save(context) } as Record<string, unknown>));
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
     for (const itemData of serialized) {
       if (itemData["name"] === "") delete itemData["name"];
     }
@@ -111,7 +135,8 @@ export abstract class Tool {
     const names = new Set<string>();
     for (const itemData of serialized) {
       const name = itemData["name"];
-      if (typeof name !== "string" || name.length === 0 || names.has(name)) return serialized;
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
       names.add(name);
     }
 
@@ -124,7 +149,12 @@ export abstract class Tool {
       delete itemData["name"];
       // Check if we can use shorthand (only primary property set)
       const shorthand = (item.constructor as typeof Binding).shorthandProperty;
-      if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
         result[name] = itemData[shorthand];
         continue;
       }
@@ -206,7 +236,10 @@ export class FunctionTool extends Tool {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): FunctionTool {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FunctionTool {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -218,7 +251,10 @@ export class FunctionTool extends Tool {
       instance.kind = String(data["kind"]);
     }
     if (data["parameters"] !== undefined && data["parameters"] !== null) {
-      instance.parameters = FunctionTool.loadParameters(data["parameters"] as unknown[], context.at("parameters"));
+      instance.parameters = FunctionTool.loadParameters(
+        data["parameters"] as unknown[],
+        context.at("parameters"),
+      );
     }
     if (data["strict"] !== undefined && data["strict"] !== null) {
       instance.strict = Boolean(data["strict"]);
@@ -230,31 +266,49 @@ export class FunctionTool extends Tool {
     return instance;
   }
 
-  static loadParameters(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+  static loadParameters(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Property[] {
     context ??= new LoadContext({ path: "parameters" });
     if (!Array.isArray(data)) {
       const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Property.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Property.load({ name: k, "kind": v }, context.at(k)));
+          result.push(Property.load({ name: k, kind: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Property.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveParameters(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveParameters(
+    items: Property[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
-    const serialized = items.map(item => ({ ...item.save(context) } as Record<string, unknown>));
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
     for (const itemData of serialized) {
       if (itemData["name"] === "") delete itemData["name"];
     }
@@ -266,7 +320,8 @@ export class FunctionTool extends Tool {
     const names = new Set<string>();
     for (const itemData of serialized) {
       const name = itemData["name"];
-      if (typeof name !== "string" || name.length === 0 || names.has(name)) return serialized;
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
       names.add(name);
     }
 
@@ -279,7 +334,12 @@ export class FunctionTool extends Tool {
       delete itemData["name"];
       // Check if we can use shorthand (only primary property set)
       const shorthand = (item.constructor as typeof Property).shorthandProperty;
-      if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
         result[name] = itemData[shorthand];
         continue;
       }
@@ -305,7 +365,10 @@ export class FunctionTool extends Tool {
       result["kind"] = obj.kind;
     }
     if (obj.parameters !== undefined && obj.parameters !== null) {
-      result["parameters"] = FunctionTool.saveParameters(obj.parameters, context);
+      result["parameters"] = FunctionTool.saveParameters(
+        obj.parameters,
+        context,
+      );
     }
     if (obj.strict !== undefined && obj.strict !== null) {
       result["strict"] = obj.strict;
@@ -355,14 +418,23 @@ export class CustomTool extends Tool {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): CustomTool {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): CustomTool {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if (typeof data["kind"] === "string" && data["kind"] !== "" && (data["connection"] === undefined || data["connection"] === null)) {
-      throw new Error(`${context.at("connection").path}: missing required field`);
+    if (
+      typeof data["kind"] === "string" &&
+      data["kind"] !== "" &&
+      (data["connection"] === undefined || data["connection"] === null)
+    ) {
+      throw new Error(
+        `${context.at("connection").path}: missing required field`,
+      );
     }
     const instance = new CustomTool();
 
@@ -370,7 +442,10 @@ export class CustomTool extends Tool {
       instance.kind = String(data["kind"]);
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context.at("connection"));
+      instance.connection = Connection.load(
+        data["connection"] as Record<string, unknown>,
+        context.at("connection"),
+      );
     }
     if (data["options"] !== undefined && data["options"] !== null) {
       instance.options = data["options"] as Record<string, unknown>;
@@ -467,11 +542,15 @@ export class McpTool extends Tool {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if ((data["connection"] === undefined || data["connection"] === null)) {
-      throw new Error(`${context.at("connection").path}: missing required field`);
+    if (data["connection"] === undefined || data["connection"] === null) {
+      throw new Error(
+        `${context.at("connection").path}: missing required field`,
+      );
     }
-    if ((data["approvalMode"] === undefined || data["approvalMode"] === null)) {
-      throw new Error(`${context.at("approvalMode").path}: missing required field`);
+    if (data["approvalMode"] === undefined || data["approvalMode"] === null) {
+      throw new Error(
+        `${context.at("approvalMode").path}: missing required field`,
+      );
     }
     const instance = new McpTool();
 
@@ -479,19 +558,30 @@ export class McpTool extends Tool {
       instance.kind = String(data["kind"]);
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context.at("connection"));
+      instance.connection = Connection.load(
+        data["connection"] as Record<string, unknown>,
+        context.at("connection"),
+      );
     }
     if (data["serverName"] !== undefined && data["serverName"] !== null) {
       instance.serverName = String(data["serverName"]);
     }
-    if (data["serverDescription"] !== undefined && data["serverDescription"] !== null) {
+    if (
+      data["serverDescription"] !== undefined &&
+      data["serverDescription"] !== null
+    ) {
       instance.serverDescription = String(data["serverDescription"]);
     }
     if (data["approvalMode"] !== undefined && data["approvalMode"] !== null) {
-      instance.approvalMode = McpApprovalMode.load(data["approvalMode"] as Record<string, unknown>, context.at("approvalMode"));
+      instance.approvalMode = McpApprovalMode.load(
+        data["approvalMode"] as Record<string, unknown>,
+        context.at("approvalMode"),
+      );
     }
     if (data["allowedTools"] !== undefined && data["allowedTools"] !== null) {
-      instance.allowedTools = (data["allowedTools"] as unknown[]).map(v => String(v));
+      instance.allowedTools = (data["allowedTools"] as unknown[]).map((v) =>
+        String(v),
+      );
     }
 
     if (context) {
@@ -576,14 +666,19 @@ export class OpenApiTool extends Tool {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): OpenApiTool {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): OpenApiTool {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if ((data["connection"] === undefined || data["connection"] === null)) {
-      throw new Error(`${context.at("connection").path}: missing required field`);
+    if (data["connection"] === undefined || data["connection"] === null) {
+      throw new Error(
+        `${context.at("connection").path}: missing required field`,
+      );
     }
     const instance = new OpenApiTool();
 
@@ -591,7 +686,10 @@ export class OpenApiTool extends Tool {
       instance.kind = String(data["kind"]);
     }
     if (data["connection"] !== undefined && data["connection"] !== null) {
-      instance.connection = Connection.load(data["connection"] as Record<string, unknown>, context.at("connection"));
+      instance.connection = Connection.load(
+        data["connection"] as Record<string, unknown>,
+        context.at("connection"),
+      );
     }
     if (data["specification"] !== undefined && data["specification"] !== null) {
       instance.specification = String(data["specification"]);
@@ -668,7 +766,10 @@ export class PromptyTool extends Tool {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): PromptyTool {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): PromptyTool {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

@@ -17,7 +17,10 @@ export abstract class StreamChunk {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): StreamChunk {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): StreamChunk {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -36,7 +39,10 @@ export abstract class StreamChunk {
     return instance;
   }
 
-  private static loadKind(data: Record<string, unknown>, context?: LoadContext): StreamChunk {
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): StreamChunk {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue);
@@ -52,7 +58,9 @@ export abstract class StreamChunk {
         case "error":
           return ErrorChunk.load(data, context);
         default:
-          throw new Error(`Unknown StreamChunk discriminator field 'kind' value: ${discriminator}`);
+          throw new Error(
+            `Unknown StreamChunk discriminator field 'kind' value: ${discriminator}`,
+          );
       }
     }
     throw new Error("Missing StreamChunk discriminator property: 'kind'");
@@ -199,7 +207,10 @@ export class ThinkingChunk extends StreamChunk {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ThinkingChunk {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ThinkingChunk {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -288,7 +299,7 @@ export class ToolChunk extends StreamChunk {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if ((data["toolCall"] === undefined || data["toolCall"] === null)) {
+    if (data["toolCall"] === undefined || data["toolCall"] === null) {
       throw new Error(`${context.at("toolCall").path}: missing required field`);
     }
     const instance = new ToolChunk();
@@ -297,7 +308,10 @@ export class ToolChunk extends StreamChunk {
       instance.kind = String(data["kind"]);
     }
     if (data["toolCall"] !== undefined && data["toolCall"] !== null) {
-      instance.toolCall = ToolCall.load(data["toolCall"] as Record<string, unknown>, context.at("toolCall"));
+      instance.toolCall = ToolCall.load(
+        data["toolCall"] as Record<string, unknown>,
+        context.at("toolCall"),
+      );
     }
 
     if (context) {
@@ -368,13 +382,16 @@ export class UsageChunk extends StreamChunk {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): UsageChunk {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): UsageChunk {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if ((data["usage"] === undefined || data["usage"] === null)) {
+    if (data["usage"] === undefined || data["usage"] === null) {
       throw new Error(`${context.at("usage").path}: missing required field`);
     }
     const instance = new UsageChunk();
@@ -383,7 +400,10 @@ export class UsageChunk extends StreamChunk {
       instance.kind = String(data["kind"]);
     }
     if (data["usage"] !== undefined && data["usage"] !== null) {
-      instance.usage = InvocationUsage.load(data["usage"] as Record<string, unknown>, context.at("usage"));
+      instance.usage = InvocationUsage.load(
+        data["usage"] as Record<string, unknown>,
+        context.at("usage"),
+      );
     }
 
     if (context) {
@@ -452,7 +472,10 @@ export class ErrorChunk extends StreamChunk {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ErrorChunk {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ErrorChunk {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

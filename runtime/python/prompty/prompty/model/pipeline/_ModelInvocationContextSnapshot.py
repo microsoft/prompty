@@ -123,7 +123,7 @@ class ModelInvocationContextSnapshot:
                     # value is a scalar, use it as the primary property
                     result.append(Message.load({"name": k, "role": v}, context.at(k)))
             return result
-        return [Message.load(item, context) for item in data]
+        return [Message.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -150,7 +150,7 @@ class ModelInvocationContextSnapshot:
                     # value is a scalar, use it as the primary property
                     result.append(InvocationContextDecision.load({"name": k, "candidateId": v}, context.at(k)))
             return result
-        return [InvocationContextDecision.load(item, context) for item in data]
+        return [InvocationContextDecision.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_decisions(items: list[InvocationContextDecision], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

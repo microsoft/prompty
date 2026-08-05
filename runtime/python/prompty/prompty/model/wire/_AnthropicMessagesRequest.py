@@ -113,7 +113,7 @@ class AnthropicMessagesRequest:
                     # value is a scalar, use it as the primary property
                     result.append(AnthropicWireMessage.load({"name": k, "role": v}, context.at(k)))
             return result
-        return [AnthropicWireMessage.load(item, context) for item in data]
+        return [AnthropicWireMessage.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_messages(items: list[AnthropicWireMessage], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -140,7 +140,7 @@ class AnthropicMessagesRequest:
                     # value is a scalar, use it as the primary property
                     result.append(AnthropicToolDefinition.load({"name": k, "description": v}, context.at(k)))
             return result
-        return [AnthropicToolDefinition.load(item, context) for item in data]
+        return [AnthropicToolDefinition.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tools(items: list[AnthropicToolDefinition], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

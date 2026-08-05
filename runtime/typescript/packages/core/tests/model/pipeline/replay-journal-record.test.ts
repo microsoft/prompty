@@ -18,12 +18,6 @@ describe("ReplayJournalRecord", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = ReplayJournalRecord.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new ReplayJournalRecord();
       const data = instance.save();

@@ -9,9 +9,22 @@ import { ToolCall } from "../conversation/tool-call";
 /** Calls an LLM provider with messages and returns the raw provider response. */
 export interface Executor {
   /** Call an LLM provider with messages and return the raw response */
-  execute(agent: Prompty, messages: Message[], signal?: AbortSignal): Promise<unknown>;
+  execute(
+    agent: Prompty,
+    messages: Message[],
+    signal?: AbortSignal,
+  ): Promise<unknown>;
   /** Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. */
-  executeStream?(agent: Prompty, messages: Message[], signal?: AbortSignal): Promise<unknown>;
+  executeStream?(
+    agent: Prompty,
+    messages: Message[],
+    signal?: AbortSignal,
+  ): Promise<unknown>;
   /** Format tool call results into messages for the next iteration */
-  formatToolMessages(rawResponse: unknown, toolCalls: ToolCall[], toolResults: string[], textContent: string | null): Message[];
+  formatToolMessages(
+    rawResponse: unknown,
+    toolCalls: ToolCall[],
+    toolResults: string[],
+    textContent: string | null,
+  ): Message[];
 }

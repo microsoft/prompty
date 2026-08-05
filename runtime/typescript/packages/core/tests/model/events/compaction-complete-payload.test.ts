@@ -61,7 +61,9 @@ describe("CompactionCompletePayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "removed": 5,\n  "remaining": 3,\n  "summaryLength": 1200\n}`,
+      ) as Record<string, unknown>;
       const instance = CompactionCompletePayload.load(data);
       expect(instance).toBeDefined();
     });

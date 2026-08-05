@@ -45,7 +45,10 @@ export class HostToolResult {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): HostToolResult {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): HostToolResult {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

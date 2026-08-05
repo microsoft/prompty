@@ -8,7 +8,17 @@ def test_load_json_modelreconciliationstate():
     json_data = r'''
     {
       "invocationId": "inv_abc123",
-      "message": "provider connection dropped after request was sent"
+      "message": "provider connection dropped after request was sent",
+      "request": {
+        "context": {
+          "id": "context:inv_abc123",
+          "sessionId": "sess_abc123",
+          "turnId": "turn_abc123",
+          "invocationId": "inv_abc123",
+          "iteration": 1,
+          "contextState": {}
+        }
+      }
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -21,6 +31,14 @@ def test_load_yaml_modelreconciliationstate():
     yaml_data = r'''
     invocationId: inv_abc123
     message: provider connection dropped after request was sent
+    request:
+      context:
+        id: "context:inv_abc123"
+        sessionId: sess_abc123
+        turnId: turn_abc123
+        invocationId: inv_abc123
+        iteration: 1
+        contextState: {}
 
     '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -34,7 +52,17 @@ def test_roundtrip_json_modelreconciliationstate():
     json_data = r'''
     {
       "invocationId": "inv_abc123",
-      "message": "provider connection dropped after request was sent"
+      "message": "provider connection dropped after request was sent",
+      "request": {
+        "context": {
+          "id": "context:inv_abc123",
+          "sessionId": "sess_abc123",
+          "turnId": "turn_abc123",
+          "invocationId": "inv_abc123",
+          "iteration": 1,
+          "contextState": {}
+        }
+      }
     }
     '''
     original_data = json.loads(json_data, strict=False)
@@ -50,7 +78,17 @@ def test_to_json_modelreconciliationstate():
     json_data = r'''
     {
       "invocationId": "inv_abc123",
-      "message": "provider connection dropped after request was sent"
+      "message": "provider connection dropped after request was sent",
+      "request": {
+        "context": {
+          "id": "context:inv_abc123",
+          "sessionId": "sess_abc123",
+          "turnId": "turn_abc123",
+          "invocationId": "inv_abc123",
+          "iteration": 1,
+          "contextState": {}
+        }
+      }
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -65,7 +103,17 @@ def test_to_yaml_modelreconciliationstate():
     json_data = r'''
     {
       "invocationId": "inv_abc123",
-      "message": "provider connection dropped after request was sent"
+      "message": "provider connection dropped after request was sent",
+      "request": {
+        "context": {
+          "id": "context:inv_abc123",
+          "sessionId": "sess_abc123",
+          "turnId": "turn_abc123",
+          "invocationId": "inv_abc123",
+          "iteration": 1,
+          "contextState": {}
+        }
+      }
     }
     '''
     data = json.loads(json_data, strict=False)

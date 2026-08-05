@@ -5,5 +5,7 @@
 import { StreamChunk } from "../../../src/model/index";
 
 describe("StreamChunk", () => {
-
+  it("should be defined", () => {
+    expect(StreamChunk).toBeDefined();
+  });
 });

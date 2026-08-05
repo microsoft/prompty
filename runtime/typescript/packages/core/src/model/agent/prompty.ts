@@ -59,7 +59,7 @@ export class Prompty {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if ((data["model"] === undefined || data["model"] === null)) {
+    if (data["model"] === undefined || data["model"] === null) {
       throw new Error(`${context.at("model").path}: missing required field`);
     }
     const instance = new Prompty();
@@ -77,19 +77,34 @@ export class Prompty {
       instance.metadata = data["metadata"] as Record<string, unknown>;
     }
     if (data["inputs"] !== undefined && data["inputs"] !== null) {
-      instance.inputs = Prompty.loadInputs(data["inputs"] as unknown[], context.at("inputs"));
+      instance.inputs = Prompty.loadInputs(
+        data["inputs"] as unknown[],
+        context.at("inputs"),
+      );
     }
     if (data["outputs"] !== undefined && data["outputs"] !== null) {
-      instance.outputs = Prompty.loadOutputs(data["outputs"] as unknown[], context.at("outputs"));
+      instance.outputs = Prompty.loadOutputs(
+        data["outputs"] as unknown[],
+        context.at("outputs"),
+      );
     }
     if (data["model"] !== undefined && data["model"] !== null) {
-      instance.model = Model.load(data["model"] as Record<string, unknown>, context.at("model"));
+      instance.model = Model.load(
+        data["model"] as Record<string, unknown>,
+        context.at("model"),
+      );
     }
     if (data["tools"] !== undefined && data["tools"] !== null) {
-      instance.tools = Prompty.loadTools(data["tools"] as unknown[], context.at("tools"));
+      instance.tools = Prompty.loadTools(
+        data["tools"] as unknown[],
+        context.at("tools"),
+      );
     }
     if (data["template"] !== undefined && data["template"] !== null) {
-      instance.template = Template.load(data["template"] as Record<string, unknown>, context.at("template"));
+      instance.template = Template.load(
+        data["template"] as Record<string, unknown>,
+        context.at("template"),
+      );
     }
     if (data["instructions"] !== undefined && data["instructions"] !== null) {
       instance.instructions = String(data["instructions"]);
@@ -101,31 +116,49 @@ export class Prompty {
     return instance;
   }
 
-  static loadInputs(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+  static loadInputs(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Property[] {
     context ??= new LoadContext({ path: "inputs" });
     if (!Array.isArray(data)) {
       const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Property.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Property.load({ name: k, "kind": v }, context.at(k)));
+          result.push(Property.load({ name: k, kind: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Property.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveInputs(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveInputs(
+    items: Property[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
-    const serialized = items.map(item => ({ ...item.save(context) } as Record<string, unknown>));
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
     for (const itemData of serialized) {
       if (itemData["name"] === "") delete itemData["name"];
     }
@@ -137,7 +170,8 @@ export class Prompty {
     const names = new Set<string>();
     for (const itemData of serialized) {
       const name = itemData["name"];
-      if (typeof name !== "string" || name.length === 0 || names.has(name)) return serialized;
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
       names.add(name);
     }
 
@@ -150,7 +184,12 @@ export class Prompty {
       delete itemData["name"];
       // Check if we can use shorthand (only primary property set)
       const shorthand = (item.constructor as typeof Property).shorthandProperty;
-      if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
         result[name] = itemData[shorthand];
         continue;
       }
@@ -159,31 +198,49 @@ export class Prompty {
     return result;
   }
 
-  static loadOutputs(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+  static loadOutputs(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Property[] {
     context ??= new LoadContext({ path: "outputs" });
     if (!Array.isArray(data)) {
       const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Property.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Property.load({ name: k, "kind": v }, context.at(k)));
+          result.push(Property.load({ name: k, kind: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Property.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveOutputs(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveOutputs(
+    items: Property[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
-    const serialized = items.map(item => ({ ...item.save(context) } as Record<string, unknown>));
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
     for (const itemData of serialized) {
       if (itemData["name"] === "") delete itemData["name"];
     }
@@ -195,7 +252,8 @@ export class Prompty {
     const names = new Set<string>();
     for (const itemData of serialized) {
       const name = itemData["name"];
-      if (typeof name !== "string" || name.length === 0 || names.has(name)) return serialized;
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
       names.add(name);
     }
 
@@ -208,7 +266,12 @@ export class Prompty {
       delete itemData["name"];
       // Check if we can use shorthand (only primary property set)
       const shorthand = (item.constructor as typeof Property).shorthandProperty;
-      if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
         result[name] = itemData[shorthand];
         continue;
       }
@@ -217,31 +280,49 @@ export class Prompty {
     return result;
   }
 
-  static loadTools(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Tool[] {
+  static loadTools(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Tool[] {
     context ??= new LoadContext({ path: "tools" });
     if (!Array.isArray(data)) {
       const result: Tool[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Tool.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Tool.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Tool.load({ name: k, "kind": v }, context.at(k)));
+          result.push(Tool.load({ name: k, kind: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Tool.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Tool.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveTools(items: Tool[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveTools(
+    items: Tool[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
-    const serialized = items.map(item => ({ ...item.save(context) } as Record<string, unknown>));
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
     for (const itemData of serialized) {
       if (itemData["name"] === "") delete itemData["name"];
     }
@@ -253,7 +334,8 @@ export class Prompty {
     const names = new Set<string>();
     for (const itemData of serialized) {
       const name = itemData["name"];
-      if (typeof name !== "string" || name.length === 0 || names.has(name)) return serialized;
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
       names.add(name);
     }
 
@@ -266,7 +348,12 @@ export class Prompty {
       delete itemData["name"];
       // Check if we can use shorthand (only primary property set)
       const shorthand = (item.constructor as typeof Tool).shorthandProperty;
-      if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
         result[name] = itemData[shorthand];
         continue;
       }

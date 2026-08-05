@@ -123,7 +123,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx.At("messages"))
+						loaded, err := LoadMessage(item, ctx.At("messages").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -158,7 +158,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.PendingToolRequests = make([]ModelToolRequest, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelToolRequest(item, ctx.At("pendingToolRequests"))
+						loaded, err := LoadModelToolRequest(item, ctx.At("pendingToolRequests").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -172,7 +172,7 @@ func LoadEngineCheckpoint(data interface{}, ctx *LoadContext) (EngineCheckpoint,
 				result.CompletedToolResults = make([]ModelToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelToolResult(item, ctx.At("completedToolResults"))
+						loaded, err := LoadModelToolResult(item, ctx.At("completedToolResults").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

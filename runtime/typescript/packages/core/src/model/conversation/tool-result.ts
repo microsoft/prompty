@@ -34,7 +34,10 @@ export class ToolResult {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ToolResult {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ToolResult {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -43,7 +46,10 @@ export class ToolResult {
     const instance = new ToolResult();
 
     if (data["parts"] !== undefined && data["parts"] !== null) {
-      instance.parts = ToolResult.loadParts(data["parts"] as unknown[], context.at("parts"));
+      instance.parts = ToolResult.loadParts(
+        data["parts"] as unknown[],
+        context.at("parts"),
+      );
     }
     if (data["status"] !== undefined && data["status"] !== null) {
       instance.status = String(data["status"]) as ToolResultStatus;
@@ -64,32 +70,48 @@ export class ToolResult {
     return instance;
   }
 
-  static loadParts(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ContentPart[] {
+  static loadParts(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ContentPart[] {
     context ??= new LoadContext({ path: "parts" });
     if (!Array.isArray(data)) {
       const result: ContentPart[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(ContentPart.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            ContentPart.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(ContentPart.load({ name: k, "kind": v }, context.at(k)));
+          result.push(ContentPart.load({ name: k, kind: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => ContentPart.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      ContentPart.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveParts(items: ContentPart[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveParts(
+    items: ContentPart[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -152,7 +174,6 @@ export class ToolResult {
   static text(value: string): ToolResult {
     return new ToolResult({ parts: [new TextPart({ value: value })] });
   }
-
 }
 
 /**

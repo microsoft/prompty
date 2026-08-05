@@ -31,6 +31,16 @@ func (ctx *LoadContext) At(segment string) *LoadContext {
 	return &LoadContext{Path: ctx.Path + "." + segment}
 }
 
+// AtIndex creates a child context for an array element. Rendered with bracket
+// notation (messages[3]) so an index is never confused with a map key of the
+// same name, which dot-joining would make ambiguous.
+func (ctx *LoadContext) AtIndex(index int) *LoadContext {
+	if ctx == nil {
+		return &LoadContext{Path: fmt.Sprintf("[%d]", index)}
+	}
+	return &LoadContext{Path: fmt.Sprintf("%s[%d]", ctx.Path, index)}
+}
+
 // SaveContext provides context for saving operations
 const CollectionFormatObject = "object"
 const CollectionFormatArray = "array"

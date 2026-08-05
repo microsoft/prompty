@@ -79,7 +79,7 @@ class InvocationContextState:
                     # value is a scalar, use it as the primary property
                     result.append(DelegatedStateReference.load({"name": k, "provider": v}, context.at(k)))
             return result
-        return [DelegatedStateReference.load(item, context) for item in data]
+        return [DelegatedStateReference.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_delegated_state(items: list[DelegatedStateReference], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

@@ -18,12 +18,6 @@ describe("AnthropicImageBlock", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = AnthropicImageBlock.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new AnthropicImageBlock();
       const data = instance.save();

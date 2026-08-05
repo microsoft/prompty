@@ -24,7 +24,10 @@ export class ContextCandidate {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ContextCandidate {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ContextCandidate {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -39,7 +42,10 @@ export class ContextCandidate {
       instance.source = String(data["source"]);
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = ContextCandidate.loadMessages(data["messages"] as unknown[], context.at("messages"));
+      instance.messages = ContextCandidate.loadMessages(
+        data["messages"] as unknown[],
+        context.at("messages"),
+      );
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
@@ -51,32 +57,48 @@ export class ContextCandidate {
     return instance;
   }
 
-  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+  static loadMessages(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Message[] {
     context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
       const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Message.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Message.load({ name: k, "role": v }, context.at(k)));
+          result.push(Message.load({ name: k, role: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Message.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Message.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(
+    items: Message[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion

@@ -57,7 +57,7 @@ func LoadFinalOutputPolicyRequest(data interface{}, ctx *LoadContext) (FinalOutp
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx.At("messages"))
+						loaded, err := LoadMessage(item, ctx.At("messages").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

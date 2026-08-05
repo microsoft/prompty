@@ -12,7 +12,21 @@ fn test_tool_context_load_json() {
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 "####;
     let ctx = LoadContext::default();
@@ -27,6 +41,13 @@ fn test_tool_context_load_yaml() {
     let yaml = r####"
 metadata:
   userId: user-123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
 "####;
     let ctx = LoadContext::default();
@@ -42,7 +63,21 @@ fn test_tool_context_roundtrip() {
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -60,7 +95,21 @@ fn test_tool_context_serde_roundtrip() {
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 "####;
     let instance: ToolContext = serde_json::from_str(json)
@@ -71,6 +120,7 @@ fn test_tool_context_serde_roundtrip() {
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
     assert_eq!(instance, ToolContext::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(value, canonical, "serde must serialize to byte-identical canonical wire (empty-omission preserved; no plain-derive divergence)");
     let reparsed: ToolContext = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");

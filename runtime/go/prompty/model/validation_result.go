@@ -36,7 +36,7 @@ func LoadValidationResult(data interface{}, ctx *LoadContext) (ValidationResult,
 				result.Errors = make([]ValidationError, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadValidationError(item, ctx.At("errors"))
+						loaded, err := LoadValidationError(item, ctx.At("errors").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

@@ -29,19 +29,25 @@ export class Template {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if ((data["format"] === undefined || data["format"] === null)) {
+    if (data["format"] === undefined || data["format"] === null) {
       throw new Error(`${context.at("format").path}: missing required field`);
     }
-    if ((data["parser"] === undefined || data["parser"] === null)) {
+    if (data["parser"] === undefined || data["parser"] === null) {
       throw new Error(`${context.at("parser").path}: missing required field`);
     }
     const instance = new Template();
 
     if (data["format"] !== undefined && data["format"] !== null) {
-      instance.format = FormatConfig.load(data["format"] as Record<string, unknown>, context.at("format"));
+      instance.format = FormatConfig.load(
+        data["format"] as Record<string, unknown>,
+        context.at("format"),
+      );
     }
     if (data["parser"] !== undefined && data["parser"] !== null) {
-      instance.parser = ParserConfig.load(data["parser"] as Record<string, unknown>, context.at("parser"));
+      instance.parser = ParserConfig.load(
+        data["parser"] as Record<string, unknown>,
+        context.at("parser"),
+      );
     }
 
     if (context) {

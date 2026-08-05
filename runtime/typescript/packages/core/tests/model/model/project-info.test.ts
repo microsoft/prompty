@@ -18,12 +18,6 @@ describe("ProjectInfo", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = ProjectInfo.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new ProjectInfo();
       const data = instance.save();

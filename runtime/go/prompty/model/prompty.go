@@ -103,7 +103,7 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 				result.Inputs = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx.At("inputs"))
+						loaded, err := LoadProperty(item, ctx.At("inputs").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -148,7 +148,7 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 				result.Outputs = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx.At("outputs"))
+						loaded, err := LoadProperty(item, ctx.At("outputs").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -208,7 +208,7 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 				result.Tools = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadTool(item, ctx.At("tools"))
+						loaded, err := LoadTool(item, ctx.At("tools").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

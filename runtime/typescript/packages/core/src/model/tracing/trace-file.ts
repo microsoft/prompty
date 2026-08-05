@@ -28,7 +28,7 @@ export class TraceFile {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if ((data["trace"] === undefined || data["trace"] === null)) {
+    if (data["trace"] === undefined || data["trace"] === null) {
       throw new Error(`${context.at("trace").path}: missing required field`);
     }
     const instance = new TraceFile();
@@ -40,7 +40,10 @@ export class TraceFile {
       instance.version = String(data["version"]);
     }
     if (data["trace"] !== undefined && data["trace"] !== null) {
-      instance.trace = TraceSpan.load(data["trace"] as Record<string, unknown>, context.at("trace"));
+      instance.trace = TraceSpan.load(
+        data["trace"] as Record<string, unknown>,
+        context.at("trace"),
+      );
     }
 
     if (context) {

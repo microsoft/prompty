@@ -383,7 +383,7 @@ class ObjectProperty(Property):
                     # value is a scalar, use it as the primary property
                     result.append(Property.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [Property.load(item, context) for item in data]
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_properties(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -545,7 +545,7 @@ class UnionProperty(Property):
                     # value is a scalar, use it as the primary property
                     result.append(Property.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [Property.load(item, context) for item in data]
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_one_of(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -572,7 +572,7 @@ class UnionProperty(Property):
                     # value is a scalar, use it as the primary property
                     result.append(Property.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [Property.load(item, context) for item in data]
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_any_of(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

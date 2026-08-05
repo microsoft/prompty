@@ -100,7 +100,7 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx.At("bindings"))
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -281,7 +281,7 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx.At("bindings"))
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -325,7 +325,7 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 				result.Parameters = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx.At("parameters"))
+						loaded, err := LoadProperty(item, ctx.At("parameters").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -577,7 +577,7 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx.At("bindings"))
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -791,7 +791,7 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx.At("bindings"))
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -1034,7 +1034,7 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx.At("bindings"))
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -1240,7 +1240,7 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx.At("bindings"))
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

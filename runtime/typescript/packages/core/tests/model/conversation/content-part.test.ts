@@ -5,5 +5,7 @@
 import { ContentPart } from "../../../src/model/index";
 
 describe("ContentPart", () => {
-
+  it("should be defined", () => {
+    expect(ContentPart).toBeDefined();
+  });
 });

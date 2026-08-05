@@ -85,7 +85,7 @@ class Message:
                     # value is a scalar, use it as the primary property
                     result.append(ContentPart.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [ContentPart.load(item, context) for item in data]
+        return [ContentPart.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_parts(items: list[ContentPart], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

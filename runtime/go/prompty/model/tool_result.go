@@ -48,7 +48,7 @@ func LoadToolResult(data interface{}, ctx *LoadContext) (ToolResult, error) {
 				result.Parts = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadContentPart(item, ctx.At("parts"))
+						loaded, err := LoadContentPart(item, ctx.At("parts").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

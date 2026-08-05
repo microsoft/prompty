@@ -19,7 +19,7 @@ describe("AnthropicMessagesResponse", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",\n  "model": "claude-sonnet-4-20250514",\n  "stop_reason": "end_turn"\n}`;
+      const json = `{\n  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",\n  "model": "claude-sonnet-4-20250514",\n  "stop_reason": "end_turn",\n  "usage": {\n    "input_tokens": 150,\n    "output_tokens": 42\n  }\n}`;
       const instance = AnthropicMessagesResponse.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("msg_01XFDUDYJgAACzvnptvVoYEL");
@@ -28,7 +28,7 @@ describe("AnthropicMessagesResponse", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",\n  "model": "claude-sonnet-4-20250514",\n  "stop_reason": "end_turn"\n}`;
+      const json = `{\n  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",\n  "model": "claude-sonnet-4-20250514",\n  "stop_reason": "end_turn",\n  "usage": {\n    "input_tokens": 150,\n    "output_tokens": 42\n  }\n}`;
       const instance = AnthropicMessagesResponse.fromJson(json);
       const output = instance.toJson();
       const reloaded = AnthropicMessagesResponse.fromJson(output);
@@ -40,7 +40,7 @@ describe("AnthropicMessagesResponse", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `id: msg_01XFDUDYJgAACzvnptvVoYEL\nmodel: claude-sonnet-4-20250514\nstop_reason: end_turn\n`;
+      const yaml = `id: msg_01XFDUDYJgAACzvnptvVoYEL\nmodel: claude-sonnet-4-20250514\nstop_reason: end_turn\nusage:\n  input_tokens: 150\n  output_tokens: 42\n`;
       const instance = AnthropicMessagesResponse.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("msg_01XFDUDYJgAACzvnptvVoYEL");
@@ -49,7 +49,7 @@ describe("AnthropicMessagesResponse", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `id: msg_01XFDUDYJgAACzvnptvVoYEL\nmodel: claude-sonnet-4-20250514\nstop_reason: end_turn\n`;
+      const yaml = `id: msg_01XFDUDYJgAACzvnptvVoYEL\nmodel: claude-sonnet-4-20250514\nstop_reason: end_turn\nusage:\n  input_tokens: 150\n  output_tokens: 42\n`;
       const instance = AnthropicMessagesResponse.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = AnthropicMessagesResponse.fromYaml(output);
@@ -61,7 +61,9 @@ describe("AnthropicMessagesResponse", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",\n  "model": "claude-sonnet-4-20250514",\n  "stop_reason": "end_turn",\n  "usage": {\n    "input_tokens": 150,\n    "output_tokens": 42\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = AnthropicMessagesResponse.load(data);
       expect(instance).toBeDefined();
     });

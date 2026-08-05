@@ -19,11 +19,13 @@ export class Property {
 
   private static cloneRawValue(value: unknown): unknown {
     if (Array.isArray(value)) {
-      return value.map(item => this.cloneRawValue(item));
+      return value.map((item) => this.cloneRawValue(item));
     }
     if (value !== null && typeof value === "object") {
       const result: Record<string, unknown> = {};
-      for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      for (const [key, item] of Object.entries(
+        value as Record<string, unknown>,
+      )) {
         result[key] = this.cloneRawValue(item);
       }
       return result;
@@ -137,7 +139,10 @@ export class Property {
     return instance;
   }
 
-  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Property {
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): Property {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
       const discriminator = String(discriminatorValue);
@@ -238,13 +243,16 @@ export class ArrayProperty extends Property {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ArrayProperty {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ArrayProperty {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if ((data["items"] === undefined || data["items"] === null)) {
+    if (data["items"] === undefined || data["items"] === null) {
       throw new Error(`${context.at("items").path}: missing required field`);
     }
     const instance = new ArrayProperty();
@@ -253,7 +261,10 @@ export class ArrayProperty extends Property {
       instance.kind = String(data["kind"]);
     }
     if (data["items"] !== undefined && data["items"] !== null) {
-      instance.items = Property.load(data["items"] as Record<string, unknown>, context.at("items"));
+      instance.items = Property.load(
+        data["items"] as Record<string, unknown>,
+        context.at("items"),
+      );
     }
 
     if (context) {
@@ -322,7 +333,10 @@ export class ObjectProperty extends Property {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ObjectProperty {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ObjectProperty {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -334,7 +348,10 @@ export class ObjectProperty extends Property {
       instance.kind = String(data["kind"]);
     }
     if (data["properties"] !== undefined && data["properties"] !== null) {
-      instance.properties = ObjectProperty.loadProperties(data["properties"] as unknown[], context.at("properties"));
+      instance.properties = ObjectProperty.loadProperties(
+        data["properties"] as unknown[],
+        context.at("properties"),
+      );
     }
 
     if (context) {
@@ -343,31 +360,49 @@ export class ObjectProperty extends Property {
     return instance;
   }
 
-  static loadProperties(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+  static loadProperties(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Property[] {
     context ??= new LoadContext({ path: "properties" });
     if (!Array.isArray(data)) {
       const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Property.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Property.load({ name: k, "kind": v }, context.at(k)));
+          result.push(Property.load({ name: k, kind: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Property.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveProperties(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveProperties(
+    items: Property[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
-    const serialized = items.map(item => ({ ...item.save(context) } as Record<string, unknown>));
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
     for (const itemData of serialized) {
       if (itemData["name"] === "") delete itemData["name"];
     }
@@ -379,7 +414,8 @@ export class ObjectProperty extends Property {
     const names = new Set<string>();
     for (const itemData of serialized) {
       const name = itemData["name"];
-      if (typeof name !== "string" || name.length === 0 || names.has(name)) return serialized;
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
       names.add(name);
     }
 
@@ -392,7 +428,12 @@ export class ObjectProperty extends Property {
       delete itemData["name"];
       // Check if we can use shorthand (only primary property set)
       const shorthand = (item.constructor as typeof Property).shorthandProperty;
-      if (context.useShorthand && shorthand && Object.keys(itemData).length === 1 && shorthand in itemData) {
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
         result[name] = itemData[shorthand];
         continue;
       }
@@ -418,7 +459,10 @@ export class ObjectProperty extends Property {
       result["kind"] = obj.kind;
     }
     if (obj.properties !== undefined && obj.properties !== null) {
-      result["properties"] = ObjectProperty.saveProperties(obj.properties, context);
+      result["properties"] = ObjectProperty.saveProperties(
+        obj.properties,
+        context,
+      );
     }
     return result;
   }
@@ -467,7 +511,10 @@ export class UnionProperty extends Property {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): UnionProperty {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): UnionProperty {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -479,10 +526,16 @@ export class UnionProperty extends Property {
       instance.kind = String(data["kind"]);
     }
     if (data["oneOf"] !== undefined && data["oneOf"] !== null) {
-      instance.oneOf = UnionProperty.loadOneOf(data["oneOf"] as unknown[], context.at("oneOf"));
+      instance.oneOf = UnionProperty.loadOneOf(
+        data["oneOf"] as unknown[],
+        context.at("oneOf"),
+      );
     }
     if (data["anyOf"] !== undefined && data["anyOf"] !== null) {
-      instance.anyOf = UnionProperty.loadAnyOf(data["anyOf"] as unknown[], context.at("anyOf"));
+      instance.anyOf = UnionProperty.loadAnyOf(
+        data["anyOf"] as unknown[],
+        context.at("anyOf"),
+      );
     }
 
     if (context) {
@@ -491,60 +544,92 @@ export class UnionProperty extends Property {
     return instance;
   }
 
-  static loadOneOf(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+  static loadOneOf(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Property[] {
     context ??= new LoadContext({ path: "oneOf" });
     if (!Array.isArray(data)) {
       const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Property.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Property.load({ name: k, "kind": v }, context.at(k)));
+          result.push(Property.load({ name: k, kind: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Property.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveOneOf(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveOneOf(
+    items: Property[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadAnyOf(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Property[] {
+  static loadAnyOf(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Property[] {
     context ??= new LoadContext({ path: "anyOf" });
     if (!Array.isArray(data)) {
       const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Property.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Property.load({ name: k, "kind": v }, context.at(k)));
+          result.push(Property.load({ name: k, kind: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => Property.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveAnyOf(items: Property[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveAnyOf(
+    items: Property[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion

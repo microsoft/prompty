@@ -38,7 +38,10 @@ export class PermissionCompletedPayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): PermissionCompletedPayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): PermissionCompletedPayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -65,7 +68,10 @@ export class PermissionCompletedPayload {
       instance.result = data["result"] as Record<string, unknown>;
     }
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
-      instance.redaction = RedactionMetadata.load(data["redaction"] as Record<string, unknown>, context.at("redaction"));
+      instance.redaction = RedactionMetadata.load(
+        data["redaction"] as Record<string, unknown>,
+        context.at("redaction"),
+      );
     }
 
     if (context) {
@@ -124,15 +130,27 @@ export class PermissionCompletedPayload {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): PermissionCompletedPayload {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): PermissionCompletedPayload {
     const data = JSON.parse(json);
-    return PermissionCompletedPayload.load(data as Record<string, unknown>, context);
+    return PermissionCompletedPayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): PermissionCompletedPayload {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): PermissionCompletedPayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return PermissionCompletedPayload.load(data as Record<string, unknown>, context);
+    return PermissionCompletedPayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion

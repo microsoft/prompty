@@ -92,7 +92,7 @@ class Tool(ABC):
                     # value is a scalar, use it as the primary property
                     result.append(Binding.load({"name": k, "input": v}, context.at(k)))
             return result
-        return [Binding.load(item, context) for item in data]
+        return [Binding.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_bindings(items: list[Binding], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -277,7 +277,7 @@ class FunctionTool(Tool):
                     # value is a scalar, use it as the primary property
                     result.append(Property.load({"name": k, "kind": v}, context.at(k)))
             return result
-        return [Property.load(item, context) for item in data]
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_parameters(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

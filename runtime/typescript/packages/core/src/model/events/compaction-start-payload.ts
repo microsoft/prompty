@@ -15,7 +15,10 @@ export class CompactionStartPayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): CompactionStartPayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): CompactionStartPayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -67,13 +70,19 @@ export class CompactionStartPayload {
 
   static fromJson(json: string, context?: LoadContext): CompactionStartPayload {
     const data = JSON.parse(json);
-    return CompactionStartPayload.load(data as Record<string, unknown>, context);
+    return CompactionStartPayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   static fromYaml(yaml: string, context?: LoadContext): CompactionStartPayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return CompactionStartPayload.load(data as Record<string, unknown>, context);
+    return CompactionStartPayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion

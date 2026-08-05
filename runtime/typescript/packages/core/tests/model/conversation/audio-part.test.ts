@@ -57,7 +57,9 @@ describe("AudioPart", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "source": "https://example.com/audio.wav",\n  "mediaType": "audio/wav"\n}`,
+      ) as Record<string, unknown>;
       const instance = AudioPart.load(data);
       expect(instance).toBeDefined();
     });

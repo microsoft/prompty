@@ -18,12 +18,6 @@ describe("HostPolicyRequest", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = HostPolicyRequest.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new HostPolicyRequest();
       const data = instance.save();

@@ -41,7 +41,7 @@ func LoadAnthropicMessagesRequest(data interface{}, ctx *LoadContext) (Anthropic
 				result.Messages = make([]AnthropicWireMessage, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadAnthropicWireMessage(item, ctx.At("messages"))
+						loaded, err := LoadAnthropicWireMessage(item, ctx.At("messages").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -130,7 +130,7 @@ func LoadAnthropicMessagesRequest(data interface{}, ctx *LoadContext) (Anthropic
 				result.Tools = make([]AnthropicToolDefinition, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadAnthropicToolDefinition(item, ctx.At("tools"))
+						loaded, err := LoadAnthropicToolDefinition(item, ctx.At("tools").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

@@ -7,7 +7,16 @@ from prompty.model import ResumeContext
 def test_load_json_resumecontext():
     json_data = r'''
     {
-      "lastJournalSequence": 12
+      "lastJournalSequence": 12,
+      "checkpoint": {
+        "id": "ckpt_abc123",
+        "sessionId": "sess_abc123",
+        "turnId": "turn_abc123",
+        "runId": "run_abc123",
+        "iteration": 1,
+        "lastSequence": 1,
+        "contextState": {}
+      }
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -18,6 +27,14 @@ def test_load_json_resumecontext():
 def test_load_yaml_resumecontext():
     yaml_data = r'''
     lastJournalSequence: 12
+    checkpoint:
+      id: ckpt_abc123
+      sessionId: sess_abc123
+      turnId: turn_abc123
+      runId: run_abc123
+      iteration: 1
+      lastSequence: 1
+      contextState: {}
 
     '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -29,7 +46,16 @@ def test_roundtrip_json_resumecontext():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r'''
     {
-      "lastJournalSequence": 12
+      "lastJournalSequence": 12,
+      "checkpoint": {
+        "id": "ckpt_abc123",
+        "sessionId": "sess_abc123",
+        "turnId": "turn_abc123",
+        "runId": "run_abc123",
+        "iteration": 1,
+        "lastSequence": 1,
+        "contextState": {}
+      }
     }
     '''
     original_data = json.loads(json_data, strict=False)
@@ -43,7 +69,16 @@ def test_to_json_resumecontext():
     """Test that to_json produces valid JSON."""
     json_data = r'''
     {
-      "lastJournalSequence": 12
+      "lastJournalSequence": 12,
+      "checkpoint": {
+        "id": "ckpt_abc123",
+        "sessionId": "sess_abc123",
+        "turnId": "turn_abc123",
+        "runId": "run_abc123",
+        "iteration": 1,
+        "lastSequence": 1,
+        "contextState": {}
+      }
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -57,7 +92,16 @@ def test_to_yaml_resumecontext():
     """Test that to_yaml produces valid YAML."""
     json_data = r'''
     {
-      "lastJournalSequence": 12
+      "lastJournalSequence": 12,
+      "checkpoint": {
+        "id": "ckpt_abc123",
+        "sessionId": "sess_abc123",
+        "turnId": "turn_abc123",
+        "runId": "run_abc123",
+        "iteration": 1,
+        "lastSequence": 1,
+        "contextState": {}
+      }
     }
     '''
     data = json.loads(json_data, strict=False)

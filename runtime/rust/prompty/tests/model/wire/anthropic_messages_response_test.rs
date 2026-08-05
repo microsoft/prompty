@@ -12,7 +12,11 @@ fn test_anthropic_messages_response_load_json() {
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 "####;
     let ctx = LoadContext::default();
@@ -30,6 +34,9 @@ fn test_anthropic_messages_response_load_yaml() {
 id: msg_01XFDUDYJgAACzvnptvVoYEL
 model: claude-sonnet-4-20250514
 stop_reason: end_turn
+usage:
+  input_tokens: 150
+  output_tokens: 42
 
 "####;
     let ctx = LoadContext::default();
@@ -47,7 +54,11 @@ fn test_anthropic_messages_response_roundtrip() {
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -65,7 +76,11 @@ fn test_anthropic_messages_response_serde_roundtrip() {
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 "####;
     let instance: AnthropicMessagesResponse = serde_json::from_str(json)

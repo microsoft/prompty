@@ -39,7 +39,10 @@ export class PermissionRequest {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): PermissionRequest {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): PermissionRequest {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

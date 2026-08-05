@@ -27,7 +27,10 @@ export class AiResourceInfo {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AiResourceInfo {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AiResourceInfo {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -101,12 +104,12 @@ export class AiResourceInfo {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      "name": { "foundry": "name" },
-      "kind": { "foundry": "kind" },
-      "endpoint": { "foundry": "endpoint" },
-      "location": { "foundry": "location" },
-      "resourceGroup": { "foundry": "resource_group" },
-      "serviceUrl": { "foundry": "foundry_url" },
+      name: { foundry: "name" },
+      kind: { foundry: "kind" },
+      endpoint: { foundry: "endpoint" },
+      location: { foundry: "location" },
+      resourceGroup: { foundry: "resource_group" },
+      serviceUrl: { foundry: "foundry_url" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

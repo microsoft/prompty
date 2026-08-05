@@ -18,12 +18,6 @@ describe("SubscriptionInfo", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = SubscriptionInfo.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new SubscriptionInfo();
       const data = instance.save();

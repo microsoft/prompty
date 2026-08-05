@@ -24,7 +24,7 @@ describe("ToolCall", () => {
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("call_abc123");
       expect(instance.name).toEqual("get_weather");
-      expect(instance.arguments).toEqual("{\"city\": \"Paris\"}");
+      expect(instance.arguments).toEqual('{"city": "Paris"}');
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -45,7 +45,7 @@ describe("ToolCall", () => {
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("call_abc123");
       expect(instance.name).toEqual("get_weather");
-      expect(instance.arguments).toEqual("{\"city\": \"Paris\"}");
+      expect(instance.arguments).toEqual('{"city": "Paris"}');
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -61,7 +61,9 @@ describe("ToolCall", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "call_abc123",\n  "name": "get_weather",\n  "arguments": "{\\"city\\": \\"Paris\\"}"\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolCall.load(data);
       expect(instance).toBeDefined();
     });

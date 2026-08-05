@@ -79,7 +79,7 @@ class ValidationResult:
                     # value is a scalar, use it as the primary property
                     result.append(ValidationError.load({"name": k, "message": v}, context.at(k)))
             return result
-        return [ValidationError.load(item, context) for item in data]
+        return [ValidationError.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_errors(items: list[ValidationError], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

@@ -8,5 +8,8 @@ import { ModelToolRequest } from "./model-tool-request";
 /** Authorizes model-requested tools at a runtime cancellation boundary. */
 export interface EnginePermissionPort {
   /** Authorize one model-requested tool before execution */
-  authorize(request: ModelToolRequest, signal?: AbortSignal): Promise<EnginePermissionDecision>;
+  authorize(
+    request: ModelToolRequest,
+    signal?: AbortSignal,
+  ): Promise<EnginePermissionDecision>;
 }

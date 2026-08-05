@@ -27,7 +27,10 @@ export class OAuthToken {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): OAuthToken {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): OAuthToken {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -95,11 +98,11 @@ export class OAuthToken {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      "accessToken": { "foundry": "access_token" },
-      "tokenType": { "foundry": "token_type" },
-      "expiresIn": { "foundry": "expires_in" },
-      "refreshToken": { "foundry": "refresh_token" },
-      "scope": { "foundry": "scope" },
+      accessToken: { foundry: "access_token" },
+      tokenType: { foundry: "token_type" },
+      expiresIn: { foundry: "expires_in" },
+      refreshToken: { foundry: "refresh_token" },
+      scope: { foundry: "scope" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

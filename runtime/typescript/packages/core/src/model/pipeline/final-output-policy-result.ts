@@ -21,7 +21,10 @@ export class FinalOutputPolicyResult {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): FinalOutputPolicyResult {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FinalOutputPolicyResult {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -77,15 +80,27 @@ export class FinalOutputPolicyResult {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): FinalOutputPolicyResult {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): FinalOutputPolicyResult {
     const data = JSON.parse(json);
-    return FinalOutputPolicyResult.load(data as Record<string, unknown>, context);
+    return FinalOutputPolicyResult.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): FinalOutputPolicyResult {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): FinalOutputPolicyResult {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return FinalOutputPolicyResult.load(data as Record<string, unknown>, context);
+    return FinalOutputPolicyResult.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion

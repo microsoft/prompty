@@ -7,6 +7,7 @@ package prompty
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
 
 	"gopkg.in/yaml.v3"
@@ -77,6 +78,14 @@ func LoadProperty(data interface{}, ctx *LoadContext) (interface{}, error) {
 	case string:
 		// Shorthand: string -> Property
 		expansion := map[string]interface{}{"kind": "string", "example": v}
+		return LoadProperty(expansion, ctx)
+	case float64:
+		// Shorthand: JSON number -> Property
+		if v == math.Trunc(v) {
+			expansion := map[string]interface{}{"kind": "integer", "example": v}
+			return LoadProperty(expansion, ctx)
+		}
+		expansion := map[string]interface{}{"kind": "float", "example": v}
 		return LoadProperty(expansion, ctx)
 	}
 	// Handle polymorphic types based on discriminator
@@ -461,7 +470,7 @@ func LoadObjectProperty(data interface{}, ctx *LoadContext) (ObjectProperty, err
 				result.Properties = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx.At("properties"))
+						loaded, err := LoadProperty(item, ctx.At("properties").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -664,7 +673,7 @@ func LoadUnionProperty(data interface{}, ctx *LoadContext) (UnionProperty, error
 				result.OneOf = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx.At("oneOf"))
+						loaded, err := LoadProperty(item, ctx.At("oneOf").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -679,7 +688,7 @@ func LoadUnionProperty(data interface{}, ctx *LoadContext) (UnionProperty, error
 				result.AnyOf = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx.At("anyOf"))
+						loaded, err := LoadProperty(item, ctx.At("anyOf").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

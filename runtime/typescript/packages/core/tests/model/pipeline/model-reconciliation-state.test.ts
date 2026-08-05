@@ -19,15 +19,17 @@ describe("ModelReconciliationState", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "invocationId": "inv_abc123",\n  "message": "provider connection dropped after request was sent"\n}`;
+      const json = `{\n  "invocationId": "inv_abc123",\n  "message": "provider connection dropped after request was sent",\n  "request": {\n    "context": {\n      "id": "context:inv_abc123",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_abc123",\n      "invocationId": "inv_abc123",\n      "iteration": 1,\n      "contextState": {}\n    }\n  }\n}`;
       const instance = ModelReconciliationState.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.invocationId).toEqual("inv_abc123");
-      expect(instance.message).toEqual("provider connection dropped after request was sent");
+      expect(instance.message).toEqual(
+        "provider connection dropped after request was sent",
+      );
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "invocationId": "inv_abc123",\n  "message": "provider connection dropped after request was sent"\n}`;
+      const json = `{\n  "invocationId": "inv_abc123",\n  "message": "provider connection dropped after request was sent",\n  "request": {\n    "context": {\n      "id": "context:inv_abc123",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_abc123",\n      "invocationId": "inv_abc123",\n      "iteration": 1,\n      "contextState": {}\n    }\n  }\n}`;
       const instance = ModelReconciliationState.fromJson(json);
       const output = instance.toJson();
       const reloaded = ModelReconciliationState.fromJson(output);
@@ -38,15 +40,17 @@ describe("ModelReconciliationState", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `invocationId: inv_abc123\nmessage: provider connection dropped after request was sent\n`;
+      const yaml = `invocationId: inv_abc123\nmessage: provider connection dropped after request was sent\nrequest:\n  context:\n    id: "context:inv_abc123"\n    sessionId: sess_abc123\n    turnId: turn_abc123\n    invocationId: inv_abc123\n    iteration: 1\n    contextState: {}\n`;
       const instance = ModelReconciliationState.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.invocationId).toEqual("inv_abc123");
-      expect(instance.message).toEqual("provider connection dropped after request was sent");
+      expect(instance.message).toEqual(
+        "provider connection dropped after request was sent",
+      );
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `invocationId: inv_abc123\nmessage: provider connection dropped after request was sent\n`;
+      const yaml = `invocationId: inv_abc123\nmessage: provider connection dropped after request was sent\nrequest:\n  context:\n    id: "context:inv_abc123"\n    sessionId: sess_abc123\n    turnId: turn_abc123\n    invocationId: inv_abc123\n    iteration: 1\n    contextState: {}\n`;
       const instance = ModelReconciliationState.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ModelReconciliationState.fromYaml(output);
@@ -57,7 +61,9 @@ describe("ModelReconciliationState", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "invocationId": "inv_abc123",\n  "message": "provider connection dropped after request was sent",\n  "request": {\n    "context": {\n      "id": "context:inv_abc123",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_abc123",\n      "invocationId": "inv_abc123",\n      "iteration": 1,\n      "contextState": {}\n    }\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ModelReconciliationState.load(data);
       expect(instance).toBeDefined();
     });

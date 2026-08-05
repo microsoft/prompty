@@ -9,7 +9,11 @@ def test_load_json_anthropicmessagesresponse():
     {
       "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
       "model": "claude-sonnet-4-20250514",
-      "stop_reason": "end_turn"
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 150,
+        "output_tokens": 42
+      }
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -24,6 +28,9 @@ def test_load_yaml_anthropicmessagesresponse():
     id: msg_01XFDUDYJgAACzvnptvVoYEL
     model: claude-sonnet-4-20250514
     stop_reason: end_turn
+    usage:
+      input_tokens: 150
+      output_tokens: 42
 
     '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -39,7 +46,11 @@ def test_roundtrip_json_anthropicmessagesresponse():
     {
       "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
       "model": "claude-sonnet-4-20250514",
-      "stop_reason": "end_turn"
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 150,
+        "output_tokens": 42
+      }
     }
     '''
     original_data = json.loads(json_data, strict=False)
@@ -57,7 +68,11 @@ def test_to_json_anthropicmessagesresponse():
     {
       "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
       "model": "claude-sonnet-4-20250514",
-      "stop_reason": "end_turn"
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 150,
+        "output_tokens": 42
+      }
     }
     '''
     data = json.loads(json_data, strict=False)
@@ -73,7 +88,11 @@ def test_to_yaml_anthropicmessagesresponse():
     {
       "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
       "model": "claude-sonnet-4-20250514",
-      "stop_reason": "end_turn"
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 150,
+        "output_tokens": 42
+      }
     }
     '''
     data = json.loads(json_data, strict=False)

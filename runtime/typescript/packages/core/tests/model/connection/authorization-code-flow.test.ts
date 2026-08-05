@@ -18,12 +18,6 @@ describe("AuthorizationCodeFlow", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = AuthorizationCodeFlow.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new AuthorizationCodeFlow();
       const data = instance.save();

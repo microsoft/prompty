@@ -21,7 +21,10 @@ export class ToolCallStartPayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ToolCallStartPayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ToolCallStartPayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

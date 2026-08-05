@@ -21,7 +21,10 @@ export class AnthropicToolUseBlock {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicToolUseBlock {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicToolUseBlock {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

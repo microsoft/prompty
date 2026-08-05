@@ -16,7 +16,10 @@ export class MemoryStore {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): MemoryStore {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): MemoryStore {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -25,7 +28,10 @@ export class MemoryStore {
     const instance = new MemoryStore();
 
     if (data["entries"] !== undefined && data["entries"] !== null) {
-      instance.entries = MemoryStore.loadEntries(data["entries"] as unknown[], context.at("entries"));
+      instance.entries = MemoryStore.loadEntries(
+        data["entries"] as unknown[],
+        context.at("entries"),
+      );
     }
 
     if (context) {
@@ -34,32 +40,48 @@ export class MemoryStore {
     return instance;
   }
 
-  static loadEntries(data: Record<string, unknown>[] | unknown[], context?: LoadContext): MemoryEntry[] {
+  static loadEntries(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): MemoryEntry[] {
     context ??= new LoadContext({ path: "entries" });
     if (!Array.isArray(data)) {
       const result: MemoryEntry[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(MemoryEntry.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            MemoryEntry.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(MemoryEntry.load({ name: k, "content": v }, context.at(k)));
+          result.push(MemoryEntry.load({ name: k, content: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map(item => MemoryEntry.load(item as Record<string, unknown>, context));
+    return data.map((item, index) =>
+      MemoryEntry.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveEntries(items: MemoryEntry[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveEntries(
+    items: MemoryEntry[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion

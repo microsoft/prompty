@@ -4,7 +4,11 @@
 
 import { LoadContext, SaveContext } from "../context";
 
-export type SessionEndStatus = "success" | "error" | "cancelled" | "interrupted";
+export type SessionEndStatus =
+  | "success"
+  | "error"
+  | "cancelled"
+  | "interrupted";
 
 export class SessionEndPayload {
   static readonly shorthandProperty: string | undefined = undefined;
@@ -31,7 +35,10 @@ export class SessionEndPayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): SessionEndPayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): SessionEndPayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

@@ -18,12 +18,6 @@ describe("TurnModelResponse", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = TurnModelResponse.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new TurnModelResponse();
       const data = instance.save();

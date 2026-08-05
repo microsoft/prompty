@@ -43,6 +43,19 @@ export class LoadContext {
   }
 
   /**
+   * Descend into an array element. Rendered with bracket notation
+   * (`messages[3]`) so an index is never confused with a map key of the
+   * same name, which dot-joining would make ambiguous.
+   */
+  atIndex(index: number): LoadContext {
+    return new LoadContext({
+      preProcess: this.preProcess,
+      postProcess: this.postProcess,
+      path: `${this.path}[${index}]`,
+    });
+  }
+
+  /**
    * Apply pre-processing to input data if a preProcess callback is set.
    * @param data - The raw input dictionary to process.
    * @returns The processed dictionary, or the original if no callback is set.

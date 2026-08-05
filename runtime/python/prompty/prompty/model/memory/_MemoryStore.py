@@ -77,7 +77,7 @@ class MemoryStore:
                     # value is a scalar, use it as the primary property
                     result.append(MemoryEntry.load({"name": k, "content": v}, context.at(k)))
             return result
-        return [MemoryEntry.load(item, context) for item in data]
+        return [MemoryEntry.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_entries(items: list[MemoryEntry], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

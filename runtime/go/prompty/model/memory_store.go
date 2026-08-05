@@ -35,7 +35,7 @@ func LoadMemoryStore(data interface{}, ctx *LoadContext) (MemoryStore, error) {
 				result.Entries = make([]MemoryEntry, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMemoryEntry(item, ctx.At("entries"))
+						loaded, err := LoadMemoryEntry(item, ctx.At("entries").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

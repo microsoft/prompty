@@ -103,7 +103,7 @@ class ModelInvocationResponse:
                     # value is a scalar, use it as the primary property
                     result.append(Message.load({"name": k, "role": v}, context.at(k)))
             return result
-        return [Message.load(item, context) for item in data]
+        return [Message.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_assistant_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -130,7 +130,7 @@ class ModelInvocationResponse:
                     # value is a scalar, use it as the primary property
                     result.append(ModelToolRequest.load({"name": k, "id": v}, context.at(k)))
             return result
-        return [ModelToolRequest.load(item, context) for item in data]
+        return [ModelToolRequest.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tool_requests(items: list[ModelToolRequest], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

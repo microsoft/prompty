@@ -88,7 +88,7 @@ class TurnModelResponse:
                     # value is a scalar, use it as the primary property
                     result.append(HostToolRequest.load({"name": k, "requestId": v}, context.at(k)))
             return result
-        return [HostToolRequest.load(item, context) for item in data]
+        return [HostToolRequest.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tool_requests(items: list[HostToolRequest], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:

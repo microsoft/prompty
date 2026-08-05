@@ -91,7 +91,7 @@ class TurnEngineResult:
                     # value is a scalar, use it as the primary property
                     result.append(ModelInvocationContextSnapshot.load({"name": k, "id": v}, context.at(k)))
             return result
-        return [ModelInvocationContextSnapshot.load(item, context) for item in data]
+        return [ModelInvocationContextSnapshot.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_snapshots(items: list[ModelInvocationContextSnapshot], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
@@ -118,7 +118,7 @@ class TurnEngineResult:
                     # value is a scalar, use it as the primary property
                     result.append(ModelToolResult.load({"name": k, "requestId": v}, context.at(k)))
             return result
-        return [ModelToolResult.load(item, context) for item in data]
+        return [ModelToolResult.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tool_results(items: list[ModelToolResult], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
