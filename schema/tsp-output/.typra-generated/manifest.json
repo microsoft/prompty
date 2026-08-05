@@ -5844,6 +5844,686 @@
       "marker": true
     },
     {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Package.swift",
+      "marker": false
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/agent/guardrail_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/agent/prompty.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/connection/authorization_code_flow.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/connection/connection.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/connection/device_authorization.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/connection/o_auth_token.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/conversation/content_part.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/conversation/message.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/conversation/thread_marker.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/conversation/tool_call.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/conversation/tool_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/core/file_not_found_error.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/core/invoker_error.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/core/property.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/core/validation_error.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/core/validation_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/checkpoint.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/compaction_complete_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/compaction_failed_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/compaction_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/done_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/error_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/harness_context.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/hook_end_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/hook_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/host_tool_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/host_tool_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/llm_complete_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/llm_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/messages_updated_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/permission_completed_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/permission_decision.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/permission_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/permission_requested_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/redacted_field.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/redaction_metadata.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/retry_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/session_end_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/session_event.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/session_file_ref.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/session_ref.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/session_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/session_summary.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/session_trace.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/session_warning_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/status_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/stream_chunk.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/thinking_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/token_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/tool_call_complete_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/tool_call_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/tool_execution_complete_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/tool_execution_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/tool_result_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/trajectory_event.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/turn_end_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/turn_event.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/turn_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/turn_summary.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/events/turn_trace.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/memory/memory_entry.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/memory/memory_store.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/ai_resource_info.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/invocation_usage.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/model_info.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/model_lister.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/model_options.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/model.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/project_info.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/subscription_info.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model/token_usage.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/checkpoint_store.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/compaction_config.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/context_candidate.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/context_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/delegated_state_reference.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/engine_checkpoint.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/engine_event.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/engine_permission_decision.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/event_journal_writer.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/event_sink.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/executor.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/final_output_policy_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/final_output_policy_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/host_policy_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/host_policy_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/host_tool_executor.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/invocation_context_decision.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/invocation_context_state.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/model_invocation_context_snapshot.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/model_invocation_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/model_invocation_response.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/model_reconciliation_state.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/model_tool_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/model_tool_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/parser.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/permission_resolver.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/processor.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/renderer.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/replay_journal_record.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/replay_mismatch.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/replay_verification_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/replay_verification_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/resume_context.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/retry_policy_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/run_turn_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/run_turn_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/turn_commit.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/turn_engine_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/turn_model_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/turn_model_response.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/pipeline/turn_options.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/streaming/stream_options.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/template/format_config.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/template/parser_config.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/template/template.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/tools/binding.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/tools/mcp_approval_mode.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/tools/tool_context.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/tools/tool_dispatch_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/tools/tool.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/tracing/trace_file.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/tracing/trace_span.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/tracing/trace_time.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/TypraRuntime.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_image_block.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_image_source.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_messages_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_messages_response.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_text_block.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_tool_definition.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_tool_result_block.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_tool_use_block.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_usage.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire/anthropic_wire_message.swift",
+      "marker": true
+    },
+    {
       "outputRoot": "../runtime/typescript/packages/core/src",
       "path": "../runtime/typescript/packages/core/src/eslint.config.js",
       "marker": true

@@ -13,8 +13,7 @@ __pycache__/
 .pytest_cache/
 
 # Schema emitter build artifacts
-schema/emitter/dist/
-schema/tsp-output/*
+schema/emitter/dist/schema/tsp-output/*
 !schema/tsp-output/.typra-generated/
 !schema/tsp-output/.typra-generated/export-surfaces.json
 !schema/tsp-output/.typra-generated/hydration-seams.json
@@ -24,3 +23,14 @@ schema/tsp-output/.typra-generated/report.json
 !schema/tsp-output/json-ast/
 !schema/tsp-output/json-ast/model.json
 .playwright-mcp/
+
+# SwiftPM build artifacts and resolved dependency pins.
+# Package.resolved is untracked because the Swift runtime is a library: pinning
+# transitive versions here would constrain every consumer.
+.build/
+.swiftpm/
+Package.resolved
+
+# Written by the Swift CI workflow so the compiler identity can be folded into
+# the SwiftPM cache key; never produced by a normal local build.
+.swift-toolchain-stamp

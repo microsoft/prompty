@@ -1,0 +1,66 @@
+name: prompty Swift build and test
+
+on:
+  pull_request:
+    paths:
+      - 'runtime/swift/**'
+      # The Swift tests are validated against the shared cross-runtime vectors,
+      # so a spec change must re-run them.
+      - 'spec/**'
+      - '.github/workflows/prompty-swift-check.yml'
+
+  workflow_call:
+
+jobs:
+  swift-tests:
+    name: test Swift on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: runtime/swift/prompty
+    steps:
+      - uses: actions/checkout@v5
+
+      # macOS runners ship Swift with Xcode; only Linux needs a toolchain.
+      - name: Install Swift toolchain
+        if: runner.os == 'Linux'
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '6.0'
+
+      # Stamped into the cache key below so a runner-image or toolchain change
+      # can never restore build artifacts produced by a different compiler.
+      - name: Show Swift version
+        run: swift --version | tee "$GITHUB_WORKSPACE/.swift-toolchain-stamp"
+
+      # defaults.run.working-directory does not apply to `uses:` steps, so this
+      # path is repo-root relative. Package.resolved is untracked, so the key
+      # covers the manifests and the toolchain instead.
+      - name: Cache SwiftPM build
+        uses: actions/cache@v5
+        with:
+          path: runtime/swift/prompty/.build
+          key: ${{ runner.os }}-swiftpm-${{ hashFiles('.swift-toolchain-stamp', 'runtime/swift/**/Package.swift') }}
+
+      # Builds PromptyModel transitively via the ../prompty-model path
+      # dependency, so generated model code is compiled here too.
+      - name: Build with tests
+        run: swift build --build-tests
+
+      # LiveOpenAITests skip themselves when OPENAI_API_KEY is unset, so this
+      # stays hermetic on CI while still running end to end locally.
+      - name: Run tests
+        run: swift test
+
+      # Only the hand-written runtime is linted. The generated PromptyModel
+      # sources are the emitter's output, not ours to reformat -- they happen
+      # to pass today, but a formatting change upstream must not break CI.
+      - name: Check formatting
+        if: runner.os == 'Linux'
+        run: swift format lint --strict --recursive Sources Tests

@@ -10032,6 +10032,2055 @@
       ]
     },
     {
+      "target": "swift",
+      "outputRoot": "../runtime/swift/prompty-model",
+      "packageName": "PromptyModel",
+      "rootExports": [
+        "AiResourceInfo",
+        "AnonymousConnection",
+        "AnthropicImageBlock",
+        "AnthropicImageSource",
+        "AnthropicMessagesRequest",
+        "AnthropicMessagesResponse",
+        "AnthropicTextBlock",
+        "AnthropicToolDefinition",
+        "AnthropicToolResultBlock",
+        "AnthropicToolUseBlock",
+        "AnthropicUsage",
+        "AnthropicWireMessage",
+        "ApiKeyConnection",
+        "ArrayProperty",
+        "AudioPart",
+        "AuthorizationCodeFlow",
+        "Binding",
+        "Checkpoint",
+        "CheckpointStore",
+        "CompactionCompletePayload",
+        "CompactionConfig",
+        "CompactionFailedPayload",
+        "CompactionStartPayload",
+        "Connection",
+        "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
+        "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
+        "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineEvent",
+        "EnginePermissionDecision",
+        "ErrorChunk",
+        "ErrorEventPayload",
+        "EventJournalWriter",
+        "EventSink",
+        "Executor",
+        "FileNotFoundError",
+        "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
+        "FormatConfig",
+        "FoundryConnection",
+        "FunctionTool",
+        "GuardrailResult",
+        "HarnessContext",
+        "HookEndPayload",
+        "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
+        "HostToolExecutor",
+        "HostToolRequest",
+        "HostToolResult",
+        "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
+        "InvokerError",
+        "LlmCompletePayload",
+        "LlmStartPayload",
+        "McpApprovalMode",
+        "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
+        "Message",
+        "MessagesUpdatedPayload",
+        "Model",
+        "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
+        "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
+        "OAuthConnection",
+        "OAuthToken",
+        "ObjectProperty",
+        "OpenApiTool",
+        "Parser",
+        "ParserConfig",
+        "PermissionCompletedPayload",
+        "PermissionDecision",
+        "PermissionRequest",
+        "PermissionRequestedPayload",
+        "PermissionResolver",
+        "Processor",
+        "ProjectInfo",
+        "Prompty",
+        "PromptyTool",
+        "Property",
+        "RedactedField",
+        "RedactionMetadata",
+        "ReferenceConnection",
+        "RemoteConnection",
+        "Renderer",
+        "ReplayJournalRecord",
+        "ReplayMismatch",
+        "ReplayVerificationRequest",
+        "ReplayVerificationResult",
+        "ResumeContext",
+        "RetryPayload",
+        "RetryPolicyRequest",
+        "RunTurnRequest",
+        "RunTurnResult",
+        "SessionEndPayload",
+        "SessionEvent",
+        "SessionFileRef",
+        "SessionRef",
+        "SessionStartPayload",
+        "SessionSummary",
+        "SessionTrace",
+        "SessionWarningPayload",
+        "StatusEventPayload",
+        "StreamChunk",
+        "StreamOptions",
+        "SubscriptionInfo",
+        "Template",
+        "TextChunk",
+        "TextPart",
+        "ThinkingChunk",
+        "ThinkingEventPayload",
+        "ThreadMarker",
+        "TokenEventPayload",
+        "TokenUsage",
+        "Tool",
+        "ToolCall",
+        "ToolCallCompletePayload",
+        "ToolCallStartPayload",
+        "ToolChunk",
+        "ToolContext",
+        "ToolDispatchResult",
+        "ToolExecutionCompletePayload",
+        "ToolExecutionStartPayload",
+        "ToolResult",
+        "ToolResultPayload",
+        "TraceFile",
+        "TraceSpan",
+        "TraceTime",
+        "TrajectoryEvent",
+        "TurnCommit",
+        "TurnEndPayload",
+        "TurnEngineResult",
+        "TurnEvent",
+        "TurnModelRequest",
+        "TurnModelResponse",
+        "TurnOptions",
+        "TurnStartPayload",
+        "TurnSummary",
+        "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
+        "ValidationError",
+        "ValidationResult"
+      ],
+      "exports": [
+        {
+          "name": "GuardrailResult",
+          "kind": "value",
+          "group": "agent",
+          "source": "Sources/PromptyModel/agent/guardrail_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "Prompty",
+          "kind": "value",
+          "group": "agent",
+          "source": "Sources/PromptyModel/agent/prompty.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnonymousConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "ApiKeyConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/authorization_code_flow.swift",
+          "protocol": false
+        },
+        {
+          "name": "Connection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/device_authorization.swift",
+          "protocol": false
+        },
+        {
+          "name": "FoundryConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "OAuthConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/o_auth_token.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReferenceConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "RemoteConnection",
+          "kind": "value",
+          "group": "connection",
+          "source": "Sources/PromptyModel/connection/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "AudioPart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "ContentPart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "FilePart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "ImagePart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "Message",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/message.swift",
+          "protocol": false
+        },
+        {
+          "name": "TextPart",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "ThreadMarker",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/thread_marker.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolCall",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/tool_call.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolResult",
+          "kind": "value",
+          "group": "conversation",
+          "source": "Sources/PromptyModel/conversation/tool_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "ArrayProperty",
+          "kind": "value",
+          "group": "core",
+          "source": "Sources/PromptyModel/core/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "FileNotFoundError",
+          "kind": "value",
+          "group": "core",
+          "source": "Sources/PromptyModel/core/file_not_found_error.swift",
+          "protocol": false
+        },
+        {
+          "name": "InvokerError",
+          "kind": "value",
+          "group": "core",
+          "source": "Sources/PromptyModel/core/invoker_error.swift",
+          "protocol": false
+        },
+        {
+          "name": "ObjectProperty",
+          "kind": "value",
+          "group": "core",
+          "source": "Sources/PromptyModel/core/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "Property",
+          "kind": "value",
+          "group": "core",
+          "source": "Sources/PromptyModel/core/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
+          "kind": "value",
+          "group": "core",
+          "source": "Sources/PromptyModel/core/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "ValidationError",
+          "kind": "value",
+          "group": "core",
+          "source": "Sources/PromptyModel/core/validation_error.swift",
+          "protocol": false
+        },
+        {
+          "name": "ValidationResult",
+          "kind": "value",
+          "group": "core",
+          "source": "Sources/PromptyModel/core/validation_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "Checkpoint",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/checkpoint.swift",
+          "protocol": false
+        },
+        {
+          "name": "CompactionCompletePayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/compaction_complete_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "CompactionFailedPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/compaction_failed_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "CompactionStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/compaction_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "DoneEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/done_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ErrorChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "ErrorEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/error_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "HarnessContext",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/harness_context.swift",
+          "protocol": false
+        },
+        {
+          "name": "HookEndPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/hook_end_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "HookStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/hook_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostToolRequest",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/host_tool_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostToolResult",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/host_tool_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "LlmCompletePayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/llm_complete_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "LlmStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/llm_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "MessagesUpdatedPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/messages_updated_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "PermissionCompletedPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/permission_completed_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "PermissionDecision",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/permission_decision.swift",
+          "protocol": false
+        },
+        {
+          "name": "PermissionRequest",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/permission_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "PermissionRequestedPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/permission_requested_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "RedactedField",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/redacted_field.swift",
+          "protocol": false
+        },
+        {
+          "name": "RedactionMetadata",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/redaction_metadata.swift",
+          "protocol": false
+        },
+        {
+          "name": "RetryPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/retry_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionEndPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/session_end_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionEvent",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/session_event.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionFileRef",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/session_file_ref.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionRef",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/session_ref.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/session_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionSummary",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/session_summary.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionTrace",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/session_trace.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionWarningPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/session_warning_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "StatusEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/status_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "StreamChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "TextChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "ThinkingChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "ThinkingEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/thinking_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "TokenEventPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/token_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolCallCompletePayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/tool_call_complete_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolCallStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/tool_call_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolExecutionCompletePayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/tool_execution_complete_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolExecutionStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/tool_execution_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolResultPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/tool_result_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "TrajectoryEvent",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/trajectory_event.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnEndPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/turn_end_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnEvent",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/turn_event.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnStartPayload",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/turn_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnSummary",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/turn_summary.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnTrace",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/turn_trace.swift",
+          "protocol": false
+        },
+        {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "events",
+          "source": "Sources/PromptyModel/events/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "memory",
+          "source": "Sources/PromptyModel/memory/memory_entry.swift",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "memory",
+          "source": "Sources/PromptyModel/memory/memory_store.swift",
+          "protocol": false
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/ai_resource_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/invocation_usage.swift",
+          "protocol": false
+        },
+        {
+          "name": "Model",
+          "kind": "value",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/model.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/model_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/model_lister.swift",
+          "protocol": true
+        },
+        {
+          "name": "ModelOptions",
+          "kind": "value",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/model_options.swift",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/project_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/subscription_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "TokenUsage",
+          "kind": "value",
+          "group": "model",
+          "source": "Sources/PromptyModel/model/token_usage.swift",
+          "protocol": false
+        },
+        {
+          "name": "CheckpointStore",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/checkpoint_store.swift",
+          "protocol": true
+        },
+        {
+          "name": "CompactionConfig",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/compaction_config.swift",
+          "protocol": false
+        },
+        {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/context_candidate.swift",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/context_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/delegated_state_reference.swift",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/engine_checkpoint.swift",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/engine_event.swift",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/engine_permission_decision.swift",
+          "protocol": false
+        },
+        {
+          "name": "EventJournalWriter",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/event_journal_writer.swift",
+          "protocol": true
+        },
+        {
+          "name": "EventSink",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/event_sink.swift",
+          "protocol": true
+        },
+        {
+          "name": "Executor",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/executor.swift",
+          "protocol": true
+        },
+        {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/final_output_policy_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/final_output_policy_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/host_policy_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/host_policy_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostToolExecutor",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/host_tool_executor.swift",
+          "protocol": true
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/invocation_context_decision.swift",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/invocation_context_state.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/model_invocation_context_snapshot.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/model_invocation_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/model_invocation_response.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/model_reconciliation_state.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/model_tool_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/model_tool_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "Parser",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/parser.swift",
+          "protocol": true
+        },
+        {
+          "name": "PermissionResolver",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/permission_resolver.swift",
+          "protocol": true
+        },
+        {
+          "name": "Processor",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/processor.swift",
+          "protocol": true
+        },
+        {
+          "name": "Renderer",
+          "kind": "type",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/renderer.swift",
+          "protocol": true
+        },
+        {
+          "name": "ReplayJournalRecord",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/replay_journal_record.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReplayMismatch",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/replay_mismatch.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReplayVerificationRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/replay_verification_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReplayVerificationResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/replay_verification_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/resume_context.swift",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/retry_policy_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "RunTurnRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/run_turn_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "RunTurnResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/run_turn_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/turn_commit.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/turn_engine_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnModelRequest",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/turn_model_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnModelResponse",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/turn_model_response.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnOptions",
+          "kind": "value",
+          "group": "pipeline",
+          "source": "Sources/PromptyModel/pipeline/turn_options.swift",
+          "protocol": false
+        },
+        {
+          "name": "StreamOptions",
+          "kind": "value",
+          "group": "streaming",
+          "source": "Sources/PromptyModel/streaming/stream_options.swift",
+          "protocol": false
+        },
+        {
+          "name": "FormatConfig",
+          "kind": "value",
+          "group": "template",
+          "source": "Sources/PromptyModel/template/format_config.swift",
+          "protocol": false
+        },
+        {
+          "name": "ParserConfig",
+          "kind": "value",
+          "group": "template",
+          "source": "Sources/PromptyModel/template/parser_config.swift",
+          "protocol": false
+        },
+        {
+          "name": "Template",
+          "kind": "value",
+          "group": "template",
+          "source": "Sources/PromptyModel/template/template.swift",
+          "protocol": false
+        },
+        {
+          "name": "Binding",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/binding.swift",
+          "protocol": false
+        },
+        {
+          "name": "CustomTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "FunctionTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "McpApprovalMode",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/mcp_approval_mode.swift",
+          "protocol": false
+        },
+        {
+          "name": "McpTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "OpenApiTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "PromptyTool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "Tool",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolContext",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/tool_context.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolDispatchResult",
+          "kind": "value",
+          "group": "tools",
+          "source": "Sources/PromptyModel/tools/tool_dispatch_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "TraceFile",
+          "kind": "value",
+          "group": "tracing",
+          "source": "Sources/PromptyModel/tracing/trace_file.swift",
+          "protocol": false
+        },
+        {
+          "name": "TraceSpan",
+          "kind": "value",
+          "group": "tracing",
+          "source": "Sources/PromptyModel/tracing/trace_span.swift",
+          "protocol": false
+        },
+        {
+          "name": "TraceTime",
+          "kind": "value",
+          "group": "tracing",
+          "source": "Sources/PromptyModel/tracing/trace_time.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicImageBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_image_block.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicImageSource",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_image_source.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicMessagesRequest",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_messages_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicMessagesResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_messages_response.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicTextBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_text_block.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolDefinition",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_tool_definition.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolResultBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_tool_result_block.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolUseBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_tool_use_block.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicUsage",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_usage.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicWireMessage",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_wire_message.swift",
+          "protocol": false
+        }
+      ],
+      "groups": [
+        {
+          "name": "agent",
+          "exports": [
+            "GuardrailResult",
+            "Prompty"
+          ],
+          "modules": [
+            "guardrail_result.swift",
+            "prompty.swift"
+          ]
+        },
+        {
+          "name": "connection",
+          "exports": [
+            "AnonymousConnection",
+            "ApiKeyConnection",
+            "AuthorizationCodeFlow",
+            "Connection",
+            "DeviceAuthorization",
+            "FoundryConnection",
+            "OAuthConnection",
+            "OAuthToken",
+            "ReferenceConnection",
+            "RemoteConnection"
+          ],
+          "modules": [
+            "authorization_code_flow.swift",
+            "connection.swift",
+            "device_authorization.swift",
+            "o_auth_token.swift"
+          ]
+        },
+        {
+          "name": "conversation",
+          "exports": [
+            "AudioPart",
+            "ContentPart",
+            "FilePart",
+            "ImagePart",
+            "Message",
+            "TextPart",
+            "ThreadMarker",
+            "ToolCall",
+            "ToolResult"
+          ],
+          "modules": [
+            "content_part.swift",
+            "message.swift",
+            "thread_marker.swift",
+            "tool_call.swift",
+            "tool_result.swift"
+          ]
+        },
+        {
+          "name": "core",
+          "exports": [
+            "ArrayProperty",
+            "FileNotFoundError",
+            "InvokerError",
+            "ObjectProperty",
+            "Property",
+            "UnionProperty",
+            "ValidationError",
+            "ValidationResult"
+          ],
+          "modules": [
+            "file_not_found_error.swift",
+            "invoker_error.swift",
+            "property.swift",
+            "validation_error.swift",
+            "validation_result.swift"
+          ]
+        },
+        {
+          "name": "events",
+          "exports": [
+            "Checkpoint",
+            "CompactionCompletePayload",
+            "CompactionFailedPayload",
+            "CompactionStartPayload",
+            "DoneEventPayload",
+            "ErrorChunk",
+            "ErrorEventPayload",
+            "HarnessContext",
+            "HookEndPayload",
+            "HookStartPayload",
+            "HostToolRequest",
+            "HostToolResult",
+            "LlmCompletePayload",
+            "LlmStartPayload",
+            "MessagesUpdatedPayload",
+            "PermissionCompletedPayload",
+            "PermissionDecision",
+            "PermissionRequest",
+            "PermissionRequestedPayload",
+            "RedactedField",
+            "RedactionMetadata",
+            "RetryPayload",
+            "SessionEndPayload",
+            "SessionEvent",
+            "SessionFileRef",
+            "SessionRef",
+            "SessionStartPayload",
+            "SessionSummary",
+            "SessionTrace",
+            "SessionWarningPayload",
+            "StatusEventPayload",
+            "StreamChunk",
+            "TextChunk",
+            "ThinkingChunk",
+            "ThinkingEventPayload",
+            "TokenEventPayload",
+            "ToolCallCompletePayload",
+            "ToolCallStartPayload",
+            "ToolChunk",
+            "ToolExecutionCompletePayload",
+            "ToolExecutionStartPayload",
+            "ToolResultPayload",
+            "TrajectoryEvent",
+            "TurnEndPayload",
+            "TurnEvent",
+            "TurnStartPayload",
+            "TurnSummary",
+            "TurnTrace",
+            "UsageChunk"
+          ],
+          "modules": [
+            "checkpoint.swift",
+            "compaction_complete_payload.swift",
+            "compaction_failed_payload.swift",
+            "compaction_start_payload.swift",
+            "done_event_payload.swift",
+            "error_event_payload.swift",
+            "harness_context.swift",
+            "hook_end_payload.swift",
+            "hook_start_payload.swift",
+            "host_tool_request.swift",
+            "host_tool_result.swift",
+            "llm_complete_payload.swift",
+            "llm_start_payload.swift",
+            "messages_updated_payload.swift",
+            "permission_completed_payload.swift",
+            "permission_decision.swift",
+            "permission_request.swift",
+            "permission_requested_payload.swift",
+            "redacted_field.swift",
+            "redaction_metadata.swift",
+            "retry_payload.swift",
+            "session_end_payload.swift",
+            "session_event.swift",
+            "session_file_ref.swift",
+            "session_ref.swift",
+            "session_start_payload.swift",
+            "session_summary.swift",
+            "session_trace.swift",
+            "session_warning_payload.swift",
+            "status_event_payload.swift",
+            "stream_chunk.swift",
+            "thinking_event_payload.swift",
+            "token_event_payload.swift",
+            "tool_call_complete_payload.swift",
+            "tool_call_start_payload.swift",
+            "tool_execution_complete_payload.swift",
+            "tool_execution_start_payload.swift",
+            "tool_result_payload.swift",
+            "trajectory_event.swift",
+            "turn_end_payload.swift",
+            "turn_event.swift",
+            "turn_start_payload.swift",
+            "turn_summary.swift",
+            "turn_trace.swift"
+          ]
+        },
+        {
+          "name": "memory",
+          "exports": [
+            "MemoryEntry",
+            "MemoryStore"
+          ],
+          "modules": [
+            "memory_entry.swift",
+            "memory_store.swift"
+          ]
+        },
+        {
+          "name": "model",
+          "exports": [
+            "AiResourceInfo",
+            "InvocationUsage",
+            "Model",
+            "ModelInfo",
+            "ModelLister",
+            "ModelOptions",
+            "ProjectInfo",
+            "SubscriptionInfo",
+            "TokenUsage"
+          ],
+          "modules": [
+            "ai_resource_info.swift",
+            "invocation_usage.swift",
+            "model.swift",
+            "model_info.swift",
+            "model_lister.swift",
+            "model_options.swift",
+            "project_info.swift",
+            "subscription_info.swift",
+            "token_usage.swift"
+          ]
+        },
+        {
+          "name": "pipeline",
+          "exports": [
+            "CheckpointStore",
+            "CompactionConfig",
+            "ContextCandidate",
+            "ContextRequest",
+            "DelegatedStateReference",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
+            "EventJournalWriter",
+            "EventSink",
+            "Executor",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "HostPolicyRequest",
+            "HostPolicyResult",
+            "HostToolExecutor",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
+            "Parser",
+            "PermissionResolver",
+            "Processor",
+            "Renderer",
+            "ReplayJournalRecord",
+            "ReplayMismatch",
+            "ReplayVerificationRequest",
+            "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPolicyRequest",
+            "RunTurnRequest",
+            "RunTurnResult",
+            "TurnCommit",
+            "TurnEngineResult",
+            "TurnModelRequest",
+            "TurnModelResponse",
+            "TurnOptions"
+          ],
+          "modules": [
+            "checkpoint_store.swift",
+            "compaction_config.swift",
+            "context_candidate.swift",
+            "context_request.swift",
+            "delegated_state_reference.swift",
+            "engine_checkpoint.swift",
+            "engine_event.swift",
+            "engine_permission_decision.swift",
+            "event_journal_writer.swift",
+            "event_sink.swift",
+            "executor.swift",
+            "final_output_policy_request.swift",
+            "final_output_policy_result.swift",
+            "host_policy_request.swift",
+            "host_policy_result.swift",
+            "host_tool_executor.swift",
+            "invocation_context_decision.swift",
+            "invocation_context_state.swift",
+            "model_invocation_context_snapshot.swift",
+            "model_invocation_request.swift",
+            "model_invocation_response.swift",
+            "model_reconciliation_state.swift",
+            "model_tool_request.swift",
+            "model_tool_result.swift",
+            "parser.swift",
+            "permission_resolver.swift",
+            "processor.swift",
+            "renderer.swift",
+            "replay_journal_record.swift",
+            "replay_mismatch.swift",
+            "replay_verification_request.swift",
+            "replay_verification_result.swift",
+            "resume_context.swift",
+            "retry_policy_request.swift",
+            "run_turn_request.swift",
+            "run_turn_result.swift",
+            "turn_commit.swift",
+            "turn_engine_result.swift",
+            "turn_model_request.swift",
+            "turn_model_response.swift",
+            "turn_options.swift"
+          ]
+        },
+        {
+          "name": "streaming",
+          "exports": [
+            "StreamOptions"
+          ],
+          "modules": [
+            "stream_options.swift"
+          ]
+        },
+        {
+          "name": "template",
+          "exports": [
+            "FormatConfig",
+            "ParserConfig",
+            "Template"
+          ],
+          "modules": [
+            "format_config.swift",
+            "parser_config.swift",
+            "template.swift"
+          ]
+        },
+        {
+          "name": "tools",
+          "exports": [
+            "Binding",
+            "CustomTool",
+            "FunctionTool",
+            "McpApprovalMode",
+            "McpTool",
+            "OpenApiTool",
+            "PromptyTool",
+            "Tool",
+            "ToolContext",
+            "ToolDispatchResult"
+          ],
+          "modules": [
+            "binding.swift",
+            "mcp_approval_mode.swift",
+            "tool.swift",
+            "tool_context.swift",
+            "tool_dispatch_result.swift"
+          ]
+        },
+        {
+          "name": "tracing",
+          "exports": [
+            "TraceFile",
+            "TraceSpan",
+            "TraceTime"
+          ],
+          "modules": [
+            "trace_file.swift",
+            "trace_span.swift",
+            "trace_time.swift"
+          ]
+        },
+        {
+          "name": "wire",
+          "exports": [
+            "AnthropicImageBlock",
+            "AnthropicImageSource",
+            "AnthropicMessagesRequest",
+            "AnthropicMessagesResponse",
+            "AnthropicTextBlock",
+            "AnthropicToolDefinition",
+            "AnthropicToolResultBlock",
+            "AnthropicToolUseBlock",
+            "AnthropicUsage",
+            "AnthropicWireMessage"
+          ],
+          "modules": [
+            "anthropic_image_block.swift",
+            "anthropic_image_source.swift",
+            "anthropic_messages_request.swift",
+            "anthropic_messages_response.swift",
+            "anthropic_text_block.swift",
+            "anthropic_tool_definition.swift",
+            "anthropic_tool_result_block.swift",
+            "anthropic_tool_use_block.swift",
+            "anthropic_usage.swift",
+            "anthropic_wire_message.swift"
+          ]
+        }
+      ],
+      "protocols": [
+        {
+          "name": "ModelLister",
+          "group": "model",
+          "symbol": "ModelLister",
+          "source": "Sources/PromptyModel/model/model_lister.swift",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "CheckpointStore",
+          "group": "pipeline",
+          "symbol": "CheckpointStore",
+          "source": "Sources/PromptyModel/pipeline/checkpoint_store.swift",
+          "methods": [
+            {
+              "name": "listCheckpoints",
+              "returns": "Checkpoint[]",
+              "params": {
+                "sessionId": "string"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "load",
+              "returns": "Checkpoint?",
+              "params": {
+                "checkpointId": "string",
+                "sessionId": "string"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "save",
+              "returns": "Checkpoint",
+              "params": {
+                "checkpoint": "Checkpoint"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "EventJournalWriter",
+          "group": "pipeline",
+          "symbol": "EventJournalWriter",
+          "source": "Sources/PromptyModel/pipeline/event_journal_writer.swift",
+          "methods": [
+            {
+              "name": "appendSession",
+              "returns": "boolean",
+              "params": {
+                "sessionEvent": "SessionEvent"
+              },
+              "optional": false,
+              "sync": true
+            },
+            {
+              "name": "appendTurn",
+              "returns": "boolean",
+              "params": {
+                "turnEvent": "TurnEvent"
+              },
+              "optional": false,
+              "sync": true
+            },
+            {
+              "name": "close",
+              "returns": "boolean",
+              "params": {
+                "summary": "SessionSummary?"
+              },
+              "optional": false,
+              "sync": true
+            }
+          ]
+        },
+        {
+          "name": "EventSink",
+          "group": "pipeline",
+          "symbol": "EventSink",
+          "source": "Sources/PromptyModel/pipeline/event_sink.swift",
+          "methods": [
+            {
+              "name": "emitSession",
+              "returns": "boolean",
+              "params": {
+                "sessionEvent": "SessionEvent"
+              },
+              "optional": false,
+              "sync": true
+            },
+            {
+              "name": "emitTurn",
+              "returns": "boolean",
+              "params": {
+                "turnEvent": "TurnEvent"
+              },
+              "optional": false,
+              "sync": true
+            }
+          ]
+        },
+        {
+          "name": "Executor",
+          "group": "pipeline",
+          "symbol": "Executor",
+          "source": "Sources/PromptyModel/pipeline/executor.swift",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "unknown",
+              "params": {
+                "agent": "Prompty",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "executeStream",
+              "returns": "unknown",
+              "params": {
+                "agent": "Prompty",
+                "messages": "Message[]"
+              },
+              "optional": true,
+              "sync": false
+            },
+            {
+              "name": "formatToolMessages",
+              "returns": "Message[]",
+              "params": {
+                "rawResponse": "unknown",
+                "textContent": "string?",
+                "toolCalls": "ToolCall[]",
+                "toolResults": "string[]"
+              },
+              "optional": false,
+              "sync": true
+            }
+          ]
+        },
+        {
+          "name": "HostToolExecutor",
+          "group": "pipeline",
+          "symbol": "HostToolExecutor",
+          "source": "Sources/PromptyModel/pipeline/host_tool_executor.swift",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "HostToolResult",
+              "params": {
+                "request": "HostToolRequest"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "Parser",
+          "group": "pipeline",
+          "symbol": "Parser",
+          "source": "Sources/PromptyModel/pipeline/parser.swift",
+          "methods": [
+            {
+              "name": "parse",
+              "returns": "Message[]",
+              "params": {
+                "agent": "Prompty",
+                "context": "Record<unknown>?",
+                "rendered": "string"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "preRender",
+              "returns": "unknown?",
+              "params": {
+                "template": "string"
+              },
+              "optional": true,
+              "sync": true
+            }
+          ]
+        },
+        {
+          "name": "PermissionResolver",
+          "group": "pipeline",
+          "symbol": "PermissionResolver",
+          "source": "Sources/PromptyModel/pipeline/permission_resolver.swift",
+          "methods": [
+            {
+              "name": "request",
+              "returns": "PermissionDecision",
+              "params": {
+                "request": "PermissionRequest"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "Processor",
+          "group": "pipeline",
+          "symbol": "Processor",
+          "source": "Sources/PromptyModel/pipeline/processor.swift",
+          "methods": [
+            {
+              "name": "process",
+              "returns": "unknown",
+              "params": {
+                "agent": "Prompty",
+                "response": "unknown"
+              },
+              "optional": false,
+              "sync": false
+            },
+            {
+              "name": "processStream",
+              "returns": "unknown",
+              "params": {
+                "stream": "unknown"
+              },
+              "optional": true,
+              "sync": false
+            }
+          ]
+        },
+        {
+          "name": "Renderer",
+          "group": "pipeline",
+          "symbol": "Renderer",
+          "source": "Sources/PromptyModel/pipeline/renderer.swift",
+          "methods": [
+            {
+              "name": "render",
+              "returns": "string",
+              "params": {
+                "agent": "Prompty",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false
+            }
+          ]
+        }
+      ],
+      "modules": [
+        "Sources/PromptyModel/agent/guardrail_result.swift",
+        "Sources/PromptyModel/agent/prompty.swift",
+        "Sources/PromptyModel/connection/authorization_code_flow.swift",
+        "Sources/PromptyModel/connection/connection.swift",
+        "Sources/PromptyModel/connection/device_authorization.swift",
+        "Sources/PromptyModel/connection/o_auth_token.swift",
+        "Sources/PromptyModel/conversation/content_part.swift",
+        "Sources/PromptyModel/conversation/message.swift",
+        "Sources/PromptyModel/conversation/thread_marker.swift",
+        "Sources/PromptyModel/conversation/tool_call.swift",
+        "Sources/PromptyModel/conversation/tool_result.swift",
+        "Sources/PromptyModel/core/file_not_found_error.swift",
+        "Sources/PromptyModel/core/invoker_error.swift",
+        "Sources/PromptyModel/core/property.swift",
+        "Sources/PromptyModel/core/validation_error.swift",
+        "Sources/PromptyModel/core/validation_result.swift",
+        "Sources/PromptyModel/events/checkpoint.swift",
+        "Sources/PromptyModel/events/compaction_complete_payload.swift",
+        "Sources/PromptyModel/events/compaction_failed_payload.swift",
+        "Sources/PromptyModel/events/compaction_start_payload.swift",
+        "Sources/PromptyModel/events/done_event_payload.swift",
+        "Sources/PromptyModel/events/error_event_payload.swift",
+        "Sources/PromptyModel/events/harness_context.swift",
+        "Sources/PromptyModel/events/hook_end_payload.swift",
+        "Sources/PromptyModel/events/hook_start_payload.swift",
+        "Sources/PromptyModel/events/host_tool_request.swift",
+        "Sources/PromptyModel/events/host_tool_result.swift",
+        "Sources/PromptyModel/events/llm_complete_payload.swift",
+        "Sources/PromptyModel/events/llm_start_payload.swift",
+        "Sources/PromptyModel/events/messages_updated_payload.swift",
+        "Sources/PromptyModel/events/permission_completed_payload.swift",
+        "Sources/PromptyModel/events/permission_decision.swift",
+        "Sources/PromptyModel/events/permission_request.swift",
+        "Sources/PromptyModel/events/permission_requested_payload.swift",
+        "Sources/PromptyModel/events/redacted_field.swift",
+        "Sources/PromptyModel/events/redaction_metadata.swift",
+        "Sources/PromptyModel/events/retry_payload.swift",
+        "Sources/PromptyModel/events/session_end_payload.swift",
+        "Sources/PromptyModel/events/session_event.swift",
+        "Sources/PromptyModel/events/session_file_ref.swift",
+        "Sources/PromptyModel/events/session_ref.swift",
+        "Sources/PromptyModel/events/session_start_payload.swift",
+        "Sources/PromptyModel/events/session_summary.swift",
+        "Sources/PromptyModel/events/session_trace.swift",
+        "Sources/PromptyModel/events/session_warning_payload.swift",
+        "Sources/PromptyModel/events/status_event_payload.swift",
+        "Sources/PromptyModel/events/stream_chunk.swift",
+        "Sources/PromptyModel/events/thinking_event_payload.swift",
+        "Sources/PromptyModel/events/token_event_payload.swift",
+        "Sources/PromptyModel/events/tool_call_complete_payload.swift",
+        "Sources/PromptyModel/events/tool_call_start_payload.swift",
+        "Sources/PromptyModel/events/tool_execution_complete_payload.swift",
+        "Sources/PromptyModel/events/tool_execution_start_payload.swift",
+        "Sources/PromptyModel/events/tool_result_payload.swift",
+        "Sources/PromptyModel/events/trajectory_event.swift",
+        "Sources/PromptyModel/events/turn_end_payload.swift",
+        "Sources/PromptyModel/events/turn_event.swift",
+        "Sources/PromptyModel/events/turn_start_payload.swift",
+        "Sources/PromptyModel/events/turn_summary.swift",
+        "Sources/PromptyModel/events/turn_trace.swift",
+        "Sources/PromptyModel/memory/memory_entry.swift",
+        "Sources/PromptyModel/memory/memory_store.swift",
+        "Sources/PromptyModel/model/ai_resource_info.swift",
+        "Sources/PromptyModel/model/invocation_usage.swift",
+        "Sources/PromptyModel/model/model.swift",
+        "Sources/PromptyModel/model/model_info.swift",
+        "Sources/PromptyModel/model/model_lister.swift",
+        "Sources/PromptyModel/model/model_options.swift",
+        "Sources/PromptyModel/model/project_info.swift",
+        "Sources/PromptyModel/model/subscription_info.swift",
+        "Sources/PromptyModel/model/token_usage.swift",
+        "Sources/PromptyModel/pipeline/checkpoint_store.swift",
+        "Sources/PromptyModel/pipeline/compaction_config.swift",
+        "Sources/PromptyModel/pipeline/context_candidate.swift",
+        "Sources/PromptyModel/pipeline/context_request.swift",
+        "Sources/PromptyModel/pipeline/delegated_state_reference.swift",
+        "Sources/PromptyModel/pipeline/engine_checkpoint.swift",
+        "Sources/PromptyModel/pipeline/engine_event.swift",
+        "Sources/PromptyModel/pipeline/engine_permission_decision.swift",
+        "Sources/PromptyModel/pipeline/event_journal_writer.swift",
+        "Sources/PromptyModel/pipeline/event_sink.swift",
+        "Sources/PromptyModel/pipeline/executor.swift",
+        "Sources/PromptyModel/pipeline/final_output_policy_request.swift",
+        "Sources/PromptyModel/pipeline/final_output_policy_result.swift",
+        "Sources/PromptyModel/pipeline/host_policy_request.swift",
+        "Sources/PromptyModel/pipeline/host_policy_result.swift",
+        "Sources/PromptyModel/pipeline/host_tool_executor.swift",
+        "Sources/PromptyModel/pipeline/invocation_context_decision.swift",
+        "Sources/PromptyModel/pipeline/invocation_context_state.swift",
+        "Sources/PromptyModel/pipeline/model_invocation_context_snapshot.swift",
+        "Sources/PromptyModel/pipeline/model_invocation_request.swift",
+        "Sources/PromptyModel/pipeline/model_invocation_response.swift",
+        "Sources/PromptyModel/pipeline/model_reconciliation_state.swift",
+        "Sources/PromptyModel/pipeline/model_tool_request.swift",
+        "Sources/PromptyModel/pipeline/model_tool_result.swift",
+        "Sources/PromptyModel/pipeline/parser.swift",
+        "Sources/PromptyModel/pipeline/permission_resolver.swift",
+        "Sources/PromptyModel/pipeline/processor.swift",
+        "Sources/PromptyModel/pipeline/renderer.swift",
+        "Sources/PromptyModel/pipeline/replay_journal_record.swift",
+        "Sources/PromptyModel/pipeline/replay_mismatch.swift",
+        "Sources/PromptyModel/pipeline/replay_verification_request.swift",
+        "Sources/PromptyModel/pipeline/replay_verification_result.swift",
+        "Sources/PromptyModel/pipeline/resume_context.swift",
+        "Sources/PromptyModel/pipeline/retry_policy_request.swift",
+        "Sources/PromptyModel/pipeline/run_turn_request.swift",
+        "Sources/PromptyModel/pipeline/run_turn_result.swift",
+        "Sources/PromptyModel/pipeline/turn_commit.swift",
+        "Sources/PromptyModel/pipeline/turn_engine_result.swift",
+        "Sources/PromptyModel/pipeline/turn_model_request.swift",
+        "Sources/PromptyModel/pipeline/turn_model_response.swift",
+        "Sources/PromptyModel/pipeline/turn_options.swift",
+        "Sources/PromptyModel/streaming/stream_options.swift",
+        "Sources/PromptyModel/template/format_config.swift",
+        "Sources/PromptyModel/template/parser_config.swift",
+        "Sources/PromptyModel/template/template.swift",
+        "Sources/PromptyModel/tools/binding.swift",
+        "Sources/PromptyModel/tools/mcp_approval_mode.swift",
+        "Sources/PromptyModel/tools/tool.swift",
+        "Sources/PromptyModel/tools/tool_context.swift",
+        "Sources/PromptyModel/tools/tool_dispatch_result.swift",
+        "Sources/PromptyModel/tracing/trace_file.swift",
+        "Sources/PromptyModel/tracing/trace_span.swift",
+        "Sources/PromptyModel/tracing/trace_time.swift",
+        "Sources/PromptyModel/wire/anthropic_image_block.swift",
+        "Sources/PromptyModel/wire/anthropic_image_source.swift",
+        "Sources/PromptyModel/wire/anthropic_messages_request.swift",
+        "Sources/PromptyModel/wire/anthropic_messages_response.swift",
+        "Sources/PromptyModel/wire/anthropic_text_block.swift",
+        "Sources/PromptyModel/wire/anthropic_tool_definition.swift",
+        "Sources/PromptyModel/wire/anthropic_tool_result_block.swift",
+        "Sources/PromptyModel/wire/anthropic_tool_use_block.swift",
+        "Sources/PromptyModel/wire/anthropic_usage.swift",
+        "Sources/PromptyModel/wire/anthropic_wire_message.swift"
+      ]
+    },
+    {
       "target": "typescript",
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "namespace": "Prompty",

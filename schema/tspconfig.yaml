@@ -32,5 +32,36 @@ options:
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"
         import-path: "prompty::model"
+      - type: Swift
+        output-dir: "../runtime/swift/prompty-model"
+        package-name: "PromptyModel"
+        # test-dir is intentionally omitted: the Typra Swift emitter emits
+        # tests that do not compile. Measured by generating and building
+        # them: 1184 errors at 0.4.3 and 180 at 0.4.8. At 0.4.9, after
+        # probe-patching 48 source errors so the test target could build, the
+        # same 180 test errors remained, in four classes: element-level enum
+        # cases applied to array/optional types (`[Tool]?` has no member
+        # `customTool`), struct-style member access on polymorphic enums
+        # (`Property.kind`, where `Property` is an enum) alongside references
+        # to properties that do not exist (`ApiKeyConnection.key`; the
+        # property is `apiKey`), a typed enum compared against a raw string
+        # (`AuthenticationMode` vs `String`), and mis-cased or unqualified
+        # type references (`mcpApprovalModeKind` and `apiType` for the emitted
+        # `McpApprovalModeKind` and `ApiType`). These are test-generator
+        # defects, disjoint from the source-generator ones fixed in 0.4.3 and
+        # 0.4.6. The library must compile before this is measurable: if it
+        # fails first, the test target is never built and the error count is
+        # misleadingly small. Reported upstream; restore test-dir once fixed.
+        #
+        # The counts above are raw `error:` lines. Later probes report
+        # primary unique errors instead -- deduplicated whole lines, minus
+        # Swift's caret-annotation repeats -- because raw counts swing with
+        # incremental-build caching (the same state measured 392 and 98).
+        # On that normalised basis: 49 across five files at 0.4.5, 45 at
+        # 0.4.9, and 45 at 0.4.10. Do not compare a normalised figure against
+        # the raw ones above; compare failing identities, not counts. At
+        # least four of the ModelTests failures are ours, not the emitter's
+        # -- see the stale `@sample` blocks at model/model/model.tsp L86/L93.
+        # Model round-trip coverage lives in runtime/swift/prompty meanwhile.
       - type: markdown
         output-dir: "../web/src/content/docs/reference"
