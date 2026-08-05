@@ -77,9 +77,9 @@ public partial class Property
     /// </summary>
     public IList<object>? EnumValues { get; set; } = [];
 
-    private Dictionary<string, object?> _raw = new();
+    protected Dictionary<string, object?> _raw = new();
 
-    private static object? CloneRawValue(object? value)
+    protected static object? CloneRawValue(object? value)
     {
         if (value is IDictionary<string, object?> dictionary)
         {
