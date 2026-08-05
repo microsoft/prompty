@@ -307,7 +307,8 @@ async fn public_streaming_turn_cancels_after_open_and_persists_terminal_event() 
     };
     let durability = Arc::new(RecordingDurability::default());
     let mut streaming_agent = agent(provider);
-    streaming_agent.model.options = Some(prompty::model::ModelOptions::load_from_value(
+    streaming_agent.model.as_mut().expect("fixture declares a model").options =
+        Some(prompty::model::ModelOptions::load_from_value(
         &json!({"additionalProperties": {"stream": true}}),
         &LoadContext::default(),
     ));

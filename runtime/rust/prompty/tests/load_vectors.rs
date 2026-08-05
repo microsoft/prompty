@@ -192,14 +192,19 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
     // model
     if let Some(model) = expected.get("model") {
         if model.is_null() {
-            // expected null model → id should be empty (default)
+            // The vector asks for a null model; assert exactly that rather than
+            // inferring it from an empty id.
             assert!(
-                agent.model.id.is_empty(),
-                "[{vec_name}] expected null/empty model, got id='{}'",
-                agent.model.id
+                agent.model.is_none(),
+                "[{vec_name}] expected null model, got id={:?}",
+                agent.model.as_ref().map(|m| m.id.clone())
             );
         } else {
-            validate_model(&agent.model, model, vec_name);
+            let actual = agent
+                .model
+                .as_ref()
+                .unwrap_or_else(|| panic!("[{vec_name}] expected a model, got none"));
+            validate_model(actual, model, vec_name);
         }
     }
 

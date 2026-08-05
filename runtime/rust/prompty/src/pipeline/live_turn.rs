@@ -1251,7 +1251,11 @@ pub(super) async fn turn_with_engine_request(
         events: events.clone(),
         agent_name: Some(agent.name.clone()),
         provider: provider.clone(),
-        model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
+        model_id: agent
+            .model
+            .as_ref()
+            .map(|m| m.id.clone())
+            .filter(|id| !id.is_empty()),
         configured_max_iterations: max_iterations,
         agent_mode,
         persistence,

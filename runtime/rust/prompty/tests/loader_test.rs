@@ -91,21 +91,21 @@ fn test_basic_load() {
         agent.description.as_deref(),
         Some("A basic prompt for testing")
     );
-    assert_eq!(agent.model.id, "gpt-4");
-    assert_eq!(agent.model.provider.as_deref(), Some("openai"));
+    assert_eq!(model_of(&agent).id, "gpt-4");
+    assert_eq!(model_of(&agent).provider.as_deref(), Some("openai"));
     assert_eq!(
-        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        model_of(&agent).api_type.as_ref().map(|t| t.as_str()),
         Some("chat")
     );
 
     // Connection
-    let conn = agent.model.connection.as_object().unwrap();
+    let conn = model_of(&agent).connection.as_object().unwrap();
     assert_eq!(conn["kind"], "key");
     assert_eq!(conn["endpoint"], "https://test.openai.com");
     assert_eq!(conn["apiKey"], "sk-test123");
 
     // Options
-    let opts = agent.model.options.as_ref().unwrap();
+    let opts = model_of(&agent).options.as_ref().unwrap();
     assert!((opts.temperature.unwrap() - 0.7_f32).abs() < f32::EPSILON);
     assert_eq!(opts.max_output_tokens.unwrap(), 1000);
 
@@ -135,7 +135,7 @@ fn test_minimal_load() {
     let agent = load_fixture("minimal.prompty", &[]).unwrap();
 
     assert_eq!(agent.name, "minimal");
-    assert_eq!(agent.model.id, "gpt-4");
+    assert_eq!(model_of(&agent).id, "gpt-4");
     assert_eq!(agent.instructions.as_deref(), Some("system:\nHello world."));
     assert!(agent.as_inputs().is_none());
     assert!(agent.as_outputs().is_none());
@@ -150,7 +150,7 @@ fn test_model_shorthand() {
         "model": "gpt-4o"
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    assert_eq!(agent.model.id, "gpt-4o");
+    assert_eq!(model_of(&agent).id, "gpt-4o");
 }
 
 #[test]
@@ -167,7 +167,7 @@ fn test_env_resolution() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[("MY_VAR", "hello")]).unwrap();
-    let conn = agent.model.connection.as_object().unwrap();
+    let conn = model_of(&agent).connection.as_object().unwrap();
     assert_eq!(conn["endpoint"], "hello");
 }
 
@@ -185,7 +185,7 @@ fn test_env_default() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let conn = agent.model.connection.as_object().unwrap();
+    let conn = model_of(&agent).connection.as_object().unwrap();
     assert_eq!(conn["endpoint"], "fallback_value");
 }
 
@@ -262,7 +262,7 @@ fn test_tools_function_load() {
 
     assert_eq!(agent.name, "function-tools");
     assert_eq!(
-        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        model_of(&agent).api_type.as_ref().map(|t| t.as_str()),
         Some("chat")
     );
 
@@ -311,9 +311,9 @@ fn test_embedding_load() {
     .unwrap();
 
     assert_eq!(agent.name, "embedding");
-    assert_eq!(agent.model.id, "text-embedding-3-small");
+    assert_eq!(model_of(&agent).id, "text-embedding-3-small");
     assert_eq!(
-        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        model_of(&agent).api_type.as_ref().map(|t| t.as_str()),
         Some("embedding")
     );
 }
@@ -344,7 +344,7 @@ fn test_connection_types_load() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let conn = agent.model.connection.as_object().unwrap();
+    let conn = model_of(&agent).connection.as_object().unwrap();
     assert_eq!(conn["kind"], "anonymous");
     assert_eq!(conn["endpoint"], "https://localhost:8080");
 }
@@ -464,4 +464,14 @@ fn test_threaded_load() {
     // Should have a thread-type input
     let thread_input = inputs.iter().find(|i| i.kind_str() == "thread");
     assert!(thread_input.is_some(), "Expected a thread-kind input");
+}
+
+/// Tests in this file all load fixtures that declare a model. `Prompty::model`
+/// is optional (a name-only prompt is valid per load_vectors.json), so unwrap it
+/// once here instead of scattering `.as_ref().unwrap()` through every assertion.
+fn model_of(agent: &prompty::model::prompty::Prompty) -> &prompty::model::model::Model {
+    agent
+        .model
+        .as_ref()
+        .expect("fixture was expected to declare a model")
 }
