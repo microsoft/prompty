@@ -552,28 +552,6 @@ fn run_error_vector(vec_name: &str, input: &Value, expected: &Value, env: &Value
 
     match result {
         Ok(_) => {
-            // Special case: template_string_invalid — the Rust runtime's generated
-            // Template::load_from_value accepts strings (they produce an empty Template).
-            // This is a known behavioral difference from the Python runtime.
-            if vec_name == "template_string_invalid" {
-                // Verify the template is effectively empty/broken (empty kind strings)
-                let agent = attempt_load(input, env).unwrap();
-                let tmpl = agent.template.as_ref();
-                if let Some(t) = tmpl {
-                    // Template was created from a bare string — format/parser kinds
-                    // will be empty because Template::load_from_value only reads
-                    // "format"/"parser" sub-keys which don't exist on a string.
-                    assert!(
-                        t.format.kind.is_empty() && t.parser.kind.is_empty(),
-                        "[{vec_name}] template_string_invalid: expected empty format/parser kinds, \
-                         got format.kind='{}', parser.kind='{}'",
-                        t.format.kind,
-                        t.parser.kind
-                    );
-                }
-                // Pass — runtime doesn't error but produces an unusable template
-                return;
-            }
             panic!("[{vec_name}] expected error containing '{expected_err}', but load succeeded");
         }
         Err(err) => {
