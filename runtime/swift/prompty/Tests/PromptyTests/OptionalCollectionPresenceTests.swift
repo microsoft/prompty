@@ -76,7 +76,8 @@ final class OptionalCollectionPresenceTests: XCTestCase {
           + "absence assertions would be checking the .unknown passthrough instead",
         file: file, line: line)
     }
-    XCTAssertEqual(saved["kind"] as? String, kind, "'\(kind)' lost its discriminator on save",
+    XCTAssertEqual(
+      saved["kind"] as? String, kind, "'\(kind)' lost its discriminator on save",
       file: file, line: line)
     XCTAssertEqual(
       saved["name"] as? String, "field_\(kind)", "'\(kind)' lost its name on save",

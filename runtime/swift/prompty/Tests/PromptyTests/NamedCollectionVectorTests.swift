@@ -774,7 +774,9 @@ final class NamedCollectionVectorTests: XCTestCase {
     ]
     let actual: [String: Any] = [
       "name": "outer",
-      "properties": ["alpha": ["kind": "object", "properties": [["name": "leaf", "kind": "string"]]]],
+      "properties": [
+        "alpha": ["kind": "object", "properties": [["name": "leaf", "kind": "string"]]]
+      ],
     ]
 
     XCTAssertEqual(
