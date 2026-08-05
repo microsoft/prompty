@@ -211,8 +211,24 @@ public partial class Prompty
                     var newDict = new Dictionary<string, object?>
                     {
                         ["name"] = kvp.Key,
-                        ["example"] = kvp.Value
+                        ["default"] = kvp.Value
                     };
+                    if (kvp.Value is int or long or short or byte)
+                    {
+                        newDict["kind"] = "integer";
+                    }
+                    else if (kvp.Value is double or float or decimal)
+                    {
+                        newDict["kind"] = "float";
+                    }
+                    else if (kvp.Value is string)
+                    {
+                        newDict["kind"] = "string";
+                    }
+                    else if (kvp.Value is bool)
+                    {
+                        newDict["kind"] = "boolean";
+                    }
                     result.Add(Property.Load(newDict, context?.At(kvp.Key)));
                 }
             }
@@ -266,8 +282,24 @@ public partial class Prompty
                     var newDict = new Dictionary<string, object?>
                     {
                         ["name"] = kvp.Key,
-                        ["example"] = kvp.Value
+                        ["default"] = kvp.Value
                     };
+                    if (kvp.Value is int or long or short or byte)
+                    {
+                        newDict["kind"] = "integer";
+                    }
+                    else if (kvp.Value is double or float or decimal)
+                    {
+                        newDict["kind"] = "float";
+                    }
+                    else if (kvp.Value is string)
+                    {
+                        newDict["kind"] = "string";
+                    }
+                    else if (kvp.Value is bool)
+                    {
+                        newDict["kind"] = "boolean";
+                    }
                     result.Add(Property.Load(newDict, context?.At(kvp.Key)));
                 }
             }

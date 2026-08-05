@@ -7,6 +7,7 @@ package prompty
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
 
 	"gopkg.in/yaml.v3"
@@ -306,7 +307,26 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 					item, ok := entry.(map[string]interface{})
 					if !ok {
 						item = map[string]interface{}{}
-						item["example"] = entry
+						switch shorthandValue := entry.(type) {
+						case int, int32, int64:
+							item["kind"] = "integer"
+							item["default"] = shorthandValue
+						case float64:
+							if shorthandValue == math.Trunc(shorthandValue) {
+								item["kind"] = "integer"
+							} else {
+								item["kind"] = "float"
+							}
+							item["default"] = shorthandValue
+						case string:
+							item["kind"] = "string"
+							item["default"] = shorthandValue
+						case bool:
+							item["kind"] = "boolean"
+							item["default"] = shorthandValue
+						default:
+							item["default"] = shorthandValue
+						}
 					} else {
 						copy := make(map[string]interface{}, len(item)+1)
 						for itemKey, itemValue := range item {

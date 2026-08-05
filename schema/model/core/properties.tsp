@@ -12,6 +12,7 @@ namespace Prompty;
  *   and processed to generate prompts for AI models.
  */
 @discriminator("kind")
+@entryShorthand("default")
 @coerce(
   string,
   #{ kind: "string", example: "{value}" },

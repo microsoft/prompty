@@ -413,8 +413,16 @@ impl Tool {
                         }
                         let mut v = if value.is_object() {
                             value.clone()
+                        } else if value.is_i64() {
+                            serde_json::json!({ "kind": "integer", "default": value })
+                        } else if value.is_f64() {
+                            serde_json::json!({ "kind": "float", "default": value })
+                        } else if value.is_string() {
+                            serde_json::json!({ "kind": "string", "default": value })
+                        } else if value.is_boolean() {
+                            serde_json::json!({ "kind": "boolean", "default": value })
                         } else {
-                            serde_json::json!({ "example": value })
+                            serde_json::json!({ "default": value })
                         };
                         if let serde_json::Value::Object(ref mut m) = v {
                             m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));

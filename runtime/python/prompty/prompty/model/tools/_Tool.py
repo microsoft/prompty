@@ -262,8 +262,18 @@ class FunctionTool(Tool):
                     # value is an object, spread its properties
                     result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append(Property.load({"name": k, "example": v}, context.at(k)))
+                    # value is a scalar, infer the entry shape from its type
+                    if isinstance(v, int) and not isinstance(v, bool):
+                        shorthand = {"kind": "integer", "default": v}
+                    elif isinstance(v, float):
+                        shorthand = {"kind": "float", "default": v}
+                    elif isinstance(v, str):
+                        shorthand = {"kind": "string", "default": v}
+                    elif isinstance(v, bool):
+                        shorthand = {"kind": "boolean", "default": v}
+                    else:
+                        shorthand = {"default": v}
+                    result.append(Property.load({"name": k, **shorthand}, context.at(k)))
             return result
         return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 

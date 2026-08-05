@@ -135,7 +135,19 @@ export class Prompty {
             ),
           );
         } else {
-          result.push(Property.load({ name: k, example: v }, context.at(k)));
+          let shorthand: Record<string, unknown>;
+          if (typeof v === "number" && Number.isInteger(v)) {
+            shorthand = { kind: "integer", default: v };
+          } else if (typeof v === "number") {
+            shorthand = { kind: "float", default: v };
+          } else if (typeof v === "string") {
+            shorthand = { kind: "string", default: v };
+          } else if (typeof v === "boolean") {
+            shorthand = { kind: "boolean", default: v };
+          } else {
+            shorthand = { default: v };
+          }
+          result.push(Property.load({ name: k, ...shorthand }, context.at(k)));
         }
       }
       return result;
@@ -217,7 +229,19 @@ export class Prompty {
             ),
           );
         } else {
-          result.push(Property.load({ name: k, example: v }, context.at(k)));
+          let shorthand: Record<string, unknown>;
+          if (typeof v === "number" && Number.isInteger(v)) {
+            shorthand = { kind: "integer", default: v };
+          } else if (typeof v === "number") {
+            shorthand = { kind: "float", default: v };
+          } else if (typeof v === "string") {
+            shorthand = { kind: "string", default: v };
+          } else if (typeof v === "boolean") {
+            shorthand = { kind: "boolean", default: v };
+          } else {
+            shorthand = { default: v };
+          }
+          result.push(Property.load({ name: k, ...shorthand }, context.at(k)));
         }
       }
       return result;
