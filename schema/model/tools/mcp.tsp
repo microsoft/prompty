@@ -26,7 +26,7 @@ model McpTool extends Tool {
 
   @doc("The approval mode for the MCP tool")
   @sample(#{ approvalMode: #{ kind: "always" } })
-  approvalMode: McpApprovalMode;
+  approvalMode?: McpApprovalMode;
 
   @doc("List of allowed operations or resources for the MCP tool")
   @sample(#{ allowedTools: #["operation1", "operation2"] })
