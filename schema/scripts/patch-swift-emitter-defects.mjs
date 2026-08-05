@@ -1,21 +1,51 @@
 // Temporary post-generation shim for @typra/emitter@0.4.2 Swift defects.
 //
-// The Swift generator emits code that does not compile. Every defect below has
+// The Swift generator emits code that does not compile. Every entry below has
 // been reported upstream; this script applies the exact fixes the emitter should
 // produce so `runtime/swift` stays buildable in the meantime. It runs as part of
 // `npm run generate`, immediately after Typra writes its output, so the Swift
 // model package remains fully machine-generated — no file is ever hand-edited.
+//
+// The three `Connection` patches have two different root causes, and conflating
+// them is why successive emitter candidates could "fix the wildcard" while the
+// Connection build errors persisted unchanged. They are split below into defect
+// 1b (emitter-owned) and the "Schema gap" entry at the end of this list
+// (schema-owned). Read the retirement notes carefully: which patches a given
+// emitter release retires depends on *how* it fixes 1b, and 0.4.10 has already
+// retired two of the three natively (see the version log at the end of file).
 //
 // Each patch is asserted. If a `find` pattern stops matching and the `replace`
 // text is not already present, generation fails loudly: that is the signal that
 // a new emitter release changed behaviour and this shim should be re-checked or
 // deleted.
 //
-// Upstream defects covered:
-//   1. Polymorphic enums emit a wildcard `load` branch without declaring the
-//      corresponding case (`Tool.customTool`) or a `save` branch, and emit
-//      `.unknown([:])` field defaults for enums that never declare `unknown`
-//      (`Connection`).
+// Upstream emitter defects covered:
+//   1a. Polymorphic enums emit a wildcard `load` branch without declaring the
+//      corresponding case (`Tool.customTool`) or a `save` branch. `CustomTool`
+//      is declared in TypeSpec as `kind: "*"` (`schema/model/tools/tool.tsp`),
+//      so the emitter simply fails to project a subtype the schema does define.
+//   1b. The emitter emits `Connection = .unknown([:])` as the field default for
+//      every required `Connection`-typed field — six sites in `tools/tool.swift`
+//      (`CustomTool`, `McpTool`, `OpenApiTool`: one stored property and one
+//      `init` parameter each) — while `Connection` never declares an `unknown`
+//      case. When synthesising a default for a required field of a closed
+//      polymorphic union, the emitter reaches for a wildcard arm that it did
+//      not emit. This is self-contained emitter incorrectness: raw output fails
+//      to compile *on its own terms*, independent of how the schema question
+//      below is resolved. A conforming emitter must either declare the case or
+//      synthesise a different default. Verified by deleting only the injected
+//      `case unknown` line and rebuilding: 16 errors, all `type 'Connection'
+//      has no member 'unknown'`, at tool.swift:145/152/232/242/344/351 plus the
+//      two shim-injected arms in connection.swift.
+//
+//      The `case unknown` declaration and `save` arm patches are this shim's
+//      chosen workaround for 1b — declaring the case is the smallest edit that
+//      makes the six defaults legal, and the `save` arm is then required only
+//      because that declaration makes the generated `switch` non-exhaustive.
+//      They are not the only possible fix, so what a corrected emitter retires
+//      depends on which fix it ships. Measured: 0.4.10 emits both the
+//      declaration and the `save` arm natively, retiring those two patches, and
+//      leaves `load`'s `default:` still throwing.
 //   2. Self-recursive polymorphic enums are not marked `indirect` (`Property`).
 //   3. Convenience factories pass raw literals where enum values are required
 //      (`Message.user/system/assistant`, `ToolResult.text`).
@@ -35,6 +65,42 @@
 //      everything listed above *except* `name` — do not remove the `name`
 //      injection on the strength of an `extends` fix alone. Confirm it against
 //      regenerated output first.
+//
+// Schema gap (NOT an emitter defect — do not report it as one):
+//      `Connection` is declared as a closed union of six `kind` literals with no
+//      wildcard subtype (`schema/model/connection/connection.tsp`), so a
+//      conforming emitter is *correct* to close the enum and throw on an
+//      unrecognised discriminator. The `load` patch below deliberately overrides
+//      that and preserves the raw payload instead.
+//
+//      Be precise about what does and does not currently mandate this. As of
+//      this branch `spec/spec.md` §2.5 only tabulates the six known kinds; it
+//      states no requirement about unrecognised ones, so the `load` patch is
+//      NOT satisfying a written contract today. What it follows is the adjacent
+//      established principle in §2.3 (lines 246-247): unknown top-level
+//      properties SHOULD be preserved and implementations MUST NOT raise on
+//      them. Extending that from unknown properties to unknown discriminator
+//      values is a deliberate forward-compatibility choice made here, pending a
+//      §2.5 amendment and a shared `connection_roundtrip` vector. The Swift
+//      suite carries a tripwire that fails once that vector lands, so this
+//      cannot be quietly forgotten (see ConnectionRoundTripTests.swift).
+//
+//      Do not cite the Rust runtime as precedent for *lossless* round-tripping;
+//      it is precedent only for not throwing. Rust maps an unrecognised kind to
+//      `ConnectionKind::default()` (connection.rs:258) and `kind_str` has only
+//      the six arms (connection.rs:274-283), so it rewrites the discriminator on
+//      save and drops the subtype payload. Swift's `.unknown(object)` is
+//      strictly stronger. That divergence is itself unresolved cross-runtime
+//      behaviour, not settled parity.
+//
+//      The durable fix is schema-owned: open the discriminator so unknown kinds
+//      are legal by construction. Exit condition — and this needs measuring, not
+//      assuming, because defect 1a proves a declared wildcard does not guarantee
+//      this emitter projects one correctly: once the schema opens the union,
+//      regenerate *with these three patches removed* and confirm (i) the package
+//      builds, (ii) raw generated `load`/`save` preserve an unrecognised kind's
+//      discriminator and payload byte-for-byte, and (iii) the Swift suite plus
+//      the shared round-trip vector pass. Only then delete them.
 //
 // Known limitation: injected base fields are added as properties and wired into
 // `load` / `save`, but not into the generated memberwise `init`. Constructing a
@@ -244,7 +310,10 @@ const patches = [
     replace: "public indirect enum Property: TypraModel {",
   },
 
-  // --- Defect 1: missing wildcard cases on polymorphic enums ---------------
+  // --- Defect 1a: missing wildcard case on `Tool` (emitter-owned) ----------
+  // `CustomTool { kind: "*" }` IS declared in schema/model/tools/tool.tsp, so
+  // the emitter is failing to project a subtype the schema defines. Contrast
+  // with the `Connection` patches below, which straddle emitter and schema.
   {
     file: join("tools", "tool.swift"),
     find: "  case promptyTool(PromptyTool)\n",
@@ -257,6 +326,16 @@ const patches = [
       "    case .promptyTool(let value): return try value.save(context)\n" +
       "    case .customTool(let value): return try value.save(context)\n",
   },
+  // --- `Connection`: defect 1b (emitter) + schema gap (schema) -------------
+  // Two root causes, kept together because one `case unknown` line serves both.
+  // The declaration and `save` arm work around defect 1b: the emitter emits
+  // `Connection = .unknown([:])` defaults in tools/tool.swift while never
+  // declaring the case, so raw output does not compile. 0.4.10 emits both of
+  // those natively, so a corrected emitter can retire them. The `load` arm is
+  // different: connection.tsp closes the union, so throwing is correct emitter
+  // behaviour, and overriding it is a deliberate forward-compatibility choice
+  // not yet backed by a written spec requirement. See the header for the
+  // measured exit condition — do not delete these on inspection alone.
   {
     file: join("connection", "connection.swift"),
     find: "  case foundryConnection(FoundryConnection)\n",
@@ -270,11 +349,16 @@ const patches = [
       '        type: "Connection", field: "kind", value: discriminator)\n',
     replace:
       "    default:\n" +
-      "      // Defect 1 (continued): the emitter references `.unknown` in generated\n" +
-      "      // defaults but never makes it reachable from load. Connection has no\n" +
-      "      // wildcard subtype in TypeSpec, yet the Rust runtime tolerates unknown\n" +
-      "      // kinds (falls back to a default kind, retaining the raw fields), so\n" +
-      "      // throwing here breaks cross-runtime parity on forward-compatible files.\n" +
+      "      // Deliberate forward-compatibility override, not an emitter defect.\n" +
+      "      // `Connection` declares no wildcard subtype in TypeSpec, so closing\n" +
+      "      // this enum and throwing here is correct emitter output. Preserving\n" +
+      "      // the raw payload instead extends the spec's unknown-property rule\n" +
+      "      // (spec.md 2.3) to unknown discriminator values, so that forward-\n" +
+      "      // compatible files survive a load/save cycle. Note this is stronger\n" +
+      "      // than the Rust runtime, which does not throw but does rewrite the\n" +
+      "      // discriminator and drop the payload. Retires only once the schema\n" +
+      "      // opens the union and regenerated output is measured to preserve\n" +
+      "      // unknown kinds on its own.\n" +
       "      return .unknown(object)\n",
   },
   {
