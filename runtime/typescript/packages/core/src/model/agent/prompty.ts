@@ -135,7 +135,7 @@ export class Prompty {
             ),
           );
         } else {
-          result.push(Property.load({ name: k, kind: v }, context.at(k)));
+          result.push(Property.load({ name: k, example: v }, context.at(k)));
         }
       }
       return result;
@@ -217,7 +217,7 @@ export class Prompty {
             ),
           );
         } else {
-          result.push(Property.load({ name: k, kind: v }, context.at(k)));
+          result.push(Property.load({ name: k, example: v }, context.at(k)));
         }
       }
       return result;

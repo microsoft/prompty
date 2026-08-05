@@ -382,7 +382,7 @@ export class ObjectProperty extends Property {
             ),
           );
         } else {
-          result.push(Property.load({ name: k, kind: v }, context.at(k)));
+          result.push(Property.load({ name: k, example: v }, context.at(k)));
         }
       }
       return result;
@@ -566,7 +566,7 @@ export class UnionProperty extends Property {
             ),
           );
         } else {
-          result.push(Property.load({ name: k, kind: v }, context.at(k)));
+          result.push(Property.load({ name: k, example: v }, context.at(k)));
         }
       }
       return result;
@@ -610,7 +610,7 @@ export class UnionProperty extends Property {
             ),
           );
         } else {
-          result.push(Property.load({ name: k, kind: v }, context.at(k)));
+          result.push(Property.load({ name: k, example: v }, context.at(k)));
         }
       }
       return result;

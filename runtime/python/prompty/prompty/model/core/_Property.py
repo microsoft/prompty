@@ -365,7 +365,7 @@ class ObjectProperty(Property):
                     result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append(Property.load({"name": k, "kind": v}, context.at(k)))
+                    result.append(Property.load({"name": k, "example": v}, context.at(k)))
             return result
         return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
@@ -521,7 +521,7 @@ class UnionProperty(Property):
                     result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append(Property.load({"name": k, "kind": v}, context.at(k)))
+                    result.append(Property.load({"name": k, "example": v}, context.at(k)))
             return result
         return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
@@ -548,7 +548,7 @@ class UnionProperty(Property):
                     result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append(Property.load({"name": k, "kind": v}, context.at(k)))
+                    result.append(Property.load({"name": k, "example": v}, context.at(k)))
             return result
         return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 

@@ -240,7 +240,8 @@ public class NamedCollectionVectorTests
         _ => element.GetRawText(),
     };
 
-    private static JsonElement FindVector(string vectorName)    {
+    private static JsonElement FindVector(string vectorName)
+    {
         using var document = JsonDocument.Parse(File.ReadAllText(VectorsPath));
         return document.RootElement
             .GetProperty("vectors")

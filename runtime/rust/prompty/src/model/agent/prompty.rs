@@ -254,7 +254,7 @@ impl Prompty {
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {
-                            serde_json::json!({ "kind": value })
+                            serde_json::json!({ "example": value })
                         };
                         if let serde_json::Value::Object(ref mut m) = v {
                             m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));
@@ -321,7 +321,7 @@ impl Prompty {
                         let mut v = if value.is_object() {
                             value.clone()
                         } else {
-                            serde_json::json!({ "kind": value })
+                            serde_json::json!({ "example": value })
                         };
                         if let serde_json::Value::Object(ref mut m) = v {
                             m.entry("name".to_string()).or_insert_with(|| serde_json::Value::String(name.clone()));

@@ -174,7 +174,7 @@ public partial class ContextRequest
                 }
                 else
                 {
-                    // Value is a scalar, use it as the primary property
+                    // Value is a scalar, infer the entry shape from its runtime type
                     var newDict = new Dictionary<string, object?>
                     {
                         ["name"] = kvp.Key,

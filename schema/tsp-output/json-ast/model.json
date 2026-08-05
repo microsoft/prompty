@@ -7,6 +7,7 @@
   "base": {},
   "isAbstract": false,
   "isProtocol": false,
+  "entryShorthand": null,
   "coercions": [],
   "factories": [],
   "methods": [],
@@ -225,6 +226,7 @@
         "base": {},
         "isAbstract": false,
         "isProtocol": false,
+        "entryShorthand": null,
         "discriminator": "kind",
         "coercions": [
           {
@@ -280,6 +282,7 @@
             },
             "isAbstract": false,
             "isProtocol": false,
+            "entryShorthand": null,
             "coercions": [],
             "factories": [],
             "methods": [],
@@ -351,6 +354,7 @@
                   "base": {},
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "discriminator": "kind",
                   "coercions": [
                     {
@@ -406,6 +410,7 @@
                       },
                       "isAbstract": false,
                       "isProtocol": false,
+                      "entryShorthand": null,
                       "coercions": [],
                       "factories": [],
                       "methods": [],
@@ -482,6 +487,7 @@
                             "base": {},
                             "isAbstract": false,
                             "isProtocol": false,
+                            "entryShorthand": null,
                             "discriminator": "kind",
                             "coercions": [
                               {
@@ -537,6 +543,7 @@
                                 },
                                 "isAbstract": false,
                                 "isProtocol": false,
+                                "entryShorthand": null,
                                 "coercions": [],
                                 "factories": [],
                                 "methods": [],
@@ -598,6 +605,7 @@
                                       "base": {},
                                       "isAbstract": false,
                                       "isProtocol": false,
+                                      "entryShorthand": null,
                                       "discriminator": "kind",
                                       "coercions": [
                                         {
@@ -932,6 +940,7 @@
                                       "base": {},
                                       "isAbstract": false,
                                       "isProtocol": false,
+                                      "entryShorthand": null,
                                       "discriminator": "kind",
                                       "coercions": [
                                         {
@@ -1512,6 +1521,7 @@
                       },
                       "isAbstract": false,
                       "isProtocol": false,
+                      "entryShorthand": null,
                       "coercions": [],
                       "factories": [],
                       "methods": [],
@@ -1573,6 +1583,7 @@
                             "base": {},
                             "isAbstract": false,
                             "isProtocol": false,
+                            "entryShorthand": null,
                             "discriminator": "kind",
                             "coercions": [
                               {
@@ -1907,6 +1918,7 @@
                             "base": {},
                             "isAbstract": false,
                             "isProtocol": false,
+                            "entryShorthand": null,
                             "discriminator": "kind",
                             "coercions": [
                               {
@@ -2455,6 +2467,7 @@
             },
             "isAbstract": false,
             "isProtocol": false,
+            "entryShorthand": null,
             "coercions": [],
             "factories": [],
             "methods": [],
@@ -2537,6 +2550,7 @@
             },
             "isAbstract": false,
             "isProtocol": false,
+            "entryShorthand": null,
             "coercions": [],
             "factories": [],
             "methods": [],
@@ -2598,6 +2612,7 @@
                   "base": {},
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "discriminator": "kind",
                   "coercions": [
                     {
@@ -2932,6 +2947,7 @@
                   "base": {},
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "discriminator": "kind",
                   "coercions": [
                     {
@@ -3595,6 +3611,7 @@
         "base": {},
         "isAbstract": false,
         "isProtocol": false,
+        "entryShorthand": null,
         "coercions": [
           {
             "scalar": "string",
@@ -3754,6 +3771,7 @@
               "base": {},
               "isAbstract": true,
               "isProtocol": false,
+              "entryShorthand": null,
               "discriminator": "kind",
               "coercions": [],
               "factories": [],
@@ -3771,6 +3789,7 @@
                   },
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "coercions": [],
                   "factories": [],
                   "methods": [],
@@ -3886,6 +3905,7 @@
                   },
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "coercions": [],
                   "factories": [],
                   "methods": [],
@@ -4001,6 +4021,7 @@
                   },
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "coercions": [],
                   "factories": [],
                   "methods": [],
@@ -4116,6 +4137,7 @@
                   },
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "coercions": [],
                   "factories": [],
                   "methods": [],
@@ -4199,6 +4221,7 @@
                   },
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "coercions": [],
                   "factories": [],
                   "methods": [],
@@ -4412,6 +4435,7 @@
                   },
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "coercions": [],
                   "factories": [],
                   "methods": [],
@@ -4695,6 +4719,7 @@
               "base": {},
               "isAbstract": false,
               "isProtocol": false,
+              "entryShorthand": null,
               "coercions": [],
               "factories": [],
               "methods": [],
@@ -5187,6 +5212,7 @@
         "base": {},
         "isAbstract": true,
         "isProtocol": false,
+        "entryShorthand": null,
         "discriminator": "kind",
         "coercions": [],
         "factories": [],
@@ -5204,6 +5230,7 @@
             },
             "isAbstract": false,
             "isProtocol": false,
+            "entryShorthand": null,
             "coercions": [],
             "factories": [],
             "methods": [],
@@ -5355,6 +5382,7 @@
             },
             "isAbstract": false,
             "isProtocol": false,
+            "entryShorthand": null,
             "coercions": [],
             "factories": [],
             "methods": [],
@@ -5467,6 +5495,7 @@
             },
             "isAbstract": false,
             "isProtocol": false,
+            "entryShorthand": null,
             "coercions": [],
             "factories": [],
             "methods": [],
@@ -5644,6 +5673,7 @@
                   "base": {},
                   "isAbstract": false,
                   "isProtocol": false,
+                  "entryShorthand": null,
                   "coercions": [
                     {
                       "scalar": "string",
@@ -5815,6 +5845,7 @@
             },
             "isAbstract": false,
             "isProtocol": false,
+            "entryShorthand": null,
             "coercions": [],
             "factories": [],
             "methods": [],
@@ -5932,6 +5963,7 @@
             },
             "isAbstract": false,
             "isProtocol": false,
+            "entryShorthand": null,
             "coercions": [],
             "factories": [],
             "methods": [],
@@ -6180,6 +6212,7 @@
               "base": {},
               "isAbstract": false,
               "isProtocol": false,
+              "entryShorthand": null,
               "coercions": [
                 {
                   "scalar": "string",
@@ -6307,6 +6340,7 @@
         "base": {},
         "isAbstract": false,
         "isProtocol": false,
+        "entryShorthand": null,
         "coercions": [],
         "factories": [],
         "methods": [],
@@ -6354,6 +6388,7 @@
               "base": {},
               "isAbstract": false,
               "isProtocol": false,
+              "entryShorthand": null,
               "discriminator": "kind",
               "coercions": [
                 {
@@ -6512,6 +6547,7 @@
               "base": {},
               "isAbstract": false,
               "isProtocol": false,
+              "entryShorthand": null,
               "discriminator": "kind",
               "coercions": [
                 {
