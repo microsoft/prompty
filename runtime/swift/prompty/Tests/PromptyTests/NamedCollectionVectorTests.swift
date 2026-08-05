@@ -306,13 +306,22 @@ final class NamedCollectionVectorTests: XCTestCase {
 
     for (index, expectedEntry) in expectedEntries.enumerated() {
       let actualEntry = wireEntries[index]
+      let entryPath = "\(name).\(collectionPath)[\(index)]"
       compare(
         expected: canonicalizeExpected(expectedEntry), actual: actualEntry,
-        path: "\(name).\(collectionPath)[\(index)]", failures: &failures)
+        path: entryPath, failures: &failures)
+
+      // `canonicalizeExpected` flattens a name-keyed nested `properties` map
+      // into the ordered list so the *semantic* comparison can proceed. That
+      // adaptation also erases the shape difference, so a nested collection
+      // saved as the array fallback would compare equal to a fixture stating
+      // the canonical object form. Walk the two in parallel to recover it.
+      blocked += nestedObjectFormGaps(
+        expected: expectedEntry, actual: actualEntry, path: entryPath)
 
       for absent in absentEntryFields where actualEntry[absent] != nil {
         failures.append(
-          "\(name).\(collectionPath)[\(index)]: `\(absent)` must be absent, but it is "
+          "\(entryPath): `\(absent)` must be absent, but it is "
             + "\(String(describing: actualEntry[absent])). The named-collection scalar "
             + "shorthand stores the value in `default`; populating `\(absent)` too "
             + "would blur it with the direct @coerce contract.")
@@ -359,6 +368,304 @@ final class NamedCollectionVectorTests: XCTestCase {
     return vectors
   }
 
+  // MARK: - Nested object-form detection
+  //
+  // These run whether or not the canonical fixture is on the branch, so the
+  // detection above is exercised while `testCanonicalNamedCollectionVector` is
+  // still skipping on absence.
+
+  /// The canonicalised comparison pipeline cannot see a nested object-form gap.
+  ///
+  /// This is the justification for `nestedObjectFormGaps` existing, pinned as a
+  /// test so it cannot quietly stop being true. The fixture states `properties`
+  /// as a name-keyed map — the canonical object form — while the runtime saved
+  /// the ordered array fallback.
+  ///
+  /// The blindness is created by `canonicalizeExpected`, not by `compare`:
+  /// `compare` on its own would see a map on one side and a list on the other.
+  /// Canonicalisation reshapes the expectation to the wire form first — which
+  /// is what lets the semantic assertions run at all — and that same adaptation
+  /// erases the shape difference. Both steps are exercised here together
+  /// because it is their composition that loses the signal.
+  func testCanonicalisedComparisonPipelineCannotSeeNestedObjectFormGap() {
+    let expected: [String: Any] = [
+      "name": "location",
+      "kind": "object",
+      "properties": ["city": ["kind": "string"]],
+    ]
+    let actual: [String: Any] = [
+      "name": "location",
+      "kind": "object",
+      "properties": [["name": "city", "kind": "string"]],
+    ]
+
+    var failures: [String] = []
+    Self.compare(
+      expected: Self.canonicalizeExpected(expected), actual: actual, path: "probe",
+      failures: &failures)
+
+    XCTAssertTrue(
+      failures.isEmpty,
+      "the canonicalised pipeline was expected to be blind to this gap; if it "
+        + "now reports it, nestedObjectFormGaps may be redundant: \(failures)")
+  }
+
+  /// The same pair, seen by the parallel walk.
+  func testNestedObjectFormGapIsDetected() {
+    let expected: [String: Any] = [
+      "name": "location",
+      "kind": "object",
+      "properties": ["city": ["kind": "string"]],
+    ]
+    let actual: [String: Any] = [
+      "name": "location",
+      "kind": "object",
+      "properties": [["name": "city", "kind": "string"]],
+    ]
+
+    let gaps = Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe")
+
+    XCTAssertEqual(gaps.count, 1, "expected exactly one gap, got \(gaps)")
+    XCTAssertEqual(
+      gaps.first, "probe.properties (save emits array, contract wants object)")
+  }
+
+  /// A fixture that states the array form is not a gap.
+  func testArrayFormExpectationIsNotReportedAsAGap() {
+    let expected: [String: Any] = [
+      "name": "location",
+      "properties": [["name": "city", "kind": "string"]],
+    ]
+    let actual: [String: Any] = [
+      "name": "location",
+      "properties": [["name": "city", "kind": "string"]],
+    ]
+
+    XCTAssertTrue(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe").isEmpty)
+  }
+
+  /// A runtime that already emits the object form is not a gap either.
+  ///
+  /// Without this, the detection could be satisfied by always reporting, and
+  /// the baseline would never clear when the emitter is fixed.
+  func testObjectFormActualIsNotReportedAsAGap() {
+    let expected: [String: Any] = [
+      "name": "location",
+      "properties": ["city": ["kind": "string"]],
+    ]
+    let actual: [String: Any] = [
+      "name": "location",
+      "properties": ["city": ["kind": "string"]],
+    ]
+
+    XCTAssertTrue(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe").isEmpty)
+  }
+
+  /// Gaps are found at every depth, not just the first.
+  ///
+  /// The coordinator's reported row is one level down (`inputs[0].properties`).
+  /// A detector that only checked the top nesting level would satisfy that row
+  /// while missing anything deeper.
+  func testNestedObjectFormGapsAreFoundAtEveryDepth() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        "middle": [
+          "kind": "object",
+          "properties": [
+            "inner": ["kind": "object", "properties": ["leaf": ["kind": "string"]]]
+          ],
+        ]
+      ],
+    ]
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        [
+          "name": "middle", "kind": "object",
+          "properties": [
+            [
+              "name": "inner", "kind": "object",
+              "properties": [["name": "leaf", "kind": "string"]],
+            ]
+          ],
+        ]
+      ],
+    ]
+
+    let gaps = Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe")
+
+    XCTAssertEqual(
+      gaps,
+      [
+        "probe.properties (save emits array, contract wants object)",
+        "probe.properties.middle.properties (save emits array, contract wants object)",
+        "probe.properties.middle.properties.inner.properties "
+          + "(save emits array, contract wants object)",
+      ],
+      "every nesting level must be reported, with a path that locates it")
+  }
+
+  /// A gap inside `items` is reported too.
+  func testObjectFormGapInsideItemsIsDetected() {
+    let expected: [String: Any] = [
+      "name": "rows",
+      "kind": "array",
+      "items": ["kind": "object", "properties": ["cell": ["kind": "string"]]],
+    ]
+    let actual: [String: Any] = [
+      "name": "rows",
+      "kind": "array",
+      "items": ["kind": "object", "properties": [["name": "cell", "kind": "string"]]],
+    ]
+
+    XCTAssertEqual(
+      Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe"),
+      ["probe.items.properties (save emits array, contract wants object)"])
+  }
+
+  /// Descent pairs children by name, not by position.
+  ///
+  /// A map has no order, so pairing the sorted expectation against the saved
+  /// list positionally would compare unrelated children whenever the runtime's
+  /// declaration order differs from alphabetical.
+  func testDescentPairsChildrenByNameNotPosition() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        "alpha": ["kind": "string"],
+        "beta": ["kind": "object", "properties": ["leaf": ["kind": "string"]]],
+      ],
+    ]
+    // Saved in declaration order, which is the reverse of alphabetical.
+    let actual: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        [
+          "name": "beta", "kind": "object",
+          "properties": [["name": "leaf", "kind": "string"]],
+        ],
+        ["name": "alpha", "kind": "string"],
+      ],
+    ]
+
+    let gaps = Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe")
+
+    XCTAssertEqual(
+      gaps,
+      [
+        "probe.properties (save emits array, contract wants object)",
+        "probe.properties.beta.properties (save emits array, contract wants object)",
+      ],
+      "the nested gap under `beta` must be found even though `beta` is not the "
+        + "child that sorts first")
+  }
+
+  /// A nested gap is still found when the saved child omits its `name`.
+  ///
+  /// An unnamed composite is exactly the case the canonical fixture names, so
+  /// pairing purely by name would drop the child that matters most and report
+  /// nothing for anything beneath it.
+  func testNestedObjectFormGapIsFoundWhenTheSavedChildOmitsItsName() {
+    let expected: [String: Any] = [
+      "name": "outer",
+      "properties": [
+        "inner": ["kind": "object", "properties": ["leaf": ["kind": "string"]]]
+      ],
+    ]
+    let actual: [String: Any] = [
+      "name": "outer",
+      // The saved child carries no `name`, so it cannot be looked up by key.
+      "properties": [
+        ["kind": "object", "properties": [["name": "leaf", "kind": "string"]]]
+      ],
+    ]
+
+    let gaps = Self.nestedObjectFormGaps(expected: expected, actual: actual, path: "probe")
+
+    XCTAssertEqual(
+      gaps,
+      [
+        "probe.properties (save emits array, contract wants object)",
+        "probe.properties.inner.properties (save emits array, contract wants object)",
+      ],
+      "the gap beneath an unnamed saved child must still be reported")
+  }
+
+  /// Nested named collections are saved in alphabetical order.
+  ///
+  /// `canonicalizeExpected` sorts a name-keyed expectation before `compare`
+  /// pairs it positionally, and the positional fallback in the descent above
+  /// assumes the same. Neither is safe unless the runtime really does order
+  /// nested collections by name, so pin it here: if the emitter ever switches
+  /// to declaration order, this fails directly instead of surfacing as a
+  /// confusing field mismatch somewhere downstream.
+  func testNestedNamedCollectionsSaveInAlphabeticalOrder() throws {
+    let input: [String: Any] = [
+      "name": "v", "model": ["id": "gpt-4"],
+      "inputs": [
+        "outer": [
+          "kind": "object",
+          // Deliberately not alphabetical in the source.
+          "properties": [
+            "zebra": ["kind": "string"],
+            "apple": ["kind": "string"],
+            "middle": ["kind": "string"],
+          ],
+        ]
+      ],
+    ]
+
+    let agent = try Loader.load(
+      contents: Self.frontmatter(input), basePath: FileManager.default.currentDirectoryPath)
+    let saved = try agent.save()
+
+    let entries = (saved["inputs"] as? [[String: Any]]) ?? []
+    let nested = (entries.first?["properties"] as? [[String: Any]]) ?? []
+    XCTAssertEqual(
+      nested.compactMap { $0["name"] as? String }, ["apple", "middle", "zebra"],
+      "nested named collections are expected to save in alphabetical order")
+  }
+
+  /// The detection is actually wired into the vector path, not just callable.
+  ///
+  /// Every test above exercises `nestedObjectFormGaps` directly, so all of them
+  /// would still pass if the call in `runLoadSaveReload` were deleted. This
+  /// drives the real vector path with a synthetic vector and asserts the gap
+  /// arrives in `blocked`, which is the list tied to the emitter pin.
+  func testNestedGapReachesBlockedThroughTheVectorPath() {
+    let input: [String: Any] = [
+      "name": "v", "model": ["id": "gpt-4"],
+      "inputs": [
+        "location": ["kind": "object", "properties": ["street": ["kind": "string"]]]
+      ],
+    ]
+    let expected: [String: Any] = [
+      "entries": [
+        [
+          "name": "location", "kind": "object",
+          "properties": ["street": ["kind": "string"]],
+        ]
+      ]
+    ]
+
+    var failures: [String] = []
+    var blocked: [String] = []
+    var asserted: [String] = []
+    Self.runLoadSaveReload(
+      name: "synthetic", input: input, expected: expected, collectionPath: "inputs",
+      failures: &failures, blocked: &blocked, asserted: &asserted)
+
+    XCTAssertEqual(failures, [], "the synthetic vector must otherwise pass")
+    XCTAssertEqual(asserted, ["synthetic"])
+    XCTAssertTrue(
+      blocked.contains("synthetic.inputs[0].properties (save emits array, contract wants object)"),
+      "the nested gap must reach the pin-tied baseline through the real vector "
+        + "path, not only through direct calls: \(blocked)")
+  }
+
   // MARK: - Helpers
 
   /// Render a vector input as `.prompty` frontmatter.
@@ -392,6 +699,100 @@ final class NamedCollectionVectorTests: XCTestCase {
       result["items"] = canonicalizeExpected(items)
     }
     return result
+  }
+
+  /// Nested collections the fixture states in canonical object form that the
+  /// runtime saved as the ordered array fallback.
+  ///
+  /// The top-level `collectionFormat` clause records this gap for the
+  /// collection named by `collectionPath`. Nested collections have no such
+  /// clause, and `canonicalizeExpected` adapts their shape before comparison,
+  /// so without this walk a nested array fallback is indistinguishable from a
+  /// nested canonical object. Returned paths join the `blocked` baseline, which
+  /// is tied to the emitter pin — so bumping the pin without closing the gap
+  /// fails rather than resting on stale prose.
+  ///
+  /// Only the fixture's own structure drives this: a nested map is read as a
+  /// request for object form, a nested list as a request for the array form.
+  /// Nothing is inferred about collections the fixture does not mention.
+  private static func nestedObjectFormGaps(
+    expected: [String: Any], actual: [String: Any], path: String
+  ) -> [String] {
+    var gaps: [String] = []
+
+    if let expectedMap = expected["properties"] as? [String: Any] {
+      if actual["properties"] is [Any] {
+        gaps.append("\(path).properties (save emits array, contract wants object)")
+      }
+      // Descend by name so the pairing survives either wire shape. When the
+      // actual side is the ordered fallback, a child that omits `name` cannot
+      // be found that way — the unnamed-composite case — so fall back to
+      // position. Both sides order named collections alphabetically, which
+      // `testNestedNamedCollectionsSaveInAlphabeticalOrder` pins.
+      let sortedKeys = expectedMap.keys.sorted()
+      let actualChildren = namedChildren(actual["properties"])
+      let actualList = actual["properties"] as? [[String: Any]]
+      for (index, key) in sortedKeys.enumerated() {
+        guard let expectedChild = expectedMap[key] as? [String: Any] else { continue }
+        var actualChild = actualChildren[key]
+        if actualChild == nil, let actualList, actualList.count == sortedKeys.count {
+          actualChild = actualList[index]
+        }
+        guard let actualChild else { continue }
+        gaps += nestedObjectFormGaps(
+          expected: expectedChild, actual: actualChild, path: "\(path).properties.\(key)")
+      }
+    } else if let expectedList = expected["properties"] as? [[String: Any]] {
+      if let actualList = actual["properties"] as? [[String: Any]] {
+        // Both sides are ordered lists, so pair positionally exactly as
+        // `compare` does. Indexing by name here would drop children that omit
+        // `name` and collapse duplicates onto one another.
+        for (index, expectedChild) in expectedList.enumerated() where index < actualList.count {
+          gaps += nestedObjectFormGaps(
+            expected: expectedChild, actual: actualList[index],
+            path: "\(path).properties[\(index)]")
+        }
+      } else {
+        let actualChildren = namedChildren(actual["properties"])
+        for (index, expectedChild) in expectedList.enumerated() {
+          guard let name = expectedChild["name"] as? String,
+            let actualChild = actualChildren[name]
+          else { continue }
+          gaps += nestedObjectFormGaps(
+            expected: expectedChild, actual: actualChild, path: "\(path).properties[\(index)]")
+        }
+      }
+    }
+
+    if let expectedItems = expected["items"] as? [String: Any],
+      let actualItems = actual["items"] as? [String: Any]
+    {
+      gaps += nestedObjectFormGaps(
+        expected: expectedItems, actual: actualItems, path: "\(path).items")
+    }
+
+    return gaps
+  }
+
+  /// Index a nested `properties` collection by name, whichever form it uses.
+  private static func namedChildren(_ value: Any?) -> [String: [String: Any]] {
+    if let map = value as? [String: Any] {
+      var result: [String: [String: Any]] = [:]
+      for (key, child) in map {
+        result[key] = (child as? [String: Any]) ?? [:]
+      }
+      return result
+    }
+    if let list = value as? [[String: Any]] {
+      var result: [String: [String: Any]] = [:]
+      for child in list {
+        if let name = child["name"] as? String {
+          result[name] = child
+        }
+      }
+      return result
+    }
+    return [:]
   }
 
   /// Subset comparison: every field the fixture states must match exactly.
