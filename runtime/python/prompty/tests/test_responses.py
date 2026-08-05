@@ -231,7 +231,12 @@ class TestOutputSchemaToResponsesWire:
         assert schema["type"] == "object"
         assert "temperature" in schema["properties"]
         assert "condition" in schema["properties"]
-        assert schema["properties"]["temperature"]["type"] == "integer"
+        # Under strict mode every property must appear in `required`, so an
+        # output that is not marked required is expressed as a nullable type
+        # union. spec/vectors/wire/wire_vectors.json asserts exactly
+        # `{"type": ["integer", "null"]}` for this same input shape.
+        assert schema["properties"]["temperature"]["type"] == ["integer", "null"]
+        assert schema["required"] == ["temperature", "condition"]
         assert schema["additionalProperties"] is False
 
 

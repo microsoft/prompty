@@ -96,8 +96,11 @@ class TestOpenAIEnrich:
         info = ModelInfo(id="ft:gpt-4o:my-org:custom")
         enriched = _enrich("ft:gpt-4o:my-org:custom", info)
         assert enriched.context_window is None
-        assert enriched.input_modalities == []
-        assert enriched.output_modalities == []
+        # Vector "openai_enrich_unknown_id_is_noop" in
+        # spec/vectors/discovery/enrichment_vectors.json expects the output to
+        # carry only `id` -- the modality keys are absent, not empty lists.
+        assert enriched.input_modalities is None
+        assert enriched.output_modalities is None
 
     def test_does_not_overwrite_existing_values(self) -> None:
         info = ModelInfo(id="gpt-4o", context_window=999, input_modalities=["audio"])
@@ -207,11 +210,15 @@ class TestFoundryMapModel:
         info = foundry_map_model(m)
         assert info.context_window is None
 
-    def test_modalities_are_empty(self) -> None:
+    def test_modalities_are_absent(self) -> None:
         m = _fake_model("gpt-4o", "azure", max_context_length=128_000)
         info = foundry_map_model(m)
-        assert info.input_modalities == []
-        assert info.output_modalities == []
+        # Vector "foundry_deployment_flat_v1" in
+        # spec/vectors/discovery/discovery_vectors.json supplies capabilities
+        # without modality keys and expects no inputModalities /
+        # outputModalities in the output -- absent, not empty lists.
+        assert info.input_modalities is None
+        assert info.output_modalities is None
 
 
 class TestFoundryListModels:
