@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -18,7 +19,21 @@ func TestToolContextLoadJSON(t *testing.T) {
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -32,6 +47,10 @@ func TestToolContextLoadJSON(t *testing.T) {
 		t.Fatalf("Failed to load ToolContext: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertToolContextStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
@@ -45,6 +64,13 @@ func TestToolContextLoadYAML(t *testing.T) {
 	yamlData := `
 metadata:
   userId: user-123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
 `
 	var data map[string]interface{}
@@ -58,6 +84,10 @@ metadata:
 		t.Fatalf("Failed to load ToolContext: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertToolContextStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
@@ -72,7 +102,21 @@ func TestToolContextFromJSON(t *testing.T) {
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 
@@ -81,6 +125,10 @@ func TestToolContextFromJSON(t *testing.T) {
 		t.Fatalf("Failed to load ToolContext from JSON helper: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertToolContextStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
@@ -94,6 +142,13 @@ func TestToolContextFromYAML(t *testing.T) {
 	yamlData := `
 metadata:
   userId: user-123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
 `
 
@@ -102,6 +157,10 @@ metadata:
 		t.Fatalf("Failed to load ToolContext from YAML helper: %v", err)
 	}
 	_ = instance // No scalar properties to validate
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertToolContextStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
@@ -116,7 +175,21 @@ func TestToolContextRoundtrip(t *testing.T) {
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -137,6 +210,10 @@ func TestToolContextRoundtrip(t *testing.T) {
 		t.Fatalf("Failed to reload ToolContext: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertToolContextStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
@@ -151,7 +228,21 @@ func TestToolContextToJSON(t *testing.T) {
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -179,6 +270,10 @@ func TestToolContextToJSON(t *testing.T) {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertToolContextStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
@@ -193,7 +288,21 @@ func TestToolContextToYAML(t *testing.T) {
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -221,6 +330,10 @@ func TestToolContextToYAML(t *testing.T) {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertToolContextStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
@@ -233,5 +346,41 @@ func TestToolContextToYAML(t *testing.T) {
 func TestToolContextFromJSONInvalid(t *testing.T) {
 	if _, err := prompty.ToolContextFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertToolContextStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

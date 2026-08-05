@@ -14,12 +14,15 @@ import (
 
 type FormatConfig struct {
 	Kind    string                 `json:"kind" yaml:"kind"`
-	Strict  *bool                  `json:"strict,omitempty" yaml:"strict,omitempty"`
-	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
+	Strict  *bool                  `json:"strict" yaml:"strict"`
+	Options map[string]interface{} `json:"options" yaml:"options"`
 }
 
 // LoadFormatConfig creates a FormatConfig from a map[string]interface{}
 func LoadFormatConfig(data interface{}, ctx *LoadContext) (FormatConfig, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := FormatConfig{}
 
 	// Handle alternate scalar representations

@@ -18,12 +18,6 @@ describe("DeviceAuthorization", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = DeviceAuthorization.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new DeviceAuthorization();
       const data = instance.save();

@@ -65,7 +65,9 @@ describe("InvokerError", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "message": "No renderer registered for key: jinja2",\n  "component": "renderer",\n  "key": "jinja2"\n}`,
+      ) as Record<string, unknown>;
       const instance = InvokerError.load(data);
       expect(instance).toBeDefined();
     });

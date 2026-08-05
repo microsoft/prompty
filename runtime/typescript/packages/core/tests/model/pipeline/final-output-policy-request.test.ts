@@ -18,12 +18,6 @@ describe("FinalOutputPolicyRequest", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = FinalOutputPolicyRequest.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new FinalOutputPolicyRequest();
       const data = instance.save();

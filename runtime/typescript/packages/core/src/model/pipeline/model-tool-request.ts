@@ -29,6 +29,7 @@ export class ModelToolRequest {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ModelToolRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

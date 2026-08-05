@@ -25,6 +25,7 @@ export class AnthropicToolDefinition {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnthropicToolDefinition {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

@@ -57,7 +57,9 @@ describe("AnthropicToolResultBlock", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "tool_use_id": "toolu_01A09q90qw90lq917835lq9",\n  "content": "72°F and sunny in Paris"\n}`,
+      ) as Record<string, unknown>;
       const instance = AnthropicToolResultBlock.load(data);
       expect(instance).toBeDefined();
     });

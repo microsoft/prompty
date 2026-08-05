@@ -57,7 +57,9 @@ describe("MessagesUpdatedPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "reason": "tool_results",\n  "removed": 2\n}`,
+      ) as Record<string, unknown>;
       const instance = MessagesUpdatedPayload.load(data);
       expect(instance).toBeDefined();
     });

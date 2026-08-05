@@ -48,8 +48,8 @@ class AnthropicMessagesRequest:
     temperature: float | None = None
     top_p: float | None = None
     top_k: int | None = None
-    stop_sequences: list[str] = field(default_factory=list)
-    tools: list[AnthropicToolDefinition] = field(default_factory=list)
+    stop_sequences: list[str] | None = None
+    tools: list[AnthropicToolDefinition] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "AnthropicMessagesRequest":
@@ -62,8 +62,9 @@ class AnthropicMessagesRequest:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicMessagesRequest: {data}")
@@ -74,7 +75,7 @@ class AnthropicMessagesRequest:
         if data is not None and "model" in data:
             instance.model = data["model"]
         if data is not None and "messages" in data:
-            instance.messages = AnthropicMessagesRequest.load_messages(data["messages"], context)
+            instance.messages = AnthropicMessagesRequest.load_messages(data["messages"], context.at("messages"))
         if data is not None and "max_tokens" in data:
             instance.max_tokens = data["max_tokens"]
         if data is not None and "system" in data:
@@ -88,25 +89,29 @@ class AnthropicMessagesRequest:
         if data is not None and "stop_sequences" in data:
             instance.stop_sequences = data["stop_sequences"]
         if data is not None and "tools" in data:
-            instance.tools = AnthropicMessagesRequest.load_tools(data["tools"], context)
+            instance.tools = AnthropicMessagesRequest.load_tools(data["tools"], context.at("tools"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[AnthropicWireMessage]:
+        if context is None:
+            context = LoadContext(path="messages")
         if isinstance(data, dict):
             # convert simple named messages to list of AnthropicWireMessage
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(AnthropicWireMessage.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
-        return [AnthropicWireMessage.load(item, context) for item in data]
+                    result.append(AnthropicWireMessage.load({"name": k, "role": v}, context.at(k)))
+            return result
+        return [AnthropicWireMessage.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_messages(
@@ -115,23 +120,27 @@ class AnthropicMessagesRequest:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_tools(data: dict | list, context: LoadContext | None) -> list[AnthropicToolDefinition]:
+        if context is None:
+            context = LoadContext(path="tools")
         if isinstance(data, dict):
             # convert simple named tools to list of AnthropicToolDefinition
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(AnthropicToolDefinition.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "description": v})
-            data = result
-        return [AnthropicToolDefinition.load(item, context) for item in data]
+                    result.append(AnthropicToolDefinition.load({"name": k, "description": v}, context.at(k)))
+            return result
+        return [AnthropicToolDefinition.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tools(
@@ -140,28 +149,8 @@ class AnthropicMessagesRequest:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # The schema declares an ordered collection, so preserve array format
+        return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the AnthropicMessagesRequest instance to a dictionary.

@@ -53,7 +53,9 @@ describe("ToolResultPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "name": "get_weather",\n  "result": {\n    "parts": [\n      {\n        "kind": "text",\n        "value": "72°F and sunny"\n      }\n    ]\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolResultPayload.load(data);
       expect(instance).toBeDefined();
     });

@@ -15,11 +15,14 @@ import (
 type EnginePermissionDecision struct {
 	Approved bool                   `json:"approved" yaml:"approved"`
 	Reason   *string                `json:"reason,omitempty" yaml:"reason,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadEnginePermissionDecision creates a EnginePermissionDecision from a map[string]interface{}
 func LoadEnginePermissionDecision(data interface{}, ctx *LoadContext) (EnginePermissionDecision, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := EnginePermissionDecision{}
 
 	// Load from map

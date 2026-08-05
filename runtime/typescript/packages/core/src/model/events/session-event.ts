@@ -55,6 +55,7 @@ export class SessionEvent {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): SessionEvent {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -88,7 +89,7 @@ export class SessionEvent {
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
       instance.redaction = RedactionMetadata.load(
         data["redaction"] as Record<string, unknown>,
-        context,
+        context.at("redaction"),
       );
     }
 

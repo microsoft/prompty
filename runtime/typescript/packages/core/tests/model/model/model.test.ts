@@ -71,7 +71,9 @@ describe("Model", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "gpt-35-turbo",\n  "provider": "foundry",\n  "apiType": "chat",\n  "connection": {\n    "kind": "key",\n    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n    "key": "{your-api-key}"\n  },\n  "options": {\n    "type": "chat",\n    "temperature": 0.7,\n    "maxOutputTokens": 1000\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = Model.load(data);
       expect(instance).toBeDefined();
     });

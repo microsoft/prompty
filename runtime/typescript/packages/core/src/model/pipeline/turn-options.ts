@@ -46,6 +46,7 @@ export class TurnOptions {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): TurnOptions {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -76,7 +77,7 @@ export class TurnOptions {
     if (data["compaction"] !== undefined && data["compaction"] !== null) {
       instance.compaction = CompactionConfig.load(
         data["compaction"] as Record<string, unknown>,
-        context,
+        context.at("compaction"),
       );
     }
 

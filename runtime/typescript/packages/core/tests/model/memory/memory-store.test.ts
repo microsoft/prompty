@@ -49,7 +49,10 @@ describe("MemoryStore", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(`{\n  "entries": []\n}`) as Record<
+        string,
+        unknown
+      >;
       const instance = MemoryStore.load(data);
       expect(instance).toBeDefined();
     });

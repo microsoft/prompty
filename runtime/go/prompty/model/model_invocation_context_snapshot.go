@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -21,18 +22,27 @@ type ModelInvocationContextSnapshot struct {
 	InvocationId         string                      `json:"invocationId" yaml:"invocationId"`
 	Iteration            int32                       `json:"iteration" yaml:"iteration"`
 	Messages             []Message                   `json:"messages" yaml:"messages"`
-	Decisions            []InvocationContextDecision `json:"decisions,omitempty" yaml:"decisions,omitempty"`
+	Decisions            []InvocationContextDecision `json:"decisions" yaml:"decisions"`
 	StablePrefixMessages int32                       `json:"stablePrefixMessages" yaml:"stablePrefixMessages"`
 	ContextState         InvocationContextState      `json:"contextState" yaml:"contextState"`
-	Metadata             map[string]interface{}      `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata             map[string]interface{}      `json:"metadata" yaml:"metadata"`
 }
 
 // LoadModelInvocationContextSnapshot creates a ModelInvocationContextSnapshot from a map[string]interface{}
 func LoadModelInvocationContextSnapshot(data interface{}, ctx *LoadContext) (ModelInvocationContextSnapshot, error) {
-	result := ModelInvocationContextSnapshot{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := ModelInvocationContextSnapshot{
+		Messages:  []Message{},
+		Decisions: []InvocationContextDecision{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["contextState"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("contextState").Path)
+		}
 		if val, ok := m["id"]; ok && val != nil {
 			result.Id = string(val.(string))
 		}
@@ -64,7 +74,7 @@ func LoadModelInvocationContextSnapshot(data interface{}, ctx *LoadContext) (Mod
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -78,7 +88,7 @@ func LoadModelInvocationContextSnapshot(data interface{}, ctx *LoadContext) (Mod
 				result.Decisions = make([]InvocationContextDecision, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadInvocationContextDecision(item, ctx)
+						loaded, err := LoadInvocationContextDecision(item, ctx.At("decisions").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -103,7 +113,7 @@ func LoadModelInvocationContextSnapshot(data interface{}, ctx *LoadContext) (Mod
 		}
 		if val, ok := m["contextState"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadInvocationContextState(m, ctx)
+				loaded, err := LoadInvocationContextState(m, ctx.At("contextState"))
 				if err != nil {
 					return result, err
 				}

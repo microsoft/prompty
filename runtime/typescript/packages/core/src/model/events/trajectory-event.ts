@@ -52,6 +52,7 @@ export class TrajectoryEvent {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): TrajectoryEvent {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -85,7 +86,7 @@ export class TrajectoryEvent {
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
       instance.redaction = RedactionMetadata.load(
         data["redaction"] as Record<string, unknown>,
-        context,
+        context.at("redaction"),
       );
     }
 

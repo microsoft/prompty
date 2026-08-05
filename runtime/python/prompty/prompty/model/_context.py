@@ -23,6 +23,29 @@ class LoadContext:
     post_process: Callable[[Any], Any] | None = None
     """Optional callback to transform the result after instantiation."""
 
+    path: str = ""
+    """Current schema path used for load diagnostics."""
+
+    def at(self, segment: str) -> "LoadContext":
+        return LoadContext(
+            pre_process=self.pre_process,
+            post_process=self.post_process,
+            path=f"{self.path}.{segment}" if self.path else segment,
+        )
+
+    def at_index(self, index: int) -> "LoadContext":
+        """Descend into an array element.
+
+        Rendered with bracket notation (messages[3]) so an index is never
+        confused with a map key of the same name, which dot-joining would make
+        ambiguous.
+        """
+        return LoadContext(
+            pre_process=self.pre_process,
+            post_process=self.post_process,
+            path=f"{self.path}[{index}]",
+        )
+
     def process_input(self, data: dict[str, Any]) -> dict[str, Any]:
         """
         Apply pre-processing to input data if a pre_process callback is set.

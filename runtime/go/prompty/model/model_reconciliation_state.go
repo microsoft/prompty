@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,21 +21,27 @@ type ModelReconciliationState struct {
 	Request       ModelInvocationRequest `json:"request" yaml:"request"`
 	FailedAttempt int32                  `json:"failedAttempt" yaml:"failedAttempt"`
 	Message       string                 `json:"message" yaml:"message"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata      map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadModelReconciliationState creates a ModelReconciliationState from a map[string]interface{}
 func LoadModelReconciliationState(data interface{}, ctx *LoadContext) (ModelReconciliationState, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ModelReconciliationState{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["request"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("request").Path)
+		}
 		if val, ok := m["invocationId"]; ok && val != nil {
 			result.InvocationId = string(val.(string))
 		}
 		if val, ok := m["request"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadModelInvocationRequest(m, ctx)
+				loaded, err := LoadModelInvocationRequest(m, ctx.At("request"))
 				if err != nil {
 					return result, err
 				}

@@ -44,8 +44,8 @@ class RunTurnResult:
     status: RunTurnStatus = field(default="success")
     output: Any | None = None
     iterations: int = field(default=0)
-    tool_results: list[HostToolResult] = field(default_factory=list)
-    checkpoints: list[Checkpoint] = field(default_factory=list)
+    tool_results: list[HostToolResult] | None = field(default_factory=list)
+    checkpoints: list[Checkpoint] | None = field(default_factory=list)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "RunTurnResult":
@@ -58,8 +58,9 @@ class RunTurnResult:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for RunTurnResult: {data}")
@@ -78,27 +79,31 @@ class RunTurnResult:
         if data is not None and "iterations" in data:
             instance.iterations = data["iterations"]
         if data is not None and "toolResults" in data:
-            instance.tool_results = RunTurnResult.load_tool_results(data["toolResults"], context)
+            instance.tool_results = RunTurnResult.load_tool_results(data["toolResults"], context.at("toolResults"))
         if data is not None and "checkpoints" in data:
-            instance.checkpoints = RunTurnResult.load_checkpoints(data["checkpoints"], context)
+            instance.checkpoints = RunTurnResult.load_checkpoints(data["checkpoints"], context.at("checkpoints"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_tool_results(data: dict | list, context: LoadContext | None) -> list[HostToolResult]:
+        if context is None:
+            context = LoadContext(path="toolResults")
         if isinstance(data, dict):
             # convert simple named toolResults to list of HostToolResult
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(HostToolResult.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "requestId": v})
-            data = result
-        return [HostToolResult.load(item, context) for item in data]
+                    result.append(HostToolResult.load({"name": k, "requestId": v}, context.at(k)))
+            return result
+        return [HostToolResult.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tool_results(
@@ -107,30 +112,34 @@ class RunTurnResult:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_checkpoints(data: dict | list, context: LoadContext | None) -> list[Checkpoint]:
+        if context is None:
+            context = LoadContext(path="checkpoints")
         if isinstance(data, dict):
             # convert simple named checkpoints to list of Checkpoint
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Checkpoint.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
-            data = result
-        return [Checkpoint.load(item, context) for item in data]
+                    result.append(Checkpoint.load({"name": k, "id": v}, context.at(k)))
+            return result
+        return [Checkpoint.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_checkpoints(items: list[Checkpoint], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

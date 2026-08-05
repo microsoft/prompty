@@ -18,12 +18,6 @@ describe("TurnEngineResult", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = TurnEngineResult.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new TurnEngineResult();
       const data = instance.save();

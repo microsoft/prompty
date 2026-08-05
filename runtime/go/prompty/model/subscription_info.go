@@ -20,6 +20,9 @@ type SubscriptionInfo struct {
 
 // LoadSubscriptionInfo creates a SubscriptionInfo from a map[string]interface{}
 func LoadSubscriptionInfo(data interface{}, ctx *LoadContext) (SubscriptionInfo, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := SubscriptionInfo{}
 
 	// Load from map

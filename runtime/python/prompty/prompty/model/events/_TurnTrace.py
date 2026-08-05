@@ -50,8 +50,9 @@ class TurnTrace:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnTrace: {data}")
@@ -66,34 +67,38 @@ class TurnTrace:
         if data is not None and "promptyVersion" in data:
             instance.prompty_version = data["promptyVersion"]
         if data is not None and "events" in data:
-            instance.events = TurnTrace.load_events(data["events"], context)
+            instance.events = TurnTrace.load_events(data["events"], context.at("events"))
         if data is not None and "summary" in data:
-            instance.summary = TurnSummary.load(data["summary"], context)
+            instance.summary = TurnSummary.load(data["summary"], context.at("summary"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_events(data: dict | list, context: LoadContext | None) -> list[TurnEvent]:
+        if context is None:
+            context = LoadContext(path="events")
         if isinstance(data, dict):
             # convert simple named events to list of TurnEvent
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(TurnEvent.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
-            data = result
-        return [TurnEvent.load(item, context) for item in data]
+                    result.append(TurnEvent.load({"name": k, "id": v}, context.at(k)))
+            return result
+        return [TurnEvent.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_events(items: list[TurnEvent], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

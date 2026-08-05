@@ -55,8 +55,9 @@ class ToolExecutionStartPayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolExecutionStartPayload: {data}")
@@ -75,7 +76,7 @@ class ToolExecutionStartPayload:
         if data is not None and "workingDirectory" in data:
             instance.working_directory = data["workingDirectory"]
         if data is not None and "redaction" in data:
-            instance.redaction = RedactionMetadata.load(data["redaction"], context)
+            instance.redaction = RedactionMetadata.load(data["redaction"], context.at("redaction"))
         if context is not None:
             instance = context.process_output(instance)
         return instance

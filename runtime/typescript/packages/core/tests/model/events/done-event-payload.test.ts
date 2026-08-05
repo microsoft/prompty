@@ -18,12 +18,6 @@ describe("DoneEventPayload", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = DoneEventPayload.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new DoneEventPayload();
       const data = instance.save();

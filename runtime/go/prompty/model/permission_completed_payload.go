@@ -24,6 +24,9 @@ type PermissionCompletedPayload struct {
 
 // LoadPermissionCompletedPayload creates a PermissionCompletedPayload from a map[string]interface{}
 func LoadPermissionCompletedPayload(data interface{}, ctx *LoadContext) (PermissionCompletedPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := PermissionCompletedPayload{}
 
 	// Load from map
@@ -53,7 +56,7 @@ func LoadPermissionCompletedPayload(data interface{}, ctx *LoadContext) (Permiss
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
 				if err != nil {
 					return result, err
 				}

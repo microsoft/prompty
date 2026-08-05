@@ -73,7 +73,9 @@ describe("ToolResult", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "parts": [\n    {\n      "kind": "text",\n      "value": "72°F and sunny"\n    }\n  ],\n  "errorKind": "missing_tool",\n  "errorMessage": "Tool 'get_weather' is not registered",\n  "durationMs": 42\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolResult.load(data);
       expect(instance).toBeDefined();
     });

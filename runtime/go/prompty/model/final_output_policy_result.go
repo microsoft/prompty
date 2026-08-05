@@ -14,11 +14,14 @@ import (
 
 type FinalOutputPolicyResult struct {
 	Output   *interface{}           `json:"output,omitempty" yaml:"output,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadFinalOutputPolicyResult creates a FinalOutputPolicyResult from a map[string]interface{}
 func LoadFinalOutputPolicyResult(data interface{}, ctx *LoadContext) (FinalOutputPolicyResult, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := FinalOutputPolicyResult{}
 
 	// Load from map

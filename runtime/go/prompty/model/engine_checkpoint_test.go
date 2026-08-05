@@ -19,7 +19,8 @@ func TestEngineCheckpointLoadJSON(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -53,6 +54,7 @@ id: ckpt_abc123
 sessionId: sess_abc123
 turnId: turn_abc123
 runId: run_abc123
+contextState: {}
 
 `
 	var data map[string]interface{}
@@ -86,7 +88,8 @@ func TestEngineCheckpointFromJSON(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "contextState": {}
 }
 `
 
@@ -115,6 +118,7 @@ id: ckpt_abc123
 sessionId: sess_abc123
 turnId: turn_abc123
 runId: run_abc123
+contextState: {}
 
 `
 
@@ -143,7 +147,8 @@ func TestEngineCheckpointRoundtrip(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -184,7 +189,8 @@ func TestEngineCheckpointToJSON(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -232,7 +238,8 @@ func TestEngineCheckpointToYAML(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}

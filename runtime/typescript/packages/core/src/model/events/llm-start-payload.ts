@@ -33,6 +33,7 @@ export class LlmStartPayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): LlmStartPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

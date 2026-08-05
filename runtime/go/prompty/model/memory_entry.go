@@ -39,6 +39,9 @@ type MemoryEntry struct {
 
 // LoadMemoryEntry creates a MemoryEntry from a map[string]interface{}
 func LoadMemoryEntry(data interface{}, ctx *LoadContext) (MemoryEntry, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := MemoryEntry{}
 
 	// Load from map
@@ -77,7 +80,9 @@ func (obj MemoryEntry) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.CreatedAt != nil {
 		result["createdAt"] = *obj.CreatedAt
 	}
-	result["tags"] = obj.Tags
+	if obj.Tags != nil {
+		result["tags"] = obj.Tags
+	}
 
 	return result
 }

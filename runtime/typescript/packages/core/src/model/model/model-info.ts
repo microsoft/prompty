@@ -11,8 +11,8 @@ export class ModelInfo {
   displayName?: string | undefined;
   ownedBy?: string | undefined;
   contextWindow?: number | undefined;
-  inputModalities?: string[] = [];
-  outputModalities?: string[] = [];
+  inputModalities?: string[];
+  outputModalities?: string[];
   additionalProperties?: Record<string, unknown> | undefined;
 
   constructor(init?: Partial<ModelInfo>) {
@@ -40,6 +40,7 @@ export class ModelInfo {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): ModelInfo {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

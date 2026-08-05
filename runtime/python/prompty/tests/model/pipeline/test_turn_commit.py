@@ -10,7 +10,8 @@ def test_load_json_turncommit():
     json_data = r"""
     {
       "sessionId": "sess_abc123",
-      "turnId": "turn_abc123"
+      "turnId": "turn_abc123",
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)
@@ -24,6 +25,7 @@ def test_load_yaml_turncommit():
     yaml_data = r"""
     sessionId: sess_abc123
     turnId: turn_abc123
+    contextState: {}
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -38,7 +40,8 @@ def test_roundtrip_json_turncommit():
     json_data = r"""
     {
       "sessionId": "sess_abc123",
-      "turnId": "turn_abc123"
+      "turnId": "turn_abc123",
+      "contextState": {}
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -55,7 +58,8 @@ def test_to_json_turncommit():
     json_data = r"""
     {
       "sessionId": "sess_abc123",
-      "turnId": "turn_abc123"
+      "turnId": "turn_abc123",
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)
@@ -71,7 +75,8 @@ def test_to_yaml_turncommit():
     json_data = r"""
     {
       "sessionId": "sess_abc123",
-      "turnId": "turn_abc123"
+      "turnId": "turn_abc123",
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)

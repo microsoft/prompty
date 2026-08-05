@@ -52,11 +52,14 @@ class ModelReconciliationState:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ModelReconciliationState: {data}")
+        if "request" not in data or data["request"] is None:
+            raise ValueError(f"{context.at('request').path}: missing required field")
 
         # create new instance
         instance = ModelReconciliationState()
@@ -64,7 +67,7 @@ class ModelReconciliationState:
         if data is not None and "invocationId" in data:
             instance.invocation_id = data["invocationId"]
         if data is not None and "request" in data:
-            instance.request = ModelInvocationRequest.load(data["request"], context)
+            instance.request = ModelInvocationRequest.load(data["request"], context.at("request"))
         if data is not None and "failedAttempt" in data:
             instance.failed_attempt = data["failedAttempt"]
         if data is not None and "message" in data:

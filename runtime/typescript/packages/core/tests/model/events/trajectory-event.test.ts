@@ -77,7 +77,9 @@ describe("TrajectoryEvent", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "traj_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_001",\n  "toolCallId": "call_abc123",\n  "turnIndex": 4,\n  "eventType": "command",\n  "createdAt": "2026-06-09T20:00:00Z"\n}`,
+      ) as Record<string, unknown>;
       const instance = TrajectoryEvent.load(data);
       expect(instance).toBeDefined();
     });

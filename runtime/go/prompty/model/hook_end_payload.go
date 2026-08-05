@@ -33,6 +33,9 @@ type HookEndPayload struct {
 
 // LoadHookEndPayload creates a HookEndPayload from a map[string]interface{}
 func LoadHookEndPayload(data interface{}, ctx *LoadContext) (HookEndPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := HookEndPayload{}
 
 	// Load from map
@@ -77,7 +80,7 @@ func LoadHookEndPayload(data interface{}, ctx *LoadContext) (HookEndPayload, err
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
 				if err != nil {
 					return result, err
 				}

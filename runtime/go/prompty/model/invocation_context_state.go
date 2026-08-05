@@ -23,12 +23,17 @@ const (
 
 type InvocationContextState struct {
 	Portability    InvocationContextPortability `json:"portability" yaml:"portability"`
-	DelegatedState []DelegatedStateReference    `json:"delegatedState,omitempty" yaml:"delegatedState,omitempty"`
+	DelegatedState []DelegatedStateReference    `json:"delegatedState" yaml:"delegatedState"`
 }
 
 // LoadInvocationContextState creates a InvocationContextState from a map[string]interface{}
 func LoadInvocationContextState(data interface{}, ctx *LoadContext) (InvocationContextState, error) {
-	result := InvocationContextState{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := InvocationContextState{
+		DelegatedState: []DelegatedStateReference{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -40,7 +45,7 @@ func LoadInvocationContextState(data interface{}, ctx *LoadContext) (InvocationC
 				result.DelegatedState = make([]DelegatedStateReference, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadDelegatedStateReference(item, ctx)
+						loaded, err := LoadDelegatedStateReference(item, ctx.At("delegatedState").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

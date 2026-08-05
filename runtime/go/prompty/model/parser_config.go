@@ -14,11 +14,14 @@ import (
 
 type ParserConfig struct {
 	Kind    string                 `json:"kind" yaml:"kind"`
-	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
+	Options map[string]interface{} `json:"options" yaml:"options"`
 }
 
 // LoadParserConfig creates a ParserConfig from a map[string]interface{}
 func LoadParserConfig(data interface{}, ctx *LoadContext) (ParserConfig, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ParserConfig{}
 
 	// Handle alternate scalar representations

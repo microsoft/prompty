@@ -20,6 +20,7 @@ export class MemoryStore {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): MemoryStore {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -29,7 +30,7 @@ export class MemoryStore {
     if (data["entries"] !== undefined && data["entries"] !== null) {
       instance.entries = MemoryStore.loadEntries(
         data["entries"] as unknown[],
-        context,
+        context.at("entries"),
       );
     }
 
@@ -43,20 +44,31 @@ export class MemoryStore {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): MemoryEntry[] {
+    context ??= new LoadContext({ path: "entries" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: MemoryEntry[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            MemoryEntry.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, content: v });
+          result.push(MemoryEntry.load({ name: k, content: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      MemoryEntry.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      MemoryEntry.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 

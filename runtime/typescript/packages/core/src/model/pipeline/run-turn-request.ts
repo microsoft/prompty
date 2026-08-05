@@ -30,6 +30,7 @@ export class RunTurnRequest {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): RunTurnRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -48,7 +49,7 @@ export class RunTurnRequest {
     if (data["options"] !== undefined && data["options"] !== null) {
       instance.options = TurnOptions.load(
         data["options"] as Record<string, unknown>,
-        context,
+        context.at("options"),
       );
     }
 

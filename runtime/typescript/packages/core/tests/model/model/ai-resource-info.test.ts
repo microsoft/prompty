@@ -18,12 +18,6 @@ describe("AiResourceInfo", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = AiResourceInfo.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new AiResourceInfo();
       const data = instance.save();

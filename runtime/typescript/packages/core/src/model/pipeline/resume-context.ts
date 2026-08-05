@@ -32,16 +32,22 @@ export class ResumeContext {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ResumeContext {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["checkpoint"] === undefined || data["checkpoint"] === null) {
+      throw new Error(
+        `${context.at("checkpoint").path}: missing required field`,
+      );
+    }
     const instance = new ResumeContext();
 
     if (data["checkpoint"] !== undefined && data["checkpoint"] !== null) {
       instance.checkpoint = EngineCheckpoint.load(
         data["checkpoint"] as Record<string, unknown>,
-        context,
+        context.at("checkpoint"),
       );
     }
     if (data["maxIterations"] !== undefined && data["maxIterations"] !== null) {

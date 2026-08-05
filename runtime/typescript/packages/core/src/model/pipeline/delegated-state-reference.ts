@@ -27,6 +27,7 @@ export class DelegatedStateReference {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): DelegatedStateReference {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

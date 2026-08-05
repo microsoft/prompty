@@ -69,7 +69,9 @@ describe("RetryPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "operation": "llm",\n  "attempt": 2,\n  "maxAttempts": 3,\n  "delayMs": 1250,\n  "reason": "rate_limit"\n}`,
+      ) as Record<string, unknown>;
       const instance = RetryPayload.load(data);
       expect(instance).toBeDefined();
     });

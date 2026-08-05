@@ -41,6 +41,7 @@ export class Model {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): Model {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -69,13 +70,13 @@ export class Model {
     if (data["connection"] !== undefined && data["connection"] !== null) {
       instance.connection = Connection.load(
         data["connection"] as Record<string, unknown>,
-        context,
+        context.at("connection"),
       );
     }
     if (data["options"] !== undefined && data["options"] !== null) {
       instance.options = ModelOptions.load(
         data["options"] as Record<string, unknown>,
-        context,
+        context.at("options"),
       );
     }
 

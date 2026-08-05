@@ -19,11 +19,14 @@ type ModelToolRequest struct {
 	Id        string                 `json:"id" yaml:"id"`
 	Name      string                 `json:"name" yaml:"name"`
 	Arguments *interface{}           `json:"arguments,omitempty" yaml:"arguments,omitempty"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata  map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadModelToolRequest creates a ModelToolRequest from a map[string]interface{}
 func LoadModelToolRequest(data interface{}, ctx *LoadContext) (ModelToolRequest, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ModelToolRequest{}
 
 	// Load from map

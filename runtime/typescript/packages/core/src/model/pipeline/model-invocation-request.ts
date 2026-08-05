@@ -22,16 +22,20 @@ export class ModelInvocationRequest {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ModelInvocationRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["context"] === undefined || data["context"] === null) {
+      throw new Error(`${context.at("context").path}: missing required field`);
+    }
     const instance = new ModelInvocationRequest();
 
     if (data["context"] !== undefined && data["context"] !== null) {
       instance.context = ModelInvocationContextSnapshot.load(
         data["context"] as Record<string, unknown>,
-        context,
+        context.at("context"),
       );
     }
 

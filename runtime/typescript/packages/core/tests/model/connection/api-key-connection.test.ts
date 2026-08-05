@@ -65,7 +65,9 @@ describe("ApiKeyConnection", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "kind": "key",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n  "apiKey": "your-api-key"\n}`,
+      ) as Record<string, unknown>;
       const instance = ApiKeyConnection.load(data);
       expect(instance).toBeDefined();
     });

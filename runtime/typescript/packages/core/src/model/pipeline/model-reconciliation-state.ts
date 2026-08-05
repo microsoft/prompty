@@ -32,10 +32,14 @@ export class ModelReconciliationState {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ModelReconciliationState {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["request"] === undefined || data["request"] === null) {
+      throw new Error(`${context.at("request").path}: missing required field`);
+    }
     const instance = new ModelReconciliationState();
 
     if (data["invocationId"] !== undefined && data["invocationId"] !== null) {
@@ -44,7 +48,7 @@ export class ModelReconciliationState {
     if (data["request"] !== undefined && data["request"] !== null) {
       instance.request = ModelInvocationRequest.load(
         data["request"] as Record<string, unknown>,
-        context,
+        context.at("request"),
       );
     }
     if (data["failedAttempt"] !== undefined && data["failedAttempt"] !== null) {
