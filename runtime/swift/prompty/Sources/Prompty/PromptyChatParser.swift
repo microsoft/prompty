@@ -54,18 +54,25 @@ public struct PromptyChatParser: Parser {
       .map { line -> String in
         let trimmed = line.trimmingCharacters(in: .whitespaces)
         guard let match = Self.matchBoundary(trimmed) else { return line }
-        return "\(match.role)[nonce=\"\(nonce)\"]:\n"
+        return "\(match.role)[\(Self.nonceAttribute)=\"\(nonce)\"]:\n"
       }
       .joined(separator: "\n")
 
-    return PreRenderResult(text: sanitized, context: ["nonce": nonce])
+    return PreRenderResult(text: sanitized, context: [Self.nonceAttribute: nonce])
   }
 
   public func parse(agent: Prompty, rendered: String, context: [String: Any]?) async throws
     -> [Message]
   {
-    try Self.parseChat(rendered, expectedNonce: context?["nonce"] as? String)
+    try Self.parseChat(rendered, expectedNonce: context?[Self.nonceAttribute] as? String)
   }
+
+  /// Reserved attribute key carrying the strict-mode nonce.
+  ///
+  /// Reserved in two senses: its value is never type-coerced (see
+  /// ``parseAttributes(_:)``), and it is stripped from message metadata rather
+  /// than surfaced to callers.
+  static let nonceAttribute = "nonce"
 
   // MARK: - Parsing
 
@@ -133,7 +140,7 @@ public struct PromptyChatParser: Parser {
     expectedNonce: String?
   ) throws -> Message {
     if let expected = expectedNonce {
-      let actual = JSONSupport.stringify(attributes["nonce"])
+      let actual = JSONSupport.stringify(attributes[Self.nonceAttribute])
       guard actual == expected else {
         throw InvokerError.parse(
           """
@@ -146,7 +153,7 @@ public struct PromptyChatParser: Parser {
 
     // The nonce is a transport detail; everything else becomes metadata.
     var metadata = attributes
-    metadata.removeValue(forKey: "nonce")
+    metadata.removeValue(forKey: Self.nonceAttribute)
 
     return Message(role: role, parts: [.text(content)], metadata: metadata)
   }
@@ -169,6 +176,20 @@ public struct PromptyChatParser: Parser {
   }
 
   /// Extract `key=value` pairs from an attribute block, coercing scalars.
+  ///
+  /// `nonce` is exempt from coercion. It is a reserved transport key holding an
+  /// opaque 16-character hex token, and coercing it corrupts the value: hex is a
+  /// superset of decimal, so coercion corrupts roughly 1 in 1,200 generated
+  /// nonces (`0663512342083e99` parses as `6.63512342083e+110`,
+  /// `9677e80871924237` overflows to `inf`, and `0419856025378190` loses its
+  /// leading zero). Any of those then fails to equal the nonce that produced it,
+  /// so strict mode rejects its own untampered output as prompt injection.
+  ///
+  /// The root cause is fixed here rather than by stringifying at the comparison
+  /// site, which is what the Rust runtime does (`parsers/prompty.rs:174-182`).
+  /// That approach still mismatches on values whose numeric round-trip is not
+  /// identity, such as a leading zero. Never coercing a value that is
+  /// specification-defined to be an opaque string removes the class entirely.
   static func parseAttributes(_ raw: String) -> [String: Any] {
     var result: [String: Any] = [:]
     let range = NSRange(raw.startIndex..<raw.endIndex, in: raw)
@@ -181,6 +202,11 @@ public struct PromptyChatParser: Parser {
 
       let key = String(raw[keyRange])
       let value = String(raw[valueRange]).trimmingCharacters(in: .whitespaces)
+
+      if key == Self.nonceAttribute {
+        result[key] = value
+        continue
+      }
 
       switch value.lowercased() {
       case "true": result[key] = true
