@@ -108,7 +108,7 @@ model Prompty {
       },
     },
   })
-  `model`: Model | string;
+  `model`?: Model | string;
 
   // Tools
   @doc("Tools available for extended functionality")
