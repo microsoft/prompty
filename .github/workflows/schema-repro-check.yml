@@ -1,0 +1,63 @@
+name: schema generated-code reproducibility
+
+# Asserts that the committed generated code is exactly what the pinned
+# @typra/emitter produces. Nothing enforced this before, which is how two
+# commits on this repo (00a040fb -> 0.4.26, 38c7a5a0 -> 0.4.27) bumped the
+# emitter pin without regenerating and ran zero CI: every runtime workflow
+# is paths-filtered to runtime/<lang>/**, so a schema-only commit triggered
+# nothing. Both happened to be no-ops, but that was luck, not a gate.
+on:
+  pull_request:
+    paths:
+      - 'schema/**'
+      - '.github/workflows/schema-repro-check.yml'
+
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  regenerate-is-idempotent:
+    name: regeneration produces no diff
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # rustfmt is required: the Rust emitter does not format its output, but
+      # the committed tree is formatted. normalize-typra-output.mjs runs
+      # `cargo fmt -p prompty` to reconcile that. Without the component the
+      # normalize step degrades to a warning and this job reports a ~291-file
+      # diff that is purely line-joining.
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Install schema dependencies
+        working-directory: schema
+        run: npm ci
+
+      - name: Regenerate from the pinned emitter
+        working-directory: schema
+        run: npm run generate
+
+      - name: Assert the tree is unchanged
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Regenerating from the pinned @typra/emitter changed the tree."
+            echo "The committed generated code does not match the pinned emitter version."
+            echo "Fix: run 'npm run generate' in schema/ and commit the result."
+            echo ""
+            echo "--- changed files ---"
+            git status --porcelain
+            echo ""
+            echo "--- diff ---"
+            git --no-pager diff --stat
+            exit 1
+          fi
+          echo "Generated code matches the pinned emitter exactly."
