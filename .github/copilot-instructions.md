@@ -814,10 +814,9 @@ tools:
     kind: function
     description: Get the current weather
     parameters:
-      properties:
-        location:
-          kind: string
-          description: City and state
+      location:
+        kind: string
+        description: City and state
 ---
 system:
 You are a helpful assistant with access to tools.
@@ -1378,11 +1377,14 @@ agent = make_openai_agent(
         "name": "get_weather",
         "kind": "function",
         "description": "Get the current weather",
-        "parameters": {
-            "properties": [
-                {"name": "city", "kind": "string", "required": True}
-            ]
-        },
+        # FunctionTool.parameters is a `Properties` named collection
+        # (schema/model/tools/tool.tsp). Use the declared list form. Wrapping it
+        # in {"properties": [...]} parses as name-keyed object form with an array
+        # under a key, which the loader rejects:
+        #   "tools.parameters.properties: invalid named collection entry category array"
+        "parameters": [
+            {"name": "city", "kind": "string", "required": True}
+        ],
     }],
     metadata={"tool_functions": {"get_weather": get_weather}},
 )

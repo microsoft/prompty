@@ -286,11 +286,9 @@ async fn test_entra_id_agent_tool_calling() {
                 "name": "get_weather",
                 "kind": "function",
                 "description": "Get the current weather for a city",
-                "parameters": {
-                    "properties": [
-                        { "name": "city", "kind": "string", "description": "The city name", "required": true }
-                    ]
-                },
+                "parameters": [
+                    { "name": "city", "kind": "string", "description": "The city name", "required": true }
+                ],
             }
         ],
         "instructions": "system:\nYou are a helpful assistant with weather tools. Use the get_weather tool when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?",
