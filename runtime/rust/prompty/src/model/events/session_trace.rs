@@ -130,8 +130,9 @@ impl SessionTrace {
             } else {
                 format!("{}.events", path)
             };
-            for entry in entries {
-                SessionEvent::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                SessionEvent::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -143,8 +144,9 @@ impl SessionTrace {
             } else {
                 format!("{}.turns", path)
             };
-            for entry in entries {
-                TurnTrace::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                TurnTrace::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -156,8 +158,9 @@ impl SessionTrace {
             } else {
                 format!("{}.checkpoints", path)
             };
-            for entry in entries {
-                Checkpoint::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Checkpoint::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -169,8 +172,9 @@ impl SessionTrace {
             } else {
                 format!("{}.trajectory", path)
             };
-            for entry in entries {
-                TrajectoryEvent::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                TrajectoryEvent::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -182,8 +186,9 @@ impl SessionTrace {
             } else {
                 format!("{}.files", path)
             };
-            for entry in entries {
-                SessionFileRef::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                SessionFileRef::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value.get("refs").and_then(|candidate| candidate.as_array()) {
@@ -192,8 +197,9 @@ impl SessionTrace {
             } else {
                 format!("{}.refs", path)
             };
-            for entry in entries {
-                SessionRef::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                SessionRef::validate_input_at(entry, &entry_path)?;
             }
         }
         let child_path = if path.is_empty() {

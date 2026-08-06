@@ -352,13 +352,15 @@ public partial class EngineCheckpoint
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(Message.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(Message.Load(itemDict, context));
+                    result.Add(Message.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -407,13 +409,15 @@ public partial class EngineCheckpoint
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(ModelToolRequest.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(ModelToolRequest.Load(itemDict, context));
+                    result.Add(ModelToolRequest.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -462,13 +466,15 @@ public partial class EngineCheckpoint
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(ModelToolResult.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(ModelToolResult.Load(itemDict, context));
+                    result.Add(ModelToolResult.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

@@ -107,8 +107,9 @@ impl TurnModelRequest {
             } else {
                 format!("{}.toolResults", path)
             };
-            for entry in entries {
-                HostToolResult::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                HostToolResult::validate_input_at(entry, &entry_path)?;
             }
         }
         Ok(())

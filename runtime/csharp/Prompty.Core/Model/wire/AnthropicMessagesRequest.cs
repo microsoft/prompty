@@ -191,13 +191,15 @@ public partial class AnthropicMessagesRequest
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(AnthropicWireMessage.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(AnthropicWireMessage.Load(itemDict, context));
+                    result.Add(AnthropicWireMessage.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -246,13 +248,15 @@ public partial class AnthropicMessagesRequest
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(AnthropicToolDefinition.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(AnthropicToolDefinition.Load(itemDict, context));
+                    result.Add(AnthropicToolDefinition.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

@@ -120,8 +120,9 @@ impl AnthropicMessagesRequest {
             } else {
                 format!("{}.messages", path)
             };
-            for entry in entries {
-                AnthropicWireMessage::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                AnthropicWireMessage::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -133,8 +134,9 @@ impl AnthropicMessagesRequest {
             } else {
                 format!("{}.tools", path)
             };
-            for entry in entries {
-                AnthropicToolDefinition::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                AnthropicToolDefinition::validate_input_at(entry, &entry_path)?;
             }
         }
         Ok(())

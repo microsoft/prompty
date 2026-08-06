@@ -162,13 +162,15 @@ public partial class FunctionTool : Tool
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(Property.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(Property.Load(itemDict, context));
+                    result.Add(Property.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

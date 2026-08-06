@@ -242,8 +242,9 @@ impl Property {
                             }
                         }
                         serde_json::Value::Array(entries) => {
-                            for entry in entries {
-                                Property::validate_input_at(entry, &collection_path)?;
+                            for (index, entry) in entries.iter().enumerate() {
+                                let entry_path = format!("{}[{}]", collection_path, index);
+                                Property::validate_input_at(entry, &entry_path)?;
                             }
                         }
                         _ => {}
@@ -260,8 +261,9 @@ impl Property {
                     } else {
                         format!("{}.oneOf", path)
                     };
-                    for entry in entries {
-                        Property::validate_input_at(entry, &collection_path)?;
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Property::validate_input_at(entry, &entry_path)?;
                     }
                 }
                 if let Some(entries) = value
@@ -273,8 +275,9 @@ impl Property {
                     } else {
                         format!("{}.anyOf", path)
                     };
-                    for entry in entries {
-                        Property::validate_input_at(entry, &collection_path)?;
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Property::validate_input_at(entry, &entry_path)?;
                     }
                 }
             }

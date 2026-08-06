@@ -125,13 +125,15 @@ public partial class ValidationResult
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(ValidationError.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(ValidationError.Load(itemDict, context));
+                    result.Add(ValidationError.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

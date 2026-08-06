@@ -237,8 +237,9 @@ impl Tool {
                     }
                 }
                 serde_json::Value::Array(entries) => {
-                    for entry in entries {
-                        Binding::validate_input_at(entry, &collection_path)?;
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Binding::validate_input_at(entry, &entry_path)?;
                     }
                 }
                 _ => {}
@@ -281,8 +282,9 @@ impl Tool {
                             }
                         }
                         serde_json::Value::Array(entries) => {
-                            for entry in entries {
-                                Property::validate_input_at(entry, &collection_path)?;
+                            for (index, entry) in entries.iter().enumerate() {
+                                let entry_path = format!("{}[{}]", collection_path, index);
+                                Property::validate_input_at(entry, &entry_path)?;
                             }
                         }
                         _ => {}

@@ -128,8 +128,9 @@ impl ModelInvocationContextSnapshot {
             } else {
                 format!("{}.messages", path)
             };
-            for entry in entries {
-                Message::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Message::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -141,8 +142,9 @@ impl ModelInvocationContextSnapshot {
             } else {
                 format!("{}.decisions", path)
             };
-            for entry in entries {
-                InvocationContextDecision::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                InvocationContextDecision::validate_input_at(entry, &entry_path)?;
             }
         }
         let child_path = if path.is_empty() {

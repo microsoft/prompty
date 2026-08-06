@@ -175,8 +175,9 @@ impl RunTurnResult {
             } else {
                 format!("{}.toolResults", path)
             };
-            for entry in entries {
-                HostToolResult::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                HostToolResult::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -188,8 +189,9 @@ impl RunTurnResult {
             } else {
                 format!("{}.checkpoints", path)
             };
-            for entry in entries {
-                Checkpoint::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Checkpoint::validate_input_at(entry, &entry_path)?;
             }
         }
         Ok(())

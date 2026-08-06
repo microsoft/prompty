@@ -88,8 +88,9 @@ impl ContextCandidate {
             } else {
                 format!("{}.messages", path)
             };
-            for entry in entries {
-                Message::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Message::validate_input_at(entry, &entry_path)?;
             }
         }
         Ok(())

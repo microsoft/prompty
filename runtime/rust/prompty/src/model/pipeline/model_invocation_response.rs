@@ -109,8 +109,9 @@ impl ModelInvocationResponse {
             } else {
                 format!("{}.assistantMessages", path)
             };
-            for entry in entries {
-                Message::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Message::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -122,8 +123,9 @@ impl ModelInvocationResponse {
             } else {
                 format!("{}.toolRequests", path)
             };
-            for entry in entries {
-                ModelToolRequest::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ModelToolRequest::validate_input_at(entry, &entry_path)?;
             }
         }
         let child_path = if path.is_empty() {

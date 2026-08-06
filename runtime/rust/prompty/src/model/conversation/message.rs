@@ -164,8 +164,9 @@ impl Message {
             } else {
                 format!("{}.parts", path)
             };
-            for entry in entries {
-                ContentPart::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ContentPart::validate_input_at(entry, &entry_path)?;
             }
         }
         Ok(())

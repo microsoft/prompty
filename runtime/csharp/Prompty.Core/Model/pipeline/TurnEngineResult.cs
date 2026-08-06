@@ -146,13 +146,15 @@ public partial class TurnEngineResult
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(ModelInvocationContextSnapshot.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(ModelInvocationContextSnapshot.Load(itemDict, context));
+                    result.Add(ModelInvocationContextSnapshot.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -201,13 +203,15 @@ public partial class TurnEngineResult
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(ModelToolResult.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(ModelToolResult.Load(itemDict, context));
+                    result.Add(ModelToolResult.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

@@ -74,8 +74,9 @@ impl ReplayVerificationRequest {
             } else {
                 format!("{}.expected", path)
             };
-            for entry in entries {
-                ReplayJournalRecord::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ReplayJournalRecord::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -87,8 +88,9 @@ impl ReplayVerificationRequest {
             } else {
                 format!("{}.actual", path)
             };
-            for entry in entries {
-                ReplayJournalRecord::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ReplayJournalRecord::validate_input_at(entry, &entry_path)?;
             }
         }
         Ok(())

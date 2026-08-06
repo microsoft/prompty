@@ -211,13 +211,15 @@ public partial class SessionTrace
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(SessionEvent.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(SessionEvent.Load(itemDict, context));
+                    result.Add(SessionEvent.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -266,13 +268,15 @@ public partial class SessionTrace
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(TurnTrace.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(TurnTrace.Load(itemDict, context));
+                    result.Add(TurnTrace.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -321,13 +325,15 @@ public partial class SessionTrace
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(Checkpoint.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(Checkpoint.Load(itemDict, context));
+                    result.Add(Checkpoint.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -376,13 +382,15 @@ public partial class SessionTrace
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(TrajectoryEvent.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(TrajectoryEvent.Load(itemDict, context));
+                    result.Add(TrajectoryEvent.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -431,13 +439,15 @@ public partial class SessionTrace
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(SessionFileRef.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(SessionFileRef.Load(itemDict, context));
+                    result.Add(SessionFileRef.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -486,13 +496,15 @@ public partial class SessionTrace
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(SessionRef.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(SessionRef.Load(itemDict, context));
+                    result.Add(SessionRef.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

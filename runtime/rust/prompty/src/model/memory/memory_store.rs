@@ -68,8 +68,9 @@ impl MemoryStore {
             } else {
                 format!("{}.entries", path)
             };
-            for entry in entries {
-                MemoryEntry::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                MemoryEntry::validate_input_at(entry, &entry_path)?;
             }
         }
         Ok(())

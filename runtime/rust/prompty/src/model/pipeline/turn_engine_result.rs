@@ -101,8 +101,9 @@ impl TurnEngineResult {
             } else {
                 format!("{}.snapshots", path)
             };
-            for entry in entries {
-                ModelInvocationContextSnapshot::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ModelInvocationContextSnapshot::validate_input_at(entry, &entry_path)?;
             }
         }
         if let Some(entries) = value
@@ -114,8 +115,9 @@ impl TurnEngineResult {
             } else {
                 format!("{}.toolResults", path)
             };
-            for entry in entries {
-                ModelToolResult::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ModelToolResult::validate_input_at(entry, &entry_path)?;
             }
         }
         Ok(())

@@ -95,8 +95,9 @@ impl TurnTrace {
             } else {
                 format!("{}.events", path)
             };
-            for entry in entries {
-                TurnEvent::validate_input_at(entry, &collection_path)?;
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                TurnEvent::validate_input_at(entry, &entry_path)?;
             }
         }
         let child_path = if path.is_empty() {

@@ -37,6 +37,15 @@ public class LoadContext
         Path = string.IsNullOrEmpty(Path) ? segment : $"{Path}.{segment}",
     };
 
+    /// <summary>Create a child context for an array element. Rendered with bracket
+    /// notation so a diagnostic identifies which element failed.</summary>
+    public LoadContext AtIndex(int index) => new()
+    {
+        PreProcess = PreProcess,
+        PostProcess = PostProcess,
+        Path = $"{Path}[{index}]",
+    };
+
     /// <summary>
     /// Apply pre-processing to input data if a PreProcess callback is set.
     /// </summary>

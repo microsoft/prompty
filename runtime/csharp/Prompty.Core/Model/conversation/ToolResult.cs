@@ -157,13 +157,15 @@ public partial class ToolResult : IToolResultHelpers
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(ContentPart.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(ContentPart.Load(itemDict, context));
+                    result.Add(ContentPart.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

@@ -196,13 +196,15 @@ public partial class TurnCommit
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(Message.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(Message.Load(itemDict, context));
+                    result.Add(Message.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

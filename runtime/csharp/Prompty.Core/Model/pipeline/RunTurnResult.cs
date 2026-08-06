@@ -171,13 +171,15 @@ public partial class RunTurnResult
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(HostToolResult.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(HostToolResult.Load(itemDict, context));
+                    result.Add(HostToolResult.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 
@@ -226,13 +228,15 @@ public partial class RunTurnResult
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(Checkpoint.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(Checkpoint.Load(itemDict, context));
+                    result.Add(Checkpoint.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

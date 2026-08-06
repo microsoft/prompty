@@ -141,13 +141,15 @@ public abstract partial class Tool
         }
         else if (data is IEnumerable<object> list)
         {
+            var itemIndex = 0;
             foreach (var item in list)
             {
                 var itemDict = item.GetDictionary(Binding.ShorthandProperty);
                 if (itemDict.Count > 0)
                 {
-                    result.Add(Binding.Load(itemDict, context));
+                    result.Add(Binding.Load(itemDict, context?.AtIndex(itemIndex)));
                 }
+                itemIndex++;
             }
         }
 

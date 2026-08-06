@@ -142,8 +142,9 @@ impl Prompty {
                     }
                 }
                 serde_json::Value::Array(entries) => {
-                    for entry in entries {
-                        Property::validate_input_at(entry, &collection_path)?;
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Property::validate_input_at(entry, &entry_path)?;
                     }
                 }
                 _ => {}
@@ -177,8 +178,9 @@ impl Prompty {
                     }
                 }
                 serde_json::Value::Array(entries) => {
-                    for entry in entries {
-                        Property::validate_input_at(entry, &collection_path)?;
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Property::validate_input_at(entry, &entry_path)?;
                     }
                 }
                 _ => {}
@@ -220,8 +222,9 @@ impl Prompty {
                     }
                 }
                 serde_json::Value::Array(entries) => {
-                    for entry in entries {
-                        Tool::validate_input_at(entry, &collection_path)?;
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Tool::validate_input_at(entry, &entry_path)?;
                     }
                 }
                 _ => {}
