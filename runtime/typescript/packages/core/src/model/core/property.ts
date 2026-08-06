@@ -231,7 +231,7 @@ export class ArrayProperty extends Property {
   static readonly shorthandProperty: string | undefined = undefined;
 
   kind: string = "array";
-  items!: Property;
+  items?: Property | undefined;
 
   constructor(init?: Partial<ArrayProperty>) {
     super(init);
@@ -252,9 +252,6 @@ export class ArrayProperty extends Property {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    if (data["items"] === undefined || data["items"] === null) {
-      throw new Error(`${context.at("items").path}: missing required field`);
-    }
     const instance = new ArrayProperty();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {

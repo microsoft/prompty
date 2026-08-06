@@ -333,7 +333,7 @@
                 "knownAs": [],
                 "defaultFor": [],
                 "isScalar": false,
-                "isOptional": false,
+                "isOptional": true,
                 "isCollection": false,
                 "isAny": false,
                 "isDict": false,

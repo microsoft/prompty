@@ -235,7 +235,7 @@ type ArrayProperty struct {
 	Default     *interface{}  `json:"default" yaml:"default"`
 	Example     *interface{}  `json:"example" yaml:"example"`
 	EnumValues  []interface{} `json:"enumValues" yaml:"enumValues"`
-	Items       interface{}   `json:"items" yaml:"items"`
+	Items       interface{}   `json:"items,omitempty" yaml:"items,omitempty"`
 }
 
 // LoadArrayProperty creates a ArrayProperty from a map[string]interface{}
@@ -249,9 +249,6 @@ func LoadArrayProperty(data interface{}, ctx *LoadContext) (ArrayProperty, error
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
-		if requiredValue, exists := m["items"]; !exists || requiredValue == nil {
-			return result, fmt.Errorf("%s: missing required field", ctx.At("items").Path)
-		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
 		}
@@ -288,7 +285,7 @@ func LoadArrayProperty(data interface{}, ctx *LoadContext) (ArrayProperty, error
 				if err != nil {
 					return result, err
 				}
-				// Polymorphic type - keep as interface{}
+				// Polymorphic type - keep as interface{} (no pointer needed, interface{} can be nil)
 				result.Items = loaded
 			} else {
 				loaded, err := LoadProperty(val, ctx.At("items"))
@@ -326,15 +323,18 @@ func (obj ArrayProperty) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.EnumValues != nil {
 		result["enumValues"] = obj.EnumValues
 	}
-
-	// Handle polymorphic type via type switch
-	switch v := obj.Items.(type) {
-	case interface {
-		Save(*SaveContext) map[string]interface{}
-	}:
-		result["items"] = v.Save(ctx)
-	default:
-		result["items"] = obj.Items
+	if obj.Items != nil {
+		// Handle polymorphic type (stored as interface{} without pointer)
+		if obj.Items != nil {
+			switch v := obj.Items.(type) {
+			case interface {
+				Save(*SaveContext) map[string]interface{}
+			}:
+				result["items"] = v.Save(ctx)
+			default:
+				result["items"] = obj.Items
+			}
+		}
 	}
 
 	return result

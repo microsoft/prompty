@@ -39,7 +39,7 @@ public partial class ArrayProperty : Property
     /// <summary>
     /// The type of items contained in the array
     /// </summary>
-    public Property Items { get; set; }
+    public Property? Items { get; set; }
 
 
 
@@ -59,11 +59,6 @@ public partial class ArrayProperty : Property
             data = context.ProcessInput(data);
         }
 
-
-        if ((!data.TryGetValue("items", out var requiredItemsValue) || requiredItemsValue is null))
-        {
-            throw new ArgumentException($"{context!.At("items").Path}: missing required field");
-        }
 
         // Create new instance
         var instance = new ArrayProperty();
@@ -147,7 +142,10 @@ public partial class ArrayProperty : Property
         result["kind"] = obj.Kind;
 
 
-        result["items"] = obj.Items?.Save(context);
+        if (obj.Items is not null)
+        {
+            result["items"] = obj.Items?.Save(context);
+        }
 
 
         return result;

@@ -216,14 +216,14 @@ class ArrayProperty(Property):
     ----------
     kind : str
 
-    items : Property
+    items : Optional[Property]
         The type of items contained in the array
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="array")
-    items: Property = field(default_factory=Property)
+    items: Property | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ArrayProperty":
@@ -242,8 +242,6 @@ class ArrayProperty(Property):
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ArrayProperty: {data}")
-        if "items" not in data or data["items"] is None:
-            raise ValueError(f"{context.at('items').path}: missing required field")
 
         # create new instance
         instance = ArrayProperty()

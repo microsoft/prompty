@@ -68,7 +68,6 @@ properties:
     description: The type of items contained in the array
 required:
   - kind
-  - items
 allOf:
   - $ref: Property.yaml
 description: |-

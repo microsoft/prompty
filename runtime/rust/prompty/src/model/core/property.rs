@@ -17,7 +17,7 @@ pub enum PropertyKind {
     /// `kind` = `"array"`
     Array {
         /// The type of items contained in the array
-        items: serde_json::Value,
+        items: Option<serde_json::Value>,
     },
     /// `kind` = `"object"`
     Object {
@@ -143,10 +143,7 @@ impl Property {
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {
             "array" => PropertyKind::Array {
-                items: value
-                    .get("items")
-                    .cloned()
-                    .unwrap_or(serde_json::Value::Null),
+                items: value.get("items").cloned(),
             },
             "object" => PropertyKind::Object {
                 properties: value
@@ -209,11 +206,9 @@ impl Property {
                 } else {
                     format!("{}.items", path)
                 };
-                let child = value
-                    .get("items")
-                    .filter(|candidate| !candidate.is_null())
-                    .ok_or_else(|| format!("{}: missing required field", child_path))?;
-                Property::validate_input_at(child, &child_path)?;
+                if let Some(child) = value.get("items") {
+                    Property::validate_input_at(child, &child_path)?;
+                }
             }
             "object" => {
                 if let Some(collection) = value.get("properties") {
@@ -340,8 +335,8 @@ impl Property {
         // Write variant-specific fields
         match &self.kind {
             PropertyKind::Array { items, .. } => {
-                if !items.is_null() {
-                    result.insert("items".to_string(), items.clone());
+                if let Some(val) = items {
+                    result.insert("items".to_string(), val.clone());
                 }
             }
             PropertyKind::Object { properties, .. } => {
