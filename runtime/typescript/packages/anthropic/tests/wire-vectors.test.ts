@@ -93,7 +93,7 @@ describe("wire vectors (anthropic)", () => {
     // Guards against a vector being removed, or the provider filter silently
     // matching nothing, either of which would make this suite vacuously green.
     expect(vectors.length).toBe(6);
-    expect(allVectors.length).toBe(28);
+    expect(allVectors.length).toBe(29);
   });
 
   for (const vector of vectors) {

@@ -111,8 +111,8 @@ describe("wire vectors (openai)", () => {
   it("executes every OpenAI vector in the shared spec file", () => {
     // Guards against a vector being removed, or the provider filter silently
     // matching nothing, either of which would make this suite vacuously green.
-    expect(vectors.length).toBe(22);
-    expect(allVectors.length).toBe(28);
+    expect(vectors.length).toBe(23);
+    expect(allVectors.length).toBe(29);
   });
 
   for (const vector of vectors) {

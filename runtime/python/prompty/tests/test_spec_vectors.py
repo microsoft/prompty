@@ -687,6 +687,21 @@ def test_wire_vector(vec: dict):
         pytest.skip(f"Unknown apiType for wire test: {api_type}")
 
 
+def _extra_key_errors(exp_body: dict, actual_body: dict) -> list[str]:
+    """Report top-level keys present in actual that the spec does not declare.
+
+    Without this, a provider emitting an option it has no wire mapping for
+    (typra #84) passes silently -- see the `anthropic_unmapped_options` wire
+    vector. This subsumes the per-key absence checks that were previously
+    hand-enumerated (tools/response_format/text/output_config/system), which
+    could only ever catch keys someone had already thought to name.
+    """
+    extra = sorted(set(actual_body) - set(exp_body))
+    if not extra:
+        return []
+    return [f"  Unexpected keys in actual (spec says absent): {extra}"]
+
+
 def _check_wire_chat(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
     """Validate chat wire format."""
     # Build the wire representation
@@ -706,11 +721,7 @@ def _check_wire_chat(agent: Prompty, messages: list[Message], exp_body: dict, ve
         actual_body["response_format"] = response_format
 
     errors = _dict_subset_match(exp_body, actual_body)
-    # Also check no extra keys in expected that are absent
-    if "tools" not in exp_body and "tools" in actual_body:
-        errors.append("  Unexpected 'tools' key in actual (spec says absent)")
-    if "response_format" not in exp_body and "response_format" in actual_body:
-        errors.append("  Unexpected 'response_format' key in actual")
+    errors.extend(_extra_key_errors(exp_body, actual_body))
 
     if errors:
         pytest.fail(
@@ -733,6 +744,7 @@ def _check_wire_embedding(agent: Prompty, messages: list[Message], exp_body: dic
     actual_body = executor._build_embedding_args(agent, embed_input)
 
     errors = _dict_subset_match(exp_body, actual_body)
+    errors.extend(_extra_key_errors(exp_body, actual_body))
     if errors:
         pytest.fail(
             f"Wire vector '{vec_name}' failed:\n"
@@ -750,6 +762,7 @@ def _check_wire_image(agent: Prompty, messages: list[Message], exp_body: dict, v
     actual_body = executor._build_image_args(agent, prompt)
 
     errors = _dict_subset_match(exp_body, actual_body)
+    errors.extend(_extra_key_errors(exp_body, actual_body))
     if errors:
         pytest.fail(
             f"Wire vector '{vec_name}' failed:\n"
@@ -788,10 +801,7 @@ def _check_wire_responses(agent: Prompty, messages: list[Message], exp_body: dic
         actual_body["text"] = text_config
 
     errors = _dict_subset_match(exp_body, actual_body)
-    if "tools" not in exp_body and "tools" in actual_body:
-        errors.append("  Unexpected 'tools' key in actual (spec says absent)")
-    if "text" not in exp_body and "text" in actual_body:
-        errors.append("  Unexpected 'text' key in actual")
+    errors.extend(_extra_key_errors(exp_body, actual_body))
 
     if errors:
         pytest.fail(
@@ -807,13 +817,7 @@ def _check_wire_anthropic_chat(agent: Prompty, messages: list[Message], exp_body
     actual_body = _anthropic_build_chat_args(agent, messages)
 
     errors = _dict_subset_match(exp_body, actual_body)
-    # ...and no key in actual that the spec does not declare. Without this, a
-    # provider emitting an option it has no wire mapping for (typra #84) passes
-    # silently — see the `anthropic_unmapped_options` wire vector. This subsumes
-    # the per-key absence checks previously enumerated for tools/output_config/system.
-    extra = sorted(set(actual_body) - set(exp_body))
-    if extra:
-        errors.append(f"  Unexpected keys in actual (spec says absent): {extra}")
+    errors.extend(_extra_key_errors(exp_body, actual_body))
 
     if errors:
         pytest.fail(
