@@ -92,8 +92,8 @@ describe("wire vectors (anthropic)", () => {
   it("executes every Anthropic vector in the shared spec file", () => {
     // Guards against a vector being removed, or the provider filter silently
     // matching nothing, either of which would make this suite vacuously green.
-    expect(vectors.length).toBe(5);
-    expect(allVectors.length).toBe(27);
+    expect(vectors.length).toBe(6);
+    expect(allVectors.length).toBe(28);
   });
 
   for (const vector of vectors) {

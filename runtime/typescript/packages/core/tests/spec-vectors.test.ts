@@ -796,6 +796,10 @@ function compareWireBodies(actual: Record<string, unknown>, expected: Record<str
   for (const key of Object.keys(expected)) {
     expect(actual).toHaveProperty(key);
   }
+  // ...and that `actual` carries no key `expected` does not declare. Without
+  // this, a provider emitting an option it has no wire mapping for (typra #84)
+  // passes silently — see spec/vectors/wire `anthropic_unmapped_options`.
+  expect(Object.keys(actual).sort()).toEqual(Object.keys(expected).sort());
 
   // If expected doesn't have 'tools', actual shouldn't either
   if (!("tools" in expected)) {

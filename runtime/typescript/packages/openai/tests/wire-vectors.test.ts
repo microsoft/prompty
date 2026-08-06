@@ -112,7 +112,7 @@ describe("wire vectors (openai)", () => {
     // Guards against a vector being removed, or the provider filter silently
     // matching nothing, either of which would make this suite vacuously green.
     expect(vectors.length).toBe(22);
-    expect(allVectors.length).toBe(27);
+    expect(allVectors.length).toBe(28);
   });
 
   for (const vector of vectors) {
