@@ -18,6 +18,14 @@ version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
 sessionId: sess_abc123
+events:
+  - id: evt_abc123
+    type: session_start
+    timestamp: "2026-06-09T20:00:00Z"
+    sessionId: sess_abc123
+    turnId: turn_001
+    parentId: evt_parent
+    spanId: span_hook_001
 
 """;
 
@@ -38,7 +46,18 @@ sessionId: sess_abc123
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001"
+    }
+  ]
 }
 """;
 
@@ -59,7 +78,18 @@ sessionId: sess_abc123
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001"
+    }
+  ]
 }
 """;
 
@@ -86,6 +116,14 @@ version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
 sessionId: sess_abc123
+events:
+  - id: evt_abc123
+    type: session_start
+    timestamp: "2026-06-09T20:00:00Z"
+    sessionId: sess_abc123
+    turnId: turn_001
+    parentId: evt_parent
+    spanId: span_hook_001
 
 """;
 
@@ -111,7 +149,18 @@ sessionId: sess_abc123
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001"
+    }
+  ]
 }
 """;
 
@@ -131,6 +180,14 @@ version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
 sessionId: sess_abc123
+events:
+  - id: evt_abc123
+    type: session_start
+    timestamp: "2026-06-09T20:00:00Z"
+    sessionId: sess_abc123
+    turnId: turn_001
+    parentId: evt_parent
+    spanId: span_hook_001
 
 """;
 

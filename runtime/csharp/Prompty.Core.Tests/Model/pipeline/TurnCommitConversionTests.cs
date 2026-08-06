@@ -16,6 +16,7 @@ public class TurnCommitConversionTests
         string yamlData = """
 sessionId: sess_abc123
 turnId: turn_abc123
+contextState: {}
 
 """;
 
@@ -32,7 +33,8 @@ turnId: turn_abc123
         string jsonData = """
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 """;
 
@@ -49,7 +51,8 @@ turnId: turn_abc123
         string jsonData = """
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 """;
 
@@ -72,6 +75,7 @@ turnId: turn_abc123
         string yamlData = """
 sessionId: sess_abc123
 turnId: turn_abc123
+contextState: {}
 
 """;
 
@@ -93,7 +97,8 @@ turnId: turn_abc123
         string jsonData = """
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 """;
 
@@ -111,6 +116,7 @@ turnId: turn_abc123
         string yamlData = """
 sessionId: sess_abc123
 turnId: turn_abc123
+contextState: {}
 
 """;
 

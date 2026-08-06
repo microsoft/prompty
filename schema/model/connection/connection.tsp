@@ -94,5 +94,3 @@ model AnonymousConnection extends Connection {
   @sample(#{ endpoint: "https://{your-custom-endpoint}.openai.azure.com/" })
   endpoint: string;
 }
-
-

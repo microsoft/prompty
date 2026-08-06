@@ -15,6 +15,14 @@ public class ResumeContextConversionTests
     {
         string yamlData = """
 lastJournalSequence: 12
+checkpoint:
+  id: ckpt_abc123
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  runId: run_abc123
+  iteration: 1
+  lastSequence: 1
+  contextState: {}
 
 """;
 
@@ -29,7 +37,16 @@ lastJournalSequence: 12
     {
         string jsonData = """
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 """;
 
@@ -44,7 +61,16 @@ lastJournalSequence: 12
         // Test that FromJson -> ToJson -> FromJson produces equivalent data
         string jsonData = """
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 """;
 
@@ -65,6 +91,14 @@ lastJournalSequence: 12
         // Test that FromYaml -> ToYaml -> FromYaml produces equivalent data
         string yamlData = """
 lastJournalSequence: 12
+checkpoint:
+  id: ckpt_abc123
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  runId: run_abc123
+  iteration: 1
+  lastSequence: 1
+  contextState: {}
 
 """;
 
@@ -84,7 +118,16 @@ lastJournalSequence: 12
     {
         string jsonData = """
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 """;
 
@@ -101,6 +144,14 @@ lastJournalSequence: 12
     {
         string yamlData = """
 lastJournalSequence: 12
+checkpoint:
+  id: ckpt_abc123
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  runId: run_abc123
+  iteration: 1
+  lastSequence: 1
+  contextState: {}
 
 """;
 

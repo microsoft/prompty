@@ -18,6 +18,7 @@ id: "context:inv_abc123"
 sessionId: sess_abc123
 turnId: turn_abc123
 invocationId: inv_abc123
+contextState: {}
 
 """;
 
@@ -38,7 +39,8 @@ invocationId: inv_abc123
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 """;
 
@@ -59,7 +61,8 @@ invocationId: inv_abc123
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 """;
 
@@ -86,6 +89,7 @@ id: "context:inv_abc123"
 sessionId: sess_abc123
 turnId: turn_abc123
 invocationId: inv_abc123
+contextState: {}
 
 """;
 
@@ -111,7 +115,8 @@ invocationId: inv_abc123
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 """;
 
@@ -131,6 +136,7 @@ id: "context:inv_abc123"
 sessionId: sess_abc123
 turnId: turn_abc123
 invocationId: inv_abc123
+contextState: {}
 
 """;
 

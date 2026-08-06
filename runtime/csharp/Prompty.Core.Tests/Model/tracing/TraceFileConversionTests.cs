@@ -16,6 +16,14 @@ public class TraceFileConversionTests
         string yamlData = """
 runtime: python
 version: 2.0.0
+trace:
+  name: prompty.core.pipeline.run
+  __time:
+    start: "2026-04-04T12:00:00Z"
+    end: "2026-04-04T12:00:01Z"
+    duration: 1000
+  signature: prompty.core.pipeline.run
+  error: Connection refused
 
 """;
 
@@ -32,7 +40,17 @@ version: 2.0.0
         string jsonData = """
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 """;
 
@@ -49,7 +67,17 @@ version: 2.0.0
         string jsonData = """
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 """;
 
@@ -72,6 +100,14 @@ version: 2.0.0
         string yamlData = """
 runtime: python
 version: 2.0.0
+trace:
+  name: prompty.core.pipeline.run
+  __time:
+    start: "2026-04-04T12:00:00Z"
+    end: "2026-04-04T12:00:01Z"
+    duration: 1000
+  signature: prompty.core.pipeline.run
+  error: Connection refused
 
 """;
 
@@ -93,7 +129,17 @@ version: 2.0.0
         string jsonData = """
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 """;
 
@@ -111,6 +157,14 @@ version: 2.0.0
         string yamlData = """
 runtime: python
 version: 2.0.0
+trace:
+  name: prompty.core.pipeline.run
+  __time:
+    start: "2026-04-04T12:00:00Z"
+    end: "2026-04-04T12:00:01Z"
+    duration: 1000
+  signature: prompty.core.pipeline.run
+  error: Connection refused
 
 """;
 

@@ -17,6 +17,9 @@ public class AnthropicMessagesResponseConversionTests
 id: msg_01XFDUDYJgAACzvnptvVoYEL
 model: claude-sonnet-4-20250514
 stop_reason: end_turn
+usage:
+  input_tokens: 150
+  output_tokens: 42
 
 """;
 
@@ -35,7 +38,11 @@ stop_reason: end_turn
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 """;
 
@@ -54,7 +61,11 @@ stop_reason: end_turn
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 """;
 
@@ -79,6 +90,9 @@ stop_reason: end_turn
 id: msg_01XFDUDYJgAACzvnptvVoYEL
 model: claude-sonnet-4-20250514
 stop_reason: end_turn
+usage:
+  input_tokens: 150
+  output_tokens: 42
 
 """;
 
@@ -102,7 +116,11 @@ stop_reason: end_turn
 {
   "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
   "model": "claude-sonnet-4-20250514",
-  "stop_reason": "end_turn"
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
 }
 """;
 
@@ -121,6 +139,9 @@ stop_reason: end_turn
 id: msg_01XFDUDYJgAACzvnptvVoYEL
 model: claude-sonnet-4-20250514
 stop_reason: end_turn
+usage:
+  input_tokens: 150
+  output_tokens: 42
 
 """;
 

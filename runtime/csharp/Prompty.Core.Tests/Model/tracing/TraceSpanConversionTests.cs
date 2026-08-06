@@ -17,6 +17,10 @@ public class TraceSpanConversionTests
 name: prompty.core.pipeline.run
 signature: prompty.core.pipeline.run
 error: Connection refused
+__time:
+  start: "2026-04-04T12:00:00Z"
+  end: "2026-04-04T12:00:01Z"
+  duration: 1000
 
 """;
 
@@ -35,7 +39,12 @@ error: Connection refused
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 """;
 
@@ -54,7 +63,12 @@ error: Connection refused
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 """;
 
@@ -79,6 +93,10 @@ error: Connection refused
 name: prompty.core.pipeline.run
 signature: prompty.core.pipeline.run
 error: Connection refused
+__time:
+  start: "2026-04-04T12:00:00Z"
+  end: "2026-04-04T12:00:01Z"
+  duration: 1000
 
 """;
 
@@ -102,7 +120,12 @@ error: Connection refused
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 """;
 
@@ -121,6 +144,10 @@ error: Connection refused
 name: prompty.core.pipeline.run
 signature: prompty.core.pipeline.run
 error: Connection refused
+__time:
+  start: "2026-04-04T12:00:00Z"
+  end: "2026-04-04T12:00:01Z"
+  duration: 1000
 
 """;
 

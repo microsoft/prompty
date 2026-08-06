@@ -16,6 +16,13 @@ public class ToolContextConversionTests
         string yamlData = """
 metadata:
   userId: user-123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
 """;
 
@@ -31,7 +38,21 @@ metadata:
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 """;
 
@@ -47,7 +68,21 @@ metadata:
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 """;
 
@@ -68,6 +103,13 @@ metadata:
         string yamlData = """
 metadata:
   userId: user-123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
 """;
 
@@ -88,7 +130,21 @@ metadata:
 {
   "metadata": {
     "userId": "user-123"
-  }
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 """;
 
@@ -106,6 +162,13 @@ metadata:
         string yamlData = """
 metadata:
   userId: user-123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
 """;
 

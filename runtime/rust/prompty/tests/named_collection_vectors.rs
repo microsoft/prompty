@@ -2,8 +2,8 @@
 
 use std::path::PathBuf;
 
-use prompty::model::context::{LoadContext, SaveContext};
 use prompty::model::Prompty;
+use prompty::model::context::{LoadContext, SaveContext};
 use serde_json::{Map, Value};
 
 fn vectors_path() -> PathBuf {

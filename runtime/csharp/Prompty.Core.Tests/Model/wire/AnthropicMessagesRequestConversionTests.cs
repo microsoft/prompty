@@ -22,6 +22,9 @@ top_p: 0.9
 top_k: 40
 stop_sequences:
   - "\n\nHuman:"
+messages:
+  - role: user
+    content: []
 
 """;
 
@@ -49,6 +52,12 @@ stop_sequences:
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 """;
@@ -77,6 +86,12 @@ stop_sequences:
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 """;
@@ -110,6 +125,9 @@ top_p: 0.9
 top_k: 40
 stop_sequences:
   - "\n\nHuman:"
+messages:
+  - role: user
+    content: []
 
 """;
 
@@ -142,6 +160,12 @@ stop_sequences:
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 """;
@@ -166,6 +190,9 @@ top_p: 0.9
 top_k: 40
 stop_sequences:
   - "\n\nHuman:"
+messages:
+  - role: user
+    content: []
 
 """;
 
