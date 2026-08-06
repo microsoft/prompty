@@ -7,8 +7,7 @@
 
 from typing import Protocol, runtime_checkable
 
-from prompty.core.cancellation import CancellationToken
-
+from ...core.cancellation import CancellationToken
 from ._ModelToolRequest import ModelToolRequest
 from ._ModelToolResult import ModelToolResult
 

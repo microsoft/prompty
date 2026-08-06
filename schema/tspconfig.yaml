@@ -19,6 +19,14 @@ options:
         output-dir: "../runtime/python/prompty/prompty/model"
         test-dir: "../runtime/python/prompty/tests/model"
         import-path: "prompty.model"
+        # Relative, not absolute. Flit resolves the dynamic __version__ by loading
+        # prompty/__init__.py via spec_from_file_location, so "prompty" is not on
+        # sys.path during the build. An absolute self-import (the emitter default,
+        # "prompty.core.cancellation.CancellationToken") therefore raises
+        # ModuleNotFoundError and makes the package uninstallable from a clean env.
+        # Generated runtime-cancellable ports live in prompty/model/pipeline/, so
+        # "..." resolves to the prompty package root.
+        cancellation-token-path: "...core.cancellation.CancellationToken"
       - type: CSharp
         output-dir: "../runtime/csharp/Prompty.Core/Model"
         test-dir: "../runtime/csharp/Prompty.Core.Tests/Model"

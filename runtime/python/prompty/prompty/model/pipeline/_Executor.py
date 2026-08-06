@@ -7,8 +7,7 @@
 
 from typing import Any, Protocol, runtime_checkable
 
-from prompty.core.cancellation import CancellationToken
-
+from ...core.cancellation import CancellationToken
 from ..agent._Prompty import Prompty
 from ..conversation._Message import Message
 from ..conversation._ToolCall import ToolCall
