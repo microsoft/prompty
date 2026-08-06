@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -12,6 +13,29 @@ if (existsSync(manifestPath)) {
 
 trimEmptyPythonGeneratedTests(join("..", "runtime", "python", "prompty", "tests", "model"));
 trimTrailingWhitespace(join("..", "runtime", "go", "prompty", "model"));
+formatRust(join("..", "runtime", "rust"));
+
+// The Rust emitter does not format its output, but the committed tree is
+// rustfmt-formatted. Without this step a clean regeneration reports ~291
+// modified files that are purely line-joining and trailing commas, which
+// hides real diffs. Scoped to -p prompty: the workspace also contains
+// handwritten provider crates that this script has no business reformatting.
+function formatRust(root) {
+  if (!existsSync(root)) {
+    return;
+  }
+  const result = spawnSync("cargo", ["fmt", "-p", "prompty"], {
+    cwd: root,
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  });
+  if (result.error || result.status !== 0) {
+    console.warn(
+      "[normalize] cargo fmt -p prompty did not run; generated Rust is unformatted " +
+        "and will show a large spurious diff. Install a Rust toolchain and re-run.",
+    );
+  }
+}
 
 function trimEmptyPythonGeneratedTests(root) {
   if (!existsSync(root)) {
