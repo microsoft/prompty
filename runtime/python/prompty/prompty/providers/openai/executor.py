@@ -210,29 +210,23 @@ def _property_to_json_schema(prop: Any, *, optional: bool = False, strict: bool 
     if prop.enum_values:
         schema["enum"] = prop.enum_values
 
-    # Array items — default to string if unspecified
-    if prop.kind == "array":
-        if hasattr(prop, "items") and prop.items is not None:
-            schema["items"] = _property_to_json_schema(prop.items, strict=strict)
-        else:
-            schema["items"] = {"type": "string"}
+    # Array items — bare {"type": "array"} when items is unspecified
+    if prop.kind == "array" and getattr(prop, "items", None) is not None:
+        schema["items"] = _property_to_json_schema(prop.items, strict=strict)
 
-    # Object properties (with strict additionalProperties: False)
-    if prop.kind == "object":
-        if hasattr(prop, "properties") and prop.properties:
-            props: dict[str, Any] = {}
-            required: list[str] = []
-            for p in prop.properties:
-                props[p.name] = _property_to_json_schema(
-                    p, optional=strict and not bool(p.required), strict=strict
-                )
-                if strict or p.required:
-                    required.append(p.name)
-            schema["properties"] = props
-            if required:
-                schema["required"] = required
-        else:
-            schema["properties"] = {}
+    # Object properties — bare {"type": "object"} when properties is empty or absent
+    if prop.kind == "object" and getattr(prop, "properties", None):
+        props: dict[str, Any] = {}
+        required: list[str] = []
+        for p in prop.properties:
+            props[p.name] = _property_to_json_schema(
+                p, optional=strict and not bool(p.required), strict=strict
+            )
+            if strict or p.required:
+                required.append(p.name)
+        schema["properties"] = props
+        if required:
+            schema["required"] = required
         schema["additionalProperties"] = False
 
     if prop.kind == "union":

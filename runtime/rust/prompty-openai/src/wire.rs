@@ -379,7 +379,7 @@ fn property_to_json_schema(prop: &Property, strict: bool) -> Result<Value, Schem
     }
 
     match &prop.kind {
-        PropertyKind::Array { items } if !items.is_null() => {
+        PropertyKind::Array { items: Some(items) } if !items.is_null() => {
             let ctx = prompty::model::context::LoadContext::default();
             let item_prop = Property::load_from_value(items, &ctx);
             schema.insert(

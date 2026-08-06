@@ -368,7 +368,7 @@ fn property_to_json_schema(prop: &Property) -> Result<Value, SchemaError> {
 
     match &prop.kind {
         PropertyKind::Array { items } => {
-            if !items.is_null() {
+            if let Some(items) = items.as_ref().filter(|value| !value.is_null()) {
                 let ctx = prompty::model::context::LoadContext::default();
                 let item_prop = Property::load_from_value(items, &ctx);
                 schema.insert("items".into(), property_to_json_schema(&item_prop)?);

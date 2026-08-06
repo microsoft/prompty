@@ -16,7 +16,8 @@ public static class SchemaHelpers
         IList<Property>? properties,
         bool strict = false,
         ISet<string>? excludedPropertyNames = null,
-        bool supportsOneOf = true)
+        bool supportsOneOf = true,
+        bool fillEmptyStructures = true)
     {
         var result = new Dictionary<string, object?> { ["type"] = "object" };
 
@@ -35,7 +36,8 @@ public static class SchemaHelpers
                 prop,
                 optional: strict && prop.Required != true,
                 strict: strict,
-                supportsOneOf: supportsOneOf);
+                supportsOneOf: supportsOneOf,
+                fillEmptyStructures: fillEmptyStructures);
 
             if (prop.Required == true)
                 required.Add(prop.Name);
@@ -63,7 +65,8 @@ public static class SchemaHelpers
         Property prop,
         bool optional = false,
         bool strict = false,
-        bool supportsOneOf = true)
+        bool supportsOneOf = true,
+        bool fillEmptyStructures = true)
     {
         var schema = new Dictionary<string, object?>();
         if (IsKnownJsonSchemaKind(prop.Kind))
@@ -95,26 +98,45 @@ public static class SchemaHelpers
                 }
 
                 schema["oneOf"] = unionProperty.OneOf!
-                    .Select(branch => PropertyToJsonSchema(branch, strict: strict, supportsOneOf: supportsOneOf))
+                    .Select(branch => PropertyToJsonSchema(
+                        branch,
+                        strict: strict,
+                        supportsOneOf: supportsOneOf,
+                        fillEmptyStructures: fillEmptyStructures))
                     .ToList();
             }
             else
             {
                 schema["anyOf"] = unionProperty.AnyOf!
-                    .Select(branch => PropertyToJsonSchema(branch, strict: strict, supportsOneOf: supportsOneOf))
+                    .Select(branch => PropertyToJsonSchema(
+                        branch,
+                        strict: strict,
+                        supportsOneOf: supportsOneOf,
+                        fillEmptyStructures: fillEmptyStructures))
                     .ToList();
             }
         }
 
-        // Array items — recurse into item schema
+        // Array items — OpenAI emits a bare {"type": "array"} when items is
+        // unspecified; Anthropic requires an items schema, so it keeps a filler.
         if (prop is ArrayProperty arrayProp)
         {
-            schema["items"] = arrayProp.Items is not null
-                ? PropertyToJsonSchema(arrayProp.Items, strict: strict, supportsOneOf: supportsOneOf)
-                : new Dictionary<string, object?> { ["type"] = "string" };
+            if (arrayProp.Items is not null)
+            {
+                schema["items"] = PropertyToJsonSchema(
+                    arrayProp.Items,
+                    strict: strict,
+                    supportsOneOf: supportsOneOf,
+                    fillEmptyStructures: fillEmptyStructures);
+            }
+            else if (fillEmptyStructures)
+            {
+                schema["items"] = new Dictionary<string, object?> { ["type"] = "string" };
+            }
         }
 
-        // Object properties — recurse into nested properties
+        // Object properties — OpenAI emits a bare {"type": "object"} when
+        // properties is empty or absent; Anthropic keeps an empty container.
         if (prop is ObjectProperty objectProp)
         {
             if (objectProp.Properties is not null && objectProp.Properties.Count > 0)
@@ -128,19 +150,21 @@ public static class SchemaHelpers
                         p,
                         optional: strict && p.Required != true,
                         strict: strict,
-                        supportsOneOf: supportsOneOf);
+                        supportsOneOf: supportsOneOf,
+                        fillEmptyStructures: fillEmptyStructures);
                     if (strict || p.Required == true)
                         nestedRequired.Add(p.Name);
                 }
                 schema["properties"] = nested;
                 schema["required"] = nestedRequired;
+                schema["additionalProperties"] = false;
             }
-            else
+            else if (fillEmptyStructures)
             {
                 schema["properties"] = new Dictionary<string, object?>();
                 schema["required"] = new List<string>();
+                schema["additionalProperties"] = false;
             }
-            schema["additionalProperties"] = false;
         }
 
         if (prop.Nullable == true || optional)
