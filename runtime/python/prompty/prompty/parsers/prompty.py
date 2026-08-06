@@ -28,9 +28,13 @@ __all__ = ["PromptyChatParser"]
 
 # Role boundary regex — matches lines like ``system:`` or ``user[name="Alice"]:``
 _ROLE_NAMES = "|".join(sorted(ROLES))
+# Possessive quantifiers + a quoted/unquoted alternation (no shared chars between
+# branches) keep this linear-time — a plain `\w+\s*=\s*"?[^"]*"?` value class lets
+# unquoted attributes overlap with the separator/`]`, causing catastrophic
+# backtracking on malformed input. See issue #446.
 _BOUNDARY_RE = re.compile(
     r"(?im)^\s*#?\s*(" + _ROLE_NAMES + r")"
-    r"(\[((\w+\s*=\s*\"?[^\"]*\"?\s*,?\s*)+)\])?\s*:\s*$"
+    r"(\[(?:\w++\s*+=\s*+(?:\"[^\"]*\"|[^\",\]]*+)\s*+,?+\s*+)+\])?\s*:\s*$"
 )
 
 
