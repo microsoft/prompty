@@ -388,6 +388,18 @@ public class SpecVectorWireTests
                 AssertJsonSubset(prop.Value, actualProp, $"[{name}].{prop.Name}");
             }
         }
+
+        // ...and no key in the actual body that the spec does not declare. Without
+        // this, a provider emitting an option it has no wire mapping for (typra #84)
+        // passes silently — see the `anthropic_unmapped_options` wire vector.
+        var expectedKeys = expectedBody.EnumerateObject().Select(p => p.Name).ToHashSet();
+        var extraKeys = bodyJson.EnumerateObject()
+            .Select(p => p.Name)
+            .Where(k => !expectedKeys.Contains(k))
+            .OrderBy(k => k, StringComparer.Ordinal)
+            .ToList();
+        Assert.True(extraKeys.Count == 0,
+            $"[{name}]: unexpected keys in actual body (spec says absent): {string.Join(", ", extraKeys)}. Actual: {bodyJson.GetRawText()}");
     }
 
     public static IEnumerable<object[]> AnthropicChatVectors()

@@ -807,13 +807,13 @@ def _check_wire_anthropic_chat(agent: Prompty, messages: list[Message], exp_body
     actual_body = _anthropic_build_chat_args(agent, messages)
 
     errors = _dict_subset_match(exp_body, actual_body)
-    # Check no extra keys in expected that are absent
-    if "tools" not in exp_body and "tools" in actual_body:
-        errors.append("  Unexpected 'tools' key in actual (spec says absent)")
-    if "output_config" not in exp_body and "output_config" in actual_body:
-        errors.append("  Unexpected 'output_config' key in actual")
-    if "system" not in exp_body and "system" in actual_body:
-        errors.append("  Unexpected 'system' key in actual")
+    # ...and no key in actual that the spec does not declare. Without this, a
+    # provider emitting an option it has no wire mapping for (typra #84) passes
+    # silently — see the `anthropic_unmapped_options` wire vector. This subsumes
+    # the per-key absence checks previously enumerated for tools/output_config/system.
+    extra = sorted(set(actual_body) - set(exp_body))
+    if extra:
+        errors.append(f"  Unexpected keys in actual (spec says absent): {extra}")
 
     if errors:
         pytest.fail(
