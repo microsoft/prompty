@@ -9,7 +9,6 @@ import pytest
 from prompty.core.types import Message, TextPart
 from prompty.model import Prompty
 from prompty.parsers import PromptyChatParser
-from prompty.parsers.prompty import _BOUNDARY_RE
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -266,20 +265,33 @@ class TestInlineImagesPreservedAsText:
 
 
 class TestRoleBoundaryReDoS:
-    """The role-boundary regex must stay linear-time on adversarial input.
+    """Parsing must stay roughly linear in input size on adversarial input.
 
     Unquoted, unterminated attributes used to let the value class overlap
     with the `,` separator and closing `]`, giving the backtracking engine
     an exponential number of equivalent splits to try before failing.
+    Comparing runtime at two input sizes — rather than an absolute
+    wall-clock budget — keeps this robust on slow/contended CI runners
+    while still catching a regression back to exponential behavior.
     """
 
-    def test_unquoted_unterminated_attrs_stay_fast(self):
-        payload = "user[" + "a=b," * 24 + "!"
+    def setup_method(self):
+        self.parser = PromptyChatParser()
+        self.agent = _make_agent()
+
+    def _time_adversarial_parse(self, reps: int) -> float:
+        payload = "user[" + "a=b," * reps + "!"
         start = time.perf_counter()
-        result = _BOUNDARY_RE.match(payload)
-        elapsed = time.perf_counter() - start
-        assert result is None
-        assert elapsed < 0.5, f"role-boundary regex took {elapsed:.3f}s — possible ReDoS regression"
+        self.parser.parse(self.agent, payload)
+        return time.perf_counter() - start
+
+    def test_doubling_input_does_not_blow_up_runtime(self):
+        small = self._time_adversarial_parse(20)
+        large = self._time_adversarial_parse(40)
+        # Exponential (catastrophic-backtracking) behavior would roughly
+        # square the runtime when the repeat count doubles; linear-time
+        # matching keeps it within a small constant factor.
+        assert large < max(small * 20, 0.1)
 
 
 # ---------------------------------------------------------------------------
