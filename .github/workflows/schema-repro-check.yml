@@ -21,6 +21,12 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      # runtime/python/prompty/uv.lock is tracked, and the Python emitter shells
+      # out to `uv run ruff`, which would otherwise re-lock and dirty the tree —
+      # reporting as generated-code staleness. Frozen turns that into an explicit
+      # lockfile error instead of a misattributed diff.
+      UV_FROZEN: '1'
     steps:
       - uses: actions/checkout@v5
 
@@ -28,15 +34,36 @@ jobs:
         with:
           node-version: '20'
 
-      # rustfmt is required: the Rust emitter does not format its output, but
-      # the committed tree is formatted. normalize-typra-output.mjs runs
-      # `cargo fmt -p prompty` to reconcile that. Without the component the
-      # normalize step degrades to a warning and this job reports a ~291-file
-      # diff that is purely line-joining.
+      # Generation is only reproducible when every formatter the emitter shells
+      # out to is present. Each one degrades to a warning when missing, so an
+      # absent formatter reports as a large cosmetic diff and is easily
+      # misread as stale generated code. All three are installed below, and
+      # the regenerate step fails on the warnings rather than trusting them.
+      #
+      #   rustfmt   normalize-typra-output.mjs runs `cargo fmt -p prompty`
+      #             (the Rust emitter does not format its own output)
+      #   prettier  typescript/driver.js walks up from the TypeScript project
+      #             root for node_modules/prettier/bin/prettier.cjs, then runs
+      #             `npx eslint --fix` from the same workspace
+      #   ruff      python/driver.js runs `uv run ruff check --fix` and
+      #             `uv run ruff format` from runtime/python/prompty
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+
+      - name: Install TypeScript workspace (provides prettier and eslint)
+        working-directory: runtime/typescript
+        run: npm ci
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Python dev tooling (provides ruff)
+        working-directory: runtime/python/prompty
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
 
       - name: Install schema dependencies
         working-directory: schema
@@ -44,7 +71,19 @@ jobs:
 
       - name: Regenerate from the pinned emitter
         working-directory: schema
-        run: npm run generate
+        run: |
+          set -o pipefail
+          npm run generate 2>&1 | tee "$RUNNER_TEMP/generate.log"
+
+          # A missing formatter produces a warning and unformatted output. That
+          # is indistinguishable from stale generated code in the diff below, so
+          # fail here with the real cause instead of reporting false staleness.
+          if grep -Eq 'prettier not found|prettier formatting failed|ruff check failed|ruff format failed|did not run; generated Rust is unformatted' "$RUNNER_TEMP/generate.log"; then
+            echo "::error::A formatter was unavailable during generation, so the output is not comparable to the committed tree."
+            echo "This is an environment problem in this job, not stale generated code."
+            grep -E 'prettier|ruff|cargo fmt' "$RUNNER_TEMP/generate.log" || true
+            exit 1
+          fi
 
       - name: Assert the tree is unchanged
         run: |
