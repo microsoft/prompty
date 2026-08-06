@@ -270,9 +270,11 @@ class TestRoleBoundaryReDoS:
     Unquoted, unterminated attributes used to let the value class overlap
     with the `,` separator and closing `]`, giving the backtracking engine
     an exponential number of equivalent splits to try before failing.
-    Comparing runtime at two input sizes — rather than an absolute
-    wall-clock budget — keeps this robust on slow/contended CI runners
-    while still catching a regression back to exponential behavior.
+    The assertion is mostly relative (runtime at 40 reps vs. 20 reps) so it
+    stays robust on a slow/contended CI runner; the small absolute floor
+    only keeps the relative bound from collapsing to noise when `small`
+    itself measures near zero on a very fast run — it is not the budget
+    being enforced.
     """
 
     def setup_method(self):
