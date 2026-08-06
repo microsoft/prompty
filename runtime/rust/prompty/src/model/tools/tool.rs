@@ -560,6 +560,12 @@ impl Tool {
             else {
                 unreachable!()
             };
+            if ctx.use_shorthand && item_data.len() == 1 {
+                if let Some(shorthand) = item_data.get("input") {
+                    result.insert(name, shorthand.clone());
+                    continue;
+                }
+            }
             result.insert(name, serde_json::Value::Object(item_data));
         }
         serde_json::Value::Object(result)
@@ -651,6 +657,12 @@ impl Tool {
             else {
                 unreachable!()
             };
+            if ctx.use_shorthand && item_data.len() == 1 {
+                if let Some(shorthand) = item_data.get("example") {
+                    result.insert(name, shorthand.clone());
+                    continue;
+                }
+            }
             result.insert(name, serde_json::Value::Object(item_data));
         }
         serde_json::Value::Object(result)
