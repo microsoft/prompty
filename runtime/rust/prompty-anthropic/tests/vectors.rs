@@ -209,6 +209,7 @@ wire_test!(anthropic_max_tokens_required);
 wire_test!(anthropic_image_format);
 wire_test!(anthropic_tool_wire);
 wire_test!(anthropic_options);
+wire_test!(anthropic_unmapped_options);
 
 // ---------------------------------------------------------------------------
 // Process vector tests

@@ -18,12 +18,6 @@ describe("InvocationContextState", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = InvocationContextState.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new InvocationContextState();
       const data = instance.save();

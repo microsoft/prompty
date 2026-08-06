@@ -24,7 +24,7 @@ pub struct TurnModelRequest {
     pub turn_id: String,
     /// Zero-based model loop iteration
     pub iteration: i32,
-    /// Inputs supplied to the deterministic single-turn run
+    /// Inputs supplied to the deterministic single-turn run. Values may be explicit null.
     pub inputs: serde_json::Value,
     /// Canonical turn execution options
     pub options: Option<TurnOptions>,
@@ -41,12 +41,16 @@ impl TurnModelRequest {
     /// Load TurnModelRequest from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load TurnModelRequest from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -55,6 +59,9 @@ impl TurnModelRequest {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             session_id: value
                 .get("sessionId")
@@ -80,6 +87,32 @@ impl TurnModelRequest {
                 .map(|v| Self::load_tool_results(v, ctx))
                 .unwrap_or_default(),
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "options".to_string()
+        } else {
+            format!("{}.options", path)
+        };
+        if let Some(child) = value.get("options") {
+            TurnOptions::validate_input_at(child, &child_path)?;
+        }
+        if let Some(entries) = value
+            .get("toolResults")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "toolResults".to_string()
+            } else {
+                format!("{}.toolResults", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                HostToolResult::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
     }
 
     /// Serialize TurnModelRequest to a `serde_json::Value`.
@@ -109,18 +142,16 @@ impl TurnModelRequest {
         if !self.inputs.is_null() {
             result.insert("inputs".to_string(), self.inputs.clone());
         }
-        if let Some(ref val) = self.options {
+        if let Some(val) = self.options.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("options".to_string(), nested);
             }
         }
-        if !self.tool_results.is_empty() {
-            result.insert(
-                "toolResults".to_string(),
-                Self::save_tool_results(&self.tool_results, ctx),
-            );
-        }
+        result.insert(
+            "toolResults".to_string(),
+            Self::save_tool_results(&self.tool_results, ctx),
+        );
         ctx.process_dict(serde_json::Value::Object(result))
     }
 
@@ -175,6 +206,7 @@ impl serde::Serialize for TurnModelRequest {
 impl<'de> serde::Deserialize<'de> for TurnModelRequest {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

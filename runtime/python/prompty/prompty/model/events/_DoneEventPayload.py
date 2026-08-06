@@ -40,8 +40,9 @@ class DoneEventPayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for DoneEventPayload: {data}")
@@ -52,32 +53,36 @@ class DoneEventPayload:
         if data is not None and "response" in data:
             instance.response = data["response"]
         if data is not None and "messages" in data:
-            instance.messages = DoneEventPayload.load_messages(data["messages"], context)
+            instance.messages = DoneEventPayload.load_messages(data["messages"], context.at("messages"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
+        if context is None:
+            context = LoadContext(path="messages")
         if isinstance(data, dict):
             # convert simple named messages to list of Message
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Message.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
-        return [Message.load(item, context) for item in data]
+                    result.append(Message.load({"name": k, "role": v}, context.at(k)))
+            return result
+        return [Message.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

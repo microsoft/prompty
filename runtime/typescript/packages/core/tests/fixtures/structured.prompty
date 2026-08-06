@@ -21,6 +21,8 @@ outputs:
     kind: array
     description: Key points about the topic
     required: true
+    items:
+      kind: string
   - name: confidence
     kind: number
     description: Confidence score 0-1

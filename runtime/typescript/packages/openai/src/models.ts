@@ -21,6 +21,31 @@ const KNOWN_MODELS: Record<string, { contextWindow?: number; inputModalities: st
 };
 
 /**
+ * Map one raw OpenAI `/v1/models` entry into the provider-neutral `ModelInfo`
+ * contract.
+ *
+ * This is the single source of truth for the OpenAI wire → `ModelInfo` mapping
+ * and is exercised directly by the shared `spec/vectors/discovery` vectors, so
+ * every runtime converges on the same canonical shape. Enrichment from the
+ * built-in known-model table is applied here but is provider-optional per the
+ * `ModelInfo` contract, which is why the OpenAI vectors deliberately use ids
+ * outside the table.
+ *
+ * Mirrors `to_model_info` in `runtime/rust/prompty-openai/src/models.rs`.
+ */
+export function modelInfoFromWire(raw: Record<string, unknown>): ModelInfo {
+  const known = typeof raw["id"] === "string" ? findKnownModel(raw["id"]) : undefined;
+  return new ModelInfo({
+    id: typeof raw["id"] === "string" ? raw["id"] : "",
+    ownedBy: typeof raw["owned_by"] === "string" ? raw["owned_by"] : undefined,
+    contextWindow: known?.contextWindow,
+    inputModalities: known?.inputModalities,
+    outputModalities: known?.outputModalities,
+    additionalProperties: raw,
+  });
+}
+
+/**
  * List models available from the OpenAI API.
  *
  * Calls `GET /v1/models` and maps each result to a `ModelInfo`,
@@ -32,16 +57,7 @@ export async function listModels(connection: Connection): Promise<ModelInfo[]> {
   const models: ModelInfo[] = [];
 
   for (const m of page.data) {
-    const known = findKnownModel(m.id);
-    models.push(
-      new ModelInfo({
-        id: m.id,
-        ownedBy: m.owned_by,
-        contextWindow: known?.contextWindow,
-        inputModalities: known?.inputModalities,
-        outputModalities: known?.outputModalities,
-      }),
-    );
+    models.push(modelInfoFromWire(m as unknown as Record<string, unknown>));
   }
 
   return models;

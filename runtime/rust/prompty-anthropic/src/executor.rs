@@ -24,8 +24,8 @@ impl Executor for AnthropicExecutor {
     async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
@@ -96,8 +96,8 @@ impl Executor for AnthropicExecutor {
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
@@ -148,8 +148,8 @@ impl AnthropicExecutor {
     pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
@@ -171,7 +171,10 @@ impl AnthropicExecutor {
 fn resolve_connection(
     agent: &Prompty,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
-    let conn = &agent.model.connection;
+    let conn = match agent.model.as_ref() {
+        Some(model) => &model.connection,
+        None => &serde_json::Value::Null,
+    };
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {

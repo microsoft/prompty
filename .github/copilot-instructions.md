@@ -1,3 +1,127 @@
+# Operating Rules — READ THIS FIRST
+
+These rules are not style preferences. Each one is written down because ignoring it
+already cost this project a multi-day outage across seven runtimes. The rest of this
+file describes *what* to build; this section governs *how* to work. When the two
+conflict, this section wins.
+
+## 1. Vectors are the only authority
+
+The files under `spec/vectors/**` define correctness. Nothing else does.
+
+- **Before asserting any constraint, open the vector and quote it.** If you cannot cite
+  a specific vector file and the specific assertion in it, you do not have a
+  requirement — you have an opinion, and you must label it as one.
+- **Do not inherit constraints from another session, a PR description, or a chat
+  summary.** Re-derive them from the vector yourself. A false constraint propagates
+  silently and is nearly impossible to kill once several sessions repeat it.
+- **A vector that only checks `load → save → reload` equality does not require anything
+  about which type the payload loads as.** Read what is asserted, not what you assume is
+  implied.
+
+> This exact failure: a "must deserialize as the base type" constraint circulated for a
+> full day and drove an emitter-release escalation. It appears in no vector. The real
+> requirement was byte-exact payload roundtrip, satisfied by a two-line schema edit.
+
+## 2. Establish a green baseline before touching a generated-code dependency
+
+Bumping `@typra/emitter` (or any codegen dependency) regenerates thousands of files
+across every runtime at once. Without a baseline you cannot tell a regression you just
+introduced from a failure that was already there.
+
+Required sequence, in order:
+
+1. `git stash` everything. Run the full suite on the untouched pin. **Record the exact
+   pass/fail counts.** If it is not green, stop and report that first.
+2. Bump the dependency alone, in its own commit, and regenerate.
+3. Re-run and diff against the recorded baseline.
+4. Attribute every new failure before writing any fix.
+
+Never bump a codegen dependency in the same commit as a schema change or a handwritten
+fix. Keep schema edits, regeneration, and handwritten-seam repairs in **separate
+commits**, always in that order, so each can be reviewed and reverted independently.
+
+## 3. Try the cheap experiment before escalating
+
+Escalation — asking for a publish, a release, an approval, or another team's change —
+is the **last** resort, not the first.
+
+Before escalating anything, you must have run the direct experiment. Concretely: if a
+question is "which schema shape satisfies this vector?", the answer is 10 minutes of
+editing the `.tsp` and running the test, times the two or three candidate shapes. Do
+that, report a measured comparison, and the argument ends.
+
+**Hard rule: never let a thread run on whether a version exists, is publishable, or is
+authorized.** That is an availability argument, and it cannot resolve a correctness
+question. If you notice a thread arguing about versions, stop and go measure instead.
+
+> This exact failure: ~24 hours were spent arguing about which `@typra/emitter` version
+> could be published. No publish was ever needed. Three candidate schema shapes were
+> A/B'd afterward in under an hour and settled it outright.
+
+## 4. Report measurements, never impressions
+
+Every status claim must carry a number and a command that produces it.
+
+- Good: `cargo test -p prompty` → `293 passed / 3 failed`; failures at
+  `tool.rs:115`, uninvestigated.
+- Unacceptable: "mostly working", "should be fine now", "parity achieved".
+
+**State explicitly what you did not verify.** An unqualified success report that hides
+six untested runtimes is worse than no report, because it gets built upon. If you tested
+one runtime, say that one runtime was tested and name the six that were not.
+
+## 5. Orchestration has a hard budget
+
+One session per branch per PR. Beyond that:
+
+- **Give every child session a falsifiable definition of done** — a command and an
+  expected result, not a narrative goal.
+- **Two exchanges on the same blocker is the cap.** If a blocker survives two rounds of
+  messaging, stop delegating and reproduce it yourself in one worktree. Coordination
+  cost grows with the number of sessions; debugging cost does not.
+- **Never let sessions negotiate with each other about a shared dependency.** Route it
+  to a single owner — the coordinator — who decides by measurement.
+- **`archive_session` only works on sessions you created.** "Idle" is not "stopped": an
+  idle session will resume on its next message. If you need work halted and cannot
+  archive a session, say so plainly and name the sessions the user must stop.
+
+## 6. When told to stop, commit and preserve
+
+On "stop", the work is not finished — it is *preserved*. Do this before reporting:
+
+1. Commit every dirty worktree to a `wip/<topic>` branch. Never leave uncommitted work.
+2. Split into reviewable commits so the user can cherry-pick the good parts out of the
+   bad ones.
+3. In each commit message, state what is verified, what is not, and what is actively
+   known to be broken.
+4. **Flag any state that is not reproducible from the manifest** — a `--no-save`
+   install, a locally built package, a hand-edited `node_modules`. Someone will run
+   `npm ci` and silently get different bytes.
+5. Delete stale artifacts from abandoned experiments rather than committing them.
+
+## 7. Repo-specific facts that waste time when rediscovered
+
+- **Push with the `ssh` remote.** `origin` (`https://github.com/microsoft/prompty`)
+  fails with a SAML SSO 403.
+- **`origin/*` tracking refs go stale**, so "N unpushed commits" and `@{u}` comparisons
+  routinely lie. Verify against the `ssh` remote or `gh pr view` before concluding work
+  was lost.
+- **npm versions are immutable.** A version already published can never be republished
+  with different bytes. Any fix requires a strictly higher version number.
+- **`Connection` is an open discriminator**: bare `kind: string` on an `@abstract` base,
+  with `@discriminator("kind")`. **Do not add a `kind: "*"` wildcard subtype** — a
+  wildcard serializes only declared fields and structurally drops the arbitrary
+  top-level keys the vectors require. This is the one place the `Tool` / `CustomTool`
+  pattern must *not* be copied.
+- **A non-abstract polymorphic base must absorb discriminator values no subtype claims.**
+  `Property` is concrete and its union permits `string`, `integer`, `float`, `boolean`,
+  `thread`, `audio` — none of which have subtypes. They must load as the base, not
+  panic. Emitter ≥ 0.4.15 regressed this; symptoms show up identically in every
+  language (Go returned a zero `Property`; Rust panics).
+
+---
+
 # Prompty v2 — Complete Rebuild Plan
 
 ## Overview
@@ -414,7 +538,7 @@ Integration tests live in `runtime/python/prompty/tests/integration/` (see Phase
 | -------------------- | ------------------------------------------------------ |
 | `test_chat.py`       | Chat completions against real OpenAI / Azure endpoints |
 | `test_embedding.py`  | Embedding API against real endpoints                   |
-| `test_image.py`      | DALL-E 2 image generation (OpenAI only)                |
+| `test_image.py`      | Image generation (OpenAI only; opt-in via `OPENAI_IMAGE_MODEL`) |
 | `test_agent.py`      | Agent loop with tool calling against real endpoints    |
 | `test_streaming.py`  | Streaming chat completions                             |
 | `test_structured.py` | Structured output via outputs / response_format        |
@@ -690,10 +814,9 @@ tools:
     kind: function
     description: Get the current weather
     parameters:
-      properties:
-        location:
-          kind: string
-          description: City and state
+      location:
+        kind: string
+        description: City and state
 ---
 system:
 You are a helpful assistant with access to tools.
@@ -1210,7 +1333,7 @@ Configured via `.env` in the package root (`runtime/python/prompty/.env`), alrea
 | -------------------- | ----- | --------------------------------------------------------- |
 | `test_chat.py`       | 5     | Basic + async chat, temperature control, both providers   |
 | `test_embedding.py`  | 5     | Single + batch + async embeddings, both providers         |
-| `test_image.py`      | 1     | DALL-E 2 image generation (OpenAI only, 256x256 for cost) |
+| `test_image.py`      | 1     | Image generation (OpenAI only; opt-in via `OPENAI_IMAGE_MODEL`) |
 | `test_agent.py`      | 3     | Tool-calling agent loop, sync + async, both providers     |
 | `test_streaming.py`  | 3     | Streaming chat with PromptyStream/AsyncPromptyStream      |
 | `test_structured.py` | 4     | Structured output via outputs → response_format           |
@@ -1254,11 +1377,14 @@ agent = make_openai_agent(
         "name": "get_weather",
         "kind": "function",
         "description": "Get the current weather",
-        "parameters": {
-            "properties": [
-                {"name": "city", "kind": "string", "required": True}
-            ]
-        },
+        # FunctionTool.parameters is a `Properties` named collection
+        # (schema/model/tools/tool.tsp). Use the declared list form. Wrapping it
+        # in {"properties": [...]} parses as name-keyed object form with an array
+        # under a key, which the loader rejects:
+        #   "tools.parameters.properties: invalid named collection entry category array"
+        "parameters": [
+            {"name": "city", "kind": "string", "required": True}
+        ],
     }],
     metadata={"tool_functions": {"get_weather": get_weather}},
 )

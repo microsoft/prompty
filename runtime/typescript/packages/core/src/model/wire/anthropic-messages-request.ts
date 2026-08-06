@@ -16,8 +16,8 @@ export class AnthropicMessagesRequest {
   temperature?: number | undefined;
   top_p?: number | undefined;
   top_k?: number | undefined;
-  stop_sequences?: string[] = [];
-  tools?: AnthropicToolDefinition[] = [];
+  stop_sequences?: string[];
+  tools?: AnthropicToolDefinition[];
 
   constructor(init?: Partial<AnthropicMessagesRequest>) {
     this.model = init?.model ?? "";
@@ -49,6 +49,7 @@ export class AnthropicMessagesRequest {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnthropicMessagesRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -61,7 +62,7 @@ export class AnthropicMessagesRequest {
     if (data["messages"] !== undefined && data["messages"] !== null) {
       instance.messages = AnthropicMessagesRequest.loadMessages(
         data["messages"] as unknown[],
-        context,
+        context.at("messages"),
       );
     }
     if (data["max_tokens"] !== undefined && data["max_tokens"] !== null) {
@@ -90,7 +91,7 @@ export class AnthropicMessagesRequest {
     if (data["tools"] !== undefined && data["tools"] !== null) {
       instance.tools = AnthropicMessagesRequest.loadTools(
         data["tools"] as unknown[],
-        context,
+        context.at("tools"),
       );
     }
 
@@ -104,20 +105,36 @@ export class AnthropicMessagesRequest {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): AnthropicWireMessage[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: AnthropicWireMessage[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            AnthropicWireMessage.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, role: v });
+          result.push(
+            AnthropicWireMessage.load({ name: k, role: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      AnthropicWireMessage.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      AnthropicWireMessage.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -137,20 +154,39 @@ export class AnthropicMessagesRequest {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): AnthropicToolDefinition[] {
+    context ??= new LoadContext({ path: "tools" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: AnthropicToolDefinition[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            AnthropicToolDefinition.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, description: v });
+          result.push(
+            AnthropicToolDefinition.load(
+              { name: k, description: v },
+              context.at(k),
+            ),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      AnthropicToolDefinition.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      AnthropicToolDefinition.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -162,39 +198,8 @@ export class AnthropicMessagesRequest {
       context = new SaveContext();
     }
 
-    if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
-    }
-
-    // Object format: use name as key
-    const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context) as Record<string, unknown>;
-      const name = itemData["name"] as string | undefined;
-      delete itemData["name"];
-      if (name) {
-        // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof AnthropicToolDefinition)
-          .shorthandProperty;
-        if (
-          context.useShorthand &&
-          shorthand &&
-          Object.keys(itemData).length === 1 &&
-          shorthand in itemData
-        ) {
-          result[name] = itemData[shorthand];
-          continue;
-        }
-        result[name] = itemData;
-      } else {
-        // No name, fall back to array format for this item
-        if (!result["_unnamed"]) {
-          result["_unnamed"] = [];
-        }
-        (result["_unnamed"] as unknown[]).push(itemData);
-      }
-    }
-    return result;
+    // This type doesn't have a 'name' property, so always use array format
+    return items.map((item) => item.save(context));
   }
 
   //#endregion

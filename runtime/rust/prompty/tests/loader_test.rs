@@ -20,6 +20,16 @@ fn fixtures_dir() -> PathBuf {
         .join("fixtures")
 }
 
+/// Path to the canonical load vectors.
+fn load_vectors_path() -> PathBuf {
+    fixtures_dir()
+        .parent()
+        .expect("spec/fixtures must have a spec parent")
+        .join("vectors")
+        .join("load")
+        .join("load_vectors.json")
+}
+
 /// Load a fixture `.prompty` file with optional env vars set.
 fn load_fixture(
     name: &str,
@@ -81,21 +91,21 @@ fn test_basic_load() {
         agent.description.as_deref(),
         Some("A basic prompt for testing")
     );
-    assert_eq!(agent.model.id, "gpt-4");
-    assert_eq!(agent.model.provider.as_deref(), Some("openai"));
+    assert_eq!(model_of(&agent).id, "gpt-4");
+    assert_eq!(model_of(&agent).provider.as_deref(), Some("openai"));
     assert_eq!(
-        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        model_of(&agent).api_type.as_ref().map(|t| t.as_str()),
         Some("chat")
     );
 
     // Connection
-    let conn = agent.model.connection.as_object().unwrap();
+    let conn = model_of(&agent).connection.as_object().unwrap();
     assert_eq!(conn["kind"], "key");
     assert_eq!(conn["endpoint"], "https://test.openai.com");
     assert_eq!(conn["apiKey"], "sk-test123");
 
     // Options
-    let opts = agent.model.options.as_ref().unwrap();
+    let opts = model_of(&agent).options.as_ref().unwrap();
     assert!((opts.temperature.unwrap() - 0.7_f32).abs() < f32::EPSILON);
     assert_eq!(opts.max_output_tokens.unwrap(), 1000);
 
@@ -125,7 +135,7 @@ fn test_minimal_load() {
     let agent = load_fixture("minimal.prompty", &[]).unwrap();
 
     assert_eq!(agent.name, "minimal");
-    assert_eq!(agent.model.id, "gpt-4");
+    assert_eq!(model_of(&agent).id, "gpt-4");
     assert_eq!(agent.instructions.as_deref(), Some("system:\nHello world."));
     assert!(agent.as_inputs().is_none());
     assert!(agent.as_outputs().is_none());
@@ -140,7 +150,7 @@ fn test_model_shorthand() {
         "model": "gpt-4o"
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    assert_eq!(agent.model.id, "gpt-4o");
+    assert_eq!(model_of(&agent).id, "gpt-4o");
 }
 
 #[test]
@@ -157,7 +167,7 @@ fn test_env_resolution() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[("MY_VAR", "hello")]).unwrap();
-    let conn = agent.model.connection.as_object().unwrap();
+    let conn = model_of(&agent).connection.as_object().unwrap();
     assert_eq!(conn["endpoint"], "hello");
 }
 
@@ -175,7 +185,7 @@ fn test_env_default() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let conn = agent.model.connection.as_object().unwrap();
+    let conn = model_of(&agent).connection.as_object().unwrap();
     assert_eq!(conn["endpoint"], "fallback_value");
 }
 
@@ -252,7 +262,7 @@ fn test_tools_function_load() {
 
     assert_eq!(agent.name, "function-tools");
     assert_eq!(
-        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        model_of(&agent).api_type.as_ref().map(|t| t.as_str()),
         Some("chat")
     );
 
@@ -260,6 +270,32 @@ fn test_tools_function_load() {
     assert_eq!(tools.len(), 1);
     assert_eq!(tools[0].name, "get_weather");
     assert_eq!(tools[0].kind_str(), "function");
+
+    let raw = std::fs::read_to_string(load_vectors_path()).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(&raw).unwrap();
+    let vector = vectors
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|vector| vector["name"] == "tools_function_load")
+        .unwrap();
+    let expected_bindings = vector["expected"]["tools"][0]["bindings"]
+        .as_object()
+        .unwrap();
+
+    assert_eq!(tools[0].bindings.len(), expected_bindings.len());
+    for (name, expected) in expected_bindings {
+        let actual = tools[0]
+            .bindings
+            .iter()
+            .find(|binding| binding.name == *name)
+            .unwrap_or_else(|| panic!("missing binding {name:?}"));
+        assert_eq!(
+            actual.input,
+            expected["input"].as_str().unwrap(),
+            "binding {name:?} input mismatch"
+        );
+    }
 }
 
 #[test]
@@ -275,9 +311,9 @@ fn test_embedding_load() {
     .unwrap();
 
     assert_eq!(agent.name, "embedding");
-    assert_eq!(agent.model.id, "text-embedding-3-small");
+    assert_eq!(model_of(&agent).id, "text-embedding-3-small");
     assert_eq!(
-        agent.model.api_type.as_ref().map(|t| t.as_str()),
+        model_of(&agent).api_type.as_ref().map(|t| t.as_str()),
         Some("embedding")
     );
 }
@@ -308,7 +344,7 @@ fn test_connection_types_load() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let conn = agent.model.connection.as_object().unwrap();
+    let conn = model_of(&agent).connection.as_object().unwrap();
     assert_eq!(conn["kind"], "anonymous");
     assert_eq!(conn["endpoint"], "https://localhost:8080");
 }
@@ -428,4 +464,14 @@ fn test_threaded_load() {
     // Should have a thread-type input
     let thread_input = inputs.iter().find(|i| i.kind_str() == "thread");
     assert!(thread_input.is_some(), "Expected a thread-kind input");
+}
+
+/// Tests in this file all load fixtures that declare a model. `Prompty::model`
+/// is optional (a name-only prompt is valid per load_vectors.json), so unwrap it
+/// once here instead of scattering `.as_ref().unwrap()` through every assertion.
+fn model_of(agent: &prompty::model::prompty::Prompty) -> &prompty::model::model::Model {
+    agent
+        .model
+        .as_ref()
+        .expect("fixture was expected to declare a model")
 }

@@ -987,6 +987,43 @@
     }
   },
   {
+    "name": "anthropic_unmapped_options",
+    "description": "§7.5 — Anthropic: ModelOptions fields that declare no anthropic wire mapping (frequencyPenalty, presencePenalty, seed) MUST be omitted entirely, NOT emitted under their schema field names.",
+    "input": {
+      "provider": "anthropic",
+      "apiType": "chat",
+      "model_id": "claude-sonnet-4-20250514",
+      "messages": [
+        {
+          "role": "user",
+          "content": [{ "kind": "text", "value": "Hi" }]
+        }
+      ],
+      "tools": [],
+      "options": {
+        "temperature": 0.5,
+        "maxOutputTokens": 2000,
+        "frequencyPenalty": 0.1,
+        "presencePenalty": 0.2,
+        "seed": 42
+      },
+      "outputs": []
+    },
+    "expected": {
+      "request_body": {
+        "model": "claude-sonnet-4-20250514",
+        "messages": [
+          {
+            "role": "user",
+            "content": [{ "type": "text", "text": "Hi" }]
+          }
+        ],
+        "temperature": 0.5,
+        "max_tokens": 2000
+      }
+    }
+  },
+  {
     "name": "responses_structured_output",
     "description": "Responses API: structured output uses text.format.json_schema",
     "input": {
@@ -1028,6 +1065,45 @@
             "strict": true
           }
         }
+      }
+    }
+  },
+  {
+    "name": "responses_unmapped_options",
+    "description": "§7.5 — Responses API: ModelOptions fields that declare no `responses` wire mapping (frequencyPenalty, presencePenalty, seed, topK, stopSequences, allowMultipleToolCalls) MUST be omitted entirely, NOT emitted under their schema field names. Only maxOutputTokens, temperature and topP map for this surface.",
+    "input": {
+      "provider": "openai",
+      "apiType": "responses",
+      "model_id": "gpt-4o",
+      "messages": [
+        {
+          "role": "user",
+          "content": [{ "kind": "text", "value": "Hi" }]
+        }
+      ],
+      "tools": [],
+      "options": {
+        "temperature": 0.5,
+        "maxOutputTokens": 2000,
+        "topP": 0.9,
+        "frequencyPenalty": 0.1,
+        "presencePenalty": 0.2,
+        "seed": 42,
+        "topK": 5,
+        "stopSequences": ["END"],
+        "allowMultipleToolCalls": true
+      },
+      "outputs": []
+    },
+    "expected": {
+      "request_body": {
+        "model": "gpt-4o",
+        "input": [
+          { "role": "user", "content": "Hi" }
+        ],
+        "temperature": 0.5,
+        "max_output_tokens": 2000,
+        "top_p": 0.9
       }
     }
   }

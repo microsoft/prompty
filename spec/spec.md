@@ -246,6 +246,47 @@ correspond to the TypeSpec-generated data model.
 Unknown top-level properties SHOULD be preserved in `metadata` or ignored. Implementations
 MUST NOT raise an error for unknown properties.
 
+#### `Record<unknown>` value nullability
+
+`Record<unknown>` has two independent nullability axes:
+
+1. The model property's optionality controls whether the record itself may be absent.
+2. The `unknown` value type permits every JSON-compatible value, including explicit
+   `null`, at any nesting depth.
+
+After YAML parsing, YAML null forms have the same explicit-null semantics as JSON
+`null`.
+
+An implementation MUST preserve null-valued keys through load → save → reload. It MUST
+NOT drop a key whose value is `null`, coerce that value to an empty object or another
+sentinel, or conflate the present-null state with an absent key. Nested objects and arrays
+MUST apply the same rule recursively.
+
+This contract applies to every `Record<unknown>` surface. The following generated fields
+are specifically covered by the shared acceptance vectors because they cross canonical
+runtime boundaries:
+
+| Model | Field | Record presence |
+| ----- | ----- | --------------- |
+| `Message` | `metadata` | Required |
+| `Prompty` | `metadata` | Optional |
+| `ModelInfo` | `additionalProperties` | Optional |
+| `TurnModelRequest` | `inputs` | Optional |
+| `RunTurnRequest` | `inputs` | Optional |
+| `TurnModelResponse` | `checkpointState` | Optional |
+| `HostToolRequest` | `arguments` | Optional |
+| `TurnEvent` | `payload` | Required |
+| `SessionEvent` | `payload` | Required |
+
+Language bindings MUST retain both axes. For example, the conforming C# mapping is
+`IDictionary<string, object?>` for a required record and
+`IDictionary<string, object?>?` for an optional record. Mapping a
+`Record<unknown>` value as non-null `object` changes the schema contract and is
+non-conformant. Nullable annotations do not add a wire or model field.
+
+The normative shared vectors are
+`spec/vectors/model/record_unknown_nullability_vectors.json`.
+
 ### §2.4 Model
 
 The `model` property configures the LLM provider and parameters.
@@ -284,6 +325,20 @@ Connection types are discriminated by the `kind` field:
 | `anonymous`   | `endpoint`                     | No authentication                       |
 | `foundry`     | `endpoint`                     | Microsoft Foundry connection             |
 | `oauth`       | `endpoint`, `authenticationMode` | OAuth-based authentication            |
+
+The `kind` discriminator is open for forward compatibility. Known-kind matching is
+exact and case-sensitive, so a value such as `Reference` is an unknown kind rather than
+the known `reference` kind. When a runtime loads a connection whose string `kind` is
+not listed above, it MUST preserve that exact discriminator and every JSON-compatible
+property in the connection payload through a load → save → reload cycle.
+Implementations MUST NOT coerce an unknown connection to a known/default connection
+kind or discard its additional payload. This passthrough requirement applies to unknown
+connection kinds; known connection kinds retain their schema-defined fields. The shared
+acceptance vector is `spec/vectors/model/connection_roundtrip_vectors.json`.
+
+This contract is independent of tool dispatch. An unknown tool `kind` continues to load
+as `CustomTool` under §2.9; an unknown connection remains an unknown `Connection` and
+does not imply `CustomTool`.
 
 ### §2.6 ModelOptions
 
@@ -332,8 +387,62 @@ schema is a `Property` object:
 Rich kinds (`thread`, `image`, `file`, `audio`) receive special handling during
 rendering — see §5 for details.
 
+#### Named collection encoding
+
+Named collections such as `Properties`, `Tools`, `Bindings`, and `Connections` accept
+either a flat array of entries or a name-keyed object. Names are opaque parsed strings:
+implementations MUST NOT trim, case-fold, or Unicode-normalize them before comparison.
+Missing `name` and an explicit empty `name` are the same unnamed state because `name`
+defaults to `""`.
+
+The canonical serialization is a name-keyed object when every entry has a non-empty
+name and all names are unique by exact parsed-string comparison. Otherwise, the
+serializer MUST encode the entire collection as an array, preserving entry order and
+every entry's payload. The canonical array form MUST omit an empty `name`. An explicit
+array-format option MAY force array encoding for a losslessly object-encodable
+collection, but an object-format option MUST NOT override the lossless fallback.
+
+Implementations MUST NOT omit unnamed entries, overwrite duplicate names, or invent
+synthetic keys such as `_unnamed`, indexes, or suffixed names. Loading either canonical
+form and then saving and reloading it MUST preserve the same entries and payloads.
+Array fallback MUST preserve model entry order; object ordering is not semantically
+significant.
+
+At every named-collection boundary, recursively:
+
+- The array form is the collection itself: a flat array of entries.
+- In the name-keyed object form, each key maps to exactly one entry.
+- An array used as the immediate value of a name-keyed entry is structurally invalid.
+  It MUST be rejected at the first invalid value and MUST NOT be skipped, flattened,
+  stringified, or coerced into a default entry.
+- The native load error MUST identify the full collection path, including the offending
+  key, and identify the invalid value category as `array`.
+
+This validation is schema-aware and applies after JSON/YAML parsing and reference
+resolution. It does not reject the outer flat array form or arrays in declared fields
+inside a valid entry, such as `Property.default`. In particular, list shorthand is not
+available as the immediate value of a name-keyed `Property` entry because it is
+ambiguous with an invalid nested collection. Use the expanded form instead:
+
+```yaml
+inputs:
+  aliases:
+    kind: array
+    default: [Ada, Grace]
+```
+
+The normative load/save/reload and rejection cases are
+`spec/vectors/model/named_collection_vectors.json`.
+
 **Scalar shorthand**: When a property value is a plain scalar instead of a `Property`
 object, it MUST be interpreted as `Property(kind: <inferred>, default: <value>)`.
+This applies to every immediate string, integer, float, or boolean value in the
+name-keyed object form of a `Property` collection. The object key supplies `name`.
+Implementations MUST NOT reinterpret the scalar as the `kind` field, reject a valid
+primitive scalar, or silently produce an empty `kind`. At a name-keyed collection
+boundary, this normalization to `default` MUST occur before direct generated-model
+`@coerce` handling; the direct-coercion `example` behavior MUST NOT apply to the
+collection entry, and `example` MUST remain unset.
 
 ```yaml
 # Shorthand
@@ -349,6 +458,16 @@ inputs:
 
 Kind inference from scalar type: string → `"string"`, integer → `"integer"`,
 float → `"float"`, boolean → `"boolean"`, list → `"array"`, dict → `"object"`.
+The named-collection object-form exception for list values is defined above.
+
+This named-collection shorthand is distinct from direct generated-model coercion.
+When a generated `Property` loader receives a scalar as its complete input, the
+TypeSpec `@coerce` contract MUST infer the same scalar kind and store the scalar in
+`example`; it MUST NOT drop or coerce the value. JSON integer and fractional number
+inputs MUST remain distinguishable as `"integer"` and `"float"` respectively. The
+four primitive scalar branches are an atomic contract: string, integer, float, and
+boolean MUST all be supported. The normative acceptance vector is
+`spec/vectors/model/property_scalar_coercion_vectors.json`.
 
 ### §2.8 Template
 
@@ -415,13 +534,12 @@ tools:
     kind: function
     description: Get orders for a user
     parameters:
-      properties:
-        - name: user_id
-          kind: string
-          required: true
-        - name: limit
-          kind: integer
-          default: 10
+      - name: user_id
+        kind: string
+        required: true
+      - name: limit
+        kind: integer
+        default: 10
     bindings:
       user_id: ${env:CURRENT_USER_ID}
 ```
@@ -1270,6 +1388,20 @@ ToolCall:
 ToolResult:
   parts:     ContentPart[]    // Rich content from tool execution
 ```
+
+`ContentPart` is a closed, exact, case-sensitive discriminated union. A typed
+`ContentPart` load MUST reject any `kind` other than `text`, `image`, `audio`, or
+`file`, including case-only variants such as `Text`. Implementations MUST NOT create an
+unknown fallback variant, preserve the unknown payload as a `ContentPart`, or coerce it
+to a known/default kind. The rejection MUST be classified as an unknown-discriminator
+load error and report both the discriminator field (`kind`) and the exact offending
+string value. Runtimes MAY use their native load-error type, but its diagnostic or
+structured data MUST expose equivalent information.
+
+This strict contract is distinct from the intentionally open discriminator contracts:
+an unknown tool kind loads as `CustomTool` under §2.9, and an unknown connection kind
+is preserved under §2.5. The shared acceptance vectors are in
+`spec/vectors/model/content_part_discriminator_vectors.json`.
 
 **ToolResult** enables tools to return rich content (text, images, files, audio)
 rather than plain strings. Implementations MUST support conversion from a plain

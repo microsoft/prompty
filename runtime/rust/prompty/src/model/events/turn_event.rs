@@ -244,7 +244,7 @@ pub struct TurnEvent {
     pub parent_id: Option<String>,
     /// Trace span identifier associated with this event
     pub span_id: Option<String>,
-    /// Event-specific payload. Use the typed payload model matching 'type'.
+    /// Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
     pub payload: serde_json::Value,
 }
 
@@ -257,12 +257,16 @@ impl TurnEvent {
     /// Load TurnEvent from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load TurnEvent from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -271,6 +275,9 @@ impl TurnEvent {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             id: value
                 .get("id")
@@ -310,6 +317,10 @@ impl TurnEvent {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize TurnEvent to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -329,22 +340,22 @@ impl TurnEvent {
                 serde_json::Value::String(self.timestamp.clone()),
             );
         }
-        if let Some(ref val) = self.turn_id {
+        if let Some(val) = self.turn_id.as_ref() {
             result.insert("turnId".to_string(), serde_json::Value::String(val.clone()));
         }
-        if let Some(val) = self.iteration {
+        if let Some(val) = self.iteration.as_ref() {
             result.insert(
                 "iteration".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(ref val) = self.parent_id {
+        if let Some(val) = self.parent_id.as_ref() {
             result.insert(
                 "parentId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.span_id {
+        if let Some(val) = self.span_id.as_ref() {
             result.insert("spanId".to_string(), serde_json::Value::String(val.clone()));
         }
         if !self.payload.is_null() {
@@ -381,6 +392,7 @@ impl serde::Serialize for TurnEvent {
 impl<'de> serde::Deserialize<'de> for TurnEvent {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

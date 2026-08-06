@@ -19,7 +19,8 @@ fn test_model_invocation_context_snapshot_load_json() {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 "####;
     let ctx = LoadContext::default();
@@ -43,6 +44,7 @@ id: "context:inv_abc123"
 sessionId: sess_abc123
 turnId: turn_abc123
 invocationId: inv_abc123
+contextState: {}
 
 "####;
     let ctx = LoadContext::default();
@@ -66,7 +68,8 @@ fn test_model_invocation_context_snapshot_roundtrip() {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -89,7 +92,8 @@ fn test_model_invocation_context_snapshot_serde_roundtrip() {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "contextState": {}
 }
 "####;
     let instance: ModelInvocationContextSnapshot =

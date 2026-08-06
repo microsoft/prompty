@@ -31,12 +31,16 @@ impl ReplayVerificationRequest {
     /// Load ReplayVerificationRequest from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load ReplayVerificationRequest from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -45,6 +49,9 @@ impl ReplayVerificationRequest {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             expected: value
                 .get("expected")
@@ -57,21 +64,49 @@ impl ReplayVerificationRequest {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("expected")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "expected".to_string()
+            } else {
+                format!("{}.expected", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ReplayJournalRecord::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("actual")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "actual".to_string()
+            } else {
+                format!("{}.actual", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ReplayJournalRecord::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Serialize ReplayVerificationRequest to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if !self.expected.is_empty() {
-            result.insert(
-                "expected".to_string(),
-                Self::save_expected(&self.expected, ctx),
-            );
-        }
-        if !self.actual.is_empty() {
-            result.insert("actual".to_string(), Self::save_actual(&self.actual, ctx));
-        }
+        result.insert(
+            "expected".to_string(),
+            Self::save_expected(&self.expected, ctx),
+        );
+        result.insert("actual".to_string(), Self::save_actual(&self.actual, ctx));
         ctx.process_dict(serde_json::Value::Object(result))
     }
 
@@ -144,6 +179,7 @@ impl serde::Serialize for ReplayVerificationRequest {
 impl<'de> serde::Deserialize<'de> for ReplayVerificationRequest {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -259,12 +259,16 @@ impl EngineEvent {
     /// Load EngineEvent from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load EngineEvent from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -273,6 +277,9 @@ impl EngineEvent {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             sequence: value.get("sequence").and_then(|v| v.as_i64()).unwrap_or(0),
             id: value
@@ -325,6 +332,10 @@ impl EngineEvent {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize EngineEvent to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -364,7 +375,7 @@ impl EngineEvent {
                 serde_json::Value::String(self.run_id.clone()),
             );
         }
-        if let Some(ref val) = self.parent_run_id {
+        if let Some(val) = self.parent_run_id.as_ref() {
             result.insert(
                 "parentRunId".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -376,23 +387,23 @@ impl EngineEvent {
                 serde_json::Value::Number(serde_json::Number::from(self.delegation_depth)),
             );
         }
-        if let Some(ref val) = self.invocation_id {
+        if let Some(val) = self.invocation_id.as_ref() {
             result.insert(
                 "invocationId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(val) = self.iteration {
+        if let Some(val) = self.iteration.as_ref() {
             result.insert(
                 "iteration".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
         result.insert(
             "kind".to_string(),
             serde_json::Value::String(self.kind.to_string()),
         );
-        if let Some(ref val) = self.payload {
+        if let Some(val) = self.payload.as_ref() {
             result.insert("payload".to_string(), val.clone());
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -421,6 +432,7 @@ impl serde::Serialize for EngineEvent {
 impl<'de> serde::Deserialize<'de> for EngineEvent {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

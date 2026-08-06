@@ -39,12 +39,16 @@ impl ToolExecutionStartPayload {
     /// Load ToolExecutionStartPayload from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load ToolExecutionStartPayload from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -53,6 +57,9 @@ impl ToolExecutionStartPayload {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             request_id: value
                 .get("requestId")
@@ -82,19 +89,31 @@ impl ToolExecutionStartPayload {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "redaction".to_string()
+        } else {
+            format!("{}.redaction", path)
+        };
+        if let Some(child) = value.get("redaction") {
+            RedactionMetadata::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
+    }
+
     /// Serialize ToolExecutionStartPayload to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(ref val) = self.request_id {
+        if let Some(val) = self.request_id.as_ref() {
             result.insert(
                 "requestId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.tool_call_id {
+        if let Some(val) = self.tool_call_id.as_ref() {
             result.insert(
                 "toolCallId".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -109,13 +128,13 @@ impl ToolExecutionStartPayload {
         if !self.arguments.is_null() {
             result.insert("arguments".to_string(), self.arguments.clone());
         }
-        if let Some(ref val) = self.working_directory {
+        if let Some(val) = self.working_directory.as_ref() {
             result.insert(
                 "workingDirectory".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.redaction {
+        if let Some(val) = self.redaction.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("redaction".to_string(), nested);
@@ -152,6 +171,7 @@ impl serde::Serialize for ToolExecutionStartPayload {
 impl<'de> serde::Deserialize<'de> for ToolExecutionStartPayload {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -20,6 +20,9 @@ type SessionWarningPayload struct {
 
 // LoadSessionWarningPayload creates a SessionWarningPayload from a map[string]interface{}
 func LoadSessionWarningPayload(data interface{}, ctx *LoadContext) (SessionWarningPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := SessionWarningPayload{}
 
 	// Load from map

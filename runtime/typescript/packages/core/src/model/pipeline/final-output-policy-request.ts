@@ -34,6 +34,7 @@ export class FinalOutputPolicyRequest {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): FinalOutputPolicyRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -52,7 +53,7 @@ export class FinalOutputPolicyRequest {
     if (data["messages"] !== undefined && data["messages"] !== null) {
       instance.messages = FinalOutputPolicyRequest.loadMessages(
         data["messages"] as unknown[],
-        context,
+        context.at("messages"),
       );
     }
     if (data["output"] !== undefined && data["output"] !== null) {
@@ -72,20 +73,31 @@ export class FinalOutputPolicyRequest {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Message[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Message.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, role: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Message.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 

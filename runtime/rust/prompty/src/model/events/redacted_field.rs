@@ -114,12 +114,16 @@ impl RedactedField {
     /// Load RedactedField from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load RedactedField from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -128,6 +132,9 @@ impl RedactedField {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             path: value
                 .get("path")
@@ -146,6 +153,10 @@ impl RedactedField {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize RedactedField to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -162,7 +173,7 @@ impl RedactedField {
             "mode".to_string(),
             serde_json::Value::String(self.mode.to_string()),
         );
-        if let Some(ref val) = self.reason {
+        if let Some(val) = self.reason.as_ref() {
             result.insert("reason".to_string(), serde_json::Value::String(val.clone()));
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -191,6 +202,7 @@ impl serde::Serialize for RedactedField {
 impl<'de> serde::Deserialize<'de> for RedactedField {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

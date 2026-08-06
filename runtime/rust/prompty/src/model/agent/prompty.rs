@@ -28,14 +28,14 @@ pub struct Prompty {
     pub display_name: Option<String>,
     /// Description of the prompt's purpose
     pub description: Option<String>,
-    /// Additional metadata including authors, tags, and other arbitrary properties
+    /// Additional metadata including authors, tags, and other arbitrary properties. Values may be explicit null.
     pub metadata: serde_json::Value,
     /// Input parameters that participate in template rendering
-    pub inputs: Vec<Property>,
+    pub inputs: Option<Vec<Property>>,
     /// Expected output format and structure
-    pub outputs: Vec<Property>,
+    pub outputs: Option<Vec<Property>>,
     /// AI model configuration
-    pub model: Model,
+    pub model: Option<Model>,
     /// Tools available for extended functionality
     pub tools: Vec<Tool>,
     /// Template configuration for prompt rendering
@@ -53,12 +53,16 @@ impl Prompty {
     /// Load Prompty from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load Prompty from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -67,6 +71,9 @@ impl Prompty {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             name: value
                 .get("name")
@@ -85,19 +92,12 @@ impl Prompty {
                 .get("metadata")
                 .cloned()
                 .unwrap_or(serde_json::Value::Null),
-            inputs: value
-                .get("inputs")
-                .map(|v| Self::load_inputs(v, ctx))
-                .unwrap_or_default(),
-            outputs: value
-                .get("outputs")
-                .map(|v| Self::load_outputs(v, ctx))
-                .unwrap_or_default(),
+            inputs: value.get("inputs").map(|v| Self::load_inputs(v, ctx)),
+            outputs: value.get("outputs").map(|v| Self::load_outputs(v, ctx)),
             model: value
                 .get("model")
                 .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                .map(|v| Model::load_from_value(v, ctx))
-                .unwrap_or_default(),
+                .map(|v| Model::load_from_value(v, ctx)),
             tools: value
                 .get("tools")
                 .map(|v| Self::load_tools(v, ctx))
@@ -113,6 +113,134 @@ impl Prompty {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(collection) = value.get("inputs") {
+            let collection_path = if path.is_empty() {
+                "inputs".to_string()
+            } else {
+                format!("{}.inputs", path)
+            };
+            match collection {
+                serde_json::Value::Object(entries) => {
+                    for (name, entry) in entries {
+                        let entry_path = format!("{}.{}", collection_path, name);
+                        if entry.is_array() {
+                            return Err(format!(
+                                "{}: invalid named collection entry category array",
+                                entry_path
+                            ));
+                        }
+                        let mut candidate = if entry.is_object() {
+                            entry.clone()
+                        } else {
+                            serde_json::json!({ "kind": entry })
+                        };
+                        if let serde_json::Value::Object(ref mut map) = candidate {
+                            map.insert("name".to_string(), serde_json::Value::String(name.clone()));
+                        }
+                        Property::validate_input_at(&candidate, &entry_path)?;
+                    }
+                }
+                serde_json::Value::Array(entries) => {
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Property::validate_input_at(entry, &entry_path)?;
+                    }
+                }
+                _ => {}
+            }
+        }
+        if let Some(collection) = value.get("outputs") {
+            let collection_path = if path.is_empty() {
+                "outputs".to_string()
+            } else {
+                format!("{}.outputs", path)
+            };
+            match collection {
+                serde_json::Value::Object(entries) => {
+                    for (name, entry) in entries {
+                        let entry_path = format!("{}.{}", collection_path, name);
+                        if entry.is_array() {
+                            return Err(format!(
+                                "{}: invalid named collection entry category array",
+                                entry_path
+                            ));
+                        }
+                        let mut candidate = if entry.is_object() {
+                            entry.clone()
+                        } else {
+                            serde_json::json!({ "kind": entry })
+                        };
+                        if let serde_json::Value::Object(ref mut map) = candidate {
+                            map.insert("name".to_string(), serde_json::Value::String(name.clone()));
+                        }
+                        Property::validate_input_at(&candidate, &entry_path)?;
+                    }
+                }
+                serde_json::Value::Array(entries) => {
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Property::validate_input_at(entry, &entry_path)?;
+                    }
+                }
+                _ => {}
+            }
+        }
+        let child_path = if path.is_empty() {
+            "model".to_string()
+        } else {
+            format!("{}.model", path)
+        };
+        if let Some(child) = value.get("model") {
+            Model::validate_input_at(child, &child_path)?;
+        }
+        if let Some(collection) = value.get("tools") {
+            let collection_path = if path.is_empty() {
+                "tools".to_string()
+            } else {
+                format!("{}.tools", path)
+            };
+            match collection {
+                serde_json::Value::Object(entries) => {
+                    for (name, entry) in entries {
+                        let entry_path = format!("{}.{}", collection_path, name);
+                        if entry.is_array() {
+                            return Err(format!(
+                                "{}: invalid named collection entry category array",
+                                entry_path
+                            ));
+                        }
+                        let mut candidate = if entry.is_object() {
+                            entry.clone()
+                        } else {
+                            serde_json::json!({ "kind": entry })
+                        };
+                        if let serde_json::Value::Object(ref mut map) = candidate {
+                            map.insert("name".to_string(), serde_json::Value::String(name.clone()));
+                        }
+                        Tool::validate_input_at(&candidate, &entry_path)?;
+                    }
+                }
+                serde_json::Value::Array(entries) => {
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Tool::validate_input_at(entry, &entry_path)?;
+                    }
+                }
+                _ => {}
+            }
+        }
+        let child_path = if path.is_empty() {
+            "template".to_string()
+        } else {
+            format!("{}.template", path)
+        };
+        if let Some(child) = value.get("template") {
+            Template::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
+    }
+
     /// Serialize Prompty to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -125,13 +253,13 @@ impl Prompty {
                 serde_json::Value::String(self.name.clone()),
             );
         }
-        if let Some(ref val) = self.display_name {
+        if let Some(val) = self.display_name.as_ref() {
             result.insert(
                 "displayName".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.description {
+        if let Some(val) = self.description.as_ref() {
             result.insert(
                 "description".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -140,31 +268,26 @@ impl Prompty {
         if !self.metadata.is_null() {
             result.insert("metadata".to_string(), self.metadata.clone());
         }
-        if !self.inputs.is_empty() {
-            result.insert("inputs".to_string(), Self::save_inputs(&self.inputs, ctx));
+        if let Some(items) = self.inputs.as_ref() {
+            result.insert("inputs".to_string(), Self::save_inputs(items, ctx));
         }
-        if !self.outputs.is_empty() {
-            result.insert(
-                "outputs".to_string(),
-                Self::save_outputs(&self.outputs, ctx),
-            );
+        if let Some(items) = self.outputs.as_ref() {
+            result.insert("outputs".to_string(), Self::save_outputs(items, ctx));
         }
-        {
-            let nested = self.model.to_value(ctx);
+        if let Some(val) = self.model.as_ref() {
+            let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("model".to_string(), nested);
             }
         }
-        if !self.tools.is_empty() {
-            result.insert("tools".to_string(), Self::save_tools(&self.tools, ctx));
-        }
-        if let Some(ref val) = self.template {
+        result.insert("tools".to_string(), Self::save_tools(&self.tools, ctx));
+        if let Some(val) = self.template.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("template".to_string(), nested);
             }
         }
-        if let Some(ref val) = self.instructions {
+        if let Some(val) = self.instructions.as_ref() {
             result.insert(
                 "instructions".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -199,20 +322,31 @@ impl Prompty {
 
             serde_json::Value::Object(obj) => obj
                 .iter()
-                .filter_map(|(name, value)| {
+                .map(|(name, value)| {
                     if value.is_array() {
-                        return None;
+                        panic!(
+                            "inputs.{}: invalid named collection entry category array",
+                            name
+                        );
                     }
                     let mut v = if value.is_object() {
                         value.clone()
+                    } else if value.is_i64() {
+                        serde_json::json!({ "kind": "integer", "default": value })
+                    } else if value.is_f64() {
+                        serde_json::json!({ "kind": "float", "default": value })
+                    } else if value.is_string() {
+                        serde_json::json!({ "kind": "string", "default": value })
+                    } else if value.is_boolean() {
+                        serde_json::json!({ "kind": "boolean", "default": value })
                     } else {
-                        serde_json::json!({ "kind": value })
+                        serde_json::json!({ "default": value })
                     };
                     if let serde_json::Value::Object(ref mut m) = v {
                         m.entry("name".to_string())
                             .or_insert_with(|| serde_json::Value::String(name.clone()));
                     }
-                    Some(Property::load_from_value(&v, ctx))
+                    Property::load_from_value(&v, ctx)
                 })
                 .collect(),
             _ => Vec::new(),
@@ -221,18 +355,35 @@ impl Prompty {
 
     /// Save a collection of Property to a JSON value.
     fn save_inputs(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+        let mut serialized = items
+            .iter()
+            .map(|item| item.to_value(ctx))
+            .collect::<Vec<_>>();
+        for item_data in &mut serialized {
+            if let serde_json::Value::Object(map) = item_data {
+                if matches!(map.get("name"), Some(serde_json::Value::String(name)) if name.is_empty())
+                {
+                    map.remove("name");
+                }
+            }
+        }
+
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
+            return serde_json::Value::Array(serialized);
+        }
+        let mut names = std::collections::HashSet::new();
+        for item_data in &serialized {
+            let Some(name) = item_data.get("name").and_then(|value| value.as_str()) else {
+                return serde_json::Value::Array(serialized);
+            };
+            if name.is_empty() || !names.insert(name.to_string()) {
+                return serde_json::Value::Array(serialized);
+            }
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
+        for item_data in serialized {
+            let mut item_data = match item_data {
                 serde_json::Value::Object(m) => m,
                 other => {
                     let mut m = serde_json::Map::new();
@@ -240,9 +391,19 @@ impl Prompty {
                     m
                 }
             };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
+            let serde_json::Value::String(name) = item_data
+                .remove("name")
+                .expect("validated named collection item")
+            else {
+                unreachable!()
+            };
+            if ctx.use_shorthand && item_data.len() == 1 {
+                if let Some(shorthand) = item_data.get("example") {
+                    result.insert(name, shorthand.clone());
+                    continue;
+                }
             }
+            result.insert(name, serde_json::Value::Object(item_data));
         }
         serde_json::Value::Object(result)
     }
@@ -258,20 +419,31 @@ impl Prompty {
 
             serde_json::Value::Object(obj) => obj
                 .iter()
-                .filter_map(|(name, value)| {
+                .map(|(name, value)| {
                     if value.is_array() {
-                        return None;
+                        panic!(
+                            "outputs.{}: invalid named collection entry category array",
+                            name
+                        );
                     }
                     let mut v = if value.is_object() {
                         value.clone()
+                    } else if value.is_i64() {
+                        serde_json::json!({ "kind": "integer", "default": value })
+                    } else if value.is_f64() {
+                        serde_json::json!({ "kind": "float", "default": value })
+                    } else if value.is_string() {
+                        serde_json::json!({ "kind": "string", "default": value })
+                    } else if value.is_boolean() {
+                        serde_json::json!({ "kind": "boolean", "default": value })
                     } else {
-                        serde_json::json!({ "kind": value })
+                        serde_json::json!({ "default": value })
                     };
                     if let serde_json::Value::Object(ref mut m) = v {
                         m.entry("name".to_string())
                             .or_insert_with(|| serde_json::Value::String(name.clone()));
                     }
-                    Some(Property::load_from_value(&v, ctx))
+                    Property::load_from_value(&v, ctx)
                 })
                 .collect(),
             _ => Vec::new(),
@@ -280,18 +452,35 @@ impl Prompty {
 
     /// Save a collection of Property to a JSON value.
     fn save_outputs(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+        let mut serialized = items
+            .iter()
+            .map(|item| item.to_value(ctx))
+            .collect::<Vec<_>>();
+        for item_data in &mut serialized {
+            if let serde_json::Value::Object(map) = item_data {
+                if matches!(map.get("name"), Some(serde_json::Value::String(name)) if name.is_empty())
+                {
+                    map.remove("name");
+                }
+            }
+        }
+
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
+            return serde_json::Value::Array(serialized);
+        }
+        let mut names = std::collections::HashSet::new();
+        for item_data in &serialized {
+            let Some(name) = item_data.get("name").and_then(|value| value.as_str()) else {
+                return serde_json::Value::Array(serialized);
+            };
+            if name.is_empty() || !names.insert(name.to_string()) {
+                return serde_json::Value::Array(serialized);
+            }
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
+        for item_data in serialized {
+            let mut item_data = match item_data {
                 serde_json::Value::Object(m) => m,
                 other => {
                     let mut m = serde_json::Map::new();
@@ -299,9 +488,19 @@ impl Prompty {
                     m
                 }
             };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
+            let serde_json::Value::String(name) = item_data
+                .remove("name")
+                .expect("validated named collection item")
+            else {
+                unreachable!()
+            };
+            if ctx.use_shorthand && item_data.len() == 1 {
+                if let Some(shorthand) = item_data.get("example") {
+                    result.insert(name, shorthand.clone());
+                    continue;
+                }
             }
+            result.insert(name, serde_json::Value::Object(item_data));
         }
         serde_json::Value::Object(result)
     }
@@ -316,9 +515,12 @@ impl Prompty {
 
             serde_json::Value::Object(obj) => obj
                 .iter()
-                .filter_map(|(name, value)| {
+                .map(|(name, value)| {
                     if value.is_array() {
-                        return None;
+                        panic!(
+                            "tools.{}: invalid named collection entry category array",
+                            name
+                        );
                     }
                     let mut v = if value.is_object() {
                         value.clone()
@@ -329,7 +531,7 @@ impl Prompty {
                         m.entry("name".to_string())
                             .or_insert_with(|| serde_json::Value::String(name.clone()));
                     }
-                    Some(Tool::load_from_value(&v, ctx))
+                    Tool::load_from_value(&v, ctx)
                 })
                 .collect(),
             _ => Vec::new(),
@@ -338,18 +540,35 @@ impl Prompty {
 
     /// Save a collection of Tool to a JSON value.
     fn save_tools(items: &[Tool], ctx: &SaveContext) -> serde_json::Value {
+        let mut serialized = items
+            .iter()
+            .map(|item| item.to_value(ctx))
+            .collect::<Vec<_>>();
+        for item_data in &mut serialized {
+            if let serde_json::Value::Object(map) = item_data {
+                if matches!(map.get("name"), Some(serde_json::Value::String(name)) if name.is_empty())
+                {
+                    map.remove("name");
+                }
+            }
+        }
+
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
+            return serde_json::Value::Array(serialized);
+        }
+        let mut names = std::collections::HashSet::new();
+        for item_data in &serialized {
+            let Some(name) = item_data.get("name").and_then(|value| value.as_str()) else {
+                return serde_json::Value::Array(serialized);
+            };
+            if name.is_empty() || !names.insert(name.to_string()) {
+                return serde_json::Value::Array(serialized);
+            }
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
+        for item_data in serialized {
+            let mut item_data = match item_data {
                 serde_json::Value::Object(m) => m,
                 other => {
                     let mut m = serde_json::Map::new();
@@ -357,9 +576,13 @@ impl Prompty {
                     m
                 }
             };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
-            }
+            let serde_json::Value::String(name) = item_data
+                .remove("name")
+                .expect("validated named collection item")
+            else {
+                unreachable!()
+            };
+            result.insert(name, serde_json::Value::Object(item_data));
         }
         serde_json::Value::Object(result)
     }
@@ -377,6 +600,7 @@ impl serde::Serialize for Prompty {
 impl<'de> serde::Deserialize<'de> for Prompty {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

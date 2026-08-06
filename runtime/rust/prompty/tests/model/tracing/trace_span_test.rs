@@ -18,7 +18,12 @@ fn test_trace_span_load_json() {
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 "####;
     let ctx = LoadContext::default();
@@ -48,6 +53,10 @@ fn test_trace_span_load_yaml() {
 name: prompty.core.pipeline.run
 signature: prompty.core.pipeline.run
 error: Connection refused
+__time:
+  start: "2026-04-04T12:00:00Z"
+  end: "2026-04-04T12:00:01Z"
+  duration: 1000
 
 "####;
     let ctx = LoadContext::default();
@@ -72,7 +81,12 @@ fn test_trace_span_roundtrip() {
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -94,7 +108,12 @@ fn test_trace_span_serde_roundtrip() {
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 "####;
     let instance: TraceSpan =

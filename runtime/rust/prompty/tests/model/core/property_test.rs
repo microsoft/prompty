@@ -92,7 +92,12 @@ fn test_property_from_input() {
     let value = serde_json::json!(false);
     let ctx = LoadContext::default();
     let instance = Property::load_from_value(&value, &ctx);
-    let _ = instance; // abstract type, load succeeded
+    let saved = instance.to_value(&SaveContext::default());
+    let reloaded = Property::load_from_value(&saved, &ctx);
+    assert_eq!(
+        reloaded, instance,
+        "scalar-coerced abstract models must survive save/reload"
+    );
 }
 
 #[test]
@@ -100,7 +105,12 @@ fn test_property_from_input_2() {
     let value = serde_json::json!(3.14);
     let ctx = LoadContext::default();
     let instance = Property::load_from_value(&value, &ctx);
-    let _ = instance; // abstract type, load succeeded
+    let saved = instance.to_value(&SaveContext::default());
+    let reloaded = Property::load_from_value(&saved, &ctx);
+    assert_eq!(
+        reloaded, instance,
+        "scalar-coerced abstract models must survive save/reload"
+    );
 }
 
 #[test]
@@ -108,7 +118,12 @@ fn test_property_from_input_3() {
     let value = serde_json::json!(4);
     let ctx = LoadContext::default();
     let instance = Property::load_from_value(&value, &ctx);
-    let _ = instance; // abstract type, load succeeded
+    let saved = instance.to_value(&SaveContext::default());
+    let reloaded = Property::load_from_value(&saved, &ctx);
+    assert_eq!(
+        reloaded, instance,
+        "scalar-coerced abstract models must survive save/reload"
+    );
 }
 
 #[test]
@@ -116,5 +131,10 @@ fn test_property_from_input_4() {
     let value = serde_json::json!("example");
     let ctx = LoadContext::default();
     let instance = Property::load_from_value(&value, &ctx);
-    let _ = instance; // abstract type, load succeeded
+    let saved = instance.to_value(&SaveContext::default());
+    let reloaded = Property::load_from_value(&saved, &ctx);
+    assert_eq!(
+        reloaded, instance,
+        "scalar-coerced abstract models must survive save/reload"
+    );
 }

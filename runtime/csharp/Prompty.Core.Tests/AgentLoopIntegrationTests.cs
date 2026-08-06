@@ -64,7 +64,10 @@ file class MockExecutor : IExecutor
 
     public void EnqueueResponse(object response) => _responses.Enqueue(response);
 
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(
+        Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken = default)
     {
         // Snapshot the messages at call time
         Calls.Add(new List<Message>(messages));

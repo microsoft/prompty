@@ -32,6 +32,9 @@ type Message struct {
 
 // LoadMessage creates a Message from a map[string]interface{}
 func LoadMessage(data interface{}, ctx *LoadContext) (Message, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := Message{}
 
 	// Load from map
@@ -44,7 +47,7 @@ func LoadMessage(data interface{}, ctx *LoadContext) (Message, error) {
 				result.Parts = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadContentPart(item, ctx)
+						loaded, err := LoadContentPart(item, ctx.At("parts").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

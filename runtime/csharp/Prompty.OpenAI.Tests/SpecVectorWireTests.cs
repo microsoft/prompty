@@ -131,6 +131,8 @@ public class SpecVectorWireTests
                 $"[{name}] Expected 'response_format' in serialized options but not found");
             AssertJsonSubset(expectedRF, actualRF, $"[{name}] response_format");
         }
+
+        AssertNoSchemaNamedOptions(optionsJson, expectedBody, name);
     }
 
     public static IEnumerable<object[]> OpenAIChatVectors()
@@ -326,6 +328,37 @@ public class SpecVectorWireTests
                 $"[{name}] Expected 'text' in serialized options");
             AssertJsonSubset(expectedText, actualText, $"[{name}] text");
         }
+
+        AssertNoSchemaNamedOptions(actualJson, expectedBody, name);
+    }
+
+    /// <summary>
+    /// Asserts that no ModelOptions field appears under its *schema* name in the
+    /// actual body unless the spec declares it. A provider that has no wire mapping
+    /// for an option must omit it entirely rather than fall back to the schema field
+    /// name (typra #84) — see the `responses_unmapped_options` wire vector.
+    ///
+    /// This is deliberately narrower than a full extra-key comparison: these bodies
+    /// are produced by the Azure SDK serializer, which legitimately adds keys of its
+    /// own. Schema field names are never among them.
+    /// </summary>
+    private static void AssertNoSchemaNamedOptions(JsonElement actual, JsonElement expectedBody, string name)
+    {
+        string[] schemaNames =
+        [
+            "frequencyPenalty", "maxOutputTokens", "presencePenalty", "seed",
+            "temperature", "topK", "topP", "stopSequences",
+            "allowMultipleToolCalls", "additionalProperties",
+        ];
+
+        var leaked = schemaNames
+            .Where(s => !expectedBody.TryGetProperty(s, out _))
+            .Where(s => actual.TryGetProperty(s, out _))
+            .OrderBy(s => s, StringComparer.Ordinal)
+            .ToList();
+
+        Assert.True(leaked.Count == 0,
+            $"[{name}]: ModelOptions fields emitted under their schema names instead of being omitted: {string.Join(", ", leaked)}. Actual: {actual.GetRawText()}");
     }
 
     public static IEnumerable<object[]> OpenAIResponsesVectors()
@@ -388,6 +421,18 @@ public class SpecVectorWireTests
                 AssertJsonSubset(prop.Value, actualProp, $"[{name}].{prop.Name}");
             }
         }
+
+        // ...and no key in the actual body that the spec does not declare. Without
+        // this, a provider emitting an option it has no wire mapping for (typra #84)
+        // passes silently — see the `anthropic_unmapped_options` wire vector.
+        var expectedKeys = expectedBody.EnumerateObject().Select(p => p.Name).ToHashSet();
+        var extraKeys = bodyJson.EnumerateObject()
+            .Select(p => p.Name)
+            .Where(k => !expectedKeys.Contains(k))
+            .OrderBy(k => k, StringComparer.Ordinal)
+            .ToList();
+        Assert.True(extraKeys.Count == 0,
+            $"[{name}]: unexpected keys in actual body (spec says absent): {string.Join(", ", extraKeys)}. Actual: {bodyJson.GetRawText()}");
     }
 
     public static IEnumerable<object[]> AnthropicChatVectors()

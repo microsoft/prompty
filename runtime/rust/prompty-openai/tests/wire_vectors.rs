@@ -206,6 +206,7 @@ wire_test!(chat_image_base64);
 wire_test!(responses_simple);
 wire_test!(responses_with_tools);
 wire_test!(responses_structured_output);
+wire_test!(responses_unmapped_options);
 
 fn function_parameters_schema(parameters: Value) -> Result<Value, wire::SchemaError> {
     let agent = Prompty::load_from_value(

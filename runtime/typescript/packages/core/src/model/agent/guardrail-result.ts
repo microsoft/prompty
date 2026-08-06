@@ -27,6 +27,7 @@ export class GuardrailResult {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): GuardrailResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

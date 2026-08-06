@@ -9,6 +9,8 @@
     clippy::all
 )]
 
+use crate::engine::CancellationToken;
+
 use super::super::conversation::message::Message;
 
 use super::super::agent::prompty::Prompty;
@@ -23,12 +25,14 @@ pub trait Executor: Send + Sync {
         &self,
         agent: &Prompty,
         messages: &Vec<Message>,
+        cancellation: &CancellationToken,
     ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>;
     /// Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support.
     async fn execute_stream(
         &self,
         agent: &Prompty,
         messages: &Vec<Message>,
+        cancellation: &CancellationToken,
     ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
         Err("not supported".into())
     }

@@ -18,6 +18,9 @@ type CompactionStartPayload struct {
 
 // LoadCompactionStartPayload creates a CompactionStartPayload from a map[string]interface{}
 func LoadCompactionStartPayload(data interface{}, ctx *LoadContext) (CompactionStartPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := CompactionStartPayload{}
 
 	// Load from map

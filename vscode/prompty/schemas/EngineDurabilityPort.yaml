@@ -1,0 +1,5 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EngineDurabilityPort.yaml
+type: object
+properties: {}
+description: Persists semantic engine events and checkpoints without runtime cancellation.

@@ -43,7 +43,7 @@ class SessionEvent:
     span_id : Optional[str]
         Trace span identifier associated with this event
     payload : dict[str, Any]
-        Event-specific payload. Use the typed payload model matching 'type'.
+        Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
     redaction : Optional[RedactionMetadata]
         Redaction state for sensitive payload fields
     """
@@ -71,8 +71,9 @@ class SessionEvent:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for SessionEvent: {data}")
@@ -97,7 +98,7 @@ class SessionEvent:
         if data is not None and "payload" in data:
             instance.payload = data["payload"]
         if data is not None and "redaction" in data:
-            instance.redaction = RedactionMetadata.load(data["redaction"], context)
+            instance.redaction = RedactionMetadata.load(data["redaction"], context.at("redaction"))
         if context is not None:
             instance = context.process_output(instance)
         return instance

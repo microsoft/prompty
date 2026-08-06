@@ -20,7 +20,7 @@ pub struct HostToolRequest {
     pub tool_call_id: Option<String>,
     /// Name of the host tool being executed
     pub tool_name: String,
-    /// Tool arguments after host-side sanitization
+    /// Tool arguments after host-side sanitization. Values may be explicit null.
     pub arguments: serde_json::Value,
     /// Working directory or execution scope for the tool
     pub working_directory: Option<String>,
@@ -35,12 +35,16 @@ impl HostToolRequest {
     /// Load HostToolRequest from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load HostToolRequest from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -49,6 +53,9 @@ impl HostToolRequest {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             request_id: value
                 .get("requestId")
@@ -74,19 +81,23 @@ impl HostToolRequest {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize HostToolRequest to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(ref val) = self.request_id {
+        if let Some(val) = self.request_id.as_ref() {
             result.insert(
                 "requestId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.tool_call_id {
+        if let Some(val) = self.tool_call_id.as_ref() {
             result.insert(
                 "toolCallId".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -101,7 +112,7 @@ impl HostToolRequest {
         if !self.arguments.is_null() {
             result.insert("arguments".to_string(), self.arguments.clone());
         }
-        if let Some(ref val) = self.working_directory {
+        if let Some(val) = self.working_directory.as_ref() {
             result.insert(
                 "workingDirectory".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -138,6 +149,7 @@ impl serde::Serialize for HostToolRequest {
 impl<'de> serde::Deserialize<'de> for HostToolRequest {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

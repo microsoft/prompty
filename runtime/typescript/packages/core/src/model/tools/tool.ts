@@ -22,14 +22,13 @@ export abstract class Tool {
     if (init?.description !== undefined) {
       this.description = init.description;
     }
-    if (init?.bindings !== undefined) {
-      this.bindings = init.bindings;
-    }
+    this.bindings = init?.bindings ?? [];
   }
 
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): Tool {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -49,7 +48,7 @@ export abstract class Tool {
     if (data["bindings"] !== undefined && data["bindings"] !== null) {
       instance.bindings = Tool.loadBindings(
         data["bindings"] as unknown[],
-        context,
+        context.at("bindings"),
       );
     }
 
@@ -65,7 +64,7 @@ export abstract class Tool {
   ): Tool {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
-      const discriminator = String(discriminatorValue).toLowerCase();
+      const discriminator = String(discriminatorValue);
       switch (discriminator) {
         case "function":
           return FunctionTool.load(data, context);
@@ -86,20 +85,31 @@ export abstract class Tool {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Binding[] {
+    context ??= new LoadContext({ path: "bindings" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Binding[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Binding.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, input: v });
+          result.push(Binding.load({ name: k, input: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Binding.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Binding.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -111,37 +121,44 @@ export abstract class Tool {
       context = new SaveContext();
     }
 
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
+    for (const itemData of serialized) {
+      if (itemData["name"] === "") delete itemData["name"];
+    }
+
     if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
+      return serialized;
+    }
+
+    const names = new Set<string>();
+    for (const itemData of serialized) {
+      const name = itemData["name"];
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
+      names.add(name);
     }
 
     // Object format: use name as key
     const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context) as Record<string, unknown>;
-      const name = itemData["name"] as string | undefined;
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index];
+      const itemData = serialized[index];
+      const name = itemData["name"] as string;
       delete itemData["name"];
-      if (name) {
-        // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof Binding)
-          .shorthandProperty;
-        if (
-          context.useShorthand &&
-          shorthand &&
-          Object.keys(itemData).length === 1 &&
-          shorthand in itemData
-        ) {
-          result[name] = itemData[shorthand];
-          continue;
-        }
-        result[name] = itemData;
-      } else {
-        // No name, fall back to array format for this item
-        if (!result["_unnamed"]) {
-          result["_unnamed"] = [];
-        }
-        (result["_unnamed"] as unknown[]).push(itemData);
+      // Check if we can use shorthand (only primary property set)
+      const shorthand = (item.constructor as typeof Binding).shorthandProperty;
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
+        result[name] = itemData[shorthand];
+        continue;
       }
+      result[name] = itemData;
     }
     return result;
   }
@@ -223,6 +240,7 @@ export class FunctionTool extends Tool {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): FunctionTool {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -235,7 +253,7 @@ export class FunctionTool extends Tool {
     if (data["parameters"] !== undefined && data["parameters"] !== null) {
       instance.parameters = FunctionTool.loadParameters(
         data["parameters"] as unknown[],
-        context,
+        context.at("parameters"),
       );
     }
     if (data["strict"] !== undefined && data["strict"] !== null) {
@@ -252,20 +270,43 @@ export class FunctionTool extends Tool {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Property[] {
+    context ??= new LoadContext({ path: "parameters" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, kind: v });
+          let shorthand: Record<string, unknown>;
+          if (typeof v === "number" && Number.isInteger(v)) {
+            shorthand = { kind: "integer", default: v };
+          } else if (typeof v === "number") {
+            shorthand = { kind: "float", default: v };
+          } else if (typeof v === "string") {
+            shorthand = { kind: "string", default: v };
+          } else if (typeof v === "boolean") {
+            shorthand = { kind: "boolean", default: v };
+          } else {
+            shorthand = { default: v };
+          }
+          result.push(Property.load({ name: k, ...shorthand }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Property.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -277,37 +318,44 @@ export class FunctionTool extends Tool {
       context = new SaveContext();
     }
 
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
+    for (const itemData of serialized) {
+      if (itemData["name"] === "") delete itemData["name"];
+    }
+
     if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
+      return serialized;
+    }
+
+    const names = new Set<string>();
+    for (const itemData of serialized) {
+      const name = itemData["name"];
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
+      names.add(name);
     }
 
     // Object format: use name as key
     const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context) as Record<string, unknown>;
-      const name = itemData["name"] as string | undefined;
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index];
+      const itemData = serialized[index];
+      const name = itemData["name"] as string;
       delete itemData["name"];
-      if (name) {
-        // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof Property)
-          .shorthandProperty;
-        if (
-          context.useShorthand &&
-          shorthand &&
-          Object.keys(itemData).length === 1 &&
-          shorthand in itemData
-        ) {
-          result[name] = itemData[shorthand];
-          continue;
-        }
-        result[name] = itemData;
-      } else {
-        // No name, fall back to array format for this item
-        if (!result["_unnamed"]) {
-          result["_unnamed"] = [];
-        }
-        (result["_unnamed"] as unknown[]).push(itemData);
+      // Check if we can use shorthand (only primary property set)
+      const shorthand = (item.constructor as typeof Property).shorthandProperty;
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
+        result[name] = itemData[shorthand];
+        continue;
       }
+      result[name] = itemData;
     }
     return result;
   }
@@ -386,10 +434,20 @@ export class CustomTool extends Tool {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): CustomTool {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (
+      typeof data["kind"] === "string" &&
+      data["kind"] !== "" &&
+      (data["connection"] === undefined || data["connection"] === null)
+    ) {
+      throw new Error(
+        `${context.at("connection").path}: missing required field`,
+      );
+    }
     const instance = new CustomTool();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
@@ -398,7 +456,7 @@ export class CustomTool extends Tool {
     if (data["connection"] !== undefined && data["connection"] !== null) {
       instance.connection = Connection.load(
         data["connection"] as Record<string, unknown>,
-        context,
+        context.at("connection"),
       );
     }
     if (data["options"] !== undefined && data["options"] !== null) {
@@ -467,8 +525,8 @@ export class McpTool extends Tool {
   connection!: Connection;
   serverName: string = "";
   serverDescription?: string | undefined;
-  approvalMode!: McpApprovalMode;
-  allowedTools?: string[] = [];
+  approvalMode?: McpApprovalMode | undefined;
+  allowedTools?: string[];
 
   constructor(init?: Partial<McpTool>) {
     super(init);
@@ -491,10 +549,16 @@ export class McpTool extends Tool {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): McpTool {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["connection"] === undefined || data["connection"] === null) {
+      throw new Error(
+        `${context.at("connection").path}: missing required field`,
+      );
+    }
     const instance = new McpTool();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
@@ -503,7 +567,7 @@ export class McpTool extends Tool {
     if (data["connection"] !== undefined && data["connection"] !== null) {
       instance.connection = Connection.load(
         data["connection"] as Record<string, unknown>,
-        context,
+        context.at("connection"),
       );
     }
     if (data["serverName"] !== undefined && data["serverName"] !== null) {
@@ -518,7 +582,7 @@ export class McpTool extends Tool {
     if (data["approvalMode"] !== undefined && data["approvalMode"] !== null) {
       instance.approvalMode = McpApprovalMode.load(
         data["approvalMode"] as Record<string, unknown>,
-        context,
+        context.at("approvalMode"),
       );
     }
     if (data["allowedTools"] !== undefined && data["allowedTools"] !== null) {
@@ -613,10 +677,16 @@ export class OpenApiTool extends Tool {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): OpenApiTool {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["connection"] === undefined || data["connection"] === null) {
+      throw new Error(
+        `${context.at("connection").path}: missing required field`,
+      );
+    }
     const instance = new OpenApiTool();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
@@ -625,7 +695,7 @@ export class OpenApiTool extends Tool {
     if (data["connection"] !== undefined && data["connection"] !== null) {
       instance.connection = Connection.load(
         data["connection"] as Record<string, unknown>,
-        context,
+        context.at("connection"),
       );
     }
     if (data["specification"] !== undefined && data["specification"] !== null) {
@@ -707,6 +777,7 @@ export class PromptyTool extends Tool {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): PromptyTool {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

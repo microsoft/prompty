@@ -24,7 +24,7 @@ class HostToolRequest:
     tool_name : str
         Name of the host tool being executed
     arguments : Optional[dict[str, Any]]
-        Tool arguments after host-side sanitization
+        Tool arguments after host-side sanitization. Values may be explicit null.
     working_directory : Optional[str]
         Working directory or execution scope for the tool
     """
@@ -48,8 +48,9 @@ class HostToolRequest:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for HostToolRequest: {data}")

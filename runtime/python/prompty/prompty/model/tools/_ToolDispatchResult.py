@@ -45,11 +45,14 @@ class ToolDispatchResult:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolDispatchResult: {data}")
+        if "result" not in data or data["result"] is None:
+            raise ValueError(f"{context.at('result').path}: missing required field")
 
         # create new instance
         instance = ToolDispatchResult()
@@ -59,7 +62,7 @@ class ToolDispatchResult:
         if data is not None and "name" in data:
             instance.name = data["name"]
         if data is not None and "result" in data:
-            instance.result = ToolResult.load(data["result"], context)
+            instance.result = ToolResult.load(data["result"], context.at("result"))
         if context is not None:
             instance = context.process_output(instance)
         return instance

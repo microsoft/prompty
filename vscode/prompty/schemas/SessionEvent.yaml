@@ -40,7 +40,7 @@ properties:
   payload:
     $ref: RecordUnknown.yaml
     default: {}
-    description: Event-specific payload. Use the typed payload model matching 'type'.
+    description: Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
   redaction:
     $ref: RedactionMetadata.yaml
     description: Redaction state for sensitive payload fields

@@ -27,13 +27,19 @@ type RunTurnResult struct {
 	Status      RunTurnStatus    `json:"status" yaml:"status"`
 	Output      *interface{}     `json:"output,omitempty" yaml:"output,omitempty"`
 	Iterations  int32            `json:"iterations" yaml:"iterations"`
-	ToolResults []HostToolResult `json:"toolResults,omitempty" yaml:"toolResults,omitempty"`
-	Checkpoints []Checkpoint     `json:"checkpoints,omitempty" yaml:"checkpoints,omitempty"`
+	ToolResults []HostToolResult `json:"toolResults" yaml:"toolResults"`
+	Checkpoints []Checkpoint     `json:"checkpoints" yaml:"checkpoints"`
 }
 
 // LoadRunTurnResult creates a RunTurnResult from a map[string]interface{}
 func LoadRunTurnResult(data interface{}, ctx *LoadContext) (RunTurnResult, error) {
-	result := RunTurnResult{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := RunTurnResult{
+		ToolResults: []HostToolResult{},
+		Checkpoints: []Checkpoint{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -68,7 +74,7 @@ func LoadRunTurnResult(data interface{}, ctx *LoadContext) (RunTurnResult, error
 				result.ToolResults = make([]HostToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadHostToolResult(item, ctx)
+						loaded, err := LoadHostToolResult(item, ctx.At("toolResults").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -82,7 +88,7 @@ func LoadRunTurnResult(data interface{}, ctx *LoadContext) (RunTurnResult, error
 				result.Checkpoints = make([]Checkpoint, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadCheckpoint(item, ctx)
+						loaded, err := LoadCheckpoint(item, ctx.At("checkpoints").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

@@ -19,6 +19,7 @@ export abstract class ContentPart {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ContentPart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -42,7 +43,7 @@ export abstract class ContentPart {
   ): ContentPart {
     const discriminatorValue = data["kind"];
     if (discriminatorValue !== undefined && discriminatorValue !== null) {
-      const discriminator = String(discriminatorValue).toLowerCase();
+      const discriminator = String(discriminatorValue);
       switch (discriminator) {
         case "text":
           return TextPart.load(data, context);
@@ -54,7 +55,7 @@ export abstract class ContentPart {
           return AudioPart.load(data, context);
         default:
           throw new Error(
-            `Unknown ContentPart discriminator value: ${discriminator}`,
+            `Unknown ContentPart discriminator field 'kind' value: ${discriminator}`,
           );
       }
     }
@@ -122,6 +123,7 @@ export class TextPart extends ContentPart {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): TextPart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -210,6 +212,7 @@ export class ImagePart extends ContentPart {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): ImagePart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -306,6 +309,7 @@ export class FilePart extends ContentPart {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): FilePart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -396,6 +400,7 @@ export class AudioPart extends ContentPart {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): AudioPart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

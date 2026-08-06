@@ -20,6 +20,9 @@ type TurnStartPayload struct {
 
 // LoadTurnStartPayload creates a TurnStartPayload from a map[string]interface{}
 func LoadTurnStartPayload(data interface{}, ctx *LoadContext) (TurnStartPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TurnStartPayload{}
 
 	// Load from map

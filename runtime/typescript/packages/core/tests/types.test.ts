@@ -20,10 +20,11 @@ describe("Message", () => {
 
   it("concatenates multiple text parts", () => {
     const msg = new Message({ role: "user", parts: [
-      { kind: "text", value: "Hello " },
+      { kind: "text", value: "Hello" },
       { kind: "text", value: "world" },
     ] });
-    expect(msg.text).toBe("Hello world");
+    expect(msg.text).toBe("Hello\nworld");
+    expect(msg.toTextContent()).toBe("Hello\nworld");
   });
 
   it("returns string for single text part in toTextContent", () => {
@@ -45,6 +46,8 @@ describe("Message", () => {
     const msg = new Message({ role: "system" });
     expect(msg.parts).toEqual([]);
     expect(msg.metadata).toEqual({});
+    expect(msg.text).toBe("");
+    expect(msg.toTextContent()).toBe("");
   });
 });
 

@@ -21,6 +21,7 @@ export class ThreadMarker {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ThreadMarker {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

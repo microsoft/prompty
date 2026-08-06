@@ -28,6 +28,9 @@ type SessionTrace struct {
 
 // LoadSessionTrace creates a SessionTrace from a map[string]interface{}
 func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := SessionTrace{}
 
 	// Load from map
@@ -52,7 +55,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Events = make([]SessionEvent, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadSessionEvent(item, ctx)
+						loaded, err := LoadSessionEvent(item, ctx.At("events").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -66,7 +69,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Turns = make([]TurnTrace, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadTurnTrace(item, ctx)
+						loaded, err := LoadTurnTrace(item, ctx.At("turns").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -80,7 +83,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Checkpoints = make([]Checkpoint, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadCheckpoint(item, ctx)
+						loaded, err := LoadCheckpoint(item, ctx.At("checkpoints").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -94,7 +97,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Trajectory = make([]TrajectoryEvent, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadTrajectoryEvent(item, ctx)
+						loaded, err := LoadTrajectoryEvent(item, ctx.At("trajectory").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -108,7 +111,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Files = make([]SessionFileRef, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadSessionFileRef(item, ctx)
+						loaded, err := LoadSessionFileRef(item, ctx.At("files").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -122,7 +125,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 				result.Refs = make([]SessionRef, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadSessionRef(item, ctx)
+						loaded, err := LoadSessionRef(item, ctx.At("refs").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -133,7 +136,7 @@ func LoadSessionTrace(data interface{}, ctx *LoadContext) (SessionTrace, error) 
 		}
 		if val, ok := m["summary"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadSessionSummary(m, ctx)
+				loaded, err := LoadSessionSummary(m, ctx.At("summary"))
 				if err != nil {
 					return result, err
 				}

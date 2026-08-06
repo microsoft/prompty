@@ -49,6 +49,7 @@ export class HostToolResult {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): HostToolResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

@@ -22,6 +22,7 @@ export class ReplayVerificationRequest {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ReplayVerificationRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -31,13 +32,13 @@ export class ReplayVerificationRequest {
     if (data["expected"] !== undefined && data["expected"] !== null) {
       instance.expected = ReplayVerificationRequest.loadExpected(
         data["expected"] as unknown[],
-        context,
+        context.at("expected"),
       );
     }
     if (data["actual"] !== undefined && data["actual"] !== null) {
       instance.actual = ReplayVerificationRequest.loadActual(
         data["actual"] as unknown[],
-        context,
+        context.at("actual"),
       );
     }
 
@@ -51,20 +52,36 @@ export class ReplayVerificationRequest {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): ReplayJournalRecord[] {
+    context ??= new LoadContext({ path: "expected" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ReplayJournalRecord[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            ReplayJournalRecord.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, kind: v });
+          result.push(
+            ReplayJournalRecord.load({ name: k, kind: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ReplayJournalRecord.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      ReplayJournalRecord.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -84,20 +101,36 @@ export class ReplayVerificationRequest {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): ReplayJournalRecord[] {
+    context ??= new LoadContext({ path: "actual" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ReplayJournalRecord[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            ReplayJournalRecord.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, kind: v });
+          result.push(
+            ReplayJournalRecord.load({ name: k, kind: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ReplayJournalRecord.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      ReplayJournalRecord.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 

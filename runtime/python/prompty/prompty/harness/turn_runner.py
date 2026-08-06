@@ -243,7 +243,7 @@ class ReferenceTurnRunner:
         self._record_turn("permission_completed", turn_id, iteration, decision.save())
 
         if not decision.approved:
-            return HostToolResult(
+            denied = HostToolResult(
                 request_id=tool_request.request_id,
                 tool_call_id=tool_request.tool_call_id,
                 tool_name=tool_request.tool_name,
@@ -251,6 +251,8 @@ class ReferenceTurnRunner:
                 error_kind="permission_denied",
                 result={"message": decision.reason or "Permission denied"},
             )
+            self._record_turn("tool_result", turn_id, iteration, denied.save())
+            return denied
 
         self._record_turn("tool_execution_start", turn_id, iteration, tool_request.save())
         result = await self.host_tool_executor.execute(tool_request)

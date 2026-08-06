@@ -18,7 +18,8 @@ fn test_turn_commit_load_json() {
     let json = r####"
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 "####;
     let ctx = LoadContext::default();
@@ -38,6 +39,7 @@ fn test_turn_commit_load_yaml() {
     let yaml = r####"
 sessionId: sess_abc123
 turnId: turn_abc123
+contextState: {}
 
 "####;
     let ctx = LoadContext::default();
@@ -57,7 +59,8 @@ fn test_turn_commit_roundtrip() {
     let json = r####"
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -78,7 +81,8 @@ fn test_turn_commit_serde_roundtrip() {
     let json = r####"
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 "####;
     let instance: TurnCommit =

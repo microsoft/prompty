@@ -33,12 +33,16 @@ impl LlmStartPayload {
     /// Load LlmStartPayload from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load LlmStartPayload from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -47,6 +51,9 @@ impl LlmStartPayload {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             provider: value
                 .get("provider")
@@ -67,34 +74,38 @@ impl LlmStartPayload {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize LlmStartPayload to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(ref val) = self.provider {
+        if let Some(val) = self.provider.as_ref() {
             result.insert(
                 "provider".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.model_id {
+        if let Some(val) = self.model_id.as_ref() {
             result.insert(
                 "modelId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(val) = self.message_count {
+        if let Some(val) = self.message_count.as_ref() {
             result.insert(
                 "messageCount".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(val) = self.attempt {
+        if let Some(val) = self.attempt.as_ref() {
             result.insert(
                 "attempt".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -123,6 +134,7 @@ impl serde::Serialize for LlmStartPayload {
 impl<'de> serde::Deserialize<'de> for LlmStartPayload {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

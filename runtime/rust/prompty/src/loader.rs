@@ -184,7 +184,17 @@ fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Pro
     let mut value = serde_json::Value::Object(data);
     resolve::resolve_references(&mut value, &agent_dir, &options.allowed_file_roots)?;
 
-    // 6. Load via emitter-generated typed constructor with context
+    // 6. Reject invalid shorthand shapes the generated model cannot represent.
+    //    `template` must be an object with format/parser — a bare string is not valid v2.
+    if let Some(template) = value.get("template") {
+        if !template.is_object() {
+            return Err(LoadError::InvalidFrontmatter(
+                "Invalid template format".to_string(),
+            ));
+        }
+    }
+
+    // 7. Load via emitter-generated typed constructor with context
     let agent = Prompty::load_from_value(&value, &ctx);
 
     // 7. Store source path in metadata for PromptyTool resolution

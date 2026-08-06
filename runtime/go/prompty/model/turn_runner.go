@@ -223,14 +223,18 @@ func (r *ReferenceTurnRunner) resolveAndExecuteTool(turnId string, iteration int
 			message = *decision.Reason
 		}
 		result := interface{}(map[string]interface{}{"message": message})
-		return HostToolResult{
+		denied := HostToolResult{
 			RequestId:  toolRequest.RequestId,
 			ToolCallId: toolRequest.ToolCallId,
 			ToolName:   toolRequest.ToolName,
 			Success:    false,
 			ErrorKind:  &errorKind,
 			Result:     &result,
-		}, nil
+		}
+		if err := r.recordTurn(TurnEventTypeToolResult, turnId, iteration, denied.Save(NewSaveContext())); err != nil {
+			return HostToolResult{}, err
+		}
+		return denied, nil
 	}
 	if err := r.recordTurn(TurnEventTypeToolExecutionStart, turnId, iteration, toolRequest.Save(NewSaveContext())); err != nil {
 		return HostToolResult{}, err

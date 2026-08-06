@@ -115,18 +115,31 @@ LEGACY_INPUT_ITEM = {
 class Diagnostic:
     """A single validation issue."""
 
-    def __init__(self, file: str, line: int | None, message: str, *, is_legacy: bool = False) -> None:
+    def __init__(
+        self,
+        file: str,
+        line: int | None,
+        message: str,
+        *,
+        is_legacy: bool = False,
+        kind: str | None = None,
+    ) -> None:
         self.file = file
         self.line = line
         self.message = message
         self.is_legacy = is_legacy
+        self.kind = kind
 
     def __str__(self) -> str:
         loc = self.file
         if self.line is not None:
             loc += f":{self.line}"
-        kind = "legacy property" if self.is_legacy else "unknown property"
-        return f"[FAIL] {loc} -- {kind} {self.message}"
+        if self.kind is None:
+            kind = "legacy property" if self.is_legacy else "unknown property"
+        else:
+            kind = self.kind
+        prefix = f"{kind} " if kind else ""
+        return f"[FAIL] {loc} -- {prefix}{self.message}"
 
 
 # ---------------------------------------------------------------------------
@@ -352,18 +365,34 @@ def _validate_tool(tool: dict, file: str, line: int | None, diagnostics: list[Di
     if "connection" in tool:
         _validate_connection(tool["connection"], file, line, diagnostics)
 
-    # Validate parameters (PropertySchema — same as inputs)
+    # Validate parameters — a `Properties` named collection
+    # (`Record<Property> | Named<Property>[]`, schema/model/core/properties.tsp).
+    # Only two forms are canonical: a list of entries, or a name-keyed object.
+    # A `properties:` wrapper is NOT a third form — it parses as name-keyed
+    # object form with a single entry named `properties` whose value is an
+    # array, which the normative contract (spec/spec.md) requires be rejected.
     if "parameters" in tool:
         params = tool["parameters"]
         if isinstance(params, list):
             for item in params:
                 _validate_input_output_item(item, "tool.parameters", file, line, diagnostics)
         elif isinstance(params, dict):
-            if "properties" in params:
-                props = params["properties"]
-                if isinstance(props, list):
-                    for item in props:
-                        _validate_input_output_item(item, "tool.parameters", file, line, diagnostics)
+            for name, value in params.items():
+                if isinstance(value, list):
+                    diagnostics.append(
+                        Diagnostic(
+                            file,
+                            line,
+                            f"tool.parameters: invalid named collection entry category array for "
+                            f"'{name}'. `parameters` is a named collection: use the list form "
+                            f"(`parameters:` followed by `- name: ...` entries) or the name-keyed "
+                            f"object form (`parameters:` followed by `{name}:` mapping to an "
+                            f"object). A `properties:` wrapper is not a valid form.",
+                            kind="",
+                        )
+                    )
+                elif isinstance(value, dict):
+                    _validate_input_output_item(value, "tool.parameters", file, line, diagnostics)
 
 
 def _validate_template(data, file: str, line: int | None, diagnostics: list[Diagnostic]) -> None:

@@ -5,7 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
@@ -29,7 +29,7 @@ class RedactionMetadata:
     _shorthand_property: ClassVar[str | None] = None
 
     sanitized: bool | None = None
-    fields: list[RedactedField] = field(default_factory=list)
+    fields: list[RedactedField] | None = None
     policy: str | None = None
 
     @staticmethod
@@ -43,8 +43,9 @@ class RedactionMetadata:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for RedactionMetadata: {data}")
@@ -55,7 +56,7 @@ class RedactionMetadata:
         if data is not None and "sanitized" in data:
             instance.sanitized = data["sanitized"]
         if data is not None and "fields" in data:
-            instance.fields = RedactionMetadata.load_fields(data["fields"], context)
+            instance.fields = RedactionMetadata.load_fields(data["fields"], context.at("fields"))
         if data is not None and "policy" in data:
             instance.policy = data["policy"]
         if context is not None:
@@ -64,25 +65,29 @@ class RedactionMetadata:
 
     @staticmethod
     def load_fields(data: dict | list, context: LoadContext | None) -> list[RedactedField]:
+        if context is None:
+            context = LoadContext(path="fields")
         if isinstance(data, dict):
             # convert simple named fields to list of RedactedField
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(RedactedField.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "path": v})
-            data = result
-        return [RedactedField.load(item, context) for item in data]
+                    result.append(RedactedField.load({"name": k, "path": v}, context.at(k)))
+            return result
+        return [RedactedField.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_fields(items: list[RedactedField], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

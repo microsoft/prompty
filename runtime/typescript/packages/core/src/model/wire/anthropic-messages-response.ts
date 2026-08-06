@@ -34,10 +34,14 @@ export class AnthropicMessagesResponse {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnthropicMessagesResponse {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["usage"] === undefined || data["usage"] === null) {
+      throw new Error(`${context.at("usage").path}: missing required field`);
+    }
     const instance = new AnthropicMessagesResponse();
 
     if (data["id"] !== undefined && data["id"] !== null) {
@@ -61,7 +65,7 @@ export class AnthropicMessagesResponse {
     if (data["usage"] !== undefined && data["usage"] !== null) {
       instance.usage = AnthropicUsage.load(
         data["usage"] as Record<string, unknown>,
-        context,
+        context.at("usage"),
       );
     }
 

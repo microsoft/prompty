@@ -47,12 +47,16 @@ impl ToolExecutionCompletePayload {
     /// Load ToolExecutionCompletePayload from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load ToolExecutionCompletePayload from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -61,6 +65,9 @@ impl ToolExecutionCompletePayload {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             request_id: value
                 .get("requestId")
@@ -100,19 +107,31 @@ impl ToolExecutionCompletePayload {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "redaction".to_string()
+        } else {
+            format!("{}.redaction", path)
+        };
+        if let Some(child) = value.get("redaction") {
+            RedactionMetadata::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
+    }
+
     /// Serialize ToolExecutionCompletePayload to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(ref val) = self.request_id {
+        if let Some(val) = self.request_id.as_ref() {
             result.insert(
                 "requestId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.tool_call_id {
+        if let Some(val) = self.tool_call_id.as_ref() {
             result.insert(
                 "toolCallId".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -125,24 +144,24 @@ impl ToolExecutionCompletePayload {
             );
         }
         result.insert("success".to_string(), serde_json::Value::Bool(self.success));
-        if let Some(ref val) = self.result {
+        if let Some(val) = self.result.as_ref() {
             result.insert("result".to_string(), val.clone());
         }
-        if let Some(val) = self.exit_code {
+        if let Some(val) = self.exit_code.as_ref() {
             result.insert(
                 "exitCode".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(val) = self.duration_ms {
+        if let Some(val) = self.duration_ms.as_ref() {
             result.insert(
                 "durationMs".to_string(),
-                serde_json::Number::from_f64(val as f64)
+                serde_json::Number::from_f64(*val as f64)
                     .map(serde_json::Value::Number)
                     .unwrap_or(serde_json::Value::Null),
             );
         }
-        if let Some(ref val) = self.error_kind {
+        if let Some(val) = self.error_kind.as_ref() {
             result.insert(
                 "errorKind".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -151,7 +170,7 @@ impl ToolExecutionCompletePayload {
         if !self.telemetry.is_null() {
             result.insert("telemetry".to_string(), self.telemetry.clone());
         }
-        if let Some(ref val) = self.redaction {
+        if let Some(val) = self.redaction.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("redaction".to_string(), nested);
@@ -188,6 +207,7 @@ impl serde::Serialize for ToolExecutionCompletePayload {
 impl<'de> serde::Deserialize<'de> for ToolExecutionCompletePayload {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -23,6 +23,9 @@ type DeviceAuthorization struct {
 
 // LoadDeviceAuthorization creates a DeviceAuthorization from a map[string]interface{}
 func LoadDeviceAuthorization(data interface{}, ctx *LoadContext) (DeviceAuthorization, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := DeviceAuthorization{}
 
 	// Load from map

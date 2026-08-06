@@ -25,6 +25,7 @@ export class RetryPolicyRequest {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): RetryPolicyRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

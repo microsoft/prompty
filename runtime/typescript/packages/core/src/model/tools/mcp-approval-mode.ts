@@ -10,8 +10,8 @@ export class McpApprovalMode {
   static readonly shorthandProperty: string | undefined = "kind";
 
   kind: mcpApprovalModeKind = "always";
-  alwaysRequireApprovalTools?: string[] = [];
-  neverRequireApprovalTools?: string[] = [];
+  alwaysRequireApprovalTools?: string[];
+  neverRequireApprovalTools?: string[];
 
   constructor(init?: Partial<McpApprovalMode>) {
     this.kind = init?.kind ?? "always";
@@ -29,6 +29,7 @@ export class McpApprovalMode {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): McpApprovalMode {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

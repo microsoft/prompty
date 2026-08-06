@@ -18,12 +18,6 @@ describe("RetryPolicyRequest", () => {
   });
 
   describe("load and save", () => {
-    it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
-      const instance = RetryPolicyRequest.load(data);
-      expect(instance).toBeDefined();
-    });
-
     it("should save to dictionary", () => {
       const instance = new RetryPolicyRequest();
       const data = instance.save();

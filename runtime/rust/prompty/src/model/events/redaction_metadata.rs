@@ -19,7 +19,7 @@ pub struct RedactionMetadata {
     /// Whether the payload has been sanitized for persistence or external display
     pub sanitized: Option<bool>,
     /// Field-level redaction details
-    pub fields: Vec<RedactedField>,
+    pub fields: Option<Vec<RedactedField>>,
     /// Host policy or sanitizer version that produced this metadata
     pub policy: Option<String>,
 }
@@ -33,12 +33,16 @@ impl RedactionMetadata {
     /// Load RedactionMetadata from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load RedactionMetadata from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -47,17 +51,35 @@ impl RedactionMetadata {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             sanitized: value.get("sanitized").and_then(|v| v.as_bool()),
-            fields: value
-                .get("fields")
-                .map(|v| Self::load_fields(v, ctx))
-                .unwrap_or_default(),
+            fields: value.get("fields").map(|v| Self::load_fields(v, ctx)),
             policy: value
                 .get("policy")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("fields")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "fields".to_string()
+            } else {
+                format!("{}.fields", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                RedactedField::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
     }
 
     /// Serialize RedactionMetadata to a `serde_json::Value`.
@@ -66,13 +88,13 @@ impl RedactionMetadata {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(val) = self.sanitized {
-            result.insert("sanitized".to_string(), serde_json::Value::Bool(val));
+        if let Some(val) = self.sanitized.as_ref() {
+            result.insert("sanitized".to_string(), serde_json::Value::Bool(*val));
         }
-        if !self.fields.is_empty() {
-            result.insert("fields".to_string(), Self::save_fields(&self.fields, ctx));
+        if let Some(items) = self.fields.as_ref() {
+            result.insert("fields".to_string(), Self::save_fields(items, ctx));
         }
-        if let Some(ref val) = self.policy {
+        if let Some(val) = self.policy.as_ref() {
             result.insert("policy".to_string(), serde_json::Value::String(val.clone()));
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -124,6 +146,7 @@ impl serde::Serialize for RedactionMetadata {
 impl<'de> serde::Deserialize<'de> for RedactionMetadata {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

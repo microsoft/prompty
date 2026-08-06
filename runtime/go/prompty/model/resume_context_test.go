@@ -16,7 +16,16 @@ import (
 func TestResumeContextLoadJSON(t *testing.T) {
 	jsonData := `
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 `
 	var data map[string]interface{}
@@ -32,12 +41,32 @@ func TestResumeContextLoadJSON(t *testing.T) {
 	if instance.LastJournalSequence != 12 {
 		t.Errorf(`Expected LastJournalSequence to be 12, got %v`, instance.LastJournalSequence)
 	}
+	if instance.Checkpoint.Id != "ckpt_abc123" {
+		t.Errorf(`Expected Checkpoint.Id to be "ckpt_abc123", got %v`, instance.Checkpoint.Id)
+	}
+	if instance.Checkpoint.SessionId != "sess_abc123" {
+		t.Errorf(`Expected Checkpoint.SessionId to be "sess_abc123", got %v`, instance.Checkpoint.SessionId)
+	}
+	if instance.Checkpoint.TurnId != "turn_abc123" {
+		t.Errorf(`Expected Checkpoint.TurnId to be "turn_abc123", got %v`, instance.Checkpoint.TurnId)
+	}
+	if instance.Checkpoint.RunId != "run_abc123" {
+		t.Errorf(`Expected Checkpoint.RunId to be "run_abc123", got %v`, instance.Checkpoint.RunId)
+	}
 }
 
 // TestResumeContextLoadYAML tests loading ResumeContext from YAML
 func TestResumeContextLoadYAML(t *testing.T) {
 	yamlData := `
 lastJournalSequence: 12
+checkpoint:
+  id: ckpt_abc123
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  runId: run_abc123
+  iteration: 1
+  lastSequence: 1
+  contextState: {}
 
 `
 	var data map[string]interface{}
@@ -53,13 +82,34 @@ lastJournalSequence: 12
 	if instance.LastJournalSequence != 12 {
 		t.Errorf(`Expected LastJournalSequence to be 12, got %v`, instance.LastJournalSequence)
 	}
+	if instance.Checkpoint.Id != "ckpt_abc123" {
+		t.Errorf(`Expected Checkpoint.Id to be "ckpt_abc123", got %v`, instance.Checkpoint.Id)
+	}
+	if instance.Checkpoint.SessionId != "sess_abc123" {
+		t.Errorf(`Expected Checkpoint.SessionId to be "sess_abc123", got %v`, instance.Checkpoint.SessionId)
+	}
+	if instance.Checkpoint.TurnId != "turn_abc123" {
+		t.Errorf(`Expected Checkpoint.TurnId to be "turn_abc123", got %v`, instance.Checkpoint.TurnId)
+	}
+	if instance.Checkpoint.RunId != "run_abc123" {
+		t.Errorf(`Expected Checkpoint.RunId to be "run_abc123", got %v`, instance.Checkpoint.RunId)
+	}
 }
 
 // TestResumeContextFromJSON tests loading ResumeContext through the generated JSON helper
 func TestResumeContextFromJSON(t *testing.T) {
 	jsonData := `
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 `
 
@@ -70,12 +120,32 @@ func TestResumeContextFromJSON(t *testing.T) {
 	if instance.LastJournalSequence != 12 {
 		t.Errorf(`Expected LastJournalSequence to be 12, got %v`, instance.LastJournalSequence)
 	}
+	if instance.Checkpoint.Id != "ckpt_abc123" {
+		t.Errorf(`Expected Checkpoint.Id to be "ckpt_abc123", got %v`, instance.Checkpoint.Id)
+	}
+	if instance.Checkpoint.SessionId != "sess_abc123" {
+		t.Errorf(`Expected Checkpoint.SessionId to be "sess_abc123", got %v`, instance.Checkpoint.SessionId)
+	}
+	if instance.Checkpoint.TurnId != "turn_abc123" {
+		t.Errorf(`Expected Checkpoint.TurnId to be "turn_abc123", got %v`, instance.Checkpoint.TurnId)
+	}
+	if instance.Checkpoint.RunId != "run_abc123" {
+		t.Errorf(`Expected Checkpoint.RunId to be "run_abc123", got %v`, instance.Checkpoint.RunId)
+	}
 }
 
 // TestResumeContextFromYAML tests loading ResumeContext through the generated YAML helper
 func TestResumeContextFromYAML(t *testing.T) {
 	yamlData := `
 lastJournalSequence: 12
+checkpoint:
+  id: ckpt_abc123
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  runId: run_abc123
+  iteration: 1
+  lastSequence: 1
+  contextState: {}
 
 `
 
@@ -86,13 +156,34 @@ lastJournalSequence: 12
 	if instance.LastJournalSequence != 12 {
 		t.Errorf(`Expected LastJournalSequence to be 12, got %v`, instance.LastJournalSequence)
 	}
+	if instance.Checkpoint.Id != "ckpt_abc123" {
+		t.Errorf(`Expected Checkpoint.Id to be "ckpt_abc123", got %v`, instance.Checkpoint.Id)
+	}
+	if instance.Checkpoint.SessionId != "sess_abc123" {
+		t.Errorf(`Expected Checkpoint.SessionId to be "sess_abc123", got %v`, instance.Checkpoint.SessionId)
+	}
+	if instance.Checkpoint.TurnId != "turn_abc123" {
+		t.Errorf(`Expected Checkpoint.TurnId to be "turn_abc123", got %v`, instance.Checkpoint.TurnId)
+	}
+	if instance.Checkpoint.RunId != "run_abc123" {
+		t.Errorf(`Expected Checkpoint.RunId to be "run_abc123", got %v`, instance.Checkpoint.RunId)
+	}
 }
 
 // TestResumeContextRoundtrip tests load -> save -> load produces equivalent data
 func TestResumeContextRoundtrip(t *testing.T) {
 	jsonData := `
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 `
 	var data map[string]interface{}
@@ -115,13 +206,34 @@ func TestResumeContextRoundtrip(t *testing.T) {
 	if reloaded.LastJournalSequence != 12 {
 		t.Errorf(`Expected LastJournalSequence to be 12, got %v`, reloaded.LastJournalSequence)
 	}
+	if reloaded.Checkpoint.Id != "ckpt_abc123" {
+		t.Errorf(`Expected Checkpoint.Id to be "ckpt_abc123", got %v`, reloaded.Checkpoint.Id)
+	}
+	if reloaded.Checkpoint.SessionId != "sess_abc123" {
+		t.Errorf(`Expected Checkpoint.SessionId to be "sess_abc123", got %v`, reloaded.Checkpoint.SessionId)
+	}
+	if reloaded.Checkpoint.TurnId != "turn_abc123" {
+		t.Errorf(`Expected Checkpoint.TurnId to be "turn_abc123", got %v`, reloaded.Checkpoint.TurnId)
+	}
+	if reloaded.Checkpoint.RunId != "run_abc123" {
+		t.Errorf(`Expected Checkpoint.RunId to be "run_abc123", got %v`, reloaded.Checkpoint.RunId)
+	}
 }
 
 // TestResumeContextToJSON tests that ToJSON produces valid JSON
 func TestResumeContextToJSON(t *testing.T) {
 	jsonData := `
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 `
 	var data map[string]interface{}
@@ -151,13 +263,34 @@ func TestResumeContextToJSON(t *testing.T) {
 	if reloaded.LastJournalSequence != 12 {
 		t.Errorf(`Expected LastJournalSequence to be 12, got %v`, reloaded.LastJournalSequence)
 	}
+	if reloaded.Checkpoint.Id != "ckpt_abc123" {
+		t.Errorf(`Expected Checkpoint.Id to be "ckpt_abc123", got %v`, reloaded.Checkpoint.Id)
+	}
+	if reloaded.Checkpoint.SessionId != "sess_abc123" {
+		t.Errorf(`Expected Checkpoint.SessionId to be "sess_abc123", got %v`, reloaded.Checkpoint.SessionId)
+	}
+	if reloaded.Checkpoint.TurnId != "turn_abc123" {
+		t.Errorf(`Expected Checkpoint.TurnId to be "turn_abc123", got %v`, reloaded.Checkpoint.TurnId)
+	}
+	if reloaded.Checkpoint.RunId != "run_abc123" {
+		t.Errorf(`Expected Checkpoint.RunId to be "run_abc123", got %v`, reloaded.Checkpoint.RunId)
+	}
 }
 
 // TestResumeContextToYAML tests that ToYAML produces valid YAML
 func TestResumeContextToYAML(t *testing.T) {
 	jsonData := `
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 `
 	var data map[string]interface{}
@@ -186,6 +319,18 @@ func TestResumeContextToYAML(t *testing.T) {
 	}
 	if reloaded.LastJournalSequence != 12 {
 		t.Errorf(`Expected LastJournalSequence to be 12, got %v`, reloaded.LastJournalSequence)
+	}
+	if reloaded.Checkpoint.Id != "ckpt_abc123" {
+		t.Errorf(`Expected Checkpoint.Id to be "ckpt_abc123", got %v`, reloaded.Checkpoint.Id)
+	}
+	if reloaded.Checkpoint.SessionId != "sess_abc123" {
+		t.Errorf(`Expected Checkpoint.SessionId to be "sess_abc123", got %v`, reloaded.Checkpoint.SessionId)
+	}
+	if reloaded.Checkpoint.TurnId != "turn_abc123" {
+		t.Errorf(`Expected Checkpoint.TurnId to be "turn_abc123", got %v`, reloaded.Checkpoint.TurnId)
+	}
+	if reloaded.Checkpoint.RunId != "run_abc123" {
+		t.Errorf(`Expected Checkpoint.RunId to be "run_abc123", got %v`, reloaded.Checkpoint.RunId)
 	}
 }
 

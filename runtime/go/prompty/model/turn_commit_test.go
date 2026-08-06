@@ -17,7 +17,8 @@ func TestTurnCommitLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -43,6 +44,7 @@ func TestTurnCommitLoadYAML(t *testing.T) {
 	yamlData := `
 sessionId: sess_abc123
 turnId: turn_abc123
+contextState: {}
 
 `
 	var data map[string]interface{}
@@ -68,7 +70,8 @@ func TestTurnCommitFromJSON(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 `
 
@@ -89,6 +92,7 @@ func TestTurnCommitFromYAML(t *testing.T) {
 	yamlData := `
 sessionId: sess_abc123
 turnId: turn_abc123
+contextState: {}
 
 `
 
@@ -109,7 +113,8 @@ func TestTurnCommitRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -142,7 +147,8 @@ func TestTurnCommitToJSON(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -182,7 +188,8 @@ func TestTurnCommitToYAML(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "contextState": {}
 }
 `
 	var data map[string]interface{}

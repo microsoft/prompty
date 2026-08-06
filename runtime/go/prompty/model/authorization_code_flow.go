@@ -19,6 +19,9 @@ type AuthorizationCodeFlow struct {
 
 // LoadAuthorizationCodeFlow creates a AuthorizationCodeFlow from a map[string]interface{}
 func LoadAuthorizationCodeFlow(data interface{}, ctx *LoadContext) (AuthorizationCodeFlow, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AuthorizationCodeFlow{}
 
 	// Load from map

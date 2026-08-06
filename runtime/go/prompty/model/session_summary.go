@@ -33,6 +33,9 @@ type SessionSummary struct {
 
 // LoadSessionSummary creates a SessionSummary from a map[string]interface{}
 func LoadSessionSummary(data interface{}, ctx *LoadContext) (SessionSummary, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := SessionSummary{}
 
 	// Load from map
@@ -74,7 +77,7 @@ func LoadSessionSummary(data interface{}, ctx *LoadContext) (SessionSummary, err
 		}
 		if val, ok := m["usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTokenUsage(m, ctx)
+				loaded, err := LoadTokenUsage(m, ctx.At("usage"))
 				if err != nil {
 					return result, err
 				}

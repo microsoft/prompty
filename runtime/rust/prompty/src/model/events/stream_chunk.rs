@@ -68,12 +68,16 @@ impl StreamChunk {
     /// Load StreamChunk from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load StreamChunk from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -82,6 +86,9 @@ impl StreamChunk {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {
             "text" => StreamChunkKind::TextChunk {
@@ -119,9 +126,65 @@ impl StreamChunk {
                     .unwrap_or_default()
                     .to_string(),
             },
-            _ => StreamChunkKind::default(),
+            _ => panic!(
+                "Unknown StreamChunk discriminator field 'kind' value: {}",
+                kind_str
+            ),
         };
         Self { kind: kind }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Self::validate_discriminator(value)?;
+        match value
+            .get("kind")
+            .and_then(|candidate| candidate.as_str())
+            .unwrap_or("")
+        {
+            "text" => {}
+            "thinking" => {}
+            "tool" => {
+                let child_path = if path.is_empty() {
+                    "toolCall".to_string()
+                } else {
+                    format!("{}.toolCall", path)
+                };
+                let child = value
+                    .get("toolCall")
+                    .filter(|candidate| !candidate.is_null())
+                    .ok_or_else(|| format!("{}: missing required field", child_path))?;
+                ToolCall::validate_input_at(child, &child_path)?;
+            }
+            "usage" => {
+                let child_path = if path.is_empty() {
+                    "usage".to_string()
+                } else {
+                    format!("{}.usage", path)
+                };
+                let child = value
+                    .get("usage")
+                    .filter(|candidate| !candidate.is_null())
+                    .ok_or_else(|| format!("{}: missing required field", child_path))?;
+                InvocationUsage::validate_input_at(child, &child_path)?;
+            }
+            "error" => {}
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn validate_discriminator(value: &serde_json::Value) -> Result<(), String> {
+        let discriminator = value
+            .get("kind")
+            .and_then(|candidate| candidate.as_str())
+            .ok_or_else(|| "Missing StreamChunk discriminator property: 'kind'".to_string())?;
+        match discriminator {
+            "text" | "thinking" | "tool" | "usage" | "error" => Ok(()),
+            _ => Err(format!(
+                "Unknown StreamChunk discriminator field 'kind' value: {}",
+                discriminator
+            )),
+        }
     }
 
     /// Returns the `kind` discriminator string for this instance.
@@ -211,6 +274,7 @@ impl serde::Serialize for StreamChunk {
 impl<'de> serde::Deserialize<'de> for StreamChunk {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
@@ -232,6 +296,7 @@ impl serde::Serialize for StreamChunkKind {
 impl<'de> serde::Deserialize<'de> for StreamChunkKind {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        StreamChunk::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(StreamChunk::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

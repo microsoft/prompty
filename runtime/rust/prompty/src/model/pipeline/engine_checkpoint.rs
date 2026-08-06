@@ -85,12 +85,16 @@ impl EngineCheckpoint {
     /// Load EngineCheckpoint from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load EngineCheckpoint from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -99,6 +103,9 @@ impl EngineCheckpoint {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             id: value
                 .get("id")
@@ -195,6 +202,78 @@ impl EngineCheckpoint {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("messages")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "messages".to_string()
+            } else {
+                format!("{}.messages", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Message::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("pendingToolRequests")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "pendingToolRequests".to_string()
+            } else {
+                format!("{}.pendingToolRequests", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ModelToolRequest::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("completedToolResults")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "completedToolResults".to_string()
+            } else {
+                format!("{}.completedToolResults", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ModelToolResult::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        let child_path = if path.is_empty() {
+            "modelReconciliation".to_string()
+        } else {
+            format!("{}.modelReconciliation", path)
+        };
+        if let Some(child) = value.get("modelReconciliation") {
+            ModelReconciliationState::validate_input_at(child, &child_path)?;
+        }
+        let child_path = if path.is_empty() {
+            "pendingModelResponse".to_string()
+        } else {
+            format!("{}.pendingModelResponse", path)
+        };
+        if let Some(child) = value.get("pendingModelResponse") {
+            ModelInvocationResponse::validate_input_at(child, &child_path)?;
+        }
+        let child_path = if path.is_empty() {
+            "contextState".to_string()
+        } else {
+            format!("{}.contextState", path)
+        };
+        let child = value
+            .get("contextState")
+            .filter(|candidate| !candidate.is_null())
+            .ok_or_else(|| format!("{}: missing required field", child_path))?;
+        InvocationContextState::validate_input_at(child, &child_path)?;
+        Ok(())
+    }
+
     /// Serialize EngineCheckpoint to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -222,7 +301,7 @@ impl EngineCheckpoint {
                 serde_json::Value::String(self.run_id.clone()),
             );
         }
-        if let Some(ref val) = self.parent_run_id {
+        if let Some(val) = self.parent_run_id.as_ref() {
             result.insert(
                 "parentRunId".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -246,39 +325,33 @@ impl EngineCheckpoint {
                 serde_json::Value::Number(serde_json::Number::from(self.last_sequence)),
             );
         }
-        if !self.messages.is_empty() {
-            result.insert(
-                "messages".to_string(),
-                Self::save_messages(&self.messages, ctx),
-            );
-        }
+        result.insert(
+            "messages".to_string(),
+            Self::save_messages(&self.messages, ctx),
+        );
         if self.stable_prefix_messages != 0 {
             result.insert(
                 "stablePrefixMessages".to_string(),
                 serde_json::Value::Number(serde_json::Number::from(self.stable_prefix_messages)),
             );
         }
-        if let Some(ref val) = self.inputs {
+        if let Some(val) = self.inputs.as_ref() {
             result.insert("inputs".to_string(), val.clone());
         }
-        if let Some(ref val) = self.active_invocation_id {
+        if let Some(val) = self.active_invocation_id.as_ref() {
             result.insert(
                 "activeInvocationId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if !self.pending_tool_requests.is_empty() {
-            result.insert(
-                "pendingToolRequests".to_string(),
-                Self::save_pending_tool_requests(&self.pending_tool_requests, ctx),
-            );
-        }
-        if !self.completed_tool_results.is_empty() {
-            result.insert(
-                "completedToolResults".to_string(),
-                Self::save_completed_tool_results(&self.completed_tool_results, ctx),
-            );
-        }
+        result.insert(
+            "pendingToolRequests".to_string(),
+            Self::save_pending_tool_requests(&self.pending_tool_requests, ctx),
+        );
+        result.insert(
+            "completedToolResults".to_string(),
+            Self::save_completed_tool_results(&self.completed_tool_results, ctx),
+        );
         if self.completed_model_iterations != 0 {
             result.insert(
                 "completedModelIterations".to_string(),
@@ -291,20 +364,20 @@ impl EngineCheckpoint {
             "reconciliationRequired".to_string(),
             serde_json::Value::Bool(self.reconciliation_required),
         );
-        if let Some(ref val) = self.model_reconciliation {
+        if let Some(val) = self.model_reconciliation.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("modelReconciliation".to_string(), nested);
             }
         }
-        if let Some(ref val) = self.pending_output {
+        if let Some(val) = self.pending_output.as_ref() {
             result.insert("pendingOutput".to_string(), val.clone());
         }
         result.insert(
             "finalOutputReady".to_string(),
             serde_json::Value::Bool(self.final_output_ready),
         );
-        if let Some(ref val) = self.pending_model_response {
+        if let Some(val) = self.pending_model_response.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("pendingModelResponse".to_string(), nested);
@@ -369,7 +442,7 @@ impl EngineCheckpoint {
     }
 
     /// Load a collection of ModelToolRequest from a JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
+    /// Handles both array format `[{...}]`.
     fn load_pending_tool_requests(
         data: &serde_json::Value,
         ctx: &LoadContext,
@@ -380,24 +453,6 @@ impl EngineCheckpoint {
                 .map(|v| ModelToolRequest::load_from_value(v, ctx))
                 .collect(),
 
-            serde_json::Value::Object(obj) => obj
-                .iter()
-                .filter_map(|(name, value)| {
-                    if value.is_array() {
-                        return None;
-                    }
-                    let mut v = if value.is_object() {
-                        value.clone()
-                    } else {
-                        serde_json::json!({ "id": value })
-                    };
-                    if let serde_json::Value::Object(ref mut m) = v {
-                        m.entry("name".to_string())
-                            .or_insert_with(|| serde_json::Value::String(name.clone()));
-                    }
-                    Some(ModelToolRequest::load_from_value(&v, ctx))
-                })
-                .collect(),
             _ => Vec::new(),
         }
     }
@@ -407,34 +462,16 @@ impl EngineCheckpoint {
         items: &[ModelToolRequest],
         ctx: &SaveContext,
     ) -> serde_json::Value {
-        if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
-        }
-        // Object format: use name as key
-        let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
-                serde_json::Value::Object(m) => m,
-                other => {
-                    let mut m = serde_json::Map::new();
-                    m.insert("value".to_string(), other);
-                    m
-                }
-            };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
-            }
-        }
-        serde_json::Value::Object(result)
+        serde_json::Value::Array(
+            items
+                .iter()
+                .map(|item| item.to_value(ctx))
+                .collect::<Vec<_>>(),
+        )
     }
 
     /// Load a collection of ModelToolResult from a JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
+    /// Handles both array format `[{...}]`.
     fn load_completed_tool_results(
         data: &serde_json::Value,
         ctx: &LoadContext,
@@ -445,24 +482,6 @@ impl EngineCheckpoint {
                 .map(|v| ModelToolResult::load_from_value(v, ctx))
                 .collect(),
 
-            serde_json::Value::Object(obj) => obj
-                .iter()
-                .filter_map(|(name, value)| {
-                    if value.is_array() {
-                        return None;
-                    }
-                    let mut v = if value.is_object() {
-                        value.clone()
-                    } else {
-                        serde_json::json!({ "requestId": value })
-                    };
-                    if let serde_json::Value::Object(ref mut m) = v {
-                        m.entry("name".to_string())
-                            .or_insert_with(|| serde_json::Value::String(name.clone()));
-                    }
-                    Some(ModelToolResult::load_from_value(&v, ctx))
-                })
-                .collect(),
             _ => Vec::new(),
         }
     }
@@ -472,30 +491,12 @@ impl EngineCheckpoint {
         items: &[ModelToolResult],
         ctx: &SaveContext,
     ) -> serde_json::Value {
-        if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
-        }
-        // Object format: use name as key
-        let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
-                serde_json::Value::Object(m) => m,
-                other => {
-                    let mut m = serde_json::Map::new();
-                    m.insert("value".to_string(), other);
-                    m
-                }
-            };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
-            }
-        }
-        serde_json::Value::Object(result)
+        serde_json::Value::Array(
+            items
+                .iter()
+                .map(|item| item.to_value(ctx))
+                .collect::<Vec<_>>(),
+        )
     }
 }
 
@@ -511,6 +512,7 @@ impl serde::Serialize for EngineCheckpoint {
 impl<'de> serde::Deserialize<'de> for EngineCheckpoint {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

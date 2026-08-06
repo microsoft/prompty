@@ -59,8 +59,8 @@ ROLES = frozenset({"system", "user", "assistant", "developer"})
 
 
 def _message_text(self: Message) -> str:
-    """Concatenate all TextPart values into a single string."""
-    return "".join(p.value for p in self.parts if isinstance(p, TextPart))
+    """Concatenate all TextPart values joined by newline."""
+    return "\n".join(p.value for p in self.parts if isinstance(p, TextPart))
 
 
 def _message_to_text_content(self: Message) -> str | list[dict[str, Any]]:

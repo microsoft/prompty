@@ -336,6 +336,22 @@ public class PipelineTests : IDisposable
     }
 
     [Fact]
+    public async Task ExecuteAsync_ForwardsCancellationToken()
+    {
+        var agent = CreateAgent();
+        var executor = new MockExecutor();
+        InvokerRegistry.RegisterExecutor("openai", executor);
+        using var cancellation = new CancellationTokenSource();
+
+        await Pipeline.ExecuteAsync(
+            agent,
+            [new Message { Parts = [new TextPart { Value = "Hi" }] }],
+            cancellation.Token);
+
+        Assert.Equal(cancellation.Token, executor.LastCancellationToken);
+    }
+
+    [Fact]
     public async Task ProcessAsync_UsesProvider()
     {
         var agent = CreateAgent();
@@ -601,8 +617,16 @@ internal class MockParser : IParser
 
 internal class MockExecutor : IExecutor
 {
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
-        => Task.FromResult<object>("mock-response");
+    public CancellationToken LastCancellationToken { get; private set; }
+
+    public Task<object> ExecuteAsync(
+        Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken = default)
+    {
+        LastCancellationToken = cancellationToken;
+        return Task.FromResult<object>("mock-response");
+    }
 
     public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
     {
@@ -629,7 +653,10 @@ internal class ToolCallingExecutor : IExecutor
 {
     private int _callCount;
 
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(
+        Prompty agent,
+        List<Message> messages,
+        CancellationToken cancellationToken = default)
     {
         _callCount++;
         if (_callCount == 1)

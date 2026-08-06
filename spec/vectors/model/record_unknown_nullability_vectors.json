@@ -1,0 +1,364 @@
+{
+  "version": "1",
+  "description": "Cross-runtime Record<unknown> nullability contracts. Optionality controls whether the record itself may be absent; present records permit explicit null values at every nesting depth. Load/save/reload must preserve null-valued keys and must not conflate present-null with absence.",
+  "vectors": [
+    {
+      "name": "message_metadata_preserves_null_values",
+      "operation": "load-save-reload",
+      "model": "Message",
+      "fieldPath": "metadata",
+      "input": {
+        "role": "user",
+        "parts": [],
+        "metadata": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "prompty_metadata_preserves_null_values",
+      "operation": "load-save-reload",
+      "model": "Prompty",
+      "fieldPath": "metadata",
+      "input": {
+        "name": "nullable-prompty-metadata",
+        "metadata": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "model_info_additional_properties_preserve_null_values",
+      "operation": "load-save-reload",
+      "model": "ModelInfo",
+      "fieldPath": "additionalProperties",
+      "input": {
+        "id": "nullable-provider-model",
+        "additionalProperties": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "turn_model_request_inputs_preserve_null_values",
+      "operation": "load-save-reload",
+      "model": "TurnModelRequest",
+      "fieldPath": "inputs",
+      "input": {
+        "sessionId": "sess_nullable",
+        "turnId": "turn_nullable",
+        "iteration": 0,
+        "inputs": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "run_turn_request_inputs_preserve_null_values",
+      "operation": "load-save-reload",
+      "model": "RunTurnRequest",
+      "fieldPath": "inputs",
+      "input": {
+        "sessionId": "sess_nullable",
+        "turnId": "turn_nullable",
+        "inputs": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "turn_model_response_checkpoint_state_preserves_null_values",
+      "operation": "load-save-reload",
+      "model": "TurnModelResponse",
+      "fieldPath": "checkpointState",
+      "input": {
+        "checkpointState": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "host_tool_request_arguments_preserve_null_values",
+      "operation": "load-save-reload",
+      "model": "HostToolRequest",
+      "fieldPath": "arguments",
+      "input": {
+        "toolName": "nullable-tool",
+        "arguments": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "turn_event_payload_preserves_null_values",
+      "operation": "load-save-reload",
+      "model": "TurnEvent",
+      "fieldPath": "payload",
+      "input": {
+        "id": "evt_turn_nullable",
+        "type": "turn_start",
+        "timestamp": "2026-07-01T00:00:00Z",
+        "payload": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "session_event_payload_preserves_null_values",
+      "operation": "load-save-reload",
+      "model": "SessionEvent",
+      "fieldPath": "payload",
+      "input": {
+        "id": "evt_session_nullable",
+        "type": "session_start",
+        "timestamp": "2026-07-01T00:00:00Z",
+        "payload": {
+          "direct": null,
+          "nested": {
+            "value": null
+          },
+          "list": [
+            "text",
+            null,
+            {
+              "deep": [
+                null
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "direct": null,
+        "nested": {
+          "value": null
+        },
+        "list": [
+          "text",
+          null,
+          {
+            "deep": [
+              null
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -31,12 +31,16 @@ impl DoneEventPayload {
     /// Load DoneEventPayload from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load DoneEventPayload from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -45,6 +49,9 @@ impl DoneEventPayload {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             response: value
                 .get("response")
@@ -55,6 +62,24 @@ impl DoneEventPayload {
                 .map(|v| Self::load_messages(v, ctx))
                 .unwrap_or_default(),
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("messages")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "messages".to_string()
+            } else {
+                format!("{}.messages", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Message::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
     }
 
     /// Serialize DoneEventPayload to a `serde_json::Value`.
@@ -121,6 +146,7 @@ impl serde::Serialize for DoneEventPayload {
 impl<'de> serde::Deserialize<'de> for DoneEventPayload {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

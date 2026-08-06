@@ -19,7 +19,8 @@ fn test_engine_checkpoint_load_json() {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "contextState": {}
 }
 "####;
     let ctx = LoadContext::default();
@@ -43,6 +44,7 @@ id: ckpt_abc123
 sessionId: sess_abc123
 turnId: turn_abc123
 runId: run_abc123
+contextState: {}
 
 "####;
     let ctx = LoadContext::default();
@@ -66,7 +68,8 @@ fn test_engine_checkpoint_roundtrip() {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "contextState": {}
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -89,7 +92,8 @@ fn test_engine_checkpoint_serde_roundtrip() {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "contextState": {}
 }
 "####;
     let instance: EngineCheckpoint =

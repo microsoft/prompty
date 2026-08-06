@@ -39,12 +39,16 @@ impl TurnTrace {
     /// Load TurnTrace from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load TurnTrace from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -53,6 +57,9 @@ impl TurnTrace {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             version: value
                 .get("version")
@@ -78,6 +85,32 @@ impl TurnTrace {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("events")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "events".to_string()
+            } else {
+                format!("{}.events", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                TurnEvent::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        let child_path = if path.is_empty() {
+            "summary".to_string()
+        } else {
+            format!("{}.summary", path)
+        };
+        if let Some(child) = value.get("summary") {
+            TurnSummary::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
+    }
+
     /// Serialize TurnTrace to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -90,13 +123,13 @@ impl TurnTrace {
                 serde_json::Value::String(self.version.clone()),
             );
         }
-        if let Some(ref val) = self.runtime {
+        if let Some(val) = self.runtime.as_ref() {
             result.insert(
                 "runtime".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.prompty_version {
+        if let Some(val) = self.prompty_version.as_ref() {
             result.insert(
                 "promptyVersion".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -105,7 +138,7 @@ impl TurnTrace {
         if !self.events.is_empty() {
             result.insert("events".to_string(), Self::save_events(&self.events, ctx));
         }
-        if let Some(ref val) = self.summary {
+        if let Some(val) = self.summary.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("summary".to_string(), nested);
@@ -160,6 +193,7 @@ impl serde::Serialize for TurnTrace {
 impl<'de> serde::Deserialize<'de> for TurnTrace {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

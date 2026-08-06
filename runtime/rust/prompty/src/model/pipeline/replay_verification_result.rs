@@ -98,12 +98,16 @@ impl ReplayVerificationResult {
     /// Load ReplayVerificationResult from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load ReplayVerificationResult from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -112,6 +116,9 @@ impl ReplayVerificationResult {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             status: value
                 .get("status")
@@ -133,6 +140,24 @@ impl ReplayVerificationResult {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("mismatches")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "mismatches".to_string()
+            } else {
+                format!("{}.mismatches", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ReplayMismatch::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Serialize ReplayVerificationResult to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -143,12 +168,10 @@ impl ReplayVerificationResult {
             "status".to_string(),
             serde_json::Value::String(self.status.to_string()),
         );
-        if !self.mismatches.is_empty() {
-            result.insert(
-                "mismatches".to_string(),
-                Self::save_mismatches(&self.mismatches, ctx),
-            );
-        }
+        result.insert(
+            "mismatches".to_string(),
+            Self::save_mismatches(&self.mismatches, ctx),
+        );
         if self.expected_count != 0 {
             result.insert(
                 "expectedCount".to_string(),
@@ -210,6 +233,7 @@ impl serde::Serialize for ReplayVerificationResult {
 impl<'de> serde::Deserialize<'de> for ReplayVerificationResult {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

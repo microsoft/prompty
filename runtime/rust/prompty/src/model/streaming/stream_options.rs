@@ -27,12 +27,16 @@ impl StreamOptions {
     /// Load StreamOptions from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load StreamOptions from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -41,9 +45,16 @@ impl StreamOptions {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             include_usage: value.get("includeUsage").and_then(|v| v.as_bool()),
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
     }
 
     /// Serialize StreamOptions to a `serde_json::Value`.
@@ -52,8 +63,8 @@ impl StreamOptions {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(val) = self.include_usage {
-            result.insert("includeUsage".to_string(), serde_json::Value::Bool(val));
+        if let Some(val) = self.include_usage.as_ref() {
+            result.insert("includeUsage".to_string(), serde_json::Value::Bool(*val));
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }
@@ -81,6 +92,7 @@ impl serde::Serialize for StreamOptions {
 impl<'de> serde::Deserialize<'de> for StreamOptions {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

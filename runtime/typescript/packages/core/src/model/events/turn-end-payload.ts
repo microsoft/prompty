@@ -35,6 +35,7 @@ export class TurnEndPayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): TurnEndPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

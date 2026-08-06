@@ -17,11 +17,14 @@ import (
 type CompactionConfig struct {
 	Strategy *string                `json:"strategy,omitempty" yaml:"strategy,omitempty"`
 	Budget   *int32                 `json:"budget,omitempty" yaml:"budget,omitempty"`
-	Options  map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
+	Options  map[string]interface{} `json:"options" yaml:"options"`
 }
 
 // LoadCompactionConfig creates a CompactionConfig from a map[string]interface{}
 func LoadCompactionConfig(data interface{}, ctx *LoadContext) (CompactionConfig, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := CompactionConfig{}
 
 	// Load from map

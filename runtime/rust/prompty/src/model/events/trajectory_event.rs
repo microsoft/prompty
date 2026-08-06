@@ -45,12 +45,16 @@ impl TrajectoryEvent {
     /// Load TrajectoryEvent from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load TrajectoryEvent from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -59,6 +63,9 @@ impl TrajectoryEvent {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             id: value
                 .get("id")
@@ -100,34 +107,46 @@ impl TrajectoryEvent {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "redaction".to_string()
+        } else {
+            format!("{}.redaction", path)
+        };
+        if let Some(child) = value.get("redaction") {
+            RedactionMetadata::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
+    }
+
     /// Serialize TrajectoryEvent to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(ref val) = self.id {
+        if let Some(val) = self.id.as_ref() {
             result.insert("id".to_string(), serde_json::Value::String(val.clone()));
         }
-        if let Some(ref val) = self.session_id {
+        if let Some(val) = self.session_id.as_ref() {
             result.insert(
                 "sessionId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.turn_id {
+        if let Some(val) = self.turn_id.as_ref() {
             result.insert("turnId".to_string(), serde_json::Value::String(val.clone()));
         }
-        if let Some(ref val) = self.tool_call_id {
+        if let Some(val) = self.tool_call_id.as_ref() {
             result.insert(
                 "toolCallId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(val) = self.turn_index {
+        if let Some(val) = self.turn_index.as_ref() {
             result.insert(
                 "turnIndex".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
         if !self.event_type.is_empty() {
@@ -139,13 +158,13 @@ impl TrajectoryEvent {
         if !self.data.is_null() {
             result.insert("data".to_string(), self.data.clone());
         }
-        if let Some(ref val) = self.created_at {
+        if let Some(val) = self.created_at.as_ref() {
             result.insert(
                 "createdAt".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.redaction {
+        if let Some(val) = self.redaction.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("redaction".to_string(), nested);
@@ -182,6 +201,7 @@ impl serde::Serialize for TrajectoryEvent {
 impl<'de> serde::Deserialize<'de> for TrajectoryEvent {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -21,6 +21,38 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "EngineDurabilityPort",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "pipeline/EngineDurabilityPort.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "pipeline/EnginePermissionPort.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "pipeline/EnginePostCommitPort.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "csharp",
+      "group": "pipeline",
+      "symbol": "EngineToolPort",
+      "generatedSource": "pipeline/EngineToolPort.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "csharp",
       "group": "pipeline",
@@ -98,6 +130,38 @@
       "group": "pipeline",
       "symbol": "CheckpointStore",
       "generatedSource": "checkpoint_store.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineDurabilityPort",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "engine_durability_port.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "engine_permission_port.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "engine_post_commit_port.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "go",
+      "group": "pipeline",
+      "symbol": "EngineToolPort",
+      "generatedSource": "engine_tool_port.go",
       "seamKind": "protocol-adapter"
     },
     {
@@ -181,6 +245,38 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "EngineDurabilityPort",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "EngineDurabilityPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "EnginePermissionPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "EnginePostCommitPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "markdown",
+      "group": "pipeline",
+      "symbol": "EngineToolPort",
+      "generatedSource": "EngineToolPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "markdown",
       "group": "pipeline",
@@ -257,6 +353,38 @@
       "target": "python",
       "group": "pipeline",
       "symbol": "CheckpointStore",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineDurabilityPort",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": ".pipeline",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "python",
+      "group": "pipeline",
+      "symbol": "EngineToolPort",
       "generatedSource": ".pipeline",
       "seamKind": "protocol-adapter"
     },
@@ -341,6 +469,38 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "EngineDurabilityPort",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "pipeline::engine_durability_port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "pipeline::engine_permission_port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "pipeline::engine_post_commit_port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "rust",
+      "group": "pipeline",
+      "symbol": "EngineToolPort",
+      "generatedSource": "pipeline::engine_tool_port",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "rust",
       "group": "pipeline",
@@ -418,6 +578,38 @@
       "group": "pipeline",
       "symbol": "CheckpointStore",
       "generatedSource": "./pipeline/checkpoint-store",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineDurabilityPort",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "./pipeline/engine-durability-port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "./pipeline/engine-permission-port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "./pipeline/engine-post-commit-port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "typescript",
+      "group": "pipeline",
+      "symbol": "EngineToolPort",
+      "generatedSource": "./pipeline/engine-tool-port",
       "seamKind": "protocol-adapter"
     },
     {

@@ -45,7 +45,7 @@ model Prompty {
   })
   description?: string = "";
 
-  @doc("Additional metadata including authors, tags, and other arbitrary properties")
+  @doc("Additional metadata including authors, tags, and other arbitrary properties. Values may be explicit null.")
   @sample(#{
     metadata: #{
       authors: #["sethjuarez", "jietong"],
@@ -108,7 +108,7 @@ model Prompty {
       },
     },
   })
-  `model`: Model | string;
+  `model`?: Model | string;
 
   // Tools
   @doc("Tools available for extended functionality")

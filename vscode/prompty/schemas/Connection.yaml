@@ -3,19 +3,7 @@ $id: Connection.yaml
 type: object
 properties:
   kind:
-    anyOf:
-      - type: string
-        const: remote
-      - type: string
-        const: reference
-      - type: string
-        const: key
-      - type: string
-        const: anonymous
-      - type: string
-        const: foundry
-      - type: string
-        const: oauth
+    type: string
     description: The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)
   authenticationMode:
     anyOf:

@@ -5,6 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
+import copy
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
@@ -49,7 +50,8 @@ class Property:
     nullable: bool | None = None
     default: Any | None = None
     example: Any | None = None
-    enum_values: list[Any] = field(default_factory=list)
+    enum_values: list[Any] | None = field(default_factory=list)
+    _raw: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Property":
@@ -62,8 +64,9 @@ class Property:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         # handle alternate representations
         if isinstance(data, bool):
@@ -117,6 +120,9 @@ class Property:
             instance.example = data["example"]
         if data is not None and "enumValues" in data:
             instance.enum_values = data["enumValues"]
+
+        if type(instance) is Property:
+            instance._raw = copy.deepcopy(data)
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -125,7 +131,7 @@ class Property:
     def load_kind(data: dict, context: LoadContext | None) -> "Property":
         # load polymorphic Property instance
         if data is not None and "kind" in data:
-            discriminator_value = str(data["kind"]).lower()
+            discriminator_value = str(data["kind"])
             if discriminator_value == "array":
                 return ArrayProperty.load(data, context)
             elif discriminator_value == "object":
@@ -152,7 +158,7 @@ class Property:
         if context is not None:
             obj = context.process_object(obj)
 
-        result: dict[str, Any] = {}
+        result: dict[str, Any] = copy.deepcopy(obj._raw)
 
         if obj.name is not None:
             result["name"] = obj.name
@@ -210,14 +216,14 @@ class ArrayProperty(Property):
     ----------
     kind : str
 
-    items : Property
+    items : Optional[Property]
         The type of items contained in the array
     """
 
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="array")
-    items: Property = field(default_factory=Property)
+    items: Property | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "ArrayProperty":
@@ -230,8 +236,9 @@ class ArrayProperty(Property):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ArrayProperty: {data}")
@@ -242,7 +249,7 @@ class ArrayProperty(Property):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "items" in data:
-            instance.items = Property.load(data["items"], context)
+            instance.items = Property.load(data["items"], context.at("items"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -323,8 +330,9 @@ class ObjectProperty(Property):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ObjectProperty: {data}")
@@ -335,52 +343,71 @@ class ObjectProperty(Property):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "properties" in data:
-            instance.properties = ObjectProperty.load_properties(data["properties"], context)
+            instance.properties = ObjectProperty.load_properties(data["properties"], context.at("properties"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_properties(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if context is None:
+            context = LoadContext(path="properties")
         if isinstance(data, dict):
             # convert simple named properties to list of Property
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [Property.load(item, context) for item in data]
+                    # value is a scalar, infer the entry shape from its type
+                    if isinstance(v, int) and not isinstance(v, bool):
+                        shorthand = {"kind": "integer", "default": v}
+                    elif isinstance(v, float):
+                        shorthand = {"kind": "float", "default": v}
+                    elif isinstance(v, str):
+                        shorthand = {"kind": "string", "default": v}
+                    elif isinstance(v, bool):
+                        shorthand = {"kind": "boolean", "default": v}
+                    else:
+                        shorthand = {"default": v}
+                    result.append(Property.load({"name": k, **shorthand}, context.at(k)))
+            return result
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_properties(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
+        serialized = [dict(item.save(context)) for item in items]
+        for item_data in serialized:
+            if item_data.get("name") == "":
+                item_data.pop("name")
+
         if context.collection_format == "array":
-            return [item.save(context) for item in items]
+            return serialized
+
+        names: set[str] = set()
+        for item_data in serialized:
+            name = item_data.get("name")
+            if not isinstance(name, str) or not name or name in names:
+                return serialized
+            names.add(name)
 
         # Object format: use name as key
         result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
+        for item, item_data in zip(items, serialized):
+            name = item_data.pop("name")
+            # Check if we can use shorthand (only primary property set)
+            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                shorthand_prop = item._shorthand_property
+                if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    result[name] = item_data[shorthand_prop]
+                    continue
+            result[name] = item_data
         return result
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -453,8 +480,8 @@ class UnionProperty(Property):
     _shorthand_property: ClassVar[str | None] = None
 
     kind: str = field(default="union")
-    one_of: list[Property] = field(default_factory=list)
-    any_of: list[Property] = field(default_factory=list)
+    one_of: list[Property] | None = None
+    any_of: list[Property] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "UnionProperty":
@@ -467,8 +494,9 @@ class UnionProperty(Property):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for UnionProperty: {data}")
@@ -479,57 +507,85 @@ class UnionProperty(Property):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "oneOf" in data:
-            instance.one_of = UnionProperty.load_one_of(data["oneOf"], context)
+            instance.one_of = UnionProperty.load_one_of(data["oneOf"], context.at("oneOf"))
         if data is not None and "anyOf" in data:
-            instance.any_of = UnionProperty.load_any_of(data["anyOf"], context)
+            instance.any_of = UnionProperty.load_any_of(data["anyOf"], context.at("anyOf"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_one_of(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if context is None:
+            context = LoadContext(path="oneOf")
         if isinstance(data, dict):
             # convert simple named oneOf to list of Property
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [Property.load(item, context) for item in data]
+                    # value is a scalar, infer the entry shape from its type
+                    if isinstance(v, int) and not isinstance(v, bool):
+                        shorthand = {"kind": "integer", "default": v}
+                    elif isinstance(v, float):
+                        shorthand = {"kind": "float", "default": v}
+                    elif isinstance(v, str):
+                        shorthand = {"kind": "string", "default": v}
+                    elif isinstance(v, bool):
+                        shorthand = {"kind": "boolean", "default": v}
+                    else:
+                        shorthand = {"default": v}
+                    result.append(Property.load({"name": k, **shorthand}, context.at(k)))
+            return result
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_one_of(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_any_of(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if context is None:
+            context = LoadContext(path="anyOf")
         if isinstance(data, dict):
             # convert simple named anyOf to list of Property
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [Property.load(item, context) for item in data]
+                    # value is a scalar, infer the entry shape from its type
+                    if isinstance(v, int) and not isinstance(v, bool):
+                        shorthand = {"kind": "integer", "default": v}
+                    elif isinstance(v, float):
+                        shorthand = {"kind": "float", "default": v}
+                    elif isinstance(v, str):
+                        shorthand = {"kind": "string", "default": v}
+                    elif isinstance(v, bool):
+                        shorthand = {"kind": "boolean", "default": v}
+                    else:
+                        shorthand = {"default": v}
+                    result.append(Property.load({"name": k, **shorthand}, context.at(k)))
+            return result
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_any_of(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

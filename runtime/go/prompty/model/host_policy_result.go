@@ -15,12 +15,17 @@ import (
 type HostPolicyResult struct {
 	Messages             []Message              `json:"messages" yaml:"messages"`
 	StablePrefixMessages int32                  `json:"stablePrefixMessages" yaml:"stablePrefixMessages"`
-	Metadata             map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Metadata             map[string]interface{} `json:"metadata" yaml:"metadata"`
 }
 
 // LoadHostPolicyResult creates a HostPolicyResult from a map[string]interface{}
 func LoadHostPolicyResult(data interface{}, ctx *LoadContext) (HostPolicyResult, error) {
-	result := HostPolicyResult{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := HostPolicyResult{
+		Messages: []Message{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -29,7 +34,7 @@ func LoadHostPolicyResult(data interface{}, ctx *LoadContext) (HostPolicyResult,
 				result.Messages = make([]Message, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx)
+						loaded, err := LoadMessage(item, ctx.At("messages").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

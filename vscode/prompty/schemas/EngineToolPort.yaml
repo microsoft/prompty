@@ -1,0 +1,5 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: EngineToolPort.yaml
+type: object
+properties: {}
+description: Executes authorized model-requested tools at a runtime cancellation boundary.

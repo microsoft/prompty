@@ -269,7 +269,10 @@ public class AgentLoopTests : IDisposable
     /// <summary>Executor that returns a fixed response.</summary>
     private class MockExecutor(object response) : IExecutor
     {
-        public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(
+            Core.Prompty agent,
+            List<Message> messages,
+            CancellationToken cancellationToken = default)
             => Task.FromResult(response);
 
         public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
@@ -296,7 +299,10 @@ public class AgentLoopTests : IDisposable
         private int _index;
         public int CallCount => _index;
 
-        public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(
+            Core.Prompty agent,
+            List<Message> messages,
+            CancellationToken cancellationToken = default)
         {
             if (_index >= responses.Count)
                 throw new InvalidOperationException("SequenceExecutor ran out of responses.");
@@ -310,7 +316,10 @@ public class AgentLoopTests : IDisposable
     /// <summary>Executor that always returns a tool call — for testing max iterations.</summary>
     private class InfiniteToolCallExecutor : IExecutor
     {
-        public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(
+            Core.Prompty agent,
+            List<Message> messages,
+            CancellationToken cancellationToken = default)
         {
             return Task.FromResult<object>(new ToolCallResult
             {

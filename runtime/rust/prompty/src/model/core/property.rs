@@ -17,7 +17,7 @@ pub enum PropertyKind {
     /// `kind` = `"array"`
     Array {
         /// The type of items contained in the array
-        items: serde_json::Value,
+        items: Option<serde_json::Value>,
     },
     /// `kind` = `"object"`
     Object {
@@ -27,14 +27,16 @@ pub enum PropertyKind {
     /// `kind` = `"union"`
     Union {
         /// Alternative property schemas where exactly one branch must match
-        one_of: Vec<Property>,
+        one_of: Option<Vec<Property>>,
         /// Alternative property schemas where one or more branches may match
-        any_of: Vec<Property>,
+        any_of: Option<Vec<Property>>,
     },
     /// Wildcard / catch-all variant for unrecognized `kind` values.
     Custom {
         /// The raw `kind` string for this unknown variant.
         kind_name: String,
+        /// Unmodeled fields preserved for forward-compatible round trips.
+        raw: serde_json::Map<String, serde_json::Value>,
     },
 }
 
@@ -42,6 +44,7 @@ impl Default for PropertyKind {
     fn default() -> Self {
         PropertyKind::Custom {
             kind_name: String::new(),
+            raw: serde_json::Map::new(),
         }
     }
 }
@@ -61,7 +64,7 @@ pub struct Property {
     /// Example value used for either initialization or tooling
     pub example: Option<serde_json::Value>,
     /// Allowed enumeration values for the property
-    pub enum_values: Option<Vec<serde_json::Value>>,
+    pub enum_values: Vec<serde_json::Value>,
     /// Variant-specific data, discriminated by `kind`.
     pub kind: PropertyKind,
 }
@@ -75,12 +78,16 @@ impl Property {
     /// Load Property from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load Property from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -89,19 +96,14 @@ impl Property {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         if let Some(value) = value.as_bool() {
             return Property {
                 kind: PropertyKind::Custom {
                     kind_name: "boolean".to_string(),
-                },
-                example: Some(value.into()),
-                ..Default::default()
-            };
-        }
-        if let Some(value) = value.as_i64() {
-            return Property {
-                kind: PropertyKind::Custom {
-                    kind_name: "integer".to_string(),
+                    raw: serde_json::Map::new(),
                 },
                 example: Some(value.into()),
                 ..Default::default()
@@ -112,6 +114,27 @@ impl Property {
             return Property {
                 kind: PropertyKind::Custom {
                     kind_name: "string".to_string(),
+                    raw: serde_json::Map::new(),
+                },
+                example: Some(value.into()),
+                ..Default::default()
+            };
+        }
+        if let Some(value) = value.as_i64() {
+            return Property {
+                kind: PropertyKind::Custom {
+                    kind_name: "integer".to_string(),
+                    raw: serde_json::Map::new(),
+                },
+                example: Some(value.into()),
+                ..Default::default()
+            };
+        }
+        if let Some(value) = value.as_f64() {
+            return Property {
+                kind: PropertyKind::Custom {
+                    kind_name: "float".to_string(),
+                    raw: serde_json::Map::new(),
                 },
                 example: Some(value.into()),
                 ..Default::default()
@@ -120,10 +143,7 @@ impl Property {
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {
             "array" => PropertyKind::Array {
-                items: value
-                    .get("items")
-                    .cloned()
-                    .unwrap_or(serde_json::Value::Null),
+                items: value.get("items").cloned(),
             },
             "object" => PropertyKind::Object {
                 properties: value
@@ -132,17 +152,23 @@ impl Property {
                     .unwrap_or_default(),
             },
             "union" => PropertyKind::Union {
-                one_of: value
-                    .get("oneOf")
-                    .map(|v| Self::load_one_of(v, ctx))
-                    .unwrap_or_default(),
-                any_of: value
-                    .get("anyOf")
-                    .map(|v| Self::load_any_of(v, ctx))
-                    .unwrap_or_default(),
+                one_of: value.get("oneOf").map(|v| Self::load_one_of(v, ctx)),
+                any_of: value.get("anyOf").map(|v| Self::load_any_of(v, ctx)),
             },
             _ => PropertyKind::Custom {
                 kind_name: kind_str.to_string(),
+                raw: {
+                    let mut raw = value.as_object().cloned().unwrap_or_default();
+                    raw.remove("name");
+                    raw.remove("kind");
+                    raw.remove("description");
+                    raw.remove("required");
+                    raw.remove("nullable");
+                    raw.remove("default");
+                    raw.remove("example");
+                    raw.remove("enumValues");
+                    raw
+                },
             },
         };
         Self {
@@ -162,9 +188,102 @@ impl Property {
             enum_values: value
                 .get("enumValues")
                 .and_then(|v| v.as_array())
-                .map(|arr| arr.to_vec()),
+                .map(|arr| arr.to_vec())
+                .unwrap_or_default(),
             kind: kind,
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        match value
+            .get("kind")
+            .and_then(|candidate| candidate.as_str())
+            .unwrap_or("")
+        {
+            "array" => {
+                let child_path = if path.is_empty() {
+                    "items".to_string()
+                } else {
+                    format!("{}.items", path)
+                };
+                if let Some(child) = value.get("items") {
+                    Property::validate_input_at(child, &child_path)?;
+                }
+            }
+            "object" => {
+                if let Some(collection) = value.get("properties") {
+                    let collection_path = if path.is_empty() {
+                        "properties".to_string()
+                    } else {
+                        format!("{}.properties", path)
+                    };
+                    match collection {
+                        serde_json::Value::Object(entries) => {
+                            for (name, entry) in entries {
+                                let entry_path = format!("{}.{}", collection_path, name);
+                                if entry.is_array() {
+                                    return Err(format!(
+                                        "{}: invalid named collection entry category array",
+                                        entry_path
+                                    ));
+                                }
+                                let mut candidate = if entry.is_object() {
+                                    entry.clone()
+                                } else {
+                                    serde_json::json!({ "kind": entry })
+                                };
+                                if let serde_json::Value::Object(ref mut map) = candidate {
+                                    map.insert(
+                                        "name".to_string(),
+                                        serde_json::Value::String(name.clone()),
+                                    );
+                                }
+                                Property::validate_input_at(&candidate, &entry_path)?;
+                            }
+                        }
+                        serde_json::Value::Array(entries) => {
+                            for (index, entry) in entries.iter().enumerate() {
+                                let entry_path = format!("{}[{}]", collection_path, index);
+                                Property::validate_input_at(entry, &entry_path)?;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            "union" => {
+                if let Some(entries) = value
+                    .get("oneOf")
+                    .and_then(|candidate| candidate.as_array())
+                {
+                    let collection_path = if path.is_empty() {
+                        "oneOf".to_string()
+                    } else {
+                        format!("{}.oneOf", path)
+                    };
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Property::validate_input_at(entry, &entry_path)?;
+                    }
+                }
+                if let Some(entries) = value
+                    .get("anyOf")
+                    .and_then(|candidate| candidate.as_array())
+                {
+                    let collection_path = if path.is_empty() {
+                        "anyOf".to_string()
+                    } else {
+                        format!("{}.anyOf", path)
+                    };
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Property::validate_input_at(entry, &entry_path)?;
+                    }
+                }
+            }
+            _ => {}
+        }
+        Ok(())
     }
 
     /// Returns the `kind` discriminator string for this instance.
@@ -194,66 +313,77 @@ impl Property {
                 serde_json::Value::String(self.name.clone()),
             );
         }
-        if let Some(ref val) = self.description {
+        if let Some(val) = self.description.as_ref() {
             result.insert(
                 "description".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(val) = self.required {
-            result.insert("required".to_string(), serde_json::Value::Bool(val));
+        if let Some(val) = self.required.as_ref() {
+            result.insert("required".to_string(), serde_json::Value::Bool(*val));
         }
-        if let Some(val) = self.nullable {
-            result.insert("nullable".to_string(), serde_json::Value::Bool(val));
+        if let Some(val) = self.nullable.as_ref() {
+            result.insert("nullable".to_string(), serde_json::Value::Bool(*val));
         }
-        if let Some(ref val) = self.default {
+        if let Some(val) = self.default.as_ref() {
             result.insert("default".to_string(), val.clone());
         }
-        if let Some(ref val) = self.example {
+        if let Some(val) = self.example.as_ref() {
             result.insert("example".to_string(), val.clone());
         }
-        if let Some(ref items) = self.enum_values {
-            result.insert(
-                "enumValues".to_string(),
-                serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
-            );
-        }
+        result.insert(
+            "enumValues".to_string(),
+            serde_json::to_value(&self.enum_values).unwrap_or(serde_json::Value::Null),
+        );
         // Write variant-specific fields
         match &self.kind {
             PropertyKind::Array { items, .. } => {
-                if !items.is_null() {
-                    result.insert("items".to_string(), items.clone());
+                if let Some(val) = items {
+                    result.insert("items".to_string(), val.clone());
                 }
             }
             PropertyKind::Object { properties, .. } => {
-                if !properties.is_empty() {
-                    result.insert(
-                        "properties".to_string(),
-                        serde_json::Value::Array(
-                            properties.iter().map(|item| item.to_value(ctx)).collect(),
-                        ),
-                    );
-                }
+                result.insert(
+                    "properties".to_string(),
+                    Self::save_properties(properties, ctx),
+                );
             }
             PropertyKind::Union { one_of, any_of, .. } => {
-                if !one_of.is_empty() {
+                if let Some(items) = one_of.as_ref() {
                     result.insert(
                         "oneOf".to_string(),
                         serde_json::Value::Array(
-                            one_of.iter().map(|item| item.to_value(ctx)).collect(),
+                            items.iter().map(|item| item.to_value(ctx)).collect(),
                         ),
                     );
                 }
-                if !any_of.is_empty() {
+                if let Some(items) = any_of.as_ref() {
                     result.insert(
                         "anyOf".to_string(),
                         serde_json::Value::Array(
-                            any_of.iter().map(|item| item.to_value(ctx)).collect(),
+                            items.iter().map(|item| item.to_value(ctx)).collect(),
                         ),
                     );
                 }
             }
-            PropertyKind::Custom { kind_name: _, .. } => {}
+            PropertyKind::Custom { raw, .. } => {
+                for (key, value) in raw {
+                    if matches!(
+                        key.as_str(),
+                        "name"
+                            | "kind"
+                            | "description"
+                            | "required"
+                            | "nullable"
+                            | "default"
+                            | "example"
+                            | "enumValues"
+                    ) {
+                        continue;
+                    }
+                    result.insert(key.clone(), value.clone());
+                }
+            }
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }
@@ -279,20 +409,31 @@ impl Property {
 
             serde_json::Value::Object(obj) => obj
                 .iter()
-                .filter_map(|(name, value)| {
+                .map(|(name, value)| {
                     if value.is_array() {
-                        return None;
+                        panic!(
+                            "properties.{}: invalid named collection entry category array",
+                            name
+                        );
                     }
                     let mut v = if value.is_object() {
                         value.clone()
+                    } else if value.is_i64() {
+                        serde_json::json!({ "kind": "integer", "default": value })
+                    } else if value.is_f64() {
+                        serde_json::json!({ "kind": "float", "default": value })
+                    } else if value.is_string() {
+                        serde_json::json!({ "kind": "string", "default": value })
+                    } else if value.is_boolean() {
+                        serde_json::json!({ "kind": "boolean", "default": value })
                     } else {
-                        serde_json::json!({ "kind": value })
+                        serde_json::json!({ "default": value })
                     };
                     if let serde_json::Value::Object(ref mut m) = v {
                         m.entry("name".to_string())
                             .or_insert_with(|| serde_json::Value::String(name.clone()));
                     }
-                    Some(Property::load_from_value(&v, ctx))
+                    Property::load_from_value(&v, ctx)
                 })
                 .collect(),
             _ => Vec::new(),
@@ -301,18 +442,35 @@ impl Property {
 
     /// Save a collection of Property to a JSON value.
     fn save_properties(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+        let mut serialized = items
+            .iter()
+            .map(|item| item.to_value(ctx))
+            .collect::<Vec<_>>();
+        for item_data in &mut serialized {
+            if let serde_json::Value::Object(map) = item_data {
+                if matches!(map.get("name"), Some(serde_json::Value::String(name)) if name.is_empty())
+                {
+                    map.remove("name");
+                }
+            }
+        }
+
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
+            return serde_json::Value::Array(serialized);
+        }
+        let mut names = std::collections::HashSet::new();
+        for item_data in &serialized {
+            let Some(name) = item_data.get("name").and_then(|value| value.as_str()) else {
+                return serde_json::Value::Array(serialized);
+            };
+            if name.is_empty() || !names.insert(name.to_string()) {
+                return serde_json::Value::Array(serialized);
+            }
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
+        for item_data in serialized {
+            let mut item_data = match item_data {
                 serde_json::Value::Object(m) => m,
                 other => {
                     let mut m = serde_json::Map::new();
@@ -320,9 +478,19 @@ impl Property {
                     m
                 }
             };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
+            let serde_json::Value::String(name) = item_data
+                .remove("name")
+                .expect("validated named collection item")
+            else {
+                unreachable!()
+            };
+            if ctx.use_shorthand && item_data.len() == 1 {
+                if let Some(shorthand) = item_data.get("example") {
+                    result.insert(name, shorthand.clone());
+                    continue;
+                }
             }
+            result.insert(name, serde_json::Value::Object(item_data));
         }
         serde_json::Value::Object(result)
     }
@@ -386,6 +554,7 @@ impl serde::Serialize for Property {
 impl<'de> serde::Deserialize<'de> for Property {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
@@ -407,6 +576,7 @@ impl serde::Serialize for PropertyKind {
 impl<'de> serde::Deserialize<'de> for PropertyKind {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Property::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Property::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

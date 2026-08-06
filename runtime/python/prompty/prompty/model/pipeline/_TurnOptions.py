@@ -60,8 +60,9 @@ class TurnOptions:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnOptions: {data}")
@@ -82,7 +83,7 @@ class TurnOptions:
         if data is not None and "turn" in data:
             instance.turn = data["turn"]
         if data is not None and "compaction" in data:
-            instance.compaction = CompactionConfig.load(data["compaction"], context)
+            instance.compaction = CompactionConfig.load(data["compaction"], context.at("compaction"))
         if context is not None:
             instance = context.process_output(instance)
         return instance

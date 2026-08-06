@@ -67,12 +67,16 @@ impl ContentPart {
     /// Load ContentPart from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load ContentPart from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -81,6 +85,9 @@ impl ContentPart {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {
             "text" => ContentPartKind::TextPart {
@@ -127,9 +134,42 @@ impl ContentPart {
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string()),
             },
-            _ => ContentPartKind::default(),
+            _ => panic!(
+                "Unknown ContentPart discriminator field 'kind' value: {}",
+                kind_str
+            ),
         };
         Self { kind: kind }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Self::validate_discriminator(value)?;
+        match value
+            .get("kind")
+            .and_then(|candidate| candidate.as_str())
+            .unwrap_or("")
+        {
+            "text" => {}
+            "image" => {}
+            "file" => {}
+            "audio" => {}
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn validate_discriminator(value: &serde_json::Value) -> Result<(), String> {
+        let discriminator = value
+            .get("kind")
+            .and_then(|candidate| candidate.as_str())
+            .ok_or_else(|| "Missing ContentPart discriminator property: 'kind'".to_string())?;
+        match discriminator {
+            "text" | "image" | "file" | "audio" => Ok(()),
+            _ => Err(format!(
+                "Unknown ContentPart discriminator field 'kind' value: {}",
+                discriminator
+            )),
+        }
     }
 
     /// Returns the `kind` discriminator string for this instance.
@@ -244,6 +284,7 @@ impl serde::Serialize for ContentPart {
 impl<'de> serde::Deserialize<'de> for ContentPart {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
@@ -265,6 +306,7 @@ impl serde::Serialize for ContentPartKind {
 impl<'de> serde::Deserialize<'de> for ContentPartKind {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        ContentPart::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(ContentPart::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

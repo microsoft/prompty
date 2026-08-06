@@ -1251,7 +1251,11 @@ pub(super) async fn turn_with_engine_request(
         events: events.clone(),
         agent_name: Some(agent.name.clone()),
         provider: provider.clone(),
-        model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
+        model_id: agent
+            .model
+            .as_ref()
+            .map(|m| m.id.clone())
+            .filter(|id| !id.is_empty()),
         configured_max_iterations: max_iterations,
         agent_mode,
         persistence,
@@ -2066,7 +2070,19 @@ mod tests {
             skip_output_guardrail: Arc::new(AtomicBool::new(false)),
             failures: Arc::new(LiveFailureState::default()),
         };
-        let request = ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default());
+        let request = ModelInvocationRequest::load_from_value(
+            &json!({
+                "context": {
+                    "id": "context:inv_streamed_tool_round",
+                    "sessionId": "sess_streamed_tool_round",
+                    "turnId": "turn_streamed_tool_round",
+                    "invocationId": "inv_streamed_tool_round",
+                    "iteration": 0,
+                    "contextState": {}
+                }
+            }),
+            &LoadContext::default(),
+        );
 
         let response = port
             .invoke(

@@ -125,6 +125,13 @@ pub enum ConnectionKind {
         /// The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
         connection_type: Option<String>,
     },
+    /// Lossless fallback for unrecognized `kind` values.
+    Unknown {
+        /// The raw `kind` string for this unknown variant.
+        kind_name: String,
+        /// Unmodeled fields preserved for forward-compatible round trips.
+        raw: serde_json::Map<String, serde_json::Value>,
+    },
 }
 
 impl Default for ConnectionKind {
@@ -155,12 +162,16 @@ impl Connection {
     /// Load Connection from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load Connection from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -169,6 +180,9 @@ impl Connection {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {
             "reference" => ConnectionKind::Reference {
@@ -255,7 +269,16 @@ impl Connection {
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string()),
             },
-            _ => ConnectionKind::default(),
+            _ => ConnectionKind::Unknown {
+                kind_name: kind_str.to_string(),
+                raw: {
+                    let mut raw = value.as_object().cloned().unwrap_or_default();
+                    raw.remove("kind");
+                    raw.remove("authenticationMode");
+                    raw.remove("usageDescription");
+                    raw
+                },
+            },
         };
         Self {
             authentication_mode: value
@@ -270,6 +293,23 @@ impl Connection {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        match value
+            .get("kind")
+            .and_then(|candidate| candidate.as_str())
+            .unwrap_or("")
+        {
+            "reference" => {}
+            "remote" => {}
+            "key" => {}
+            "anonymous" => {}
+            "oauth" => {}
+            "foundry" => {}
+            _ => {}
+        }
+        Ok(())
+    }
+
     /// Returns the `kind` discriminator string for this instance.
     pub fn kind_str(&self) -> &str {
         match &self.kind {
@@ -279,6 +319,7 @@ impl Connection {
             ConnectionKind::Anonymous { .. } => "anonymous",
             ConnectionKind::OAuth { .. } => "oauth",
             ConnectionKind::Foundry { .. } => "foundry",
+            ConnectionKind::Unknown { kind_name, .. } => kind_name.as_str(),
         }
     }
 
@@ -293,13 +334,13 @@ impl Connection {
             serde_json::Value::String(self.kind_str().to_string()),
         );
         // Write base fields
-        if let Some(ref val) = self.authentication_mode {
+        if let Some(val) = self.authentication_mode.as_ref() {
             result.insert(
                 "authenticationMode".to_string(),
                 serde_json::Value::String(val.to_string()),
             );
         }
-        if let Some(ref val) = self.usage_description {
+        if let Some(val) = self.usage_description.as_ref() {
             result.insert(
                 "usageDescription".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -382,7 +423,7 @@ impl Connection {
                         serde_json::Value::String(token_url.clone()),
                     );
                 }
-                if let Some(items) = scopes {
+                if let Some(items) = scopes.as_ref() {
                     result.insert(
                         "scopes".to_string(),
                         serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
@@ -409,6 +450,17 @@ impl Connection {
                         "connectionType".to_string(),
                         serde_json::Value::String(val.clone()),
                     );
+                }
+            }
+            ConnectionKind::Unknown { raw, .. } => {
+                for (key, value) in raw {
+                    if matches!(
+                        key.as_str(),
+                        "kind" | "authenticationMode" | "usageDescription"
+                    ) {
+                        continue;
+                    }
+                    result.insert(key.clone(), value.clone());
                 }
             }
         }
@@ -438,6 +490,7 @@ impl serde::Serialize for Connection {
 impl<'de> serde::Deserialize<'de> for Connection {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
@@ -459,6 +512,7 @@ impl serde::Serialize for ConnectionKind {
 impl<'de> serde::Deserialize<'de> for ConnectionKind {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Connection::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Connection::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

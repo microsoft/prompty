@@ -85,7 +85,9 @@ describe("ModelOptions", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ModelOptions.load(data);
       expect(instance).toBeDefined();
     });

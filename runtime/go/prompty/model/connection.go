@@ -6,7 +6,6 @@ package prompty
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -27,11 +26,34 @@ type Connection struct {
 	Kind               string              `json:"kind" yaml:"kind"`
 	AuthenticationMode *AuthenticationMode `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
 	UsageDescription   *string             `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
+	raw                map[string]interface{}
+}
+
+func cloneConnectionRawValue(value interface{}) interface{} {
+	switch value := value.(type) {
+	case map[string]interface{}:
+		result := make(map[string]interface{}, len(value))
+		for key, item := range value {
+			result[key] = cloneConnectionRawValue(item)
+		}
+		return result
+	case []interface{}:
+		result := make([]interface{}, len(value))
+		for index, item := range value {
+			result[index] = cloneConnectionRawValue(item)
+		}
+		return result
+	default:
+		return value
+	}
 }
 
 // LoadConnection creates a Connection from a map[string]interface{}
 // Returns interface{} because this is a polymorphic base type that can resolve to different child types
 func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := Connection{}
 
 	// Handle polymorphic types based on discriminator
@@ -52,15 +74,10 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 					return LoadOAuthConnection(data, ctx)
 				case "foundry":
 					return LoadFoundryConnection(data, ctx)
-				default:
-					return nil, fmt.Errorf("unknown Connection discriminator value: %s", discriminator)
 				}
-			default:
-				return nil, fmt.Errorf("unknown Connection discriminator value: %v", discriminator)
 			}
 		}
 	}
-	return nil, fmt.Errorf("missing Connection discriminator property: kind")
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
 		if val, ok := m["kind"]; ok && val != nil {
@@ -74,6 +91,13 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 			v := string(val.(string))
 			result.UsageDescription = &v
 		}
+		result.raw = make(map[string]interface{}, len(m))
+		for key, value := range m {
+			result.raw[key] = cloneConnectionRawValue(value)
+		}
+		delete(result.raw, "kind")
+		delete(result.raw, "authenticationMode")
+		delete(result.raw, "usageDescription")
 	}
 
 	return result, nil
@@ -82,6 +106,9 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 // Save serializes Connection to map[string]interface{}
 func (obj Connection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	for key, value := range obj.raw {
+		result[key] = cloneConnectionRawValue(value)
+	}
 	result["kind"] = obj.Kind
 	if obj.AuthenticationMode != nil {
 		result["authenticationMode"] = string(*obj.AuthenticationMode)
@@ -145,6 +172,9 @@ type ReferenceConnection struct {
 
 // LoadReferenceConnection creates a ReferenceConnection from a map[string]interface{}
 func LoadReferenceConnection(data interface{}, ctx *LoadContext) (ReferenceConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ReferenceConnection{}
 
 	// Load from map
@@ -240,6 +270,9 @@ type RemoteConnection struct {
 
 // LoadRemoteConnection creates a RemoteConnection from a map[string]interface{}
 func LoadRemoteConnection(data interface{}, ctx *LoadContext) (RemoteConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := RemoteConnection{}
 
 	// Load from map
@@ -332,6 +365,9 @@ type ApiKeyConnection struct {
 
 // LoadApiKeyConnection creates a ApiKeyConnection from a map[string]interface{}
 func LoadApiKeyConnection(data interface{}, ctx *LoadContext) (ApiKeyConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ApiKeyConnection{}
 
 	// Load from map
@@ -422,6 +458,9 @@ type AnonymousConnection struct {
 
 // LoadAnonymousConnection creates a AnonymousConnection from a map[string]interface{}
 func LoadAnonymousConnection(data interface{}, ctx *LoadContext) (AnonymousConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AnonymousConnection{}
 
 	// Load from map
@@ -515,6 +554,9 @@ type OAuthConnection struct {
 
 // LoadOAuthConnection creates a OAuthConnection from a map[string]interface{}
 func LoadOAuthConnection(data interface{}, ctx *LoadContext) (OAuthConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := OAuthConnection{}
 
 	// Load from map
@@ -572,7 +614,9 @@ func (obj OAuthConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result["clientId"] = obj.ClientId
 	result["clientSecret"] = obj.ClientSecret
 	result["tokenUrl"] = obj.TokenUrl
-	result["scopes"] = obj.Scopes
+	if obj.Scopes != nil {
+		result["scopes"] = obj.Scopes
+	}
 
 	return result
 }
@@ -630,6 +674,9 @@ type FoundryConnection struct {
 
 // LoadFoundryConnection creates a FoundryConnection from a map[string]interface{}
 func LoadFoundryConnection(data interface{}, ctx *LoadContext) (FoundryConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := FoundryConnection{}
 
 	// Load from map

@@ -12,6 +12,7 @@ namespace Prompty;
  *   and processed to generate prompts for AI models.
  */
 @discriminator("kind")
+@entryShorthand("default")
 @coerce(
   string,
   #{ kind: "string", example: "{value}" },
@@ -76,7 +77,7 @@ model ArrayProperty extends Property {
 
   @doc("The type of items contained in the array")
   @sample(#{ items: #{ kind: "string" } })
-  items: Property | Named<
+  items?: Property | Named<
     Property,
     "Name of the property",
     #{ name: "my-property" }

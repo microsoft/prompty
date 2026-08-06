@@ -19,7 +19,18 @@ fn test_session_trace_load_json() {
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001"
+    }
+  ]
 }
 "####;
     let ctx = LoadContext::default();
@@ -52,6 +63,14 @@ version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
 sessionId: sess_abc123
+events:
+  - id: evt_abc123
+    type: session_start
+    timestamp: "2026-06-09T20:00:00Z"
+    sessionId: sess_abc123
+    turnId: turn_001
+    parentId: evt_parent
+    spanId: span_hook_001
 
 "####;
     let ctx = LoadContext::default();
@@ -81,7 +100,18 @@ fn test_session_trace_roundtrip() {
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001"
+    }
+  ]
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -104,7 +134,18 @@ fn test_session_trace_serde_roundtrip() {
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001"
+    }
+  ]
 }
 "####;
     let instance: SessionTrace =

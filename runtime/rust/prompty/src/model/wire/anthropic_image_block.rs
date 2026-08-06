@@ -31,12 +31,16 @@ impl AnthropicImageBlock {
     /// Load AnthropicImageBlock from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load AnthropicImageBlock from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -45,6 +49,9 @@ impl AnthropicImageBlock {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             r#type: value
                 .get("type")
@@ -57,6 +64,20 @@ impl AnthropicImageBlock {
                 .map(|v| AnthropicImageSource::load_from_value(v, ctx))
                 .unwrap_or_default(),
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "source".to_string()
+        } else {
+            format!("{}.source", path)
+        };
+        let child = value
+            .get("source")
+            .filter(|candidate| !candidate.is_null())
+            .ok_or_else(|| format!("{}: missing required field", child_path))?;
+        AnthropicImageSource::validate_input_at(child, &child_path)?;
+        Ok(())
     }
 
     /// Serialize AnthropicImageBlock to a `serde_json::Value`.
@@ -103,6 +124,7 @@ impl serde::Serialize for AnthropicImageBlock {
 impl<'de> serde::Deserialize<'de> for AnthropicImageBlock {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

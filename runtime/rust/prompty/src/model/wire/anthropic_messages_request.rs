@@ -35,7 +35,7 @@ pub struct AnthropicMessagesRequest {
     /// Stop sequences to end generation
     pub stop_sequences: Option<Vec<String>>,
     /// Tool definitions available to the model
-    pub tools: Vec<AnthropicToolDefinition>,
+    pub tools: Option<Vec<AnthropicToolDefinition>>,
 }
 
 impl AnthropicMessagesRequest {
@@ -47,12 +47,16 @@ impl AnthropicMessagesRequest {
     /// Load AnthropicMessagesRequest from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load AnthropicMessagesRequest from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -61,6 +65,9 @@ impl AnthropicMessagesRequest {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             model: value
                 .get("model")
@@ -99,11 +106,40 @@ impl AnthropicMessagesRequest {
                         .filter_map(|v| v.as_str().map(|s| s.to_string()))
                         .collect()
                 }),
-            tools: value
-                .get("tools")
-                .map(|v| Self::load_tools(v, ctx))
-                .unwrap_or_default(),
+            tools: value.get("tools").map(|v| Self::load_tools(v, ctx)),
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("messages")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "messages".to_string()
+            } else {
+                format!("{}.messages", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                AnthropicWireMessage::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("tools")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "tools".to_string()
+            } else {
+                format!("{}.tools", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                AnthropicToolDefinition::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
     }
 
     /// Serialize AnthropicMessagesRequest to a `serde_json::Value`.
@@ -130,39 +166,39 @@ impl AnthropicMessagesRequest {
                 serde_json::Value::Number(serde_json::Number::from(self.max_tokens)),
             );
         }
-        if let Some(ref val) = self.system {
+        if let Some(val) = self.system.as_ref() {
             result.insert("system".to_string(), serde_json::Value::String(val.clone()));
         }
-        if let Some(val) = self.temperature {
+        if let Some(val) = self.temperature.as_ref() {
             result.insert(
                 "temperature".to_string(),
-                serde_json::Number::from_f64(val as f64)
+                serde_json::Number::from_f64(*val as f64)
                     .map(serde_json::Value::Number)
                     .unwrap_or(serde_json::Value::Null),
             );
         }
-        if let Some(val) = self.top_p {
+        if let Some(val) = self.top_p.as_ref() {
             result.insert(
                 "top_p".to_string(),
-                serde_json::Number::from_f64(val as f64)
+                serde_json::Number::from_f64(*val as f64)
                     .map(serde_json::Value::Number)
                     .unwrap_or(serde_json::Value::Null),
             );
         }
-        if let Some(val) = self.top_k {
+        if let Some(val) = self.top_k.as_ref() {
             result.insert(
                 "top_k".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(ref items) = self.stop_sequences {
+        if let Some(items) = self.stop_sequences.as_ref() {
             result.insert(
                 "stop_sequences".to_string(),
                 serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
             );
         }
-        if !self.tools.is_empty() {
-            result.insert("tools".to_string(), Self::save_tools(&self.tools, ctx));
+        if let Some(items) = self.tools.as_ref() {
+            result.insert("tools".to_string(), Self::save_tools(items, ctx));
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }
@@ -201,7 +237,7 @@ impl AnthropicMessagesRequest {
     }
 
     /// Load a collection of AnthropicToolDefinition from a JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
+    /// Handles both array format `[{...}]`.
     fn load_tools(data: &serde_json::Value, ctx: &LoadContext) -> Vec<AnthropicToolDefinition> {
         match data {
             serde_json::Value::Array(arr) => arr
@@ -209,54 +245,18 @@ impl AnthropicMessagesRequest {
                 .map(|v| AnthropicToolDefinition::load_from_value(v, ctx))
                 .collect(),
 
-            serde_json::Value::Object(obj) => obj
-                .iter()
-                .filter_map(|(name, value)| {
-                    if value.is_array() {
-                        return None;
-                    }
-                    let mut v = if value.is_object() {
-                        value.clone()
-                    } else {
-                        serde_json::json!({ "description": value })
-                    };
-                    if let serde_json::Value::Object(ref mut m) = v {
-                        m.entry("name".to_string())
-                            .or_insert_with(|| serde_json::Value::String(name.clone()));
-                    }
-                    Some(AnthropicToolDefinition::load_from_value(&v, ctx))
-                })
-                .collect(),
             _ => Vec::new(),
         }
     }
 
     /// Save a collection of AnthropicToolDefinition to a JSON value.
     fn save_tools(items: &[AnthropicToolDefinition], ctx: &SaveContext) -> serde_json::Value {
-        if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
-        }
-        // Object format: use name as key
-        let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
-                serde_json::Value::Object(m) => m,
-                other => {
-                    let mut m = serde_json::Map::new();
-                    m.insert("value".to_string(), other);
-                    m
-                }
-            };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
-            }
-        }
-        serde_json::Value::Object(result)
+        serde_json::Value::Array(
+            items
+                .iter()
+                .map(|item| item.to_value(ctx))
+                .collect::<Vec<_>>(),
+        )
     }
 }
 
@@ -272,6 +272,7 @@ impl serde::Serialize for AnthropicMessagesRequest {
 impl<'de> serde::Deserialize<'de> for AnthropicMessagesRequest {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

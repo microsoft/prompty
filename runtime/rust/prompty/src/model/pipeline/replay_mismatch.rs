@@ -35,12 +35,16 @@ impl ReplayMismatch {
     /// Load ReplayMismatch from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load ReplayMismatch from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -49,6 +53,9 @@ impl ReplayMismatch {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             index: value.get("index").and_then(|v| v.as_i64()).unwrap_or(0) as i32,
             expected: value
@@ -67,6 +74,26 @@ impl ReplayMismatch {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "expected".to_string()
+        } else {
+            format!("{}.expected", path)
+        };
+        if let Some(child) = value.get("expected") {
+            ReplayJournalRecord::validate_input_at(child, &child_path)?;
+        }
+        let child_path = if path.is_empty() {
+            "actual".to_string()
+        } else {
+            format!("{}.actual", path)
+        };
+        if let Some(child) = value.get("actual") {
+            ReplayJournalRecord::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
+    }
+
     /// Serialize ReplayMismatch to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -79,13 +106,13 @@ impl ReplayMismatch {
                 serde_json::Value::Number(serde_json::Number::from(self.index)),
             );
         }
-        if let Some(ref val) = self.expected {
+        if let Some(val) = self.expected.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("expected".to_string(), nested);
             }
         }
-        if let Some(ref val) = self.actual {
+        if let Some(val) = self.actual.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("actual".to_string(), nested);
@@ -123,6 +150,7 @@ impl serde::Serialize for ReplayMismatch {
 impl<'de> serde::Deserialize<'de> for ReplayMismatch {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

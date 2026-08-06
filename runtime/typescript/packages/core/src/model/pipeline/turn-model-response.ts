@@ -21,9 +21,7 @@ export class TurnModelResponse {
     if (init?.usage !== undefined) {
       this.usage = init.usage;
     }
-    if (init?.toolRequests !== undefined) {
-      this.toolRequests = init.toolRequests;
-    }
+    this.toolRequests = init?.toolRequests ?? [];
     if (init?.checkpointState !== undefined) {
       this.checkpointState = init.checkpointState;
     }
@@ -35,6 +33,7 @@ export class TurnModelResponse {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): TurnModelResponse {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -47,13 +46,13 @@ export class TurnModelResponse {
     if (data["usage"] !== undefined && data["usage"] !== null) {
       instance.usage = InvocationUsage.load(
         data["usage"] as Record<string, unknown>,
-        context,
+        context.at("usage"),
       );
     }
     if (data["toolRequests"] !== undefined && data["toolRequests"] !== null) {
       instance.toolRequests = TurnModelResponse.loadToolRequests(
         data["toolRequests"] as unknown[],
-        context,
+        context.at("toolRequests"),
       );
     }
     if (
@@ -76,20 +75,36 @@ export class TurnModelResponse {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): HostToolRequest[] {
+    context ??= new LoadContext({ path: "toolRequests" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: HostToolRequest[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            HostToolRequest.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, requestId: v });
+          result.push(
+            HostToolRequest.load({ name: k, requestId: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      HostToolRequest.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      HostToolRequest.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 

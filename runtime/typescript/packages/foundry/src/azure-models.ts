@@ -31,6 +31,58 @@ interface FoundryDeploymentClient {
 }
 
 /**
+ * Map one raw Azure OpenAI model-catalog entry into the provider-neutral
+ * `ModelInfo` contract.
+ *
+ * Exercised by the shared `spec/vectors/discovery` vectors. Mirrors
+ * `parse_catalog_model_object` in `runtime/rust/prompty-foundry/src/models.rs`.
+ */
+export function catalogModelToModelInfo(raw: Record<string, unknown>): ModelInfo {
+  return new ModelInfo({
+    id: typeof raw["id"] === "string" ? raw["id"] : "",
+    ownedBy: typeof raw["owned_by"] === "string" ? raw["owned_by"] : undefined,
+    contextWindow: typeof raw["maxContextLength"] === "number" ? raw["maxContextLength"] : undefined,
+    additionalProperties: raw,
+  });
+}
+
+/**
+ * Map one raw Foundry deployment into the provider-neutral `ModelInfo` contract.
+ *
+ * Foundry's data-plane `/deployments?api-version=v1` returns a flat shape
+ * (`modelName`, `modelPublisher`, top-level `capabilities`), while the ARM
+ * management-plane shape nests these under `properties.model`. Both are
+ * supported, matching `parse_deployment_object` in
+ * `runtime/rust/prompty-foundry/src/models.rs`.
+ */
+export function deploymentToModelInfo(raw: Record<string, unknown>): ModelInfo {
+  const properties = asRecord(raw["properties"]);
+  const model = asRecord(properties?.["model"]);
+  const capabilities = asRecord(properties?.["capabilities"]) ?? asRecord(model?.["capabilities"]) ?? asRecord(raw["capabilities"]);
+
+  return new ModelInfo({
+    id: typeof raw["name"] === "string" ? raw["name"] : "",
+    displayName:
+      (typeof raw["modelName"] === "string" ? raw["modelName"] : undefined) ??
+      (typeof model?.["name"] === "string" ? (model["name"] as string) : undefined),
+    ownedBy:
+      (typeof raw["modelPublisher"] === "string" ? raw["modelPublisher"] : undefined) ??
+      (typeof model?.["publisher"] === "string" ? (model["publisher"] as string) : undefined) ??
+      "azure",
+    contextWindow:
+      getNumber(capabilities, ["maxContextLength", "contextWindow", "context_length"]) ??
+      getNumber(model, ["maxContextLength"]) ??
+      getNumber(raw, ["maxContextLength"]),
+    inputModalities: getStringArray(capabilities, ["inputModalities", "input_modalities", "supportedInputModalities"]),
+    outputModalities: getStringArray(capabilities, ["outputModalities", "output_modalities", "supportedOutputModalities"]),
+    additionalProperties: raw,
+  });
+}
+
+const asRecord = (value: unknown): Record<string, unknown> | undefined =>
+  typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
+
+/**
  * List deployments available from a Foundry project, or models from an Azure OpenAI resource.
  *
  * Foundry project endpoints return deployments; Azure OpenAI resource endpoints return model catalog entries.
@@ -69,15 +121,7 @@ async function listAzureOpenAIModels(client: AzureOpenAI): Promise<ModelInfo[]> 
   const models: ModelInfo[] = [];
 
   for (const m of page.data) {
-    const raw = m as unknown as Record<string, unknown>;
-    models.push(
-      new ModelInfo({
-        id: m.id,
-        ownedBy: m.owned_by,
-        // Azure may return maxContextLength in capabilities
-        contextWindow: typeof raw["maxContextLength"] === "number" ? raw["maxContextLength"] : undefined,
-      }),
-    );
+    models.push(catalogModelToModelInfo(m as unknown as Record<string, unknown>));
   }
 
   return models;
@@ -102,19 +146,7 @@ async function listFoundryDeployments(
   }
 
   const data = (await response.json()) as FoundryDeploymentsResponse;
-  return (data.value ?? []).map((deployment) => {
-    const capabilities = deployment.properties?.capabilities ?? deployment.properties?.model?.capabilities;
-    return new ModelInfo({
-      id: deployment.name,
-      displayName: deployment.properties?.model?.name,
-      ownedBy: deployment.properties?.model?.publisher ?? "azure",
-      contextWindow: getNumber(capabilities, ["maxContextLength", "contextWindow", "context_length"])
-        ?? deployment.properties?.model?.maxContextLength,
-      inputModalities: getStringArray(capabilities, ["inputModalities", "input_modalities", "supportedInputModalities"]),
-      outputModalities: getStringArray(capabilities, ["outputModalities", "output_modalities", "supportedOutputModalities"]),
-      additionalProperties: deployment as unknown as Record<string, unknown>,
-    });
-  });
+  return (data.value ?? []).map((deployment) => deploymentToModelInfo(deployment as unknown as Record<string, unknown>));
 }
 
 function getNumber(source: Record<string, unknown> | undefined, keys: string[]): number | undefined {

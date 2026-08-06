@@ -3,13 +3,6 @@ import "../core/core.tsp";
 
 namespace Prompty;
 
-alias ConnectionType =
-  | "remote"
-  | "reference"
-  | "key"
-  | "anonymous"
-  | "foundry"
-  | "oauth";
 alias AuthenticationMode = "user" | "system";
 
 /**
@@ -22,7 +15,7 @@ alias AuthenticationMode = "user" | "system";
 model Connection {
   @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
   @sample(#{ kind: "reference" })
-  kind: ConnectionType;
+  kind: string;
 
   @doc("The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')")
   @sample(#{ authenticationMode: "system" })

@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,20 +15,29 @@ import (
 
 type TurnEngineResult struct {
 	Commit          TurnCommit                       `json:"commit" yaml:"commit"`
-	Snapshots       []ModelInvocationContextSnapshot `json:"snapshots,omitempty" yaml:"snapshots,omitempty"`
-	ToolResults     []ModelToolResult                `json:"toolResults,omitempty" yaml:"toolResults,omitempty"`
+	Snapshots       []ModelInvocationContextSnapshot `json:"snapshots" yaml:"snapshots"`
+	ToolResults     []ModelToolResult                `json:"toolResults" yaml:"toolResults"`
 	PostCommitError *string                          `json:"postCommitError,omitempty" yaml:"postCommitError,omitempty"`
 }
 
 // LoadTurnEngineResult creates a TurnEngineResult from a map[string]interface{}
 func LoadTurnEngineResult(data interface{}, ctx *LoadContext) (TurnEngineResult, error) {
-	result := TurnEngineResult{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := TurnEngineResult{
+		Snapshots:   []ModelInvocationContextSnapshot{},
+		ToolResults: []ModelToolResult{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["commit"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("commit").Path)
+		}
 		if val, ok := m["commit"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTurnCommit(m, ctx)
+				loaded, err := LoadTurnCommit(m, ctx.At("commit"))
 				if err != nil {
 					return result, err
 				}
@@ -39,7 +49,7 @@ func LoadTurnEngineResult(data interface{}, ctx *LoadContext) (TurnEngineResult,
 				result.Snapshots = make([]ModelInvocationContextSnapshot, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelInvocationContextSnapshot(item, ctx)
+						loaded, err := LoadModelInvocationContextSnapshot(item, ctx.At("snapshots").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -53,7 +63,7 @@ func LoadTurnEngineResult(data interface{}, ctx *LoadContext) (TurnEngineResult,
 				result.ToolResults = make([]ModelToolResult, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadModelToolResult(item, ctx)
+						loaded, err := LoadModelToolResult(item, ctx.At("toolResults").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

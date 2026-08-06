@@ -21,6 +21,7 @@ export class AnthropicWireMessage {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnthropicWireMessage {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

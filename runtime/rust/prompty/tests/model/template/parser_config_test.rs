@@ -68,5 +68,10 @@ fn test_parser_config_from_parser() {
     let value = serde_json::json!("example");
     let ctx = LoadContext::default();
     let instance = ParserConfig::load_from_value(&value, &ctx);
-    let _ = instance; // abstract type, load succeeded
+    let saved = instance.to_value(&SaveContext::default());
+    let reloaded = ParserConfig::load_from_value(&saved, &ctx);
+    assert_eq!(
+        reloaded, instance,
+        "scalar-coerced abstract models must survive save/reload"
+    );
 }

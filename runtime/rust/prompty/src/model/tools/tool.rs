@@ -38,7 +38,7 @@ pub enum ToolKind {
         /// The description of the MCP tool
         server_description: Option<String>,
         /// The approval mode for the MCP tool
-        approval_mode: McpApprovalMode,
+        approval_mode: Option<McpApprovalMode>,
         /// List of allowed operations or resources for the MCP tool
         allowed_tools: Option<Vec<String>>,
     },
@@ -98,12 +98,16 @@ impl Tool {
     /// Load Tool from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load Tool from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -112,6 +116,9 @@ impl Tool {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
         let kind = match kind_str {
             "function" => ToolKind::Function {
@@ -138,8 +145,7 @@ impl Tool {
                 approval_mode: value
                     .get("approvalMode")
                     .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                    .map(|v| McpApprovalMode::load_from_value(v, ctx))
-                    .unwrap_or_default(),
+                    .map(|v| McpApprovalMode::load_from_value(v, ctx)),
                 allowed_tools: value
                     .get("allowedTools")
                     .and_then(|v| v.as_array())
@@ -202,6 +208,144 @@ impl Tool {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(collection) = value.get("bindings") {
+            let collection_path = if path.is_empty() {
+                "bindings".to_string()
+            } else {
+                format!("{}.bindings", path)
+            };
+            match collection {
+                serde_json::Value::Object(entries) => {
+                    for (name, entry) in entries {
+                        let entry_path = format!("{}.{}", collection_path, name);
+                        if entry.is_array() {
+                            return Err(format!(
+                                "{}: invalid named collection entry category array",
+                                entry_path
+                            ));
+                        }
+                        let mut candidate = if entry.is_object() {
+                            entry.clone()
+                        } else {
+                            serde_json::json!({ "input": entry })
+                        };
+                        if let serde_json::Value::Object(ref mut map) = candidate {
+                            map.insert("name".to_string(), serde_json::Value::String(name.clone()));
+                        }
+                        Binding::validate_input_at(&candidate, &entry_path)?;
+                    }
+                }
+                serde_json::Value::Array(entries) => {
+                    for (index, entry) in entries.iter().enumerate() {
+                        let entry_path = format!("{}[{}]", collection_path, index);
+                        Binding::validate_input_at(entry, &entry_path)?;
+                    }
+                }
+                _ => {}
+            }
+        }
+        match value
+            .get("kind")
+            .and_then(|candidate| candidate.as_str())
+            .unwrap_or("")
+        {
+            "function" => {
+                if let Some(collection) = value.get("parameters") {
+                    let collection_path = if path.is_empty() {
+                        "parameters".to_string()
+                    } else {
+                        format!("{}.parameters", path)
+                    };
+                    match collection {
+                        serde_json::Value::Object(entries) => {
+                            for (name, entry) in entries {
+                                let entry_path = format!("{}.{}", collection_path, name);
+                                if entry.is_array() {
+                                    return Err(format!(
+                                        "{}: invalid named collection entry category array",
+                                        entry_path
+                                    ));
+                                }
+                                let mut candidate = if entry.is_object() {
+                                    entry.clone()
+                                } else {
+                                    serde_json::json!({ "kind": entry })
+                                };
+                                if let serde_json::Value::Object(ref mut map) = candidate {
+                                    map.insert(
+                                        "name".to_string(),
+                                        serde_json::Value::String(name.clone()),
+                                    );
+                                }
+                                Property::validate_input_at(&candidate, &entry_path)?;
+                            }
+                        }
+                        serde_json::Value::Array(entries) => {
+                            for (index, entry) in entries.iter().enumerate() {
+                                let entry_path = format!("{}[{}]", collection_path, index);
+                                Property::validate_input_at(entry, &entry_path)?;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            "mcp" => {
+                let child_path = if path.is_empty() {
+                    "connection".to_string()
+                } else {
+                    format!("{}.connection", path)
+                };
+                let child = value
+                    .get("connection")
+                    .filter(|candidate| !candidate.is_null())
+                    .ok_or_else(|| format!("{}: missing required field", child_path))?;
+                Connection::validate_input_at(child, &child_path)?;
+                let child_path = if path.is_empty() {
+                    "approvalMode".to_string()
+                } else {
+                    format!("{}.approvalMode", path)
+                };
+                if let Some(child) = value.get("approvalMode") {
+                    McpApprovalMode::validate_input_at(child, &child_path)?;
+                }
+            }
+            "openapi" => {
+                let child_path = if path.is_empty() {
+                    "connection".to_string()
+                } else {
+                    format!("{}.connection", path)
+                };
+                let child = value
+                    .get("connection")
+                    .filter(|candidate| !candidate.is_null())
+                    .ok_or_else(|| format!("{}: missing required field", child_path))?;
+                Connection::validate_input_at(child, &child_path)?;
+            }
+            "prompty" => {}
+            _ => {
+                if value
+                    .get("kind")
+                    .and_then(|candidate| candidate.as_str())
+                    .is_some_and(|discriminator| !discriminator.is_empty())
+                {
+                    let child_path = if path.is_empty() {
+                        "connection".to_string()
+                    } else {
+                        format!("{}.connection", path)
+                    };
+                    let child = value
+                        .get("connection")
+                        .filter(|candidate| !candidate.is_null())
+                        .ok_or_else(|| format!("{}: missing required field", child_path))?;
+                    Connection::validate_input_at(child, &child_path)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Returns the `kind` discriminator string for this instance.
     pub fn kind_str(&self) -> &str {
         match &self.kind {
@@ -230,18 +374,16 @@ impl Tool {
                 serde_json::Value::String(self.name.clone()),
             );
         }
-        if let Some(ref val) = self.description {
+        if let Some(val) = self.description.as_ref() {
             result.insert(
                 "description".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if !self.bindings.is_empty() {
-            result.insert(
-                "bindings".to_string(),
-                Self::save_bindings(&self.bindings, ctx),
-            );
-        }
+        result.insert(
+            "bindings".to_string(),
+            Self::save_bindings(&self.bindings, ctx),
+        );
         // Write variant-specific fields
         match &self.kind {
             ToolKind::Function {
@@ -250,9 +392,7 @@ impl Tool {
                 if !parameters.is_empty() {
                     result.insert(
                         "parameters".to_string(),
-                        serde_json::Value::Array(
-                            parameters.iter().map(|item| item.to_value(ctx)).collect(),
-                        ),
+                        Self::save_parameters(parameters, ctx),
                     );
                 }
                 if let Some(val) = strict {
@@ -282,13 +422,10 @@ impl Tool {
                         serde_json::Value::String(val.clone()),
                     );
                 }
-                {
-                    let nested = approval_mode.to_value(ctx);
-                    if !nested.is_null() {
-                        result.insert("approvalMode".to_string(), nested);
-                    }
+                if let Some(val) = approval_mode {
+                    result.insert("approvalMode".to_string(), val.to_value(ctx));
                 }
-                if let Some(items) = allowed_tools {
+                if let Some(items) = allowed_tools.as_ref() {
                     result.insert(
                         "allowedTools".to_string(),
                         serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
@@ -356,9 +493,12 @@ impl Tool {
 
             serde_json::Value::Object(obj) => obj
                 .iter()
-                .filter_map(|(name, value)| {
+                .map(|(name, value)| {
                     if value.is_array() {
-                        return None;
+                        panic!(
+                            "bindings.{}: invalid named collection entry category array",
+                            name
+                        );
                     }
                     let mut v = if value.is_object() {
                         value.clone()
@@ -369,7 +509,7 @@ impl Tool {
                         m.entry("name".to_string())
                             .or_insert_with(|| serde_json::Value::String(name.clone()));
                     }
-                    Some(Binding::load_from_value(&v, ctx))
+                    Binding::load_from_value(&v, ctx)
                 })
                 .collect(),
             _ => Vec::new(),
@@ -378,18 +518,35 @@ impl Tool {
 
     /// Save a collection of Binding to a JSON value.
     fn save_bindings(items: &[Binding], ctx: &SaveContext) -> serde_json::Value {
+        let mut serialized = items
+            .iter()
+            .map(|item| item.to_value(ctx))
+            .collect::<Vec<_>>();
+        for item_data in &mut serialized {
+            if let serde_json::Value::Object(map) = item_data {
+                if matches!(map.get("name"), Some(serde_json::Value::String(name)) if name.is_empty())
+                {
+                    map.remove("name");
+                }
+            }
+        }
+
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
+            return serde_json::Value::Array(serialized);
+        }
+        let mut names = std::collections::HashSet::new();
+        for item_data in &serialized {
+            let Some(name) = item_data.get("name").and_then(|value| value.as_str()) else {
+                return serde_json::Value::Array(serialized);
+            };
+            if name.is_empty() || !names.insert(name.to_string()) {
+                return serde_json::Value::Array(serialized);
+            }
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
+        for item_data in serialized {
+            let mut item_data = match item_data {
                 serde_json::Value::Object(m) => m,
                 other => {
                     let mut m = serde_json::Map::new();
@@ -397,9 +554,19 @@ impl Tool {
                     m
                 }
             };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
+            let serde_json::Value::String(name) = item_data
+                .remove("name")
+                .expect("validated named collection item")
+            else {
+                unreachable!()
+            };
+            if ctx.use_shorthand && item_data.len() == 1 {
+                if let Some(shorthand) = item_data.get("input") {
+                    result.insert(name, shorthand.clone());
+                    continue;
+                }
             }
+            result.insert(name, serde_json::Value::Object(item_data));
         }
         serde_json::Value::Object(result)
     }
@@ -415,20 +582,31 @@ impl Tool {
 
             serde_json::Value::Object(obj) => obj
                 .iter()
-                .filter_map(|(name, value)| {
+                .map(|(name, value)| {
                     if value.is_array() {
-                        return None;
+                        panic!(
+                            "parameters.{}: invalid named collection entry category array",
+                            name
+                        );
                     }
                     let mut v = if value.is_object() {
                         value.clone()
+                    } else if value.is_i64() {
+                        serde_json::json!({ "kind": "integer", "default": value })
+                    } else if value.is_f64() {
+                        serde_json::json!({ "kind": "float", "default": value })
+                    } else if value.is_string() {
+                        serde_json::json!({ "kind": "string", "default": value })
+                    } else if value.is_boolean() {
+                        serde_json::json!({ "kind": "boolean", "default": value })
                     } else {
-                        serde_json::json!({ "kind": value })
+                        serde_json::json!({ "default": value })
                     };
                     if let serde_json::Value::Object(ref mut m) = v {
                         m.entry("name".to_string())
                             .or_insert_with(|| serde_json::Value::String(name.clone()));
                     }
-                    Some(Property::load_from_value(&v, ctx))
+                    Property::load_from_value(&v, ctx)
                 })
                 .collect(),
             _ => Vec::new(),
@@ -437,18 +615,35 @@ impl Tool {
 
     /// Save a collection of Property to a JSON value.
     fn save_parameters(items: &[Property], ctx: &SaveContext) -> serde_json::Value {
+        let mut serialized = items
+            .iter()
+            .map(|item| item.to_value(ctx))
+            .collect::<Vec<_>>();
+        for item_data in &mut serialized {
+            if let serde_json::Value::Object(map) = item_data {
+                if matches!(map.get("name"), Some(serde_json::Value::String(name)) if name.is_empty())
+                {
+                    map.remove("name");
+                }
+            }
+        }
+
         if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
+            return serde_json::Value::Array(serialized);
+        }
+        let mut names = std::collections::HashSet::new();
+        for item_data in &serialized {
+            let Some(name) = item_data.get("name").and_then(|value| value.as_str()) else {
+                return serde_json::Value::Array(serialized);
+            };
+            if name.is_empty() || !names.insert(name.to_string()) {
+                return serde_json::Value::Array(serialized);
+            }
         }
         // Object format: use name as key
         let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
+        for item_data in serialized {
+            let mut item_data = match item_data {
                 serde_json::Value::Object(m) => m,
                 other => {
                     let mut m = serde_json::Map::new();
@@ -456,9 +651,19 @@ impl Tool {
                     m
                 }
             };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
+            let serde_json::Value::String(name) = item_data
+                .remove("name")
+                .expect("validated named collection item")
+            else {
+                unreachable!()
+            };
+            if ctx.use_shorthand && item_data.len() == 1 {
+                if let Some(shorthand) = item_data.get("example") {
+                    result.insert(name, shorthand.clone());
+                    continue;
+                }
             }
+            result.insert(name, serde_json::Value::Object(item_data));
         }
         serde_json::Value::Object(result)
     }
@@ -476,6 +681,7 @@ impl serde::Serialize for Tool {
 impl<'de> serde::Deserialize<'de> for Tool {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
@@ -497,6 +703,7 @@ impl serde::Serialize for ToolKind {
 impl<'de> serde::Deserialize<'de> for ToolKind {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Tool::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Tool::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

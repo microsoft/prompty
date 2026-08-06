@@ -48,19 +48,24 @@ class Template:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Template: {data}")
+        if "format" not in data or data["format"] is None:
+            raise ValueError(f"{context.at('format').path}: missing required field")
+        if "parser" not in data or data["parser"] is None:
+            raise ValueError(f"{context.at('parser').path}: missing required field")
 
         # create new instance
         instance = Template()
 
         if data is not None and "format" in data:
-            instance.format = FormatConfig.load(data["format"], context)
+            instance.format = FormatConfig.load(data["format"], context.at("format"))
         if data is not None and "parser" in data:
-            instance.parser = ParserConfig.load(data["parser"], context)
+            instance.parser = ParserConfig.load(data["parser"], context.at("parser"))
         if context is not None:
             instance = context.process_output(instance)
         return instance

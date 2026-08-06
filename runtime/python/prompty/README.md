@@ -72,25 +72,19 @@ Say hello to {{name}}.
 import prompty
 
 # One-shot: load + prepare + run
-result = prompty.invoke(
-    "greeting.prompty", inputs={"name": "Jane"}
-)
+result = prompty.invoke("greeting.prompty", inputs={"name": "Jane"})
 print(result)
 
 # Step-by-step
 agent = prompty.load("greeting.prompty")
-messages = prompty.prepare(
-    agent, inputs={"name": "Jane"}
-)
+messages = prompty.prepare(agent, inputs={"name": "Jane"})
 result = prompty.run(agent, messages)
 ```
 
 ### 3. Async
 
 ```python
-result = await prompty.invoke_async(
-    "greeting.prompty", inputs={"name": "Jane"}
-)
+result = await prompty.invoke_async("greeting.prompty", inputs={"name": "Jane"})
 ```
 
 ## API Reference
@@ -117,6 +111,7 @@ All functions have `_async` variants (e.g.,
 ```python
 def get_weather(location: str) -> str:
     return f"72°F and sunny in {location}"
+
 
 result = prompty.turn(
     "my-agent.prompty",
@@ -170,9 +165,7 @@ client = AzureOpenAI(
 prompty.register_connection("my-foundry", client=client)
 
 # Now run — executor resolves the client by name
-result = prompty.invoke(
-    "my-prompt.prompty", inputs={...}
-)
+result = prompty.invoke("my-prompt.prompty", inputs={...})
 ```
 
 ### Structured Output
@@ -198,9 +191,7 @@ JSON-parses the result.
 
 ```python
 agent = prompty.load("chat.prompty")
-messages = prompty.prepare(
-    agent, inputs={"question": "Tell me a story"}
-)
+messages = prompty.prepare(agent, inputs={"question": "Tell me a story"})
 
 # Set stream option
 agent.model.options.additionalProperties = {
@@ -224,25 +215,22 @@ from prompty import Tracer, PromptyTracer, trace
 
 # Register a tracer
 Tracer.add("console", prompty.console_tracer)
-Tracer.add(
-    "json", PromptyTracer("./traces").tracer
-)
+Tracer.add("json", PromptyTracer("./traces").tracer)
 
 # All pipeline functions automatically emit traces
-result = prompty.invoke(
-    "my-prompt.prompty", inputs={...}
-)
+result = prompty.invoke("my-prompt.prompty", inputs={...})
+
 
 # Custom functions
 @trace
-def my_function():
-    ...
+def my_function(): ...
 ```
 
 OpenTelemetry integration:
 
 ```python
 from prompty.tracing.otel import otel_tracer
+
 Tracer.add("otel", otel_tracer())
 ```
 

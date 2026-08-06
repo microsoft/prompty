@@ -31,6 +31,7 @@ export class OAuthToken {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): OAuthToken {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

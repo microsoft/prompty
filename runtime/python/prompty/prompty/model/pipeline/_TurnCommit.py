@@ -65,11 +65,14 @@ class TurnCommit:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnCommit: {data}")
+        if "contextState" not in data or data["contextState"] is None:
+            raise ValueError(f"{context.at('contextState').path}: missing required field")
 
         # create new instance
         instance = TurnCommit()
@@ -83,40 +86,46 @@ class TurnCommit:
         if data is not None and "output" in data:
             instance.output = data["output"]
         if data is not None and "messages" in data:
-            instance.messages = TurnCommit.load_messages(data["messages"], context)
+            instance.messages = TurnCommit.load_messages(data["messages"], context.at("messages"))
         if data is not None and "iterations" in data:
             instance.iterations = data["iterations"]
         if data is not None and "lastSequence" in data:
             instance.last_sequence = data["lastSequence"]
         if data is not None and "contextState" in data:
-            instance.context_state = InvocationContextState.load(data["contextState"], context)
+            instance.context_state = InvocationContextState.load(data["contextState"], context.at("contextState"))
         if data is not None and "modelReconciliation" in data:
-            instance.model_reconciliation = ModelReconciliationState.load(data["modelReconciliation"], context)
+            instance.model_reconciliation = ModelReconciliationState.load(
+                data["modelReconciliation"], context.at("modelReconciliation")
+            )
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
+        if context is None:
+            context = LoadContext(path="messages")
         if isinstance(data, dict):
             # convert simple named messages to list of Message
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Message.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "role": v})
-            data = result
-        return [Message.load(item, context) for item in data]
+                    result.append(Message.load({"name": k, "role": v}, context.at(k)))
+            return result
+        return [Message.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

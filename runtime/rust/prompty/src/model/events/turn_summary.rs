@@ -43,12 +43,16 @@ impl TurnSummary {
     /// Load TurnSummary from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load TurnSummary from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -57,6 +61,9 @@ impl TurnSummary {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             turn_id: value
                 .get("turnId")
@@ -92,6 +99,18 @@ impl TurnSummary {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "usage".to_string()
+        } else {
+            format!("{}.usage", path)
+        };
+        if let Some(child) = value.get("usage") {
+            TokenUsage::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
+    }
+
     /// Serialize TurnSummary to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -116,34 +135,34 @@ impl TurnSummary {
                 serde_json::Value::Number(serde_json::Number::from(self.iterations)),
             );
         }
-        if let Some(val) = self.llm_calls {
+        if let Some(val) = self.llm_calls.as_ref() {
             result.insert(
                 "llmCalls".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(val) = self.tool_calls {
+        if let Some(val) = self.tool_calls.as_ref() {
             result.insert(
                 "toolCalls".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(val) = self.retries {
+        if let Some(val) = self.retries.as_ref() {
             result.insert(
                 "retries".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(ref val) = self.usage {
+        if let Some(val) = self.usage.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("usage".to_string(), nested);
             }
         }
-        if let Some(val) = self.duration_ms {
+        if let Some(val) = self.duration_ms.as_ref() {
             result.insert(
                 "durationMs".to_string(),
-                serde_json::Number::from_f64(val as f64)
+                serde_json::Number::from_f64(*val as f64)
                     .map(serde_json::Value::Number)
                     .unwrap_or(serde_json::Value::Null),
             );
@@ -174,6 +193,7 @@ impl serde::Serialize for TurnSummary {
 impl<'de> serde::Deserialize<'de> for TurnSummary {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

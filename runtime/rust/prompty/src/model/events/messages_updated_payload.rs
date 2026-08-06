@@ -17,11 +17,11 @@ use super::super::conversation::message::Message;
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct MessagesUpdatedPayload {
     /// The current full message list after the update
-    pub messages: Vec<Message>,
+    pub messages: Option<Vec<Message>>,
     /// Why the message list changed
     pub reason: Option<String>,
     /// Messages appended by this update, when available
-    pub appended: Vec<Message>,
+    pub appended: Option<Vec<Message>>,
     /// Number of messages removed by this update, when available
     pub removed: Option<i32>,
 }
@@ -35,12 +35,16 @@ impl MessagesUpdatedPayload {
     /// Load MessagesUpdatedPayload from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load MessagesUpdatedPayload from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -49,24 +53,53 @@ impl MessagesUpdatedPayload {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
-            messages: value
-                .get("messages")
-                .map(|v| Self::load_messages(v, ctx))
-                .unwrap_or_default(),
+            messages: value.get("messages").map(|v| Self::load_messages(v, ctx)),
             reason: value
                 .get("reason")
                 .and_then(|v| v.as_str())
                 .map(|s| s.to_string()),
-            appended: value
-                .get("appended")
-                .map(|v| Self::load_appended(v, ctx))
-                .unwrap_or_default(),
+            appended: value.get("appended").map(|v| Self::load_appended(v, ctx)),
             removed: value
                 .get("removed")
                 .and_then(|v| v.as_i64())
                 .map(|v| v as i32),
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("messages")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "messages".to_string()
+            } else {
+                format!("{}.messages", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Message::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("appended")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "appended".to_string()
+            } else {
+                format!("{}.appended", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Message::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
     }
 
     /// Serialize MessagesUpdatedPayload to a `serde_json::Value`.
@@ -75,25 +108,19 @@ impl MessagesUpdatedPayload {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if !self.messages.is_empty() {
-            result.insert(
-                "messages".to_string(),
-                Self::save_messages(&self.messages, ctx),
-            );
+        if let Some(items) = self.messages.as_ref() {
+            result.insert("messages".to_string(), Self::save_messages(items, ctx));
         }
-        if let Some(ref val) = self.reason {
+        if let Some(val) = self.reason.as_ref() {
             result.insert("reason".to_string(), serde_json::Value::String(val.clone()));
         }
-        if !self.appended.is_empty() {
-            result.insert(
-                "appended".to_string(),
-                Self::save_appended(&self.appended, ctx),
-            );
+        if let Some(items) = self.appended.as_ref() {
+            result.insert("appended".to_string(), Self::save_appended(items, ctx));
         }
-        if let Some(val) = self.removed {
+        if let Some(val) = self.removed.as_ref() {
             result.insert(
                 "removed".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -168,6 +195,7 @@ impl serde::Serialize for MessagesUpdatedPayload {
 impl<'de> serde::Deserialize<'de> for MessagesUpdatedPayload {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

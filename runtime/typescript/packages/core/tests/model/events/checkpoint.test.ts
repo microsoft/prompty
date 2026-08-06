@@ -73,7 +73,9 @@ describe("Checkpoint", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "chk_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_001",\n  "checkpointNumber": 3,\n  "title": "Added harness contracts",\n  "createdAt": "2026-06-09T20:00:00Z"\n}`,
+      ) as Record<string, unknown>;
       const instance = Checkpoint.load(data);
       expect(instance).toBeDefined();
     });

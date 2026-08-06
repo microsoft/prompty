@@ -10,8 +10,12 @@ from ._ContextCandidate import ContextCandidate
 from ._ContextRequest import ContextRequest
 from ._DelegatedStateReference import DelegatedStateReference
 from ._EngineCheckpoint import EngineCheckpoint
+from ._EngineDurabilityPort import EngineDurabilityPort
 from ._EngineEvent import EngineEvent
 from ._EnginePermissionDecision import EnginePermissionDecision
+from ._EnginePermissionPort import EnginePermissionPort
+from ._EnginePostCommitPort import EnginePostCommitPort
+from ._EngineToolPort import EngineToolPort
 from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
@@ -62,6 +66,10 @@ __all__ = [
     "ResumeContext",
     "TurnCommit",
     "TurnEngineResult",
+    "EnginePermissionPort",
+    "EngineToolPort",
+    "EngineDurabilityPort",
+    "EnginePostCommitPort",
     "HostPolicyRequest",
     "HostPolicyResult",
     "FinalOutputPolicyRequest",

@@ -19,6 +19,9 @@ type Binding struct {
 
 // LoadBinding creates a Binding from a map[string]interface{}
 func LoadBinding(data interface{}, ctx *LoadContext) (Binding, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := Binding{}
 
 	// Handle alternate scalar representations

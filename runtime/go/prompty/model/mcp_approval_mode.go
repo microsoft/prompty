@@ -31,6 +31,9 @@ type McpApprovalMode struct {
 
 // LoadMcpApprovalMode creates a McpApprovalMode from a map[string]interface{}
 func LoadMcpApprovalMode(data interface{}, ctx *LoadContext) (McpApprovalMode, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := McpApprovalMode{}
 
 	// Handle alternate scalar representations
@@ -76,8 +79,12 @@ func LoadMcpApprovalMode(data interface{}, ctx *LoadContext) (McpApprovalMode, e
 func (obj McpApprovalMode) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["kind"] = string(obj.Kind)
-	result["alwaysRequireApprovalTools"] = obj.AlwaysRequireApprovalTools
-	result["neverRequireApprovalTools"] = obj.NeverRequireApprovalTools
+	if obj.AlwaysRequireApprovalTools != nil {
+		result["alwaysRequireApprovalTools"] = obj.AlwaysRequireApprovalTools
+	}
+	if obj.NeverRequireApprovalTools != nil {
+		result["neverRequireApprovalTools"] = obj.NeverRequireApprovalTools
+	}
 
 	return result
 }

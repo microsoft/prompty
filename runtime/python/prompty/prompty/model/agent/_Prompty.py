@@ -39,12 +39,12 @@ class Prompty:
     description : Optional[str]
         Description of the prompt's purpose
     metadata : Optional[dict[str, Any]]
-        Additional metadata including authors, tags, and other arbitrary properties
+        Additional metadata including authors, tags, and other arbitrary properties. Values may be explicit null.
     inputs : Optional[list[Property]]
         Input parameters that participate in template rendering
     outputs : Optional[list[Property]]
         Expected output format and structure
-    model : Model
+    model : Optional[Model]
         AI model configuration
     tools : Optional[list[Tool]]
         Tools available for extended functionality
@@ -60,10 +60,10 @@ class Prompty:
     display_name: str | None = None
     description: str | None = None
     metadata: dict[str, Any] | None = None
-    inputs: list[Property] = field(default_factory=list)
-    outputs: list[Property] = field(default_factory=list)
-    model: Model = field(default_factory=Model)
-    tools: list[Tool] = field(default_factory=list)
+    inputs: list[Property] | None = None
+    outputs: list[Property] | None = None
+    model: Model | None = None
+    tools: list[Tool] | None = field(default_factory=list)
     template: Template | None = None
     instructions: str | None = None
 
@@ -78,8 +78,9 @@ class Prompty:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Prompty: {data}")
@@ -96,15 +97,15 @@ class Prompty:
         if data is not None and "metadata" in data:
             instance.metadata = data["metadata"]
         if data is not None and "inputs" in data:
-            instance.inputs = Prompty.load_inputs(data["inputs"], context)
+            instance.inputs = Prompty.load_inputs(data["inputs"], context.at("inputs"))
         if data is not None and "outputs" in data:
-            instance.outputs = Prompty.load_outputs(data["outputs"], context)
+            instance.outputs = Prompty.load_outputs(data["outputs"], context.at("outputs"))
         if data is not None and "model" in data:
-            instance.model = Model.load(data["model"], context)
+            instance.model = Model.load(data["model"], context.at("model"))
         if data is not None and "tools" in data:
-            instance.tools = Prompty.load_tools(data["tools"], context)
+            instance.tools = Prompty.load_tools(data["tools"], context.at("tools"))
         if data is not None and "template" in data:
-            instance.template = Template.load(data["template"], context)
+            instance.template = Template.load(data["template"], context.at("template"))
         if data is not None and "instructions" in data:
             instance.instructions = data["instructions"]
         if context is not None:
@@ -113,131 +114,178 @@ class Prompty:
 
     @staticmethod
     def load_inputs(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if context is None:
+            context = LoadContext(path="inputs")
         if isinstance(data, dict):
             # convert simple named inputs to list of Property
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [Property.load(item, context) for item in data]
+                    # value is a scalar, infer the entry shape from its type
+                    if isinstance(v, int) and not isinstance(v, bool):
+                        shorthand = {"kind": "integer", "default": v}
+                    elif isinstance(v, float):
+                        shorthand = {"kind": "float", "default": v}
+                    elif isinstance(v, str):
+                        shorthand = {"kind": "string", "default": v}
+                    elif isinstance(v, bool):
+                        shorthand = {"kind": "boolean", "default": v}
+                    else:
+                        shorthand = {"default": v}
+                    result.append(Property.load({"name": k, **shorthand}, context.at(k)))
+            return result
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_inputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
+        serialized = [dict(item.save(context)) for item in items]
+        for item_data in serialized:
+            if item_data.get("name") == "":
+                item_data.pop("name")
+
         if context.collection_format == "array":
-            return [item.save(context) for item in items]
+            return serialized
+
+        names: set[str] = set()
+        for item_data in serialized:
+            name = item_data.get("name")
+            if not isinstance(name, str) or not name or name in names:
+                return serialized
+            names.add(name)
 
         # Object format: use name as key
         result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
+        for item, item_data in zip(items, serialized):
+            name = item_data.pop("name")
+            # Check if we can use shorthand (only primary property set)
+            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                shorthand_prop = item._shorthand_property
+                if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    result[name] = item_data[shorthand_prop]
+                    continue
+            result[name] = item_data
         return result
 
     @staticmethod
     def load_outputs(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if context is None:
+            context = LoadContext(path="outputs")
         if isinstance(data, dict):
             # convert simple named outputs to list of Property
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
-                    # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [Property.load(item, context) for item in data]
+                    # value is a scalar, infer the entry shape from its type
+                    if isinstance(v, int) and not isinstance(v, bool):
+                        shorthand = {"kind": "integer", "default": v}
+                    elif isinstance(v, float):
+                        shorthand = {"kind": "float", "default": v}
+                    elif isinstance(v, str):
+                        shorthand = {"kind": "string", "default": v}
+                    elif isinstance(v, bool):
+                        shorthand = {"kind": "boolean", "default": v}
+                    else:
+                        shorthand = {"default": v}
+                    result.append(Property.load({"name": k, **shorthand}, context.at(k)))
+            return result
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_outputs(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
+        serialized = [dict(item.save(context)) for item in items]
+        for item_data in serialized:
+            if item_data.get("name") == "":
+                item_data.pop("name")
+
         if context.collection_format == "array":
-            return [item.save(context) for item in items]
+            return serialized
+
+        names: set[str] = set()
+        for item_data in serialized:
+            name = item_data.get("name")
+            if not isinstance(name, str) or not name or name in names:
+                return serialized
+            names.add(name)
 
         # Object format: use name as key
         result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
+        for item, item_data in zip(items, serialized):
+            name = item_data.pop("name")
+            # Check if we can use shorthand (only primary property set)
+            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                shorthand_prop = item._shorthand_property
+                if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    result[name] = item_data[shorthand_prop]
+                    continue
+            result[name] = item_data
         return result
 
     @staticmethod
     def load_tools(data: dict | list, context: LoadContext | None) -> list[Tool]:
+        if context is None:
+            context = LoadContext(path="tools")
         if isinstance(data, dict):
             # convert simple named tools to list of Tool
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Tool.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [Tool.load(item, context) for item in data]
+                    result.append(Tool.load({"name": k, "kind": v}, context.at(k)))
+            return result
+        return [Tool.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tools(items: list[Tool], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
+        serialized = [dict(item.save(context)) for item in items]
+        for item_data in serialized:
+            if item_data.get("name") == "":
+                item_data.pop("name")
+
         if context.collection_format == "array":
-            return [item.save(context) for item in items]
+            return serialized
+
+        names: set[str] = set()
+        for item_data in serialized:
+            name = item_data.get("name")
+            if not isinstance(name, str) or not name or name in names:
+                return serialized
+            names.add(name)
 
         # Object format: use name as key
         result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
+        for item, item_data in zip(items, serialized):
+            name = item_data.pop("name")
+            # Check if we can use shorthand (only primary property set)
+            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                shorthand_prop = item._shorthand_property
+                if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    result[name] = item_data[shorthand_prop]
+                    continue
+            result[name] = item_data
         return result
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

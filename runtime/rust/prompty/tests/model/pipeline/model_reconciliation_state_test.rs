@@ -17,7 +17,17 @@ fn test_model_reconciliation_state_load_json() {
     let json = r####"
 {
   "invocationId": "inv_abc123",
-  "message": "provider connection dropped after request was sent"
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "contextState": {}
+    }
+  }
 }
 "####;
     let ctx = LoadContext::default();
@@ -40,6 +50,14 @@ fn test_model_reconciliation_state_load_yaml() {
     let yaml = r####"
 invocationId: inv_abc123
 message: provider connection dropped after request was sent
+request:
+  context:
+    id: "context:inv_abc123"
+    sessionId: sess_abc123
+    turnId: turn_abc123
+    invocationId: inv_abc123
+    iteration: 1
+    contextState: {}
 
 "####;
     let ctx = LoadContext::default();
@@ -62,7 +80,17 @@ fn test_model_reconciliation_state_roundtrip() {
     let json = r####"
 {
   "invocationId": "inv_abc123",
-  "message": "provider connection dropped after request was sent"
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "contextState": {}
+    }
+  }
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -83,7 +111,17 @@ fn test_model_reconciliation_state_serde_roundtrip() {
     let json = r####"
 {
   "invocationId": "inv_abc123",
-  "message": "provider connection dropped after request was sent"
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "contextState": {}
+    }
+  }
 }
 "####;
     let instance: ModelReconciliationState =

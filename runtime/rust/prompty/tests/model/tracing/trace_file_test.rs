@@ -17,7 +17,17 @@ fn test_trace_file_load_json() {
     let json = r####"
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 "####;
     let ctx = LoadContext::default();
@@ -37,6 +47,14 @@ fn test_trace_file_load_yaml() {
     let yaml = r####"
 runtime: python
 version: 2.0.0
+trace:
+  name: prompty.core.pipeline.run
+  __time:
+    start: "2026-04-04T12:00:00Z"
+    end: "2026-04-04T12:00:01Z"
+    duration: 1000
+  signature: prompty.core.pipeline.run
+  error: Connection refused
 
 "####;
     let ctx = LoadContext::default();
@@ -56,7 +74,17 @@ fn test_trace_file_roundtrip() {
     let json = r####"
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -77,7 +105,17 @@ fn test_trace_file_serde_roundtrip() {
     let json = r####"
 {
   "runtime": "python",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
 }
 "####;
     let instance: TraceFile =

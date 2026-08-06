@@ -18,7 +18,18 @@ fn test_turn_trace_load_json() {
 {
   "version": "1",
   "runtime": "typescript",
-  "promptyVersion": "2.0.0"
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001"
+    }
+  ]
 }
 "####;
     let ctx = LoadContext::default();
@@ -45,6 +56,14 @@ fn test_turn_trace_load_yaml() {
 version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
+events:
+  - id: evt_abc123
+    type: turn_start
+    timestamp: "2026-06-09T20:00:00Z"
+    turnId: turn_001
+    iteration: 0
+    parentId: evt_parent
+    spanId: span_tool_001
 
 "####;
     let ctx = LoadContext::default();
@@ -69,7 +88,18 @@ fn test_turn_trace_roundtrip() {
 {
   "version": "1",
   "runtime": "typescript",
-  "promptyVersion": "2.0.0"
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001"
+    }
+  ]
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -91,7 +121,18 @@ fn test_turn_trace_serde_roundtrip() {
 {
   "version": "1",
   "runtime": "typescript",
-  "promptyVersion": "2.0.0"
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001"
+    }
+  ]
 }
 "####;
     let instance: TurnTrace =

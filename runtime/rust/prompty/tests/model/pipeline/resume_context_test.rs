@@ -16,7 +16,16 @@ use prompty::model::context::{LoadContext, SaveContext};
 fn test_resume_context_load_json() {
     let json = r####"
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 "####;
     let ctx = LoadContext::default();
@@ -34,6 +43,14 @@ fn test_resume_context_load_json() {
 fn test_resume_context_load_yaml() {
     let yaml = r####"
 lastJournalSequence: 12
+checkpoint:
+  id: ckpt_abc123
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  runId: run_abc123
+  iteration: 1
+  lastSequence: 1
+  contextState: {}
 
 "####;
     let ctx = LoadContext::default();
@@ -51,7 +68,16 @@ lastJournalSequence: 12
 fn test_resume_context_roundtrip() {
     let json = r####"
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 "####;
     let load_ctx = LoadContext::default();
@@ -71,7 +97,16 @@ fn test_resume_context_roundtrip() {
 fn test_resume_context_serde_roundtrip() {
     let json = r####"
 {
-  "lastJournalSequence": 12
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
 }
 "####;
     let instance: ResumeContext =

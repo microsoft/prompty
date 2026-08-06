@@ -24,10 +24,14 @@ export class ToolResultPayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ToolResultPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["result"] === undefined || data["result"] === null) {
+      throw new Error(`${context.at("result").path}: missing required field`);
+    }
     const instance = new ToolResultPayload();
 
     if (data["name"] !== undefined && data["name"] !== null) {
@@ -36,7 +40,7 @@ export class ToolResultPayload {
     if (data["result"] !== undefined && data["result"] !== null) {
       instance.result = ToolResult.load(
         data["result"] as Record<string, unknown>,
-        context,
+        context.at("result"),
       );
     }
 

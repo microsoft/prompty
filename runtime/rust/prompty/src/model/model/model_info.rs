@@ -26,7 +26,7 @@ pub struct ModelInfo {
     pub input_modalities: Option<Vec<String>>,
     /// Output modalities the model can produce (e.g., 'text', 'audio')
     pub output_modalities: Option<Vec<String>>,
-    /// Additional provider-specific properties
+    /// Additional provider-specific properties. Values may be explicit null.
     pub additional_properties: serde_json::Value,
 }
 
@@ -39,12 +39,16 @@ impl ModelInfo {
     /// Load ModelInfo from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load ModelInfo from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -53,6 +57,9 @@ impl ModelInfo {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             id: value
                 .get("id")
@@ -94,6 +101,10 @@ impl ModelInfo {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize ModelInfo to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -103,31 +114,31 @@ impl ModelInfo {
         if !self.id.is_empty() {
             result.insert("id".to_string(), serde_json::Value::String(self.id.clone()));
         }
-        if let Some(ref val) = self.display_name {
+        if let Some(val) = self.display_name.as_ref() {
             result.insert(
                 "displayName".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.owned_by {
+        if let Some(val) = self.owned_by.as_ref() {
             result.insert(
                 "ownedBy".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(val) = self.context_window {
+        if let Some(val) = self.context_window.as_ref() {
             result.insert(
                 "contextWindow".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(ref items) = self.input_modalities {
+        if let Some(items) = self.input_modalities.as_ref() {
             result.insert(
                 "inputModalities".to_string(),
                 serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
             );
         }
-        if let Some(ref items) = self.output_modalities {
+        if let Some(items) = self.output_modalities.as_ref() {
             result.insert(
                 "outputModalities".to_string(),
                 serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
@@ -215,6 +226,7 @@ impl serde::Serialize for ModelInfo {
 impl<'de> serde::Deserialize<'de> for ModelInfo {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

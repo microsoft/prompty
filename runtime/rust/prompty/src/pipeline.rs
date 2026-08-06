@@ -94,8 +94,8 @@ fn resolve_parser_kind(agent: &Prompty) -> String {
 fn resolve_provider(agent: &Prompty) -> String {
     agent
         .model
-        .provider
-        .as_deref()
+        .as_ref()
+        .and_then(|m| m.provider.as_deref())
         .filter(|p| !p.is_empty())
         .unwrap_or(DEFAULT_PROVIDER)
         .to_string()
@@ -105,8 +105,8 @@ fn resolve_provider(agent: &Prompty) -> String {
 fn is_streaming(agent: &Prompty) -> bool {
     agent
         .model
-        .options
         .as_ref()
+        .and_then(|m| m.options.as_ref())
         .and_then(|opts| {
             opts.additional_properties
                 .get("stream")
@@ -180,9 +180,18 @@ fn serialize_agent(agent: &Prompty) -> Value {
             "description": agent.description,
             "metadata": metadata,
             "model": {
-                "id": agent.model.id,
-                "apiType": agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat"),
-                "provider": agent.model.provider.as_deref().unwrap_or(""),
+                "id": agent.model.as_ref().map(|m| m.id.clone()),
+                "apiType": agent
+                    .model
+                    .as_ref()
+                    .and_then(|m| m.api_type.as_ref())
+                    .map(|t| t.as_str())
+                    .unwrap_or("chat"),
+                "provider": agent
+                    .model
+                    .as_ref()
+                    .and_then(|m| m.provider.as_deref())
+                    .unwrap_or(""),
             },
             "inputs": inputs,
             "outputs": outputs,

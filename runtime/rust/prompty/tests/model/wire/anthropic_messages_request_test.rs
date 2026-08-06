@@ -24,6 +24,12 @@ fn test_anthropic_messages_request_load_json() {
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 "####;
@@ -64,6 +70,9 @@ top_p: 0.9
 top_k: 40
 stop_sequences:
   - "\n\nHuman:"
+messages:
+  - role: user
+    content: []
 
 "####;
     let ctx = LoadContext::default();
@@ -97,6 +106,12 @@ fn test_anthropic_messages_request_roundtrip() {
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 "####;
@@ -125,6 +140,12 @@ fn test_anthropic_messages_request_serde_roundtrip() {
   "top_k": 40,
   "stop_sequences": [
     "\n\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
   ]
 }
 "####;

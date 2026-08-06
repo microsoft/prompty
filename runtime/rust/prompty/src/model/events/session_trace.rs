@@ -39,15 +39,15 @@ pub struct SessionTrace {
     /// Recorded session events in emission order
     pub events: Vec<SessionEvent>,
     /// Recorded turn traces associated with the session
-    pub turns: Vec<TurnTrace>,
+    pub turns: Option<Vec<TurnTrace>>,
     /// Checkpoints created during the session
-    pub checkpoints: Vec<Checkpoint>,
+    pub checkpoints: Option<Vec<Checkpoint>>,
     /// Compact trajectory records associated with the session
-    pub trajectory: Vec<TrajectoryEvent>,
+    pub trajectory: Option<Vec<TrajectoryEvent>>,
     /// Files observed or touched during the session
-    pub files: Vec<SessionFileRef>,
+    pub files: Option<Vec<SessionFileRef>>,
     /// Non-file references observed during the session
-    pub refs: Vec<SessionRef>,
+    pub refs: Option<Vec<SessionRef>>,
     /// Optional summary computed from the event stream
     pub summary: Option<SessionSummary>,
 }
@@ -61,12 +61,16 @@ impl SessionTrace {
     /// Load SessionTrace from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load SessionTrace from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -75,6 +79,9 @@ impl SessionTrace {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             version: value
                 .get("version")
@@ -97,31 +104,113 @@ impl SessionTrace {
                 .get("events")
                 .map(|v| Self::load_events(v, ctx))
                 .unwrap_or_default(),
-            turns: value
-                .get("turns")
-                .map(|v| Self::load_turns(v, ctx))
-                .unwrap_or_default(),
+            turns: value.get("turns").map(|v| Self::load_turns(v, ctx)),
             checkpoints: value
                 .get("checkpoints")
-                .map(|v| Self::load_checkpoints(v, ctx))
-                .unwrap_or_default(),
+                .map(|v| Self::load_checkpoints(v, ctx)),
             trajectory: value
                 .get("trajectory")
-                .map(|v| Self::load_trajectory(v, ctx))
-                .unwrap_or_default(),
-            files: value
-                .get("files")
-                .map(|v| Self::load_files(v, ctx))
-                .unwrap_or_default(),
-            refs: value
-                .get("refs")
-                .map(|v| Self::load_refs(v, ctx))
-                .unwrap_or_default(),
+                .map(|v| Self::load_trajectory(v, ctx)),
+            files: value.get("files").map(|v| Self::load_files(v, ctx)),
+            refs: value.get("refs").map(|v| Self::load_refs(v, ctx)),
             summary: value
                 .get("summary")
                 .filter(|v| v.is_object() || v.is_array() || v.is_string())
                 .map(|v| SessionSummary::load_from_value(v, ctx)),
         }
+    }
+
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        if let Some(entries) = value
+            .get("events")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "events".to_string()
+            } else {
+                format!("{}.events", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                SessionEvent::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("turns")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "turns".to_string()
+            } else {
+                format!("{}.turns", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                TurnTrace::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("checkpoints")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "checkpoints".to_string()
+            } else {
+                format!("{}.checkpoints", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                Checkpoint::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("trajectory")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "trajectory".to_string()
+            } else {
+                format!("{}.trajectory", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                TrajectoryEvent::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("files")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "files".to_string()
+            } else {
+                format!("{}.files", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                SessionFileRef::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value.get("refs").and_then(|candidate| candidate.as_array()) {
+            let collection_path = if path.is_empty() {
+                "refs".to_string()
+            } else {
+                format!("{}.refs", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                SessionRef::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        let child_path = if path.is_empty() {
+            "summary".to_string()
+        } else {
+            format!("{}.summary", path)
+        };
+        if let Some(child) = value.get("summary") {
+            SessionSummary::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
     }
 
     /// Serialize SessionTrace to a `serde_json::Value`.
@@ -136,19 +225,19 @@ impl SessionTrace {
                 serde_json::Value::String(self.version.clone()),
             );
         }
-        if let Some(ref val) = self.runtime {
+        if let Some(val) = self.runtime.as_ref() {
             result.insert(
                 "runtime".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.prompty_version {
+        if let Some(val) = self.prompty_version.as_ref() {
             result.insert(
                 "promptyVersion".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.session_id {
+        if let Some(val) = self.session_id.as_ref() {
             result.insert(
                 "sessionId".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -157,28 +246,25 @@ impl SessionTrace {
         if !self.events.is_empty() {
             result.insert("events".to_string(), Self::save_events(&self.events, ctx));
         }
-        if !self.turns.is_empty() {
-            result.insert("turns".to_string(), Self::save_turns(&self.turns, ctx));
+        if let Some(items) = self.turns.as_ref() {
+            result.insert("turns".to_string(), Self::save_turns(items, ctx));
         }
-        if !self.checkpoints.is_empty() {
+        if let Some(items) = self.checkpoints.as_ref() {
             result.insert(
                 "checkpoints".to_string(),
-                Self::save_checkpoints(&self.checkpoints, ctx),
+                Self::save_checkpoints(items, ctx),
             );
         }
-        if !self.trajectory.is_empty() {
-            result.insert(
-                "trajectory".to_string(),
-                Self::save_trajectory(&self.trajectory, ctx),
-            );
+        if let Some(items) = self.trajectory.as_ref() {
+            result.insert("trajectory".to_string(), Self::save_trajectory(items, ctx));
         }
-        if !self.files.is_empty() {
-            result.insert("files".to_string(), Self::save_files(&self.files, ctx));
+        if let Some(items) = self.files.as_ref() {
+            result.insert("files".to_string(), Self::save_files(items, ctx));
         }
-        if !self.refs.is_empty() {
-            result.insert("refs".to_string(), Self::save_refs(&self.refs, ctx));
+        if let Some(items) = self.refs.as_ref() {
+            result.insert("refs".to_string(), Self::save_refs(items, ctx));
         }
-        if let Some(ref val) = self.summary {
+        if let Some(val) = self.summary.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("summary".to_string(), nested);
@@ -348,6 +434,7 @@ impl serde::Serialize for SessionTrace {
 impl<'de> serde::Deserialize<'de> for SessionTrace {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

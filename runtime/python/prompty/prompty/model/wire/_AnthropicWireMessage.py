@@ -41,8 +41,9 @@ class AnthropicWireMessage:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicWireMessage: {data}")

@@ -6,6 +6,9 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
+	"sort"
 
 	"gopkg.in/yaml.v3"
 )
@@ -15,14 +18,19 @@ import (
 type Tool struct {
 	Name        string    `json:"name" yaml:"name"`
 	Kind        string    `json:"kind" yaml:"kind"`
-	Description *string   `json:"description,omitempty" yaml:"description,omitempty"`
-	Bindings    []Binding `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Description *string   `json:"description" yaml:"description"`
+	Bindings    []Binding `json:"bindings" yaml:"bindings"`
 }
 
 // LoadTool creates a Tool from a map[string]interface{}
 // Returns interface{} because this is a polymorphic base type that can resolve to different child types
 func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
-	result := Tool{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := Tool{
+		Bindings: []Binding{},
+	}
 
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
@@ -59,11 +67,41 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 			result.Description = &v
 		}
 		if val, ok := m["bindings"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Bindings = make([]Binding, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("bindings").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["input"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadBinding(item, ctx.At("bindings").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Bindings = append(result.Bindings, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -90,7 +128,48 @@ func (obj Tool) Save(ctx *SaveContext) map[string]interface{} {
 		for i, item := range obj.Bindings {
 			arr[i] = item.Save(ctx)
 		}
-		result["bindings"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["input"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["bindings"] = objectItems
+		} else {
+			result["bindings"] = arr
+		}
 	}
 
 	return result
@@ -141,15 +220,20 @@ func ToolFromYAML(yamlStr string) (interface{}, error) {
 type FunctionTool struct {
 	Name        string        `json:"name" yaml:"name"`
 	Kind        string        `json:"kind" yaml:"kind"`
-	Description *string       `json:"description,omitempty" yaml:"description,omitempty"`
-	Bindings    []Binding     `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Description *string       `json:"description" yaml:"description"`
+	Bindings    []Binding     `json:"bindings" yaml:"bindings"`
 	Parameters  []interface{} `json:"parameters" yaml:"parameters"`
-	Strict      *bool         `json:"strict,omitempty" yaml:"strict,omitempty"`
+	Strict      *bool         `json:"strict" yaml:"strict"`
 }
 
 // LoadFunctionTool creates a FunctionTool from a map[string]interface{}
 func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) {
-	result := FunctionTool{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := FunctionTool{
+		Bindings: []Binding{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -164,11 +248,41 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 			result.Description = &v
 		}
 		if val, ok := m["bindings"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Bindings = make([]Binding, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("bindings").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["input"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadBinding(item, ctx.At("bindings").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Bindings = append(result.Bindings, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -178,11 +292,60 @@ func LoadFunctionTool(data interface{}, ctx *LoadContext) (FunctionTool, error) 
 			}
 		}
 		if val, ok := m["parameters"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Parameters = make([]interface{}, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("parameters").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						switch shorthandValue := entry.(type) {
+						case int, int32, int64:
+							item["kind"] = "integer"
+							item["default"] = shorthandValue
+						case float64:
+							if shorthandValue == math.Trunc(shorthandValue) {
+								item["kind"] = "integer"
+							} else {
+								item["kind"] = "float"
+							}
+							item["default"] = shorthandValue
+						case string:
+							item["kind"] = "string"
+							item["default"] = shorthandValue
+						case bool:
+							item["kind"] = "boolean"
+							item["default"] = shorthandValue
+						default:
+							item["default"] = shorthandValue
+						}
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadProperty(item, ctx.At("parameters").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Parameters = append(result.Parameters, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Parameters = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx.At("parameters").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -214,7 +377,48 @@ func (obj FunctionTool) Save(ctx *SaveContext) map[string]interface{} {
 		for i, item := range obj.Bindings {
 			arr[i] = item.Save(ctx)
 		}
-		result["bindings"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["input"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["bindings"] = objectItems
+		} else {
+			result["bindings"] = arr
+		}
 	}
 	if obj.Parameters != nil {
 		arr := make([]interface{}, len(obj.Parameters))
@@ -229,7 +433,48 @@ func (obj FunctionTool) Save(ctx *SaveContext) map[string]interface{} {
 				arr[i] = item
 			}
 		}
-		result["parameters"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["example"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["parameters"] = objectItems
+		} else {
+			result["parameters"] = arr
+		}
 	}
 	if obj.Strict != nil {
 		result["strict"] = *obj.Strict
@@ -285,18 +530,28 @@ func FunctionToolFromYAML(yamlStr string) (FunctionTool, error) {
 type CustomTool struct {
 	Name        string                 `json:"name" yaml:"name"`
 	Kind        string                 `json:"kind" yaml:"kind"`
-	Description *string                `json:"description,omitempty" yaml:"description,omitempty"`
-	Bindings    []Binding              `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Description *string                `json:"description" yaml:"description"`
+	Bindings    []Binding              `json:"bindings" yaml:"bindings"`
 	Connection  interface{}            `json:"connection" yaml:"connection"`
 	Options     map[string]interface{} `json:"options" yaml:"options"`
 }
 
 // LoadCustomTool creates a CustomTool from a map[string]interface{}
 func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
-	result := CustomTool{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := CustomTool{
+		Bindings: []Binding{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if discriminatorValue, hasDiscriminator := m["kind"].(string); hasDiscriminator && discriminatorValue != "" {
+			if requiredValue, exists := m["connection"]; !exists || requiredValue == nil {
+				return result, fmt.Errorf("%s: missing required field", ctx.At("connection").Path)
+			}
+		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
 		}
@@ -308,11 +563,41 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 			result.Description = &v
 		}
 		if val, ok := m["bindings"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Bindings = make([]Binding, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("bindings").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["input"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadBinding(item, ctx.At("bindings").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Bindings = append(result.Bindings, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -323,7 +608,7 @@ func LoadCustomTool(data interface{}, ctx *LoadContext) (CustomTool, error) {
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadConnection(m, ctx)
+				loaded, err := LoadConnection(m, ctx.At("connection"))
 				if err != nil {
 					return result, err
 				}
@@ -354,7 +639,48 @@ func (obj CustomTool) Save(ctx *SaveContext) map[string]interface{} {
 		for i, item := range obj.Bindings {
 			arr[i] = item.Save(ctx)
 		}
-		result["bindings"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["input"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["bindings"] = objectItems
+		} else {
+			result["bindings"] = arr
+		}
 	}
 
 	// Handle polymorphic type via type switch
@@ -412,23 +738,31 @@ func CustomToolFromYAML(yamlStr string) (CustomTool, error) {
 // McpTool represents The MCP Server tool.
 
 type McpTool struct {
-	Name              string          `json:"name" yaml:"name"`
-	Kind              string          `json:"kind" yaml:"kind"`
-	Description       *string         `json:"description,omitempty" yaml:"description,omitempty"`
-	Bindings          []Binding       `json:"bindings,omitempty" yaml:"bindings,omitempty"`
-	Connection        interface{}     `json:"connection" yaml:"connection"`
-	ServerName        string          `json:"serverName" yaml:"serverName"`
-	ServerDescription *string         `json:"serverDescription,omitempty" yaml:"serverDescription,omitempty"`
-	ApprovalMode      McpApprovalMode `json:"approvalMode" yaml:"approvalMode"`
-	AllowedTools      []string        `json:"allowedTools,omitempty" yaml:"allowedTools,omitempty"`
+	Name              string           `json:"name" yaml:"name"`
+	Kind              string           `json:"kind" yaml:"kind"`
+	Description       *string          `json:"description" yaml:"description"`
+	Bindings          []Binding        `json:"bindings" yaml:"bindings"`
+	Connection        interface{}      `json:"connection" yaml:"connection"`
+	ServerName        string           `json:"serverName" yaml:"serverName"`
+	ServerDescription *string          `json:"serverDescription,omitempty" yaml:"serverDescription,omitempty"`
+	ApprovalMode      *McpApprovalMode `json:"approvalMode,omitempty" yaml:"approvalMode,omitempty"`
+	AllowedTools      []string         `json:"allowedTools,omitempty" yaml:"allowedTools,omitempty"`
 }
 
 // LoadMcpTool creates a McpTool from a map[string]interface{}
 func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
-	result := McpTool{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := McpTool{
+		Bindings: []Binding{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["connection"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("connection").Path)
+		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
 		}
@@ -440,11 +774,41 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 			result.Description = &v
 		}
 		if val, ok := m["bindings"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Bindings = make([]Binding, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("bindings").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["input"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadBinding(item, ctx.At("bindings").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Bindings = append(result.Bindings, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -455,7 +819,7 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadConnection(m, ctx)
+				loaded, err := LoadConnection(m, ctx.At("connection"))
 				if err != nil {
 					return result, err
 				}
@@ -472,17 +836,17 @@ func LoadMcpTool(data interface{}, ctx *LoadContext) (McpTool, error) {
 		}
 		if val, ok := m["approvalMode"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadMcpApprovalMode(m, ctx)
+				loaded, err := LoadMcpApprovalMode(m, ctx.At("approvalMode"))
 				if err != nil {
 					return result, err
 				}
-				result.ApprovalMode = loaded
+				result.ApprovalMode = &loaded
 			} else {
-				loaded, err := LoadMcpApprovalMode(val, ctx)
+				loaded, err := LoadMcpApprovalMode(val, ctx.At("approvalMode"))
 				if err != nil {
 					return result, err
 				}
-				result.ApprovalMode = loaded
+				result.ApprovalMode = &loaded
 			}
 		}
 		if val, ok := m["allowedTools"]; ok && val != nil {
@@ -514,7 +878,48 @@ func (obj McpTool) Save(ctx *SaveContext) map[string]interface{} {
 		for i, item := range obj.Bindings {
 			arr[i] = item.Save(ctx)
 		}
-		result["bindings"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["input"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["bindings"] = objectItems
+		} else {
+			result["bindings"] = arr
+		}
 	}
 
 	// Handle polymorphic type via type switch
@@ -530,9 +935,12 @@ func (obj McpTool) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.ServerDescription != nil {
 		result["serverDescription"] = *obj.ServerDescription
 	}
-
-	result["approvalMode"] = obj.ApprovalMode.Save(ctx)
-	result["allowedTools"] = obj.AllowedTools
+	if obj.ApprovalMode != nil {
+		result["approvalMode"] = obj.ApprovalMode.Save(ctx)
+	}
+	if obj.AllowedTools != nil {
+		result["allowedTools"] = obj.AllowedTools
+	}
 
 	return result
 }
@@ -579,18 +987,26 @@ func McpToolFromYAML(yamlStr string) (McpTool, error) {
 type OpenApiTool struct {
 	Name          string      `json:"name" yaml:"name"`
 	Kind          string      `json:"kind" yaml:"kind"`
-	Description   *string     `json:"description,omitempty" yaml:"description,omitempty"`
-	Bindings      []Binding   `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Description   *string     `json:"description" yaml:"description"`
+	Bindings      []Binding   `json:"bindings" yaml:"bindings"`
 	Connection    interface{} `json:"connection" yaml:"connection"`
 	Specification string      `json:"specification" yaml:"specification"`
 }
 
 // LoadOpenApiTool creates a OpenApiTool from a map[string]interface{}
 func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
-	result := OpenApiTool{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := OpenApiTool{
+		Bindings: []Binding{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["connection"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("connection").Path)
+		}
 		if val, ok := m["name"]; ok && val != nil {
 			result.Name = string(val.(string))
 		}
@@ -602,11 +1018,41 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 			result.Description = &v
 		}
 		if val, ok := m["bindings"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Bindings = make([]Binding, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("bindings").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["input"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadBinding(item, ctx.At("bindings").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Bindings = append(result.Bindings, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -617,7 +1063,7 @@ func LoadOpenApiTool(data interface{}, ctx *LoadContext) (OpenApiTool, error) {
 		}
 		if val, ok := m["connection"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadConnection(m, ctx)
+				loaded, err := LoadConnection(m, ctx.At("connection"))
 				if err != nil {
 					return result, err
 				}
@@ -646,7 +1092,48 @@ func (obj OpenApiTool) Save(ctx *SaveContext) map[string]interface{} {
 		for i, item := range obj.Bindings {
 			arr[i] = item.Save(ctx)
 		}
-		result["bindings"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["input"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["bindings"] = objectItems
+		} else {
+			result["bindings"] = arr
+		}
 	}
 
 	// Handle polymorphic type via type switch
@@ -709,15 +1196,20 @@ func OpenApiToolFromYAML(yamlStr string) (OpenApiTool, error) {
 type PromptyTool struct {
 	Name        string    `json:"name" yaml:"name"`
 	Kind        string    `json:"kind" yaml:"kind"`
-	Description *string   `json:"description,omitempty" yaml:"description,omitempty"`
-	Bindings    []Binding `json:"bindings,omitempty" yaml:"bindings,omitempty"`
+	Description *string   `json:"description" yaml:"description"`
+	Bindings    []Binding `json:"bindings" yaml:"bindings"`
 	Path        string    `json:"path" yaml:"path"`
 	Mode        string    `json:"mode" yaml:"mode"`
 }
 
 // LoadPromptyTool creates a PromptyTool from a map[string]interface{}
 func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
-	result := PromptyTool{}
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := PromptyTool{
+		Bindings: []Binding{},
+	}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -732,11 +1224,41 @@ func LoadPromptyTool(data interface{}, ctx *LoadContext) (PromptyTool, error) {
 			result.Description = &v
 		}
 		if val, ok := m["bindings"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Bindings = make([]Binding, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("bindings").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["input"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadBinding(item, ctx.At("bindings").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Bindings = append(result.Bindings, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Bindings = make([]Binding, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadBinding(item, ctx)
+						loaded, err := LoadBinding(item, ctx.At("bindings").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -769,7 +1291,48 @@ func (obj PromptyTool) Save(ctx *SaveContext) map[string]interface{} {
 		for i, item := range obj.Bindings {
 			arr[i] = item.Save(ctx)
 		}
-		result["bindings"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["input"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["bindings"] = objectItems
+		} else {
+			result["bindings"] = arr
+		}
 	}
 	result["path"] = obj.Path
 	result["mode"] = obj.Mode

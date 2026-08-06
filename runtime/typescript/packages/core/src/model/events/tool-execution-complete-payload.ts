@@ -54,6 +54,7 @@ export class ToolExecutionCompletePayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ToolExecutionCompletePayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -90,7 +91,7 @@ export class ToolExecutionCompletePayload {
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
       instance.redaction = RedactionMetadata.load(
         data["redaction"] as Record<string, unknown>,
-        context,
+        context.at("redaction"),
       );
     }
 

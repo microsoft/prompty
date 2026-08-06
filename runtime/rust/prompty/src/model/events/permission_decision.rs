@@ -37,12 +37,16 @@ impl PermissionDecision {
     /// Load PermissionDecision from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load PermissionDecision from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -51,6 +55,9 @@ impl PermissionDecision {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             request_id: value
                 .get("requestId")
@@ -80,19 +87,23 @@ impl PermissionDecision {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize PermissionDecision to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(ref val) = self.request_id {
+        if let Some(val) = self.request_id.as_ref() {
             result.insert(
                 "requestId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.tool_call_id {
+        if let Some(val) = self.tool_call_id.as_ref() {
             result.insert(
                 "toolCallId".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -108,7 +119,7 @@ impl PermissionDecision {
             "approved".to_string(),
             serde_json::Value::Bool(self.approved),
         );
-        if let Some(ref val) = self.reason {
+        if let Some(val) = self.reason.as_ref() {
             result.insert("reason".to_string(), serde_json::Value::String(val.clone()));
         }
         if !self.result.is_null() {
@@ -145,6 +156,7 @@ impl serde::Serialize for PermissionDecision {
 impl<'de> serde::Deserialize<'de> for PermissionDecision {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

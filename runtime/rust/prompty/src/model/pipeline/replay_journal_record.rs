@@ -189,12 +189,16 @@ impl ReplayJournalRecord {
     /// Load ReplayJournalRecord from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load ReplayJournalRecord from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -203,6 +207,9 @@ impl ReplayJournalRecord {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             kind: value
                 .get("kind")
@@ -253,6 +260,10 @@ impl ReplayJournalRecord {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize ReplayJournalRecord to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -263,61 +274,61 @@ impl ReplayJournalRecord {
             "kind".to_string(),
             serde_json::Value::String(self.kind.to_string()),
         );
-        if let Some(ref val) = self.r#type {
+        if let Some(val) = self.r#type.as_ref() {
             result.insert("type".to_string(), serde_json::Value::String(val.clone()));
         }
-        if let Some(ref val) = self.session_id {
+        if let Some(val) = self.session_id.as_ref() {
             result.insert(
                 "sessionId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.turn_id {
+        if let Some(val) = self.turn_id.as_ref() {
             result.insert("turnId".to_string(), serde_json::Value::String(val.clone()));
         }
-        if let Some(val) = self.iteration {
+        if let Some(val) = self.iteration.as_ref() {
             result.insert(
                 "iteration".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(ref val) = self.status {
+        if let Some(val) = self.status.as_ref() {
             result.insert(
                 "status".to_string(),
                 serde_json::Value::String(val.to_string()),
             );
         }
-        if let Some(ref val) = self.request_id {
+        if let Some(val) = self.request_id.as_ref() {
             result.insert(
                 "requestId".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.tool_name {
+        if let Some(val) = self.tool_name.as_ref() {
             result.insert(
                 "toolName".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(val) = self.success {
-            result.insert("success".to_string(), serde_json::Value::Bool(val));
+        if let Some(val) = self.success.as_ref() {
+            result.insert("success".to_string(), serde_json::Value::Bool(*val));
         }
-        if let Some(ref val) = self.error_kind {
+        if let Some(val) = self.error_kind.as_ref() {
             result.insert(
                 "errorKind".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(val) = self.turns {
+        if let Some(val) = self.turns.as_ref() {
             result.insert(
                 "turns".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
-        if let Some(val) = self.checkpoints {
+        if let Some(val) = self.checkpoints.as_ref() {
             result.insert(
                 "checkpoints".to_string(),
-                serde_json::Value::Number(serde_json::Number::from(val)),
+                serde_json::Value::Number(serde_json::Number::from(*val)),
             );
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -346,6 +357,7 @@ impl serde::Serialize for ReplayJournalRecord {
 impl<'de> serde::Deserialize<'de> for ReplayJournalRecord {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

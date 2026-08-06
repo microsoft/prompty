@@ -14,22 +14,14 @@ use crate::model::{
 // ---------------------------------------------------------------------------
 
 impl Prompty {
-    /// Returns a reference to the input properties, or `None` if empty.
+    /// Returns a reference to the input properties, or `None` if absent or empty.
     pub fn as_inputs(&self) -> Option<&Vec<Property>> {
-        if self.inputs.is_empty() {
-            None
-        } else {
-            Some(&self.inputs)
-        }
+        self.inputs.as_ref().filter(|items| !items.is_empty())
     }
 
-    /// Returns a reference to the output properties, or `None` if empty.
+    /// Returns a reference to the output properties, or `None` if absent or empty.
     pub fn as_outputs(&self) -> Option<&Vec<Property>> {
-        if self.outputs.is_empty() {
-            None
-        } else {
-            Some(&self.outputs)
-        }
+        self.outputs.as_ref().filter(|items| !items.is_empty())
     }
 
     /// Returns a reference to the tools list, or `None` if empty.

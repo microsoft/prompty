@@ -101,12 +101,16 @@ impl McpApprovalMode {
     /// Load McpApprovalMode from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load McpApprovalMode from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -115,6 +119,9 @@ impl McpApprovalMode {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         if let Some(s) = value.as_str() {
             let value = s.to_string();
             return McpApprovalMode {
@@ -148,6 +155,10 @@ impl McpApprovalMode {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        Ok(())
+    }
+
     /// Serialize McpApprovalMode to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -158,13 +169,13 @@ impl McpApprovalMode {
             "kind".to_string(),
             serde_json::Value::String(self.kind.to_string()),
         );
-        if let Some(ref items) = self.always_require_approval_tools {
+        if let Some(items) = self.always_require_approval_tools.as_ref() {
             result.insert(
                 "alwaysRequireApprovalTools".to_string(),
                 serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
             );
         }
-        if let Some(ref items) = self.never_require_approval_tools {
+        if let Some(items) = self.never_require_approval_tools.as_ref() {
             result.insert(
                 "neverRequireApprovalTools".to_string(),
                 serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
@@ -196,6 +207,7 @@ impl serde::Serialize for McpApprovalMode {
 impl<'de> serde::Deserialize<'de> for McpApprovalMode {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

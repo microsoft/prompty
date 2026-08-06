@@ -23,6 +23,9 @@ type ToolCallCompletePayload struct {
 
 // LoadToolCallCompletePayload creates a ToolCallCompletePayload from a map[string]interface{}
 func LoadToolCallCompletePayload(data interface{}, ctx *LoadContext) (ToolCallCompletePayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ToolCallCompletePayload{}
 
 	// Load from map
@@ -39,7 +42,7 @@ func LoadToolCallCompletePayload(data interface{}, ctx *LoadContext) (ToolCallCo
 		}
 		if val, ok := m["result"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadToolResult(m, ctx)
+				loaded, err := LoadToolResult(m, ctx.At("result"))
 				if err != nil {
 					return result, err
 				}

@@ -8,9 +8,9 @@ import { Message } from "../conversation/message";
 export class MessagesUpdatedPayload {
   static readonly shorthandProperty: string | undefined = undefined;
 
-  messages?: Message[] = [];
+  messages?: Message[];
   reason?: string | undefined;
-  appended?: Message[] = [];
+  appended?: Message[];
   removed?: number | undefined;
 
   constructor(init?: Partial<MessagesUpdatedPayload>) {
@@ -34,6 +34,7 @@ export class MessagesUpdatedPayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): MessagesUpdatedPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -43,7 +44,7 @@ export class MessagesUpdatedPayload {
     if (data["messages"] !== undefined && data["messages"] !== null) {
       instance.messages = MessagesUpdatedPayload.loadMessages(
         data["messages"] as unknown[],
-        context,
+        context.at("messages"),
       );
     }
     if (data["reason"] !== undefined && data["reason"] !== null) {
@@ -52,7 +53,7 @@ export class MessagesUpdatedPayload {
     if (data["appended"] !== undefined && data["appended"] !== null) {
       instance.appended = MessagesUpdatedPayload.loadAppended(
         data["appended"] as unknown[],
-        context,
+        context.at("appended"),
       );
     }
     if (data["removed"] !== undefined && data["removed"] !== null) {
@@ -69,20 +70,31 @@ export class MessagesUpdatedPayload {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Message[] {
+    context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Message.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, role: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Message.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -102,20 +114,31 @@ export class MessagesUpdatedPayload {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Message[] {
+    context ??= new LoadContext({ path: "appended" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Message.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, role: v });
+          result.push(Message.load({ name: k, role: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Message.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Message.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 

@@ -23,6 +23,9 @@ type ThreadMarker struct {
 
 // LoadThreadMarker creates a ThreadMarker from a map[string]interface{}
 func LoadThreadMarker(data interface{}, ctx *LoadContext) (ThreadMarker, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ThreadMarker{}
 
 	// Load from map

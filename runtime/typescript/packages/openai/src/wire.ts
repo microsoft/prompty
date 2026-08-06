@@ -288,28 +288,22 @@ function propertyToJsonSchema(prop: {
   if (prop.description) schema.description = prop.description;
   if (prop.enumValues && prop.enumValues.length > 0) schema.enum = prop.enumValues;
 
-  // Array items
-  if (prop.kind === "array") {
-    schema.items = prop.items
-      ? propertyToJsonSchema(prop.items as typeof prop, false, strict)
-      : { type: "string" };
+  // Array items — bare {"type": "array"} when items is unspecified
+  if (prop.kind === "array" && prop.items) {
+    schema.items = propertyToJsonSchema(prop.items as typeof prop, false, strict);
   }
 
-  // Nested object
-  if (prop.kind === "object") {
-    if (prop.properties) {
-      const nested: Record<string, unknown> = {};
-      const req: string[] = [];
-      for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
-        if (!p.name) continue;
-          nested[p.name] = propertyToJsonSchema(p, strict && !p.required, strict);
-          if (strict || p.required) req.push(p.name);
-      }
-      schema.properties = nested;
-      if (req.length > 0) schema.required = req;
-    } else {
-      schema.properties = {};
+  // Nested object — bare {"type": "object"} when properties is empty or absent
+  if (prop.kind === "object" && prop.properties && prop.properties.length > 0) {
+    const nested: Record<string, unknown> = {};
+    const req: string[] = [];
+    for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
+      if (!p.name) continue;
+      nested[p.name] = propertyToJsonSchema(p, strict && !p.required, strict);
+      if (strict || p.required) req.push(p.name);
     }
+    schema.properties = nested;
+    if (req.length > 0) schema.required = req;
     schema.additionalProperties = false;
   }
 

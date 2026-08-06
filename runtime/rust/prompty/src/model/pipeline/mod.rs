@@ -54,6 +54,18 @@ pub use turn_commit::*;
 pub mod turn_engine_result;
 pub use turn_engine_result::*;
 
+pub mod engine_permission_port;
+pub use engine_permission_port::*;
+
+pub mod engine_tool_port;
+pub use engine_tool_port::*;
+
+pub mod engine_durability_port;
+pub use engine_durability_port::*;
+
+pub mod engine_post_commit_port;
+pub use engine_post_commit_port::*;
+
 pub mod host_policy_request;
 pub use host_policy_request::*;
 

@@ -29,6 +29,7 @@ export class DeviceAuthorization {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): DeviceAuthorization {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

@@ -28,6 +28,9 @@ type Checkpoint struct {
 
 // LoadCheckpoint creates a Checkpoint from a map[string]interface{}
 func LoadCheckpoint(data interface{}, ctx *LoadContext) (Checkpoint, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := Checkpoint{}
 
 	// Load from map
@@ -85,7 +88,7 @@ func LoadCheckpoint(data interface{}, ctx *LoadContext) (Checkpoint, error) {
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
 				if err != nil {
 					return result, err
 				}

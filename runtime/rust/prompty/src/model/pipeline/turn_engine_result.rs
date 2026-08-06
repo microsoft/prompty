@@ -39,12 +39,16 @@ impl TurnEngineResult {
     /// Load TurnEngineResult from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load TurnEngineResult from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -53,6 +57,9 @@ impl TurnEngineResult {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             commit: value
                 .get("commit")
@@ -74,6 +81,48 @@ impl TurnEngineResult {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "commit".to_string()
+        } else {
+            format!("{}.commit", path)
+        };
+        let child = value
+            .get("commit")
+            .filter(|candidate| !candidate.is_null())
+            .ok_or_else(|| format!("{}: missing required field", child_path))?;
+        TurnCommit::validate_input_at(child, &child_path)?;
+        if let Some(entries) = value
+            .get("snapshots")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "snapshots".to_string()
+            } else {
+                format!("{}.snapshots", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ModelInvocationContextSnapshot::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        if let Some(entries) = value
+            .get("toolResults")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "toolResults".to_string()
+            } else {
+                format!("{}.toolResults", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                ModelToolResult::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Serialize TurnEngineResult to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -86,19 +135,15 @@ impl TurnEngineResult {
                 result.insert("commit".to_string(), nested);
             }
         }
-        if !self.snapshots.is_empty() {
-            result.insert(
-                "snapshots".to_string(),
-                Self::save_snapshots(&self.snapshots, ctx),
-            );
-        }
-        if !self.tool_results.is_empty() {
-            result.insert(
-                "toolResults".to_string(),
-                Self::save_tool_results(&self.tool_results, ctx),
-            );
-        }
-        if let Some(ref val) = self.post_commit_error {
+        result.insert(
+            "snapshots".to_string(),
+            Self::save_snapshots(&self.snapshots, ctx),
+        );
+        result.insert(
+            "toolResults".to_string(),
+            Self::save_tool_results(&self.tool_results, ctx),
+        );
+        if let Some(val) = self.post_commit_error.as_ref() {
             result.insert(
                 "postCommitError".to_string(),
                 serde_json::Value::String(val.clone()),
@@ -147,7 +192,7 @@ impl TurnEngineResult {
     }
 
     /// Load a collection of ModelToolResult from a JSON value.
-    /// Handles both array format `[{...}]` and dict format `{"name": {...}}`.
+    /// Handles both array format `[{...}]`.
     fn load_tool_results(data: &serde_json::Value, ctx: &LoadContext) -> Vec<ModelToolResult> {
         match data {
             serde_json::Value::Array(arr) => arr
@@ -155,54 +200,18 @@ impl TurnEngineResult {
                 .map(|v| ModelToolResult::load_from_value(v, ctx))
                 .collect(),
 
-            serde_json::Value::Object(obj) => obj
-                .iter()
-                .filter_map(|(name, value)| {
-                    if value.is_array() {
-                        return None;
-                    }
-                    let mut v = if value.is_object() {
-                        value.clone()
-                    } else {
-                        serde_json::json!({ "requestId": value })
-                    };
-                    if let serde_json::Value::Object(ref mut m) = v {
-                        m.entry("name".to_string())
-                            .or_insert_with(|| serde_json::Value::String(name.clone()));
-                    }
-                    Some(ModelToolResult::load_from_value(&v, ctx))
-                })
-                .collect(),
             _ => Vec::new(),
         }
     }
 
     /// Save a collection of ModelToolResult to a JSON value.
     fn save_tool_results(items: &[ModelToolResult], ctx: &SaveContext) -> serde_json::Value {
-        if ctx.collection_format == "array" {
-            return serde_json::Value::Array(
-                items
-                    .iter()
-                    .map(|item| item.to_value(ctx))
-                    .collect::<Vec<_>>(),
-            );
-        }
-        // Object format: use name as key
-        let mut result = serde_json::Map::new();
-        for item in items {
-            let mut item_data = match item.to_value(ctx) {
-                serde_json::Value::Object(m) => m,
-                other => {
-                    let mut m = serde_json::Map::new();
-                    m.insert("value".to_string(), other);
-                    m
-                }
-            };
-            if let Some(serde_json::Value::String(name)) = item_data.remove("name") {
-                result.insert(name, serde_json::Value::Object(item_data));
-            }
-        }
-        serde_json::Value::Object(result)
+        serde_json::Value::Array(
+            items
+                .iter()
+                .map(|item| item.to_value(ctx))
+                .collect::<Vec<_>>(),
+        )
     }
 }
 
@@ -218,6 +227,7 @@ impl serde::Serialize for TurnEngineResult {
 impl<'de> serde::Deserialize<'de> for TurnEngineResult {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

@@ -24,7 +24,7 @@ pub struct TurnModelResponse {
     pub usage: Option<InvocationUsage>,
     /// Host tool execution requests emitted by the model callback
     pub tool_requests: Vec<HostToolRequest>,
-    /// Additional deterministic state to merge into the iteration checkpoint
+    /// Additional deterministic state to merge into the iteration checkpoint. Values may be explicit null.
     pub checkpoint_state: serde_json::Value,
 }
 
@@ -37,12 +37,16 @@ impl TurnModelResponse {
     /// Load TurnModelResponse from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load TurnModelResponse from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -51,6 +55,9 @@ impl TurnModelResponse {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         Self {
             output: value.get("output").cloned(),
             usage: value
@@ -68,27 +75,51 @@ impl TurnModelResponse {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "usage".to_string()
+        } else {
+            format!("{}.usage", path)
+        };
+        if let Some(child) = value.get("usage") {
+            InvocationUsage::validate_input_at(child, &child_path)?;
+        }
+        if let Some(entries) = value
+            .get("toolRequests")
+            .and_then(|candidate| candidate.as_array())
+        {
+            let collection_path = if path.is_empty() {
+                "toolRequests".to_string()
+            } else {
+                format!("{}.toolRequests", path)
+            };
+            for (index, entry) in entries.iter().enumerate() {
+                let entry_path = format!("{}[{}]", collection_path, index);
+                HostToolRequest::validate_input_at(entry, &entry_path)?;
+            }
+        }
+        Ok(())
+    }
+
     /// Serialize TurnModelResponse to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        if let Some(ref val) = self.output {
+        if let Some(val) = self.output.as_ref() {
             result.insert("output".to_string(), val.clone());
         }
-        if let Some(ref val) = self.usage {
+        if let Some(val) = self.usage.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("usage".to_string(), nested);
             }
         }
-        if !self.tool_requests.is_empty() {
-            result.insert(
-                "toolRequests".to_string(),
-                Self::save_tool_requests(&self.tool_requests, ctx),
-            );
-        }
+        result.insert(
+            "toolRequests".to_string(),
+            Self::save_tool_requests(&self.tool_requests, ctx),
+        );
         if !self.checkpoint_state.is_null() {
             result.insert("checkpointState".to_string(), self.checkpoint_state.clone());
         }
@@ -146,6 +177,7 @@ impl serde::Serialize for TurnModelResponse {
 impl<'de> serde::Deserialize<'de> for TurnModelResponse {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

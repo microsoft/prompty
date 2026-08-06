@@ -119,12 +119,16 @@ impl Model {
     /// Load Model from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
     /// Load Model from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
+        Self::validate_input_at(&value, "")
+            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
         Ok(Self::load_from_value(&value, ctx))
     }
 
@@ -133,6 +137,9 @@ impl Model {
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
         let value = ctx.process_input(value.clone());
+        if let Err(message) = Self::validate_input_at(&value, "") {
+            panic!("{}", message);
+        }
         if let Some(s) = value.as_str() {
             let value = s.to_string();
             return Model {
@@ -165,6 +172,26 @@ impl Model {
         }
     }
 
+    pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
+        let child_path = if path.is_empty() {
+            "connection".to_string()
+        } else {
+            format!("{}.connection", path)
+        };
+        if let Some(child) = value.get("connection") {
+            Connection::validate_input_at(child, &child_path)?;
+        }
+        let child_path = if path.is_empty() {
+            "options".to_string()
+        } else {
+            format!("{}.options", path)
+        };
+        if let Some(child) = value.get("options") {
+            ModelOptions::validate_input_at(child, &child_path)?;
+        }
+        Ok(())
+    }
+
     /// Serialize Model to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
@@ -174,13 +201,13 @@ impl Model {
         if !self.id.is_empty() {
             result.insert("id".to_string(), serde_json::Value::String(self.id.clone()));
         }
-        if let Some(ref val) = self.provider {
+        if let Some(val) = self.provider.as_ref() {
             result.insert(
                 "provider".to_string(),
                 serde_json::Value::String(val.clone()),
             );
         }
-        if let Some(ref val) = self.api_type {
+        if let Some(val) = self.api_type.as_ref() {
             result.insert(
                 "apiType".to_string(),
                 serde_json::Value::String(val.to_string()),
@@ -189,7 +216,7 @@ impl Model {
         if !self.connection.is_null() {
             result.insert("connection".to_string(), self.connection.clone());
         }
-        if let Some(ref val) = self.options {
+        if let Some(val) = self.options.as_ref() {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("options".to_string(), nested);
@@ -221,6 +248,7 @@ impl serde::Serialize for Model {
 impl<'de> serde::Deserialize<'de> for Model {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
