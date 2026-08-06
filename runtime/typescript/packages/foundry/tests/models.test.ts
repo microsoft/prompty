@@ -59,9 +59,12 @@ describe("listAzureModels", () => {
   it("does not set modalities (Azure API does not return them)", async () => {
     const models = await listAzureModels(connection);
     for (const m of models) {
-      // ModelInfo defaults modalities to [] when not explicitly set
-      expect(m.inputModalities).toEqual([]);
-      expect(m.outputModalities).toEqual([]);
+      // ModelInfo declares `inputModalities?: string[]` with no default
+      // (schema/model/discovery.tsp:43,47), and the discovery vectors
+      // `foundry_deployment_flat_v1` / `foundry_catalog_model` expect both
+      // fields ABSENT when the provider response omits them.
+      expect(m.inputModalities).toBeUndefined();
+      expect(m.outputModalities).toBeUndefined();
     }
   });
 
