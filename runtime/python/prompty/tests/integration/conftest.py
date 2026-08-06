@@ -46,7 +46,12 @@ _OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
 _OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "")  # optional: proxy via Azure
 _OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")  # override default chat model
 _OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-_OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "dall-e-2")
+# Image generation requires explicit opt-in: the model must be named, because
+# available image models vary by account entitlement (dall-e-2 / dall-e-3 are
+# retired on current OpenAI accounts and 400 with "does not exist"; newer
+# accounts expose gpt-image-1 instead) and image calls cost money. This matches
+# the TypeScript suite, which gates on `skipIf(!OPENAI_IMAGE_MODEL)`.
+_OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "")
 _AZURE_KEY = os.environ.get("AZURE_OPENAI_API_KEY", "")
 _AZURE_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
 _AZURE_CHAT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT", "")
@@ -65,8 +70,8 @@ has_direct_openai = bool(_DIRECT_OPENAI_KEY)
 
 skip_openai = pytest.mark.skipif(not has_openai, reason="OPENAI_API_KEY not set")
 skip_openai_image = pytest.mark.skipif(
-    not has_openai,
-    reason="OPENAI_API_KEY not set",
+    not (has_openai and _OPENAI_IMAGE_MODEL),
+    reason="OPENAI_API_KEY and OPENAI_IMAGE_MODEL must both be set (image models are account-specific and billable)",
 )
 skip_foundry = pytest.mark.skipif(not has_foundry, reason="Azure OpenAI env vars not set")
 skip_azure = skip_foundry  # backward-compat alias

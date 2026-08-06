@@ -538,7 +538,7 @@ Integration tests live in `runtime/python/prompty/tests/integration/` (see Phase
 | -------------------- | ------------------------------------------------------ |
 | `test_chat.py`       | Chat completions against real OpenAI / Azure endpoints |
 | `test_embedding.py`  | Embedding API against real endpoints                   |
-| `test_image.py`      | DALL-E 2 image generation (OpenAI only)                |
+| `test_image.py`      | Image generation (OpenAI only; opt-in via `OPENAI_IMAGE_MODEL`) |
 | `test_agent.py`      | Agent loop with tool calling against real endpoints    |
 | `test_streaming.py`  | Streaming chat completions                             |
 | `test_structured.py` | Structured output via outputs / response_format        |
@@ -1333,7 +1333,7 @@ Configured via `.env` in the package root (`runtime/python/prompty/.env`), alrea
 | -------------------- | ----- | --------------------------------------------------------- |
 | `test_chat.py`       | 5     | Basic + async chat, temperature control, both providers   |
 | `test_embedding.py`  | 5     | Single + batch + async embeddings, both providers         |
-| `test_image.py`      | 1     | DALL-E 2 image generation (OpenAI only, 256x256 for cost) |
+| `test_image.py`      | 1     | Image generation (OpenAI only; opt-in via `OPENAI_IMAGE_MODEL`) |
 | `test_agent.py`      | 3     | Tool-calling agent loop, sync + async, both providers     |
 | `test_streaming.py`  | 3     | Streaming chat with PromptyStream/AsyncPromptyStream      |
 | `test_structured.py` | 4     | Structured output via outputs → response_format           |
