@@ -32,6 +32,8 @@ _ROLE_NAMES = "|".join(sorted(ROLES))
 # branches) keep this linear-time — a plain `\w+\s*=\s*"?[^"]*"?` value class lets
 # unquoted attributes overlap with the separator/`]`, causing catastrophic
 # backtracking on malformed input. See issue #446.
+# Possessive quantifiers (`++`, `*+`, `?+`) require Python 3.11+, which pyproject.toml
+# already sets as this package's floor (`requires-python = ">=3.11"`).
 _BOUNDARY_RE = re.compile(
     r"(?im)^\s*#?\s*(" + _ROLE_NAMES + r")"
     r"(\[(?:\w++\s*+=\s*+(?:\"[^\"]*\"|[^\",\]]*+)\s*+,?+\s*+)+\])?\s*:\s*$"
