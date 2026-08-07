@@ -281,11 +281,15 @@ class TestRoleBoundaryReDoS:
         self.parser = PromptyChatParser()
         self.agent = _make_agent()
 
-    def _time_adversarial_parse(self, reps: int) -> float:
+    def _time_adversarial_parse(self, reps: int, samples: int = 20) -> float:
+        """Best-of-`samples` timing to smooth out scheduler/CPU jitter."""
         payload = "user[" + "a=b," * reps + "!"
-        start = time.perf_counter()
-        self.parser.parse(self.agent, payload)
-        return time.perf_counter() - start
+        best = float("inf")
+        for _ in range(samples):
+            start = time.perf_counter()
+            self.parser.parse(self.agent, payload)
+            best = min(best, time.perf_counter() - start)
+        return best
 
     def test_doubling_input_does_not_blow_up_runtime(self):
         small = self._time_adversarial_parse(20)
