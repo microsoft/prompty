@@ -17,9 +17,61 @@ describe("DeviceAuthorization", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "deviceCode": "sample",\n  "userCode": "sample",\n  "verificationUri": "sample",\n  "expiresIn": 1,\n  "interval": 1\n}`;
+      const instance = DeviceAuthorization.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.deviceCode).toEqual("sample");
+      expect(instance.userCode).toEqual("sample");
+      expect(instance.verificationUri).toEqual("sample");
+      expect(instance.expiresIn).toEqual(1);
+      expect(instance.interval).toEqual(1);
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "deviceCode": "sample",\n  "userCode": "sample",\n  "verificationUri": "sample",\n  "expiresIn": 1,\n  "interval": 1\n}`;
+      const instance = DeviceAuthorization.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = DeviceAuthorization.fromJson(output);
+      expect(reloaded.deviceCode).toEqual(instance.deviceCode);
+      expect(reloaded.userCode).toEqual(instance.userCode);
+      expect(reloaded.verificationUri).toEqual(instance.verificationUri);
+      expect(reloaded.expiresIn).toEqual(instance.expiresIn);
+      expect(reloaded.interval).toEqual(instance.interval);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `deviceCode: sample\nuserCode: sample\nverificationUri: sample\nexpiresIn: 1\ninterval: 1\n`;
+      const instance = DeviceAuthorization.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.deviceCode).toEqual("sample");
+      expect(instance.userCode).toEqual("sample");
+      expect(instance.verificationUri).toEqual("sample");
+      expect(instance.expiresIn).toEqual(1);
+      expect(instance.interval).toEqual(1);
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `deviceCode: sample\nuserCode: sample\nverificationUri: sample\nexpiresIn: 1\ninterval: 1\n`;
+      const instance = DeviceAuthorization.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = DeviceAuthorization.fromYaml(output);
+      expect(reloaded.deviceCode).toEqual(instance.deviceCode);
+      expect(reloaded.userCode).toEqual(instance.userCode);
+      expect(reloaded.verificationUri).toEqual(instance.verificationUri);
+      expect(reloaded.expiresIn).toEqual(instance.expiresIn);
+      expect(reloaded.interval).toEqual(instance.interval);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "deviceCode": "sample",\n  "userCode": "sample",\n  "verificationUri": "sample",\n  "expiresIn": 1,\n  "interval": 1\n}`,
+      ) as Record<string, unknown>;
       const instance = DeviceAuthorization.load(data);
       expect(instance).toBeDefined();
     });

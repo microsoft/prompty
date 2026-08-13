@@ -10,7 +10,6 @@ properties:
     description: Stable turn identifier within the session
   inputs:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Inputs supplied to the deterministic single-turn run
   options:
     $ref: TurnOptions.yaml

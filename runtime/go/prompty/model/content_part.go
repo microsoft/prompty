@@ -21,13 +21,17 @@ type ContentPart struct {
 // LoadContentPart creates a ContentPart from a map[string]interface{}
 // Returns interface{} because this is a polymorphic base type that can resolve to different child types
 func LoadContentPart(data interface{}, ctx *LoadContext) (interface{}, error) {
-	result := ContentPart{}
-
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
 			switch discriminator := discriminator.(type) {
 			case string:
+				if discriminator == "" {
+					return nil, fmt.Errorf("invalid ContentPart discriminator field 'kind': expected non-blank string")
+				}
 				switch discriminator {
 				case "text":
 					return LoadTextPart(data, ctx)
@@ -38,22 +42,16 @@ func LoadContentPart(data interface{}, ctx *LoadContext) (interface{}, error) {
 				case "audio":
 					return LoadAudioPart(data, ctx)
 				default:
-					return nil, fmt.Errorf("unknown ContentPart discriminator value: %s", discriminator)
+					return nil, fmt.Errorf("unknown ContentPart discriminator field 'kind' value: %s", discriminator)
 				}
 			default:
-				return nil, fmt.Errorf("unknown ContentPart discriminator value: %v", discriminator)
+				return nil, fmt.Errorf("unknown ContentPart discriminator field 'kind' value: %v", discriminator)
 			}
+		} else {
+			return nil, fmt.Errorf("missing ContentPart discriminator property: kind")
 		}
 	}
-	return nil, fmt.Errorf("missing ContentPart discriminator property: kind")
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = string(val.(string))
-		}
-	}
-
-	return result, nil
+	return nil, fmt.Errorf("invalid ContentPart discriminator property 'kind': expected non-blank string")
 }
 
 // Save serializes ContentPart to map[string]interface{}
@@ -113,6 +111,9 @@ type TextPart struct {
 
 // LoadTextPart creates a TextPart from a map[string]interface{}
 func LoadTextPart(data interface{}, ctx *LoadContext) (TextPart, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TextPart{}
 
 	// Load from map
@@ -186,6 +187,9 @@ type ImagePart struct {
 
 // LoadImagePart creates a ImagePart from a map[string]interface{}
 func LoadImagePart(data interface{}, ctx *LoadContext) (ImagePart, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ImagePart{}
 
 	// Load from map
@@ -272,6 +276,9 @@ type FilePart struct {
 
 // LoadFilePart creates a FilePart from a map[string]interface{}
 func LoadFilePart(data interface{}, ctx *LoadContext) (FilePart, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := FilePart{}
 
 	// Load from map
@@ -351,6 +358,9 @@ type AudioPart struct {
 
 // LoadAudioPart creates a AudioPart from a map[string]interface{}
 func LoadAudioPart(data interface{}, ctx *LoadContext) (AudioPart, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AudioPart{}
 
 	// Load from map

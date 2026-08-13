@@ -28,13 +28,11 @@ properties:
     type: array
     items:
       $ref: HostToolResult.yaml
-    default: []
     description: Host tool results produced during the turn
   checkpoints:
     type: array
     items:
       $ref: Checkpoint.yaml
-    default: []
     description: Checkpoints created during the turn
 required:
   - sessionId

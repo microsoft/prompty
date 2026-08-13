@@ -20,6 +20,9 @@ type EnginePermissionDecision struct {
 
 // LoadEnginePermissionDecision creates a EnginePermissionDecision from a map[string]interface{}
 func LoadEnginePermissionDecision(data interface{}, ctx *LoadContext) (EnginePermissionDecision, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := EnginePermissionDecision{}
 
 	// Load from map

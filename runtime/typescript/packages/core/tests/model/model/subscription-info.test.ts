@@ -17,9 +17,53 @@ describe("SubscriptionInfo", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "subscriptionId": "sample",\n  "displayName": "sample",\n  "state": "sample"\n}`;
+      const instance = SubscriptionInfo.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.subscriptionId).toEqual("sample");
+      expect(instance.displayName).toEqual("sample");
+      expect(instance.state).toEqual("sample");
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "subscriptionId": "sample",\n  "displayName": "sample",\n  "state": "sample"\n}`;
+      const instance = SubscriptionInfo.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = SubscriptionInfo.fromJson(output);
+      expect(reloaded.subscriptionId).toEqual(instance.subscriptionId);
+      expect(reloaded.displayName).toEqual(instance.displayName);
+      expect(reloaded.state).toEqual(instance.state);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `subscriptionId: sample\ndisplayName: sample\nstate: sample\n`;
+      const instance = SubscriptionInfo.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.subscriptionId).toEqual("sample");
+      expect(instance.displayName).toEqual("sample");
+      expect(instance.state).toEqual("sample");
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `subscriptionId: sample\ndisplayName: sample\nstate: sample\n`;
+      const instance = SubscriptionInfo.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = SubscriptionInfo.fromYaml(output);
+      expect(reloaded.subscriptionId).toEqual(instance.subscriptionId);
+      expect(reloaded.displayName).toEqual(instance.displayName);
+      expect(reloaded.state).toEqual(instance.state);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "subscriptionId": "sample",\n  "displayName": "sample",\n  "state": "sample"\n}`,
+      ) as Record<string, unknown>;
       const instance = SubscriptionInfo.load(data);
       expect(instance).toBeDefined();
     });

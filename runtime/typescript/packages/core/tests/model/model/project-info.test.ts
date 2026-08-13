@@ -17,9 +17,53 @@ describe("ProjectInfo", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "name": "sample",\n  "displayName": "sample",\n  "endpoint": "sample"\n}`;
+      const instance = ProjectInfo.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.name).toEqual("sample");
+      expect(instance.displayName).toEqual("sample");
+      expect(instance.endpoint).toEqual("sample");
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "name": "sample",\n  "displayName": "sample",\n  "endpoint": "sample"\n}`;
+      const instance = ProjectInfo.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = ProjectInfo.fromJson(output);
+      expect(reloaded.name).toEqual(instance.name);
+      expect(reloaded.displayName).toEqual(instance.displayName);
+      expect(reloaded.endpoint).toEqual(instance.endpoint);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `name: sample\ndisplayName: sample\nendpoint: sample\n`;
+      const instance = ProjectInfo.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.name).toEqual("sample");
+      expect(instance.displayName).toEqual("sample");
+      expect(instance.endpoint).toEqual("sample");
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `name: sample\ndisplayName: sample\nendpoint: sample\n`;
+      const instance = ProjectInfo.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = ProjectInfo.fromYaml(output);
+      expect(reloaded.name).toEqual(instance.name);
+      expect(reloaded.displayName).toEqual(instance.displayName);
+      expect(reloaded.endpoint).toEqual(instance.endpoint);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "name": "sample",\n  "displayName": "sample",\n  "endpoint": "sample"\n}`,
+      ) as Record<string, unknown>;
       const instance = ProjectInfo.load(data);
       expect(instance).toBeDefined();
     });

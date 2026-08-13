@@ -64,7 +64,7 @@ class TestBasicLoading:
         """A prompt with no model specified still loads."""
         agent = load(PROMPTS / "no_model.prompty")
         assert agent.name == "no-model"
-        assert agent.model is not None  # model provides a default
+        assert agent.model is None  # model is optional with no default (schema: `model`?: Model | string)
 
 
 # ---------------------------------------------------------------------------
@@ -479,9 +479,8 @@ class TestShorthand:
         """Frontmatter with only a name — no model, no schema."""
         agent = load(PROMPTS / "shorthand_name_only.prompty")
         assert agent.name == "just-a-name"
-        assert agent.model is not None  # Prompty.load() provides default Model
-        assert agent.model.id == ""
-        assert len(agent.inputs) == 0
+        assert agent.model is None  # model is optional with no default
+        assert agent.inputs is None  # inputs is optional with no default
         assert agent.instructions is not None
         assert "helpful assistant" in agent.instructions
 

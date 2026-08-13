@@ -39,32 +39,32 @@ namespace Prompty;
 )
 model Property {
   @doc("The data type of the input property")
-  @sample(#{ kind: "string" })
+  @sample(PropertyKindSample)
   kind: SimpleTypes;
 
   @doc("A short description of the input property")
-  @sample(#{ description: "A description of the input property" })
+  @sample(PropertyDescriptionSample)
   description?: string = "";
 
   @doc("Whether the property is required")
-  @sample(#{ required: true })
+  @sample(PropertyRequiredSample)
   required?: boolean = false;
 
   @doc("Whether the property also accepts a JSON null value")
-  @sample(#{ nullable: true })
+  @sample(PropertyNullableSample)
   nullable?: boolean = false;
 
   @doc("The default value of the property - this represents the default value if none is provided")
-  @sample(#{ default: "default value" })
+  @sample(PropertyDefaultSample)
   default?: unknown = null;
 
   @doc("Example value used for either initialization or tooling")
-  @sample(#{ example: "example value" })
+  @sample(PropertyExampleSample)
   example?: unknown = null;
 
   @doc("Allowed enumeration values for the property")
-  @sample(#{ enumValues: #["value1", "value2", "value3"] })
-  enumValues?: unknown[] = #[];
+  @sample(PropertyEnumValuesSample)
+  enumValues?: unknown[];
 }
 
 /**
@@ -75,7 +75,7 @@ model ArrayProperty extends Property {
   kind: "array";
 
   @doc("The type of items contained in the array")
-  @sample(#{ items: #{ kind: "string" } })
+  @sample(toItemsSample)
   items: Property | Named<
     Property,
     "Name of the property",
@@ -91,13 +91,8 @@ model ObjectProperty extends Property {
   kind: "object";
 
   @doc("The properties contained in the object")
-  @sample(#{
-    properties: #{
-      property1: #{ kind: "string" },
-      property2: #{ kind: "number" },
-    },
-  })
-  properties: Properties = #[];
+  @sample(toPropertiesSample)
+  properties: Properties;
 }
 
 /**
@@ -117,7 +112,7 @@ model UnionProperty extends Property {
   oneOf?: Property[];
 
   @doc("Alternative property schemas where one or more branches may match")
-  @sample(#{ anyOf: #[#{ kind: "string" }, #{ kind: "boolean" }] })
+  @sample(UnionPropertyAnyOfSample)
   @minItems(1)
   anyOf?: Property[];
 }

@@ -39,19 +39,19 @@ alias MemoryCategory = "core" | "archival" | "insight";
  */
 model MemoryEntry {
   @doc("The memory content")
-  @sample(#{ content: "The user prefers concise answers." })
+  @sample(MemoryEntryContentSample)
   content: string = "";
 
   @doc("The general tier of the memory")
-  @sample(#{ category: "core" })
+  @sample(MemoryEntryCategorySample)
   category: MemoryCategory = "core";
 
   @doc("ISO 8601 UTC timestamp recording when the memory was formed; intrinsic, portable data")
-  @sample(#{ createdAt: "2026-06-09T20:00:00Z" })
+  @sample(MemoryEntryCreatedAtSample)
   createdAt?: string;
 
   @doc("General labels for the memory; used for keyword recall, grouping, and core deduplication")
-  @sample(#{ tags: #["preference", "tone"] })
+  @sample(MemoryEntryTagsSample)
   tags?: string[];
 }
 
@@ -65,6 +65,6 @@ model MemoryEntry {
  */
 model MemoryStore {
   @doc("The memories held in the store, in insertion order")
-  @sample(#{ entries: #[] })
+  @sample(MemoryStoreEntriesSample)
   entries: MemoryEntry[];
 }

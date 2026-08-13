@@ -24,7 +24,6 @@ properties:
     description: Stable error category for failed or indeterminate results
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque host-specific tool result metadata
 required:
   - requestId

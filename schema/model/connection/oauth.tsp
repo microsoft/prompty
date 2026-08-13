@@ -10,28 +10,26 @@ namespace Prompty;
  */
 model OAuthConnection extends Connection {
   @doc("The connection kind for OAuth authentication")
-  @sample(#{ kind: "oauth" })
+  @sample(OAuthConnectionKindSample)
   kind: "oauth";
 
   @doc("The endpoint URL for the service")
-  @sample(#{ endpoint: "https://api.example.com" })
+  @sample(OAuthConnectionEndpointSample)
   endpoint: string;
 
   @doc("The OAuth client ID")
-  @sample(#{ clientId: "your-client-id" })
+  @sample(OAuthConnectionClientIdSample)
   clientId: string;
 
   @doc("The OAuth client secret")
-  @sample(#{ clientSecret: "your-client-secret" })
+  @sample(OAuthConnectionClientSecretSample)
   clientSecret: string;
 
   @doc("The OAuth token endpoint URL")
-  @sample(#{
-    tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
-  })
+  @sample(OAuthConnectionTokenUrlSample)
   tokenUrl: string;
 
   @doc("OAuth scopes to request")
-  @sample(#{ scopes: #["https://cognitiveservices.azure.com/.default"] })
+  @sample(OAuthConnectionScopesSample)
   scopes?: string[];
 }

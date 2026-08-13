@@ -29,6 +29,7 @@ describe("ObjectProperty", () => {
       const instance = ObjectProperty.fromJson(json);
       const output = instance.toJson();
       const reloaded = ObjectProperty.fromJson(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
@@ -44,12 +45,15 @@ describe("ObjectProperty", () => {
       const instance = ObjectProperty.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ObjectProperty.fromYaml(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "properties": {\n    "property1": {\n      "kind": "string"\n    },\n    "property2": {\n      "kind": "number"\n    }\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ObjectProperty.load(data);
       expect(instance).toBeDefined();
     });

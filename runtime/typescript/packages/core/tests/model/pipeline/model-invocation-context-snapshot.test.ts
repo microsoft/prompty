@@ -19,7 +19,7 @@ describe("ModelInvocationContextSnapshot", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "id": "context:inv_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "invocationId": "inv_abc123"\n}`;
+      const json = `{\n  "id": "context:inv_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "invocationId": "inv_abc123",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ],\n  "contextState": {}\n}`;
       const instance = ModelInvocationContextSnapshot.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("context:inv_abc123");
@@ -29,7 +29,7 @@ describe("ModelInvocationContextSnapshot", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "id": "context:inv_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "invocationId": "inv_abc123"\n}`;
+      const json = `{\n  "id": "context:inv_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "invocationId": "inv_abc123",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ],\n  "contextState": {}\n}`;
       const instance = ModelInvocationContextSnapshot.fromJson(json);
       const output = instance.toJson();
       const reloaded = ModelInvocationContextSnapshot.fromJson(output);
@@ -42,7 +42,7 @@ describe("ModelInvocationContextSnapshot", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `id: "context:inv_abc123"\nsessionId: sess_abc123\nturnId: turn_abc123\ninvocationId: inv_abc123\n`;
+      const yaml = `id: "context:inv_abc123"\nsessionId: sess_abc123\nturnId: turn_abc123\ninvocationId: inv_abc123\nmessages:\n  - role: user\n    parts:\n      - kind: text\n        value: Hello!\n    metadata:\n      source: user-input\ncontextState: {}\n`;
       const instance = ModelInvocationContextSnapshot.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("context:inv_abc123");
@@ -52,7 +52,7 @@ describe("ModelInvocationContextSnapshot", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `id: "context:inv_abc123"\nsessionId: sess_abc123\nturnId: turn_abc123\ninvocationId: inv_abc123\n`;
+      const yaml = `id: "context:inv_abc123"\nsessionId: sess_abc123\nturnId: turn_abc123\ninvocationId: inv_abc123\nmessages:\n  - role: user\n    parts:\n      - kind: text\n        value: Hello!\n    metadata:\n      source: user-input\ncontextState: {}\n`;
       const instance = ModelInvocationContextSnapshot.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ModelInvocationContextSnapshot.fromYaml(output);
@@ -65,7 +65,9 @@ describe("ModelInvocationContextSnapshot", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "context:inv_abc123",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "invocationId": "inv_abc123",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ],\n  "contextState": {}\n}`,
+      ) as Record<string, unknown>;
       const instance = ModelInvocationContextSnapshot.load(data);
       expect(instance).toBeDefined();
     });

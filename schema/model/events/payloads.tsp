@@ -61,34 +61,34 @@ alias HookEndScope = "turn" | "session";
  */
 model TurnEvent {
   @doc("Unique identifier for this event")
-  @sample(#{ id: "evt_abc123" })
+  @sample(fileIdSample)
   id: string;
 
   @doc("Event type discriminator")
   type: TurnEventType;
 
   @doc("ISO 8601 UTC timestamp when the event was emitted")
-  @sample(#{ timestamp: "2026-06-09T20:00:00Z" })
+  @sample(fileTimestampSample)
   timestamp: string;
 
   @doc("Stable identifier for the outer turn")
-  @sample(#{ turnId: "turn_001" })
+  @sample(fileTurnIdSample)
   turnId?: string;
 
   @doc("Zero-based agent-loop iteration associated with the event")
-  @sample(#{ iteration: 0 })
+  @sample(fileIterationSample)
   iteration?: int32;
 
   @doc("Parent event or span identifier for reconstructing event hierarchy")
-  @sample(#{ parentId: "evt_parent" })
+  @sample(fileParentIdSample)
   parentId?: string;
 
   @doc("Trace span identifier associated with this event")
-  @sample(#{ spanId: "span_tool_001" })
+  @sample(fileSpanIdSample)
   spanId?: string;
 
   @doc("Event-specific payload. Use the typed payload model matching 'type'.")
-  payload: Record<unknown> = #{};
+  payload: Record<unknown>;
 }
 
 /**
@@ -96,14 +96,14 @@ model TurnEvent {
  */
 model TurnStartPayload {
   @doc("Name of the loaded prompt/agent, when available")
-  @sample(#{ agent: "weather-agent" })
+  @sample(TurnStartPayloadAgentSample)
   agent?: string;
 
   @doc("Input values supplied to the turn after host-side sanitization")
   inputs?: Record<unknown>;
 
   @doc("Configured maximum tool-call iterations")
-  @sample(#{ maxIterations: 10 })
+  @sample(TurnStartPayloadMaxIterationsSample)
   maxIterations?: int32;
 }
 
@@ -112,7 +112,7 @@ model TurnStartPayload {
  */
 model TurnEndPayload {
   @doc("Number of tool-call iterations performed")
-  @sample(#{ iterations: 2 })
+  @sample(TurnEndPayloadIterationsSample)
   iterations?: int32;
 
   @doc("Final semantic status of the turn")
@@ -122,7 +122,7 @@ model TurnEndPayload {
   response?: unknown;
 
   @doc("Total elapsed turn duration in milliseconds")
-  @sample(#{ durationMs: 1500 })
+  @sample(TurnEndPayloadDurationMsSample)
   durationMs?: float64;
 }
 
@@ -131,19 +131,19 @@ model TurnEndPayload {
  */
 model LlmStartPayload {
   @doc("Provider identifier used for the request")
-  @sample(#{ provider: "openai" })
+  @sample(LlmStartPayloadProviderSample)
   provider?: string;
 
   @doc("Model or deployment identifier used for the request")
-  @sample(#{ modelId: "gpt-4o-mini" })
+  @sample(LlmStartPayloadModelIdSample)
   modelId?: string;
 
   @doc("Number of messages sent to the provider")
-  @sample(#{ messageCount: 4 })
+  @sample(LlmStartPayloadMessageCountSample)
   messageCount?: int32;
 
   @doc("Retry attempt number, zero for the initial attempt")
-  @sample(#{ attempt: 0 })
+  @sample(LlmStartPayloadAttemptSample)
   attempt?: int32;
 }
 
@@ -152,18 +152,18 @@ model LlmStartPayload {
  */
 model LlmCompletePayload {
   @doc("Provider request identifier, when supplied by the SDK/API")
-  @sample(#{ requestId: "req_abc123" })
+  @sample(LlmCompletePayloadRequestIdSample)
   requestId?: string;
 
   @doc("Service request identifier, when supplied by the SDK/API")
-  @sample(#{ serviceRequestId: "srv_abc123" })
+  @sample(LlmCompletePayloadServiceRequestIdSample)
   serviceRequestId?: string;
 
   @doc("Token usage reported by the provider")
   usage?: TokenUsage;
 
   @doc("LLM call duration in milliseconds")
-  @sample(#{ durationMs: 820 })
+  @sample(LlmCompletePayloadDurationMsSample)
   durationMs?: float64;
 }
 
@@ -172,23 +172,23 @@ model LlmCompletePayload {
  */
 model RetryPayload {
   @doc("Operation being retried")
-  @sample(#{ operation: "llm" })
+  @sample(RetryPayloadOperationSample)
   operation: string;
 
   @doc("Attempt number about to run")
-  @sample(#{ attempt: 2 })
+  @sample(RetryPayloadAttemptSample)
   attempt: int32;
 
   @doc("Maximum configured attempts")
-  @sample(#{ maxAttempts: 3 })
+  @sample(RetryPayloadMaxAttemptsSample)
   maxAttempts?: int32;
 
   @doc("Backoff delay before the next attempt in milliseconds")
-  @sample(#{ delayMs: 1250 })
+  @sample(RetryPayloadDelayMsSample)
   delayMs?: float64;
 
   @doc("Reason for the retry")
-  @sample(#{ reason: "rate_limit" })
+  @sample(RetryPayloadReasonSample)
   reason?: string;
 }
 
@@ -197,26 +197,26 @@ model RetryPayload {
  */
 model PermissionRequestedPayload {
   @doc("Stable permission request identifier")
-  @sample(#{ requestId: "perm_abc123" })
+  @sample(PermissionRequestedPayloadRequestIdSample)
   requestId?: string;
 
   @doc("Associated tool call identifier, when the permission gates a tool call")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(PermissionRequestedPayloadToolCallIdSample)
   toolCallId?: string;
 
   @doc("Permission/action name being requested")
-  @sample(#{ permission: "tool.execute" })
+  @sample(PermissionRequestedPayloadPermissionSample)
   permission: string;
 
   @doc("Resource or tool the permission applies to")
-  @sample(#{ target: "shell" })
+  @sample(PermissionRequestedPayloadTargetSample)
   target?: string;
 
   @doc("Additional host-specific permission details")
   details?: Record<unknown>;
 
   @doc("Human-readable prompt or rationale that can be shown to an approval UI")
-  @sample(#{ promptRequest: "Allow shell to run tests?" })
+  @sample(PermissionRequestedPayloadPromptRequestSample)
   promptRequest?: string;
 
   @doc("Policy metadata used to evaluate or explain the permission request")
@@ -231,23 +231,23 @@ model PermissionRequestedPayload {
  */
 model PermissionCompletedPayload {
   @doc("Stable permission request identifier")
-  @sample(#{ requestId: "perm_abc123" })
+  @sample(PermissionCompletedPayloadRequestIdSample)
   requestId?: string;
 
   @doc("Associated tool call identifier, when the permission gated a tool call")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(PermissionCompletedPayloadToolCallIdSample)
   toolCallId?: string;
 
   @doc("Permission/action name that was decided")
-  @sample(#{ permission: "tool.execute" })
+  @sample(PermissionCompletedPayloadPermissionSample)
   permission: string;
 
   @doc("Whether the requested permission was approved")
-  @sample(#{ approved: true })
+  @sample(PermissionCompletedPayloadApprovedSample)
   approved: boolean;
 
   @doc("Decision reason, if available")
-  @sample(#{ reason: "user_approved" })
+  @sample(PermissionCompletedPayloadReasonSample)
   reason?: string;
 
   @doc("Host-specific decision result, such as a durable approval token or denial details")
@@ -263,26 +263,26 @@ model PermissionCompletedPayload {
  */
 model PermissionRequest {
   @doc("Stable permission request identifier")
-  @sample(#{ requestId: "perm_abc123" })
+  @sample(PermissionRequestRequestIdSample)
   requestId?: string;
 
   @doc("Associated tool call identifier, when the permission gates a tool call")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(PermissionRequestToolCallIdSample)
   toolCallId?: string;
 
   @doc("Permission/action name being requested")
-  @sample(#{ permission: "tool.execute" })
+  @sample(PermissionRequestPermissionSample)
   permission: string;
 
   @doc("Resource or tool the permission applies to")
-  @sample(#{ target: "shell" })
+  @sample(PermissionRequestTargetSample)
   target?: string;
 
   @doc("Additional host-specific permission details")
   details?: Record<unknown>;
 
   @doc("Human-readable prompt or rationale that can be shown to an approval UI")
-  @sample(#{ promptRequest: "Allow shell to run tests?" })
+  @sample(PermissionRequestPromptRequestSample)
   promptRequest?: string;
 
   @doc("Policy metadata used to evaluate or explain the permission request")
@@ -294,23 +294,23 @@ model PermissionRequest {
  */
 model PermissionDecision {
   @doc("Stable permission request identifier")
-  @sample(#{ requestId: "perm_abc123" })
+  @sample(PermissionDecisionRequestIdSample)
   requestId?: string;
 
   @doc("Associated tool call identifier, when the permission gated a tool call")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(PermissionDecisionToolCallIdSample)
   toolCallId?: string;
 
   @doc("Permission/action name that was decided")
-  @sample(#{ permission: "tool.execute" })
+  @sample(PermissionDecisionPermissionSample)
   permission: string;
 
   @doc("Whether the requested permission was approved")
-  @sample(#{ approved: true })
+  @sample(PermissionDecisionApprovedSample)
   approved: boolean;
 
   @doc("Decision reason, if available")
-  @sample(#{ reason: "user_approved" })
+  @sample(PermissionDecisionReasonSample)
   reason?: string;
 
   @doc("Host-specific decision result, such as a durable approval token or denial details")
@@ -322,7 +322,7 @@ model PermissionDecision {
  */
 model TokenEventPayload {
   @doc("The streamed token text")
-  @sample(#{ token: "Hello" })
+  @sample(TokenEventPayloadTokenSample)
   token: string;
 }
 
@@ -331,7 +331,7 @@ model TokenEventPayload {
  */
 model ThinkingEventPayload {
   @doc("The thinking/reasoning token text")
-  @sample(#{ token: "Let me consider..." })
+  @sample(ThinkingEventPayloadTokenSample)
   token: string;
 }
 
@@ -340,15 +340,15 @@ model ThinkingEventPayload {
  */
 model ToolCallStartPayload {
   @doc("The unique identifier of the tool call")
-  @sample(#{ id: "call_abc123" })
+  @sample(ToolCallStartPayloadIdSample)
   id?: string;
 
   @doc("The name of the tool being called")
-  @sample(#{ name: "get_weather" })
+  @sample(ToolCallStartPayloadNameSample)
   name: string;
 
   @doc("The serialized JSON arguments for the tool call")
-  @sample(#{ arguments: "{\"city\": \"Paris\"}" })
+  @sample(ToolCallStartPayloadArgumentsSample)
   arguments: string;
 }
 
@@ -357,26 +357,26 @@ model ToolCallStartPayload {
  */
 model ToolCallCompletePayload {
   @doc("The unique identifier of the tool call")
-  @sample(#{ id: "call_abc123" })
+  @sample(ToolCallCompletePayloadIdSample)
   id?: string;
 
   @doc("The name of the tool that completed")
-  @sample(#{ name: "get_weather" })
+  @sample(ToolCallCompletePayloadNameSample)
   name: string;
 
   @doc("Whether the tool dispatch succeeded semantically")
-  @sample(#{ success: true })
+  @sample(ToolCallCompletePayloadSuccessSample)
   success: boolean;
 
   @doc("Normalized tool result")
   result?: ToolResult;
 
   @doc("Tool execution duration in milliseconds")
-  @sample(#{ durationMs: 42 })
+  @sample(ToolCallCompletePayloadDurationMsSample)
   durationMs?: float64;
 
   @doc("Machine-readable error category when success is false")
-  @sample(#{ errorKind: "timeout" })
+  @sample(ToolCallCompletePayloadErrorKindSample)
   errorKind?: string;
 }
 
@@ -388,22 +388,22 @@ model ToolCallCompletePayload {
  */
 model ToolExecutionStartPayload {
   @doc("Stable host execution request identifier")
-  @sample(#{ requestId: "exec_abc123" })
+  @sample(requestingRequestIdSample)
   requestId?: string;
 
   @doc("Associated model tool call identifier, when available")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(requestingToolCallIdSample)
   toolCallId?: string;
 
   @doc("Name of the host tool being executed")
-  @sample(#{ toolName: "powershell" })
+  @sample(requestingToolNameSample)
   toolName: string;
 
   @doc("Tool arguments after host-side sanitization")
   arguments?: Record<unknown>;
 
   @doc("Working directory or execution scope for the tool")
-  @sample(#{ workingDirectory: "/workspace/project" })
+  @sample(requestingWorkingDirectorySample)
   workingDirectory?: string;
 
   @doc("Redaction state for sensitive argument fields")
@@ -415,34 +415,34 @@ model ToolExecutionStartPayload {
  */
 model ToolExecutionCompletePayload {
   @doc("Stable host execution request identifier")
-  @sample(#{ requestId: "exec_abc123" })
+  @sample(ToolExecutionCompletePayloadRequestIdSample)
   requestId?: string;
 
   @doc("Associated model tool call identifier, when available")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(ToolExecutionCompletePayloadToolCallIdSample)
   toolCallId?: string;
 
   @doc("Name of the host tool that executed")
-  @sample(#{ toolName: "powershell" })
+  @sample(ToolExecutionCompletePayloadToolNameSample)
   toolName: string;
 
   @doc("Whether the host execution completed successfully")
-  @sample(#{ success: true })
+  @sample(ToolExecutionCompletePayloadSuccessSample)
   success: boolean;
 
   @doc("Host-normalized execution result")
   result?: unknown;
 
   @doc("Process or host exit code, when applicable")
-  @sample(#{ exitCode: 0 })
+  @sample(ToolExecutionCompletePayloadExitCodeSample)
   exitCode?: int32;
 
   @doc("Tool execution duration in milliseconds")
-  @sample(#{ durationMs: 250 })
+  @sample(ToolExecutionCompletePayloadDurationMsSample)
   durationMs?: float64;
 
   @doc("Machine-readable error category when success is false")
-  @sample(#{ errorKind: "timeout" })
+  @sample(ToolExecutionCompletePayloadErrorKindSample)
   errorKind?: string;
 
   @doc("Host-specific telemetry for the execution")
@@ -457,22 +457,22 @@ model ToolExecutionCompletePayload {
  */
 model HostToolRequest {
   @doc("Stable host execution request identifier")
-  @sample(#{ requestId: "exec_abc123" })
+  @sample(HostToolRequestRequestIdSample)
   requestId?: string;
 
   @doc("Associated model tool call identifier, when available")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(HostToolRequestToolCallIdSample)
   toolCallId?: string;
 
   @doc("Name of the host tool being executed")
-  @sample(#{ toolName: "powershell" })
+  @sample(HostToolRequestToolNameSample)
   toolName: string;
 
   @doc("Tool arguments after host-side sanitization")
   arguments?: Record<unknown>;
 
   @doc("Working directory or execution scope for the tool")
-  @sample(#{ workingDirectory: "/workspace/project" })
+  @sample(HostToolRequestWorkingDirectorySample)
   workingDirectory?: string;
 }
 
@@ -481,34 +481,34 @@ model HostToolRequest {
  */
 model HostToolResult {
   @doc("Stable host execution request identifier")
-  @sample(#{ requestId: "exec_abc123" })
+  @sample(HostToolResultRequestIdSample)
   requestId?: string;
 
   @doc("Associated model tool call identifier, when available")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(HostToolResultToolCallIdSample)
   toolCallId?: string;
 
   @doc("Name of the host tool that executed")
-  @sample(#{ toolName: "powershell" })
+  @sample(HostToolResultToolNameSample)
   toolName: string;
 
   @doc("Whether the host execution completed successfully")
-  @sample(#{ success: true })
+  @sample(HostToolResultSuccessSample)
   success: boolean;
 
   @doc("Host-normalized execution result")
   result?: unknown;
 
   @doc("Process or host exit code, when applicable")
-  @sample(#{ exitCode: 0 })
+  @sample(HostToolResultExitCodeSample)
   exitCode?: int32;
 
   @doc("Tool execution duration in milliseconds")
-  @sample(#{ durationMs: 250 })
+  @sample(HostToolResultDurationMsSample)
   durationMs?: float64;
 
   @doc("Machine-readable error category when success is false")
-  @sample(#{ errorKind: "timeout" })
+  @sample(HostToolResultErrorKindSample)
   errorKind?: string;
 
   @doc("Host-specific telemetry for the execution")
@@ -520,11 +520,11 @@ model HostToolResult {
  */
 model HookStartPayload {
   @doc("Stable hook invocation identifier")
-  @sample(#{ hookInvocationId: "hook_abc123" })
+  @sample(HookStartPayloadHookInvocationIdSample)
   hookInvocationId: string;
 
   @doc("Host-defined hook type")
-  @sample(#{ hookType: "preToolUse" })
+  @sample(HookStartPayloadHookTypeSample)
   hookType: string;
 
   @doc("Whether the hook is scoped to a turn or the outer session")
@@ -542,29 +542,29 @@ model HookStartPayload {
  */
 model HookEndPayload {
   @doc("Stable hook invocation identifier")
-  @sample(#{ hookInvocationId: "hook_abc123" })
+  @sample(HookEndPayloadHookInvocationIdSample)
   hookInvocationId: string;
 
   @doc("Host-defined hook type")
-  @sample(#{ hookType: "preToolUse" })
+  @sample(HookEndPayloadHookTypeSample)
   hookType: string;
 
   @doc("Whether the hook is scoped to a turn or the outer session")
   scope?: HookEndScope;
 
   @doc("Whether the hook completed successfully")
-  @sample(#{ success: true })
+  @sample(HookEndPayloadSuccessSample)
   success: boolean;
 
   @doc("Hook output after host-side sanitization")
   output?: Record<unknown>;
 
   @doc("Hook execution duration in milliseconds")
-  @sample(#{ durationMs: 12 })
+  @sample(HookEndPayloadDurationMsSample)
   durationMs?: float64;
 
   @doc("Human-readable error when success is false")
-  @sample(#{ error: "hook failed" })
+  @sample(HookEndPayloadErrorSample)
   error?: string;
 
   @doc("Redaction state for sensitive hook output fields")
@@ -576,13 +576,11 @@ model HookEndPayload {
  */
 model ToolResultPayload {
   @doc("The name of the tool that produced the result")
-  @sample(#{ name: "get_weather" })
+  @sample(ToolResultPayloadNameSample)
   name: string;
 
   @doc("The tool's result")
-  @sample(#{
-    result: #{ parts: #[#{ kind: "text", value: "72°F and sunny" }] },
-  })
+  @sample(ToolResultPayloadResultSample)
   result: ToolResult;
 }
 
@@ -591,7 +589,7 @@ model ToolResultPayload {
  */
 model StatusEventPayload {
   @doc("Human-readable status message")
-  @sample(#{ message: "Starting iteration 3" })
+  @sample(StatusEventPayloadMessageSample)
   message: string;
 }
 
@@ -603,14 +601,14 @@ model MessagesUpdatedPayload {
   messages?: Message[];
 
   @doc("Why the message list changed")
-  @sample(#{ reason: "tool_results" })
+  @sample(MessagesUpdatedPayloadReasonSample)
   reason?: string;
 
   @doc("Messages appended by this update, when available")
   appended?: Message[];
 
   @doc("Number of messages removed by this update, when available")
-  @sample(#{ removed: 2 })
+  @sample(MessagesUpdatedPayloadRemovedSample)
   removed?: int32;
 }
 
@@ -630,15 +628,15 @@ model DoneEventPayload {
  */
 model ErrorEventPayload {
   @doc("Human-readable error description")
-  @sample(#{ message: "Rate limit exceeded" })
+  @sample(ErrorEventPayloadMessageSample)
   message: string;
 
   @doc("Stable machine-readable error category")
-  @sample(#{ errorKind: "rate_limit" })
+  @sample(ErrorEventPayloadErrorKindSample)
   errorKind?: string;
 
   @doc("Operation or phase where the error occurred")
-  @sample(#{ phase: "llm" })
+  @sample(ErrorEventPayloadPhaseSample)
   phase?: string;
 }
 
@@ -647,7 +645,7 @@ model ErrorEventPayload {
  */
 model CompactionStartPayload {
   @doc("Number of messages selected for compaction")
-  @sample(#{ droppedCount: 5 })
+  @sample(CompactionStartPayloadDroppedCountSample)
   droppedCount: int32;
 }
 
@@ -656,15 +654,15 @@ model CompactionStartPayload {
  */
 model CompactionCompletePayload {
   @doc("Number of messages removed during compaction")
-  @sample(#{ removed: 5 })
+  @sample(CompactionCompletePayloadRemovedSample)
   removed: int32;
 
   @doc("Number of messages remaining after compaction")
-  @sample(#{ remaining: 3 })
+  @sample(CompactionCompletePayloadRemainingSample)
   remaining: int32;
 
   @doc("Length of the generated summary, when a summarization strategy is used")
-  @sample(#{ summaryLength: 1200 })
+  @sample(CompactionCompletePayloadSummaryLengthSample)
   summaryLength?: int32;
 }
 
@@ -673,7 +671,7 @@ model CompactionCompletePayload {
  */
 model CompactionFailedPayload {
   @doc("Explanation of why compaction failed")
-  @sample(#{ message: "Summarization prompt exceeded context window" })
+  @sample(CompactionFailedPayloadMessageSample)
   message: string;
 }
 
@@ -682,34 +680,34 @@ model CompactionFailedPayload {
  */
 model TurnSummary {
   @doc("Stable identifier for the outer turn")
-  @sample(#{ turnId: "turn_001" })
+  @sample(TurnSummaryTurnIdSample)
   turnId: string;
 
   @doc("Final turn status: 'success', 'error', or 'cancelled'")
-  @sample(#{ status: "success" })
+  @sample(TurnSummaryStatusSample)
   status: string;
 
   @doc("Number of agent-loop iterations")
-  @sample(#{ iterations: 2 })
+  @sample(TurnSummaryIterationsSample)
   iterations: int32;
 
   @doc("Number of LLM calls made during the turn")
-  @sample(#{ llmCalls: 3 })
+  @sample(TurnSummaryLlmCallsSample)
   llmCalls?: int32;
 
   @doc("Number of tool calls dispatched during the turn")
-  @sample(#{ toolCalls: 2 })
+  @sample(TurnSummaryToolCallsSample)
   toolCalls?: int32;
 
   @doc("Number of retry events during the turn")
-  @sample(#{ retries: 1 })
+  @sample(TurnSummaryRetriesSample)
   retries?: int32;
 
   @doc("Aggregated token usage for the turn")
   usage?: TokenUsage;
 
   @doc("Total elapsed turn duration in milliseconds")
-  @sample(#{ durationMs: 2500 })
+  @sample(TurnSummaryDurationMsSample)
   durationMs?: float64;
 }
 
@@ -718,15 +716,15 @@ model TurnSummary {
  */
 model TurnTrace {
   @doc("Trace schema version")
-  @sample(#{ version: "1" })
+  @sample(TurnTraceVersionSample)
   version: string = "1";
 
   @doc("Runtime name that produced the trace")
-  @sample(#{ runtime: "typescript" })
+  @sample(TurnTraceRuntimeSample)
   runtime?: string;
 
   @doc("Prompty library version that produced the trace")
-  @sample(#{ promptyVersion: "2.0.0" })
+  @sample(TurnTracePromptyVersionSample)
   promptyVersion?: string;
 
   @doc("Recorded turn events in emission order")
@@ -746,15 +744,15 @@ alias RedactionMode = "none" | "redacted" | "hashed" | "summary" | "reference";
  */
 model RedactedField {
   @doc("JSONPath-like field path, relative to the containing payload")
-  @sample(#{ path: "$.arguments.apiKey" })
+  @sample(RedactedFieldPathSample)
   path: string;
 
   @doc("How the field was represented")
-  @sample(#{ mode: "redacted" })
+  @sample(RedactedFieldModeSample)
   mode: RedactionMode;
 
   @doc("Human-readable reason or policy that caused this handling")
-  @sample(#{ reason: "secret" })
+  @sample(RedactedFieldReasonSample)
   reason?: string;
 }
 
@@ -763,13 +761,13 @@ model RedactedField {
  */
 model RedactionMetadata {
   @doc("Whether the payload has been sanitized for persistence or external display")
-  @sample(#{ sanitized: true })
+  @sample(RedactionMetadataSanitizedSample)
   sanitized?: boolean = false;
 
   @doc("Field-level redaction details")
   fields?: RedactedField[];
 
   @doc("Host policy or sanitizer version that produced this metadata")
-  @sample(#{ policy: "default-v1" })
+  @sample(RedactionMetadataPolicySample)
   policy?: string;
 }

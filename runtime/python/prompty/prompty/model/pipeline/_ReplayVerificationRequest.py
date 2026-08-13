@@ -40,8 +40,9 @@ class ReplayVerificationRequest:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ReplayVerificationRequest: {data}")
@@ -50,27 +51,31 @@ class ReplayVerificationRequest:
         instance = ReplayVerificationRequest()
 
         if data is not None and "expected" in data:
-            instance.expected = ReplayVerificationRequest.load_expected(data["expected"], context)
+            instance.expected = ReplayVerificationRequest.load_expected(data["expected"], context.at("expected"))
         if data is not None and "actual" in data:
-            instance.actual = ReplayVerificationRequest.load_actual(data["actual"], context)
+            instance.actual = ReplayVerificationRequest.load_actual(data["actual"], context.at("actual"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_expected(data: dict | list, context: LoadContext | None) -> list[ReplayJournalRecord]:
+        if context is None:
+            context = LoadContext(path="expected")
         if isinstance(data, dict):
             # convert simple named expected to list of ReplayJournalRecord
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ReplayJournalRecord.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [ReplayJournalRecord.load(item, context) for item in data]
+                    result.append(ReplayJournalRecord.load({"name": k, "kind": v}, context.at(k)))
+            return result
+        return [ReplayJournalRecord.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_expected(
@@ -79,23 +84,27 @@ class ReplayVerificationRequest:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_actual(data: dict | list, context: LoadContext | None) -> list[ReplayJournalRecord]:
+        if context is None:
+            context = LoadContext(path="actual")
         if isinstance(data, dict):
             # convert simple named actual to list of ReplayJournalRecord
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ReplayJournalRecord.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [ReplayJournalRecord.load(item, context) for item in data]
+                    result.append(ReplayJournalRecord.load({"name": k, "kind": v}, context.at(k)))
+            return result
+        return [ReplayJournalRecord.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_actual(
@@ -104,7 +113,7 @@ class ReplayVerificationRequest:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

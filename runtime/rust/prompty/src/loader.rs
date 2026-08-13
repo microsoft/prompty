@@ -184,7 +184,17 @@ fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Pro
     let mut value = serde_json::Value::Object(data);
     resolve::resolve_references(&mut value, &agent_dir, &options.allowed_file_roots)?;
 
-    // 6. Load via emitter-generated typed constructor with context
+    // 6. Validate before loading. In Typra 0.6.2 the generated
+    //    `load_from_value` panics on validation failure (missing required
+    //    fields, malformed collections). Surface those as a recoverable
+    //    `LoadError` by validating first — this keeps negative-path callers
+    //    (e.g. a bare-string `template`) on the `Result` seam instead of
+    //    unwinding.
+    if let Err(message) = Prompty::validate_input_at(&value, "") {
+        return Err(LoadError::InvalidFrontmatter(message));
+    }
+
+    // 7. Load via emitter-generated typed constructor with context
     let agent = Prompty::load_from_value(&value, &ctx);
 
     // 7. Store source path in metadata for PromptyTool resolution

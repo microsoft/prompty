@@ -15,7 +15,7 @@ model HostPolicyRequest {
   iteration: int32;
 
   @doc("Canonical messages entering the invocation")
-  messages: Message[] = #[];
+  messages: Message[];
 
   @doc("Number of leading messages eligible for provider prefix-cache reuse")
   stablePrefixMessages: int32 = 0;
@@ -27,13 +27,13 @@ model HostPolicyRequest {
 /** State rewrite produced by the host policy before a model invocation. */
 model HostPolicyResult {
   @doc("Canonical messages to use for the invocation")
-  messages: Message[] = #[];
+  messages: Message[];
 
   @doc("Number of leading messages eligible for provider prefix-cache reuse")
   stablePrefixMessages: int32 = 0;
 
   @doc("Opaque host-specific policy metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /** Final output supplied to the host policy immediately before a success commit. */
@@ -48,7 +48,7 @@ model FinalOutputPolicyRequest {
   iteration: int32;
 
   @doc("Canonical messages at commit time")
-  messages: Message[] = #[];
+  messages: Message[];
 
   @doc("Proposed final output")
   output?: unknown;
@@ -63,7 +63,7 @@ model FinalOutputPolicyResult {
   output?: unknown;
 
   @doc("Opaque host-specific policy metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /** Context supplied to the retry policy after a retryable model failure. */

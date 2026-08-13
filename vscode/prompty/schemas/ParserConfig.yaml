@@ -8,7 +8,6 @@ properties:
     description: Parser used to process the rendered template into API-compatible format
   options:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Options for the parser
 required:
   - kind

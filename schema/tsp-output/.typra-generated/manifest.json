@@ -750,6 +750,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/CheckpointStore.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/connection/AnonymousConnection.cs",
       "marker": true
     },
@@ -901,6 +906,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/core/ValidationResult.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/EventJournalWriter.cs",
       "marker": true
     },
     {
@@ -1190,6 +1200,21 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/EventSink.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Executor.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/HostToolExecutor.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/memory/MemoryCategory.cs",
       "marker": true
     },
@@ -1225,11 +1250,6 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/model/ModelLister.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/model/ModelOptions.cs",
       "marker": true
     },
@@ -1250,7 +1270,17 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/CheckpointStore.cs",
+      "path": "../runtime/csharp/Prompty.Core/Model/ModelLister.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Parser.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/PermissionResolver.cs",
       "marker": true
     },
     {
@@ -1300,21 +1330,6 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/EventJournalWriter.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/EventSink.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/Executor.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/pipeline/FinalOutputPolicyRequest.cs",
       "marker": true
     },
@@ -1331,11 +1346,6 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/pipeline/HostPolicyResult.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/HostToolExecutor.cs",
       "marker": true
     },
     {
@@ -1391,26 +1401,6 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/pipeline/ModelToolResult.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/Parser.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/PermissionResolver.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/Processor.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/pipeline/Renderer.cs",
       "marker": true
     },
     {
@@ -1496,6 +1486,16 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/pipeline/TurnOptions.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Processor.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Renderer.cs",
       "marker": true
     },
     {
@@ -3060,7 +3060,57 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_CheckpointStore.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_context.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_EventJournalWriter.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_EventSink.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_Executor.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_HostToolExecutor.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_ModelLister.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_Parser.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_PermissionResolver.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_Processor.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_Renderer.py",
       "marker": true
     },
     {
@@ -3430,11 +3480,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/model/_ModelLister.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/model/_ModelOptions.py",
       "marker": true
     },
@@ -3456,11 +3501,6 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/pipeline/__init__.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_CheckpointStore.py",
       "marker": true
     },
     {
@@ -3500,21 +3540,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_EventJournalWriter.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_EventSink.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_Executor.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/pipeline/_FinalOutputPolicyRequest.py",
       "marker": true
     },
@@ -3531,11 +3556,6 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/pipeline/_HostPolicyResult.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_HostToolExecutor.py",
       "marker": true
     },
     {
@@ -3576,26 +3596,6 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/pipeline/_ModelToolResult.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_Parser.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_PermissionResolver.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_Processor.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/pipeline/_Renderer.py",
       "marker": true
     },
     {
@@ -3825,7 +3825,17 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/connection/test_authorization_code_flow.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/connection/test_connection.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/connection/test_device_authorization.py",
       "marker": true
     },
     {
@@ -3836,6 +3846,11 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/connection/test_o_auth_connection.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/connection/test_o_auth_token.py",
       "marker": true
     },
     {
@@ -3851,6 +3866,11 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/conversation/test_audio_part.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/conversation/test_content_part.py",
       "marker": true
     },
     {
@@ -3946,6 +3966,11 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/events/test_compaction_start_payload.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/events/test_done_event_payload.py",
       "marker": true
     },
     {
@@ -4080,6 +4105,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/events/test_stream_chunk.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/events/test_text_chunk.py",
       "marker": true
     },
@@ -4160,12 +4190,22 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/events/test_usage_chunk.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/memory/test_memory_entry.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/memory/test_memory_store.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/model/test_ai_resource_info.py",
       "marker": true
     },
     {
@@ -4190,6 +4230,16 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/model/test_project_info.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/model/test_subscription_info.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/model/test_token_usage.py",
       "marker": true
     },
@@ -4201,6 +4251,11 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_context_candidate.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_context_request.py",
       "marker": true
     },
     {
@@ -4220,12 +4275,52 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_engine_permission_decision.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_final_output_policy_request.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_final_output_policy_result.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_host_policy_request.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_host_policy_result.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_invocation_context_decision.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_invocation_context_state.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_model_invocation_context_snapshot.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_model_invocation_request.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_model_invocation_response.py",
       "marker": true
     },
     {
@@ -4245,7 +4340,32 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_journal_record.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_mismatch.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_verification_request.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_replay_verification_result.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_resume_context.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_retry_policy_request.py",
       "marker": true
     },
     {
@@ -4265,7 +4385,17 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_engine_result.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_model_request.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/pipeline/test_turn_model_response.py",
       "marker": true
     },
     {
@@ -4296,6 +4426,11 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/test_context.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/test_vector_conformance.py",
       "marker": true
     },
     {
@@ -4365,6 +4500,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_image_block.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/wire/test_anthropic_image_source.py",
       "marker": true
     },
@@ -4421,6 +4561,11 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/agent/prompty.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/checkpoint_store.rs",
       "marker": true
     },
     {
@@ -4511,6 +4656,16 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/core/validation_result.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/event_journal_writer.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/event_sink.rs",
       "marker": true
     },
     {
@@ -4740,6 +4895,16 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/executor.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/host_tool_executor.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/memory/memory_entry.rs",
       "marker": true
     },
@@ -4760,6 +4925,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/model_lister.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/model/ai_resource_info.rs",
       "marker": true
     },
@@ -4776,11 +4946,6 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/model/model_info.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/model/model_lister.rs",
       "marker": true
     },
     {
@@ -4810,7 +4975,12 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/checkpoint_store.rs",
+      "path": "../runtime/rust/prompty/src/model/parser.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/permission_resolver.rs",
       "marker": true
     },
     {
@@ -4850,21 +5020,6 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/event_journal_writer.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/event_sink.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/executor.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/final_output_policy_request.rs",
       "marker": true
     },
@@ -4881,11 +5036,6 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/host_policy_result.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/host_tool_executor.rs",
       "marker": true
     },
     {
@@ -4931,26 +5081,6 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/model_tool_result.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/parser.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/permission_resolver.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/processor.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/pipeline/renderer.rs",
       "marker": true
     },
     {
@@ -5016,6 +5146,16 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/pipeline/turn_options.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/processor.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/renderer.rs",
       "marker": true
     },
     {
@@ -5865,6 +6005,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/checkpoint-store.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/connection/authorization-code-flow.ts",
       "marker": true
     },
@@ -5951,6 +6096,16 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/core/validation-result.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/event-journal-writer.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/event-sink.ts",
       "marker": true
     },
     {
@@ -6180,6 +6335,16 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/executor.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/host-tool-executor.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/index.ts",
       "marker": true
     },
@@ -6200,6 +6365,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/model-lister.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/model/ai-resource-info.ts",
       "marker": true
     },
@@ -6216,11 +6386,6 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/model/model-info.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/model/model-lister.ts",
       "marker": true
     },
     {
@@ -6250,7 +6415,12 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/checkpoint-store.ts",
+      "path": "../runtime/typescript/packages/core/src/model/parser.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/permission-resolver.ts",
       "marker": true
     },
     {
@@ -6290,21 +6460,6 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/event-journal-writer.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/event-sink.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/executor.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/final-output-policy-request.ts",
       "marker": true
     },
@@ -6321,11 +6476,6 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/host-policy-result.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/host-tool-executor.ts",
       "marker": true
     },
     {
@@ -6371,26 +6521,6 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/model-tool-result.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/parser.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/permission-resolver.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/processor.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/pipeline/renderer.ts",
       "marker": true
     },
     {
@@ -6456,6 +6586,16 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/pipeline/turn-options.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/processor.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/renderer.ts",
       "marker": true
     },
     {
@@ -7276,6 +7416,11 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/tracing/trace-time.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/vector-conformance.test.ts",
       "marker": true
     },
     {

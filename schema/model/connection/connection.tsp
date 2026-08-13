@@ -21,17 +21,15 @@ alias AuthenticationMode = "user" | "system";
 @discriminator("kind")
 model Connection {
   @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-  @sample(#{ kind: "reference" })
+  @sample(ConnectionKindSample)
   kind: ConnectionType;
 
   @doc("The authority level for the connection, indicating under whose authority the connection is made (e.g., 'user', 'agent', 'system')")
-  @sample(#{ authenticationMode: "system" })
+  @sample(ConnectionAuthenticationModeSample)
   authenticationMode?: AuthenticationMode;
 
   @doc("The usage description for the connection, providing context on how this connection will be used")
-  @sample(#{
-    usageDescription: "This will allow the agent to respond to an email on your behalf",
-  })
+  @sample(ConnectionUsageDescriptionSample)
   usageDescription?: string;
 }
 
@@ -46,15 +44,15 @@ alias Connections = Record<Connection> | Named<
  */
 model ReferenceConnection extends Connection {
   @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-  @sample(#{ kind: "reference" })
+  @sample(ReferenceConnectionKindSample)
   kind: "reference";
 
   @doc("The name of the connection")
-  @sample(#{ name: "my-reference-connection" })
+  @sample(ReferenceConnectionNameSample)
   name: string;
 
   @doc("The target resource or service that this connection refers to")
-  @sample(#{ target: "my-target-resource" })
+  @sample(ReferenceConnectionTargetSample)
   target?: string;
 }
 
@@ -63,15 +61,15 @@ model ReferenceConnection extends Connection {
  */
 model RemoteConnection extends Connection {
   @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-  @sample(#{ kind: "remote" })
+  @sample(RemoteConnectionKindSample)
   kind: "remote";
 
   @doc("The name of the connection")
-  @sample(#{ name: "my-reference-connection" })
+  @sample(RemoteConnectionNameSample)
   name: string;
 
   @doc("The endpoint URL for the AI service")
-  @sample(#{ endpoint: "https://{your-custom-endpoint}.openai.azure.com/" })
+  @sample(RemoteConnectionEndpointSample)
   endpoint: string;
 }
 
@@ -80,24 +78,24 @@ model RemoteConnection extends Connection {
  */
 model ApiKeyConnection extends Connection {
   @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-  @sample(#{ kind: "key" })
+  @sample(ApiKeyConnectionKindSample)
   kind: "key";
 
   @doc("The endpoint URL for the AI service")
-  @sample(#{ endpoint: "https://{your-custom-endpoint}.openai.azure.com/" })
+  @sample(ApiKeyConnectionEndpointSample)
   endpoint: string;
 
   @doc("The API key for authenticating with the AI service")
-  @sample(#{ apiKey: "your-api-key" })
+  @sample(ApiKeyConnectionApiKeySample)
   apiKey: string;
 }
 
 model AnonymousConnection extends Connection {
   @doc("The Authentication kind for the AI service (e.g., 'key' for API key, 'oauth' for OAuth tokens)")
-  @sample(#{ kind: "anonymous" })
+  @sample(AnonymousConnectionKindSample)
   kind: "anonymous";
 
   @doc("The endpoint for authenticating with the AI service")
-  @sample(#{ endpoint: "https://{your-custom-endpoint}.openai.azure.com/" })
+  @sample(AnonymousConnectionEndpointSample)
   endpoint: string;
 }

@@ -14,7 +14,7 @@ model ToolContext {
   messages: Message[];
 
   @doc("Optional metadata for tool-specific context (e.g., user session info)")
-  @sample(#{ metadata: #{ userId: "user-123" } })
+  @sample(ToolContextMetadataSample)
   metadata?: Record<unknown>;
 }
 
@@ -25,16 +25,14 @@ model ToolContext {
  */
 model ToolDispatchResult {
   @doc("The tool call ID from the LLM response, used to correlate results")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(ToolDispatchResultToolCallIdSample)
   toolCallId: string;
 
   @doc("The name of the tool that was called")
-  @sample(#{ name: "get_weather" })
+  @sample(ToolDispatchResultNameSample)
   name: string;
 
   @doc("The result produced by the tool handler")
-  @sample(#{
-    result: #{ parts: #[#{ kind: "text", value: "72°F and sunny" }] },
-  })
+  @sample(ToolDispatchResultResultSample)
   result: ToolResult;
 }

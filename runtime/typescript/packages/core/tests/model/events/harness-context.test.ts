@@ -57,7 +57,9 @@ describe("HarnessContext", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "cwd": "/workspace/project",\n  "gitRoot": "/workspace/project"\n}`,
+      ) as Record<string, unknown>;
       const instance = HarnessContext.load(data);
       expect(instance).toBeDefined();
     });

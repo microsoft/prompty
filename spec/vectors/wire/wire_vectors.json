@@ -458,7 +458,7 @@
             { "name": "an_integer", "kind": "integer" },
             { "name": "a_float", "kind": "float" },
             { "name": "a_boolean", "kind": "boolean" },
-            { "name": "an_array", "kind": "array" },
+            { "name": "an_array", "kind": "array", "items": { "kind": "string" } },
             { "name": "an_object", "kind": "object" }
           ]
         }
@@ -485,7 +485,7 @@
                   "an_integer": { "type": "integer" },
                   "a_float": { "type": "number" },
                   "a_boolean": { "type": "boolean" },
-                  "an_array": { "type": "array" },
+                  "an_array": { "type": "array", "items": { "type": "string" } },
                   "an_object": { "type": "object" }
                 }
               }

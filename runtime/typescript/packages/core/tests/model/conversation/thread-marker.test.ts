@@ -57,7 +57,9 @@ describe("ThreadMarker", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "name": "thread",\n  "kind": "thread"\n}`,
+      ) as Record<string, unknown>;
       const instance = ThreadMarker.load(data);
       expect(instance).toBeDefined();
     });

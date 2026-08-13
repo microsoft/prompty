@@ -10,20 +10,18 @@ namespace Prompty;
  */
 model FoundryConnection extends Connection {
   @doc("The connection kind for Foundry project access")
-  @sample(#{ kind: "foundry" })
+  @sample(FoundryConnectionKindSample)
   kind: "foundry";
 
   @doc("The Foundry project endpoint URL")
-  @sample(#{
-    endpoint: "https://myresource.services.ai.azure.com/api/projects/myproject",
-  })
+  @sample(FoundryConnectionEndpointSample)
   endpoint: string;
 
   @doc("The named connection within the Foundry project")
-  @sample(#{ name: "my-openai-connection" })
+  @sample(FoundryConnectionNameSample)
   name?: string;
 
   @doc("The connection type within the Foundry project (e.g., 'model', 'index', 'storage')")
-  @sample(#{ connectionType: "model" })
+  @sample(FoundryConnectionConnectionTypeSample)
   connectionType?: string;
 }

@@ -18,7 +18,6 @@ properties:
     description: Human-readable reason the outcome is indeterminate
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque host-specific reconciliation metadata
 required:
   - invocationId

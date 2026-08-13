@@ -11,7 +11,7 @@ export class ReplayVerificationResult {
   static readonly shorthandProperty: string | undefined = undefined;
 
   status: ReplayVerificationStatus = "passed";
-  mismatches?: ReplayMismatch[] = [];
+  mismatches?: ReplayMismatch[];
   expectedCount: number = 0;
   actualCount: number = 0;
 
@@ -30,6 +30,7 @@ export class ReplayVerificationResult {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ReplayVerificationResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -42,7 +43,7 @@ export class ReplayVerificationResult {
     if (data["mismatches"] !== undefined && data["mismatches"] !== null) {
       instance.mismatches = ReplayVerificationResult.loadMismatches(
         data["mismatches"] as unknown[],
-        context,
+        context.at("mismatches"),
       );
     }
     if (data["expectedCount"] !== undefined && data["expectedCount"] !== null) {
@@ -62,20 +63,36 @@ export class ReplayVerificationResult {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): ReplayMismatch[] {
+    context ??= new LoadContext({ path: "mismatches" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: ReplayMismatch[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            ReplayMismatch.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, index: v });
+          result.push(
+            ReplayMismatch.load({ name: k, index: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      ReplayMismatch.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      ReplayMismatch.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 

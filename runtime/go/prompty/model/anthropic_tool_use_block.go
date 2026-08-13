@@ -22,6 +22,9 @@ type AnthropicToolUseBlock struct {
 
 // LoadAnthropicToolUseBlock creates a AnthropicToolUseBlock from a map[string]interface{}
 func LoadAnthropicToolUseBlock(data interface{}, ctx *LoadContext) (AnthropicToolUseBlock, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AnthropicToolUseBlock{}
 
 	// Load from map

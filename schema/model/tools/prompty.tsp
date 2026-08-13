@@ -13,14 +13,14 @@ alias promptyToolMode = "single";
  */
 model PromptyTool extends Tool {
   @doc("The kind identifier for prompty tools")
-  @sample(#{ kind: "prompty" })
+  @sample(PromptyToolKindSample)
   kind: "prompty";
 
   @doc("Path to the child .prompty file, relative to the parent")
-  @sample(#{ path: "./summarize.prompty" })
+  @sample(PromptyToolPathSample)
   path: string;
 
   @doc("Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool.")
-  @sample(#{ mode: "single" })
+  @sample(PromptyToolModeSample)
   mode: promptyToolMode = "single";
 }

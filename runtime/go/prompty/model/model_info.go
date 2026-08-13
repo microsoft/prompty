@@ -29,6 +29,9 @@ type ModelInfo struct {
 
 // LoadModelInfo creates a ModelInfo from a map[string]interface{}
 func LoadModelInfo(data interface{}, ctx *LoadContext) (ModelInfo, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ModelInfo{}
 
 	// Load from map
@@ -103,8 +106,12 @@ func (obj ModelInfo) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.ContextWindow != nil {
 		result["contextWindow"] = *obj.ContextWindow
 	}
-	result["inputModalities"] = obj.InputModalities
-	result["outputModalities"] = obj.OutputModalities
+	if obj.InputModalities != nil {
+		result["inputModalities"] = obj.InputModalities
+	}
+	if obj.OutputModalities != nil {
+		result["outputModalities"] = obj.OutputModalities
+	}
 	if obj.AdditionalProperties != nil {
 		result["additionalProperties"] = obj.AdditionalProperties
 	}

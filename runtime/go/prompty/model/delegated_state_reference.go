@@ -21,6 +21,9 @@ type DelegatedStateReference struct {
 
 // LoadDelegatedStateReference creates a DelegatedStateReference from a map[string]interface{}
 func LoadDelegatedStateReference(data interface{}, ctx *LoadContext) (DelegatedStateReference, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := DelegatedStateReference{}
 
 	// Load from map

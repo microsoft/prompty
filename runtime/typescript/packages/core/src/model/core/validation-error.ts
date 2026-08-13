@@ -23,6 +23,7 @@ export class ValidationError {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ValidationError {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

@@ -367,11 +367,11 @@ pub trait Processor: Send + Sync {
         Ok(ModelInvocationResponse {
             output: tool_requests.is_empty().then_some(output),
             usage: None,
-            assistant_messages,
-            tool_requests,
+            assistant_messages: Some(assistant_messages),
+            tool_requests: Some(tool_requests),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
             metadata: serde_json::Value::Null,
         })
@@ -392,11 +392,11 @@ pub trait Processor: Send + Sync {
         Ok(ModelInvocationResponse {
             output: Some(response),
             usage: None,
-            assistant_messages,
-            tool_requests: Vec::new(),
+            assistant_messages: Some(assistant_messages),
+            tool_requests: None,
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
             metadata: serde_json::Value::Null,
         })

@@ -19,7 +19,7 @@ describe("SessionTrace", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "sessionId": "sess_abc123"\n}`;
+      const json = `{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "sessionId": "sess_abc123",\n  "events": [\n    {\n      "id": "evt_abc123",\n      "type": "session_start",\n      "timestamp": "2026-06-09T20:00:00Z",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_001",\n      "parentId": "evt_parent",\n      "spanId": "span_hook_001",\n      "payload": {}\n    }\n  ]\n}`;
       const instance = SessionTrace.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.version).toEqual("1");
@@ -29,7 +29,7 @@ describe("SessionTrace", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "sessionId": "sess_abc123"\n}`;
+      const json = `{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "sessionId": "sess_abc123",\n  "events": [\n    {\n      "id": "evt_abc123",\n      "type": "session_start",\n      "timestamp": "2026-06-09T20:00:00Z",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_001",\n      "parentId": "evt_parent",\n      "spanId": "span_hook_001",\n      "payload": {}\n    }\n  ]\n}`;
       const instance = SessionTrace.fromJson(json);
       const output = instance.toJson();
       const reloaded = SessionTrace.fromJson(output);
@@ -42,7 +42,7 @@ describe("SessionTrace", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `version: "1"\nruntime: typescript\npromptyVersion: 2.0.0\nsessionId: sess_abc123\n`;
+      const yaml = `version: "1"\nruntime: typescript\npromptyVersion: 2.0.0\nsessionId: sess_abc123\nevents:\n  - id: evt_abc123\n    type: session_start\n    timestamp: "2026-06-09T20:00:00Z"\n    sessionId: sess_abc123\n    turnId: turn_001\n    parentId: evt_parent\n    spanId: span_hook_001\n    payload: {}\n`;
       const instance = SessionTrace.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.version).toEqual("1");
@@ -52,7 +52,7 @@ describe("SessionTrace", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `version: "1"\nruntime: typescript\npromptyVersion: 2.0.0\nsessionId: sess_abc123\n`;
+      const yaml = `version: "1"\nruntime: typescript\npromptyVersion: 2.0.0\nsessionId: sess_abc123\nevents:\n  - id: evt_abc123\n    type: session_start\n    timestamp: "2026-06-09T20:00:00Z"\n    sessionId: sess_abc123\n    turnId: turn_001\n    parentId: evt_parent\n    spanId: span_hook_001\n    payload: {}\n`;
       const instance = SessionTrace.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = SessionTrace.fromYaml(output);
@@ -65,7 +65,9 @@ describe("SessionTrace", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "sessionId": "sess_abc123",\n  "events": [\n    {\n      "id": "evt_abc123",\n      "type": "session_start",\n      "timestamp": "2026-06-09T20:00:00Z",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_001",\n      "parentId": "evt_parent",\n      "spanId": "span_hook_001",\n      "payload": {}\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = SessionTrace.load(data);
       expect(instance).toBeDefined();
     });

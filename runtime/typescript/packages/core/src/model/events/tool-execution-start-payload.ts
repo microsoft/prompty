@@ -40,6 +40,7 @@ export class ToolExecutionStartPayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ToolExecutionStartPayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -67,7 +68,7 @@ export class ToolExecutionStartPayload {
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
       instance.redaction = RedactionMetadata.load(
         data["redaction"] as Record<string, unknown>,
-        context,
+        context.at("redaction"),
       );
     }
 

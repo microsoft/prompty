@@ -6,7 +6,6 @@ properties:
     type: array
     items:
       $ref: Message.yaml
-    default: []
     description: Canonical messages to use for the invocation
   stablePrefixMessages:
     type: integer
@@ -16,7 +15,6 @@ properties:
     description: Number of leading messages eligible for provider prefix-cache reuse
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque host-specific policy metadata
 required:
   - messages

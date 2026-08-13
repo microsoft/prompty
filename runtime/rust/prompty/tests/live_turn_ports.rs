@@ -246,11 +246,15 @@ async fn turn_with_engine_request_uses_host_permission_and_persists_denial() {
         .lock()
         .expect("checkpoints lock poisoned");
     assert!(checkpoints.iter().any(|checkpoint| {
-        checkpoint.completed_tool_results.iter().any(|tool_result| {
-            tool_result.outcome == ToolOutcome::Failed
-                && tool_result.error_kind.as_deref() == Some("host_policy_denied")
-                && tool_result.output == Some(json!("host policy denied weather access"))
-        })
+        checkpoint
+            .completed_tool_results
+            .iter()
+            .flatten()
+            .any(|tool_result| {
+                tool_result.outcome == ToolOutcome::Failed
+                    && tool_result.error_kind.as_deref() == Some("host_policy_denied")
+                    && tool_result.output == Some(json!("host policy denied weather access"))
+            })
     }));
 }
 

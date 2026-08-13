@@ -22,6 +22,9 @@ type HarnessContext struct {
 
 // LoadHarnessContext creates a HarnessContext from a map[string]interface{}
 func LoadHarnessContext(data interface{}, ctx *LoadContext) (HarnessContext, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := HarnessContext{}
 
 	// Load from map

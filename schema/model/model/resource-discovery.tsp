@@ -32,6 +32,7 @@ model AiResourceInfo {
   resourceGroup: string;
 
   @doc("Optional service root used to enumerate projects")
+  @sample(AiResourceInfoServiceUrlSample)
   serviceUrl?: string;
 }
 

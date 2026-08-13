@@ -194,12 +194,19 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
         if model.is_null() {
             // expected null model → id should be empty (default)
             assert!(
-                agent.model.id.is_empty(),
+                agent
+                    .model
+                    .as_ref()
+                    .map_or(true, |model| model.id.is_empty()),
                 "[{vec_name}] expected null/empty model, got id='{}'",
-                agent.model.id
+                agent
+                    .model
+                    .as_ref()
+                    .map(|model| model.id.as_str())
+                    .unwrap_or("")
             );
         } else {
-            validate_model(&agent.model, model, vec_name);
+            validate_model(agent.model.as_ref().unwrap(), model, vec_name);
         }
     }
 

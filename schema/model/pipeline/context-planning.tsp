@@ -19,7 +19,7 @@ model ContextRequest {
   iteration: int32;
 
   @doc("Canonical messages entering context planning")
-  messages: Message[] = #[];
+  messages: Message[];
 
   @doc("Number of leading messages eligible for provider prefix-cache reuse")
   stablePrefixMessages: int32 = 0;
@@ -34,16 +34,16 @@ model ContextRequest {
 /** A context contribution before filtering, ranking, and packing. */
 model ContextCandidate {
   @doc("Stable candidate identifier")
-  @sample(#{ id: "memory:project-plan" })
+  @sample(ContextCandidateIdSample)
   id: string;
 
   @doc("Host-defined source of the candidate")
-  @sample(#{ source: "memory" })
+  @sample(ContextCandidateSourceSample)
   source: string;
 
   @doc("Messages contributed by the candidate")
-  messages: Message[] = #[];
+  messages: Message[];
 
   @doc("Opaque host-specific candidate metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }

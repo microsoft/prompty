@@ -52,8 +52,9 @@ class ToolCallCompletePayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolCallCompletePayload: {data}")
@@ -68,7 +69,7 @@ class ToolCallCompletePayload:
         if data is not None and "success" in data:
             instance.success = data["success"]
         if data is not None and "result" in data:
-            instance.result = ToolResult.load(data["result"], context)
+            instance.result = ToolResult.load(data["result"], context.at("result"))
         if data is not None and "durationMs" in data:
             instance.duration_ms = data["durationMs"]
         if data is not None and "errorKind" in data:

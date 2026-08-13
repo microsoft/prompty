@@ -38,8 +38,9 @@ class ContentPart(ABC):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ContentPart: {data}")
@@ -56,21 +57,21 @@ class ContentPart(ABC):
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "ContentPart":
         # load polymorphic ContentPart instance
-        if data is not None and "kind" in data:
-            discriminator_value = str(data["kind"]).lower()
-            if discriminator_value == "text":
-                return TextPart.load(data, context)
-            elif discriminator_value == "image":
-                return ImagePart.load(data, context)
-            elif discriminator_value == "file":
-                return FilePart.load(data, context)
-            elif discriminator_value == "audio":
-                return AudioPart.load(data, context)
+        discriminator_raw = data.get("kind") if data is not None else None
+        if not isinstance(discriminator_raw, str) or discriminator_raw == "":
+            raise ValueError("Invalid ContentPart discriminator field 'kind': expected non-blank string")
+        discriminator_value = discriminator_raw
+        if discriminator_value == "text":
+            return TextPart.load(data, context)
+        elif discriminator_value == "image":
+            return ImagePart.load(data, context)
+        elif discriminator_value == "file":
+            return FilePart.load(data, context)
+        elif discriminator_value == "audio":
+            return AudioPart.load(data, context)
 
-            else:
-                raise ValueError(f"Unknown ContentPart discriminator value: {discriminator_value}")
         else:
-            raise ValueError("Missing ContentPart discriminator property: 'kind'")
+            raise ValueError(f"Unknown ContentPart discriminator field 'kind' value: {discriminator_value}")
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ContentPart instance to a dictionary.
@@ -147,8 +148,9 @@ class TextPart(ContentPart):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TextPart: {data}")
@@ -245,8 +247,9 @@ class ImagePart(ContentPart):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ImagePart: {data}")
@@ -348,8 +351,9 @@ class FilePart(ContentPart):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FilePart: {data}")
@@ -447,8 +451,9 @@ class AudioPart(ContentPart):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AudioPart: {data}")

@@ -29,6 +29,7 @@ describe("CustomTool", () => {
       const instance = CustomTool.fromJson(json);
       const output = instance.toJson();
       const reloaded = CustomTool.fromJson(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
@@ -44,12 +45,15 @@ describe("CustomTool", () => {
       const instance = CustomTool.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = CustomTool.fromYaml(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "connection": {\n    "kind": "reference"\n  },\n  "options": {\n    "timeout": 30,\n    "retries": 3\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = CustomTool.load(data);
       expect(instance).toBeDefined();
     });

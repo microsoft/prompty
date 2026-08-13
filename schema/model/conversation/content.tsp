@@ -26,7 +26,7 @@ model TextPart extends ContentPart {
   kind: "text";
 
   @doc("The text content")
-  @sample(#{ value: "Hello, world!" })
+  @sample(TextPartValueSample)
   value: string;
 }
 
@@ -38,15 +38,15 @@ model ImagePart extends ContentPart {
   kind: "image";
 
   @doc("URL or base64-encoded image data")
-  @sample(#{ source: "https://example.com/image.png" })
+  @sample(ImagePartSourceSample)
   source: string;
 
   @doc("Detail level hint for the model (e.g., 'auto', 'low', 'high')")
-  @sample(#{ detail: "auto" })
+  @sample(ImagePartDetailSample)
   detail?: string;
 
   @doc("MIME type of the image (e.g., 'image/png')")
-  @sample(#{ mediaType: "image/png" })
+  @sample(ImagePartMediaTypeSample)
   mediaType?: string;
 }
 
@@ -58,11 +58,11 @@ model FilePart extends ContentPart {
   kind: "file";
 
   @doc("URL or base64-encoded file data")
-  @sample(#{ source: "https://example.com/document.pdf" })
+  @sample(FilePartSourceSample)
   source: string;
 
   @doc("MIME type of the file (e.g., 'application/pdf')")
-  @sample(#{ mediaType: "application/pdf" })
+  @sample(FilePartMediaTypeSample)
   mediaType?: string;
 }
 
@@ -74,10 +74,10 @@ model AudioPart extends ContentPart {
   kind: "audio";
 
   @doc("URL or base64-encoded audio data")
-  @sample(#{ source: "https://example.com/audio.wav" })
+  @sample(AudioPartSourceSample)
   source: string;
 
   @doc("MIME type of the audio (e.g., 'audio/wav')")
-  @sample(#{ mediaType: "audio/wav" })
+  @sample(AudioPartMediaTypeSample)
   mediaType?: string;
 }

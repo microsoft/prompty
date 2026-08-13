@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -18,13 +19,19 @@ type ModelInvocationRequest struct {
 
 // LoadModelInvocationRequest creates a ModelInvocationRequest from a map[string]interface{}
 func LoadModelInvocationRequest(data interface{}, ctx *LoadContext) (ModelInvocationRequest, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ModelInvocationRequest{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["context"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("context").Path)
+		}
 		if val, ok := m["context"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadModelInvocationContextSnapshot(m, ctx)
+				loaded, err := LoadModelInvocationContextSnapshot(m, ctx.At("context"))
 				if err != nil {
 					return result, err
 				}

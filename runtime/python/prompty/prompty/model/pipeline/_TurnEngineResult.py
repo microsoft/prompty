@@ -33,8 +33,8 @@ class TurnEngineResult:
     _shorthand_property: ClassVar[str | None] = None
 
     commit: TurnCommit = field(default_factory=TurnCommit)
-    snapshots: list[ModelInvocationContextSnapshot] = field(default_factory=list)
-    tool_results: list[ModelToolResult] = field(default_factory=list)
+    snapshots: list[ModelInvocationContextSnapshot] | None = None
+    tool_results: list[ModelToolResult] | None = None
     post_commit_error: str | None = None
 
     @staticmethod
@@ -48,21 +48,24 @@ class TurnEngineResult:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TurnEngineResult: {data}")
+        if "commit" not in data or data["commit"] is None:
+            raise ValueError(f"{context.at('commit').path}: missing required field")
 
         # create new instance
         instance = TurnEngineResult()
 
         if data is not None and "commit" in data:
-            instance.commit = TurnCommit.load(data["commit"], context)
+            instance.commit = TurnCommit.load(data["commit"], context.at("commit"))
         if data is not None and "snapshots" in data:
-            instance.snapshots = TurnEngineResult.load_snapshots(data["snapshots"], context)
+            instance.snapshots = TurnEngineResult.load_snapshots(data["snapshots"], context.at("snapshots"))
         if data is not None and "toolResults" in data:
-            instance.tool_results = TurnEngineResult.load_tool_results(data["toolResults"], context)
+            instance.tool_results = TurnEngineResult.load_tool_results(data["toolResults"], context.at("toolResults"))
         if data is not None and "postCommitError" in data:
             instance.post_commit_error = data["postCommitError"]
         if context is not None:
@@ -71,18 +74,22 @@ class TurnEngineResult:
 
     @staticmethod
     def load_snapshots(data: dict | list, context: LoadContext | None) -> list[ModelInvocationContextSnapshot]:
+        if context is None:
+            context = LoadContext(path="snapshots")
         if isinstance(data, dict):
             # convert simple named snapshots to list of ModelInvocationContextSnapshot
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ModelInvocationContextSnapshot.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
-            data = result
-        return [ModelInvocationContextSnapshot.load(item, context) for item in data]
+                    result.append(ModelInvocationContextSnapshot.load({"name": k, "id": v}, context.at(k)))
+            return result
+        return [ModelInvocationContextSnapshot.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_snapshots(
@@ -91,23 +98,27 @@ class TurnEngineResult:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_tool_results(data: dict | list, context: LoadContext | None) -> list[ModelToolResult]:
+        if context is None:
+            context = LoadContext(path="toolResults")
         if isinstance(data, dict):
             # convert simple named toolResults to list of ModelToolResult
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(ModelToolResult.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "requestId": v})
-            data = result
-        return [ModelToolResult.load(item, context) for item in data]
+                    result.append(ModelToolResult.load({"name": k, "requestId": v}, context.at(k)))
+            return result
+        return [ModelToolResult.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_tool_results(
@@ -116,28 +127,8 @@ class TurnEngineResult:
         if context is None:
             context = SaveContext()
 
-        if context.collection_format == "array":
-            return [item.save(context) for item in items]
-
-        # Object format: use name as key
-        result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
-        return result
+        # The schema declares an ordered collection, so preserve array format
+        return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TurnEngineResult instance to a dictionary.

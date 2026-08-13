@@ -11,7 +11,7 @@ namespace Prompty;
 @coerce(string, #{ input: "{value}" })
 model Binding {
   @doc("The input property that will be bound to the tool parameter argument")
-  @sample(#{ input: "input-variable" })
+  @sample(BindingInputSample)
   input: string;
 }
 
@@ -36,16 +36,16 @@ union ToolTypes {
 @discriminator("kind")
 model Tool {
   @doc("The kind identifier for the tool")
-  @sample(#{ kind: "function" })
+  @sample(ToolKindSample)
   kind: ToolTypes;
 
   @doc("A short description of the tool for metadata purposes")
-  @sample(#{ description: "A description of the tool" })
+  @sample(ToolDescriptionSample)
   description?: string = "";
 
   @doc("Tool argument bindings to input properties")
-  @sample(#{ bindings: #{ input: "value" } })
-  bindings?: Bindings = #[];
+  @sample(ToolBindingsSample)
+  bindings?: Bindings;
 }
 
 /**
@@ -53,32 +53,16 @@ model Tool {
  */
 model FunctionTool extends Tool {
   @doc("The kind identifier for function tools")
-  @sample(#{ kind: "function" })
+  @sample(FunctionToolKindSample)
   kind: "function";
 
   @doc("Parameters accepted by the function tool")
-  @sample(#{
-    parameters: #[
-      #{ name: "firstName", kind: "string", default: "Jane" },
-      #{ name: "lastName", kind: "string", default: "Doe" },
-      #{
-        name: "question",
-        kind: "string",
-        default: "What is the meaning of life?",
-      }
-    ],
-  })
-  @sample(#{
-    parameters: #{
-      firstName: #{ kind: "string", default: "Jane" },
-      lastName: #{ kind: "string", default: "Doe" },
-      question: #{ kind: "string", default: "What is the meaning of life?" },
-    },
-  })
+  @sample(FunctionToolParametersSample)
+  @sample(FunctionToolParametersSample2)
   parameters: Properties;
 
   @doc("Indicates whether the function tool enforces strict validation on its parameters")
-  @sample(#{ strict: true })
+  @sample(FunctionToolStrictSample)
   strict?: boolean = true;
 }
 
@@ -94,12 +78,12 @@ model CustomTool extends Tool {
   kind: "*";
 
   @doc("Connection configuration for the server tool")
-  @sample(#{ connection: #{ kind: "reference" } })
+  @sample(CustomToolConnectionSample)
   connection: Connection;
 
   @doc("Configuration options for the server tool")
-  @sample(#{ options: #{ timeout: 30, retries: 3 } })
-  options: Record<unknown> = #{};
+  @sample(CustomToolOptionsSample)
+  options: Record<unknown>;
 }
 
 alias Tools = Record<Tool> | Named<

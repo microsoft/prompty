@@ -5,15 +5,37 @@
 import { StreamChunk } from "../../../src/model/index";
 
 describe("StreamChunk", () => {
-  describe("construction", () => {
-    it("should create a new instance with defaults", () => {
-      const instance = new StreamChunk();
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "kind": "text",\n  "value": "Hello"\n}`;
+      const instance = StreamChunk.fromJson(json);
       expect(instance).toBeDefined();
+      expect(instance.kind).toEqual("text");
     });
 
-    it("should create a new instance with partial initialization", () => {
-      const instance = new StreamChunk({});
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "kind": "text",\n  "value": "Hello"\n}`;
+      const instance = StreamChunk.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = StreamChunk.fromJson(output);
+      expect(reloaded.kind).toEqual(instance.kind);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `kind: text\nvalue: Hello\n`;
+      const instance = StreamChunk.fromYaml(yaml);
       expect(instance).toBeDefined();
+      expect(instance.kind).toEqual("text");
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `kind: text\nvalue: Hello\n`;
+      const instance = StreamChunk.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = StreamChunk.fromYaml(output);
+      expect(reloaded.kind).toEqual(instance.kind);
     });
   });
 });

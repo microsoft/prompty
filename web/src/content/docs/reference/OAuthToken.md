@@ -28,6 +28,13 @@ classDiagram
     }
 ```
 
+## Yaml Example
+
+```yaml
+refreshToken: 0.AXoAoffline-refresh-token-value
+scope: https://cognitiveservices.azure.com/.default offline_access
+```
+
 ## Properties
 
 | Name | Type | Description |

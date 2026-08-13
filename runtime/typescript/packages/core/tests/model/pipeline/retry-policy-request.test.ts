@@ -17,9 +17,57 @@ describe("RetryPolicyRequest", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "failedAttempts": 1,\n  "nextAttempt": 1,\n  "maxAttempts": 1,\n  "reason": "sample"\n}`;
+      const instance = RetryPolicyRequest.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.failedAttempts).toEqual(1);
+      expect(instance.nextAttempt).toEqual(1);
+      expect(instance.maxAttempts).toEqual(1);
+      expect(instance.reason).toEqual("sample");
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "failedAttempts": 1,\n  "nextAttempt": 1,\n  "maxAttempts": 1,\n  "reason": "sample"\n}`;
+      const instance = RetryPolicyRequest.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = RetryPolicyRequest.fromJson(output);
+      expect(reloaded.failedAttempts).toEqual(instance.failedAttempts);
+      expect(reloaded.nextAttempt).toEqual(instance.nextAttempt);
+      expect(reloaded.maxAttempts).toEqual(instance.maxAttempts);
+      expect(reloaded.reason).toEqual(instance.reason);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `failedAttempts: 1\nnextAttempt: 1\nmaxAttempts: 1\nreason: sample\n`;
+      const instance = RetryPolicyRequest.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.failedAttempts).toEqual(1);
+      expect(instance.nextAttempt).toEqual(1);
+      expect(instance.maxAttempts).toEqual(1);
+      expect(instance.reason).toEqual("sample");
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `failedAttempts: 1\nnextAttempt: 1\nmaxAttempts: 1\nreason: sample\n`;
+      const instance = RetryPolicyRequest.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = RetryPolicyRequest.fromYaml(output);
+      expect(reloaded.failedAttempts).toEqual(instance.failedAttempts);
+      expect(reloaded.nextAttempt).toEqual(instance.nextAttempt);
+      expect(reloaded.maxAttempts).toEqual(instance.maxAttempts);
+      expect(reloaded.reason).toEqual(instance.reason);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "failedAttempts": 1,\n  "nextAttempt": 1,\n  "maxAttempts": 1,\n  "reason": "sample"\n}`,
+      ) as Record<string, unknown>;
       const instance = RetryPolicyRequest.load(data);
       expect(instance).toBeDefined();
     });

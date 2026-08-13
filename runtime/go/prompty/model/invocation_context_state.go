@@ -28,6 +28,9 @@ type InvocationContextState struct {
 
 // LoadInvocationContextState creates a InvocationContextState from a map[string]interface{}
 func LoadInvocationContextState(data interface{}, ctx *LoadContext) (InvocationContextState, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := InvocationContextState{}
 
 	// Load from map
@@ -40,7 +43,7 @@ func LoadInvocationContextState(data interface{}, ctx *LoadContext) (InvocationC
 				result.DelegatedState = make([]DelegatedStateReference, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadDelegatedStateReference(item, ctx)
+						loaded, err := LoadDelegatedStateReference(item, ctx.At("delegatedState").AtIndex(i))
 						if err != nil {
 							return result, err
 						}

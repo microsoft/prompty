@@ -18,6 +18,9 @@ type ThinkingEventPayload struct {
 
 // LoadThinkingEventPayload creates a ThinkingEventPayload from a map[string]interface{}
 func LoadThinkingEventPayload(data interface{}, ctx *LoadContext) (ThinkingEventPayload, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ThinkingEventPayload{}
 
 	// Load from map

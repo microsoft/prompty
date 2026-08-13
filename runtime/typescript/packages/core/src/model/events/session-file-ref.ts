@@ -35,6 +35,7 @@ export class SessionFileRef {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): SessionFileRef {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

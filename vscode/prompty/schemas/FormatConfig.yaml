@@ -12,7 +12,6 @@ properties:
     description: Whether the template can emit structural text for parsing output
   options:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Options for the template engine
 required:
   - kind

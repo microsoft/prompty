@@ -19,14 +19,14 @@ describe("ResumeContext", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "lastJournalSequence": 12\n}`;
+      const json = `{\n  "lastJournalSequence": 12,\n  "checkpoint": {\n    "id": "ckpt_abc123",\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "runId": "run_abc123",\n    "iteration": 1,\n    "lastSequence": 1,\n    "messages": [],\n    "contextState": {}\n  }\n}`;
       const instance = ResumeContext.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.lastJournalSequence).toEqual(12);
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "lastJournalSequence": 12\n}`;
+      const json = `{\n  "lastJournalSequence": 12,\n  "checkpoint": {\n    "id": "ckpt_abc123",\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "runId": "run_abc123",\n    "iteration": 1,\n    "lastSequence": 1,\n    "messages": [],\n    "contextState": {}\n  }\n}`;
       const instance = ResumeContext.fromJson(json);
       const output = instance.toJson();
       const reloaded = ResumeContext.fromJson(output);
@@ -38,14 +38,14 @@ describe("ResumeContext", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `lastJournalSequence: 12\n`;
+      const yaml = `lastJournalSequence: 12\ncheckpoint:\n  id: ckpt_abc123\n  sessionId: sess_abc123\n  turnId: turn_abc123\n  runId: run_abc123\n  iteration: 1\n  lastSequence: 1\n  messages: []\n  contextState: {}\n`;
       const instance = ResumeContext.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.lastJournalSequence).toEqual(12);
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `lastJournalSequence: 12\n`;
+      const yaml = `lastJournalSequence: 12\ncheckpoint:\n  id: ckpt_abc123\n  sessionId: sess_abc123\n  turnId: turn_abc123\n  runId: run_abc123\n  iteration: 1\n  lastSequence: 1\n  messages: []\n  contextState: {}\n`;
       const instance = ResumeContext.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ResumeContext.fromYaml(output);
@@ -57,7 +57,9 @@ describe("ResumeContext", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "lastJournalSequence": 12,\n  "checkpoint": {\n    "id": "ckpt_abc123",\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "runId": "run_abc123",\n    "iteration": 1,\n    "lastSequence": 1,\n    "messages": [],\n    "contextState": {}\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ResumeContext.load(data);
       expect(instance).toBeDefined();
     });

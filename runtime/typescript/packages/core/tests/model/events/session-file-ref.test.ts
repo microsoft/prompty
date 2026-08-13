@@ -69,7 +69,9 @@ describe("SessionFileRef", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "sessionId": "sess_abc123",\n  "path": "src/index.ts",\n  "toolName": "view",\n  "turnIndex": 2,\n  "firstSeenAt": "2026-06-09T20:00:00Z"\n}`,
+      ) as Record<string, unknown>;
       const instance = SessionFileRef.load(data);
       expect(instance).toBeDefined();
     });

@@ -19,7 +19,7 @@ describe("ContextCandidate", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "id": "memory:project-plan",\n  "source": "memory"\n}`;
+      const json = `{\n  "id": "memory:project-plan",\n  "source": "memory",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ]\n}`;
       const instance = ContextCandidate.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("memory:project-plan");
@@ -27,7 +27,7 @@ describe("ContextCandidate", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "id": "memory:project-plan",\n  "source": "memory"\n}`;
+      const json = `{\n  "id": "memory:project-plan",\n  "source": "memory",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ]\n}`;
       const instance = ContextCandidate.fromJson(json);
       const output = instance.toJson();
       const reloaded = ContextCandidate.fromJson(output);
@@ -38,7 +38,7 @@ describe("ContextCandidate", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `id: "memory:project-plan"\nsource: memory\n`;
+      const yaml = `id: "memory:project-plan"\nsource: memory\nmessages:\n  - role: user\n    parts:\n      - kind: text\n        value: Hello!\n    metadata:\n      source: user-input\n`;
       const instance = ContextCandidate.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.id).toEqual("memory:project-plan");
@@ -46,7 +46,7 @@ describe("ContextCandidate", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `id: "memory:project-plan"\nsource: memory\n`;
+      const yaml = `id: "memory:project-plan"\nsource: memory\nmessages:\n  - role: user\n    parts:\n      - kind: text\n        value: Hello!\n    metadata:\n      source: user-input\n`;
       const instance = ContextCandidate.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ContextCandidate.fromYaml(output);
@@ -57,7 +57,9 @@ describe("ContextCandidate", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "memory:project-plan",\n  "source": "memory",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = ContextCandidate.load(data);
       expect(instance).toBeDefined();
     });

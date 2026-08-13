@@ -19,7 +19,7 @@ describe("TraceSpan", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "name": "prompty.core.pipeline.run",\n  "signature": "prompty.core.pipeline.run",\n  "error": "Connection refused"\n}`;
+      const json = `{\n  "name": "prompty.core.pipeline.run",\n  "signature": "prompty.core.pipeline.run",\n  "error": "Connection refused",\n  "__time": {\n    "start": "2026-04-04T12:00:00Z",\n    "end": "2026-04-04T12:00:01Z",\n    "duration": 1000\n  }\n}`;
       const instance = TraceSpan.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("prompty.core.pipeline.run");
@@ -28,7 +28,7 @@ describe("TraceSpan", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "name": "prompty.core.pipeline.run",\n  "signature": "prompty.core.pipeline.run",\n  "error": "Connection refused"\n}`;
+      const json = `{\n  "name": "prompty.core.pipeline.run",\n  "signature": "prompty.core.pipeline.run",\n  "error": "Connection refused",\n  "__time": {\n    "start": "2026-04-04T12:00:00Z",\n    "end": "2026-04-04T12:00:01Z",\n    "duration": 1000\n  }\n}`;
       const instance = TraceSpan.fromJson(json);
       const output = instance.toJson();
       const reloaded = TraceSpan.fromJson(output);
@@ -40,7 +40,7 @@ describe("TraceSpan", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `name: prompty.core.pipeline.run\nsignature: prompty.core.pipeline.run\nerror: Connection refused\n`;
+      const yaml = `name: prompty.core.pipeline.run\nsignature: prompty.core.pipeline.run\nerror: Connection refused\n__time:\n  start: "2026-04-04T12:00:00Z"\n  end: "2026-04-04T12:00:01Z"\n  duration: 1000\n`;
       const instance = TraceSpan.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.name).toEqual("prompty.core.pipeline.run");
@@ -49,7 +49,7 @@ describe("TraceSpan", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `name: prompty.core.pipeline.run\nsignature: prompty.core.pipeline.run\nerror: Connection refused\n`;
+      const yaml = `name: prompty.core.pipeline.run\nsignature: prompty.core.pipeline.run\nerror: Connection refused\n__time:\n  start: "2026-04-04T12:00:00Z"\n  end: "2026-04-04T12:00:01Z"\n  duration: 1000\n`;
       const instance = TraceSpan.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = TraceSpan.fromYaml(output);
@@ -61,7 +61,9 @@ describe("TraceSpan", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "name": "prompty.core.pipeline.run",\n  "signature": "prompty.core.pipeline.run",\n  "error": "Connection refused",\n  "__time": {\n    "start": "2026-04-04T12:00:00Z",\n    "end": "2026-04-04T12:00:01Z",\n    "duration": 1000\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = TraceSpan.load(data);
       expect(instance).toBeDefined();
     });

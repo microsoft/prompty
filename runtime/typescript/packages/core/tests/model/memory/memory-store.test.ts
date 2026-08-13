@@ -29,6 +29,7 @@ describe("MemoryStore", () => {
       const instance = MemoryStore.fromJson(json);
       const output = instance.toJson();
       const reloaded = MemoryStore.fromJson(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
@@ -44,12 +45,16 @@ describe("MemoryStore", () => {
       const instance = MemoryStore.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = MemoryStore.fromYaml(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(`{\n  "entries": []\n}`) as Record<
+        string,
+        unknown
+      >;
       const instance = MemoryStore.load(data);
       expect(instance).toBeDefined();
     });

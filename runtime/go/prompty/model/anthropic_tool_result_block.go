@@ -20,6 +20,9 @@ type AnthropicToolResultBlock struct {
 
 // LoadAnthropicToolResultBlock creates a AnthropicToolResultBlock from a map[string]interface{}
 func LoadAnthropicToolResultBlock(data interface{}, ctx *LoadContext) (AnthropicToolResultBlock, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AnthropicToolResultBlock{}
 
 	// Load from map

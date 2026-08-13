@@ -17,7 +17,6 @@ properties:
     type: array
     items:
       $ref: Message.yaml
-    default: []
     description: Canonical messages at commit time
   output:
     description: Proposed final output

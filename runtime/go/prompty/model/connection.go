@@ -32,13 +32,17 @@ type Connection struct {
 // LoadConnection creates a Connection from a map[string]interface{}
 // Returns interface{} because this is a polymorphic base type that can resolve to different child types
 func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
-	result := Connection{}
-
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
 			switch discriminator := discriminator.(type) {
 			case string:
+				if discriminator == "" {
+					return nil, fmt.Errorf("invalid Connection discriminator field 'kind': expected non-blank string")
+				}
 				switch discriminator {
 				case "reference":
 					return LoadReferenceConnection(data, ctx)
@@ -53,30 +57,16 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 				case "foundry":
 					return LoadFoundryConnection(data, ctx)
 				default:
-					return nil, fmt.Errorf("unknown Connection discriminator value: %s", discriminator)
+					return nil, fmt.Errorf("unknown Connection discriminator field 'kind' value: %s", discriminator)
 				}
 			default:
-				return nil, fmt.Errorf("unknown Connection discriminator value: %v", discriminator)
+				return nil, fmt.Errorf("unknown Connection discriminator field 'kind' value: %v", discriminator)
 			}
+		} else {
+			return nil, fmt.Errorf("missing Connection discriminator property: kind")
 		}
 	}
-	return nil, fmt.Errorf("missing Connection discriminator property: kind")
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = string(val.(string))
-		}
-		if val, ok := m["authenticationMode"]; ok && val != nil {
-			v := AuthenticationMode(val.(string))
-			result.AuthenticationMode = &v
-		}
-		if val, ok := m["usageDescription"]; ok && val != nil {
-			v := string(val.(string))
-			result.UsageDescription = &v
-		}
-	}
-
-	return result, nil
+	return nil, fmt.Errorf("invalid Connection discriminator property 'kind': expected non-blank string")
 }
 
 // Save serializes Connection to map[string]interface{}
@@ -145,6 +135,9 @@ type ReferenceConnection struct {
 
 // LoadReferenceConnection creates a ReferenceConnection from a map[string]interface{}
 func LoadReferenceConnection(data interface{}, ctx *LoadContext) (ReferenceConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ReferenceConnection{}
 
 	// Load from map
@@ -240,6 +233,9 @@ type RemoteConnection struct {
 
 // LoadRemoteConnection creates a RemoteConnection from a map[string]interface{}
 func LoadRemoteConnection(data interface{}, ctx *LoadContext) (RemoteConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := RemoteConnection{}
 
 	// Load from map
@@ -332,6 +328,9 @@ type ApiKeyConnection struct {
 
 // LoadApiKeyConnection creates a ApiKeyConnection from a map[string]interface{}
 func LoadApiKeyConnection(data interface{}, ctx *LoadContext) (ApiKeyConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ApiKeyConnection{}
 
 	// Load from map
@@ -422,6 +421,9 @@ type AnonymousConnection struct {
 
 // LoadAnonymousConnection creates a AnonymousConnection from a map[string]interface{}
 func LoadAnonymousConnection(data interface{}, ctx *LoadContext) (AnonymousConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AnonymousConnection{}
 
 	// Load from map
@@ -515,6 +517,9 @@ type OAuthConnection struct {
 
 // LoadOAuthConnection creates a OAuthConnection from a map[string]interface{}
 func LoadOAuthConnection(data interface{}, ctx *LoadContext) (OAuthConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := OAuthConnection{}
 
 	// Load from map
@@ -572,7 +577,9 @@ func (obj OAuthConnection) Save(ctx *SaveContext) map[string]interface{} {
 	result["clientId"] = obj.ClientId
 	result["clientSecret"] = obj.ClientSecret
 	result["tokenUrl"] = obj.TokenUrl
-	result["scopes"] = obj.Scopes
+	if obj.Scopes != nil {
+		result["scopes"] = obj.Scopes
+	}
 
 	return result
 }
@@ -630,6 +637,9 @@ type FoundryConnection struct {
 
 // LoadFoundryConnection creates a FoundryConnection from a map[string]interface{}
 func LoadFoundryConnection(data interface{}, ctx *LoadContext) (FoundryConnection, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := FoundryConnection{}
 
 	// Load from map

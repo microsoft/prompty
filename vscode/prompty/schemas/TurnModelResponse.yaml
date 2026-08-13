@@ -11,10 +11,8 @@ properties:
     type: array
     items:
       $ref: HostToolRequest.yaml
-    default: []
     description: Host tool execution requests emitted by the model callback
   checkpointState:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Additional deterministic state to merge into the iteration checkpoint
 description: Response returned by the injected model callback to the reference turn runner.

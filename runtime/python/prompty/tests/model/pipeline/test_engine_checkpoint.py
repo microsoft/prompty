@@ -12,7 +12,22 @@ def test_load_json_enginecheckpoint():
       "id": "ckpt_abc123",
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
-      "runId": "run_abc123"
+      "runId": "run_abc123",
+      "messages": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "kind": "text",
+              "value": "Hello!"
+            }
+          ],
+          "metadata": {
+            "source": "user-input"
+          }
+        }
+      ],
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)
@@ -30,6 +45,14 @@ def test_load_yaml_enginecheckpoint():
     sessionId: sess_abc123
     turnId: turn_abc123
     runId: run_abc123
+    messages:
+      - role: user
+        parts:
+          - kind: text
+            value: Hello!
+        metadata:
+          source: user-input
+    contextState: {}
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -48,7 +71,22 @@ def test_roundtrip_json_enginecheckpoint():
       "id": "ckpt_abc123",
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
-      "runId": "run_abc123"
+      "runId": "run_abc123",
+      "messages": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "kind": "text",
+              "value": "Hello!"
+            }
+          ],
+          "metadata": {
+            "source": "user-input"
+          }
+        }
+      ],
+      "contextState": {}
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -69,7 +107,22 @@ def test_to_json_enginecheckpoint():
       "id": "ckpt_abc123",
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
-      "runId": "run_abc123"
+      "runId": "run_abc123",
+      "messages": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "kind": "text",
+              "value": "Hello!"
+            }
+          ],
+          "metadata": {
+            "source": "user-input"
+          }
+        }
+      ],
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)
@@ -87,7 +140,22 @@ def test_to_yaml_enginecheckpoint():
       "id": "ckpt_abc123",
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
-      "runId": "run_abc123"
+      "runId": "run_abc123",
+      "messages": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "kind": "text",
+              "value": "Hello!"
+            }
+          ],
+          "metadata": {
+            "source": "user-input"
+          }
+        }
+      ],
+      "contextState": {}
     }
     """
     data = json.loads(json_data, strict=False)

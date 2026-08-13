@@ -17,11 +17,11 @@ alias GuardrailPhase = "input" | "output" | "tool";
 @factory("rewrite", #{ allowed: true }, #{ rewrite: "unknown" })
 model GuardrailResult {
   @doc("Whether the content passed the guardrail check")
-  @sample(#{ allowed: true })
+  @sample(GuardrailResultAllowedSample)
   allowed: boolean;
 
   @doc("Explanation of why the content was allowed or denied")
-  @sample(#{ reason: "Content is safe" })
+  @sample(GuardrailResultReasonSample)
   reason?: string;
 
   @doc("Optional rewritten content to replace the original")

@@ -19,7 +19,7 @@ describe("TraceFile", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "runtime": "python",\n  "version": "2.0.0"\n}`;
+      const json = `{\n  "runtime": "python",\n  "version": "2.0.0",\n  "trace": {\n    "name": "prompty.core.pipeline.run",\n    "__time": {\n      "start": "2026-04-04T12:00:00Z",\n      "end": "2026-04-04T12:00:01Z",\n      "duration": 1000\n    },\n    "signature": "prompty.core.pipeline.run",\n    "error": "Connection refused"\n  }\n}`;
       const instance = TraceFile.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.runtime).toEqual("python");
@@ -27,7 +27,7 @@ describe("TraceFile", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "runtime": "python",\n  "version": "2.0.0"\n}`;
+      const json = `{\n  "runtime": "python",\n  "version": "2.0.0",\n  "trace": {\n    "name": "prompty.core.pipeline.run",\n    "__time": {\n      "start": "2026-04-04T12:00:00Z",\n      "end": "2026-04-04T12:00:01Z",\n      "duration": 1000\n    },\n    "signature": "prompty.core.pipeline.run",\n    "error": "Connection refused"\n  }\n}`;
       const instance = TraceFile.fromJson(json);
       const output = instance.toJson();
       const reloaded = TraceFile.fromJson(output);
@@ -38,7 +38,7 @@ describe("TraceFile", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `runtime: python\nversion: 2.0.0\n`;
+      const yaml = `runtime: python\nversion: 2.0.0\ntrace:\n  name: prompty.core.pipeline.run\n  __time:\n    start: "2026-04-04T12:00:00Z"\n    end: "2026-04-04T12:00:01Z"\n    duration: 1000\n  signature: prompty.core.pipeline.run\n  error: Connection refused\n`;
       const instance = TraceFile.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.runtime).toEqual("python");
@@ -46,7 +46,7 @@ describe("TraceFile", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `runtime: python\nversion: 2.0.0\n`;
+      const yaml = `runtime: python\nversion: 2.0.0\ntrace:\n  name: prompty.core.pipeline.run\n  __time:\n    start: "2026-04-04T12:00:00Z"\n    end: "2026-04-04T12:00:01Z"\n    duration: 1000\n  signature: prompty.core.pipeline.run\n  error: Connection refused\n`;
       const instance = TraceFile.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = TraceFile.fromYaml(output);
@@ -57,7 +57,9 @@ describe("TraceFile", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "runtime": "python",\n  "version": "2.0.0",\n  "trace": {\n    "name": "prompty.core.pipeline.run",\n    "__time": {\n      "start": "2026-04-04T12:00:00Z",\n      "end": "2026-04-04T12:00:01Z",\n      "duration": 1000\n    },\n    "signature": "prompty.core.pipeline.run",\n    "error": "Connection refused"\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = TraceFile.load(data);
       expect(instance).toBeDefined();
     });

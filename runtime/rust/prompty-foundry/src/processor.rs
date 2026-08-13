@@ -45,7 +45,7 @@ impl Processor for FoundryProcessor {
             agent, &response, "foundry", false, request,
         )?;
         mapped.output = Some(response);
-        mapped.tool_requests.clear();
+        mapped.tool_requests = None;
         Ok(mapped)
     }
 
@@ -125,11 +125,7 @@ mod tests {
         });
 
         let result = FoundryProcessor
-            .process_with_context(
-                &agent,
-                response,
-                &ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default()),
-            )
+            .process_with_context(&agent, response, &ModelInvocationRequest::default())
             .await
             .unwrap();
 
@@ -138,6 +134,11 @@ mod tests {
             state.portability,
             prompty::model::InvocationContextPortability::Portable
         );
-        assert!(state.delegated_state.is_empty());
+        assert!(
+            state
+                .delegated_state
+                .as_ref()
+                .map_or(true, |state| state.is_empty())
+        );
     }
 }

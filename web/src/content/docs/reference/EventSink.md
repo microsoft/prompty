@@ -21,8 +21,8 @@ config:
 classDiagram
     class EventSink {
       <<protocol>>
-        +emitTurn(turnEvent: TurnEvent) boolean [sync]
-        +emitSession(sessionEvent: SessionEvent) boolean [sync]
+        +emitSession(sessionEvent: SessionEvent) boolean [sync, non-fatal]
+        +emitTurn(turnEvent: TurnEvent) boolean [sync, non-fatal]
     }
 ```
 
@@ -32,5 +32,5 @@ The following helper methods are declared via `@method` and must be implemented 
 
 | Name | Signature | Runtime shape | Description |
 | ---- | --------- | ------------- | ----------- |
-| `emitTurn` | `emitTurn(turnEvent: TurnEvent) -> boolean` | sync | Emit a typed turn event to a host sink |
-| `emitSession` | `emitSession(sessionEvent: SessionEvent) -> boolean` | sync | Emit a typed session event to a host sink |
+| `emitSession` | `emitSession(sessionEvent: SessionEvent) -> boolean` | sync, non-fatal | Emit a typed session event to a host sink |
+| `emitTurn` | `emitTurn(turnEvent: TurnEvent) -> boolean` | sync, non-fatal | Emit a typed turn event to a host sink |

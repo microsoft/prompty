@@ -496,8 +496,12 @@ impl LiveModelPort {
         if self.raw_final && !self.agent_mode {
             self.skip_output_guardrail.store(true, Ordering::Release);
             response.output = Some(raw_response.clone());
-            response.tool_requests.clear();
-        } else if response.tool_requests.is_empty() {
+            response.tool_requests = None;
+        } else if response
+            .tool_requests
+            .as_ref()
+            .map_or(true, |requests| requests.is_empty())
+        {
             response.output = response.output.map(|output| unwrap_structured(&output));
         }
         Ok((response, raw_response))
@@ -653,7 +657,11 @@ impl ModelPort for LiveModelPort {
             )
             .await
             .map_err(|error| self.failures.record_invoker(error))?;
-            if response.tool_requests.is_empty() {
+            if response
+                .tool_requests
+                .as_ref()
+                .map_or(true, |requests| requests.is_empty())
+            {
                 response.output = response.output.map(|output| unwrap_structured(&output));
             }
             let provider_metadata = std::mem::take(&mut response.metadata);
@@ -696,11 +704,11 @@ impl ModelPort for LiveModelPort {
                     })
                 })
                 .transpose()?,
-            assistant_messages: Vec::new(),
-            tool_requests,
+            assistant_messages: None,
+            tool_requests: Some(tool_requests),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
             metadata: json!({
                 "rawResponse": raw_response,
@@ -751,7 +759,12 @@ impl ConversationPort for LiveConversationPort {
         response: &EngineModelInvocationResponse,
         results: &[EngineToolResult],
     ) -> Result<Vec<Message>, PortError> {
-        if response.tool_requests.is_empty() || results.is_empty() {
+        if response
+            .tool_requests
+            .as_ref()
+            .map_or(true, |requests| requests.is_empty())
+            || results.is_empty()
+        {
             return Err(PortError::configuration(
                 "tool conversation formatting requires non-empty requests and results",
             ));
@@ -759,6 +772,7 @@ impl ConversationPort for LiveConversationPort {
         let tool_calls = response
             .tool_requests
             .iter()
+            .flatten()
             .map(|request| ToolCall {
                 id: request.id.clone(),
                 name: request.name.clone(),
@@ -768,6 +782,7 @@ impl ConversationPort for LiveConversationPort {
         let tool_results = response
             .tool_requests
             .iter()
+            .flatten()
             .map(|request| {
                 results
                     .iter()
@@ -1124,7 +1139,10 @@ impl DurabilityPort for LiveDurabilityPort {
                 event.kind,
                 EngineEventKind::Tool_execution_completed | EngineEventKind::Tool_result_committed
             )
-        }) && checkpoint.pending_tool_requests.is_empty()
+        }) && checkpoint
+            .pending_tool_requests
+            .as_ref()
+            .map_or(true, |requests| requests.is_empty())
             && checkpoint.pending_model_response.is_none()
         {
             self.events.emit(AgentEvent::MessagesUpdated {
@@ -1234,7 +1252,11 @@ pub(super) async fn turn_with_engine_request(
     let agent = Arc::new(agent.clone());
     let provider = super::resolve_provider(&agent);
     let streaming = super::is_streaming(&agent);
-    let agent_mode = !tools.is_empty() || !agent.tools.is_empty();
+    let agent_mode = !tools.is_empty()
+        || agent
+            .tools
+            .as_ref()
+            .map_or(false, |agent_tools| !agent_tools.is_empty());
     let failures = Arc::new(LiveFailureState::default());
     let guardrails = guardrails.map(Arc::new);
     let tools = Arc::new(tools);
@@ -1251,7 +1273,10 @@ pub(super) async fn turn_with_engine_request(
         events: events.clone(),
         agent_name: Some(agent.name.clone()),
         provider: provider.clone(),
-        model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
+        model_id: agent
+            .model
+            .as_ref()
+            .and_then(|model| (!model.id.is_empty()).then(|| model.id.clone())),
         configured_max_iterations: max_iterations,
         agent_mode,
         persistence,
@@ -1960,21 +1985,21 @@ mod tests {
             Ok(GeneratedModelInvocationResponse {
                 output: None,
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: vec![ModelToolRequest {
+                assistant_messages: None,
+                tool_requests: Some(vec![ModelToolRequest {
                     id: "call_weather".to_string(),
                     name: "weather".to_string(),
                     arguments: Some(json!({"city": "Paris"})),
                     metadata: Value::Null,
-                }],
+                }]),
                 next_context_state: Some(InvocationContextState {
                     portability: InvocationContextPortability::Delegated,
-                    delegated_state: vec![crate::model::DelegatedStateReference {
+                    delegated_state: Some(vec![crate::model::DelegatedStateReference {
                         provider: "openai".to_string(),
                         kind: "response".to_string(),
                         id: "resp_streamed_tool_round".to_string(),
                         metadata: Value::Null,
-                    }],
+                    }]),
                 }),
                 metadata: Value::Null,
             })
@@ -2066,7 +2091,7 @@ mod tests {
             skip_output_guardrail: Arc::new(AtomicBool::new(false)),
             failures: Arc::new(LiveFailureState::default()),
         };
-        let request = ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default());
+        let request = ModelInvocationRequest::default();
 
         let response = port
             .invoke(
@@ -2081,11 +2106,15 @@ mod tests {
             .next_context_state
             .expect("the next invocation must receive a context state");
         assert_eq!(context.portability, InvocationContextPortability::Delegated);
-        assert_eq!(context.delegated_state.len(), 1);
-        assert_eq!(context.delegated_state[0].provider, "openai");
-        assert_eq!(context.delegated_state[0].kind, "response");
-        assert_eq!(context.delegated_state[0].id, "resp_streamed_tool_round");
-        assert_eq!(response.tool_requests[0].id, "call_weather");
+        let delegated_state = context.delegated_state.as_ref().unwrap();
+        assert_eq!(delegated_state.len(), 1);
+        assert_eq!(delegated_state[0].provider, "openai");
+        assert_eq!(delegated_state[0].kind, "response");
+        assert_eq!(delegated_state[0].id, "resp_streamed_tool_round");
+        assert_eq!(
+            response.tool_requests.as_ref().unwrap()[0].id,
+            "call_weather"
+        );
     }
 
     #[test]
@@ -2098,21 +2127,21 @@ mod tests {
         let response = EngineModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "call_weather".to_string(),
                 name: "weather".to_string(),
                 arguments: Some(json!({"city": "Paris"})),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Delegated,
-                delegated_state: vec![crate::model::DelegatedStateReference {
+                delegated_state: Some(vec![crate::model::DelegatedStateReference {
                     provider: RESPONSES_STREAM_PROVIDER.to_string(),
                     kind: "response".to_string(),
                     id: "resp_123".to_string(),
                     metadata: Value::Null,
-                }],
+                }]),
             }),
             metadata: Value::Null,
         };

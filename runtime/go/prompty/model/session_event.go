@@ -39,6 +39,9 @@ type SessionEvent struct {
 
 // LoadSessionEvent creates a SessionEvent from a map[string]interface{}
 func LoadSessionEvent(data interface{}, ctx *LoadContext) (SessionEvent, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := SessionEvent{}
 
 	// Load from map
@@ -75,7 +78,7 @@ func LoadSessionEvent(data interface{}, ctx *LoadContext) (SessionEvent, error) 
 		}
 		if val, ok := m["redaction"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx)
+				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
 				if err != nil {
 					return result, err
 				}

@@ -14,19 +14,19 @@ namespace Prompty;
  */
 model EngineCheckpoint {
   @doc("Stable unique identifier for this checkpoint")
-  @sample(#{ id: "ckpt_abc123" })
+  @sample(orIdSample)
   id: string;
 
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(orSessionIdSample)
   sessionId: string;
 
   @doc("Stable turn identifier")
-  @sample(#{ turnId: "turn_abc123" })
+  @sample(orTurnIdSample)
   turnId: string;
 
   @doc("Stable identifier of this engine run")
-  @sample(#{ runId: "run_abc123" })
+  @sample(orRunIdSample)
   runId: string;
 
   @doc("Run identifier of the parent run when this run was delegated")
@@ -42,7 +42,7 @@ model EngineCheckpoint {
   lastSequence: int64;
 
   @doc("Canonical conversation messages at checkpoint time")
-  messages: Message[] = #[];
+  messages: Message[];
 
   @doc("Number of leading messages eligible for provider prefix-cache reuse")
   stablePrefixMessages: int32 = 0;
@@ -54,10 +54,10 @@ model EngineCheckpoint {
   activeInvocationId?: string;
 
   @doc("Tool requests awaiting execution or commitment")
-  pendingToolRequests?: ModelToolRequest[] = #[];
+  pendingToolRequests?: ModelToolRequest[];
 
   @doc("Tool results already executed in this round")
-  completedToolResults?: ModelToolResult[] = #[];
+  completedToolResults?: ModelToolResult[];
 
   @doc("Number of fully completed model iterations")
   completedModelIterations: int32 = 0;
@@ -87,7 +87,7 @@ model EngineCheckpoint {
   contextState: InvocationContextState;
 
   @doc("Opaque host-specific checkpoint metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /**
@@ -107,9 +107,9 @@ model ResumeContext {
   maxModelAttempts: int32;
 
   @doc("Last durably persisted journal sequence when the journal tail is ahead of the checkpoint; the resumed run continues numbering after this value. Zero resumes from the checkpoint's own lastSequence.")
-  @sample(#{ lastJournalSequence: 12 })
+  @sample(orLastJournalSequenceSample)
   lastJournalSequence: int64 = 0;
 
   @doc("Opaque host-specific resume metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }

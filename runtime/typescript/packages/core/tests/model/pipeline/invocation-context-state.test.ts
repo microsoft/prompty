@@ -17,9 +17,41 @@ describe("InvocationContextState", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{}`;
+      const instance = InvocationContextState.fromJson(json);
+      expect(instance).toBeDefined();
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{}`;
+      const instance = InvocationContextState.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = InvocationContextState.fromJson(output);
+      expect(reloaded).toBeDefined();
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `{}\n`;
+      const instance = InvocationContextState.fromYaml(yaml);
+      expect(instance).toBeDefined();
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `{}\n`;
+      const instance = InvocationContextState.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = InvocationContextState.fromYaml(output);
+      expect(reloaded).toBeDefined();
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(`{}`) as Record<string, unknown>;
       const instance = InvocationContextState.load(data);
       expect(instance).toBeDefined();
     });

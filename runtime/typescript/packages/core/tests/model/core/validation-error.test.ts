@@ -61,7 +61,9 @@ describe("ValidationError", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "message": "Missing required input: firstName",\n  "property": "firstName",\n  "constraint": "required"\n}`,
+      ) as Record<string, unknown>;
       const instance = ValidationError.load(data);
       expect(instance).toBeDefined();
     });

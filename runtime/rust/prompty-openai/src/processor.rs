@@ -48,7 +48,7 @@ impl Processor for OpenAIProcessor {
         let mut mapped =
             process_invocation_response_with_context(agent, &response, "openai", true, request)?;
         mapped.output = Some(response);
-        mapped.tool_requests.clear();
+        mapped.tool_requests = None;
         Ok(mapped)
     }
 
@@ -84,7 +84,7 @@ pub fn process_invocation_response(
     if let Some(state) = &mut mapped.next_context_state {
         // The legacy surface has no immutable request snapshot, so it cannot
         // establish a trustworthy native continuation boundary.
-        for delegated in &mut state.delegated_state {
+        for delegated in state.delegated_state.iter_mut().flatten() {
             delegated.metadata = Value::Null;
         }
     }
@@ -123,7 +123,7 @@ pub fn process_invocation_response_with_context(
             .filter(|id| !id.is_empty())
             .map(|id| InvocationContextState {
                 portability: InvocationContextPortability::Delegated,
-                delegated_state: vec![DelegatedStateReference {
+                delegated_state: Some(vec![DelegatedStateReference {
                     provider: provider.to_string(),
                     kind: "response".to_string(),
                     id: id.to_string(),
@@ -132,11 +132,11 @@ pub fn process_invocation_response_with_context(
                             "inputMessages": request.context.messages,
                         },
                     }),
-                }],
+                }]),
             })
             .unwrap_or(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
     );
     let assistant_messages = next_context_state
@@ -148,8 +148,8 @@ pub fn process_invocation_response_with_context(
     Ok(ModelInvocationResponse {
         output: tool_requests.is_empty().then_some(output),
         usage: invocation_usage(response),
-        assistant_messages,
-        tool_requests,
+        assistant_messages: Some(assistant_messages),
+        tool_requests: Some(tool_requests),
         next_context_state,
         metadata: Value::Null,
     })
@@ -835,11 +835,12 @@ mod tests {
             .next_context_state
             .expect("Responses API response should carry a continuation reference");
         assert_eq!(state.portability, InvocationContextPortability::Delegated);
-        assert_eq!(state.delegated_state[0].provider, "openai");
-        assert_eq!(state.delegated_state[0].kind, "response");
-        assert_eq!(state.delegated_state[0].id, "resp_123");
+        let delegated_state = state.delegated_state.as_ref().unwrap();
+        assert_eq!(delegated_state[0].provider, "openai");
+        assert_eq!(delegated_state[0].kind, "response");
+        assert_eq!(delegated_state[0].id, "resp_123");
         assert_eq!(
-            state.delegated_state[0].metadata[RESPONSES_CONTINUATION_BOUNDARY]["inputMessages"],
+            delegated_state[0].metadata[RESPONSES_CONTINUATION_BOUNDARY]["inputMessages"],
             serde_json::to_value(initial_messages).unwrap()
         );
         assert_eq!(result.output, Some(json!("Hello from Responses")));
@@ -872,11 +873,17 @@ mod tests {
 
         let state = result.next_context_state.expect("context state");
         assert_eq!(state.portability, InvocationContextPortability::Portable);
-        assert!(state.delegated_state.is_empty());
-        assert_eq!(result.assistant_messages.len(), 1);
-        assert_eq!(result.assistant_messages[0].text_content(), "Hello");
+        assert!(
+            state
+                .delegated_state
+                .as_ref()
+                .map_or(true, |state| state.is_empty())
+        );
+        let assistant_messages = result.assistant_messages.as_ref().unwrap();
+        assert_eq!(assistant_messages.len(), 1);
+        assert_eq!(assistant_messages[0].text_content(), "Hello");
         assert_eq!(
-            result.assistant_messages[0].metadata["tool_calls"][0]["id"],
+            assistant_messages[0].metadata["tool_calls"][0]["id"],
             "call_1"
         );
     }

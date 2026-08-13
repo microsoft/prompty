@@ -47,23 +47,23 @@ model EngineEvent {
   sequence: int64;
 
   @doc("Stable unique identifier for this event")
-  @sample(#{ id: "evt_abc123" })
+  @sample(EngineEventIdSample)
   id: string;
 
   @doc("RFC 3339 timestamp when the event was emitted")
-  @sample(#{ timestamp: "2025-01-01T00:00:00Z" })
+  @sample(EngineEventTimestampSample)
   timestamp: string;
 
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(EngineEventSessionIdSample)
   sessionId: string;
 
   @doc("Stable turn identifier")
-  @sample(#{ turnId: "turn_abc123" })
+  @sample(EngineEventTurnIdSample)
   turnId: string;
 
   @doc("Stable identifier of this engine run")
-  @sample(#{ runId: "run_abc123" })
+  @sample(EngineEventRunIdSample)
   runId: string;
 
   @doc("Run identifier of the parent run when this run was delegated")
@@ -93,7 +93,7 @@ model EngineEvent {
  */
 model ModelReconciliationState {
   @doc("Model invocation identifier awaiting reconciliation")
-  @sample(#{ invocationId: "inv_abc123" })
+  @sample(invocationInvocationIdSample)
   invocationId: string;
 
   @doc("The request whose outcome must be reconciled")
@@ -103,11 +103,11 @@ model ModelReconciliationState {
   failedAttempt: int32;
 
   @doc("Human-readable reason the outcome is indeterminate")
-  @sample(#{ message: "provider connection dropped after request was sent" })
+  @sample(invocationMessageSample)
   message: string;
 
   @doc("Opaque host-specific reconciliation metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /** A permission decision for one tool request. */
@@ -119,5 +119,5 @@ model EnginePermissionDecision {
   reason?: string;
 
   @doc("Opaque host-specific permission metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }

@@ -22,7 +22,7 @@ classDiagram
     class Executor {
       <<protocol>>
         +execute(agent: Prompty, messages: Message[]) unknown [async-capable]
-        +executeStream(agent: Prompty, messages: Message[]) unknown [async-capable]
+        +executeStream(agent: Prompty, messages: Message[]) unknown [async-capable, optional default]
         +formatToolMessages(rawResponse: unknown, toolCalls: ToolCall[], toolResults: string[], textContent: string?) Message[] [sync]
     }
 ```
@@ -34,5 +34,5 @@ The following helper methods are declared via `@method` and must be implemented 
 | Name | Signature | Runtime shape | Description |
 | ---- | --------- | ------------- | ----------- |
 | `execute` | `execute(agent: Prompty, messages: Message[]) -> unknown` | async-capable | Call an LLM provider with messages and return the raw response |
-| `executeStream` | `executeStream(agent: Prompty, messages: Message[]) -> unknown` | async-capable _(optional default)_ | Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. |
+| `executeStream` | `executeStream(agent: Prompty, messages: Message[]) -> unknown` | async-capable, optional default | Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. |
 | `formatToolMessages` | `formatToolMessages(rawResponse: unknown, toolCalls: ToolCall[], toolResults: string[], textContent: string?) -> Message[]` | sync | Format tool call results into messages for the next iteration |

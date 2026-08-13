@@ -29,6 +29,7 @@ describe("Template", () => {
       const instance = Template.fromJson(json);
       const output = instance.toJson();
       const reloaded = Template.fromJson(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
@@ -44,12 +45,15 @@ describe("Template", () => {
       const instance = Template.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = Template.fromYaml(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "format": {\n    "kind": "mustache"\n  },\n  "parser": {\n    "kind": "mustache"\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = Template.load(data);
       expect(instance).toBeDefined();
     });

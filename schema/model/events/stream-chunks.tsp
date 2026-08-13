@@ -28,7 +28,7 @@ model TextChunk extends StreamChunk {
   kind: "text";
 
   @doc("The text content of the chunk")
-  @sample(#{ value: "Hello" })
+  @sample(TextChunkValueSample)
   value: string;
 }
 
@@ -40,7 +40,7 @@ model ThinkingChunk extends StreamChunk {
   kind: "thinking";
 
   @doc("The thinking content of the chunk")
-  @sample(#{ value: "Let me consider..." })
+  @sample(ThinkingChunkValueSample)
   value: string;
 }
 
@@ -52,13 +52,7 @@ model ToolChunk extends StreamChunk {
   kind: "tool";
 
   @doc("The tool call data")
-  @sample(#{
-    toolCall: #{
-      id: "call_abc123",
-      name: "get_weather",
-      arguments: "{\"city\": \"Paris\"}",
-    },
-  })
+  @sample(ToolChunkToolCallSample)
   toolCall: ToolCall;
 }
 
@@ -81,6 +75,6 @@ model ErrorChunk extends StreamChunk {
   kind: "error";
 
   @doc("The error message")
-  @sample(#{ message: "Rate limit exceeded" })
+  @sample(ErrorChunkMessageSample)
   message: string;
 }

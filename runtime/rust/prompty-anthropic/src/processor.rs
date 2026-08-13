@@ -49,11 +49,11 @@ impl Processor for AnthropicProcessor {
         Ok(ModelInvocationResponse {
             output: tool_requests.is_empty().then_some(output),
             usage: None,
-            assistant_messages: portable_assistant_messages(&response),
-            tool_requests,
+            assistant_messages: Some(portable_assistant_messages(&response)),
+            tool_requests: Some(tool_requests),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
             metadata: Value::Null,
         })
@@ -69,7 +69,7 @@ impl Processor for AnthropicProcessor {
             .process_with_context(agent, response.clone(), request)
             .await?;
         mapped.output = Some(response);
-        mapped.tool_requests.clear();
+        mapped.tool_requests = None;
         Ok(mapped)
     }
 
@@ -523,21 +523,23 @@ mod tests {
         });
 
         let result = AnthropicProcessor
-            .process_with_context(
-                &agent,
-                response,
-                &ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default()),
-            )
+            .process_with_context(&agent, response, &ModelInvocationRequest::default())
             .await
             .unwrap();
 
         let state = result.next_context_state.expect("context state");
         assert_eq!(state.portability, InvocationContextPortability::Portable);
-        assert!(state.delegated_state.is_empty());
-        assert_eq!(result.assistant_messages.len(), 1);
-        assert_eq!(result.assistant_messages[0].text_content(), "Hello!");
+        assert!(
+            state
+                .delegated_state
+                .as_ref()
+                .map_or(true, |state| state.is_empty())
+        );
+        let assistant_messages = result.assistant_messages.as_ref().unwrap();
+        assert_eq!(assistant_messages.len(), 1);
+        assert_eq!(assistant_messages[0].text_content(), "Hello!");
         assert_eq!(
-            result.assistant_messages[0].metadata["content"][1]["type"],
+            assistant_messages[0].metadata["content"][1]["type"],
             "tool_use"
         );
     }

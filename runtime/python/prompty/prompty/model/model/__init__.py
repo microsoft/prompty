@@ -8,7 +8,6 @@ from ._AiResourceInfo import AiResourceInfo
 from ._InvocationUsage import InvocationUsage
 from ._Model import Model
 from ._ModelInfo import ModelInfo
-from ._ModelLister import ModelLister
 from ._ModelOptions import ModelOptions
 from ._ProjectInfo import ProjectInfo
 from ._SubscriptionInfo import SubscriptionInfo
@@ -19,7 +18,6 @@ __all__ = [
     "Model",
     "TokenUsage",
     "InvocationUsage",
-    "ModelLister",
     "ModelInfo",
     "SubscriptionInfo",
     "AiResourceInfo",

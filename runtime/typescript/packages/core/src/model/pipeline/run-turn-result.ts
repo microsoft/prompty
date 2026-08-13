@@ -16,8 +16,8 @@ export class RunTurnResult {
   status: RunTurnStatus = "success";
   output?: unknown | undefined;
   iterations: number = 0;
-  toolResults?: HostToolResult[] = [];
-  checkpoints?: Checkpoint[] = [];
+  toolResults?: HostToolResult[];
+  checkpoints?: Checkpoint[];
 
   constructor(init?: Partial<RunTurnResult>) {
     this.sessionId = init?.sessionId ?? "";
@@ -41,6 +41,7 @@ export class RunTurnResult {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): RunTurnResult {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -65,13 +66,13 @@ export class RunTurnResult {
     if (data["toolResults"] !== undefined && data["toolResults"] !== null) {
       instance.toolResults = RunTurnResult.loadToolResults(
         data["toolResults"] as unknown[],
-        context,
+        context.at("toolResults"),
       );
     }
     if (data["checkpoints"] !== undefined && data["checkpoints"] !== null) {
       instance.checkpoints = RunTurnResult.loadCheckpoints(
         data["checkpoints"] as unknown[],
-        context,
+        context.at("checkpoints"),
       );
     }
 
@@ -85,20 +86,36 @@ export class RunTurnResult {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): HostToolResult[] {
+    context ??= new LoadContext({ path: "toolResults" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: HostToolResult[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            HostToolResult.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, requestId: v });
+          result.push(
+            HostToolResult.load({ name: k, requestId: v }, context.at(k)),
+          );
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      HostToolResult.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      HostToolResult.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
     );
   }
 
@@ -118,20 +135,31 @@ export class RunTurnResult {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Checkpoint[] {
+    context ??= new LoadContext({ path: "checkpoints" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Checkpoint[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Checkpoint.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, id: v });
+          result.push(Checkpoint.load({ name: k, id: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Checkpoint.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Checkpoint.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 

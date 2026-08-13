@@ -9,14 +9,14 @@ namespace Prompty;
  */
 model OpenApiTool extends Tool {
   @doc("The kind identifier for OpenAPI tools")
-  @sample(#{ kind: "openapi" })
+  @sample(OpenApiToolKindSample)
   kind: "openapi";
 
   @doc("The connection configuration for the OpenAPI tool")
-  @sample(#{ connection: #{ kind: "reference" } })
+  @sample(OpenApiToolConnectionSample)
   connection: Connection;
 
   @doc("The full OpenAPI specification")
-  @sample(#{ specification: "./openapi.json" })
+  @sample(OpenApiToolSpecificationSample)
   specification: string;
 }

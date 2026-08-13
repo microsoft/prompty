@@ -21,13 +21,17 @@ type StreamChunk struct {
 // LoadStreamChunk creates a StreamChunk from a map[string]interface{}
 // Returns interface{} because this is a polymorphic base type that can resolve to different child types
 func LoadStreamChunk(data interface{}, ctx *LoadContext) (interface{}, error) {
-	result := StreamChunk{}
-
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
 			switch discriminator := discriminator.(type) {
 			case string:
+				if discriminator == "" {
+					return nil, fmt.Errorf("invalid StreamChunk discriminator field 'kind': expected non-blank string")
+				}
 				switch discriminator {
 				case "text":
 					return LoadTextChunk(data, ctx)
@@ -40,22 +44,16 @@ func LoadStreamChunk(data interface{}, ctx *LoadContext) (interface{}, error) {
 				case "error":
 					return LoadErrorChunk(data, ctx)
 				default:
-					return nil, fmt.Errorf("unknown StreamChunk discriminator value: %s", discriminator)
+					return nil, fmt.Errorf("unknown StreamChunk discriminator field 'kind' value: %s", discriminator)
 				}
 			default:
-				return nil, fmt.Errorf("unknown StreamChunk discriminator value: %v", discriminator)
+				return nil, fmt.Errorf("unknown StreamChunk discriminator field 'kind' value: %v", discriminator)
 			}
+		} else {
+			return nil, fmt.Errorf("missing StreamChunk discriminator property: kind")
 		}
 	}
-	return nil, fmt.Errorf("missing StreamChunk discriminator property: kind")
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = string(val.(string))
-		}
-	}
-
-	return result, nil
+	return nil, fmt.Errorf("invalid StreamChunk discriminator property 'kind': expected non-blank string")
 }
 
 // Save serializes StreamChunk to map[string]interface{}
@@ -115,6 +113,9 @@ type TextChunk struct {
 
 // LoadTextChunk creates a TextChunk from a map[string]interface{}
 func LoadTextChunk(data interface{}, ctx *LoadContext) (TextChunk, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := TextChunk{}
 
 	// Load from map
@@ -186,6 +187,9 @@ type ThinkingChunk struct {
 
 // LoadThinkingChunk creates a ThinkingChunk from a map[string]interface{}
 func LoadThinkingChunk(data interface{}, ctx *LoadContext) (ThinkingChunk, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ThinkingChunk{}
 
 	// Load from map
@@ -257,16 +261,22 @@ type ToolChunk struct {
 
 // LoadToolChunk creates a ToolChunk from a map[string]interface{}
 func LoadToolChunk(data interface{}, ctx *LoadContext) (ToolChunk, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ToolChunk{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["toolCall"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("toolCall").Path)
+		}
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
 		}
 		if val, ok := m["toolCall"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadToolCall(m, ctx)
+				loaded, err := LoadToolCall(m, ctx.At("toolCall"))
 				if err != nil {
 					return result, err
 				}
@@ -335,16 +345,22 @@ type UsageChunk struct {
 
 // LoadUsageChunk creates a UsageChunk from a map[string]interface{}
 func LoadUsageChunk(data interface{}, ctx *LoadContext) (UsageChunk, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := UsageChunk{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["usage"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("usage").Path)
+		}
 		if val, ok := m["kind"]; ok && val != nil {
 			result.Kind = string(val.(string))
 		}
 		if val, ok := m["usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadInvocationUsage(m, ctx)
+				loaded, err := LoadInvocationUsage(m, ctx.At("usage"))
 				if err != nil {
 					return result, err
 				}
@@ -413,6 +429,9 @@ type ErrorChunk struct {
 
 // LoadErrorChunk creates a ErrorChunk from a map[string]interface{}
 func LoadErrorChunk(data interface{}, ctx *LoadContext) (ErrorChunk, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ErrorChunk{}
 
 	// Load from map

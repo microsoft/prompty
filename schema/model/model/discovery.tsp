@@ -2,16 +2,11 @@ import "@typra/emitter";
 
 namespace Prompty;
 
-@@protocol(ModelLister);
-@@method(ModelLister,
-  "listModels",
-  "ModelInfo[]",
-  "List models available through a provider connection",
-  #{ connection: "unknown" }
-);
-
 /** Lists models available through a provider connection. */
-model ModelLister {}
+interface ModelLister {
+  @doc("List models available through a provider connection")
+  listModels(connection: unknown): ModelInfo[];
+}
 
 /**
  * Information about a model available from a provider. Used by provider-level
@@ -23,30 +18,30 @@ model ModelLister {}
  */
 model ModelInfo {
   @doc("The model identifier (e.g., 'gpt-4o', 'claude-3-opus')")
-  @sample(#{ id: "gpt-4o" })
+  @sample(availableIdSample)
   id: string;
 
   @doc("Human-readable display name")
-  @sample(#{ displayName: "GPT-4o" })
+  @sample(availableDisplayNameSample)
   displayName?: string;
 
   @doc("The organization or entity that owns the model")
-  @sample(#{ ownedBy: "openai" })
+  @sample(availableOwnedBySample)
   ownedBy?: string;
 
   @doc("Maximum context window size in tokens")
-  @sample(#{ contextWindow: 128000 })
+  @sample(availableContextWindowSample)
   contextWindow?: int32;
 
   @doc("Input modalities the model accepts (e.g., 'text', 'image', 'audio')")
-  @sample(#{ inputModalities: #["text", "image"] })
+  @sample(availableInputModalitiesSample)
   inputModalities?: string[];
 
   @doc("Output modalities the model can produce (e.g., 'text', 'audio')")
-  @sample(#{ outputModalities: #["text"] })
+  @sample(availableOutputModalitiesSample)
   outputModalities?: string[];
 
   @doc("Additional provider-specific properties")
-  @sample(#{ additionalProperties: #{ supportsStreaming: true } })
+  @sample(availableAdditionalPropertiesSample)
   additionalProperties?: Record<unknown>;
 }

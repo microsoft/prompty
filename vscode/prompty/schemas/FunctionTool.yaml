@@ -63,7 +63,6 @@ properties:
             enumValues:
               type: array
               items: {}
-              default: []
               description: Allowed enumeration values for the property
           required:
             - name

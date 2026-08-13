@@ -37,7 +37,7 @@ class Tool(ABC):
     name: str = field(default="")
     kind: str = field(default="")
     description: str | None = None
-    bindings: list[Binding] = field(default_factory=list)
+    bindings: list[Binding] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Tool":
@@ -50,8 +50,9 @@ class Tool(ABC):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Tool: {data}")
@@ -66,73 +67,82 @@ class Tool(ABC):
         if data is not None and "description" in data:
             instance.description = data["description"]
         if data is not None and "bindings" in data:
-            instance.bindings = Tool.load_bindings(data["bindings"], context)
+            instance.bindings = Tool.load_bindings(data["bindings"], context.at("bindings"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_bindings(data: dict | list, context: LoadContext | None) -> list[Binding]:
+        if context is None:
+            context = LoadContext(path="bindings")
         if isinstance(data, dict):
             # convert simple named bindings to list of Binding
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Binding.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "input": v})
-            data = result
-        return [Binding.load(item, context) for item in data]
+                    result.append(Binding.load({"name": k, "input": v}, context.at(k)))
+            return result
+        return [Binding.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_bindings(items: list[Binding], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
+        serialized = [dict(item.save(context)) for item in items]
+        for item_data in serialized:
+            if item_data.get("name") == "":
+                item_data.pop("name")
+
         if context.collection_format == "array":
-            return [item.save(context) for item in items]
+            return serialized
+
+        names: set[str] = set()
+        for item_data in serialized:
+            name = item_data.get("name")
+            if not isinstance(name, str) or not name or name in names:
+                return serialized
+            names.add(name)
 
         # Object format: use name as key
         result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
+        for item, item_data in zip(items, serialized):
+            name = item_data.pop("name")
+            # Check if we can use shorthand (only primary property set)
+            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                shorthand_prop = item._shorthand_property
+                if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    result[name] = item_data[shorthand_prop]
+                    continue
+            result[name] = item_data
         return result
 
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "Tool":
         # load polymorphic Tool instance
-        if data is not None and "kind" in data:
-            discriminator_value = str(data["kind"]).lower()
-            if discriminator_value == "function":
-                return FunctionTool.load(data, context)
-            elif discriminator_value == "mcp":
-                return McpTool.load(data, context)
-            elif discriminator_value == "openapi":
-                return OpenApiTool.load(data, context)
-            elif discriminator_value == "prompty":
-                return PromptyTool.load(data, context)
+        discriminator_raw = data.get("kind") if data is not None else None
+        if not isinstance(discriminator_raw, str) or discriminator_raw == "":
+            raise ValueError("Invalid Tool discriminator field 'kind': expected non-blank string")
+        discriminator_value = discriminator_raw
+        if discriminator_value == "function":
+            return FunctionTool.load(data, context)
+        elif discriminator_value == "mcp":
+            return McpTool.load(data, context)
+        elif discriminator_value == "openapi":
+            return OpenApiTool.load(data, context)
+        elif discriminator_value == "prompty":
+            return PromptyTool.load(data, context)
 
-            else:
-                # load default instance
-                return CustomTool.load(data, context)
         else:
-            raise ValueError("Missing Tool discriminator property: 'kind'")
+            # load default instance
+            return CustomTool.load(data, context)
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Tool instance to a dictionary.
@@ -218,8 +228,9 @@ class FunctionTool(Tool):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FunctionTool: {data}")
@@ -230,7 +241,7 @@ class FunctionTool(Tool):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "parameters" in data:
-            instance.parameters = FunctionTool.load_parameters(data["parameters"], context)
+            instance.parameters = FunctionTool.load_parameters(data["parameters"], context.at("parameters"))
         if data is not None and "strict" in data:
             instance.strict = data["strict"]
         if context is not None:
@@ -239,45 +250,54 @@ class FunctionTool(Tool):
 
     @staticmethod
     def load_parameters(data: dict | list, context: LoadContext | None) -> list[Property]:
+        if context is None:
+            context = LoadContext(path="parameters")
         if isinstance(data, dict):
             # convert simple named parameters to list of Property
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Property.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "kind": v})
-            data = result
-        return [Property.load(item, context) for item in data]
+                    result.append(Property.load({"name": k, "example": v}, context.at(k)))
+            return result
+        return [Property.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_parameters(items: list[Property], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
+        serialized = [dict(item.save(context)) for item in items]
+        for item_data in serialized:
+            if item_data.get("name") == "":
+                item_data.pop("name")
+
         if context.collection_format == "array":
-            return [item.save(context) for item in items]
+            return serialized
+
+        names: set[str] = set()
+        for item_data in serialized:
+            name = item_data.get("name")
+            if not isinstance(name, str) or not name or name in names:
+                return serialized
+            names.add(name)
 
         # Object format: use name as key
         result: dict[str, Any] = {}
-        for item in items:
-            item_data = item.save(context)
-            name = item_data.pop("name", None)
-            if name:
-                # Check if we can use shorthand (only primary property set)
-                if context.use_shorthand and hasattr(item, "_shorthand_property"):
-                    shorthand_prop = item._shorthand_property
-                    if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
-                        result[name] = item_data[shorthand_prop]
-                        continue
-                result[name] = item_data
-            else:
-                # No name, fall back to array format for this item
-                if "_unnamed" not in result:
-                    result["_unnamed"] = []
-                result["_unnamed"].append(item_data)
+        for item, item_data in zip(items, serialized):
+            name = item_data.pop("name")
+            # Check if we can use shorthand (only primary property set)
+            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+                shorthand_prop = item._shorthand_property
+                if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
+                    result[name] = item_data[shorthand_prop]
+                    continue
+            result[name] = item_data
         return result
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
@@ -364,11 +384,14 @@ class CustomTool(Tool):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for CustomTool: {data}")
+        if "connection" not in data or data["connection"] is None:
+            raise ValueError(f"{context.at('connection').path}: missing required field")
 
         # create new instance
         instance = CustomTool()
@@ -376,7 +399,7 @@ class CustomTool(Tool):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "connection" in data:
-            instance.connection = Connection.load(data["connection"], context)
+            instance.connection = Connection.load(data["connection"], context.at("connection"))
         if data is not None and "options" in data:
             instance.options = data["options"]
         if context is not None:
@@ -446,7 +469,7 @@ class McpTool(Tool):
         The server name of the MCP tool
     server_description : Optional[str]
         The description of the MCP tool
-    approval_mode : McpApprovalMode
+    approval_mode : Optional[McpApprovalMode]
         The approval mode for the MCP tool
     allowed_tools : Optional[list[str]]
         List of allowed operations or resources for the MCP tool
@@ -458,8 +481,8 @@ class McpTool(Tool):
     connection: Connection = field(default_factory=Connection)
     server_name: str = field(default="")
     server_description: str | None = None
-    approval_mode: McpApprovalMode = field(default_factory=McpApprovalMode)
-    allowed_tools: list[str] = field(default_factory=list)
+    approval_mode: McpApprovalMode | None = None
+    allowed_tools: list[str] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "McpTool":
@@ -472,11 +495,14 @@ class McpTool(Tool):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for McpTool: {data}")
+        if "connection" not in data or data["connection"] is None:
+            raise ValueError(f"{context.at('connection').path}: missing required field")
 
         # create new instance
         instance = McpTool()
@@ -484,13 +510,13 @@ class McpTool(Tool):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "connection" in data:
-            instance.connection = Connection.load(data["connection"], context)
+            instance.connection = Connection.load(data["connection"], context.at("connection"))
         if data is not None and "serverName" in data:
             instance.server_name = data["serverName"]
         if data is not None and "serverDescription" in data:
             instance.server_description = data["serverDescription"]
         if data is not None and "approvalMode" in data:
-            instance.approval_mode = McpApprovalMode.load(data["approvalMode"], context)
+            instance.approval_mode = McpApprovalMode.load(data["approvalMode"], context.at("approvalMode"))
         if data is not None and "allowedTools" in data:
             instance.allowed_tools = data["allowedTools"]
         if context is not None:
@@ -583,11 +609,14 @@ class OpenApiTool(Tool):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for OpenApiTool: {data}")
+        if "connection" not in data or data["connection"] is None:
+            raise ValueError(f"{context.at('connection').path}: missing required field")
 
         # create new instance
         instance = OpenApiTool()
@@ -595,7 +624,7 @@ class OpenApiTool(Tool):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "connection" in data:
-            instance.connection = Connection.load(data["connection"], context)
+            instance.connection = Connection.load(data["connection"], context.at("connection"))
         if data is not None and "specification" in data:
             instance.specification = data["specification"]
         if context is not None:
@@ -685,8 +714,9 @@ class PromptyTool(Tool):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for PromptyTool: {data}")

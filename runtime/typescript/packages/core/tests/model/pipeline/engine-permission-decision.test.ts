@@ -17,9 +17,46 @@ describe("EnginePermissionDecision", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "approved": true\n}`;
+      const instance = EnginePermissionDecision.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.approved).toEqual(true);
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "approved": true\n}`;
+      const instance = EnginePermissionDecision.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = EnginePermissionDecision.fromJson(output);
+      expect(reloaded.approved).toEqual(instance.approved);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `approved: true\n`;
+      const instance = EnginePermissionDecision.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.approved).toEqual(true);
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `approved: true\n`;
+      const instance = EnginePermissionDecision.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = EnginePermissionDecision.fromYaml(output);
+      expect(reloaded.approved).toEqual(instance.approved);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(`{\n  "approved": true\n}`) as Record<
+        string,
+        unknown
+      >;
       const instance = EnginePermissionDecision.load(data);
       expect(instance).toBeDefined();
     });

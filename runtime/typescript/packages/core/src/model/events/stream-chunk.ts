@@ -21,6 +21,7 @@ export abstract class StreamChunk {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): StreamChunk {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -43,26 +44,33 @@ export abstract class StreamChunk {
     context?: LoadContext,
   ): StreamChunk {
     const discriminatorValue = data["kind"];
-    if (discriminatorValue !== undefined && discriminatorValue !== null) {
-      const discriminator = String(discriminatorValue).toLowerCase();
-      switch (discriminator) {
-        case "text":
-          return TextChunk.load(data, context);
-        case "thinking":
-          return ThinkingChunk.load(data, context);
-        case "tool":
-          return ToolChunk.load(data, context);
-        case "usage":
-          return UsageChunk.load(data, context);
-        case "error":
-          return ErrorChunk.load(data, context);
-        default:
-          throw new Error(
-            `Unknown StreamChunk discriminator value: ${discriminator}`,
-          );
-      }
+    if (typeof discriminatorValue !== "string") {
+      throw new Error(
+        "Invalid StreamChunk discriminator field 'kind': expected non-blank string",
+      );
     }
-    throw new Error("Missing StreamChunk discriminator property: 'kind'");
+    if (discriminatorValue === "") {
+      throw new Error(
+        "Invalid StreamChunk discriminator field 'kind': expected non-blank string",
+      );
+    }
+    const discriminator = discriminatorValue;
+    switch (discriminator) {
+      case "text":
+        return TextChunk.load(data, context);
+      case "thinking":
+        return ThinkingChunk.load(data, context);
+      case "tool":
+        return ToolChunk.load(data, context);
+      case "usage":
+        return UsageChunk.load(data, context);
+      case "error":
+        return ErrorChunk.load(data, context);
+      default:
+        throw new Error(
+          `Unknown StreamChunk discriminator field 'kind' value: ${discriminator}`,
+        );
+    }
   }
 
   //#endregion
@@ -126,6 +134,7 @@ export class TextChunk extends StreamChunk {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): TextChunk {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -209,6 +218,7 @@ export class ThinkingChunk extends StreamChunk {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ThinkingChunk {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -291,10 +301,14 @@ export class ToolChunk extends StreamChunk {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): ToolChunk {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["toolCall"] === undefined || data["toolCall"] === null) {
+      throw new Error(`${context.at("toolCall").path}: missing required field`);
+    }
     const instance = new ToolChunk();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
@@ -303,7 +317,7 @@ export class ToolChunk extends StreamChunk {
     if (data["toolCall"] !== undefined && data["toolCall"] !== null) {
       instance.toolCall = ToolCall.load(
         data["toolCall"] as Record<string, unknown>,
-        context,
+        context.at("toolCall"),
       );
     }
 
@@ -379,10 +393,14 @@ export class UsageChunk extends StreamChunk {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): UsageChunk {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["usage"] === undefined || data["usage"] === null) {
+      throw new Error(`${context.at("usage").path}: missing required field`);
+    }
     const instance = new UsageChunk();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
@@ -391,7 +409,7 @@ export class UsageChunk extends StreamChunk {
     if (data["usage"] !== undefined && data["usage"] !== null) {
       instance.usage = InvocationUsage.load(
         data["usage"] as Record<string, unknown>,
-        context,
+        context.at("usage"),
       );
     }
 
@@ -465,6 +483,7 @@ export class ErrorChunk extends StreamChunk {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ErrorChunk {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

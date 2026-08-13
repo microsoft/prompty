@@ -21,6 +21,9 @@ type RunTurnRequest struct {
 
 // LoadRunTurnRequest creates a RunTurnRequest from a map[string]interface{}
 func LoadRunTurnRequest(data interface{}, ctx *LoadContext) (RunTurnRequest, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := RunTurnRequest{}
 
 	// Load from map
@@ -38,7 +41,7 @@ func LoadRunTurnRequest(data interface{}, ctx *LoadContext) (RunTurnRequest, err
 		}
 		if val, ok := m["options"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTurnOptions(m, ctx)
+				loaded, err := LoadTurnOptions(m, ctx.At("options"))
 				if err != nil {
 					return result, err
 				}

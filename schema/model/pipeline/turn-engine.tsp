@@ -15,11 +15,11 @@ alias EngineTurnStatus =
 /** The committed outcome of a turn handed to post-commit consumers. */
 model TurnCommit {
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(TurnCommitSessionIdSample)
   sessionId: string;
 
   @doc("Stable turn identifier")
-  @sample(#{ turnId: "turn_abc123" })
+  @sample(TurnCommitTurnIdSample)
   turnId: string;
 
   @doc("Terminal status of the turn")
@@ -29,7 +29,7 @@ model TurnCommit {
   output?: unknown;
 
   @doc("Canonical conversation messages at commit time")
-  messages: Message[] = #[];
+  messages: Message[];
 
   @doc("Number of model loop iterations executed")
   iterations: int32;
@@ -50,10 +50,10 @@ model TurnEngineResult {
   commit: TurnCommit;
 
   @doc("Immutable context snapshots produced during the turn")
-  snapshots?: ModelInvocationContextSnapshot[] = #[];
+  snapshots?: ModelInvocationContextSnapshot[];
 
   @doc("Normalized tool results produced during the turn")
-  toolResults?: ModelToolResult[] = #[];
+  toolResults?: ModelToolResult[];
 
   @doc("A non-fatal post-commit failure; the turn itself remains committed")
   postCommitError?: string;

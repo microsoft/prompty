@@ -21,6 +21,9 @@ type RetryPolicyRequest struct {
 
 // LoadRetryPolicyRequest creates a RetryPolicyRequest from a map[string]interface{}
 func LoadRetryPolicyRequest(data interface{}, ctx *LoadContext) (RetryPolicyRequest, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := RetryPolicyRequest{}
 
 	// Load from map

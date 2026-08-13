@@ -16,7 +16,6 @@ properties:
     description: Description of the prompt's purpose
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Additional metadata including authors, tags, and other arbitrary properties
   inputs:
     anyOf:
@@ -75,7 +74,6 @@ properties:
             enumValues:
               type: array
               items: {}
-              default: []
               description: Allowed enumeration values for the property
           required:
             - name
@@ -138,7 +136,6 @@ properties:
             enumValues:
               type: array
               items: {}
-              default: []
               description: Allowed enumeration values for the property
           required:
             - name
@@ -184,12 +181,10 @@ properties:
                     required:
                       - name
                       - input
-              default: []
               description: Tool argument bindings to input properties
           required:
             - name
             - kind
-    default: []
     description: Tools available for extended functionality
   template:
     $ref: Template.yaml
@@ -200,7 +195,6 @@ properties:
     description: Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body.
 required:
   - name
-  - model
 description: |-
   A Prompty is a markdown file format for LLM prompts. The frontmatter defines
   structured metadata including model configuration, input/output schemas, tools,

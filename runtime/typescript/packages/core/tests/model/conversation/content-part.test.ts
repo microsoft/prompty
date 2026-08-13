@@ -5,15 +5,37 @@
 import { ContentPart } from "../../../src/model/index";
 
 describe("ContentPart", () => {
-  describe("construction", () => {
-    it("should create a new instance with defaults", () => {
-      const instance = new ContentPart();
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "kind": "text",\n  "value": "Hello, world!"\n}`;
+      const instance = ContentPart.fromJson(json);
       expect(instance).toBeDefined();
+      expect(instance.kind).toEqual("text");
     });
 
-    it("should create a new instance with partial initialization", () => {
-      const instance = new ContentPart({});
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "kind": "text",\n  "value": "Hello, world!"\n}`;
+      const instance = ContentPart.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = ContentPart.fromJson(output);
+      expect(reloaded.kind).toEqual(instance.kind);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `kind: text\nvalue: Hello, world!\n`;
+      const instance = ContentPart.fromYaml(yaml);
       expect(instance).toBeDefined();
+      expect(instance.kind).toEqual("text");
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `kind: text\nvalue: Hello, world!\n`;
+      const instance = ContentPart.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = ContentPart.fromYaml(output);
+      expect(reloaded.kind).toEqual(instance.kind);
     });
   });
 });

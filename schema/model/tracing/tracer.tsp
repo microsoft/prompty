@@ -41,15 +41,15 @@ union TraceValue {
  */
 model TraceTime {
   @doc("ISO 8601 UTC timestamp when the span started")
-  @sample(#{ start: "2026-04-04T12:00:00Z" })
+  @sample(TraceTimeStartSample)
   start: string;
 
   @doc("ISO 8601 UTC timestamp when the span ended")
-  @sample(#{ end: "2026-04-04T12:00:01Z" })
+  @sample(TraceTimeEndSample)
   end: string;
 
   @doc("Duration of the span in milliseconds")
-  @sample(#{ duration: 1000 })
+  @sample(TraceTimeDurationSample)
   duration: float64;
 }
 
@@ -60,14 +60,14 @@ model TraceTime {
  */
 model TraceSpan {
   @doc("The name of this span (typically the function signature)")
-  @sample(#{ name: "prompty.core.pipeline.run" })
+  @sample(TraceSpanNameSample)
   name: string;
 
   @doc("Timing information for this span")
   __time: TraceTime;
 
   @doc("Fully-qualified function signature that produced this span")
-  @sample(#{ signature: "prompty.core.pipeline.run" })
+  @sample(TraceSpanSignatureSample)
   signature?: string;
 
   @doc("Serialized input parameters (redacted per §3.4)")
@@ -77,7 +77,7 @@ model TraceSpan {
   output?: unknown;
 
   @doc("Error message if the span ended with an exception")
-  @sample(#{ error: "Connection refused" })
+  @sample(TraceSpanErrorSample)
   error?: string;
 
   @doc("Aggregated token usage hoisted from child spans (§3.5)")
@@ -95,11 +95,11 @@ model TraceSpan {
  */
 model TraceFile {
   @doc("Language/runtime name (e.g., 'python', 'csharp', 'javascript')")
-  @sample(#{ runtime: "python" })
+  @sample(TraceFileRuntimeSample)
   runtime: string;
 
   @doc("Prompty library version")
-  @sample(#{ version: "2.0.0" })
+  @sample(TraceFileVersionSample)
   version: string;
 
   @doc("The root trace span")

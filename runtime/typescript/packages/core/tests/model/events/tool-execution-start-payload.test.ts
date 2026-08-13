@@ -65,7 +65,9 @@ describe("ToolExecutionStartPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "requestId": "exec_abc123",\n  "toolCallId": "call_abc123",\n  "toolName": "powershell",\n  "workingDirectory": "/workspace/project"\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolExecutionStartPayload.load(data);
       expect(instance).toBeDefined();
     });

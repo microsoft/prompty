@@ -46,8 +46,9 @@ class LlmCompletePayload:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for LlmCompletePayload: {data}")
@@ -60,7 +61,7 @@ class LlmCompletePayload:
         if data is not None and "serviceRequestId" in data:
             instance.service_request_id = data["serviceRequestId"]
         if data is not None and "usage" in data:
-            instance.usage = TokenUsage.load(data["usage"], context)
+            instance.usage = TokenUsage.load(data["usage"], context.at("usage"))
         if data is not None and "durationMs" in data:
             instance.duration_ms = data["durationMs"]
         if context is not None:

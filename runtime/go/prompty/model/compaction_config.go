@@ -22,6 +22,9 @@ type CompactionConfig struct {
 
 // LoadCompactionConfig creates a CompactionConfig from a map[string]interface{}
 func LoadCompactionConfig(data interface{}, ctx *LoadContext) (CompactionConfig, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := CompactionConfig{}
 
 	// Load from map

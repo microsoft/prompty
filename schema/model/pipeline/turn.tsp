@@ -15,31 +15,31 @@ namespace Prompty;
  */
 model TurnOptions {
   @doc("Maximum number of tool-call iterations before the loop terminates")
-  @sample(#{ maxIterations: 10 })
+  @sample(definesMaxIterationsSample)
   maxIterations?: int32 = 10;
 
   @doc("Maximum number of LLM call retries on transient failure within a single iteration")
-  @sample(#{ maxLlmRetries: 3 })
+  @sample(definesMaxLlmRetriesSample)
   maxLlmRetries?: int32 = 3;
 
   @doc("Character budget for the context window. When set, the loop trims older messages to stay within budget before each LLM call. System messages are never dropped.")
-  @sample(#{ contextBudget: 100000 })
+  @sample(definesContextBudgetSample)
   contextBudget?: int32;
 
   @doc("Whether to execute multiple tool calls concurrently when the LLM returns several in one response")
-  @sample(#{ parallelToolCalls: true })
+  @sample(definesParallelToolCallsSample)
   parallelToolCalls?: boolean = false;
 
   @doc("When true, return the raw LLM response without processor post-processing")
-  @sample(#{ raw: false })
+  @sample(definesRawSample)
   raw?: boolean = false;
 
   @doc("Turn number for trace labeling. Useful when the caller maintains an outer conversation loop.")
-  @sample(#{ turn: 1 })
+  @sample(definesTurnSample)
   turn?: int32;
 
   @doc("Context compaction configuration. Controls how messages are summarized when the context window exceeds the budget.")
-  @sample(#{ compaction: #{ strategy: "summarize" } })
+  @sample(definesCompactionSample)
   compaction?: CompactionConfig;
 }
 
@@ -50,16 +50,16 @@ model TurnOptions {
  */
 model CompactionConfig {
   @doc("The compaction strategy identifier. Built-in strategies include 'summarize'. Can also be a path to a .prompty file used as the summarization prompt.")
-  @sample(#{ strategy: "summarize" })
+  @sample(CompactionConfigStrategySample)
   strategy?: string;
 
   @doc("Character budget for the compacted context. Overrides TurnOptions.contextBudget when set.")
-  @sample(#{ budget: 50000 })
+  @sample(CompactionConfigBudgetSample)
   budget?: int32;
 
   @doc("Additional strategy-specific options")
-  @sample(#{ options: #{ preserveSystemMessages: true } })
-  options?: Record<unknown> = #{};
+  @sample(CompactionConfigOptionsSample)
+  options?: Record<unknown>;
 }
 
 /**
@@ -70,25 +70,25 @@ model CompactionConfig {
  */
 model TurnModelRequest {
   @doc("Stable harness session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(callbackSessionIdSample)
   sessionId: string;
 
   @doc("Stable turn identifier within the session")
-  @sample(#{ turnId: "turn_abc123" })
+  @sample(callbackTurnIdSample)
   turnId: string;
 
   @doc("Zero-based model loop iteration")
-  @sample(#{ iteration: 0 })
+  @sample(callbackIterationSample)
   iteration: int32;
 
   @doc("Inputs supplied to the deterministic single-turn run")
-  inputs?: Record<unknown> = #{};
+  inputs?: Record<unknown>;
 
   @doc("Canonical turn execution options")
   options?: TurnOptions;
 
   @doc("Host tool results produced by the previous iteration")
-  toolResults?: HostToolResult[] = #[];
+  toolResults?: HostToolResult[];
 }
 
 /**
@@ -102,10 +102,10 @@ model TurnModelResponse {
   usage?: InvocationUsage;
 
   @doc("Host tool execution requests emitted by the model callback")
-  toolRequests?: HostToolRequest[] = #[];
+  toolRequests?: HostToolRequest[];
 
   @doc("Additional deterministic state to merge into the iteration checkpoint")
-  checkpointState?: Record<unknown> = #{};
+  checkpointState?: Record<unknown>;
 }
 
 /**
@@ -113,15 +113,15 @@ model TurnModelResponse {
  */
 model RunTurnRequest {
   @doc("Stable harness session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(RunTurnRequestSessionIdSample)
   sessionId: string;
 
   @doc("Stable turn identifier within the session")
-  @sample(#{ turnId: "turn_abc123" })
+  @sample(RunTurnRequestTurnIdSample)
   turnId: string;
 
   @doc("Inputs supplied to the deterministic single-turn run")
-  inputs?: Record<unknown> = #{};
+  inputs?: Record<unknown>;
 
   @doc("Canonical turn execution options")
   options?: TurnOptions;
@@ -140,11 +140,11 @@ alias RunTurnStatus = "success" | "error" | "cancelled";
  */
 model RunTurnResult {
   @doc("Stable harness session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(RunTurnResultSessionIdSample)
   sessionId: string;
 
   @doc("Stable turn identifier within the session")
-  @sample(#{ turnId: "turn_abc123" })
+  @sample(RunTurnResultTurnIdSample)
   turnId: string;
 
   @doc("Final semantic status for the deterministic turn")
@@ -154,14 +154,14 @@ model RunTurnResult {
   output?: unknown;
 
   @doc("Number of model loop iterations executed")
-  @sample(#{ iterations: 1 })
+  @sample(RunTurnResultIterationsSample)
   iterations: int32;
 
   @doc("Host tool results produced during the turn")
-  toolResults?: HostToolResult[] = #[];
+  toolResults?: HostToolResult[];
 
   @doc("Checkpoints created during the turn")
-  checkpoints?: Checkpoint[] = #[];
+  checkpoints?: Checkpoint[];
 }
 
 /**
@@ -227,10 +227,10 @@ alias ReplayRecordStatus = "success" | "error" | "cancelled";
  */
 model ReplayVerificationRequest {
   @doc("Expected normalized replay records")
-  expected: ReplayJournalRecord[] = #[];
+  expected: ReplayJournalRecord[];
 
   @doc("Actual normalized replay records")
-  actual: ReplayJournalRecord[] = #[];
+  actual: ReplayJournalRecord[];
 }
 
 /**
@@ -263,7 +263,7 @@ model ReplayVerificationResult {
   status: ReplayVerificationStatus;
 
   @doc("Record mismatches, empty when verification passed")
-  mismatches?: ReplayMismatch[] = #[];
+  mismatches?: ReplayMismatch[];
 
   @doc("Number of expected records")
   expectedCount: int32;

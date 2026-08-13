@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -19,7 +20,19 @@ func TestSessionTraceLoadJSON(t *testing.T) {
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001",
+      "payload": {}
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -44,6 +57,16 @@ func TestSessionTraceLoadJSON(t *testing.T) {
 	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
 	}
+	if len(instance.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(instance.Events))
+	}
+	assertSessionTraceStringField(t, instance.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertSessionTraceStringField(t, instance.Events[0], "Type", "session_start", "Events[0].Type")
+	assertSessionTraceStringField(t, instance.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertSessionTraceStringField(t, instance.Events[0], "SessionId", "sess_abc123", "Events[0].SessionId")
+	assertSessionTraceStringField(t, instance.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertSessionTraceStringField(t, instance.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertSessionTraceStringField(t, instance.Events[0], "SpanId", "span_hook_001", "Events[0].SpanId")
 }
 
 // TestSessionTraceLoadYAML tests loading SessionTrace from YAML
@@ -53,6 +76,15 @@ version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
 sessionId: sess_abc123
+events:
+  - id: evt_abc123
+    type: session_start
+    timestamp: "2026-06-09T20:00:00Z"
+    sessionId: sess_abc123
+    turnId: turn_001
+    parentId: evt_parent
+    spanId: span_hook_001
+    payload: {}
 
 `
 	var data map[string]interface{}
@@ -77,6 +109,16 @@ sessionId: sess_abc123
 	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
 	}
+	if len(instance.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(instance.Events))
+	}
+	assertSessionTraceStringField(t, instance.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertSessionTraceStringField(t, instance.Events[0], "Type", "session_start", "Events[0].Type")
+	assertSessionTraceStringField(t, instance.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertSessionTraceStringField(t, instance.Events[0], "SessionId", "sess_abc123", "Events[0].SessionId")
+	assertSessionTraceStringField(t, instance.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertSessionTraceStringField(t, instance.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertSessionTraceStringField(t, instance.Events[0], "SpanId", "span_hook_001", "Events[0].SpanId")
 }
 
 // TestSessionTraceFromJSON tests loading SessionTrace through the generated JSON helper
@@ -86,7 +128,19 @@ func TestSessionTraceFromJSON(t *testing.T) {
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001",
+      "payload": {}
+    }
+  ]
 }
 `
 
@@ -106,6 +160,16 @@ func TestSessionTraceFromJSON(t *testing.T) {
 	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
 	}
+	if len(instance.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(instance.Events))
+	}
+	assertSessionTraceStringField(t, instance.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertSessionTraceStringField(t, instance.Events[0], "Type", "session_start", "Events[0].Type")
+	assertSessionTraceStringField(t, instance.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertSessionTraceStringField(t, instance.Events[0], "SessionId", "sess_abc123", "Events[0].SessionId")
+	assertSessionTraceStringField(t, instance.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertSessionTraceStringField(t, instance.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertSessionTraceStringField(t, instance.Events[0], "SpanId", "span_hook_001", "Events[0].SpanId")
 }
 
 // TestSessionTraceFromYAML tests loading SessionTrace through the generated YAML helper
@@ -115,6 +179,15 @@ version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
 sessionId: sess_abc123
+events:
+  - id: evt_abc123
+    type: session_start
+    timestamp: "2026-06-09T20:00:00Z"
+    sessionId: sess_abc123
+    turnId: turn_001
+    parentId: evt_parent
+    spanId: span_hook_001
+    payload: {}
 
 `
 
@@ -134,6 +207,16 @@ sessionId: sess_abc123
 	if instance.SessionId == nil || *instance.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, instance.SessionId)
 	}
+	if len(instance.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(instance.Events))
+	}
+	assertSessionTraceStringField(t, instance.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertSessionTraceStringField(t, instance.Events[0], "Type", "session_start", "Events[0].Type")
+	assertSessionTraceStringField(t, instance.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertSessionTraceStringField(t, instance.Events[0], "SessionId", "sess_abc123", "Events[0].SessionId")
+	assertSessionTraceStringField(t, instance.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertSessionTraceStringField(t, instance.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertSessionTraceStringField(t, instance.Events[0], "SpanId", "span_hook_001", "Events[0].SpanId")
 }
 
 // TestSessionTraceRoundtrip tests load -> save -> load produces equivalent data
@@ -143,7 +226,19 @@ func TestSessionTraceRoundtrip(t *testing.T) {
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001",
+      "payload": {}
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -175,6 +270,16 @@ func TestSessionTraceRoundtrip(t *testing.T) {
 	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
 	}
+	if len(reloaded.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(reloaded.Events))
+	}
+	assertSessionTraceStringField(t, reloaded.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertSessionTraceStringField(t, reloaded.Events[0], "Type", "session_start", "Events[0].Type")
+	assertSessionTraceStringField(t, reloaded.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertSessionTraceStringField(t, reloaded.Events[0], "SessionId", "sess_abc123", "Events[0].SessionId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "SpanId", "span_hook_001", "Events[0].SpanId")
 }
 
 // TestSessionTraceToJSON tests that ToJSON produces valid JSON
@@ -184,7 +289,19 @@ func TestSessionTraceToJSON(t *testing.T) {
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001",
+      "payload": {}
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -223,6 +340,16 @@ func TestSessionTraceToJSON(t *testing.T) {
 	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
 	}
+	if len(reloaded.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(reloaded.Events))
+	}
+	assertSessionTraceStringField(t, reloaded.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertSessionTraceStringField(t, reloaded.Events[0], "Type", "session_start", "Events[0].Type")
+	assertSessionTraceStringField(t, reloaded.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertSessionTraceStringField(t, reloaded.Events[0], "SessionId", "sess_abc123", "Events[0].SessionId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "SpanId", "span_hook_001", "Events[0].SpanId")
 }
 
 // TestSessionTraceToYAML tests that ToYAML produces valid YAML
@@ -232,7 +359,19 @@ func TestSessionTraceToYAML(t *testing.T) {
   "version": "1",
   "runtime": "typescript",
   "promptyVersion": "2.0.0",
-  "sessionId": "sess_abc123"
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001",
+      "payload": {}
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -271,11 +410,57 @@ func TestSessionTraceToYAML(t *testing.T) {
 	if reloaded.SessionId == nil || *reloaded.SessionId != "sess_abc123" {
 		t.Errorf(`Expected SessionId to be "sess_abc123", got %v`, reloaded.SessionId)
 	}
+	if len(reloaded.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(reloaded.Events))
+	}
+	assertSessionTraceStringField(t, reloaded.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertSessionTraceStringField(t, reloaded.Events[0], "Type", "session_start", "Events[0].Type")
+	assertSessionTraceStringField(t, reloaded.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertSessionTraceStringField(t, reloaded.Events[0], "SessionId", "sess_abc123", "Events[0].SessionId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertSessionTraceStringField(t, reloaded.Events[0], "SpanId", "span_hook_001", "Events[0].SpanId")
 }
 
 // TestSessionTraceFromJSONInvalid rejects malformed JSON instead of silently defaulting
 func TestSessionTraceFromJSONInvalid(t *testing.T) {
 	if _, err := prompty.SessionTraceFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertSessionTraceStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

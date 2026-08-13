@@ -10,10 +10,10 @@ namespace Prompty;
  */
 model ValidationResult {
   @doc("Whether all inputs passed validation")
-  @sample(#{ valid: true })
+  @sample(ValidationResultValidSample)
   valid: boolean;
 
   @doc("List of validation errors (empty when valid is true)")
-  @sample(#{ errors: #[] })
+  @sample(ValidationResultErrorsSample)
   errors: ValidationError[];
 }

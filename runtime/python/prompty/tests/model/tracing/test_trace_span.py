@@ -11,7 +11,12 @@ def test_load_json_tracespan():
     {
       "name": "prompty.core.pipeline.run",
       "signature": "prompty.core.pipeline.run",
-      "error": "Connection refused"
+      "error": "Connection refused",
+      "__time": {
+        "start": "2026-04-04T12:00:00Z",
+        "end": "2026-04-04T12:00:01Z",
+        "duration": 1000
+      }
     }
     """
     data = json.loads(json_data, strict=False)
@@ -27,6 +32,10 @@ def test_load_yaml_tracespan():
     name: prompty.core.pipeline.run
     signature: prompty.core.pipeline.run
     error: Connection refused
+    __time:
+      start: "2026-04-04T12:00:00Z"
+      end: "2026-04-04T12:00:01Z"
+      duration: 1000
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -43,7 +52,12 @@ def test_roundtrip_json_tracespan():
     {
       "name": "prompty.core.pipeline.run",
       "signature": "prompty.core.pipeline.run",
-      "error": "Connection refused"
+      "error": "Connection refused",
+      "__time": {
+        "start": "2026-04-04T12:00:00Z",
+        "end": "2026-04-04T12:00:01Z",
+        "duration": 1000
+      }
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -62,7 +76,12 @@ def test_to_json_tracespan():
     {
       "name": "prompty.core.pipeline.run",
       "signature": "prompty.core.pipeline.run",
-      "error": "Connection refused"
+      "error": "Connection refused",
+      "__time": {
+        "start": "2026-04-04T12:00:00Z",
+        "end": "2026-04-04T12:00:01Z",
+        "duration": 1000
+      }
     }
     """
     data = json.loads(json_data, strict=False)
@@ -79,7 +98,12 @@ def test_to_yaml_tracespan():
     {
       "name": "prompty.core.pipeline.run",
       "signature": "prompty.core.pipeline.run",
-      "error": "Connection refused"
+      "error": "Connection refused",
+      "__time": {
+        "start": "2026-04-04T12:00:00Z",
+        "end": "2026-04-04T12:00:01Z",
+        "duration": 1000
+      }
     }
     """
     data = json.loads(json_data, strict=False)

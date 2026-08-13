@@ -16,11 +16,11 @@ namespace Prompty;
  */
 model Template {
   @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")
-  @sample(#{ format: #{ kind: "mustache" } })
+  @sample(forFormatSample)
   format: FormatConfig | string;
 
   @doc("Parser used to process the rendered template into API-compatible format")
-  @sample(#{ parser: #{ kind: "mustache" } })
+  @sample(forParserSample)
   parser: ParserConfig | string;
 }
 
@@ -36,16 +36,16 @@ model Template {
 )
 model FormatConfig {
   @doc("Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)")
-  @sample(#{ kind: "mustache" })
+  @sample(FormatConfigKindSample)
   kind: string = "*";
 
   @doc("Whether the template can emit structural text for parsing output")
-  @sample(#{ strict: true })
+  @sample(FormatConfigStrictSample)
   strict?: boolean = false;
 
   @doc("Options for the template engine")
-  @sample(#{ options: #{ key: "value" } })
-  options?: Record<unknown> = #{};
+  @sample(FormatConfigOptionsSample)
+  options?: Record<unknown>;
 }
 
 /**
@@ -60,10 +60,10 @@ model FormatConfig {
 )
 model ParserConfig {
   @doc("Parser used to process the rendered template into API-compatible format")
-  @sample(#{ kind: "prompty" })
+  @sample(ParserConfigKindSample)
   kind: string = "*";
 
   @doc("Options for the parser")
-  @sample(#{ options: #{ key: "value" } })
-  options?: Record<unknown> = #{};
+  @sample(ParserConfigOptionsSample)
+  options?: Record<unknown>;
 }

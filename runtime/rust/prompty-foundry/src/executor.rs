@@ -36,8 +36,8 @@ impl Executor for FoundryExecutor {
     async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
 
@@ -101,8 +101,8 @@ impl Executor for FoundryExecutor {
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
@@ -155,7 +155,10 @@ impl Executor for FoundryExecutor {
 fn resolve_connection(
     agent: &Prompty,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
-    let conn = &agent.model.connection;
+    let Some(model) = agent.model.as_ref() else {
+        return Ok(std::borrow::Cow::Owned(serde_json::Value::Null));
+    };
+    let conn = &model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {
@@ -278,8 +281,8 @@ fn strip_project_path(endpoint: &str) -> String {
 /// Extract the deployment name from the agent's model configuration.
 fn get_deployment(agent: &Prompty) -> Result<String, InvokerError> {
     // model.id is the deployment name for Azure
-    if !agent.model.id.is_empty() {
-        return Ok(agent.model.id.clone());
+    if let Some(model) = agent.model.as_ref().filter(|model| !model.id.is_empty()) {
+        return Ok(model.id.clone());
     }
 
     // Fall back to environment variable
@@ -299,7 +302,7 @@ fn get_deployment(agent: &Prompty) -> Result<String, InvokerError> {
 /// Get the API version, defaulting to the latest preview.
 fn get_api_version(agent: &Prompty) -> String {
     // Check model options for custom api version
-    if let Some(opts) = &agent.model.options {
+    if let Some(opts) = &agent.model.as_ref().and_then(|model| model.options.clone()) {
         if let Some(version) = opts
             .additional_properties
             .get("apiVersion")

@@ -23,13 +23,11 @@ properties:
     type: array
     items:
       $ref: Message.yaml
-    default: []
     description: Canonical messages visible to the model
   decisions:
     type: array
     items:
       $ref: InvocationContextDecision.yaml
-    default: []
     description: Context-planning decisions used to assemble the snapshot
   stablePrefixMessages:
     type: integer
@@ -42,7 +40,6 @@ properties:
     description: Provider-context state carried into this invocation
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque host-specific snapshot metadata
 required:
   - id

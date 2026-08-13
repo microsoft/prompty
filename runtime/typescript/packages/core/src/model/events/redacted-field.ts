@@ -32,6 +32,7 @@ export class RedactedField {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): RedactedField {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

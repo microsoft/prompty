@@ -6,6 +6,8 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
+	"sort"
 
 	"gopkg.in/yaml.v3"
 )
@@ -25,19 +27,22 @@ import (
 
 type Prompty struct {
 	Name         string                 `json:"name" yaml:"name"`
-	DisplayName  *string                `json:"displayName,omitempty" yaml:"displayName,omitempty"`
-	Description  *string                `json:"description,omitempty" yaml:"description,omitempty"`
+	DisplayName  *string                `json:"displayName" yaml:"displayName"`
+	Description  *string                `json:"description" yaml:"description"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	Inputs       []interface{}          `json:"inputs,omitempty" yaml:"inputs,omitempty"`
 	Outputs      []interface{}          `json:"outputs,omitempty" yaml:"outputs,omitempty"`
-	Model        Model                  `json:"model" yaml:"model"`
+	Model        *Model                 `json:"model,omitempty" yaml:"model,omitempty"`
 	Tools        []interface{}          `json:"tools,omitempty" yaml:"tools,omitempty"`
 	Template     *Template              `json:"template,omitempty" yaml:"template,omitempty"`
-	Instructions *string                `json:"instructions,omitempty" yaml:"instructions,omitempty"`
+	Instructions *string                `json:"instructions" yaml:"instructions"`
 }
 
 // LoadPrompty creates a Prompty from a map[string]interface{}
 func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := Prompty{}
 
 	// Load from map
@@ -59,11 +64,41 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 			}
 		}
 		if val, ok := m["inputs"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Inputs = make([]interface{}, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("inputs").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["example"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadProperty(item, ctx.At("inputs").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Inputs = append(result.Inputs, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Inputs = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx.At("inputs").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -74,11 +109,41 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 			}
 		}
 		if val, ok := m["outputs"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Outputs = make([]interface{}, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("outputs").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["example"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadProperty(item, ctx.At("outputs").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Outputs = append(result.Outputs, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Outputs = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadProperty(item, ctx)
+						loaded, err := LoadProperty(item, ctx.At("outputs").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -90,25 +155,55 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 		}
 		if val, ok := m["model"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadModel(m, ctx)
+				loaded, err := LoadModel(m, ctx.At("model"))
 				if err != nil {
 					return result, err
 				}
-				result.Model = loaded
+				result.Model = &loaded
 			} else {
-				loaded, err := LoadModel(val, ctx)
+				loaded, err := LoadModel(val, ctx.At("model"))
 				if err != nil {
 					return result, err
 				}
-				result.Model = loaded
+				result.Model = &loaded
 			}
 		}
 		if val, ok := m["tools"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
+			if named, ok := val.(map[string]interface{}); ok {
+				keys := make([]string, 0, len(named))
+				for key := range named {
+					keys = append(keys, key)
+				}
+				sort.Strings(keys)
+				result.Tools = make([]interface{}, 0, len(keys))
+				for _, key := range keys {
+					entry := named[key]
+					if _, invalid := entry.([]interface{}); invalid {
+						return result, fmt.Errorf("%s: invalid named collection entry category array", ctx.At("tools").At(key).Path)
+					}
+					item, ok := entry.(map[string]interface{})
+					if !ok {
+						item = map[string]interface{}{}
+						item["kind"] = entry
+					} else {
+						copy := make(map[string]interface{}, len(item)+1)
+						for itemKey, itemValue := range item {
+							copy[itemKey] = itemValue
+						}
+						item = copy
+					}
+					item["name"] = key
+					loaded, err := LoadTool(item, ctx.At("tools").At(key))
+					if err != nil {
+						return result, err
+					}
+					result.Tools = append(result.Tools, loaded)
+				}
+			} else if arr, ok := val.([]interface{}); ok {
 				result.Tools = make([]interface{}, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadTool(item, ctx)
+						loaded, err := LoadTool(item, ctx.At("tools").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -120,7 +215,7 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 		}
 		if val, ok := m["template"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTemplate(m, ctx)
+				loaded, err := LoadTemplate(m, ctx.At("template"))
 				if err != nil {
 					return result, err
 				}
@@ -162,7 +257,48 @@ func (obj Prompty) Save(ctx *SaveContext) map[string]interface{} {
 				arr[i] = item
 			}
 		}
-		result["inputs"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["example"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["inputs"] = objectItems
+		} else {
+			result["inputs"] = arr
+		}
 	}
 	if obj.Outputs != nil {
 		arr := make([]interface{}, len(obj.Outputs))
@@ -177,10 +313,52 @@ func (obj Prompty) Save(ctx *SaveContext) map[string]interface{} {
 				arr[i] = item
 			}
 		}
-		result["outputs"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			if (ctx == nil || ctx.UseShorthand) && len(copy) == 1 {
+				if shorthand, ok := copy["example"]; ok {
+					objectItems[name] = shorthand
+					continue
+				}
+			}
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["outputs"] = objectItems
+		} else {
+			result["outputs"] = arr
+		}
 	}
-
-	result["model"] = obj.Model.Save(ctx)
+	if obj.Model != nil {
+		result["model"] = obj.Model.Save(ctx)
+	}
 	if obj.Tools != nil {
 		arr := make([]interface{}, len(obj.Tools))
 		for i, item := range obj.Tools {
@@ -194,7 +372,42 @@ func (obj Prompty) Save(ctx *SaveContext) map[string]interface{} {
 				arr[i] = item
 			}
 		}
-		result["tools"] = arr
+		seenNames := make(map[string]struct{}, len(arr))
+		objectItems := make(map[string]interface{}, len(arr))
+		losslessObject := true
+		for i, serialized := range arr {
+			item, ok := serialized.(map[string]interface{})
+			if !ok {
+				losslessObject = false
+				continue
+			}
+			copy := make(map[string]interface{}, len(item))
+			for key, value := range item {
+				copy[key] = value
+			}
+			name, hasName := copy["name"].(string)
+			if hasName && name == "" {
+				delete(copy, "name")
+				arr[i] = copy
+				hasName = false
+			}
+			if !hasName || name == "" {
+				losslessObject = false
+				continue
+			}
+			if _, duplicate := seenNames[name]; duplicate {
+				losslessObject = false
+				continue
+			}
+			seenNames[name] = struct{}{}
+			delete(copy, "name")
+			objectItems[name] = copy
+		}
+		if losslessObject && (ctx == nil || ctx.CollectionFormat != CollectionFormatArray) {
+			result["tools"] = objectItems
+		} else {
+			result["tools"] = arr
+		}
 	}
 	if obj.Template != nil {
 		result["template"] = obj.Template.Save(ctx)

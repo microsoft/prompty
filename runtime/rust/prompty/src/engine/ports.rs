@@ -400,8 +400,8 @@ impl ConversationPort for DefaultConversationPort {
         response: &ModelInvocationResponse,
         results: &[EngineToolResult],
     ) -> Result<Vec<Message>, PortError> {
-        let mut messages = response.assistant_messages.clone();
-        for request in &response.tool_requests {
+        let mut messages = response.assistant_messages.clone().unwrap_or_default();
+        for request in response.tool_requests.iter().flatten() {
             if let Some(result) = results
                 .iter()
                 .find(|result| result.request_id == request.id)

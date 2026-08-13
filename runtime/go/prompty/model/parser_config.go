@@ -19,6 +19,9 @@ type ParserConfig struct {
 
 // LoadParserConfig creates a ParserConfig from a map[string]interface{}
 func LoadParserConfig(data interface{}, ctx *LoadContext) (ParserConfig, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ParserConfig{}
 
 	// Handle alternate scalar representations

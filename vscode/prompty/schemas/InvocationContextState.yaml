@@ -16,7 +16,6 @@ properties:
     type: array
     items:
       $ref: DelegatedStateReference.yaml
-    default: []
     description: Explicit references to provider-held context state
 required:
   - portability

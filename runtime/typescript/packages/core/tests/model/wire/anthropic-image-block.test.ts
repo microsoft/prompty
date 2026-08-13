@@ -17,9 +17,45 @@ describe("AnthropicImageBlock", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "type": "image",\n  "source": {\n    "type": "base64",\n    "media_type": "image/png",\n    "data": "iVBORw0KGgo..."\n  }\n}`;
+      const instance = AnthropicImageBlock.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.type).toEqual("image");
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "type": "image",\n  "source": {\n    "type": "base64",\n    "media_type": "image/png",\n    "data": "iVBORw0KGgo..."\n  }\n}`;
+      const instance = AnthropicImageBlock.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = AnthropicImageBlock.fromJson(output);
+      expect(reloaded.type).toEqual(instance.type);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `type: image\nsource:\n  type: base64\n  media_type: image/png\n  data: iVBORw0KGgo...\n`;
+      const instance = AnthropicImageBlock.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.type).toEqual("image");
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `type: image\nsource:\n  type: base64\n  media_type: image/png\n  data: iVBORw0KGgo...\n`;
+      const instance = AnthropicImageBlock.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = AnthropicImageBlock.fromYaml(output);
+      expect(reloaded.type).toEqual(instance.type);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "type": "image",\n  "source": {\n    "type": "base64",\n    "media_type": "image/png",\n    "data": "iVBORw0KGgo..."\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = AnthropicImageBlock.load(data);
       expect(instance).toBeDefined();
     });

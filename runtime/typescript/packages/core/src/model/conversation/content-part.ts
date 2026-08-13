@@ -19,6 +19,7 @@ export abstract class ContentPart {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ContentPart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -41,24 +42,31 @@ export abstract class ContentPart {
     context?: LoadContext,
   ): ContentPart {
     const discriminatorValue = data["kind"];
-    if (discriminatorValue !== undefined && discriminatorValue !== null) {
-      const discriminator = String(discriminatorValue).toLowerCase();
-      switch (discriminator) {
-        case "text":
-          return TextPart.load(data, context);
-        case "image":
-          return ImagePart.load(data, context);
-        case "file":
-          return FilePart.load(data, context);
-        case "audio":
-          return AudioPart.load(data, context);
-        default:
-          throw new Error(
-            `Unknown ContentPart discriminator value: ${discriminator}`,
-          );
-      }
+    if (typeof discriminatorValue !== "string") {
+      throw new Error(
+        "Invalid ContentPart discriminator field 'kind': expected non-blank string",
+      );
     }
-    throw new Error("Missing ContentPart discriminator property: 'kind'");
+    if (discriminatorValue === "") {
+      throw new Error(
+        "Invalid ContentPart discriminator field 'kind': expected non-blank string",
+      );
+    }
+    const discriminator = discriminatorValue;
+    switch (discriminator) {
+      case "text":
+        return TextPart.load(data, context);
+      case "image":
+        return ImagePart.load(data, context);
+      case "file":
+        return FilePart.load(data, context);
+      case "audio":
+        return AudioPart.load(data, context);
+      default:
+        throw new Error(
+          `Unknown ContentPart discriminator field 'kind' value: ${discriminator}`,
+        );
+    }
   }
 
   //#endregion
@@ -122,6 +130,7 @@ export class TextPart extends ContentPart {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): TextPart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -210,6 +219,7 @@ export class ImagePart extends ContentPart {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): ImagePart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -306,6 +316,7 @@ export class FilePart extends ContentPart {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): FilePart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -396,6 +407,7 @@ export class AudioPart extends ContentPart {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): AudioPart {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

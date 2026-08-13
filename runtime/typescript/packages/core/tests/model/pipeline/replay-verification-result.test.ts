@@ -17,9 +17,53 @@ describe("ReplayVerificationResult", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "status": "passed",\n  "expectedCount": 1,\n  "actualCount": 1\n}`;
+      const instance = ReplayVerificationResult.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.status).toEqual("passed");
+      expect(instance.expectedCount).toEqual(1);
+      expect(instance.actualCount).toEqual(1);
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "status": "passed",\n  "expectedCount": 1,\n  "actualCount": 1\n}`;
+      const instance = ReplayVerificationResult.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = ReplayVerificationResult.fromJson(output);
+      expect(reloaded.status).toEqual(instance.status);
+      expect(reloaded.expectedCount).toEqual(instance.expectedCount);
+      expect(reloaded.actualCount).toEqual(instance.actualCount);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `status: passed\nexpectedCount: 1\nactualCount: 1\n`;
+      const instance = ReplayVerificationResult.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.status).toEqual("passed");
+      expect(instance.expectedCount).toEqual(1);
+      expect(instance.actualCount).toEqual(1);
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `status: passed\nexpectedCount: 1\nactualCount: 1\n`;
+      const instance = ReplayVerificationResult.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = ReplayVerificationResult.fromYaml(output);
+      expect(reloaded.status).toEqual(instance.status);
+      expect(reloaded.expectedCount).toEqual(instance.expectedCount);
+      expect(reloaded.actualCount).toEqual(instance.actualCount);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "status": "passed",\n  "expectedCount": 1,\n  "actualCount": 1\n}`,
+      ) as Record<string, unknown>;
       const instance = ReplayVerificationResult.load(data);
       expect(instance).toBeDefined();
     });

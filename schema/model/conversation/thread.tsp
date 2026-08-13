@@ -11,10 +11,10 @@ namespace Prompty;
  */
 model ThreadMarker {
   @doc("The input property name (e.g. 'conversation')")
-  @sample(#{ name: "thread" })
+  @sample(ThreadMarkerNameSample)
   name: string = "thread";
 
   @doc("The rich kind ('thread', 'image', 'file', 'audio')")
-  @sample(#{ kind: "thread" })
+  @sample(ThreadMarkerKindSample)
   kind: string = "thread";
 }

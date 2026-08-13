@@ -9,15 +9,15 @@ namespace Prompty;
  */
 model InvokerError {
   @doc("Human-readable error message")
-  @sample(#{ message: "No renderer registered for key: jinja2" })
+  @sample(InvokerErrorMessageSample)
   message: string;
 
   @doc("The pipeline component type that was being looked up (e.g., 'renderer', 'parser', 'executor', 'processor')")
-  @sample(#{ component: "renderer" })
+  @sample(InvokerErrorComponentSample)
   component: string;
 
   @doc("The registration key that was not found")
-  @sample(#{ key: "jinja2" })
+  @sample(InvokerErrorKeySample)
   key: string;
 }
 
@@ -27,15 +27,15 @@ model InvokerError {
  */
 model ValidationError {
   @doc("Human-readable error message")
-  @sample(#{ message: "Missing required input: firstName" })
+  @sample(ValidationErrorMessageSample)
   message: string;
 
   @doc("The name of the property that failed validation")
-  @sample(#{ property: "firstName" })
+  @sample(ValidationErrorPropertySample)
   property: string;
 
   @doc("The constraint that was violated (e.g., 'required', 'type')")
-  @sample(#{ constraint: "required" })
+  @sample(ValidationErrorConstraintSample)
   constraint: string;
 }
 
@@ -45,10 +45,10 @@ model ValidationError {
  */
 model FileNotFoundError {
   @doc("Human-readable error message")
-  @sample(#{ message: "Prompty file not found: ./chat.prompty" })
+  @sample(FileNotFoundErrorMessageSample)
   message: string;
 
   @doc("The file path that could not be resolved")
-  @sample(#{ path: "./chat.prompty" })
+  @sample(FileNotFoundErrorPathSample)
   path: string;
 }

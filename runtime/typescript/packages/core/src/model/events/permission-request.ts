@@ -43,6 +43,7 @@ export class PermissionRequest {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): PermissionRequest {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

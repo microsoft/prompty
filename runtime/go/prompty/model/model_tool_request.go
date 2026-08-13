@@ -24,6 +24,9 @@ type ModelToolRequest struct {
 
 // LoadModelToolRequest creates a ModelToolRequest from a map[string]interface{}
 func LoadModelToolRequest(data interface{}, ctx *LoadContext) (ModelToolRequest, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ModelToolRequest{}
 
 	// Load from map

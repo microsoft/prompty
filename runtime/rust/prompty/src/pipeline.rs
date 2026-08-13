@@ -94,9 +94,8 @@ fn resolve_parser_kind(agent: &Prompty) -> String {
 fn resolve_provider(agent: &Prompty) -> String {
     agent
         .model
-        .provider
-        .as_deref()
-        .filter(|p| !p.is_empty())
+        .as_ref()
+        .and_then(|model| model.provider.as_deref().filter(|p| !p.is_empty()))
         .unwrap_or(DEFAULT_PROVIDER)
         .to_string()
 }
@@ -105,8 +104,8 @@ fn resolve_provider(agent: &Prompty) -> String {
 fn is_streaming(agent: &Prompty) -> bool {
     agent
         .model
-        .options
         .as_ref()
+        .and_then(|model| model.options.as_ref())
         .and_then(|opts| {
             opts.additional_properties
                 .get("stream")
@@ -179,11 +178,15 @@ fn serialize_agent(agent: &Prompty) -> Value {
             "name": agent.name,
             "description": agent.description,
             "metadata": metadata,
-            "model": {
-                "id": agent.model.id,
-                "apiType": agent.model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat"),
-                "provider": agent.model.provider.as_deref().unwrap_or(""),
-            },
+            "model": agent.model.as_ref().map(|model| json!({
+                "id": model.id,
+                "apiType": model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat"),
+                "provider": model.provider.as_deref().unwrap_or(""),
+            })).unwrap_or_else(|| json!({
+                "id": "",
+                "apiType": "chat",
+                "provider": "",
+            })),
             "inputs": inputs,
             "outputs": outputs,
             "tools": tools,
@@ -1735,8 +1738,8 @@ mod tests {
                     .context
                     .context_state
                     .delegated_state
-                    .first()
-                    .map(|state| state.id.clone())
+                    .as_ref()
+                    .and_then(|state| state.first().map(|state| state.id.clone()))
                     .unwrap_or_default(),
             );
             Ok(json!({ "contextAware": true }))
@@ -1768,7 +1771,7 @@ mod tests {
             let call = self.calls.fetch_add(1, Ordering::SeqCst);
             let next_context_state = Some(InvocationContextState {
                 portability: InvocationContextPortability::Delegated,
-                delegated_state: vec![crate::model::DelegatedStateReference {
+                delegated_state: Some(vec![crate::model::DelegatedStateReference {
                     provider: "context-test".to_string(),
                     kind: "continuation".to_string(),
                     id: if call == 0 {
@@ -1777,21 +1780,21 @@ mod tests {
                         "provider-state-2".to_string()
                     },
                     metadata: Value::Null,
-                }],
+                }]),
             });
             Ok(ModelInvocationResponse {
                 output: (call != 0).then(|| json!("resumed")),
                 usage: None,
-                assistant_messages: Vec::new(),
+                assistant_messages: None,
                 tool_requests: if call == 0 {
-                    vec![ModelToolRequest {
+                    Some(vec![ModelToolRequest {
                         id: "context-tool".to_string(),
                         name: "acknowledge".to_string(),
                         arguments: Some(json!({})),
                         metadata: Value::Null,
-                    }]
+                    }])
                 } else {
-                    Vec::new()
+                    None
                 },
                 next_context_state,
                 metadata: Value::Null,
@@ -2056,7 +2059,8 @@ mod tests {
             ContextPortability::Delegated
         );
         assert_eq!(
-            checkpoint.context_state.delegated_state[0].id, "provider-state-1",
+            checkpoint.context_state.delegated_state.as_ref().unwrap()[0].id,
+            "provider-state-1",
             "checkpoint: {checkpoint:?}"
         );
         assert_eq!(

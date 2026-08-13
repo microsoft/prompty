@@ -17,9 +17,53 @@ describe("HostPolicyRequest", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "sessionId": "sample",\n  "turnId": "sample",\n  "iteration": 1,\n  "messages": []\n}`;
+      const instance = HostPolicyRequest.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.sessionId).toEqual("sample");
+      expect(instance.turnId).toEqual("sample");
+      expect(instance.iteration).toEqual(1);
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "sessionId": "sample",\n  "turnId": "sample",\n  "iteration": 1,\n  "messages": []\n}`;
+      const instance = HostPolicyRequest.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = HostPolicyRequest.fromJson(output);
+      expect(reloaded.sessionId).toEqual(instance.sessionId);
+      expect(reloaded.turnId).toEqual(instance.turnId);
+      expect(reloaded.iteration).toEqual(instance.iteration);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `sessionId: sample\nturnId: sample\niteration: 1\nmessages: []\n`;
+      const instance = HostPolicyRequest.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.sessionId).toEqual("sample");
+      expect(instance.turnId).toEqual("sample");
+      expect(instance.iteration).toEqual(1);
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `sessionId: sample\nturnId: sample\niteration: 1\nmessages: []\n`;
+      const instance = HostPolicyRequest.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = HostPolicyRequest.fromYaml(output);
+      expect(reloaded.sessionId).toEqual(instance.sessionId);
+      expect(reloaded.turnId).toEqual(instance.turnId);
+      expect(reloaded.iteration).toEqual(instance.iteration);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "sessionId": "sample",\n  "turnId": "sample",\n  "iteration": 1,\n  "messages": []\n}`,
+      ) as Record<string, unknown>;
       const instance = HostPolicyRequest.load(data);
       expect(instance).toBeDefined();
     });

@@ -24,10 +24,14 @@ export class AnthropicImageBlock {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnthropicImageBlock {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["source"] === undefined || data["source"] === null) {
+      throw new Error(`${context.at("source").path}: missing required field`);
+    }
     const instance = new AnthropicImageBlock();
 
     if (data["type"] !== undefined && data["type"] !== null) {
@@ -36,7 +40,7 @@ export class AnthropicImageBlock {
     if (data["source"] !== undefined && data["source"] !== null) {
       instance.source = AnthropicImageSource.load(
         data["source"] as Record<string, unknown>,
-        context,
+        context.at("source"),
       );
     }
 

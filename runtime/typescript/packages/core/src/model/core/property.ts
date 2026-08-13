@@ -14,7 +14,24 @@ export class Property {
   nullable?: boolean | undefined;
   default?: unknown | undefined;
   example?: unknown | undefined;
-  enumValues?: unknown[] = [];
+  enumValues?: unknown[];
+  protected raw: Record<string, unknown> = {};
+
+  protected static cloneRawValue(value: unknown): unknown {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.cloneRawValue(item));
+    }
+    if (value !== null && typeof value === "object") {
+      const result: Record<string, unknown> = {};
+      for (const [key, item] of Object.entries(
+        value as Record<string, unknown>,
+      )) {
+        result[key] = this.cloneRawValue(item);
+      }
+      return result;
+    }
+    return value;
+  }
 
   constructor(init?: Partial<Property>) {
     this.name = init?.name ?? "";
@@ -42,6 +59,7 @@ export class Property {
   //#region Load Methods
 
   static load(data: Record<string, unknown>, context?: LoadContext): Property {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -113,6 +131,10 @@ export class Property {
       instance.enumValues = data["enumValues"] as unknown[];
     }
 
+    if (instance.constructor === Property) {
+      instance.raw = Property.cloneRawValue(data) as Record<string, unknown>;
+    }
+
     if (context) {
       return context.processOutput(instance) as Property;
     }
@@ -124,20 +146,27 @@ export class Property {
     context?: LoadContext,
   ): Property {
     const discriminatorValue = data["kind"];
-    if (discriminatorValue !== undefined && discriminatorValue !== null) {
-      const discriminator = String(discriminatorValue).toLowerCase();
-      switch (discriminator) {
-        case "array":
-          return ArrayProperty.load(data, context);
-        case "object":
-          return ObjectProperty.load(data, context);
-        case "union":
-          return UnionProperty.load(data, context);
-        default:
-          return new Property();
-      }
+    if (typeof discriminatorValue !== "string") {
+      throw new Error(
+        "Invalid Property discriminator field 'kind': expected non-blank string",
+      );
     }
-    return new Property();
+    if (discriminatorValue === "") {
+      throw new Error(
+        "Invalid Property discriminator field 'kind': expected non-blank string",
+      );
+    }
+    const discriminator = discriminatorValue;
+    switch (discriminator) {
+      case "array":
+        return ArrayProperty.load(data, context);
+      case "object":
+        return ObjectProperty.load(data, context);
+      case "union":
+        return UnionProperty.load(data, context);
+      default:
+        return new Property();
+    }
   }
 
   //#endregion
@@ -150,7 +179,7 @@ export class Property {
       obj = context.processObject(obj) as this;
     }
 
-    const result: Record<string, unknown> = {};
+    const result = Property.cloneRawValue(obj.raw) as Record<string, unknown>;
 
     if (obj.name !== undefined && obj.name !== null) {
       result["name"] = obj.name;
@@ -227,10 +256,14 @@ export class ArrayProperty extends Property {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ArrayProperty {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
+    if (data["items"] === undefined || data["items"] === null) {
+      throw new Error(`${context.at("items").path}: missing required field`);
+    }
     const instance = new ArrayProperty();
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
@@ -239,7 +272,7 @@ export class ArrayProperty extends Property {
     if (data["items"] !== undefined && data["items"] !== null) {
       instance.items = Property.load(
         data["items"] as Record<string, unknown>,
-        context,
+        context.at("items"),
       );
     }
 
@@ -313,6 +346,7 @@ export class ObjectProperty extends Property {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ObjectProperty {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -325,7 +359,7 @@ export class ObjectProperty extends Property {
     if (data["properties"] !== undefined && data["properties"] !== null) {
       instance.properties = ObjectProperty.loadProperties(
         data["properties"] as unknown[],
-        context,
+        context.at("properties"),
       );
     }
 
@@ -339,20 +373,31 @@ export class ObjectProperty extends Property {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Property[] {
+    context ??= new LoadContext({ path: "properties" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, kind: v });
+          result.push(Property.load({ name: k, example: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Property.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -364,37 +409,44 @@ export class ObjectProperty extends Property {
       context = new SaveContext();
     }
 
+    const serialized = items.map(
+      (item) => ({ ...item.save(context) }) as Record<string, unknown>,
+    );
+    for (const itemData of serialized) {
+      if (itemData["name"] === "") delete itemData["name"];
+    }
+
     if (context.collectionFormat === "array") {
-      return items.map((item) => item.save(context));
+      return serialized;
+    }
+
+    const names = new Set<string>();
+    for (const itemData of serialized) {
+      const name = itemData["name"];
+      if (typeof name !== "string" || name.length === 0 || names.has(name))
+        return serialized;
+      names.add(name);
     }
 
     // Object format: use name as key
     const result: Record<string, unknown> = {};
-    for (const item of items) {
-      const itemData = item.save(context) as Record<string, unknown>;
-      const name = itemData["name"] as string | undefined;
+    for (let index = 0; index < items.length; index++) {
+      const item = items[index];
+      const itemData = serialized[index];
+      const name = itemData["name"] as string;
       delete itemData["name"];
-      if (name) {
-        // Check if we can use shorthand (only primary property set)
-        const shorthand = (item.constructor as typeof Property)
-          .shorthandProperty;
-        if (
-          context.useShorthand &&
-          shorthand &&
-          Object.keys(itemData).length === 1 &&
-          shorthand in itemData
-        ) {
-          result[name] = itemData[shorthand];
-          continue;
-        }
-        result[name] = itemData;
-      } else {
-        // No name, fall back to array format for this item
-        if (!result["_unnamed"]) {
-          result["_unnamed"] = [];
-        }
-        (result["_unnamed"] as unknown[]).push(itemData);
+      // Check if we can use shorthand (only primary property set)
+      const shorthand = (item.constructor as typeof Property).shorthandProperty;
+      if (
+        context.useShorthand &&
+        shorthand &&
+        Object.keys(itemData).length === 1 &&
+        shorthand in itemData
+      ) {
+        result[name] = itemData[shorthand];
+        continue;
       }
+      result[name] = itemData;
     }
     return result;
   }
@@ -452,8 +504,8 @@ export class UnionProperty extends Property {
   static readonly shorthandProperty: string | undefined = undefined;
 
   kind: string = "union";
-  oneOf?: Property[] = [];
-  anyOf?: Property[] = [];
+  oneOf?: Property[];
+  anyOf?: Property[];
 
   constructor(init?: Partial<UnionProperty>) {
     super(init);
@@ -472,6 +524,7 @@ export class UnionProperty extends Property {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): UnionProperty {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -484,13 +537,13 @@ export class UnionProperty extends Property {
     if (data["oneOf"] !== undefined && data["oneOf"] !== null) {
       instance.oneOf = UnionProperty.loadOneOf(
         data["oneOf"] as unknown[],
-        context,
+        context.at("oneOf"),
       );
     }
     if (data["anyOf"] !== undefined && data["anyOf"] !== null) {
       instance.anyOf = UnionProperty.loadAnyOf(
         data["anyOf"] as unknown[],
-        context,
+        context.at("anyOf"),
       );
     }
 
@@ -504,20 +557,31 @@ export class UnionProperty extends Property {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Property[] {
+    context ??= new LoadContext({ path: "oneOf" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, kind: v });
+          result.push(Property.load({ name: k, example: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Property.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 
@@ -537,20 +601,31 @@ export class UnionProperty extends Property {
     data: Record<string, unknown>[] | unknown[],
     context?: LoadContext,
   ): Property[] {
+    context ??= new LoadContext({ path: "anyOf" });
     if (!Array.isArray(data)) {
-      // Convert dict/object format to array format
-      const result: Record<string, unknown>[] = [];
+      const result: Property[] = [];
       for (const [k, v] of Object.entries(data)) {
+        if (Array.isArray(v)) {
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
+        }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push({ name: k, ...(v as Record<string, unknown>) });
+          result.push(
+            Property.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push({ name: k, kind: v });
+          result.push(Property.load({ name: k, example: v }, context.at(k)));
         }
       }
-      data = result;
+      return result;
     }
-    return data.map((item) =>
-      Property.load(item as Record<string, unknown>, context),
+    return data.map((item, index) =>
+      Property.load(item as Record<string, unknown>, context.atIndex(index)),
     );
   }
 

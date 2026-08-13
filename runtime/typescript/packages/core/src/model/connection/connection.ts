@@ -29,6 +29,7 @@ export abstract class Connection {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): Connection {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -65,28 +66,35 @@ export abstract class Connection {
     context?: LoadContext,
   ): Connection {
     const discriminatorValue = data["kind"];
-    if (discriminatorValue !== undefined && discriminatorValue !== null) {
-      const discriminator = String(discriminatorValue).toLowerCase();
-      switch (discriminator) {
-        case "reference":
-          return ReferenceConnection.load(data, context);
-        case "remote":
-          return RemoteConnection.load(data, context);
-        case "key":
-          return ApiKeyConnection.load(data, context);
-        case "anonymous":
-          return AnonymousConnection.load(data, context);
-        case "oauth":
-          return OAuthConnection.load(data, context);
-        case "foundry":
-          return FoundryConnection.load(data, context);
-        default:
-          throw new Error(
-            `Unknown Connection discriminator value: ${discriminator}`,
-          );
-      }
+    if (typeof discriminatorValue !== "string") {
+      throw new Error(
+        "Invalid Connection discriminator field 'kind': expected non-blank string",
+      );
     }
-    throw new Error("Missing Connection discriminator property: 'kind'");
+    if (discriminatorValue === "") {
+      throw new Error(
+        "Invalid Connection discriminator field 'kind': expected non-blank string",
+      );
+    }
+    const discriminator = discriminatorValue;
+    switch (discriminator) {
+      case "reference":
+        return ReferenceConnection.load(data, context);
+      case "remote":
+        return RemoteConnection.load(data, context);
+      case "key":
+        return ApiKeyConnection.load(data, context);
+      case "anonymous":
+        return AnonymousConnection.load(data, context);
+      case "oauth":
+        return OAuthConnection.load(data, context);
+      case "foundry":
+        return FoundryConnection.load(data, context);
+      default:
+        throw new Error(
+          `Unknown Connection discriminator field 'kind' value: ${discriminator}`,
+        );
+    }
   }
 
   //#endregion
@@ -166,6 +174,7 @@ export class ReferenceConnection extends Connection {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ReferenceConnection {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -257,6 +266,7 @@ export class RemoteConnection extends Connection {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): RemoteConnection {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -348,6 +358,7 @@ export class ApiKeyConnection extends Connection {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ApiKeyConnection {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -437,6 +448,7 @@ export class AnonymousConnection extends Connection {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): AnonymousConnection {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -510,7 +522,7 @@ export class OAuthConnection extends Connection {
   clientId: string = "";
   clientSecret: string = "";
   tokenUrl: string = "";
-  scopes?: string[] = [];
+  scopes?: string[];
 
   constructor(init?: Partial<OAuthConnection>) {
     super(init);
@@ -530,6 +542,7 @@ export class OAuthConnection extends Connection {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): OAuthConnection {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -645,6 +658,7 @@ export class FoundryConnection extends Connection {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): FoundryConnection {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }

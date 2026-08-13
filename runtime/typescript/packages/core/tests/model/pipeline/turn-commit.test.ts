@@ -19,7 +19,7 @@ describe("TurnCommit", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123"\n}`;
+      const json = `{\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ],\n  "contextState": {}\n}`;
       const instance = TurnCommit.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.sessionId).toEqual("sess_abc123");
@@ -27,7 +27,7 @@ describe("TurnCommit", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123"\n}`;
+      const json = `{\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ],\n  "contextState": {}\n}`;
       const instance = TurnCommit.fromJson(json);
       const output = instance.toJson();
       const reloaded = TurnCommit.fromJson(output);
@@ -38,7 +38,7 @@ describe("TurnCommit", () => {
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `sessionId: sess_abc123\nturnId: turn_abc123\n`;
+      const yaml = `sessionId: sess_abc123\nturnId: turn_abc123\nmessages:\n  - role: user\n    parts:\n      - kind: text\n        value: Hello!\n    metadata:\n      source: user-input\ncontextState: {}\n`;
       const instance = TurnCommit.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.sessionId).toEqual("sess_abc123");
@@ -46,7 +46,7 @@ describe("TurnCommit", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `sessionId: sess_abc123\nturnId: turn_abc123\n`;
+      const yaml = `sessionId: sess_abc123\nturnId: turn_abc123\nmessages:\n  - role: user\n    parts:\n      - kind: text\n        value: Hello!\n    metadata:\n      source: user-input\ncontextState: {}\n`;
       const instance = TurnCommit.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = TurnCommit.fromYaml(output);
@@ -57,7 +57,9 @@ describe("TurnCommit", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ],\n  "contextState": {}\n}`,
+      ) as Record<string, unknown>;
       const instance = TurnCommit.load(data);
       expect(instance).toBeDefined();
     });

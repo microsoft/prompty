@@ -29,6 +29,7 @@ describe("UnionProperty", () => {
       const instance = UnionProperty.fromJson(json);
       const output = instance.toJson();
       const reloaded = UnionProperty.fromJson(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
@@ -44,12 +45,15 @@ describe("UnionProperty", () => {
       const instance = UnionProperty.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = UnionProperty.fromYaml(output);
+      expect(reloaded).toBeDefined();
     });
   });
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = UnionProperty.load(data);
       expect(instance).toBeDefined();
     });

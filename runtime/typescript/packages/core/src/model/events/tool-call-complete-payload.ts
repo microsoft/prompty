@@ -38,6 +38,7 @@ export class ToolCallCompletePayload {
     data: Record<string, unknown>,
     context?: LoadContext,
   ): ToolCallCompletePayload {
+    context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
@@ -56,7 +57,7 @@ export class ToolCallCompletePayload {
     if (data["result"] !== undefined && data["result"] !== null) {
       instance.result = ToolResult.load(
         data["result"] as Record<string, unknown>,
-        context,
+        context.at("result"),
       );
     }
     if (data["durationMs"] !== undefined && data["durationMs"] !== null) {

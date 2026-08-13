@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -18,7 +19,19 @@ func TestTurnTraceLoadJSON(t *testing.T) {
 {
   "version": "1",
   "runtime": "typescript",
-  "promptyVersion": "2.0.0"
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001",
+      "payload": {}
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -40,6 +53,15 @@ func TestTurnTraceLoadJSON(t *testing.T) {
 	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
 		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
 	}
+	if len(instance.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(instance.Events))
+	}
+	assertTurnTraceStringField(t, instance.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertTurnTraceStringField(t, instance.Events[0], "Type", "turn_start", "Events[0].Type")
+	assertTurnTraceStringField(t, instance.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertTurnTraceStringField(t, instance.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertTurnTraceStringField(t, instance.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertTurnTraceStringField(t, instance.Events[0], "SpanId", "span_tool_001", "Events[0].SpanId")
 }
 
 // TestTurnTraceLoadYAML tests loading TurnTrace from YAML
@@ -48,6 +70,15 @@ func TestTurnTraceLoadYAML(t *testing.T) {
 version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
+events:
+  - id: evt_abc123
+    type: turn_start
+    timestamp: "2026-06-09T20:00:00Z"
+    turnId: turn_001
+    iteration: 0
+    parentId: evt_parent
+    spanId: span_tool_001
+    payload: {}
 
 `
 	var data map[string]interface{}
@@ -69,6 +100,15 @@ promptyVersion: 2.0.0
 	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
 		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
 	}
+	if len(instance.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(instance.Events))
+	}
+	assertTurnTraceStringField(t, instance.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertTurnTraceStringField(t, instance.Events[0], "Type", "turn_start", "Events[0].Type")
+	assertTurnTraceStringField(t, instance.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertTurnTraceStringField(t, instance.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertTurnTraceStringField(t, instance.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertTurnTraceStringField(t, instance.Events[0], "SpanId", "span_tool_001", "Events[0].SpanId")
 }
 
 // TestTurnTraceFromJSON tests loading TurnTrace through the generated JSON helper
@@ -77,7 +117,19 @@ func TestTurnTraceFromJSON(t *testing.T) {
 {
   "version": "1",
   "runtime": "typescript",
-  "promptyVersion": "2.0.0"
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001",
+      "payload": {}
+    }
+  ]
 }
 `
 
@@ -94,6 +146,15 @@ func TestTurnTraceFromJSON(t *testing.T) {
 	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
 		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
 	}
+	if len(instance.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(instance.Events))
+	}
+	assertTurnTraceStringField(t, instance.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertTurnTraceStringField(t, instance.Events[0], "Type", "turn_start", "Events[0].Type")
+	assertTurnTraceStringField(t, instance.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertTurnTraceStringField(t, instance.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertTurnTraceStringField(t, instance.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertTurnTraceStringField(t, instance.Events[0], "SpanId", "span_tool_001", "Events[0].SpanId")
 }
 
 // TestTurnTraceFromYAML tests loading TurnTrace through the generated YAML helper
@@ -102,6 +163,15 @@ func TestTurnTraceFromYAML(t *testing.T) {
 version: "1"
 runtime: typescript
 promptyVersion: 2.0.0
+events:
+  - id: evt_abc123
+    type: turn_start
+    timestamp: "2026-06-09T20:00:00Z"
+    turnId: turn_001
+    iteration: 0
+    parentId: evt_parent
+    spanId: span_tool_001
+    payload: {}
 
 `
 
@@ -118,6 +188,15 @@ promptyVersion: 2.0.0
 	if instance.PromptyVersion == nil || *instance.PromptyVersion != "2.0.0" {
 		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, instance.PromptyVersion)
 	}
+	if len(instance.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(instance.Events))
+	}
+	assertTurnTraceStringField(t, instance.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertTurnTraceStringField(t, instance.Events[0], "Type", "turn_start", "Events[0].Type")
+	assertTurnTraceStringField(t, instance.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertTurnTraceStringField(t, instance.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertTurnTraceStringField(t, instance.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertTurnTraceStringField(t, instance.Events[0], "SpanId", "span_tool_001", "Events[0].SpanId")
 }
 
 // TestTurnTraceRoundtrip tests load -> save -> load produces equivalent data
@@ -126,7 +205,19 @@ func TestTurnTraceRoundtrip(t *testing.T) {
 {
   "version": "1",
   "runtime": "typescript",
-  "promptyVersion": "2.0.0"
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001",
+      "payload": {}
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -155,6 +246,15 @@ func TestTurnTraceRoundtrip(t *testing.T) {
 	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
 		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
 	}
+	if len(reloaded.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(reloaded.Events))
+	}
+	assertTurnTraceStringField(t, reloaded.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertTurnTraceStringField(t, reloaded.Events[0], "Type", "turn_start", "Events[0].Type")
+	assertTurnTraceStringField(t, reloaded.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertTurnTraceStringField(t, reloaded.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertTurnTraceStringField(t, reloaded.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertTurnTraceStringField(t, reloaded.Events[0], "SpanId", "span_tool_001", "Events[0].SpanId")
 }
 
 // TestTurnTraceToJSON tests that ToJSON produces valid JSON
@@ -163,7 +263,19 @@ func TestTurnTraceToJSON(t *testing.T) {
 {
   "version": "1",
   "runtime": "typescript",
-  "promptyVersion": "2.0.0"
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001",
+      "payload": {}
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -199,6 +311,15 @@ func TestTurnTraceToJSON(t *testing.T) {
 	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
 		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
 	}
+	if len(reloaded.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(reloaded.Events))
+	}
+	assertTurnTraceStringField(t, reloaded.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertTurnTraceStringField(t, reloaded.Events[0], "Type", "turn_start", "Events[0].Type")
+	assertTurnTraceStringField(t, reloaded.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertTurnTraceStringField(t, reloaded.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertTurnTraceStringField(t, reloaded.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertTurnTraceStringField(t, reloaded.Events[0], "SpanId", "span_tool_001", "Events[0].SpanId")
 }
 
 // TestTurnTraceToYAML tests that ToYAML produces valid YAML
@@ -207,7 +328,19 @@ func TestTurnTraceToYAML(t *testing.T) {
 {
   "version": "1",
   "runtime": "typescript",
-  "promptyVersion": "2.0.0"
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001",
+      "payload": {}
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -243,11 +376,56 @@ func TestTurnTraceToYAML(t *testing.T) {
 	if reloaded.PromptyVersion == nil || *reloaded.PromptyVersion != "2.0.0" {
 		t.Errorf(`Expected PromptyVersion to be "2.0.0", got %v`, reloaded.PromptyVersion)
 	}
+	if len(reloaded.Events) != 1 {
+		t.Fatalf("Expected Events length to be 1, got %d", len(reloaded.Events))
+	}
+	assertTurnTraceStringField(t, reloaded.Events[0], "Id", "evt_abc123", "Events[0].Id")
+	assertTurnTraceStringField(t, reloaded.Events[0], "Type", "turn_start", "Events[0].Type")
+	assertTurnTraceStringField(t, reloaded.Events[0], "Timestamp", "2026-06-09T20:00:00Z", "Events[0].Timestamp")
+	assertTurnTraceStringField(t, reloaded.Events[0], "TurnId", "turn_001", "Events[0].TurnId")
+	assertTurnTraceStringField(t, reloaded.Events[0], "ParentId", "evt_parent", "Events[0].ParentId")
+	assertTurnTraceStringField(t, reloaded.Events[0], "SpanId", "span_tool_001", "Events[0].SpanId")
 }
 
 // TestTurnTraceFromJSONInvalid rejects malformed JSON instead of silently defaulting
 func TestTurnTraceFromJSONInvalid(t *testing.T) {
 	if _, err := prompty.TurnTraceFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertTurnTraceStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

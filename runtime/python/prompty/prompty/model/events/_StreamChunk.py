@@ -40,8 +40,9 @@ class StreamChunk(ABC):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for StreamChunk: {data}")
@@ -58,23 +59,23 @@ class StreamChunk(ABC):
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "StreamChunk":
         # load polymorphic StreamChunk instance
-        if data is not None and "kind" in data:
-            discriminator_value = str(data["kind"]).lower()
-            if discriminator_value == "text":
-                return TextChunk.load(data, context)
-            elif discriminator_value == "thinking":
-                return ThinkingChunk.load(data, context)
-            elif discriminator_value == "tool":
-                return ToolChunk.load(data, context)
-            elif discriminator_value == "usage":
-                return UsageChunk.load(data, context)
-            elif discriminator_value == "error":
-                return ErrorChunk.load(data, context)
+        discriminator_raw = data.get("kind") if data is not None else None
+        if not isinstance(discriminator_raw, str) or discriminator_raw == "":
+            raise ValueError("Invalid StreamChunk discriminator field 'kind': expected non-blank string")
+        discriminator_value = discriminator_raw
+        if discriminator_value == "text":
+            return TextChunk.load(data, context)
+        elif discriminator_value == "thinking":
+            return ThinkingChunk.load(data, context)
+        elif discriminator_value == "tool":
+            return ToolChunk.load(data, context)
+        elif discriminator_value == "usage":
+            return UsageChunk.load(data, context)
+        elif discriminator_value == "error":
+            return ErrorChunk.load(data, context)
 
-            else:
-                raise ValueError(f"Unknown StreamChunk discriminator value: {discriminator_value}")
         else:
-            raise ValueError("Missing StreamChunk discriminator property: 'kind'")
+            raise ValueError(f"Unknown StreamChunk discriminator field 'kind' value: {discriminator_value}")
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the StreamChunk instance to a dictionary.
@@ -151,8 +152,9 @@ class TextChunk(StreamChunk):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for TextChunk: {data}")
@@ -243,8 +245,9 @@ class ThinkingChunk(StreamChunk):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ThinkingChunk: {data}")
@@ -335,11 +338,14 @@ class ToolChunk(StreamChunk):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ToolChunk: {data}")
+        if "toolCall" not in data or data["toolCall"] is None:
+            raise ValueError(f"{context.at('toolCall').path}: missing required field")
 
         # create new instance
         instance = ToolChunk()
@@ -347,7 +353,7 @@ class ToolChunk(StreamChunk):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "toolCall" in data:
-            instance.tool_call = ToolCall.load(data["toolCall"], context)
+            instance.tool_call = ToolCall.load(data["toolCall"], context.at("toolCall"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -427,11 +433,14 @@ class UsageChunk(StreamChunk):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for UsageChunk: {data}")
+        if "usage" not in data or data["usage"] is None:
+            raise ValueError(f"{context.at('usage').path}: missing required field")
 
         # create new instance
         instance = UsageChunk()
@@ -439,7 +448,7 @@ class UsageChunk(StreamChunk):
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
         if data is not None and "usage" in data:
-            instance.usage = InvocationUsage.load(data["usage"], context)
+            instance.usage = InvocationUsage.load(data["usage"], context.at("usage"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
@@ -519,8 +528,9 @@ class ErrorChunk(StreamChunk):
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ErrorChunk: {data}")

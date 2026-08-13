@@ -119,8 +119,8 @@ impl OpenAIExecutor {
     ) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
 
@@ -176,8 +176,8 @@ impl OpenAIExecutor {
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
 
@@ -233,8 +233,8 @@ impl OpenAIExecutor {
     ) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
         Ok(match api_type {
@@ -306,6 +306,7 @@ fn responses_continuation(
         .context_state
         .delegated_state
         .iter()
+        .flatten()
         .find(|state| state.provider == "openai" && state.kind == "response")
         .filter(|state| !state.id.is_empty())
     else {
@@ -348,7 +349,10 @@ fn responses_continuation(
 fn resolve_connection(
     agent: &Prompty,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
-    let conn = &agent.model.connection;
+    let Some(model) = agent.model.as_ref() else {
+        return Ok(std::borrow::Cow::Owned(serde_json::Value::Null));
+    };
+    let conn = &model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {

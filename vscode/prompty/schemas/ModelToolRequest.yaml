@@ -12,7 +12,6 @@ properties:
     description: Provider-normalized tool arguments
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque provider-specific tool request metadata
 required:
   - id

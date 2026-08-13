@@ -65,7 +65,9 @@ describe("ModelInfo", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "id": "gpt-4o",\n  "displayName": "GPT-4o",\n  "ownedBy": "openai",\n  "contextWindow": 128000,\n  "inputModalities": [\n    "text",\n    "image"\n  ],\n  "outputModalities": [\n    "text"\n  ],\n  "additionalProperties": {\n    "supportsStreaming": true\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ModelInfo.load(data);
       expect(instance).toBeDefined();
     });

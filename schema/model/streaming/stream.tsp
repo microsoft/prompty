@@ -8,6 +8,6 @@ namespace Prompty;
  */
 model StreamOptions {
   @doc("When true, the final streaming chunk includes token usage statistics")
-  @sample(#{ includeUsage: true })
+  @sample(optionsIncludeUsageSample)
   includeUsage?: boolean;
 }

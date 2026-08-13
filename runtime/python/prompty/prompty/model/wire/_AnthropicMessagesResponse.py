@@ -55,11 +55,14 @@ class AnthropicMessagesResponse:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for AnthropicMessagesResponse: {data}")
+        if "usage" not in data or data["usage"] is None:
+            raise ValueError(f"{context.at('usage').path}: missing required field")
 
         # create new instance
         instance = AnthropicMessagesResponse()
@@ -77,7 +80,7 @@ class AnthropicMessagesResponse:
         if data is not None and "stop_reason" in data:
             instance.stop_reason = data["stop_reason"]
         if data is not None and "usage" in data:
-            instance.usage = AnthropicUsage.load(data["usage"], context)
+            instance.usage = AnthropicUsage.load(data["usage"], context.at("usage"))
         if context is not None:
             instance = context.process_output(instance)
         return instance

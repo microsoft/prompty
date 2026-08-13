@@ -11,7 +11,19 @@ def test_load_json_turntrace():
     {
       "version": "1",
       "runtime": "typescript",
-      "promptyVersion": "2.0.0"
+      "promptyVersion": "2.0.0",
+      "events": [
+        {
+          "id": "evt_abc123",
+          "type": "turn_start",
+          "timestamp": "2026-06-09T20:00:00Z",
+          "turnId": "turn_001",
+          "iteration": 0,
+          "parentId": "evt_parent",
+          "spanId": "span_tool_001",
+          "payload": {}
+        }
+      ]
     }
     """
     data = json.loads(json_data, strict=False)
@@ -27,6 +39,15 @@ def test_load_yaml_turntrace():
     version: "1"
     runtime: typescript
     promptyVersion: 2.0.0
+    events:
+      - id: evt_abc123
+        type: turn_start
+        timestamp: "2026-06-09T20:00:00Z"
+        turnId: turn_001
+        iteration: 0
+        parentId: evt_parent
+        spanId: span_tool_001
+        payload: {}
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -43,7 +64,19 @@ def test_roundtrip_json_turntrace():
     {
       "version": "1",
       "runtime": "typescript",
-      "promptyVersion": "2.0.0"
+      "promptyVersion": "2.0.0",
+      "events": [
+        {
+          "id": "evt_abc123",
+          "type": "turn_start",
+          "timestamp": "2026-06-09T20:00:00Z",
+          "turnId": "turn_001",
+          "iteration": 0,
+          "parentId": "evt_parent",
+          "spanId": "span_tool_001",
+          "payload": {}
+        }
+      ]
     }
     """
     original_data = json.loads(json_data, strict=False)
@@ -62,7 +95,19 @@ def test_to_json_turntrace():
     {
       "version": "1",
       "runtime": "typescript",
-      "promptyVersion": "2.0.0"
+      "promptyVersion": "2.0.0",
+      "events": [
+        {
+          "id": "evt_abc123",
+          "type": "turn_start",
+          "timestamp": "2026-06-09T20:00:00Z",
+          "turnId": "turn_001",
+          "iteration": 0,
+          "parentId": "evt_parent",
+          "spanId": "span_tool_001",
+          "payload": {}
+        }
+      ]
     }
     """
     data = json.loads(json_data, strict=False)
@@ -79,7 +124,19 @@ def test_to_yaml_turntrace():
     {
       "version": "1",
       "runtime": "typescript",
-      "promptyVersion": "2.0.0"
+      "promptyVersion": "2.0.0",
+      "events": [
+        {
+          "id": "evt_abc123",
+          "type": "turn_start",
+          "timestamp": "2026-06-09T20:00:00Z",
+          "turnId": "turn_001",
+          "iteration": 0,
+          "parentId": "evt_parent",
+          "spanId": "span_tool_001",
+          "payload": {}
+        }
+      ]
     }
     """
     data = json.loads(json_data, strict=False)

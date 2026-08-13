@@ -29,7 +29,7 @@ class InvocationContextState:
     _shorthand_property: ClassVar[str | None] = None
 
     portability: InvocationContextPortability = field(default="portable")
-    delegated_state: list[DelegatedStateReference] = field(default_factory=list)
+    delegated_state: list[DelegatedStateReference] | None = None
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "InvocationContextState":
@@ -42,8 +42,9 @@ class InvocationContextState:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for InvocationContextState: {data}")
@@ -54,25 +55,31 @@ class InvocationContextState:
         if data is not None and "portability" in data:
             instance.portability = data["portability"]
         if data is not None and "delegatedState" in data:
-            instance.delegated_state = InvocationContextState.load_delegated_state(data["delegatedState"], context)
+            instance.delegated_state = InvocationContextState.load_delegated_state(
+                data["delegatedState"], context.at("delegatedState")
+            )
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_delegated_state(data: dict | list, context: LoadContext | None) -> list[DelegatedStateReference]:
+        if context is None:
+            context = LoadContext(path="delegatedState")
         if isinstance(data, dict):
             # convert simple named delegatedState to list of DelegatedStateReference
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(DelegatedStateReference.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "provider": v})
-            data = result
-        return [DelegatedStateReference.load(item, context) for item in data]
+                    result.append(DelegatedStateReference.load({"name": k, "provider": v}, context.at(k)))
+            return result
+        return [DelegatedStateReference.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_delegated_state(
@@ -81,7 +88,7 @@ class InvocationContextState:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

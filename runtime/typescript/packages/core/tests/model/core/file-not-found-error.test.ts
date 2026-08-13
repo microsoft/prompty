@@ -61,7 +61,9 @@ describe("FileNotFoundError", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "message": "Prompty file not found: ./chat.prompty",\n  "path": "./chat.prompty"\n}`,
+      ) as Record<string, unknown>;
       const instance = FileNotFoundError.load(data);
       expect(instance).toBeDefined();
     });

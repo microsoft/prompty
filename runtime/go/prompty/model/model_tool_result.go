@@ -32,6 +32,9 @@ type ModelToolResult struct {
 
 // LoadModelToolResult creates a ModelToolResult from a map[string]interface{}
 func LoadModelToolResult(data interface{}, ctx *LoadContext) (ModelToolResult, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := ModelToolResult{}
 
 	// Load from map

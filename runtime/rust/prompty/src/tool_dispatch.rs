@@ -172,7 +172,11 @@ pub fn resolve_bindings(
         return args;
     };
 
-    if tool_def.bindings.is_empty() {
+    if tool_def
+        .bindings
+        .as_ref()
+        .map_or(true, |bindings| bindings.is_empty())
+    {
         return args;
     }
 
@@ -181,7 +185,7 @@ pub fn resolve_bindings(
         None => return args,
     };
 
-    for binding in &tool_def.bindings {
+    for binding in tool_def.bindings.iter().flatten() {
         if let Some(value) = parent_obj.get(&binding.input) {
             args_obj.insert(binding.name.clone(), value.clone());
         }
@@ -368,7 +372,7 @@ pub async fn dispatch_tool(
 
 /// Find a tool definition in `agent.tools` by name.
 fn find_tool_def<'a>(agent: &'a Prompty, name: &str) -> Option<&'a crate::model::Tool> {
-    agent.tools.iter().find(|t| t.name == name)
+    agent.tools.iter().flatten().find(|t| t.name == name)
 }
 
 /// Execute a user-provided tool handler (from TurnOptions.tools).
@@ -656,10 +660,11 @@ mod tests {
         let mut agent = Prompty::default();
         if let Some(arr) = tools.as_array() {
             let ctx = LoadContext::default();
-            agent.tools = arr
-                .iter()
-                .map(|v| crate::model::Tool::load_from_value(v, &ctx))
-                .collect();
+            agent.tools = Some(
+                arr.iter()
+                    .map(|v| crate::model::Tool::load_from_value(v, &ctx))
+                    .collect(),
+            );
         }
         agent
     }
@@ -1050,7 +1055,9 @@ mod tests {
         let agent = agent_with_tools(serde_json::json!([{
             "name": "my_mcp_tool",
             "kind": "mcp",
-            "serverName": "test-server"
+            "serverName": "test-server",
+            "connection": { "kind": "reference" },
+            "approvalMode": { "kind": "always" }
         }]));
 
         let tc = make_tool_call("my_mcp_tool", "{}");
@@ -1070,7 +1077,8 @@ mod tests {
         // Agent has a tool with unknown kind — should fall through to "*" wildcard
         let agent = agent_with_tools(serde_json::json!([{
             "name": "my_exotic_tool",
-            "kind": "exotic_provider"
+            "kind": "exotic_provider",
+            "connection": { "kind": "reference" }
         }]));
 
         let tc = make_tool_call("my_exotic_tool", "{}");

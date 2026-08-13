@@ -130,14 +130,26 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, S
     let mut args = Map::new();
 
     // Model ID
-    args.insert("model".to_string(), Value::String(agent.model.id.clone()));
+    args.insert(
+        "model".to_string(),
+        Value::String(
+            agent
+                .model
+                .as_ref()
+                .map(|model| model.id.clone())
+                .unwrap_or_default(),
+        ),
+    );
 
     // Messages
     let wire_msgs: Vec<Value> = messages.iter().map(message_to_wire).collect();
     args.insert("messages".to_string(), Value::Array(wire_msgs));
 
     // Options
-    apply_options(&mut args, &agent.model.options);
+    apply_options(
+        &mut args,
+        &agent.model.as_ref().and_then(|model| model.options.clone()),
+    );
 
     // Tools
     let tools = tools_to_wire(agent)?;
@@ -174,10 +186,15 @@ pub fn enable_streaming(body: &mut Value, api_type: &str) {
 
 /// Build the request body for an embedding call.
 pub fn build_embedding_args(agent: &Prompty, messages: &[Message]) -> Value {
-    let model = if agent.model.id.is_empty() {
+    let model_id = agent
+        .model
+        .as_ref()
+        .map(|model| model.id.as_str())
+        .unwrap_or("");
+    let model = if model_id.is_empty() {
         "text-embedding-ada-002".to_string()
     } else {
-        agent.model.id.clone()
+        model_id.to_string()
     };
 
     let input = extract_text_input(messages);
@@ -188,7 +205,7 @@ pub fn build_embedding_args(agent: &Prompty, messages: &[Message]) -> Value {
     });
 
     // Only additionalProperties from options
-    if let Some(ref opts) = agent.model.options {
+    if let Some(ref opts) = agent.model.as_ref().and_then(|model| model.options.clone()) {
         if let Some(map) = opts.additional_properties.as_object() {
             for (k, v) in map {
                 args[k.clone()] = v.clone();
@@ -201,10 +218,15 @@ pub fn build_embedding_args(agent: &Prompty, messages: &[Message]) -> Value {
 
 /// Build the request body for an image generation call.
 pub fn build_image_args(agent: &Prompty, messages: &[Message]) -> Value {
-    let model = if agent.model.id.is_empty() {
+    let model_id = agent
+        .model
+        .as_ref()
+        .map(|model| model.id.as_str())
+        .unwrap_or("");
+    let model = if model_id.is_empty() {
         "dall-e-3".to_string()
     } else {
-        agent.model.id.clone()
+        model_id.to_string()
     };
 
     let prompt = extract_text_input(messages);
@@ -224,7 +246,7 @@ pub fn build_image_args(agent: &Prompty, messages: &[Message]) -> Value {
     });
 
     // Only additionalProperties from options
-    if let Some(ref opts) = agent.model.options {
+    if let Some(ref opts) = agent.model.as_ref().and_then(|model| model.options.clone()) {
         if let Some(map) = opts.additional_properties.as_object() {
             for (k, v) in map {
                 args[k.clone()] = v.clone();
@@ -320,8 +342,12 @@ fn function_tool_to_wire(tool: &Tool) -> Result<Value, SchemaError> {
     }
 
     // Collect bound parameter names to strip from wire format (§7.1.3)
-    let bound_names: std::collections::HashSet<String> =
-        tool.bindings.iter().map(|b| b.name.clone()).collect();
+    let bound_names: std::collections::HashSet<String> = tool
+        .bindings
+        .iter()
+        .flatten()
+        .map(|b| b.name.clone())
+        .collect();
 
     // Parameters → JSON Schema, filtering out bound params
     {
@@ -358,8 +384,12 @@ fn property_to_json_schema(prop: &Property, strict: bool) -> Result<Value, Schem
     if let Some(ref desc) = prop.description {
         schema.insert("description".to_string(), Value::String(desc.clone()));
     }
-    if let Some(ref enum_vals) = prop.enum_values {
-        schema.insert("enum".to_string(), Value::Array(enum_vals.clone()));
+    if let Some(enum_values) = prop
+        .enum_values
+        .as_ref()
+        .filter(|values| !values.is_empty())
+    {
+        schema.insert("enum".to_string(), Value::Array(enum_values.clone()));
     }
 
     match &prop.kind {
@@ -398,17 +428,21 @@ fn property_to_json_schema(prop: &Property, strict: bool) -> Result<Value, Schem
         PropertyKind::Object { .. } => {
             // bare {"type": "object"} when properties is empty or absent
         }
-        PropertyKind::Union { one_of, any_of } => match (!one_of.is_empty(), !any_of.is_empty()) {
-            (true, false) => return Err(SchemaError::unsupported_one_of()),
-            (false, true) => {
-                let branches = any_of
-                    .iter()
-                    .map(|branch| property_to_json_schema(branch, strict))
-                    .collect::<Result<Vec<_>, _>>()?;
-                schema.insert("anyOf".to_string(), Value::Array(branches));
+        PropertyKind::Union { one_of, any_of } => {
+            let one_of_items = one_of.as_deref().unwrap_or(&[]);
+            let any_of_items = any_of.as_deref().unwrap_or(&[]);
+            match (!one_of_items.is_empty(), !any_of_items.is_empty()) {
+                (true, false) => return Err(SchemaError::unsupported_one_of()),
+                (false, true) => {
+                    let branches = any_of_items
+                        .iter()
+                        .map(|branch| property_to_json_schema(branch, strict))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    schema.insert("anyOf".to_string(), Value::Array(branches));
+                }
+                _ => return Err(SchemaError::invalid_union()),
             }
-            _ => return Err(SchemaError::invalid_union()),
-        },
+        }
         _ => {}
     }
 
@@ -548,10 +582,15 @@ fn output_schema_to_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> 
 ///
 /// System/developer messages become `instructions`; other messages become `input` items.
 pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
-    let model = if agent.model.id.is_empty() {
+    let model_id = agent
+        .model
+        .as_ref()
+        .map(|model| model.id.as_str())
+        .unwrap_or("");
+    let model = if model_id.is_empty() {
         "gpt-4o".to_string()
     } else {
-        agent.model.id.clone()
+        model_id.to_string()
     };
 
     let mut system_parts: Vec<String> = Vec::new();
@@ -578,7 +617,10 @@ pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Result<Val
     }
 
     // Options
-    apply_responses_options(&mut args, &agent.model.options);
+    apply_responses_options(
+        &mut args,
+        &agent.model.as_ref().and_then(|model| model.options.clone()),
+    );
 
     // Tools (flat format — no nested "function" key)
     let tools = responses_tools_to_wire(agent)?;
@@ -686,8 +728,12 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Result<Value, SchemaError> {
     }
 
     // Collect bound parameter names to strip (§7.1.3)
-    let bound_names: std::collections::HashSet<String> =
-        tool.bindings.iter().map(|b| b.name.clone()).collect();
+    let bound_names: std::collections::HashSet<String> = tool
+        .bindings
+        .iter()
+        .flatten()
+        .map(|b| b.name.clone())
+        .collect();
 
     {
         let typed_params: Vec<&Property> = parameters

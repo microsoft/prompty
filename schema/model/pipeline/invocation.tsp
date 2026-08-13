@@ -14,19 +14,19 @@ alias InvocationContextPortability = "portable" | "delegated" | "opaque";
  */
 model DelegatedStateReference {
   @doc("Provider that owns the retained state")
-  @sample(#{ provider: "openai" })
+  @sample(DelegatedStateReferenceProviderSample)
   provider: string;
 
   @doc("Provider-defined kind of retained state")
-  @sample(#{ kind: "response" })
+  @sample(DelegatedStateReferenceKindSample)
   kind: string;
 
   @doc("Provider-defined identifier for the retained state")
-  @sample(#{ id: "resp_abc123" })
+  @sample(DelegatedStateReferenceIdSample)
   id: string;
 
   @doc("Opaque provider-specific state reference metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /**
@@ -37,7 +37,7 @@ model InvocationContextState {
   portability: InvocationContextPortability = "portable";
 
   @doc("Explicit references to provider-held context state")
-  delegatedState?: DelegatedStateReference[] = #[];
+  delegatedState?: DelegatedStateReference[];
 }
 
 /**
@@ -50,14 +50,14 @@ alias InvocationContextDisposition = "included" | "excluded";
  */
 model InvocationContextDecision {
   @doc("Stable identifier of the evaluated context candidate")
-  @sample(#{ candidateId: "memory:project-plan" })
+  @sample(InvocationContextDecisionCandidateIdSample)
   candidateId: string;
 
   @doc("Whether the candidate was included in the invocation context")
   disposition: InvocationContextDisposition;
 
   @doc("Human-readable reason for the disposition")
-  @sample(#{ reason: "included by relevance ranking" })
+  @sample(InvocationContextDecisionReasonSample)
   reason: string;
 
   @doc("Zero-based rank among included candidates, when applicable")
@@ -67,7 +67,7 @@ model InvocationContextDecision {
   estimatedTokens?: int32;
 
   @doc("Opaque host-specific decision metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /**
@@ -77,29 +77,29 @@ model InvocationContextDecision {
  */
 model ModelInvocationContextSnapshot {
   @doc("Stable identifier for this context snapshot")
-  @sample(#{ id: "context:inv_abc123" })
+  @sample(ModelInvocationContextSnapshotIdSample)
   id: string;
 
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(ModelInvocationContextSnapshotSessionIdSample)
   sessionId: string;
 
   @doc("Stable turn identifier")
-  @sample(#{ turnId: "turn_abc123" })
+  @sample(ModelInvocationContextSnapshotTurnIdSample)
   turnId: string;
 
   @doc("Stable model invocation identifier")
-  @sample(#{ invocationId: "inv_abc123" })
+  @sample(ModelInvocationContextSnapshotInvocationIdSample)
   invocationId: string;
 
   @doc("Zero-based model loop iteration")
   iteration: int32;
 
   @doc("Canonical messages visible to the model")
-  messages: Message[] = #[];
+  messages: Message[];
 
   @doc("Context-planning decisions used to assemble the snapshot")
-  decisions?: InvocationContextDecision[] = #[];
+  decisions?: InvocationContextDecision[];
 
   @doc("Number of leading messages eligible for provider prefix-cache reuse")
   stablePrefixMessages: int32 = 0;
@@ -108,7 +108,7 @@ model ModelInvocationContextSnapshot {
   contextState: InvocationContextState;
 
   @doc("Opaque host-specific snapshot metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /**
@@ -127,18 +127,18 @@ model ModelInvocationRequest {
  */
 model ModelToolRequest {
   @doc("Provider-stable tool request identifier")
-  @sample(#{ id: "call_abc123" })
+  @sample(providerIdSample)
   id: string;
 
   @doc("Name of the requested tool")
-  @sample(#{ name: "get_weather" })
+  @sample(providerNameSample)
   name: string;
 
   @doc("Provider-normalized tool arguments")
   arguments?: unknown;
 
   @doc("Opaque provider-specific tool request metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /**
@@ -151,11 +151,11 @@ alias ModelToolOutcome = "success" | "failed" | "indeterminate";
  */
 model ModelToolResult {
   @doc("Identifier of the corresponding model tool request")
-  @sample(#{ requestId: "call_abc123" })
+  @sample(ModelToolResultRequestIdSample)
   requestId: string;
 
   @doc("Name of the executed tool")
-  @sample(#{ name: "get_weather" })
+  @sample(ModelToolResultNameSample)
   name: string;
 
   @doc("Semantic outcome of the external tool effect")
@@ -168,7 +168,7 @@ model ModelToolResult {
   errorKind?: string;
 
   @doc("Opaque host-specific tool result metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }
 
 /**
@@ -185,14 +185,14 @@ model ModelInvocationResponse {
   usage?: InvocationUsage;
 
   @doc("Assistant messages to commit before tool results are made visible")
-  assistantMessages?: Message[] = #[];
+  assistantMessages?: Message[];
 
   @doc("Tool requests returned by the provider")
-  toolRequests?: ModelToolRequest[] = #[];
+  toolRequests?: ModelToolRequest[];
 
   @doc("Provider-context state to carry into the next invocation")
   nextContextState?: InvocationContextState;
 
   @doc("Opaque provider-specific response metadata")
-  metadata?: Record<unknown> = #{};
+  metadata?: Record<unknown>;
 }

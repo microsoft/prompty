@@ -21,7 +21,6 @@ properties:
     description: Last durably persisted journal sequence when the journal tail is ahead of the checkpoint; the resumed run continues numbering after this value. Zero resumes from the checkpoint's own lastSequence.
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque host-specific resume metadata
 required:
   - checkpoint

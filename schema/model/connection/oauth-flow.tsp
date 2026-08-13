@@ -14,9 +14,11 @@ model OAuthToken {
   expiresIn: int64;
 
   @doc("Refresh token when offline access was granted")
+  @sample(OAuthTokenRefreshTokenSample)
   refreshToken?: string;
 
   @doc("Scopes granted by the authorization server")
+  @sample(OAuthTokenScopeSample)
   scope?: string;
 }
 

@@ -35,14 +35,14 @@ alias Role = "system" | "user" | "assistant" | "developer" | "tool";
 )
 model Message {
   @doc("The role of the message sender")
-  @sample(#{ role: "user" })
+  @sample(MessageRoleSample)
   role: Role = "user";
 
   @doc("The content parts of the message")
-  @sample(#{ parts: #[#{ kind: "text", value: "Hello!" }] })
+  @sample(MessagePartsSample)
   parts: ContentPart[];
 
   @doc("Optional metadata associated with the message")
-  @sample(#{ metadata: #{ source: "user-input" } })
-  metadata: Record<unknown> = #{};
+  @sample(MessageMetadataSample)
+  metadata: Record<unknown>;
 }

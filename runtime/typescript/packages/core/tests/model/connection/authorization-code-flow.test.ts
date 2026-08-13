@@ -17,9 +17,49 @@ describe("AuthorizationCodeFlow", () => {
     });
   });
 
+  describe("JSON serialization", () => {
+    it("should load from JSON - example 1", () => {
+      const json = `{\n  "authUrl": "sample",\n  "codeVerifier": "sample"\n}`;
+      const instance = AuthorizationCodeFlow.fromJson(json);
+      expect(instance).toBeDefined();
+      expect(instance.authUrl).toEqual("sample");
+      expect(instance.codeVerifier).toEqual("sample");
+    });
+
+    it("should round-trip JSON - example 1", () => {
+      const json = `{\n  "authUrl": "sample",\n  "codeVerifier": "sample"\n}`;
+      const instance = AuthorizationCodeFlow.fromJson(json);
+      const output = instance.toJson();
+      const reloaded = AuthorizationCodeFlow.fromJson(output);
+      expect(reloaded.authUrl).toEqual(instance.authUrl);
+      expect(reloaded.codeVerifier).toEqual(instance.codeVerifier);
+    });
+  });
+
+  describe("YAML serialization", () => {
+    it("should load from YAML - example 1", () => {
+      const yaml = `authUrl: sample\ncodeVerifier: sample\n`;
+      const instance = AuthorizationCodeFlow.fromYaml(yaml);
+      expect(instance).toBeDefined();
+      expect(instance.authUrl).toEqual("sample");
+      expect(instance.codeVerifier).toEqual("sample");
+    });
+
+    it("should round-trip YAML - example 1", () => {
+      const yaml = `authUrl: sample\ncodeVerifier: sample\n`;
+      const instance = AuthorizationCodeFlow.fromYaml(yaml);
+      const output = instance.toYaml();
+      const reloaded = AuthorizationCodeFlow.fromYaml(output);
+      expect(reloaded.authUrl).toEqual(instance.authUrl);
+      expect(reloaded.codeVerifier).toEqual(instance.codeVerifier);
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data: Record<string, unknown> = {};
+      const data = JSON.parse(
+        `{\n  "authUrl": "sample",\n  "codeVerifier": "sample"\n}`,
+      ) as Record<string, unknown>;
       const instance = AuthorizationCodeFlow.load(data);
       expect(instance).toBeDefined();
     });

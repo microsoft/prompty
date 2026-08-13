@@ -124,7 +124,10 @@ impl TurnEngineRequest {
             max_model_attempts: 3,
             start_iteration: if checkpoint.resume_same_iteration {
                 checkpoint.iteration as usize
-            } else if checkpoint.pending_tool_requests.is_empty()
+            } else if checkpoint
+                .pending_tool_requests
+                .as_ref()
+                .map_or(true, |requests| requests.is_empty())
                 && checkpoint.pending_model_response.is_none()
                 && !checkpoint.final_output_ready
                 && !checkpoint.reconciliation_required
@@ -135,10 +138,17 @@ impl TurnEngineRequest {
             },
             initial_sequence: last_journal_sequence.max(checkpoint.last_sequence as u64),
             portability: checkpoint.context_state.portability,
-            delegated_state: checkpoint.context_state.delegated_state.clone(),
+            delegated_state: checkpoint
+                .context_state
+                .delegated_state
+                .clone()
+                .unwrap_or_default(),
             active_invocation_id: checkpoint.active_invocation_id.clone(),
-            pending_tool_requests: checkpoint.pending_tool_requests.clone(),
-            completed_tool_results: checkpoint.completed_tool_results.clone(),
+            pending_tool_requests: checkpoint.pending_tool_requests.clone().unwrap_or_default(),
+            completed_tool_results: checkpoint
+                .completed_tool_results
+                .clone()
+                .unwrap_or_default(),
             completed_model_iterations: checkpoint.completed_model_iterations as usize,
             reconciliation_required: checkpoint.reconciliation_required,
             model_reconciliation: checkpoint.model_reconciliation.clone(),
@@ -177,6 +187,7 @@ impl TurnEngineRequest {
         let mut resolved = checkpoint.clone();
         let existing = resolved
             .completed_tool_results
+            .get_or_insert_with(Vec::new)
             .iter_mut()
             .find(|result| result.request_id == resolved_result.request_id)
             .ok_or_else(|| {
@@ -640,7 +651,7 @@ impl TurnEngine {
                         as i32,
                     context_state: InvocationContextState {
                         portability: state.portability,
-                        delegated_state: state.delegated_state.clone(),
+                        delegated_state: Some(state.delegated_state.clone()),
                     },
                     inputs: Some(state.inputs.clone()),
                 })
@@ -847,12 +858,17 @@ impl TurnEngine {
         let Some(response) = state.pending_model_response.take() else {
             return Ok(Vec::new());
         };
-        if response.tool_requests.is_empty() {
+        if response
+            .tool_requests
+            .as_ref()
+            .map_or(true, |requests| requests.is_empty())
+        {
             return Ok(Vec::new());
         }
         let results = response
             .tool_requests
             .iter()
+            .flatten()
             .filter_map(|request| {
                 state
                     .tool_results
@@ -861,7 +877,12 @@ impl TurnEngine {
                     .cloned()
             })
             .collect::<Vec<_>>();
-        if results.len() != response.tool_requests.len() {
+        if results.len()
+            != response
+                .tool_requests
+                .as_ref()
+                .map_or(0, |requests| requests.len())
+        {
             state.pending_model_response = Some(response);
             return Err(PortError::configuration(
                 "tool exchange is incomplete and cannot be formatted",
@@ -1027,7 +1048,7 @@ impl TurnEngine {
             json!({
                 "reconciliation": reconciliation,
                 "hasOutput": response.output.is_some(),
-                "toolRequests": response.tool_requests.len(),
+                "toolRequests": response.tool_requests.as_ref().map_or(0, |requests| requests.len()),
                 "metadata": response.metadata,
             }),
         );
@@ -1066,7 +1087,7 @@ impl TurnEngine {
             Some(state.iteration),
             json!({
                 "hasOutput": response.output.is_some(),
-                "toolRequests": response.tool_requests.len(),
+                "toolRequests": response.tool_requests.as_ref().map_or(0, |requests| requests.len()),
                 "nextPortability": response.next_context_state.as_ref().map(|s| &s.portability),
                 "delegatedState": response.next_context_state.as_ref().map(|s| &s.delegated_state),
                 "metadata": response.metadata,
@@ -1305,8 +1326,8 @@ impl TurnEngine {
                 Some(state.inputs.clone())
             },
             active_invocation_id: state.active_invocation_id.clone(),
-            pending_tool_requests: state.pending_tool_requests.clone(),
-            completed_tool_results: state.tool_results.clone(),
+            pending_tool_requests: Some(state.pending_tool_requests.clone()),
+            completed_tool_results: Some(state.tool_results.clone()),
             completed_model_iterations: state.completed_model_iterations as i32,
             reconciliation_required: state.reconciliation_required
                 || state
@@ -1321,7 +1342,7 @@ impl TurnEngine {
             policy_applied_for_iteration: state.policy_applied_for_iteration,
             context_state: InvocationContextState {
                 portability: state.portability,
-                delegated_state: state.delegated_state.clone(),
+                delegated_state: Some(state.delegated_state.clone()),
             },
             metadata: Value::Null,
         }
@@ -1466,7 +1487,7 @@ impl TurnEngine {
             last_sequence: state.sequence as i64,
             context_state: InvocationContextState {
                 portability: state.portability,
-                delegated_state: state.delegated_state.clone(),
+                delegated_state: Some(state.delegated_state.clone()),
             },
             model_reconciliation: state.model_reconciliation.clone(),
         };
@@ -1674,15 +1695,20 @@ impl TurnState {
         response: &ModelInvocationResponse,
     ) -> Result<(), String> {
         self.completed_model_iterations += 1;
-        if response.tool_requests.is_empty() {
-            self.messages.extend(response.assistant_messages.clone());
+        if response
+            .tool_requests
+            .as_ref()
+            .map_or(true, |requests| requests.is_empty())
+        {
+            self.messages
+                .extend(response.assistant_messages.clone().unwrap_or_default());
             self.pending_model_response = None;
         } else {
             self.pending_model_response = Some(response.clone());
         }
         self.apply_provider_state(response)?;
         self.active_invocation_id = Some(invocation_id.to_string());
-        self.pending_tool_requests = response.tool_requests.clone();
+        self.pending_tool_requests = response.tool_requests.clone().unwrap_or_default();
         self.pending_output = response.output.clone();
         self.final_output_ready = self.pending_tool_requests.is_empty();
         Ok(())
@@ -1691,7 +1717,7 @@ impl TurnState {
     fn apply_provider_state(&mut self, response: &ModelInvocationResponse) -> Result<(), String> {
         if let Some(next) = &response.next_context_state {
             self.portability = next.portability;
-            self.delegated_state = next.delegated_state.clone();
+            self.delegated_state = next.delegated_state.clone().unwrap_or_default();
         } else if self.portability == ContextPortability::Portable {
             self.delegated_state.clear();
         }

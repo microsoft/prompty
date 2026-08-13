@@ -38,11 +38,11 @@ alias SessionSummaryStatus = "success" | "error" | "cancelled" | "interrupted";
  */
 model HarnessContext {
   @doc("Current working directory for the harness")
-  @sample(#{ cwd: "/workspace/project" })
+  @sample(turnCwdSample)
   cwd?: string;
 
   @doc("Git repository root, when known")
-  @sample(#{ gitRoot: "/workspace/project" })
+  @sample(turnGitRootSample)
   gitRoot?: string;
 
   @doc("Host-defined context metadata, such as source-control or sandbox details")
@@ -54,35 +54,35 @@ model HarnessContext {
  */
 model SessionStartPayload {
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(SessionStartPayloadSessionIdSample)
   sessionId: string;
 
   @doc("Session event schema version")
-  @sample(#{ schemaVersion: "1" })
+  @sample(SessionStartPayloadSchemaVersionSample)
   schemaVersion?: string = "1";
 
   @doc("Producer that started the session")
-  @sample(#{ producer: "prompty-agent" })
+  @sample(SessionStartPayloadProducerSample)
   producer?: string;
 
   @doc("Runtime that produced the session")
-  @sample(#{ runtime: "typescript" })
+  @sample(SessionStartPayloadRuntimeSample)
   runtime?: string;
 
   @doc("Prompty library version")
-  @sample(#{ promptyVersion: "2.0.0" })
+  @sample(SessionStartPayloadPromptyVersionSample)
   promptyVersion?: string;
 
   @doc("ISO 8601 UTC timestamp when the session started")
-  @sample(#{ startTime: "2026-06-09T20:00:00Z" })
+  @sample(SessionStartPayloadStartTimeSample)
   startTime?: string;
 
   @doc("Selected model identifier, when known")
-  @sample(#{ selectedModel: "gpt-4o-mini" })
+  @sample(SessionStartPayloadSelectedModelSample)
   selectedModel?: string;
 
   @doc("Selected reasoning effort or equivalent model setting, when known")
-  @sample(#{ reasoningEffort: "medium" })
+  @sample(SessionStartPayloadReasoningEffortSample)
   reasoningEffort?: string;
 
   @doc("Repository and execution context")
@@ -94,19 +94,19 @@ model SessionStartPayload {
  */
 model SessionEndPayload {
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(SessionEndPayloadSessionIdSample)
   sessionId?: string;
 
   @doc("Final session status")
-  @sample(#{ status: "success" })
+  @sample(SessionEndPayloadStatusSample)
   status?: SessionEndStatus;
 
   @doc("Host-specific reason the session ended")
-  @sample(#{ reason: "complete" })
+  @sample(SessionEndPayloadReasonSample)
   reason?: string;
 
   @doc("Total elapsed session duration in milliseconds")
-  @sample(#{ durationMs: 12500 })
+  @sample(SessionEndPayloadDurationMsSample)
   durationMs?: float64;
 }
 
@@ -115,11 +115,11 @@ model SessionEndPayload {
  */
 model SessionWarningPayload {
   @doc("Stable machine-readable warning category")
-  @sample(#{ warningType: "remote" })
+  @sample(SessionWarningPayloadWarningTypeSample)
   warningType: string;
 
   @doc("Human-readable warning message")
-  @sample(#{ message: "Remote session disabled" })
+  @sample(SessionWarningPayloadMessageSample)
   message: string;
 
   @doc("Additional host-specific warning details")
@@ -131,34 +131,34 @@ model SessionWarningPayload {
  */
 model SessionEvent {
   @doc("Unique identifier for this event")
-  @sample(#{ id: "evt_abc123" })
+  @sample(SessionEventIdSample)
   id: string;
 
   @doc("Event type discriminator")
   type: SessionEventType;
 
   @doc("ISO 8601 UTC timestamp when the event was emitted")
-  @sample(#{ timestamp: "2026-06-09T20:00:00Z" })
+  @sample(SessionEventTimestampSample)
   timestamp: string;
 
   @doc("Stable identifier for the outer session")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(SessionEventSessionIdSample)
   sessionId?: string;
 
   @doc("Associated turn identifier, when this session event is linked to a turn")
-  @sample(#{ turnId: "turn_001" })
+  @sample(SessionEventTurnIdSample)
   turnId?: string;
 
   @doc("Parent event or span identifier for reconstructing event hierarchy")
-  @sample(#{ parentId: "evt_parent" })
+  @sample(SessionEventParentIdSample)
   parentId?: string;
 
   @doc("Trace span identifier associated with this event")
-  @sample(#{ spanId: "span_hook_001" })
+  @sample(SessionEventSpanIdSample)
   spanId?: string;
 
   @doc("Event-specific payload. Use the typed payload model matching 'type'.")
-  payload: Record<unknown> = #{};
+  payload: Record<unknown>;
 
   @doc("Redaction state for sensitive payload fields")
   redaction?: RedactionMetadata;
@@ -169,23 +169,23 @@ model SessionEvent {
  */
 model Checkpoint {
   @doc("Stable checkpoint identifier")
-  @sample(#{ id: "chk_abc123" })
+  @sample(CheckpointIdSample)
   id?: string;
 
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(CheckpointSessionIdSample)
   sessionId?: string;
 
   @doc("Associated turn identifier, when the checkpoint was created inside a turn")
-  @sample(#{ turnId: "turn_001" })
+  @sample(CheckpointTurnIdSample)
   turnId?: string;
 
   @doc("Monotonic checkpoint number within the session")
-  @sample(#{ checkpointNumber: 3 })
+  @sample(CheckpointCheckpointNumberSample)
   checkpointNumber?: int32;
 
   @doc("Short checkpoint title")
-  @sample(#{ title: "Added harness contracts" })
+  @sample(CheckpointTitleSample)
   title: string;
 
   @doc("Short human-readable overview")
@@ -201,7 +201,7 @@ model Checkpoint {
   metadata?: Record<unknown>;
 
   @doc("ISO 8601 UTC timestamp when the checkpoint was created")
-  @sample(#{ createdAt: "2026-06-09T20:00:00Z" })
+  @sample(CheckpointCreatedAtSample)
   createdAt?: string;
 
   @doc("Redaction state for sensitive checkpoint fields")
@@ -213,34 +213,34 @@ model Checkpoint {
  */
 model TrajectoryEvent {
   @doc("Stable trajectory event identifier")
-  @sample(#{ id: "traj_abc123" })
+  @sample(TrajectoryEventIdSample)
   id?: string;
 
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(TrajectoryEventSessionIdSample)
   sessionId?: string;
 
   @doc("Associated turn identifier, when available")
-  @sample(#{ turnId: "turn_001" })
+  @sample(TrajectoryEventTurnIdSample)
   turnId?: string;
 
   @doc("Associated tool call identifier, when available")
-  @sample(#{ toolCallId: "call_abc123" })
+  @sample(TrajectoryEventToolCallIdSample)
   toolCallId?: string;
 
   @doc("Zero-based turn index in the session")
-  @sample(#{ turnIndex: 4 })
+  @sample(TrajectoryEventTurnIndexSample)
   turnIndex?: int32;
 
   @doc("Host-defined trajectory event category")
-  @sample(#{ eventType: "command" })
+  @sample(TrajectoryEventEventTypeSample)
   eventType: string;
 
   @doc("Sanitized event data")
   data?: Record<unknown>;
 
   @doc("ISO 8601 UTC timestamp when the trajectory event was recorded")
-  @sample(#{ createdAt: "2026-06-09T20:00:00Z" })
+  @sample(TrajectoryEventCreatedAtSample)
   createdAt?: string;
 
   @doc("Redaction state for sensitive trajectory fields")
@@ -252,23 +252,23 @@ model TrajectoryEvent {
  */
 model SessionFileRef {
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(SessionFileRefSessionIdSample)
   sessionId?: string;
 
   @doc("File path, relative to the harness workspace when possible")
-  @sample(#{ path: "src/index.ts" })
+  @sample(SessionFileRefPathSample)
   path: string;
 
   @doc("Tool that first observed the file, when known")
-  @sample(#{ toolName: "view" })
+  @sample(SessionFileRefToolNameSample)
   toolName?: string;
 
   @doc("Zero-based turn index where the file was first observed")
-  @sample(#{ turnIndex: 2 })
+  @sample(SessionFileRefTurnIndexSample)
   turnIndex?: int32;
 
   @doc("ISO 8601 UTC timestamp when the file was first observed")
-  @sample(#{ firstSeenAt: "2026-06-09T20:00:00Z" })
+  @sample(SessionFileRefFirstSeenAtSample)
   firstSeenAt?: string;
 }
 
@@ -277,23 +277,23 @@ model SessionFileRef {
  */
 model SessionRef {
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(SessionRefSessionIdSample)
   sessionId?: string;
 
   @doc("Reference category")
-  @sample(#{ refType: "issue" })
+  @sample(SessionRefRefTypeSample)
   refType: string;
 
   @doc("Reference value")
-  @sample(#{ refValue: "owner/repo#123" })
+  @sample(SessionRefRefValueSample)
   refValue: string;
 
   @doc("Zero-based turn index where the reference was first observed")
-  @sample(#{ turnIndex: 2 })
+  @sample(SessionRefTurnIndexSample)
   turnIndex?: int32;
 
   @doc("ISO 8601 UTC timestamp when the reference was recorded")
-  @sample(#{ createdAt: "2026-06-09T20:00:00Z" })
+  @sample(SessionRefCreatedAtSample)
   createdAt?: string;
 }
 
@@ -302,26 +302,26 @@ model SessionRef {
  */
 model SessionSummary {
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(SessionSummarySessionIdSample)
   sessionId: string;
 
   @doc("Final session status")
-  @sample(#{ status: "success" })
+  @sample(SessionSummaryStatusSample)
   status?: SessionSummaryStatus;
 
   @doc("Number of user/assistant turns in the session")
-  @sample(#{ turns: 5 })
+  @sample(SessionSummaryTurnsSample)
   turns?: int32;
 
   @doc("Number of checkpoints created")
-  @sample(#{ checkpoints: 2 })
+  @sample(SessionSummaryCheckpointsSample)
   checkpoints?: int32;
 
   @doc("Aggregated token usage for the session")
   usage?: TokenUsage;
 
   @doc("Total elapsed session duration in milliseconds")
-  @sample(#{ durationMs: 12500 })
+  @sample(SessionSummaryDurationMsSample)
   durationMs?: float64;
 }
 
@@ -330,19 +330,19 @@ model SessionSummary {
  */
 model SessionTrace {
   @doc("Trace schema version")
-  @sample(#{ version: "1" })
+  @sample(SessionTraceVersionSample)
   version: string = "1";
 
   @doc("Runtime name that produced the trace")
-  @sample(#{ runtime: "typescript" })
+  @sample(SessionTraceRuntimeSample)
   runtime?: string;
 
   @doc("Prompty library version that produced the trace")
-  @sample(#{ promptyVersion: "2.0.0" })
+  @sample(SessionTracePromptyVersionSample)
   promptyVersion?: string;
 
   @doc("Stable session identifier")
-  @sample(#{ sessionId: "sess_abc123" })
+  @sample(SessionTraceSessionIdSample)
   sessionId?: string;
 
   @doc("Recorded session events in emission order")

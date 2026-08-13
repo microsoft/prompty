@@ -31,11 +31,6 @@ use crate::model::events::{
     turn_event::{TurnEvent, TurnEventType},
 };
 use crate::model::pipeline::{
-    checkpoint_store::CheckpointStore,
-    event_journal_writer::EventJournalWriter,
-    event_sink::EventSink,
-    host_tool_executor::HostToolExecutor,
-    permission_resolver::PermissionResolver,
     replay_journal_record::ReplayJournalRecord,
     replay_mismatch::ReplayMismatch,
     replay_verification_request::ReplayVerificationRequest,
@@ -44,6 +39,11 @@ use crate::model::pipeline::{
     run_turn_result::{RunTurnResult, RunTurnStatus},
     turn_model_request::TurnModelRequest,
     turn_model_response::TurnModelResponse,
+};
+use crate::model::{
+    checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter,
+    event_sink::EventSink, host_tool_executor::HostToolExecutor,
+    permission_resolver::PermissionResolver,
 };
 
 pub type AdapterError = Box<dyn Error + Send + Sync>;
@@ -222,7 +222,7 @@ impl ReferenceReplayVerifier {
             },
             expected_count: expected.len() as i32,
             actual_count: actual.len() as i32,
-            mismatches,
+            mismatches: Some(mismatches),
         }
     }
 }
@@ -467,7 +467,7 @@ impl ModelPort for ReferenceModelPort {
             iteration: request.context.iteration,
             inputs: self.inputs.clone(),
             options: Some(self.options.clone()),
-            tool_results,
+            tool_results: Some(tool_results),
         })
         .map_err(|error| {
             let message = format!("reference model callback: {error}");
@@ -482,6 +482,7 @@ impl ModelPort for ReferenceModelPort {
         let tool_requests = response
             .tool_requests
             .iter()
+            .flatten()
             .enumerate()
             .map(|(index, host)| {
                 let request_id = host
@@ -505,8 +506,8 @@ impl ModelPort for ReferenceModelPort {
         Ok(ModelInvocationResponse {
             output: response.output,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests,
+            assistant_messages: Some(Vec::new()),
+            tool_requests: Some(tool_requests),
             next_context_state: None,
             metadata: json!({
                 "referenceResponse": response_value,
@@ -731,6 +732,7 @@ where
             "toolRequests": response
                 .tool_requests
                 .iter()
+                .flatten()
                 .map(|request| request.to_value(&SaveContext::new()))
                 .collect::<Vec<_>>()
         });
@@ -988,7 +990,10 @@ where
                     EngineEventKind::Tool_execution_completed
                         | EngineEventKind::Tool_result_committed
                 )
-            }) && checkpoint.pending_tool_requests.is_empty()
+            }) && checkpoint
+                .pending_tool_requests
+                .as_ref()
+                .map_or(true, |v| v.is_empty())
                 && checkpoint.pending_model_response.is_none())
         {
             let results = self
@@ -1189,8 +1194,8 @@ where
             status,
             output,
             iterations: result.commit.iterations,
-            tool_results,
-            checkpoints,
+            tool_results: Some(tool_results),
+            checkpoints: Some(checkpoints),
         })
     }
 }

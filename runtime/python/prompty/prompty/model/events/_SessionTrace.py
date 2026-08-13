@@ -55,11 +55,11 @@ class SessionTrace:
     prompty_version: str | None = None
     session_id: str | None = None
     events: list[SessionEvent] = field(default_factory=list)
-    turns: list[TurnTrace] = field(default_factory=list)
-    checkpoints: list[Checkpoint] = field(default_factory=list)
-    trajectory: list[TrajectoryEvent] = field(default_factory=list)
-    files: list[SessionFileRef] = field(default_factory=list)
-    refs: list[SessionRef] = field(default_factory=list)
+    turns: list[TurnTrace] | None = None
+    checkpoints: list[Checkpoint] | None = None
+    trajectory: list[TrajectoryEvent] | None = None
+    files: list[SessionFileRef] | None = None
+    refs: list[SessionRef] | None = None
     summary: SessionSummary | None = None
 
     @staticmethod
@@ -73,8 +73,9 @@ class SessionTrace:
 
         """
 
-        if context is not None:
-            data = context.process_input(data)
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for SessionTrace: {data}")
@@ -91,106 +92,122 @@ class SessionTrace:
         if data is not None and "sessionId" in data:
             instance.session_id = data["sessionId"]
         if data is not None and "events" in data:
-            instance.events = SessionTrace.load_events(data["events"], context)
+            instance.events = SessionTrace.load_events(data["events"], context.at("events"))
         if data is not None and "turns" in data:
-            instance.turns = SessionTrace.load_turns(data["turns"], context)
+            instance.turns = SessionTrace.load_turns(data["turns"], context.at("turns"))
         if data is not None and "checkpoints" in data:
-            instance.checkpoints = SessionTrace.load_checkpoints(data["checkpoints"], context)
+            instance.checkpoints = SessionTrace.load_checkpoints(data["checkpoints"], context.at("checkpoints"))
         if data is not None and "trajectory" in data:
-            instance.trajectory = SessionTrace.load_trajectory(data["trajectory"], context)
+            instance.trajectory = SessionTrace.load_trajectory(data["trajectory"], context.at("trajectory"))
         if data is not None and "files" in data:
-            instance.files = SessionTrace.load_files(data["files"], context)
+            instance.files = SessionTrace.load_files(data["files"], context.at("files"))
         if data is not None and "refs" in data:
-            instance.refs = SessionTrace.load_refs(data["refs"], context)
+            instance.refs = SessionTrace.load_refs(data["refs"], context.at("refs"))
         if data is not None and "summary" in data:
-            instance.summary = SessionSummary.load(data["summary"], context)
+            instance.summary = SessionSummary.load(data["summary"], context.at("summary"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
 
     @staticmethod
     def load_events(data: dict | list, context: LoadContext | None) -> list[SessionEvent]:
+        if context is None:
+            context = LoadContext(path="events")
         if isinstance(data, dict):
             # convert simple named events to list of SessionEvent
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(SessionEvent.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
-            data = result
-        return [SessionEvent.load(item, context) for item in data]
+                    result.append(SessionEvent.load({"name": k, "id": v}, context.at(k)))
+            return result
+        return [SessionEvent.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_events(items: list[SessionEvent], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_turns(data: dict | list, context: LoadContext | None) -> list[TurnTrace]:
+        if context is None:
+            context = LoadContext(path="turns")
         if isinstance(data, dict):
             # convert simple named turns to list of TurnTrace
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(TurnTrace.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "version": v})
-            data = result
-        return [TurnTrace.load(item, context) for item in data]
+                    result.append(TurnTrace.load({"name": k, "version": v}, context.at(k)))
+            return result
+        return [TurnTrace.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_turns(items: list[TurnTrace], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_checkpoints(data: dict | list, context: LoadContext | None) -> list[Checkpoint]:
+        if context is None:
+            context = LoadContext(path="checkpoints")
         if isinstance(data, dict):
             # convert simple named checkpoints to list of Checkpoint
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(Checkpoint.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
-            data = result
-        return [Checkpoint.load(item, context) for item in data]
+                    result.append(Checkpoint.load({"name": k, "id": v}, context.at(k)))
+            return result
+        return [Checkpoint.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_checkpoints(items: list[Checkpoint], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_trajectory(data: dict | list, context: LoadContext | None) -> list[TrajectoryEvent]:
+        if context is None:
+            context = LoadContext(path="trajectory")
         if isinstance(data, dict):
             # convert simple named trajectory to list of TrajectoryEvent
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(TrajectoryEvent.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "id": v})
-            data = result
-        return [TrajectoryEvent.load(item, context) for item in data]
+                    result.append(TrajectoryEvent.load({"name": k, "id": v}, context.at(k)))
+            return result
+        return [TrajectoryEvent.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_trajectory(
@@ -199,53 +216,61 @@ class SessionTrace:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_files(data: dict | list, context: LoadContext | None) -> list[SessionFileRef]:
+        if context is None:
+            context = LoadContext(path="files")
         if isinstance(data, dict):
             # convert simple named files to list of SessionFileRef
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(SessionFileRef.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "sessionId": v})
-            data = result
-        return [SessionFileRef.load(item, context) for item in data]
+                    result.append(SessionFileRef.load({"name": k, "sessionId": v}, context.at(k)))
+            return result
+        return [SessionFileRef.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_files(items: list[SessionFileRef], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     @staticmethod
     def load_refs(data: dict | list, context: LoadContext | None) -> list[SessionRef]:
+        if context is None:
+            context = LoadContext(path="refs")
         if isinstance(data, dict):
             # convert simple named refs to list of SessionRef
             result = []
             for k, v in data.items():
+                if isinstance(v, list):
+                    raise TypeError(f"{context.at(k).path}: invalid named collection entry category array")
                 if isinstance(v, dict):
                     # value is an object, spread its properties
-                    result.append({"name": k, **v})
+                    result.append(SessionRef.load({"name": k, **v}, context.at(k)))
                 else:
                     # value is a scalar, use it as the primary property
-                    result.append({"name": k, "sessionId": v})
-            data = result
-        return [SessionRef.load(item, context) for item in data]
+                    result.append(SessionRef.load({"name": k, "sessionId": v}, context.at(k)))
+            return result
+        return [SessionRef.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
     def save_refs(items: list[SessionRef], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
-        # This type doesn't have a 'name' property, so always use array format
+        # The schema declares an ordered collection, so preserve array format
         return [item.save(context) for item in items]
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:

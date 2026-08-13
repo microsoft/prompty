@@ -16,15 +16,15 @@ alias ToolResultStatus = "success" | "error" | "cancelled" | "timeout";
  */
 model ToolCall {
   @doc("The unique identifier of the tool call")
-  @sample(#{ id: "call_abc123" })
+  @sample(ToolCallIdSample)
   id: string;
 
   @doc("The name of the tool to call")
-  @sample(#{ name: "get_weather" })
+  @sample(ToolCallNameSample)
   name: string;
 
   @doc("The serialized JSON arguments for the tool call")
-  @sample(#{ arguments: "{\"city\": \"Paris\"}" })
+  @sample(ToolCallArgumentsSample)
   arguments: string;
 }
 
@@ -43,21 +43,21 @@ model ToolCall {
 @method("text", "string", "Concatenate all TextPart values joined by newline")
 model ToolResult {
   @doc("The content parts of the tool result")
-  @sample(#{ parts: #[#{ kind: "text", value: "72°F and sunny" }] })
+  @sample(ToolResultPartsSample)
   parts: ContentPart[];
 
   @doc("Semantic execution status for the tool result")
   status?: ToolResultStatus;
 
   @doc("Stable machine-readable error category when status is not success")
-  @sample(#{ errorKind: "missing_tool" })
+  @sample(ToolResultErrorKindSample)
   errorKind?: string;
 
   @doc("Human-readable error message when status is not success")
-  @sample(#{ errorMessage: "Tool 'get_weather' is not registered" })
+  @sample(ToolResultErrorMessageSample)
   errorMessage?: string;
 
   @doc("Tool execution duration in milliseconds")
-  @sample(#{ durationMs: 42 })
+  @sample(ToolResultDurationMsSample)
   durationMs?: float64;
 }

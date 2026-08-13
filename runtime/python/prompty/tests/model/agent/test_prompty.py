@@ -82,17 +82,7 @@ def test_load_json_prompty():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -142,26 +132,7 @@ def test_load_yaml_prompty():
     template:
       format: mustache
       parser: prompty
-    instructions: "system:
-
-      You are an AI assistant who helps people find information.
-
-      As the assistant, you answer questions briefly, succinctly,
-
-      and in a personable manner using markdown and even add some\
-
-      personal flair with appropriate emojis.
-
-
-      # Customer
-
-      You are helping {{firstName}} {{lastName}} to find answers to\
-
-      their questions. Use their name to address them in your responses.
-
-      user:
-
-      {{question}}"
+    instructions: "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -172,17 +143,7 @@ def test_load_yaml_prompty():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -265,17 +226,7 @@ def test_roundtrip_json_prompty():
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -508,17 +459,7 @@ def test_load_json_prompty_1():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -568,26 +509,7 @@ def test_load_yaml_prompty_1():
     template:
       format: mustache
       parser: prompty
-    instructions: "system:
-
-      You are an AI assistant who helps people find information.
-
-      As the assistant, you answer questions briefly, succinctly,
-
-      and in a personable manner using markdown and even add some\
-
-      personal flair with appropriate emojis.
-
-
-      # Customer
-
-      You are helping {{firstName}} {{lastName}} to find answers to\
-
-      their questions. Use their name to address them in your responses.
-
-      user:
-
-      {{question}}"
+    instructions: "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -598,17 +520,7 @@ def test_load_yaml_prompty_1():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -690,17 +602,7 @@ def test_roundtrip_json_prompty_1():
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -933,17 +835,7 @@ def test_load_json_prompty_2():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -993,26 +885,7 @@ def test_load_yaml_prompty_2():
     template:
       format: mustache
       parser: prompty
-    instructions: "system:
-
-      You are an AI assistant who helps people find information.
-
-      As the assistant, you answer questions briefly, succinctly,
-
-      and in a personable manner using markdown and even add some\
-
-      personal flair with appropriate emojis.
-
-
-      # Customer
-
-      You are helping {{firstName}} {{lastName}} to find answers to\
-
-      their questions. Use their name to address them in your responses.
-
-      user:
-
-      {{question}}"
+    instructions: "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -1023,17 +896,7 @@ def test_load_yaml_prompty_2():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -1117,17 +980,7 @@ def test_roundtrip_json_prompty_2():
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -1363,17 +1216,7 @@ def test_load_json_prompty_3():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -1423,26 +1266,7 @@ def test_load_yaml_prompty_3():
     template:
       format: mustache
       parser: prompty
-    instructions: "system:
-
-      You are an AI assistant who helps people find information.
-
-      As the assistant, you answer questions briefly, succinctly,
-
-      and in a personable manner using markdown and even add some\
-
-      personal flair with appropriate emojis.
-
-
-      # Customer
-
-      You are helping {{firstName}} {{lastName}} to find answers to\
-
-      their questions. Use their name to address them in your responses.
-
-      user:
-
-      {{question}}"
+    instructions: "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -1453,17 +1277,7 @@ def test_load_yaml_prompty_3():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -1546,17 +1360,7 @@ def test_roundtrip_json_prompty_3():
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -1793,17 +1597,7 @@ def test_load_json_prompty_4():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -1853,26 +1647,7 @@ def test_load_yaml_prompty_4():
     template:
       format: mustache
       parser: prompty
-    instructions: "system:
-
-      You are an AI assistant who helps people find information.
-
-      As the assistant, you answer questions briefly, succinctly,
-
-      and in a personable manner using markdown and even add some\
-
-      personal flair with appropriate emojis.
-
-
-      # Customer
-
-      You are helping {{firstName}} {{lastName}} to find answers to\
-
-      their questions. Use their name to address them in your responses.
-
-      user:
-
-      {{question}}"
+    instructions: "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -1883,17 +1658,7 @@ def test_load_yaml_prompty_4():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -1979,17 +1744,7 @@ def test_roundtrip_json_prompty_4():
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -2231,17 +1986,7 @@ def test_load_json_prompty_5():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -2291,26 +2036,7 @@ def test_load_yaml_prompty_5():
     template:
       format: mustache
       parser: prompty
-    instructions: "system:
-
-      You are an AI assistant who helps people find information.
-
-      As the assistant, you answer questions briefly, succinctly,
-
-      and in a personable manner using markdown and even add some\
-
-      personal flair with appropriate emojis.
-
-
-      # Customer
-
-      You are helping {{firstName}} {{lastName}} to find answers to\
-
-      their questions. Use their name to address them in your responses.
-
-      user:
-
-      {{question}}"
+    instructions: "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -2321,17 +2047,7 @@ def test_load_yaml_prompty_5():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -2416,17 +2132,7 @@ def test_roundtrip_json_prompty_5():
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -2668,17 +2374,7 @@ def test_load_json_prompty_6():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -2728,26 +2424,7 @@ def test_load_yaml_prompty_6():
     template:
       format: mustache
       parser: prompty
-    instructions: "system:
-
-      You are an AI assistant who helps people find information.
-
-      As the assistant, you answer questions briefly, succinctly,
-
-      and in a personable manner using markdown and even add some\
-
-      personal flair with appropriate emojis.
-
-
-      # Customer
-
-      You are helping {{firstName}} {{lastName}} to find answers to\
-
-      their questions. Use their name to address them in your responses.
-
-      user:
-
-      {{question}}"
+    instructions: "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -2758,17 +2435,7 @@ def test_load_yaml_prompty_6():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -2855,17 +2522,7 @@ def test_roundtrip_json_prompty_6():
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -3110,17 +2767,7 @@ def test_load_json_prompty_7():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -3170,26 +2817,7 @@ def test_load_yaml_prompty_7():
     template:
       format: mustache
       parser: prompty
-    instructions: "system:
-
-      You are an AI assistant who helps people find information.
-
-      As the assistant, you answer questions briefly, succinctly,
-
-      and in a personable manner using markdown and even add some\
-
-      personal flair with appropriate emojis.
-
-
-      # Customer
-
-      You are helping {{firstName}} {{lastName}} to find answers to\
-
-      their questions. Use their name to address them in your responses.
-
-      user:
-
-      {{question}}"
+    instructions: "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
@@ -3200,17 +2828,7 @@ def test_load_yaml_prompty_7():
     assert instance.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         instance.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 
@@ -3296,17 +2914,7 @@ def test_roundtrip_json_prompty_7():
     assert reloaded.description == "A basic prompt that uses the GPT-3 chat API to answer questions"
     assert (
         reloaded.instructions
-        == """system:
-You are an AI assistant who helps people find information.
-As the assistant, you answer questions briefly, succinctly,
-and in a personable manner using markdown and even add some
-personal flair with appropriate emojis.
-
-# Customer
-You are helping {{firstName}} {{lastName}} to find answers to
-their questions. Use their name to address them in your responses.
-user:
-{{question}}"""
+        == "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
     )
 
 

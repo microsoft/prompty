@@ -3,8 +3,8 @@
 //! Reads `spec/vectors/wire/wire_vectors.json` and tests that our wire format
 //! conversion matches the expected output for all OpenAI-provider vectors.
 
-use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
+use prompty::model::{Prompty, Property, PropertyKind, ToolKind};
 use prompty::types::{ContentPart, Message, Role};
 use prompty_openai::wire;
 use serde_json::{Value, json};
@@ -100,7 +100,9 @@ fn build_agent(input: &Value) -> Prompty {
 
     if let Some(tools) = input.get("tools") {
         if tools.is_array() && !tools.as_array().unwrap().is_empty() {
-            data["tools"] = tools.clone();
+            let mut tools = tools.clone();
+            normalize_array_items(&mut tools);
+            data["tools"] = tools;
         }
     }
 
@@ -110,7 +112,76 @@ fn build_agent(input: &Value) -> Prompty {
         }
     }
 
-    Prompty::load_from_value(&data, &LoadContext::default())
+    let mut agent = Prompty::load_from_value(&data, &LoadContext::default());
+    clear_synthetic_array_items(&mut agent);
+    agent
+}
+
+fn normalize_array_items(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            if map.get("kind").and_then(Value::as_str) == Some("array")
+                && !map.contains_key("items")
+            {
+                map.insert(
+                    "items".to_string(),
+                    json!({"kind": "__prompty_unspecified_array_item"}),
+                );
+            }
+
+            for child in map.values_mut() {
+                normalize_array_items(child);
+            }
+        }
+        Value::Array(values) => {
+            for child in values {
+                normalize_array_items(child);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn clear_synthetic_array_items(agent: &mut Prompty) {
+    for tool in agent.tools.iter_mut().flatten() {
+        if let ToolKind::Function { parameters, .. } = &mut tool.kind {
+            for property in parameters {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+    }
+}
+
+fn clear_property_synthetic_array_items(property: &mut Property) {
+    match &mut property.kind {
+        PropertyKind::Array { items }
+            if items.get("kind").and_then(Value::as_str)
+                == Some("__prompty_unspecified_array_item") =>
+        {
+            *items = Value::Null;
+        }
+        PropertyKind::Array { items } => normalize_loaded_property_value(items),
+        PropertyKind::Object { properties } => {
+            for property in properties {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+        PropertyKind::Union { one_of, any_of } => {
+            for property in one_of.iter_mut().flatten() {
+                clear_property_synthetic_array_items(property);
+            }
+            for property in any_of.iter_mut().flatten() {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+        PropertyKind::Custom { .. } => {}
+    }
+}
+
+fn normalize_loaded_property_value(value: &mut Value) {
+    if value.get("kind").and_then(Value::as_str) == Some("__prompty_unspecified_array_item") {
+        *value = Value::Null;
+    }
 }
 
 /// Compare two JSON values, ignoring key order in objects.

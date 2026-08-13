@@ -50,7 +50,16 @@ pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, S
     let mut body = Map::new();
 
     // Model ID
-    body.insert("model".into(), json!(agent.model.id));
+    body.insert(
+        "model".into(),
+        json!(
+            agent
+                .model
+                .as_ref()
+                .map(|model| model.id.clone())
+                .unwrap_or_default()
+        ),
+    );
 
     // Extract system messages → top-level `system` field
     let system_text = extract_system(messages);
@@ -236,7 +245,7 @@ fn fix_f32_value(v: Value) -> Value {
 fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
     let mut max_tokens = DEFAULT_MAX_TOKENS;
 
-    if let Some(opts) = &agent.model.options {
+    if let Some(opts) = &agent.model.as_ref().and_then(|model| model.options.clone()) {
         let wire = opts.to_wire("anthropic");
         if let Value::Object(map) = wire {
             for (k, v) in map {
@@ -349,8 +358,12 @@ fn property_to_json_schema(prop: &Property) -> Result<Value, SchemaError> {
     if let Some(ref desc) = prop.description {
         schema.insert("description".into(), json!(desc));
     }
-    if let Some(ref enum_vals) = prop.enum_values {
-        schema.insert("enum".into(), Value::Array(enum_vals.clone()));
+    if let Some(enum_values) = prop
+        .enum_values
+        .as_ref()
+        .filter(|values| !values.is_empty())
+    {
+        schema.insert("enum".into(), Value::Array(enum_values.clone()));
     }
 
     match &prop.kind {
@@ -385,23 +398,27 @@ fn property_to_json_schema(prop: &Property) -> Result<Value, SchemaError> {
             }
             schema.insert("additionalProperties".into(), Value::Bool(false));
         }
-        PropertyKind::Union { one_of, any_of } => match (!one_of.is_empty(), !any_of.is_empty()) {
-            (true, false) => {
-                let branches = one_of
-                    .iter()
-                    .map(property_to_json_schema)
-                    .collect::<Result<Vec<_>, _>>()?;
-                schema.insert("oneOf".into(), Value::Array(branches));
+        PropertyKind::Union { one_of, any_of } => {
+            let one_of_items = one_of.as_deref().unwrap_or(&[]);
+            let any_of_items = any_of.as_deref().unwrap_or(&[]);
+            match (!one_of_items.is_empty(), !any_of_items.is_empty()) {
+                (true, false) => {
+                    let branches = one_of_items
+                        .iter()
+                        .map(property_to_json_schema)
+                        .collect::<Result<Vec<_>, _>>()?;
+                    schema.insert("oneOf".into(), Value::Array(branches));
+                }
+                (false, true) => {
+                    let branches = any_of_items
+                        .iter()
+                        .map(property_to_json_schema)
+                        .collect::<Result<Vec<_>, _>>()?;
+                    schema.insert("anyOf".into(), Value::Array(branches));
+                }
+                _ => return Err(SchemaError::invalid_union()),
             }
-            (false, true) => {
-                let branches = any_of
-                    .iter()
-                    .map(property_to_json_schema)
-                    .collect::<Result<Vec<_>, _>>()?;
-                schema.insert("anyOf".into(), Value::Array(branches));
-            }
-            _ => return Err(SchemaError::invalid_union()),
-        },
+        }
         _ => {}
     }
 

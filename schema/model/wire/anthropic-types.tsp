@@ -10,7 +10,7 @@ model AnthropicTextBlock {
   type: "text";
 
   @doc("The text content")
-  @sample(#{ text: "Hello, how can I help?" })
+  @sample(AnthropicTextBlockTextSample)
   text: string;
 }
 
@@ -34,11 +34,11 @@ model AnthropicImageSource {
   type: "base64";
 
   @doc("The MIME type of the image (e.g., 'image/png', 'image/jpeg')")
-  @sample(#{ media_type: "image/png" })
+  @sample(AnthropicImageSourceMedia_typeSample)
   media_type: string;
 
   @doc("The base64-encoded image data")
-  @sample(#{ data: "iVBORw0KGgo..." })
+  @sample(AnthropicImageSourceDataSample)
   data: string;
 }
 
@@ -51,15 +51,15 @@ model AnthropicToolUseBlock {
   type: "tool_use";
 
   @doc("Unique identifier for this tool invocation")
-  @sample(#{ id: "toolu_01A09q90qw90lq917835lq9" })
+  @sample(wantsIdSample)
   id: string;
 
   @doc("The name of the tool to invoke")
-  @sample(#{ name: "get_weather" })
+  @sample(wantsNameSample)
   name: string;
 
   @doc("The JSON arguments for the tool call")
-  @sample(#{ input: #{ city: "Paris" } })
+  @sample(wantsInputSample)
   input: Record<unknown>;
 }
 
@@ -71,11 +71,11 @@ model AnthropicToolResultBlock {
   type: "tool_result";
 
   @doc("The tool_use id this result corresponds to")
-  @sample(#{ tool_use_id: "toolu_01A09q90qw90lq917835lq9" })
+  @sample(AnthropicToolResultBlockTool_use_idSample)
   tool_use_id: string;
 
   @doc("The tool's output content")
-  @sample(#{ content: "72°F and sunny in Paris" })
+  @sample(AnthropicToolResultBlockContentSample)
   content: string;
 }
 
@@ -96,7 +96,7 @@ union AnthropicContentBlock {
  */
 model AnthropicWireMessage {
   @doc("The message role ('user' or 'assistant')")
-  @sample(#{ role: "user" })
+  @sample(AnthropicWireMessageRoleSample)
   role: string;
 
   @doc("Array of typed content blocks (AnthropicTextBlock | AnthropicImageBlock | AnthropicToolUseBlock | AnthropicToolResultBlock)")
@@ -110,11 +110,11 @@ model AnthropicWireMessage {
  */
 model AnthropicToolDefinition {
   @doc("The tool name")
-  @sample(#{ name: "get_weather" })
+  @sample(AnthropicToolDefinitionNameSample)
   name: string;
 
   @doc("A description of what the tool does")
-  @sample(#{ description: "Get the current weather for a city" })
+  @sample(AnthropicToolDefinitionDescriptionSample)
   description?: string;
 
   @doc("JSON Schema describing the tool's input parameters")
@@ -126,34 +126,34 @@ model AnthropicToolDefinition {
  */
 model AnthropicMessagesRequest {
   @doc("The model identifier")
-  @sample(#{ `model`: "claude-sonnet-4-20250514" })
+  @sample(AnthropicMessagesRequestSampleSample)
   `model`: string;
 
   @doc("The non-system messages to send")
   messages: AnthropicWireMessage[];
 
   @doc("Maximum number of tokens to generate (required by Anthropic)")
-  @sample(#{ max_tokens: 4096 })
+  @sample(AnthropicMessagesRequestMax_tokensSample)
   max_tokens: int32;
 
   @doc("System prompt text (extracted from system-role messages)")
-  @sample(#{ system: "You are a helpful assistant." })
+  @sample(AnthropicMessagesRequestSystemSample)
   system?: string;
 
   @doc("Sampling temperature")
-  @sample(#{ temperature: 0.7 })
+  @sample(AnthropicMessagesRequestTemperatureSample)
   temperature?: float32;
 
   @doc("Top-P sampling value")
-  @sample(#{ top_p: 0.9 })
+  @sample(AnthropicMessagesRequestTop_pSample)
   top_p?: float32;
 
   @doc("Top-K sampling value")
-  @sample(#{ top_k: 40 })
+  @sample(AnthropicMessagesRequestTop_kSample)
   top_k?: int32;
 
   @doc("Stop sequences to end generation")
-  @sample(#{ stop_sequences: #["\n\nHuman:"] })
+  @sample(AnthropicMessagesRequestStop_sequencesSample)
   stop_sequences?: string[];
 
   @doc("Tool definitions available to the model")
@@ -165,11 +165,11 @@ model AnthropicMessagesRequest {
  */
 model AnthropicUsage {
   @doc("Number of input tokens consumed")
-  @sample(#{ input_tokens: 150 })
+  @sample(AnthropicUsageInput_tokensSample)
   input_tokens: int32;
 
   @doc("Number of output tokens generated")
-  @sample(#{ output_tokens: 42 })
+  @sample(AnthropicUsageOutput_tokensSample)
   output_tokens: int32;
 }
 
@@ -178,7 +178,7 @@ model AnthropicUsage {
  */
 model AnthropicMessagesResponse {
   @doc("Unique response identifier")
-  @sample(#{ id: "msg_01XFDUDYJgAACzvnptvVoYEL" })
+  @sample(AnthropicMessagesResponseIdSample)
   id: string;
 
   @doc("Object type (always 'message')")
@@ -191,11 +191,11 @@ model AnthropicMessagesResponse {
   content: unknown[];
 
   @doc("The model that generated the response")
-  @sample(#{ `model`: "claude-sonnet-4-20250514" })
+  @sample(AnthropicMessagesResponseSampleSample)
   `model`: string;
 
   @doc("The reason generation stopped ('end_turn', 'max_tokens', 'stop_sequence', 'tool_use')")
-  @sample(#{ stop_reason: "end_turn" })
+  @sample(AnthropicMessagesResponseStop_reasonSample)
   stop_reason: string;
 
   @doc("Token usage statistics")

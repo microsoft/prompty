@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -17,7 +18,21 @@ func TestContextCandidateLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "id": "memory:project-plan",
-  "source": "memory"
+  "source": "memory",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -36,6 +51,10 @@ func TestContextCandidateLoadJSON(t *testing.T) {
 	if instance.Source != "memory" {
 		t.Errorf(`Expected Source to be "memory", got %v`, instance.Source)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertContextCandidateStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestContextCandidateLoadYAML tests loading ContextCandidate from YAML
@@ -43,6 +62,13 @@ func TestContextCandidateLoadYAML(t *testing.T) {
 	yamlData := `
 id: "memory:project-plan"
 source: memory
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
 `
 	var data map[string]interface{}
@@ -61,6 +87,10 @@ source: memory
 	if instance.Source != "memory" {
 		t.Errorf(`Expected Source to be "memory", got %v`, instance.Source)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertContextCandidateStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestContextCandidateFromJSON tests loading ContextCandidate through the generated JSON helper
@@ -68,7 +98,21 @@ func TestContextCandidateFromJSON(t *testing.T) {
 	jsonData := `
 {
   "id": "memory:project-plan",
-  "source": "memory"
+  "source": "memory",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 
@@ -82,6 +126,10 @@ func TestContextCandidateFromJSON(t *testing.T) {
 	if instance.Source != "memory" {
 		t.Errorf(`Expected Source to be "memory", got %v`, instance.Source)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertContextCandidateStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestContextCandidateFromYAML tests loading ContextCandidate through the generated YAML helper
@@ -89,6 +137,13 @@ func TestContextCandidateFromYAML(t *testing.T) {
 	yamlData := `
 id: "memory:project-plan"
 source: memory
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
 `
 
@@ -102,6 +157,10 @@ source: memory
 	if instance.Source != "memory" {
 		t.Errorf(`Expected Source to be "memory", got %v`, instance.Source)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertContextCandidateStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestContextCandidateRoundtrip tests load -> save -> load produces equivalent data
@@ -109,7 +168,21 @@ func TestContextCandidateRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "id": "memory:project-plan",
-  "source": "memory"
+  "source": "memory",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -135,6 +208,10 @@ func TestContextCandidateRoundtrip(t *testing.T) {
 	if reloaded.Source != "memory" {
 		t.Errorf(`Expected Source to be "memory", got %v`, reloaded.Source)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertContextCandidateStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestContextCandidateToJSON tests that ToJSON produces valid JSON
@@ -142,7 +219,21 @@ func TestContextCandidateToJSON(t *testing.T) {
 	jsonData := `
 {
   "id": "memory:project-plan",
-  "source": "memory"
+  "source": "memory",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -175,6 +266,10 @@ func TestContextCandidateToJSON(t *testing.T) {
 	if reloaded.Source != "memory" {
 		t.Errorf(`Expected Source to be "memory", got %v`, reloaded.Source)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertContextCandidateStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestContextCandidateToYAML tests that ToYAML produces valid YAML
@@ -182,7 +277,21 @@ func TestContextCandidateToYAML(t *testing.T) {
 	jsonData := `
 {
   "id": "memory:project-plan",
-  "source": "memory"
+  "source": "memory",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ]
 }
 `
 	var data map[string]interface{}
@@ -215,11 +324,51 @@ func TestContextCandidateToYAML(t *testing.T) {
 	if reloaded.Source != "memory" {
 		t.Errorf(`Expected Source to be "memory", got %v`, reloaded.Source)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertContextCandidateStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestContextCandidateFromJSONInvalid rejects malformed JSON instead of silently defaulting
 func TestContextCandidateFromJSONInvalid(t *testing.T) {
 	if _, err := prompty.ContextCandidateFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertContextCandidateStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }
