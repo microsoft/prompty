@@ -2,7 +2,10 @@ import "@typra/emitter";
 import "../conversation/tool-invocation.tsp";
 import "../model/usage.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Conversation;
+using Prompty.Contracts.Models;
+namespace Prompty.Contracts.Events;
 
 /**
  * The kind discriminator for stream chunks.

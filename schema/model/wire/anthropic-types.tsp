@@ -1,6 +1,8 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Tooling;
+namespace Prompty.Wire.Anthropic;
 
 /**
  * A text content block in Anthropic's array-of-blocks message format.

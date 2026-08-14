@@ -1,7 +1,9 @@
 // Named sample constants for tracing/tracer.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Connectivity;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const TraceTimeStartSample = #{ start: "2026-04-04T12:00:00Z" };
 

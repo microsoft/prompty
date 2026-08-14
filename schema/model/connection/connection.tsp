@@ -1,7 +1,9 @@
 import "@typra/emitter";
 import "../core/core.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Core;
+namespace Prompty.Contracts.Connectivity;
 
 alias ConnectionType =
   | "remote"

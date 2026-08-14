@@ -1,7 +1,9 @@
 import "@typra/emitter";
 import "../model/usage.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Models;
+namespace Prompty.Contracts.Tracing;
 
 /**
  * A recursive union of JSON-safe primitive types used for trace values.

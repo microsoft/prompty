@@ -1,7 +1,8 @@
 import "@typra/emitter";
 import "../conversation/message.tsp";
 
-namespace Prompty;
+using Prompty.Contracts.Conversation;
+namespace Prompty.Contracts.Pipeline;
 
 /** Host-owned deterministic state supplied before one model invocation. */
 model HostPolicyRequest {

@@ -4,9 +4,9 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::events::permission_decision::PermissionDecision;
+use super::contracts::events::permission_decision::PermissionDecision;
 
-use super::events::permission_request::PermissionRequest;
+use super::contracts::events::permission_request::PermissionRequest;
 
 /// Resolves host permission requests for potentially sensitive actions.
 #[async_trait::async_trait]

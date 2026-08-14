@@ -1,6 +1,7 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Connectivity;
 
 /** Provider-neutral OAuth token material returned by an authorization server. */
 model OAuthToken {

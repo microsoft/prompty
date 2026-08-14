@@ -1,6 +1,7 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Conversation;
 
 /**
  * The kind discriminator for content parts.

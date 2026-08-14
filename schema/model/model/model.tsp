@@ -1,7 +1,9 @@
 import "../core/core.tsp";
 import "../connection/connection.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Connectivity;
+namespace Prompty.Contracts.Models;
 
 alias apiType = "chat" | "embedding" | "image" | "responses" | string;
 /**

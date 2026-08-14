@@ -2,7 +2,9 @@ import "@typra/emitter";
 import "../conversation/message.tsp";
 import "./invocation.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Conversation;
+namespace Prompty.Contracts.Pipeline;
 
 /** Planning input handed to the context pipeline before one model invocation. */
 model ContextRequest {

@@ -7,7 +7,7 @@
 
 from typing import Protocol, runtime_checkable
 
-from .events._Checkpoint import Checkpoint
+from .contracts.events._Checkpoint import Checkpoint
 
 
 @runtime_checkable

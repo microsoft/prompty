@@ -1,7 +1,9 @@
 import "@typra/emitter";
 import "./content.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Tooling;
+namespace Prompty.Contracts.Conversation;
 
 /**
  * Normalized status for tool execution. The transport can complete while the

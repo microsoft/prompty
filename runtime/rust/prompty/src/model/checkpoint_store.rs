@@ -4,7 +4,7 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::events::checkpoint::Checkpoint;
+use super::contracts::events::checkpoint::Checkpoint;
 
 /// Stores and retrieves resumable session checkpoints.
 #[async_trait::async_trait]

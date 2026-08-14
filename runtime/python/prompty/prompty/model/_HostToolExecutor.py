@@ -7,8 +7,8 @@
 
 from typing import Protocol, runtime_checkable
 
-from .events._HostToolRequest import HostToolRequest
-from .events._HostToolResult import HostToolResult
+from .contracts.events._HostToolRequest import HostToolRequest
+from .contracts.events._HostToolResult import HostToolResult
 
 
 @runtime_checkable

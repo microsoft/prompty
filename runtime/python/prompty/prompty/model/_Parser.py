@@ -8,7 +8,7 @@
 from typing import Any, Protocol, runtime_checkable
 
 from .agent._Agent import Agent
-from .conversation._Message import Message
+from .contracts.conversation._Message import Message
 
 
 @runtime_checkable

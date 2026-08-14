@@ -6,7 +6,7 @@
 
 use super::agent::agent::Agent;
 
-use super::conversation::message::Message;
+use super::contracts::conversation::message::Message;
 
 /// Parses rendered prompt text into an array of structured messages with role markers.
 #[async_trait::async_trait]

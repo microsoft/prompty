@@ -2,7 +2,10 @@ import "@typra/emitter";
 import "../agent/agent.tsp";
 import "../conversation/message.tsp";
 
-namespace Prompty;
+using Prompty;
+using Prompty.Conformance.Vectors;
+using Prompty.Contracts.Conversation;
+namespace Prompty.Operations.Pipeline;
 
 /** Parses rendered prompt text into an array of structured messages with role markers. */
 interface Parser {

@@ -4,9 +4,9 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::events::host_tool_request::HostToolRequest;
+use super::contracts::events::host_tool_request::HostToolRequest;
 
-use super::events::host_tool_result::HostToolResult;
+use super::contracts::events::host_tool_result::HostToolResult;
 
 /// Executes host tools after policy and permission checks.
 #[async_trait::async_trait]

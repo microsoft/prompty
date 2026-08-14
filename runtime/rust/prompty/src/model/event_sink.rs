@@ -4,9 +4,9 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::events::session_event::SessionEvent;
+use super::contracts::events::session_event::SessionEvent;
 
-use super::events::turn_event::TurnEvent;
+use super::contracts::events::turn_event::TurnEvent;
 
 /// Receives typed turn and session events from a harness.
 #[async_trait::async_trait]

@@ -17,9 +17,8 @@ from ._Processor import Processor
 from ._Renderer import Renderer
 from .agent import (
     Agent,
-    GuardrailResult,
 )
-from .connection import (
+from .contracts.connectivity import (
     AnonymousConnection,
     ApiKeyConnection,
     AuthorizationCodeFlow,
@@ -31,7 +30,7 @@ from .connection import (
     ReferenceConnection,
     RemoteConnection,
 )
-from .conversation import (
+from .contracts.conversation import (
     AudioPart,
     ContentPart,
     FilePart,
@@ -44,7 +43,7 @@ from .conversation import (
     ToolResult,
     ToolResultHelpers,
 )
-from .core import (
+from .contracts.core import (
     ArrayProperty,
     FileNotFoundError,
     InvokerError,
@@ -54,7 +53,7 @@ from .core import (
     ValidationError,
     ValidationResult,
 )
-from .events import (
+from .contracts.events import (
     Checkpoint,
     CompactionCompletePayload,
     CompactionFailedPayload,
@@ -105,11 +104,14 @@ from .events import (
     TurnTrace,
     UsageChunk,
 )
-from .memory import (
+from .contracts.guardrails import (
+    GuardrailResult,
+)
+from .contracts.memory import (
     MemoryEntry,
     MemoryStore,
 )
-from .model import (
+from .contracts.models import (
     AiResourceInfo,
     InvocationUsage,
     Model,
@@ -119,7 +121,7 @@ from .model import (
     SubscriptionInfo,
     TokenUsage,
 )
-from .pipeline import (
+from .contracts.pipeline import (
     CompactionConfig,
     ContextCandidate,
     ContextRequest,
@@ -153,15 +155,15 @@ from .pipeline import (
     TurnModelResponse,
     TurnOptions,
 )
-from .streaming import (
+from .contracts.streaming import (
     StreamOptions,
 )
-from .template import (
+from .contracts.templates import (
     FormatConfig,
     ParserConfig,
     Template,
 )
-from .tools import (
+from .contracts.tooling import (
     Binding,
     CustomTool,
     FunctionTool,
@@ -173,12 +175,12 @@ from .tools import (
     ToolContext,
     ToolDispatchResult,
 )
-from .tracing import (
+from .contracts.tracing import (
     TraceFile,
     TraceSpan,
     TraceTime,
 )
-from .wire import (
+from .wire.anthropic import (
     AnthropicImageBlock,
     AnthropicImageSource,
     AnthropicMessagesRequest,
@@ -219,6 +221,19 @@ __all__ = [
     "ParserConfig",
     "Template",
     "Agent",
+    "InvokerError",
+    "ValidationError",
+    "FileNotFoundError",
+    "ValidationResult",
+    "TokenUsage",
+    "InvocationUsage",
+    "ModelInfo",
+    "SubscriptionInfo",
+    "AiResourceInfo",
+    "ProjectInfo",
+    "OAuthToken",
+    "DeviceAuthorization",
+    "AuthorizationCodeFlow",
     "ContentPart",
     "TextPart",
     "ImagePart",
@@ -231,18 +246,8 @@ __all__ = [
     "ToolResultHelpers",
     "ToolDispatchResult",
     "ToolCall",
-    "GuardrailResult",
     "ThreadMarker",
-    "InvokerError",
-    "ValidationError",
-    "FileNotFoundError",
-    "ValidationResult",
-    "TokenUsage",
-    "InvocationUsage",
-    "ModelInfo",
-    "SubscriptionInfo",
-    "AiResourceInfo",
-    "ProjectInfo",
+    "GuardrailResult",
     "MemoryEntry",
     "MemoryStore",
     "DelegatedStateReference",
@@ -330,9 +335,6 @@ __all__ = [
     "TraceTime",
     "TraceSpan",
     "TraceFile",
-    "OAuthToken",
-    "DeviceAuthorization",
-    "AuthorizationCodeFlow",
     "AnthropicTextBlock",
     "AnthropicImageSource",
     "AnthropicImageBlock",

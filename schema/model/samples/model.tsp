@@ -5,7 +5,9 @@
 // files can reference the constants without qualification; can be relocated to
 // `Prompty.Conformance.Samples` once the namespace taxonomy is finalized.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+using Prompty.Contracts.Models;
+namespace Prompty.Conformance.Samples;
 
 // ModelOptions
 const ModelOptionsFrequencyPenaltySample = #{ frequencyPenalty: 0.5 };

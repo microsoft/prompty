@@ -1,6 +1,7 @@
 // Named sample constants for model/resource-discovery.tsp.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const AiResourceInfoServiceUrlSample = #{
   serviceUrl: "https://my-resource.services.ai.azure.com",

@@ -39,38 +39,8 @@ pub use renderer::*;
 pub mod agent;
 pub use agent::*;
 
-pub mod connection;
-pub use connection::*;
-
-pub mod conversation;
-pub use conversation::*;
-
-pub mod core;
-pub use core::*;
-
-pub mod events;
-pub use events::*;
-
-pub mod memory;
-pub use memory::*;
-
-pub mod model;
-pub use model::*;
-
-pub mod pipeline;
-pub use pipeline::*;
-
-pub mod streaming;
-pub use streaming::*;
-
-pub mod template;
-pub use template::*;
-
-pub mod tools;
-pub use tools::*;
-
-pub mod tracing;
-pub use tracing::*;
+pub mod contracts;
+pub use contracts::*;
 
 pub mod wire;
 pub use wire::*;

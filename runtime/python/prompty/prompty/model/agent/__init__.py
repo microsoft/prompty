@@ -5,9 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 from ._Agent import Agent
-from ._GuardrailResult import GuardrailResult
 
 __all__ = [
     "Agent",
-    "GuardrailResult",
 ]

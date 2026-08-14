@@ -7,8 +7,8 @@
 
 from typing import Protocol, runtime_checkable
 
-from .events._PermissionDecision import PermissionDecision
-from .events._PermissionRequest import PermissionRequest
+from .contracts.events._PermissionDecision import PermissionDecision
+from .contracts.events._PermissionRequest import PermissionRequest
 
 
 @runtime_checkable

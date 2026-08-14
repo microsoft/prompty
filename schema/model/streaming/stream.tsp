@@ -1,6 +1,7 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Streaming;
 
 /**
  * Options controlling streaming behavior for LLM API calls.

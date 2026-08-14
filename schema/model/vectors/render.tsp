@@ -1,6 +1,8 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty;
+using Prompty.Operations.Pipeline;
+namespace Prompty.Conformance.Vectors;
 
 // Behavior vectors for the Renderer.render callable seam, migrated from
 // spec/vectors/render/render_vectors.json. Each vector binds to the CURRENT

@@ -1,7 +1,8 @@
 import "@typra/emitter";
 import "./connection.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Connectivity;
 
 /**
  * Connection configuration using OAuth 2.0 client credentials.

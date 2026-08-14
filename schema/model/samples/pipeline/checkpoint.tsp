@@ -1,7 +1,8 @@
 // Named sample constants for pipeline/checkpoint.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const orIdSample = #{ id: "ckpt_abc123" };
 

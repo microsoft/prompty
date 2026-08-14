@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 from .._context import LoadContext, SaveContext
-from ..core._Property import Property
-from ..model._Model import Model
-from ..template._Template import Template
-from ..tools._Tool import Tool
+from ..contracts.core._Property import Property
+from ..contracts.models._Model import Model
+from ..contracts.templates._Template import Template
+from ..contracts.tooling._Tool import Tool
 
 
 @dataclass

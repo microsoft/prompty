@@ -1,7 +1,8 @@
 import "@typra/emitter";
 import "./connection.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Connectivity;
 
 /**
  * Connection configuration for Microsoft Foundry projects.

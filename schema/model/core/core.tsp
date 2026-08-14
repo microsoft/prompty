@@ -1,6 +1,6 @@
 import "@typra/emitter";
 
-namespace Prompty;
+namespace Prompty.Contracts.Core;
 
 model Named<
   Item,

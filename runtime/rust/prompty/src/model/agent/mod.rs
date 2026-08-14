@@ -5,6 +5,3 @@
 
 pub mod agent;
 pub use agent::*;
-
-pub mod guardrail_result;
-pub use guardrail_result::*;

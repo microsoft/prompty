@@ -1,6 +1,7 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Models;
 
 /**
  * Tracks token consumption for a single LLM call. Provider-specific field

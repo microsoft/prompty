@@ -1,7 +1,8 @@
 // Named sample constants for core/errors.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const InvokerErrorMessageSample = #{
   message: "No renderer registered for key: jinja2",

@@ -2,7 +2,8 @@ import "@typra/emitter";
 import "../events/payloads.tsp";
 import "../events/session.tsp";
 
-namespace Prompty;
+using Prompty.Contracts.Events;
+namespace Prompty.Operations.Pipeline;
 
 /** Receives typed turn and session events from a harness. */
 interface EventSink {

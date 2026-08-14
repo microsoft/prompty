@@ -3,7 +3,12 @@ import "../conversation/message.tsp";
 import "./engine-events.tsp";
 import "./invocation.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Conversation;
+using Prompty.Contracts.Events;
+using Prompty.Contracts.Models;
+using Prompty.Contracts.Tooling;
+namespace Prompty.Contracts.Pipeline;
 
 /**
  * Portable durable checkpoint emitted after a committed model/tool round.

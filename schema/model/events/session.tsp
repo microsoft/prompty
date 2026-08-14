@@ -2,7 +2,10 @@ import "@typra/emitter";
 import "../model/usage.tsp";
 import "./payloads.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Models;
+using Prompty.Contracts.Tooling;
+namespace Prompty.Contracts.Events;
 
 /**
  * The type of event emitted by an outer agent harness session. Session events

@@ -1,6 +1,7 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Guardrails;
 
 /**
  * The phase of the pipeline at which a guardrail is evaluated.

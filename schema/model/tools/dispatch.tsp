@@ -2,7 +2,9 @@ import "@typra/emitter";
 import "../conversation/message.tsp";
 import "../conversation/tool-invocation.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Conversation;
+namespace Prompty.Contracts.Tooling;
 
 /**
  * Context passed to tool handlers during agent loop execution. Provides

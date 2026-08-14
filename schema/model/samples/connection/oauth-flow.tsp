@@ -1,6 +1,7 @@
 // Named sample constants for connection/oauth-flow.tsp.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const OAuthTokenRefreshTokenSample = #{
   refreshToken: "0.AXoAoffline-refresh-token-value",

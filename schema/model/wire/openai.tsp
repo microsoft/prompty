@@ -3,6 +3,7 @@ import "../model/discovery.tsp";
 import "../model/model.tsp";
 import "../model/usage.tsp";
 
+using Prompty.Contracts.Models;
 namespace Prompty;
 
 // ModelInfo → OpenAI model-list response field names.

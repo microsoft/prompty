@@ -1,6 +1,9 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty;
+using Prompty.Contracts.Conversation;
+using Prompty.Operations.Pipeline;
+namespace Prompty.Conformance.Vectors;
 
 // Behavior vectors for the Parser.parse callable seam, migrated from
 // spec/vectors/parse/parse_vectors.json. Bound to:

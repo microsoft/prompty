@@ -4,6 +4,8 @@ import "../model/discovery.tsp";
 import "../model/resource-discovery.tsp";
 
 using Prompty;
+using Prompty.Contracts.Connectivity;
+using Prompty.Contracts.Models;
 
 // OAuth contracts → Microsoft Entra OAuth response field names.
 @@knownAs(OAuthToken.accessToken, "foundry", "access_token");

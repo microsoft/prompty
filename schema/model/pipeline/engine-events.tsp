@@ -1,7 +1,10 @@
 import "@typra/emitter";
 import "./invocation.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Events;
+using Prompty.Contracts.Models;
+namespace Prompty.Contracts.Pipeline;
 
 /**
  * Stable semantic event kinds emitted by the live turn engine.

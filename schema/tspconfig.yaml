@@ -10,6 +10,7 @@ options:
   "@typra/emitter":
     emitter-output-dir: "{cwd}/tsp-output"
     root-object: "Prompty.Agent"
+    root-namespace: "Prompty"
     emit-targets:
       - type: TypeScript
         output-dir: "../runtime/typescript/packages/core/src/model"

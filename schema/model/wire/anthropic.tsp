@@ -4,6 +4,7 @@ import "../model/model.tsp";
 import "../model/usage.tsp";
 
 using Prompty;
+using Prompty.Contracts.Models;
 
 // ModelInfo → Anthropic model-list response field names.
 @@knownAs(ModelInfo.id, "anthropic", "id");

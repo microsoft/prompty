@@ -1,7 +1,8 @@
 // Named sample constants for tools/tool.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const BindingInputSample = #{ input: "input-variable" };
 

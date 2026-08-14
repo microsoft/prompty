@@ -1,6 +1,7 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Models;
 
 /** A cloud subscription or account boundary available to the authenticated user. */
 model SubscriptionInfo {

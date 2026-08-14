@@ -1,7 +1,8 @@
 // Named sample constants for tools/prompty.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const PromptyToolKindSample = #{ kind: "prompty" };
 

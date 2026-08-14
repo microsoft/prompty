@@ -4,7 +4,7 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::model::model_info::ModelInfo;
+use super::contracts::models::model_info::ModelInfo;
 
 /// Lists models available through a provider connection.
 #[async_trait::async_trait]

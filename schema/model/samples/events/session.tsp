@@ -1,7 +1,8 @@
 // Named sample constants for events/session.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const turnCwdSample = #{ cwd: "/workspace/project" };
 

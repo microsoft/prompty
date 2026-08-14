@@ -3,7 +3,10 @@ import "../events/payloads.tsp";
 import "../events/session.tsp";
 import "../model/usage.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Events;
+using Prompty.Contracts.Models;
+namespace Prompty.Contracts.Pipeline;
 
 /**
  * Configuration for the agent loop's turn() function. Controls iteration

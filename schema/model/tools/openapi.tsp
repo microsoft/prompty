@@ -2,7 +2,9 @@ import "../core/core.tsp";
 import "./tool.tsp";
 import "../connection/connection.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Connectivity;
+namespace Prompty.Contracts.Tooling;
 
 /*
  * The OpenAPI tool.

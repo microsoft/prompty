@@ -1,7 +1,8 @@
 import "@typra/emitter";
 import "./core.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Core;
 
 /**
  * Represents a single property.

@@ -12,6 +12,11 @@ import "../template/template.tsp";
 
 using TypeSpec.JsonSchema;
 
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Core;
+using Prompty.Contracts.Models;
+using Prompty.Contracts.Templates;
+using Prompty.Contracts.Tooling;
 namespace Prompty;
 
 /**

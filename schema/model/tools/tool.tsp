@@ -3,7 +3,10 @@ import "../core/core.tsp";
 import "../core/properties.tsp";
 import "../connection/connection.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Connectivity;
+using Prompty.Contracts.Core;
+namespace Prompty.Contracts.Tooling;
 
 /**
  * Represents a binding between an input property and a tool parameter.

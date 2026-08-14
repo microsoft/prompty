@@ -3,7 +3,9 @@ import "../conversation/message.tsp";
 import "./engine-events.tsp";
 import "./invocation.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Conversation;
+namespace Prompty.Contracts.Pipeline;
 
 /** Terminal status of a live-engine turn. */
 alias EngineTurnStatus =

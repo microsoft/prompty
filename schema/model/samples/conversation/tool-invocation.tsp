@@ -1,7 +1,9 @@
 // Named sample constants for conversation/tool-invocation.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+using Prompty.Contracts.Tooling;
+namespace Prompty.Conformance.Samples;
 
 const ToolCallIdSample = #{ id: "call_abc123" };
 

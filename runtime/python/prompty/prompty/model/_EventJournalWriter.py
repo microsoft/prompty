@@ -7,9 +7,9 @@
 
 from typing import Protocol, runtime_checkable
 
-from .events._SessionEvent import SessionEvent
-from .events._SessionSummary import SessionSummary
-from .events._TurnEvent import TurnEvent
+from .contracts.events._SessionEvent import SessionEvent
+from .contracts.events._SessionSummary import SessionSummary
+from .contracts.events._TurnEvent import TurnEvent
 
 
 @runtime_checkable

@@ -153,7 +153,7 @@
     {
       "name": "inputs",
       "typeName": {
-        "namespace": "Prompty",
+        "namespace": "Prompty.Contracts.Core",
         "name": "Property"
       },
       "description": "Input parameters that participate in template rendering",
@@ -219,7 +219,7 @@
       "isNamedCollection": true,
       "type": {
         "typeName": {
-          "namespace": "Prompty",
+          "namespace": "Prompty.Contracts.Core",
           "name": "Property"
         },
         "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -272,12 +272,12 @@
         "childTypes": [
           {
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Core",
               "name": "ArrayProperty"
             },
             "description": "Represents an array property.\nThis extends the base Property model to represent an array of items.",
             "base": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Core",
               "name": "Property"
             },
             "isAbstract": false,
@@ -315,7 +315,7 @@
               {
                 "name": "items",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Core",
                   "name": "Property"
                 },
                 "description": "The type of items contained in the array",
@@ -347,7 +347,7 @@
                 "isNamedCollection": false,
                 "type": {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Core",
                     "name": "Property"
                   },
                   "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -400,12 +400,12 @@
                   "childTypes": [
                     {
                       "typeName": {
-                        "namespace": "Prompty",
+                        "namespace": "Prompty.Contracts.Core",
                         "name": "ObjectProperty"
                       },
                       "description": "Represents an object property.\nThis extends the base Property model to represent a structured object.",
                       "base": {
-                        "namespace": "Prompty",
+                        "namespace": "Prompty.Contracts.Core",
                         "name": "Property"
                       },
                       "isAbstract": false,
@@ -443,7 +443,7 @@
                         {
                           "name": "properties",
                           "typeName": {
-                            "namespace": "Prompty",
+                            "namespace": "Prompty.Contracts.Core",
                             "name": "Property"
                           },
                           "description": "The properties contained in the object",
@@ -480,7 +480,7 @@
                           "isNamedCollection": true,
                           "type": {
                             "typeName": {
-                              "namespace": "Prompty",
+                              "namespace": "Prompty.Contracts.Core",
                               "name": "Property"
                             },
                             "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -533,12 +533,12 @@
                             "childTypes": [
                               {
                                 "typeName": {
-                                  "namespace": "Prompty",
+                                  "namespace": "Prompty.Contracts.Core",
                                   "name": "UnionProperty"
                                 },
                                 "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
                                 "base": {
-                                  "namespace": "Prompty",
+                                  "namespace": "Prompty.Contracts.Core",
                                   "name": "Property"
                                 },
                                 "isAbstract": false,
@@ -576,7 +576,7 @@
                                   {
                                     "name": "oneOf",
                                     "typeName": {
-                                      "namespace": "Prompty",
+                                      "namespace": "Prompty.Contracts.Core",
                                       "name": "Property"
                                     },
                                     "description": "Alternative property schemas where exactly one branch must match",
@@ -598,7 +598,7 @@
                                     "isNamedCollection": false,
                                     "type": {
                                       "typeName": {
-                                        "namespace": "Prompty",
+                                        "namespace": "Prompty.Contracts.Core",
                                         "name": "Property"
                                       },
                                       "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -896,7 +896,7 @@
                                   {
                                     "name": "anyOf",
                                     "typeName": {
-                                      "namespace": "Prompty",
+                                      "namespace": "Prompty.Contracts.Core",
                                       "name": "Property"
                                     },
                                     "description": "Alternative property schemas where one or more branches may match",
@@ -933,7 +933,7 @@
                                     "isNamedCollection": false,
                                     "type": {
                                       "typeName": {
-                                        "namespace": "Prompty",
+                                        "namespace": "Prompty.Contracts.Core",
                                         "name": "Property"
                                       },
                                       "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -1511,12 +1511,12 @@
                     },
                     {
                       "typeName": {
-                        "namespace": "Prompty",
+                        "namespace": "Prompty.Contracts.Core",
                         "name": "UnionProperty"
                       },
                       "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
                       "base": {
-                        "namespace": "Prompty",
+                        "namespace": "Prompty.Contracts.Core",
                         "name": "Property"
                       },
                       "isAbstract": false,
@@ -1554,7 +1554,7 @@
                         {
                           "name": "oneOf",
                           "typeName": {
-                            "namespace": "Prompty",
+                            "namespace": "Prompty.Contracts.Core",
                             "name": "Property"
                           },
                           "description": "Alternative property schemas where exactly one branch must match",
@@ -1576,7 +1576,7 @@
                           "isNamedCollection": false,
                           "type": {
                             "typeName": {
-                              "namespace": "Prompty",
+                              "namespace": "Prompty.Contracts.Core",
                               "name": "Property"
                             },
                             "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -1874,7 +1874,7 @@
                         {
                           "name": "anyOf",
                           "typeName": {
-                            "namespace": "Prompty",
+                            "namespace": "Prompty.Contracts.Core",
                             "name": "Property"
                           },
                           "description": "Alternative property schemas where one or more branches may match",
@@ -1911,7 +1911,7 @@
                           "isNamedCollection": false,
                           "type": {
                             "typeName": {
-                              "namespace": "Prompty",
+                              "namespace": "Prompty.Contracts.Core",
                               "name": "Property"
                             },
                             "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -2457,12 +2457,12 @@
           },
           {
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Core",
               "name": "ObjectProperty"
             },
             "description": "Represents an object property.\nThis extends the base Property model to represent a structured object.",
             "base": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Core",
               "name": "Property"
             },
             "isAbstract": false,
@@ -2500,7 +2500,7 @@
               {
                 "name": "properties",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Core",
                   "name": "Property"
                 },
                 "description": "The properties contained in the object",
@@ -2540,12 +2540,12 @@
           },
           {
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Core",
               "name": "UnionProperty"
             },
             "description": "Represents a JSON Schema union property.\n\nUse `oneOf` when exactly one branch must match, or `anyOf` when one or more\nbranches may match. Exactly one composition field MUST be provided with at\nleast one branch; `oneOf` and `anyOf` MUST NOT both be populated. The\nalternatives are full Prompty properties so unions remain portable across\ngenerated runtimes.",
             "base": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Core",
               "name": "Property"
             },
             "isAbstract": false,
@@ -2583,7 +2583,7 @@
               {
                 "name": "oneOf",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Core",
                   "name": "Property"
                 },
                 "description": "Alternative property schemas where exactly one branch must match",
@@ -2605,7 +2605,7 @@
                 "isNamedCollection": false,
                 "type": {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Core",
                     "name": "Property"
                   },
                   "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -2903,7 +2903,7 @@
               {
                 "name": "anyOf",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Core",
                   "name": "Property"
                 },
                 "description": "Alternative property schemas where one or more branches may match",
@@ -2940,7 +2940,7 @@
                 "isNamedCollection": false,
                 "type": {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Core",
                     "name": "Property"
                   },
                   "description": "Represents a single property.\n\n- This model defines the structure of properties that can be used in prompts,\nincluding their type, description, whether they are required, and other attributes.\n- It allows for the definition of dynamic inputs that can be filled with data\nand processed to generate prompts for AI models.",
@@ -3517,7 +3517,7 @@
     {
       "name": "outputs",
       "typeName": {
-        "namespace": "Prompty",
+        "namespace": "Prompty.Contracts.Core",
         "name": "Property"
       },
       "description": "Expected output format and structure",
@@ -3567,7 +3567,7 @@
     {
       "name": "model",
       "typeName": {
-        "namespace": "Prompty",
+        "namespace": "Prompty.Contracts.Models",
         "name": "Model"
       },
       "description": "AI model configuration",
@@ -3604,7 +3604,7 @@
       "isNamedCollection": false,
       "type": {
         "typeName": {
-          "namespace": "Prompty",
+          "namespace": "Prompty.Contracts.Models",
           "name": "Model"
         },
         "description": "Model for defining the structure and behavior of AI agents.\nThis model includes properties for specifying the model's provider, connection details, and various options.\nIt allows for flexible configuration of AI models to suit different use cases and requirements.",
@@ -3730,7 +3730,7 @@
           {
             "name": "connection",
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Connectivity",
               "name": "Connection"
             },
             "description": "The connection configuration for the model",
@@ -3764,7 +3764,7 @@
             "isNamedCollection": false,
             "type": {
               "typeName": {
-                "namespace": "Prompty",
+                "namespace": "Prompty.Contracts.Connectivity",
                 "name": "Connection"
               },
               "description": "Connection configuration for AI agents.\n`provider`, `kind`, and `endpoint` are required properties here,\nbut this section can accept additional via options.",
@@ -3779,12 +3779,12 @@
               "childTypes": [
                 {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "ReferenceConnection"
                   },
                   "description": "Connection configuration for AI services using named connections.",
                   "base": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "Connection"
                   },
                   "isAbstract": false,
@@ -3895,12 +3895,12 @@
                 },
                 {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "RemoteConnection"
                   },
                   "description": "Connection configuration for AI services using named connections.",
                   "base": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "Connection"
                   },
                   "isAbstract": false,
@@ -4011,12 +4011,12 @@
                 },
                 {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "ApiKeyConnection"
                   },
                   "description": "Connection configuration for AI services using API keys.",
                   "base": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "Connection"
                   },
                   "isAbstract": false,
@@ -4127,12 +4127,12 @@
                 },
                 {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "AnonymousConnection"
                   },
                   "description": "",
                   "base": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "Connection"
                   },
                   "isAbstract": false,
@@ -4211,12 +4211,12 @@
                 },
                 {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "OAuthConnection"
                   },
                   "description": "Connection configuration using OAuth 2.0 client credentials.\nUseful for tools and services that require OAuth authentication,\nsuch as MCP servers, OpenAPI endpoints, or other REST APIs.",
                   "base": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "Connection"
                   },
                   "isAbstract": false,
@@ -4425,12 +4425,12 @@
                 },
                 {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "FoundryConnection"
                   },
                   "description": "Connection configuration for Microsoft Foundry projects.\nProvides project-scoped access to models, tools, and services\nvia Entra ID (DefaultAzureCredential) authentication.",
                   "base": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Connectivity",
                     "name": "Connection"
                   },
                   "isAbstract": false,
@@ -4685,7 +4685,7 @@
           {
             "name": "options",
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Models",
               "name": "ModelOptions"
             },
             "description": "Additional options for the model",
@@ -4719,7 +4719,7 @@
             "isNamedCollection": false,
             "type": {
               "typeName": {
-                "namespace": "Prompty",
+                "namespace": "Prompty.Contracts.Models",
                 "name": "ModelOptions"
               },
               "description": "Options for configuring the behavior of the AI model.",
@@ -5144,7 +5144,7 @@
     {
       "name": "tools",
       "typeName": {
-        "namespace": "Prompty",
+        "namespace": "Prompty.Contracts.Tooling",
         "name": "Tool"
       },
       "description": "Tools available for extended functionality",
@@ -5212,7 +5212,7 @@
       "isNamedCollection": true,
       "type": {
         "typeName": {
-          "namespace": "Prompty",
+          "namespace": "Prompty.Contracts.Tooling",
           "name": "Tool"
         },
         "description": "Represents a tool that can be used in prompts.",
@@ -5227,12 +5227,12 @@
         "childTypes": [
           {
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "FunctionTool"
             },
             "description": "Represents a local function tool.",
             "base": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "Tool"
             },
             "isAbstract": false,
@@ -5278,7 +5278,7 @@
               {
                 "name": "parameters",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Core",
                   "name": "Property"
                 },
                 "description": "Parameters accepted by the function tool",
@@ -5379,12 +5379,12 @@
           },
           {
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "CustomTool"
             },
             "description": "Represents a generic server tool that runs on a server\nThis tool kind is designed for operations that require server-side execution\nIt may include features such as authentication, data storage, and long-running processes\nThis tool kind is ideal for tasks that involve complex computations or access to secure resources\nServer tools can be used to offload heavy processing from client applications",
             "base": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "Tool"
             },
             "isAbstract": false,
@@ -5422,7 +5422,7 @@
               {
                 "name": "connection",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Connectivity",
                   "name": "Connection"
                 },
                 "description": "Connection configuration for the server tool",
@@ -5492,12 +5492,12 @@
           },
           {
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "McpTool"
             },
             "description": "The MCP Server tool.",
             "base": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "Tool"
             },
             "isAbstract": false,
@@ -5543,7 +5543,7 @@
               {
                 "name": "connection",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Connectivity",
                   "name": "Connection"
                 },
                 "description": "The connection configuration for the MCP tool",
@@ -5641,7 +5641,7 @@
               {
                 "name": "approvalMode",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Tooling",
                   "name": "McpApprovalMode"
                 },
                 "description": "The approval mode for the MCP tool",
@@ -5673,7 +5673,7 @@
                 "isNamedCollection": false,
                 "type": {
                   "typeName": {
-                    "namespace": "Prompty",
+                    "namespace": "Prompty.Contracts.Tooling",
                     "name": "McpApprovalMode"
                   },
                   "description": "The approval mode for MCP server tools.\nWhen kind is \"specify\", use alwaysRequireApprovalTools and neverRequireApprovalTools\nto control per-tool approval. For \"always\" and \"never\", those fields are ignored.",
@@ -5842,12 +5842,12 @@
           },
           {
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "OpenApiTool"
             },
             "description": "",
             "base": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "Tool"
             },
             "isAbstract": false,
@@ -5893,7 +5893,7 @@
               {
                 "name": "connection",
                 "typeName": {
-                  "namespace": "Prompty",
+                  "namespace": "Prompty.Contracts.Connectivity",
                   "name": "Connection"
                 },
                 "description": "The connection configuration for the OpenAPI tool",
@@ -5960,12 +5960,12 @@
           },
           {
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "PromptyTool"
             },
             "description": "A tool that references another .prompty file to be invoked as a tool.\n\nThe child prompty is executed as a single prompt invocation. Nested agent\nloops are intentionally not started from PromptyTool.",
             "base": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "Tool"
             },
             "isAbstract": false,
@@ -6180,7 +6180,7 @@
           {
             "name": "bindings",
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Tooling",
               "name": "Binding"
             },
             "description": "Tool argument bindings to input properties",
@@ -6212,7 +6212,7 @@
             "isNamedCollection": true,
             "type": {
               "typeName": {
-                "namespace": "Prompty",
+                "namespace": "Prompty.Contracts.Tooling",
                 "name": "Binding"
               },
               "description": "Represents a binding between an input property and a tool parameter.",
@@ -6307,7 +6307,7 @@
     {
       "name": "template",
       "typeName": {
-        "namespace": "Prompty",
+        "namespace": "Prompty.Contracts.Templates",
         "name": "Template"
       },
       "description": "Template configuration for prompt rendering",
@@ -6340,7 +6340,7 @@
       "isNamedCollection": false,
       "type": {
         "typeName": {
-          "namespace": "Prompty",
+          "namespace": "Prompty.Contracts.Templates",
           "name": "Template"
         },
         "description": "Template model for defining prompt templates.\n\nThis model specifies the rendering engine used for slot filling prompts,\nthe parser used to process the rendered template into API-compatible format,\nand additional options for the template engine.\n\nIt allows for the creation of reusable templates that can be filled with dynamic data\nand processed to generate prompts for AI models.",
@@ -6356,7 +6356,7 @@
           {
             "name": "format",
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Templates",
               "name": "FormatConfig"
             },
             "description": "Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)",
@@ -6388,7 +6388,7 @@
             "isNamedCollection": false,
             "type": {
               "typeName": {
-                "namespace": "Prompty",
+                "namespace": "Prompty.Contracts.Templates",
                 "name": "FormatConfig"
               },
               "description": "Template format definition",
@@ -6515,7 +6515,7 @@
           {
             "name": "parser",
             "typeName": {
-              "namespace": "Prompty",
+              "namespace": "Prompty.Contracts.Templates",
               "name": "ParserConfig"
             },
             "description": "Parser used to process the rendered template into API-compatible format",
@@ -6547,7 +6547,7 @@
             "isNamedCollection": false,
             "type": {
               "typeName": {
-                "namespace": "Prompty",
+                "namespace": "Prompty.Contracts.Templates",
                 "name": "ParserConfig"
               },
               "description": "Template parser definition",

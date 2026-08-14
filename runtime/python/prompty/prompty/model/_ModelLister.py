@@ -7,7 +7,7 @@
 
 from typing import Any, Protocol, runtime_checkable
 
-from .model._ModelInfo import ModelInfo
+from .contracts.models._ModelInfo import ModelInfo
 
 
 @runtime_checkable

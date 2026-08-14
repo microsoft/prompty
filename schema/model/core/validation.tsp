@@ -1,7 +1,8 @@
 import "@typra/emitter";
 import "./errors.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Core;
 
 /**
  * The result of validating inputs against a Prompty's inputs.

@@ -1,7 +1,8 @@
 // Named sample constants for memory/memory.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const MemoryEntryContentSample = #{
   content: "The user prefers concise answers.",

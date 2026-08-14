@@ -1,7 +1,9 @@
 import "@typra/emitter";
 import "../agent/agent.tsp";
 
-namespace Prompty;
+using Prompty;
+using Prompty.Conformance.Vectors;
+namespace Prompty.Operations.Pipeline;
 
 /** Renders a template string with input values to produce the final prompt text. */
 interface Renderer {

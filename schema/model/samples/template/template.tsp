@@ -1,7 +1,8 @@
 // Named sample constants for template/template.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const forFormatSample = #{ format: #{ kind: "mustache" } };
 

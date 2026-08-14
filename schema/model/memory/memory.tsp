@@ -1,6 +1,7 @@
 import "@typra/emitter";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Memory;
 
 /**
  * The tier of an agent memory in a general, host-neutral tiered-memory model.

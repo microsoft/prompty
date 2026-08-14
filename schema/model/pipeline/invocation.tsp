@@ -2,7 +2,11 @@ import "@typra/emitter";
 import "../conversation/message.tsp";
 import "../model/usage.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Conversation;
+using Prompty.Contracts.Models;
+using Prompty.Contracts.Tooling;
+namespace Prompty.Contracts.Pipeline;
 
 /**
  * Describes how completely an invocation can be reconstructed outside its provider.

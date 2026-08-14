@@ -3,7 +3,9 @@ import "../agent/agent.tsp";
 import "../conversation/message.tsp";
 import "../conversation/tool-invocation.tsp";
 
-namespace Prompty;
+using Prompty;
+using Prompty.Contracts.Conversation;
+namespace Prompty.Operations.Pipeline;
 
 /** Calls an LLM provider with messages and returns the raw provider response. */
 interface Executor {

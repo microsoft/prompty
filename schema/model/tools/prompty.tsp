@@ -1,7 +1,8 @@
 import "../core/core.tsp";
 import "./tool.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Tooling;
 
 alias promptyToolMode = "single";
 

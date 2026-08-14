@@ -5,13 +5,13 @@
 
 use super::super::context::{LoadContext, SaveContext};
 
-use super::super::model::model::Model;
+use super::super::contracts::models::model::Model;
 
-use super::super::core::property::Property;
+use super::super::contracts::core::property::Property;
 
-use super::super::template::template::Template;
+use super::super::contracts::templates::template::Template;
 
-use super::super::tools::tool::Tool;
+use super::super::contracts::tooling::tool::Tool;
 
 /// An Agent is the root model produced from a .prompty markdown file for LLM prompts. The frontmatter defines structured metadata including model configuration, input/output schemas, tools, and template settings. The markdown body becomes the instructions. This is the single root type for the Prompty schema — there is no abstract base class or kind discriminator. A .prompty file always produces an Agent instance. Runtime loaders may resolve frontmatter references such as `${env:VAR}` and `${file:relative/path}`. File references must be treated as a host-controlled capability: by default they are scoped to the containing .prompty file's directory tree after canonicalization, and any additional allowed roots must be supplied by the host application's load options rather than frontmatter.
 #[derive(Debug, Clone, Default, PartialEq)]

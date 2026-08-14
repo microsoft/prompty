@@ -1,7 +1,8 @@
 import "@typra/emitter";
 import "./content.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Conversation;
 
 /**
  * The role of a message in a conversation.

@@ -6,9 +6,9 @@
 
 use super::agent::agent::Agent;
 
-use super::conversation::message::Message;
+use super::contracts::conversation::message::Message;
 
-use super::conversation::tool_call::ToolCall;
+use super::contracts::conversation::tool_call::ToolCall;
 
 /// Calls an LLM provider with messages and returns the raw provider response.
 #[async_trait::async_trait]

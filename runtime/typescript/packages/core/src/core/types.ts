@@ -9,7 +9,7 @@
  * @module
  */
 
-import type { MessageHelpers } from "../model/conversation/message";
+import type { MessageHelpers } from "../model/contracts/conversation/message";
 
 // ---------------------------------------------------------------------------
 // Content Parts (discriminated union by `kind`)

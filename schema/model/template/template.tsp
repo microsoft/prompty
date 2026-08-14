@@ -1,7 +1,9 @@
 import "@typra/emitter";
 import "../core/core.tsp";
 
-namespace Prompty;
+using Prompty.Conformance.Samples;
+using Prompty.Operations.Pipeline;
+namespace Prompty.Contracts.Templates;
 
 /**
  * Template model for defining prompt templates.

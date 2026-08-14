@@ -1,7 +1,10 @@
 import "@typra/emitter";
 import "../agent/agent.tsp";
 
-namespace Prompty;
+using Prompty;
+using Prompty.Conformance.Vectors;
+using Prompty.Contracts.Events;
+namespace Prompty.Operations.Pipeline;
 
 /** Extracts a clean, typed result from a raw LLM provider response. */
 interface Processor {

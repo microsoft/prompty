@@ -1,7 +1,8 @@
 // Named sample constants for tools/mcp.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const McpToolKindSample = #{ kind: "mcp" };
 

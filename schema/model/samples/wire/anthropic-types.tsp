@@ -1,7 +1,8 @@
 // Named sample constants for wire/anthropic-types.tsp.
 // Auto-extracted from inline @sample decorators.
 
-namespace Prompty;
+using Prompty.Contracts.Core;
+namespace Prompty.Conformance.Samples;
 
 const AnthropicTextBlockTextSample = #{ text: "Hello, how can I help?" };
 
