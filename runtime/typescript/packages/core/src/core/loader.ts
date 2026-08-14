@@ -12,7 +12,7 @@ import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, extname, isAbsolute, relative, resolve } from "node:path";
 import matter from "gray-matter";
 import { LoadContext, SaveContext } from "../model/context.js";
-import { Agent } from "../model/agent/agent.js";
+import { Agent } from "../model/agent.js";
 
 export interface LoadOptions {
   /**

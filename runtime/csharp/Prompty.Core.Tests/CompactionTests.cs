@@ -14,7 +14,7 @@ public class CompactionTests
         {
             Role = Role.Assistant,
             Parts = [new TextPart { Value = "" }],
-            Metadata = new Dictionary<string, object>
+            Metadata = new Dictionary<string, object?>
             {
                 ["tool_calls"] = new List<ToolCall>
                 {
@@ -268,3 +268,4 @@ public class CompactionTests
         Assert.Null((CompactionStrategy?)null);
     }
 }
+

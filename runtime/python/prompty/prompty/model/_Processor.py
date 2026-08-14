@@ -7,7 +7,7 @@
 
 from typing import Any, Protocol, runtime_checkable
 
-from .agent._Agent import Agent
+from ._Agent import Agent
 
 
 @runtime_checkable

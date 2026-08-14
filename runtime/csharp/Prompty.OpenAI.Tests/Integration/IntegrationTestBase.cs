@@ -77,7 +77,7 @@ public abstract class IntegrationTestBase
         ModelOptions? options = null,
         IList<Tool>? tools = null,
         IList<Property>? outputs = null,
-        IDictionary<string, object>? metadata = null)
+        IDictionary<string, object?>? metadata = null)
     {
         var apiKey = GetEnvOrSkip("OPENAI_API_KEY");
         model ??= OpenAIModel;
@@ -129,7 +129,7 @@ public abstract class IntegrationTestBase
         ModelOptions? options = null,
         IList<Tool>? tools = null,
         IList<Property>? outputs = null,
-        IDictionary<string, object>? metadata = null)
+        IDictionary<string, object?>? metadata = null)
     {
         var apiKey = GetEnvOrSkip("AZURE_OPENAI_API_KEY");
         var endpoint = GetEnvOrSkip("AZURE_OPENAI_ENDPOINT");
@@ -180,7 +180,7 @@ public abstract class IntegrationTestBase
         ModelOptions? options = null,
         IList<Tool>? tools = null,
         IList<Property>? outputs = null,
-        IDictionary<string, object>? metadata = null)
+        IDictionary<string, object?>? metadata = null)
     {
         var apiKey = GetEnvOrSkip("ANTHROPIC_API_KEY");
 
@@ -321,3 +321,4 @@ public abstract class IntegrationTestBase
         new Property { Name = "country", Kind = "string", Description = "The country" },
     ];
 }
+

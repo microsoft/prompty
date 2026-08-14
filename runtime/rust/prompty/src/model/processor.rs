@@ -4,7 +4,7 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::agent::agent::Agent;
+use super::agent::Agent;
 
 /// Extracts a clean, typed result from a raw LLM provider response.
 #[async_trait::async_trait]

@@ -8,7 +8,7 @@
  * @module
  */
 
-import type { Agent } from "../model/agent/agent.js";
+import type { Agent } from "../model/agent.js";
 import type { Message } from "./types.js";
 
 // ---------------------------------------------------------------------------

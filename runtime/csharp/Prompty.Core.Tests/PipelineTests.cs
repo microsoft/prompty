@@ -538,7 +538,7 @@ public class PipelineTests : IDisposable
             {
                 Role = Role.System,
                 Parts = [new TextPart { Value = "Prefix __PROMPTY_THREAD_abcd1234_conv__" }],
-                Metadata = new Dictionary<string, object> { ["source"] = "test" },
+                Metadata = new Dictionary<string, object?> { ["source"] = "test" },
             },
         };
 
@@ -608,10 +608,10 @@ internal class MockExecutor : IExecutor
     {
         var messages = new List<Message>
         {
-            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }
@@ -643,10 +643,10 @@ internal class ToolCallingExecutor : IExecutor
     {
         var messages = new List<Message>
         {
-            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+            new() { Role = Role.Assistant, Parts = [], Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id } });
+            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id } });
         return messages;
     }
 }
@@ -674,3 +674,4 @@ internal class ToolCallingProcessor : IProcessor
         return Task.FromResult<object>("The weather is 72°F and sunny");
     }
 }
+

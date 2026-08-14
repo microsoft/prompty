@@ -5,7 +5,7 @@
   "files": [
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/agent/AgentConversionTests.cs",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/AgentConversionTests.cs",
       "marker": true
     },
     {
@@ -740,7 +740,7 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/agent/Agent.cs",
+      "path": "../runtime/csharp/Prompty.Core/Model/Agent.cs",
       "marker": true
     },
     {
@@ -3060,6 +3060,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_Agent.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_CheckpointStore.py",
       "marker": true
     },
@@ -3111,16 +3116,6 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_Renderer.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/agent/__init__.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/agent/_Agent.py",
       "marker": true
     },
     {
@@ -3820,11 +3815,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/agent/test_agent.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/connectivity/test_anonymous_connection.py",
       "marker": true
     },
@@ -4505,6 +4495,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/test_agent.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/test_context.py",
       "marker": true
     },
@@ -4565,12 +4560,7 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/agent/agent.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/agent/mod.rs",
+      "path": "../runtime/rust/prompty/src/model/agent.rs",
       "marker": true
     },
     {
@@ -5325,12 +5315,7 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/agent/agent_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/agent/mod.rs",
+      "path": "../runtime/rust/prompty/tests/model/agent_test.rs",
       "marker": true
     },
     {
@@ -6035,12 +6020,7 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/agent/agent.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/agent/index.ts",
+      "path": "../runtime/typescript/packages/core/src/model/agent.ts",
       "marker": true
     },
     {
@@ -6785,7 +6765,7 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/agent/agent.test.ts",
+      "path": "../runtime/typescript/packages/core/tests/model/agent.test.ts",
       "marker": true
     },
     {

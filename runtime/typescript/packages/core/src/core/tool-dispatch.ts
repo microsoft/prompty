@@ -22,7 +22,7 @@
  */
 
 import { dirname, resolve } from "node:path";
-import type { Agent } from "../model/agent/agent.js";
+import type { Agent } from "../model/agent.js";
 
 // ---------------------------------------------------------------------------
 // ToolHandler interface

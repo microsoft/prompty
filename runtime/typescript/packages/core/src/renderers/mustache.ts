@@ -5,7 +5,7 @@
  */
 
 import Mustache from "mustache";
-import type { Agent } from "../model/agent/agent.js";
+import type { Agent } from "../model/agent.js";
 import type { Renderer } from "../core/interfaces.js";
 import { prepareRenderInputs } from "./common.js";
 

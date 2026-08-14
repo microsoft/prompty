@@ -6,6 +6,9 @@
 pub mod context;
 pub use context::*;
 
+pub mod agent;
+pub use agent::*;
+
 pub mod checkpoint_store;
 pub use checkpoint_store::*;
 
@@ -35,9 +38,6 @@ pub use processor::*;
 
 pub mod renderer;
 pub use renderer::*;
-
-pub mod agent;
-pub use agent::*;
 
 pub mod contracts;
 pub use contracts::*;

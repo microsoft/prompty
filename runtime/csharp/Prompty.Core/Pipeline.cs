@@ -923,7 +923,7 @@ public static class Pipeline
                 {
                     Role = msg.Role,
                     Parts = [new TextPart { Value = before }],
-                    Metadata = msg.Metadata is not null ? new Dictionary<string, object>(msg.Metadata) : new Dictionary<string, object>(),
+                    Metadata = msg.Metadata is not null ? new Dictionary<string, object?>(msg.Metadata) : new Dictionary<string, object?>(),
                 });
             }
 
@@ -937,7 +937,7 @@ public static class Pipeline
                 {
                     Role = msg.Role,
                     Parts = [new TextPart { Value = after }],
-                    Metadata = msg.Metadata is not null ? new Dictionary<string, object>(msg.Metadata) : new Dictionary<string, object>(),
+                    Metadata = msg.Metadata is not null ? new Dictionary<string, object?>(msg.Metadata) : new Dictionary<string, object?>(),
                 });
             }
         }

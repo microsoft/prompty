@@ -121,7 +121,7 @@ public class HarnessAdaptersTests
         {
             RequestId = "exec-1",
             ToolName = "add",
-            Arguments = new Dictionary<string, object> { ["a"] = 2, ["b"] = 3 }
+            Arguments = new Dictionary<string, object?> { ["a"] = 2, ["b"] = 3 }
         });
 
         Assert.True(result.Success);
@@ -168,7 +168,7 @@ public class HarnessAdaptersTests
         Id = "turn-event",
         Type = TurnEventType.TurnStart,
         Timestamp = "2026-06-10T00:00:00Z",
-        Payload = new Dictionary<string, object> { ["phase"] = "start" }
+        Payload = new Dictionary<string, object?> { ["phase"] = "start" }
     };
 
     private static SessionEvent SessionEvent() => new()
@@ -177,6 +177,7 @@ public class HarnessAdaptersTests
         Type = SessionEventType.SessionStart,
         Timestamp = "2026-06-10T00:00:00Z",
         SessionId = "session-1",
-        Payload = new Dictionary<string, object> { ["phase"] = "start" }
+        Payload = new Dictionary<string, object?> { ["phase"] = "start" }
     };
 }
+

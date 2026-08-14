@@ -74,7 +74,7 @@ public static class PromptyLoader
         var agent = Agent.Load(data, ctx);
 
         // 3. Attach source path in metadata
-        agent.Metadata ??= new Dictionary<string, object>();
+        agent.Metadata ??= new Dictionary<string, object?>();
         agent.Metadata["__source_path"] = fullPath;
 
         return agent;

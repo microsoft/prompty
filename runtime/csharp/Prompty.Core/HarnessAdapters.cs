@@ -234,7 +234,7 @@ public sealed class DenyAllPermissionResolver : IPermissionResolver
     }
 }
 
-public delegate Task<object?> HostToolHandler(IDictionary<string, object> arguments, HostToolRequest request);
+public delegate Task<object?> HostToolHandler(IDictionary<string, object?> arguments, HostToolRequest request);
 
 /// <summary>
 /// Dispatches host tool requests to registered local functions.
@@ -267,7 +267,7 @@ public sealed class FunctionHostToolExecutor : IHostToolExecutor
 
         try
         {
-            var result = await handler(request.Arguments ?? new Dictionary<string, object>(), request);
+            var result = await handler(request.Arguments ?? new Dictionary<string, object?>(), request);
             return new HostToolResult
             {
                 RequestId = request.RequestId,

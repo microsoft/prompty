@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { Agent } from "../model/agent/agent.js";
+import type { Agent } from "../model/agent.js";
 import { RICH_KINDS } from "../core/types.js";
 
 /** Map of input name → nonce string (set during rendering, read during prepare). */

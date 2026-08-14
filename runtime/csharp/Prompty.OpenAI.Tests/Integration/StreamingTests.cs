@@ -15,7 +15,7 @@ public class StreamingTests : IntegrationTestBase
 {
     private static void EnableStreaming(Core.Agent agent)
     {
-        agent.Metadata ??= new Dictionary<string, object>();
+        agent.Metadata ??= new Dictionary<string, object?>();
         agent.Metadata["stream"] = true;
     }
 
@@ -109,3 +109,4 @@ public class StreamingTests : IntegrationTestBase
         Assert.Contains("hello", fullText, StringComparison.OrdinalIgnoreCase);
     }
 }
+

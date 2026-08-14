@@ -31,7 +31,7 @@
  * @module
  */
 
-import { Agent } from "../model/agent/agent.js";
+import { Agent } from "../model/agent.js";
 import {
   type ToolCall,
   Message,

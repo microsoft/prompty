@@ -4,7 +4,7 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::agent::agent::Agent;
+use super::agent::Agent;
 
 /// Renders a template string with input values to produce the final prompt text.
 #[async_trait::async_trait]

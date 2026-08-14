@@ -1,7 +1,7 @@
 import "@typra/emitter";
-import "../connection/oauth-flow.tsp";
-import "../model/discovery.tsp";
-import "../model/resource-discovery.tsp";
+import "../contracts/connectivity/oauth-flow.tsp";
+import "../contracts/models/discovery.tsp";
+import "../contracts/models/resource-discovery.tsp";
 
 using Prompty;
 using Prompty.Contracts.Connectivity;
