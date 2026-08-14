@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use prompty::interfaces::{Executor, InvokerError, Processor};
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use prompty::types::Message;
 use prompty::{
@@ -56,7 +56,7 @@ struct ScriptedExecutor {
 
 #[async_trait]
 impl Executor for ScriptedExecutor {
-    async fn execute(&self, _agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+    async fn execute(&self, _agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
         self.observed_messages
             .lock()
             .expect("messages lock poisoned")
@@ -75,7 +75,7 @@ struct ToolCallProcessor;
 
 #[async_trait]
 impl Processor for ToolCallProcessor {
-    async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, _agent: &Agent, response: Value) -> Result<Value, InvokerError> {
         let message = &response["choices"][0]["message"];
         if let Some(tool_calls) = message.get("tool_calls").and_then(Value::as_array) {
             if !tool_calls.is_empty() {
@@ -140,8 +140,8 @@ impl PostCommitPort for RecordingPostCommit {
     }
 }
 
-fn agent(provider: &str) -> Prompty {
-    Prompty::load_from_value(
+fn agent(provider: &str) -> Agent {
+    Agent::load_from_value(
         &json!({
             "kind": "prompt",
             "name": "live-port-test",

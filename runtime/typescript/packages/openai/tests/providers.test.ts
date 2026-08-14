@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { messageToWire, buildChatArgs } from "../src/wire.js";
 import { processResponse } from "../src/processor.js";
 import { Message, text } from "@prompty/core";
-import { Prompty } from "@prompty/core";
+import { Agent } from "@prompty/core";
 
 describe("messageToWire", () => {
   it("converts a simple text message", () => {
@@ -36,7 +36,7 @@ describe("messageToWire", () => {
 });
 
 describe("processResponse", () => {
-  const agent = new Prompty({ name: "test", model: "gpt-4o" });
+  const agent = new Agent({ name: "test", model: "gpt-4o" });
 
   it("extracts content from chat completion", () => {
     const response = {
@@ -90,7 +90,7 @@ describe("processResponse", () => {
 
 describe("buildChatArgs nested tool schemas", () => {
   it("produces array items with nested object properties", () => {
-    const agent = Prompty.load({
+    const agent = Agent.load({
       name: "test",
       model: {
         id: "gpt-4",
@@ -145,7 +145,7 @@ describe("buildChatArgs nested tool schemas", () => {
   });
 
   it("produces nested object properties", () => {
-    const agent = Prompty.load({
+    const agent = Agent.load({
       name: "test",
       model: { id: "gpt-4", provider: "openai" },
       tools: [
@@ -182,7 +182,7 @@ describe("buildChatArgs nested tool schemas", () => {
   });
 
   it("handles deeply nested schemas (array > object > array > string)", () => {
-    const agent = Prompty.load({
+    const agent = Agent.load({
       name: "test",
       model: { id: "gpt-4", provider: "openai" },
       tools: [

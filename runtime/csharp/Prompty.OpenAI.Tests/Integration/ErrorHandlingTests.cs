@@ -35,7 +35,7 @@ public class ErrorHandlingTests : IntegrationTestBase
     /// Creates an agent with intentionally bad credentials, bypassing the usual
     /// MakeOpenAIAgent/MakeFoundryAgent/MakeAnthropicAgent helpers that skip on missing env vars.
     /// </summary>
-    private static Core.Prompty MakeBadAgent(
+    private static Core.Agent MakeBadAgent(
         string provider,
         string? apiKey = null,
         string? endpoint = null,
@@ -60,7 +60,7 @@ public class ErrorHandlingTests : IntegrationTestBase
                 ["connection"] = connectionDict,
             },
         };
-        return Core.Prompty.Load(data, new LoadContext());
+        return Core.Agent.Load(data, new LoadContext());
     }
 
     // -----------------------------------------------------------------------

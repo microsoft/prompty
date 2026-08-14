@@ -36,7 +36,7 @@ from prompty.model import (
     Binding,
     FunctionTool,
     Model,
-    Prompty,
+    Agent,
     Property,
     Template,
 )
@@ -85,8 +85,8 @@ def _load_vectors(stage: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
-def _make_prompty_from_frontmatter(data: dict, instructions: str = "") -> Prompty:
-    """Build a Prompty from a frontmatter dict (like the vectors provide).
+def _make_prompty_from_frontmatter(data: dict, instructions: str = "") -> Agent:
+    """Build a Agent from a frontmatter dict (like the vectors provide).
 
     Spec vectors use ``inputs``/``outputs`` with a ``properties`` sub-key.
     The runtime model expects ``inputs``/``outputs`` as a flat list of Property dicts.
@@ -103,11 +103,11 @@ def _make_prompty_from_frontmatter(data: dict, instructions: str = "") -> Prompt
     if "outputs" in d and isinstance(d["outputs"], dict) and "properties" in d["outputs"]:
         d["outputs"] = d["outputs"]["properties"]
 
-    return Prompty.load(d, LoadContext())
+    return Agent.load(d, LoadContext())
 
 
-def _make_agent_for_wire(vec_input: dict) -> Prompty:
-    """Build a Prompty suitable for wire-format testing from a vector input."""
+def _make_agent_for_wire(vec_input: dict) -> Agent:
+    """Build a Agent suitable for wire-format testing from a vector input."""
     model_id = vec_input.get("model_id", "gpt-4")
     api_type = vec_input.get("apiType", "chat")
     options = vec_input.get("options", {})
@@ -131,7 +131,7 @@ def _make_agent_for_wire(vec_input: dict) -> Prompty:
     if outputs:
         data["outputs"] = outputs
 
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def _vec_messages_to_runtime(messages: list[dict]) -> list[Message]:
@@ -335,8 +335,8 @@ def _write_prompty_from_frontmatter(
     path.write_text(content, encoding="utf-8")
 
 
-def _assert_load_expected(agent: Prompty, expected: dict, vec_name: str):
-    """Assert that a loaded Prompty matches the expected fields from a vector."""
+def _assert_load_expected(agent: Agent, expected: dict, vec_name: str):
+    """Assert that a loaded Agent matches the expected fields from a vector."""
     errors: list[str] = []
 
     if "name" in expected:
@@ -552,7 +552,7 @@ def test_render_vector(vec: dict):
 
     # Build a minimal agent to pass to the renderer.
     # For thread nonce injection, the agent needs thread-kind input declarations.
-    agent = Prompty(name="render_test")
+    agent = Agent(name="render_test")
     if any(isinstance(v, dict) and v.get("_kind") == "thread" for v in inputs.values()):
         from prompty.model import Property as ModelProperty
 
@@ -607,7 +607,7 @@ def test_parse_vector(vec: dict):
 
     rendered = inp["rendered"]
     parser = PromptyChatParser()
-    agent = Prompty(name="parse_test")
+    agent = Agent(name="parse_test")
 
     # Thread nonce expansion is a pipeline-level concern, not parser-level.
     # The parser produces Message objects from rendered text.
@@ -685,7 +685,7 @@ def test_wire_vector(vec: dict):
         pytest.skip(f"Unknown apiType for wire test: {api_type}")
 
 
-def _check_wire_chat(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
+def _check_wire_chat(agent: Agent, messages: list[Message], exp_body: dict, vec_name: str):
     """Validate chat wire format."""
     # Build the wire representation
     wire_messages = [_message_to_wire(m) for m in messages]
@@ -719,7 +719,7 @@ def _check_wire_chat(agent: Prompty, messages: list[Message], exp_body: dict, ve
         )
 
 
-def _check_wire_embedding(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
+def _check_wire_embedding(agent: Agent, messages: list[Message], exp_body: dict, vec_name: str):
     """Validate embedding wire format using REAL production builder."""
     texts = [m.text for m in messages if m.text]
     if len(texts) == 1:
@@ -739,7 +739,7 @@ def _check_wire_embedding(agent: Prompty, messages: list[Message], exp_body: dic
         )
 
 
-def _check_wire_image(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
+def _check_wire_image(agent: Agent, messages: list[Message], exp_body: dict, vec_name: str):
     """Validate image wire format using REAL production builder."""
     user_msgs = [m for m in messages if m.role == "user"]
     prompt = user_msgs[-1].text if user_msgs else ""
@@ -756,7 +756,7 @@ def _check_wire_image(agent: Prompty, messages: list[Message], exp_body: dict, v
         )
 
 
-def _check_wire_responses(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
+def _check_wire_responses(agent: Agent, messages: list[Message], exp_body: dict, vec_name: str):
     """Validate Responses API wire format."""
     system_parts: list[str] = []
     input_messages: list[dict[str, Any]] = []
@@ -800,7 +800,7 @@ def _check_wire_responses(agent: Prompty, messages: list[Message], exp_body: dic
         )
 
 
-def _check_wire_anthropic_chat(agent: Prompty, messages: list[Message], exp_body: dict, vec_name: str):
+def _check_wire_anthropic_chat(agent: Agent, messages: list[Message], exp_body: dict, vec_name: str):
     """Validate Anthropic chat wire format."""
     actual_body = _anthropic_build_chat_args(agent, messages)
 
@@ -919,7 +919,7 @@ def test_process_vector(vec: dict):
     # Build agent with outputs if needed
     agent = None
     if has_outputs:
-        agent = Prompty(
+        agent = Agent(
             name="process_test",
             outputs=[Property(name="dummy", kind="string")],
         )
@@ -1023,9 +1023,9 @@ def test_agent_vector(vec: dict):
     if _EXTENSION_KEYS & set(inp.keys()):
         pytest.skip("Extension vector — tested in test_agent_extension_vector")
 
-    # -- Build the Prompty agent from vector data --
+    # -- Build the Agent agent from vector data --
     tools_list = [_build_function_tool(t) for t in inp.get("tools", [])]
-    agent = Prompty(
+    agent = Agent(
         name="agent_test",
         model=Model(id="gpt-4", provider="specmock"),
         tools=tools_list,
@@ -1172,7 +1172,7 @@ def test_agent_vector(vec: dict):
 
 def _test_agent_error_real(
     name: str,
-    agent: Prompty,
+    agent: Agent,
     inp: dict,
     expected: dict,
     tool_functions: dict[str, Any],
@@ -1298,7 +1298,7 @@ def _setup_agent_ext_common(vec: dict):
     sequence = vec["sequence"]
 
     tools_list = [_build_function_tool(t) for t in inp.get("tools", [])]
-    agent = Prompty(
+    agent = Agent(
         name="agent_ext_test",
         model=Model(id="gpt-4", provider="specmock"),
         tools=tools_list,

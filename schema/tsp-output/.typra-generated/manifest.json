@@ -5,12 +5,12 @@
   "files": [
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/agent/GuardrailResultConversionTests.cs",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/agent/AgentConversionTests.cs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/agent/PromptyConversionTests.cs",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/agent/GuardrailResultConversionTests.cs",
       "marker": true
     },
     {
@@ -740,12 +740,12 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/agent/GuardrailResult.cs",
+      "path": "../runtime/csharp/Prompty.Core/Model/agent/Agent.cs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/agent/Prompty.cs",
+      "path": "../runtime/csharp/Prompty.Core/Model/agent/GuardrailResult.cs",
       "marker": true
     },
     {
@@ -1645,6 +1645,16 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/agent_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/agent.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/ai_resource_info_test.go",
       "marker": true
     },
@@ -2445,17 +2455,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/prompty_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/prompty_tool_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/prompty.go",
       "marker": true
     },
     {
@@ -3120,12 +3120,12 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/agent/_GuardrailResult.py",
+      "path": "../runtime/python/prompty/prompty/model/agent/_Agent.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
-      "path": "../runtime/python/prompty/prompty/model/agent/_Prompty.py",
+      "path": "../runtime/python/prompty/prompty/model/agent/_GuardrailResult.py",
       "marker": true
     },
     {
@@ -3805,12 +3805,12 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/agent/test_guardrail_result.py",
+      "path": "../runtime/python/prompty/tests/model/agent/test_agent.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/agent/test_prompty.py",
+      "path": "../runtime/python/prompty/tests/model/agent/test_guardrail_result.py",
       "marker": true
     },
     {
@@ -4550,17 +4550,17 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/agent/agent.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/agent/guardrail_result.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/agent/mod.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/src/model",
-      "path": "../runtime/rust/prompty/src/model/agent/prompty.rs",
       "marker": true
     },
     {
@@ -5295,17 +5295,17 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/agent/agent_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/agent/guardrail_result_test.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/agent/mod.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/agent/prompty_test.rs",
       "marker": true
     },
     {
@@ -5990,17 +5990,17 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/agent/agent.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/agent/guardrail-result.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/agent/index.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "path": "../runtime/typescript/packages/core/src/model/agent/prompty.ts",
       "marker": true
     },
     {
@@ -6735,12 +6735,12 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/agent/guardrail-result.test.ts",
+      "path": "../runtime/typescript/packages/core/tests/model/agent/agent.test.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/agent/prompty.test.ts",
+      "path": "../runtime/typescript/packages/core/tests/model/agent/guardrail-result.test.ts",
       "marker": true
     },
     {
@@ -7475,6 +7475,11 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/Agent.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/AiResourceInfo.md",
       "marker": true
     },
@@ -7931,11 +7936,6 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ProjectInfo.md",
-      "marker": true
-    },
-    {
-      "outputRoot": "../web/src/content/docs/reference",
-      "path": "../web/src/content/docs/reference/Prompty.md",
       "marker": true
     },
     {

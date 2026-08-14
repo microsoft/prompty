@@ -7,7 +7,7 @@
 use std::path::PathBuf;
 use std::sync::Once;
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use serde_json::Value;
 
@@ -54,7 +54,7 @@ const MUSTACHE_VECTORS: &[&str] = &[
 ///
 /// For the `thread_nonce_injection` vector the agent needs a `kind: thread`
 /// input declaration so that `prepare_render_inputs` replaces it with a nonce.
-fn build_agent(name: &str, template: &str, engine: &str) -> Prompty {
+fn build_agent(name: &str, template: &str, engine: &str) -> Agent {
     if name == "thread_nonce_injection" {
         let data = serde_json::json!({
             "name": "test",
@@ -70,7 +70,7 @@ fn build_agent(name: &str, template: &str, engine: &str) -> Prompty {
                 "parser": { "kind": "prompty" }
             }
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     } else {
         let data = serde_json::json!({
             "name": "test",
@@ -82,7 +82,7 @@ fn build_agent(name: &str, template: &str, engine: &str) -> Prompty {
                 "parser": { "kind": "prompty" }
             }
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 }
 

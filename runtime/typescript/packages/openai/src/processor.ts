@@ -6,14 +6,14 @@
  * @module
  */
 
-import type { Prompty } from "@prompty/core";
+import type { Agent } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
 export class OpenAIProcessor implements Processor {
-  async process(agent: Prompty, response: unknown): Promise<unknown> {
+  async process(agent: Agent, response: unknown): Promise<unknown> {
     return traceSpan("OpenAIProcessor", async (emit) => {
       emit("signature", "prompty.openai.processor.OpenAIProcessor.invoke");
       emit("inputs", { data: response });
@@ -30,7 +30,7 @@ export class OpenAIProcessor implements Processor {
 /**
  * Extract clean content from an OpenAI response.
  */
-export function processResponse(agent: Prompty, response: unknown): unknown {
+export function processResponse(agent: Agent, response: unknown): unknown {
   if (typeof response !== "object" || response === null) return response;
 
   // Streaming response — return content-extracting async generator
@@ -153,7 +153,7 @@ async function* streamGenerator(
  * - JSON-parsed content when outputs is present
  */
 function processResponsesApi(
-  agent: Prompty,
+  agent: Agent,
   response: Record<string, unknown>,
 ): unknown {
   const output = response.output as Record<string, unknown>[];
@@ -223,7 +223,7 @@ function processResponsesApi(
 // ---------------------------------------------------------------------------
 
 function processChatCompletion(
-  agent: Prompty,
+  agent: Agent,
   response: Record<string, unknown>,
 ): unknown {
   const choices = response.choices as Record<string, unknown>[];

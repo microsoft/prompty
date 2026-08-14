@@ -522,7 +522,7 @@ public class TracingTests : IDisposable
             InvokerRegistry.RegisterExecutor("openai", new MockExecutor("Hello!"));
             InvokerRegistry.RegisterProcessor("openai", new MockProcessor());
 
-            var agent = new Prompty
+            var agent = new Agent
             {
                 Name = "test-agent",
                 Instructions = "Hello",
@@ -565,19 +565,19 @@ public class TracingTests : IDisposable
 
     private class PassthroughRenderer : IRenderer
     {
-        public Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs)
+        public Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
             => Task.FromResult(template);
     }
 
     private class PassthroughParser : IParser
     {
-        public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
+        public Task<List<Message>> ParseAsync(Agent agent, string rendered, Dictionary<string, object?>? context)
             => Task.FromResult<List<Message>>([new() { Role = Role.User, Parts = [new TextPart { Value = rendered }] }]);
     }
 
     private class MockExecutor(object response) : IExecutor
     {
-        public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(Agent agent, List<Message> messages)
             => Task.FromResult(response);
 
         public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
@@ -591,7 +591,7 @@ public class TracingTests : IDisposable
 
     private class MockProcessor : IProcessor
     {
-        public Task<object> ProcessAsync(Prompty agent, object response)
+        public Task<object> ProcessAsync(Agent agent, object response)
             => Task.FromResult(response);
     }
 

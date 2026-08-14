@@ -22,7 +22,7 @@
  */
 
 import { dirname, resolve } from "node:path";
-import type { Prompty } from "../model/agent/prompty.js";
+import type { Agent } from "../model/agent/agent.js";
 
 // ---------------------------------------------------------------------------
 // ToolHandler interface
@@ -38,7 +38,7 @@ export interface ToolHandler {
   executeTool(
     tool: Record<string, unknown>,
     args: Record<string, unknown>,
-    agent: Prompty,
+    agent: Agent,
     parentInputs: Record<string, unknown>,
   ): Promise<string>;
 }
@@ -147,7 +147,7 @@ class FunctionToolHandler implements ToolHandler {
   async executeTool(
     tool: Record<string, unknown>,
     _args: Record<string, unknown>,
-    _agent: Prompty,
+    _agent: Agent,
     _parentInputs: Record<string, unknown>,
   ): Promise<string> {
     const name = (tool.name as string) ?? "unknown";
@@ -169,7 +169,7 @@ class PromptyToolHandler implements ToolHandler {
   async executeTool(
     tool: Record<string, unknown>,
     args: Record<string, unknown>,
-    agent: Prompty,
+    agent: Agent,
     _parentInputs: Record<string, unknown>,
   ): Promise<string> {
     // Dynamic imports to break circular dependency with pipeline.ts
@@ -222,7 +222,7 @@ class McpToolHandler implements ToolHandler {
   async executeTool(
     _tool: Record<string, unknown>,
     _args: Record<string, unknown>,
-    _agent: Prompty,
+    _agent: Agent,
     _parentInputs: Record<string, unknown>,
   ): Promise<string> {
     throw new Error("MCP tool dispatch is not yet implemented");
@@ -237,7 +237,7 @@ class OpenApiToolHandler implements ToolHandler {
   async executeTool(
     _tool: Record<string, unknown>,
     _args: Record<string, unknown>,
-    _agent: Prompty,
+    _agent: Agent,
     _parentInputs: Record<string, unknown>,
   ): Promise<string> {
     throw new Error("OpenAPI tool dispatch is not yet implemented");
@@ -252,7 +252,7 @@ class CustomToolHandler implements ToolHandler {
   async executeTool(
     _tool: Record<string, unknown>,
     _args: Record<string, unknown>,
-    _agent: Prompty,
+    _agent: Agent,
     _parentInputs: Record<string, unknown>,
   ): Promise<string> {
     throw new Error("Custom tool dispatch is not yet implemented");
@@ -377,7 +377,7 @@ export async function dispatchTool(
   toolName: string,
   args: Record<string, unknown>,
   userTools: Record<string, (...args: unknown[]) => unknown>,
-  agent: Prompty,
+  agent: Agent,
   parentInputs: Record<string, unknown>,
 ): Promise<string> {
   try {

@@ -554,7 +554,7 @@ public class PipelineTests : IDisposable
     // Helpers
     // -----------------------------------------------------------------------
 
-    private static Prompty CreateAgent(string provider = "openai")
+    private static Agent CreateAgent(string provider = "openai")
     {
         var data = new Dictionary<string, object?>
         {
@@ -572,10 +572,10 @@ public class PipelineTests : IDisposable
                 ["parser"] = new Dictionary<string, object?> { ["kind"] = "prompty" },
             },
         };
-        return Prompty.Load(data, new LoadContext());
+        return Agent.Load(data, new LoadContext());
     }
 
-    private static Prompty CreateAgentWithInputs(params Property[] props)
+    private static Agent CreateAgentWithInputs(params Property[] props)
     {
         var agent = CreateAgent();
         agent.Inputs = [.. props];
@@ -589,19 +589,19 @@ public class PipelineTests : IDisposable
 
 internal class MockRenderer : IRenderer
 {
-    public Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs)
+    public Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
         => Task.FromResult($"rendered:{template}");
 }
 
 internal class MockParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
+    public Task<List<Message>> ParseAsync(Agent agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult<List<Message>>([new Message { Role = Role.System, Parts = [new TextPart { Value = rendered }] }]);
 }
 
 internal class MockExecutor : IExecutor
 {
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(Agent agent, List<Message> messages)
         => Task.FromResult<object>("mock-response");
 
     public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
@@ -618,7 +618,7 @@ internal class MockExecutor : IExecutor
 
 internal class MockProcessor : IProcessor
 {
-    public Task<object> ProcessAsync(Prompty agent, object response)
+    public Task<object> ProcessAsync(Agent agent, object response)
         => Task.FromResult<object>($"processed:{response}");
 }
 
@@ -629,7 +629,7 @@ internal class ToolCallingExecutor : IExecutor
 {
     private int _callCount;
 
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(Agent agent, List<Message> messages)
     {
         _callCount++;
         if (_callCount == 1)
@@ -658,7 +658,7 @@ internal class ToolCallingProcessor : IProcessor
 {
     private int _callCount;
 
-    public Task<object> ProcessAsync(Prompty agent, object response)
+    public Task<object> ProcessAsync(Agent agent, object response)
     {
         _callCount++;
         if (response is string s && s == "tool_calls_response")

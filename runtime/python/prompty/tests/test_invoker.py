@@ -200,10 +200,10 @@ def _patch_entry_points(**groups):
 
 
 def _make_agent(**overrides) -> Any:
-    """Create a minimal mock Prompty for testing."""
-    from prompty.model import Model, Prompty
+    """Create a minimal mock Agent for testing."""
+    from prompty.model import Model, Agent
 
-    agent = mock.Mock(spec=Prompty)
+    agent = mock.Mock(spec=Agent)
     agent.instructions = overrides.get("instructions", "system:\nHello {{name}}\n\nuser:\n{{question}}")
     agent.inputs = overrides.get("inputs", [])
     agent.template = overrides.get("template", None)

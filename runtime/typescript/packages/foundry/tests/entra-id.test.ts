@@ -23,7 +23,7 @@ import {
   clearConnections,
   registerExecutor,
   registerProcessor,
-  Prompty,
+  Agent,
 } from "@prompty/core";
 import { FoundryExecutor } from "../src/executor.js";
 import { FoundryProcessor } from "../src/processor.js";
@@ -77,8 +77,8 @@ function makeEntraIdAgent(opts: {
   deployment?: string;
   options?: Record<string, unknown>;
   inputs?: Record<string, unknown>[];
-} = {}): Prompty {
-  return Prompty.load({
+} = {}): Agent {
+  return Agent.load({
     name: "entra-id-integration",
     model: {
       id: opts.deployment || AZURE_CHAT_DEPLOYMENT,

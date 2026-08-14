@@ -196,7 +196,7 @@ public class StructuredOutputPipelineTests : IDisposable
     // Helpers
     // -----------------------------------------------------------------------
 
-    private static Prompty CreateAgent(string provider = "openai")
+    private static Agent CreateAgent(string provider = "openai")
     {
         var data = new Dictionary<string, object?>
         {
@@ -213,10 +213,10 @@ public class StructuredOutputPipelineTests : IDisposable
                 ["parser"] = new Dictionary<string, object?> { ["kind"] = "prompty" },
             },
         };
-        return Prompty.Load(data, new LoadContext());
+        return Agent.Load(data, new LoadContext());
     }
 
-    private static Prompty CreateAgentWithOutputs()
+    private static Agent CreateAgentWithOutputs()
     {
         var agent = CreateAgent();
         agent.Outputs =
@@ -238,7 +238,7 @@ public class StructuredOutputPipelineTests : IDisposable
 /// </summary>
 internal class PassthroughRenderer : IRenderer
 {
-    public Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs)
+    public Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
         => Task.FromResult(template);
 }
 
@@ -247,7 +247,7 @@ internal class PassthroughRenderer : IRenderer
 /// </summary>
 internal class SingleMessageParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
+    public Task<List<Message>> ParseAsync(Agent agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult<List<Message>>(
             [new Message { Role = Role.User, Parts = [new TextPart { Value = rendered }] }]);
 }
@@ -261,7 +261,7 @@ internal class RawJsonExecutor : IExecutor
 
     public RawJsonExecutor(string rawJson) => _rawJson = rawJson;
 
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(Agent agent, List<Message> messages)
         => Task.FromResult<object>(_rawJson);
 
     public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
@@ -275,7 +275,7 @@ internal class RawJsonExecutor : IExecutor
 /// </summary>
 internal class StructuredOutputProcessor : IProcessor
 {
-    public Task<object> ProcessAsync(Prompty agent, object response)
+    public Task<object> ProcessAsync(Agent agent, object response)
     {
         var json = response as string ?? throw new InvalidOperationException("Expected string response");
         return Task.FromResult<object>(StructuredResult.FromJson(json));
@@ -287,6 +287,6 @@ internal class StructuredOutputProcessor : IProcessor
 /// </summary>
 internal class PlainProcessor : IProcessor
 {
-    public Task<object> ProcessAsync(Prompty agent, object response)
+    public Task<object> ProcessAsync(Agent agent, object response)
         => Task.FromResult<object>($"processed:{response}");
 }

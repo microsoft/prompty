@@ -7,7 +7,7 @@
 
 from typing import Any, Protocol, runtime_checkable
 
-from .agent._Prompty import Prompty
+from .agent._Agent import Agent
 from .conversation._Message import Message
 
 
@@ -15,11 +15,11 @@ from .conversation._Message import Message
 class Parser(Protocol):
     """Parses rendered prompt text into an array of structured messages with role markers."""
 
-    def parse(self, agent: Prompty, rendered: str, context: dict[str, Any] | None) -> list[Message]:
+    def parse(self, agent: Agent, rendered: str, context: dict[str, Any] | None) -> list[Message]:
         """Parse rendered text into a structured message array"""
         raise NotImplementedError
 
-    async def parse_async(self, agent: Prompty, rendered: str, context: dict[str, Any] | None) -> list[Message]:
+    async def parse_async(self, agent: Agent, rendered: str, context: dict[str, Any] | None) -> list[Message]:
         """Parse rendered text into a structured message array (async variant)"""
         raise NotImplementedError
 

@@ -8,7 +8,7 @@
  * @module
  */
 
-import type { Prompty } from "../model/agent/prompty.js";
+import type { Agent } from "../model/agent/agent.js";
 import type { Message } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -21,7 +21,7 @@ import type { Message } from "./types.js";
  * Discovered by: `agent.template.format.kind` (e.g., "nunjucks", "mustache").
  */
 export interface Renderer {
-  render(agent: Prompty, template: string, inputs: Record<string, unknown>): Promise<string>;
+  render(agent: Agent, template: string, inputs: Record<string, unknown>): Promise<string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -36,7 +36,7 @@ export interface Renderer {
  * Optionally implements `preRender()` for nonce injection (strict mode).
  */
 export interface Parser {
-  parse(agent: Prompty, rendered: string, context?: Record<string, unknown>): Promise<Message[]>;
+  parse(agent: Agent, rendered: string, context?: Record<string, unknown>): Promise<Message[]>;
 
   /**
    * Optional hook called before rendering to sanitize the template
@@ -57,7 +57,7 @@ export interface Parser {
  * Discovered by: `agent.model.provider` (e.g., "openai", "azure").
  */
 export interface Executor {
-  execute(agent: Prompty, messages: Message[]): Promise<unknown>;
+  execute(agent: Agent, messages: Message[]): Promise<unknown>;
 
   /**
    * Format tool call results into provider-specific message format.
@@ -82,5 +82,5 @@ export interface Executor {
  * Discovered by: `agent.model.provider` (e.g., "openai", "azure").
  */
 export interface Processor {
-  process(agent: Prompty, response: unknown): Promise<unknown>;
+  process(agent: Agent, response: unknown): Promise<unknown>;
 }

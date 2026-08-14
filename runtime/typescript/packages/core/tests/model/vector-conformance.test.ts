@@ -7,7 +7,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -49,7 +49,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -90,7 +90,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -131,7 +131,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -172,7 +172,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -214,7 +214,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -256,7 +256,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -328,7 +328,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -390,7 +390,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -421,7 +421,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -462,7 +462,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -504,7 +504,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -535,7 +535,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -576,7 +576,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -628,7 +628,7 @@ const vectors = [
     contract: "Parser",
     operation: "parse",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       rendered: "string",
       context: "Record<unknown>?",
     },
@@ -714,7 +714,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -761,7 +761,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -813,7 +813,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -856,7 +856,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -909,7 +909,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -956,7 +956,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1032,7 +1032,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1079,7 +1079,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1126,7 +1126,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1179,7 +1179,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1235,7 +1235,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1282,7 +1282,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1345,7 +1345,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1399,7 +1399,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1439,7 +1439,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1474,7 +1474,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1509,7 +1509,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1543,7 +1543,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1576,7 +1576,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1637,7 +1637,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1690,7 +1690,7 @@ const vectors = [
     contract: "Processor",
     operation: "process",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       response: "unknown",
     },
     returns: "unknown",
@@ -1744,7 +1744,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1768,7 +1768,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1792,7 +1792,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1814,7 +1814,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1838,7 +1838,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1862,7 +1862,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1886,7 +1886,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1910,7 +1910,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1934,7 +1934,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1958,7 +1958,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -1982,7 +1982,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2006,7 +2006,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2028,7 +2028,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2050,7 +2050,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2076,7 +2076,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2100,7 +2100,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2124,7 +2124,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2148,7 +2148,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2172,7 +2172,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2199,7 +2199,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2223,7 +2223,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },
@@ -2247,7 +2247,7 @@ const vectors = [
     contract: "Renderer",
     operation: "render",
     params: {
-      agent: "Prompty",
+      agent: "Agent",
       template: "string",
       inputs: "Record<unknown>",
     },

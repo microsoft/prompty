@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 use rand::Rng;
 
-use crate::model::Prompty;
+use crate::model::Agent;
 
 /// Input kinds that receive nonce replacement during rendering.
 pub const RICH_KINDS: &[&str] = &["thread", "image", "file", "audio"];
@@ -33,7 +33,7 @@ fn generate_nonce(name: &str) -> String {
 /// The pipeline is responsible for passing the nonces to `expand_threads()`
 /// after rendering and parsing — no global state is involved.
 pub fn prepare_render_inputs(
-    agent: &Prompty,
+    agent: &Agent,
     inputs: &serde_json::Value,
 ) -> (serde_json::Value, HashMap<String, String>) {
     let mut modified = inputs.clone();
@@ -79,7 +79,7 @@ mod tests {
 
     #[test]
     fn test_prepare_render_inputs_no_rich_kinds() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let inputs = serde_json::json!({"name": "Alice"});
         let (modified, nonces) = prepare_render_inputs(&agent, &inputs);
         assert!(nonces.is_empty());
@@ -99,7 +99,7 @@ mod tests {
             ],
             "instructions": "system:\nHello"
         });
-        let agent = Prompty::load_from_value(&data, &LoadContext::default());
+        let agent = Agent::load_from_value(&data, &LoadContext::default());
         let inputs = serde_json::json!({
             "conversation": [{"role": "user", "content": "prior message"}],
             "question": "How are you?"
@@ -133,7 +133,7 @@ mod tests {
             ],
             "instructions": "test"
         });
-        let agent = Prompty::load_from_value(&data, &LoadContext::default());
+        let agent = Agent::load_from_value(&data, &LoadContext::default());
         let inputs = serde_json::json!({
             "history": [],
             "photo": "data:image/png;base64,abc",
@@ -161,7 +161,7 @@ mod tests {
             ],
             "instructions": "test"
         });
-        let agent = Prompty::load_from_value(&data, &LoadContext::default());
+        let agent = Agent::load_from_value(&data, &LoadContext::default());
         let inputs = serde_json::json!({"audio_clip": "data:audio/wav;base64,abc"});
 
         let (_, nonces) = prepare_render_inputs(&agent, &inputs);

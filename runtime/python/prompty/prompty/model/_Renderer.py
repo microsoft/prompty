@@ -7,17 +7,17 @@
 
 from typing import Any, Protocol, runtime_checkable
 
-from .agent._Prompty import Prompty
+from .agent._Agent import Agent
 
 
 @runtime_checkable
 class Renderer(Protocol):
     """Renders a template string with input values to produce the final prompt text."""
 
-    def render(self, agent: Prompty, template: str, inputs: dict[str, Any]) -> str:
+    def render(self, agent: Agent, template: str, inputs: dict[str, Any]) -> str:
         """Render the template string with input values"""
         raise NotImplementedError
 
-    async def render_async(self, agent: Prompty, template: str, inputs: dict[str, Any]) -> str:
+    async def render_async(self, agent: Agent, template: str, inputs: dict[str, Any]) -> str:
         """Render the template string with input values (async variant)"""
         raise NotImplementedError

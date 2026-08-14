@@ -20,15 +20,15 @@ from prompty.core.pipeline import (
 )
 from prompty.core.tool_dispatch import dispatch_tool, dispatch_tool_async
 from prompty.core.types import Message, TextPart
-from prompty.model import Prompty
+from prompty.model import Agent
 
 # ---------------------------------------------------------------------------
 # Mock helpers
 # ---------------------------------------------------------------------------
 
 
-def _make_agent() -> Prompty:
-    """Create a minimal Prompty with a function tool."""
+def _make_agent() -> Agent:
+    """Create a minimal Agent with a function tool."""
     data = {
         "name": "test-agent",
         "model": {
@@ -48,7 +48,7 @@ def _make_agent() -> Prompty:
         ],
         "template": {"format": {"kind": "jinja2"}, "parser": {"kind": "prompty"}},
     }
-    agent = Prompty.load(data)
+    agent = Agent.load(data)
     return agent
 
 

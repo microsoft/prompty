@@ -10,7 +10,7 @@
  */
 
 import type Anthropic from "@anthropic-ai/sdk";
-import type { Prompty } from "@prompty/core";
+import type { Agent } from "@prompty/core";
 import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text } from "@prompty/core";
 import type { Executor } from "@prompty/core";
 import { getConnection } from "@prompty/core";
@@ -18,7 +18,7 @@ import { traceSpan, sanitizeValue } from "@prompty/core";
 import { buildChatArgs } from "./wire.js";
 
 export class AnthropicExecutor implements Executor {
-  async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
+  async execute(agent: Agent, messages: Message[]): Promise<unknown> {
     return traceSpan("AnthropicExecutor", async (emit) => {
       emit("signature", "prompty.anthropic.executor.AnthropicExecutor.invoke");
       emit("inputs", { data: messages });
@@ -49,7 +49,7 @@ export class AnthropicExecutor implements Executor {
   private async executeApiCall(
     client: Anthropic,
     clientName: string,
-    agent: Prompty,
+    agent: Agent,
     messages: Message[],
     apiType: string,
   ): Promise<unknown> {
@@ -121,7 +121,7 @@ export class AnthropicExecutor implements Executor {
     return messages;
   }
 
-  protected resolveClient(agent: Prompty): Anthropic {
+  protected resolveClient(agent: Agent): Anthropic {
     const conn = agent.model?.connection;
 
     if (conn instanceof ReferenceConnection) {
@@ -136,7 +136,7 @@ export class AnthropicExecutor implements Executor {
     return new AnthropicSDK(kwargs);
   }
 
-  protected clientKwargs(agent: Prompty): Record<string, unknown> {
+  protected clientKwargs(agent: Agent): Record<string, unknown> {
     const kwargs: Record<string, unknown> = {};
     const conn = agent.model?.connection;
 

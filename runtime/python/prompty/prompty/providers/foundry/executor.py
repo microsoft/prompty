@@ -22,7 +22,7 @@ from ...core.connections import get_connection
 from ...model import (
     ApiKeyConnection,
     FoundryConnection,
-    Prompty,
+    Agent,
     ReferenceConnection,
 )
 from ...tracing.tracer import Tracer, trace
@@ -65,7 +65,7 @@ class FoundryExecutor(_BaseExecutor):
     _trace_prefix = "AzureOpenAI"
 
     @trace
-    def execute(self, agent: Prompty, data: Any) -> Any:
+    def execute(self, agent: Agent, data: Any) -> Any:
         client = self._resolve_client(agent)
         api_type = agent.model.api_type or "chat"
 
@@ -81,7 +81,7 @@ class FoundryExecutor(_BaseExecutor):
             raise ValueError(f"Unsupported apiType: {api_type}")
 
     @trace
-    async def execute_async(self, agent: Prompty, data: Any) -> Any:
+    async def execute_async(self, agent: Agent, data: Any) -> Any:
         client = self._resolve_client_async(agent)
         api_type = agent.model.api_type or "chat"
 
@@ -96,7 +96,7 @@ class FoundryExecutor(_BaseExecutor):
         else:
             raise ValueError(f"Unsupported apiType: {api_type}")
 
-    def _resolve_client(self, agent: Prompty) -> Any:
+    def _resolve_client(self, agent: Agent) -> Any:
         """Resolve the sync Azure OpenAI client from connection config."""
         conn = agent.model.connection
 
@@ -113,7 +113,7 @@ class FoundryExecutor(_BaseExecutor):
             f"Foundry executor requires connection kind 'key', 'reference', or 'foundry', got: {type(conn).__name__}"
         )
 
-    def _resolve_client_async(self, agent: Prompty) -> Any:
+    def _resolve_client_async(self, agent: Agent) -> Any:
         """Resolve the async Azure OpenAI client from connection config."""
         conn = agent.model.connection
 
@@ -192,7 +192,7 @@ class FoundryExecutor(_BaseExecutor):
             )
         return client
 
-    def _build_client_from_entra(self, conn: FoundryConnection, agent: Prompty) -> Any:
+    def _build_client_from_entra(self, conn: FoundryConnection, agent: Agent) -> Any:
         """Build a sync AzureOpenAI client using Entra ID (DefaultAzureCredential)."""
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
         from openai import OpenAI
@@ -218,7 +218,7 @@ class FoundryExecutor(_BaseExecutor):
             )
         return client
 
-    def _build_async_client_from_entra(self, conn: FoundryConnection, agent: Prompty) -> Any:
+    def _build_async_client_from_entra(self, conn: FoundryConnection, agent: Agent) -> Any:
         """Build an async AsyncAzureOpenAI client using Entra ID (DefaultAzureCredential)."""
         from azure.identity import DefaultAzureCredential, get_bearer_token_provider
         from openai import AsyncOpenAI

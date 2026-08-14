@@ -7,7 +7,7 @@
  */
 
 import OpenAI from "openai";
-import type { Prompty } from "@prompty/core";
+import type { Agent } from "@prompty/core";
 import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text } from "@prompty/core";
 import type { Executor } from "@prompty/core";
 import { getConnection } from "@prompty/core";
@@ -15,7 +15,7 @@ import { traceSpan, sanitizeValue } from "@prompty/core";
 import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "./wire.js";
 
 export class OpenAIExecutor implements Executor {
-  async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
+  async execute(agent: Agent, messages: Message[]): Promise<unknown> {
     return traceSpan("OpenAIExecutor", async (emit) => {
       emit("signature", "prompty.openai.executor.OpenAIExecutor.invoke");
       emit("inputs", { data: messages });
@@ -46,7 +46,7 @@ export class OpenAIExecutor implements Executor {
   private async executeApiCall(
     client: OpenAI,
     clientName: string,
-    agent: Prompty,
+    agent: Agent,
     messages: Message[],
     apiType: string,
   ): Promise<unknown> {
@@ -173,7 +173,7 @@ export class OpenAIExecutor implements Executor {
     return messages;
   }
 
-  protected resolveClient(agent: Prompty): OpenAI {
+  protected resolveClient(agent: Agent): OpenAI {
     const conn = agent.model?.connection;
 
     if (conn instanceof ReferenceConnection) {
@@ -184,7 +184,7 @@ export class OpenAIExecutor implements Executor {
     return new OpenAI(kwargs);
   }
 
-  protected clientKwargs(agent: Prompty): Record<string, unknown> {
+  protected clientKwargs(agent: Agent): Record<string, unknown> {
     const kwargs: Record<string, unknown> = {};
     const conn = agent.model?.connection;
 

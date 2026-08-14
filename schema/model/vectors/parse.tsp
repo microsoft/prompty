@@ -4,10 +4,10 @@ namespace Prompty;
 
 // Behavior vectors for the Parser.parse callable seam, migrated from
 // spec/vectors/parse/parse_vectors.json. Bound to:
-//   parse(agent: Prompty, rendered: string, context?: Record<unknown>): Message[]
+//   parse(agent: Agent, rendered: string, context?: Record<unknown>): Message[]
 // Encoding notes:
 //   - parse is agent-independent (role-marker splitting), so agent = #{} (empty;
-//     every Prompty field is optional/defaulted).
+//     every Agent field is optional/defaulted).
 //   - rendered maps 1:1. The JSON thread_inputs maps to the context param
 //     (keyed by input name, e.g. conversation), which the thread-nonce
 //     expansion consumes.

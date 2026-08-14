@@ -13,7 +13,7 @@ use serde_json::{Value, json};
 use prompty::interfaces::{InvokerError, Processor};
 use prompty::model::{
     InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
-    ModelInvocationResponse, ModelToolRequest, Prompty,
+    ModelInvocationResponse, ModelToolRequest, Agent,
 };
 use prompty::types::{Message, Role, ToolCall};
 
@@ -22,13 +22,13 @@ pub struct AnthropicProcessor;
 
 #[async_trait]
 impl Processor for AnthropicProcessor {
-    async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, agent: &Agent, response: Value) -> Result<Value, InvokerError> {
         process_response(agent, &response)
     }
 
     async fn process_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         response: Value,
         _request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -61,7 +61,7 @@ impl Processor for AnthropicProcessor {
 
     async fn process_raw_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         response: Value,
         request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -109,7 +109,7 @@ fn portable_assistant_messages(response: &Value) -> Vec<Message> {
 ///
 /// This is the shared logic used by both the `AnthropicProcessor` trait impl
 /// and can be called directly for testing.
-pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, InvokerError> {
+pub fn process_response(agent: &Agent, response: &Value) -> Result<Value, InvokerError> {
     let content = response
         .get("content")
         .and_then(|c| c.as_array())
@@ -442,17 +442,17 @@ mod tests {
     use prompty::model::context::LoadContext;
     use serde_json::json;
 
-    fn make_agent() -> Prompty {
+    fn make_agent() -> Agent {
         let data = json!({
             "name": "test",
             "kind": "prompt",
             "model": {"id": "claude-3", "provider": "anthropic"},
             "instructions": "test"
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
-    fn make_agent_with_outputs() -> Prompty {
+    fn make_agent_with_outputs() -> Agent {
         let data = json!({
             "name": "test",
             "kind": "prompt",
@@ -463,7 +463,7 @@ mod tests {
                 {"name": "temp", "kind": "integer"}
             ]
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     #[tokio::test]

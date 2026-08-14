@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use prompty::interfaces::{Executor, InvokerError, Processor};
 use prompty::model::context::LoadContext;
-use prompty::model::{ModelInvocationRequest, Prompty};
+use prompty::model::{ModelInvocationRequest, Agent};
 use prompty::structured::to_structured_value;
 use prompty::types::{Message, StreamChunk};
 use prompty::{
@@ -56,7 +56,7 @@ struct ScriptedExecutor {
 impl Executor for ScriptedExecutor {
     async fn execute(
         &self,
-        _agent: &Prompty,
+        _agent: &Agent,
         _messages: &[Message],
     ) -> Result<Value, InvokerError> {
         self.calls.fetch_add(1, Ordering::SeqCst);
@@ -73,7 +73,7 @@ struct ContentProcessor;
 
 #[async_trait]
 impl Processor for ContentProcessor {
-    async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, _agent: &Agent, response: Value) -> Result<Value, InvokerError> {
         Ok(response["choices"][0]["message"]["content"].clone())
     }
 }
@@ -82,7 +82,7 @@ struct StructuredProcessor;
 
 #[async_trait]
 impl Processor for StructuredProcessor {
-    async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, _agent: &Agent, _response: Value) -> Result<Value, InvokerError> {
         Ok(to_structured_value(&prompty::create_structured_result(
             json!({"city": "Paris", "country": "France"}),
             r#"{"city":"Paris","country":"France"}"#.to_string(),
@@ -98,7 +98,7 @@ struct PendingAfterOpenStreamExecutor {
 impl Executor for PendingAfterOpenStreamExecutor {
     async fn execute(
         &self,
-        _agent: &Prompty,
+        _agent: &Agent,
         _messages: &[Message],
     ) -> Result<Value, InvokerError> {
         unreachable!("the test exercises the streaming path")
@@ -106,7 +106,7 @@ impl Executor for PendingAfterOpenStreamExecutor {
 
     async fn execute_stream_with_context(
         &self,
-        _agent: &Prompty,
+        _agent: &Agent,
         _request: &ModelInvocationRequest,
         _cancellation: &prompty::CancellationToken,
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
@@ -119,7 +119,7 @@ struct PendingStreamProcessor;
 
 #[async_trait]
 impl Processor for PendingStreamProcessor {
-    async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, _agent: &Agent, _response: Value) -> Result<Value, InvokerError> {
         unreachable!("the test exercises the streaming path")
     }
 
@@ -134,8 +134,8 @@ impl Processor for PendingStreamProcessor {
     }
 }
 
-fn agent(provider: &str) -> Prompty {
-    Prompty::load_from_value(
+fn agent(provider: &str) -> Agent {
+    Agent::load_from_value(
         &json!({
             "kind": "prompt",
             "name": "live-turn-execution",

@@ -241,9 +241,9 @@ public class SpecVectorProcessTests
     // Helpers
     // -----------------------------------------------------------------------
 
-    private static Core.Prompty BuildAgent(bool hasOutputs)
+    private static Core.Agent BuildAgent(bool hasOutputs)
     {
-        var agent = new Core.Prompty { Name = "process_test" };
+        var agent = new Core.Agent { Name = "process_test" };
         if (hasOutputs)
         {
             agent.Outputs = [new Property { Name = "dummy", Kind = "string" }];

@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import type { Prompty } from "../model/agent/prompty.js";
+import type { Agent } from "../model/agent/agent.js";
 import { RICH_KINDS } from "../core/types.js";
 
 /** Map of input name → nonce string (set during rendering, read during prepare). */
@@ -21,7 +21,7 @@ let lastNonces: Map<string, string> = new Map();
  * @returns `[modifiedInputs, noncesMap]`
  */
 export function prepareRenderInputs(
-  agent: Prompty,
+  agent: Agent,
   inputs: Record<string, unknown>,
 ): [Record<string, unknown>, Map<string, string>] {
   const nonces = new Map<string, string>();
@@ -55,7 +55,7 @@ export function clearLastNonces(): void {
  * Get map of `{propertyName: kind}` for inputs with rich kinds
  * (thread, image, file, audio).
  */
-function getRichInputNames(agent: Prompty): Record<string, string> {
+function getRichInputNames(agent: Agent): Record<string, string> {
   const result: Record<string, string> = {};
   const props = agent.inputs;
   if (!props || props.length === 0) return result;

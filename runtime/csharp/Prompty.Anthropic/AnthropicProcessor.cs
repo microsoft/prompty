@@ -11,7 +11,7 @@ namespace Prompty.Anthropic;
 /// </summary>
 public class AnthropicProcessor : IProcessor
 {
-    public Task<object> ProcessAsync(Core.Prompty agent, object response)
+    public Task<object> ProcessAsync(Core.Agent agent, object response)
     {
         if (response is PromptyStream stream)
         {
@@ -30,7 +30,7 @@ public class AnthropicProcessor : IProcessor
         return Task.FromResult(result);
     }
 
-    private static object ProcessResponse(JsonElement json, Core.Prompty agent)
+    private static object ProcessResponse(JsonElement json, Core.Agent agent)
     {
         // Check stop_reason for tool_use
         var stopReason = json.TryGetProperty("stop_reason", out var sr) ? sr.GetString() : null;
@@ -117,7 +117,7 @@ public class AnthropicProcessor : IProcessor
     /// Reconstructs a final result from accumulated SSE events (after the stream has been consumed).
     /// Handles tool calls (content_block_start/delta with tool_use) and text deltas.
     /// </summary>
-    private static object ReconstructFromStreamItems(IReadOnlyList<object> items, Core.Prompty agent)
+    private static object ReconstructFromStreamItems(IReadOnlyList<object> items, Core.Agent agent)
     {
         var textParts = new List<string>();
         var toolCalls = new Dictionary<int, ToolCall>();

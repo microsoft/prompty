@@ -221,10 +221,10 @@ class TestBindTools:
 
     def _make_agent_with_tools(self, tool_names: list[str]) -> Any:
         """Create a minimal agent-like object with function tool declarations."""
-        from prompty.model import FunctionTool, Prompty
+        from prompty.model import FunctionTool, Agent
 
         tools = [FunctionTool(name=name, kind="function") for name in tool_names]
-        return Prompty(name="test", tools=tools)
+        return Agent(name="test", tools=tools)
 
     def test_bind_tools_basic(self):
         """Decorated functions matching declarations produce a valid dict."""
@@ -304,11 +304,11 @@ class TestBindTools:
 
     def test_bind_tools_ignores_non_function_tools(self):
         """Non-function tools (MCP, OpenAPI) are not validated."""
-        from prompty.model import FunctionTool, McpTool, Prompty
+        from prompty.model import FunctionTool, McpTool, Agent
 
         mcp = McpTool(name="filesystem", kind="mcp")
         func_tool = FunctionTool(name="get_weather", kind="function")
-        agent = Prompty(name="test", tools=[func_tool, mcp])
+        agent = Agent(name="test", tools=[func_tool, mcp])
 
         @tool(register=False)
         def get_weather(city: str) -> str:
@@ -320,8 +320,8 @@ class TestBindTools:
 
     def test_bind_tools_empty(self):
         """Empty tools list with no function declarations is valid."""
-        from prompty.model import Prompty
+        from prompty.model import Agent
 
-        agent = Prompty(name="test")
+        agent = Agent(name="test")
         result = bind_tools(agent, [])
         assert result == {}

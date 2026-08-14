@@ -11,7 +11,7 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import { Message, text } from "../src/core/types.js";
-import { Prompty, Property } from "@prompty/core";
+import { Agent, Property } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 import {
   createStructuredResult,
@@ -35,7 +35,7 @@ const PERSON_DATA = { name: "Jane", age: 30, email: "jane@example.com" };
 // ---------------------------------------------------------------------------
 
 class MockRenderer implements Renderer {
-  async render(_agent: Prompty, template: string, inputs: Record<string, unknown>): Promise<string> {
+  async render(_agent: Agent, template: string, inputs: Record<string, unknown>): Promise<string> {
     let result = template;
     for (const [key, val] of Object.entries(inputs)) {
       result = result.replace(`{{${key}}}`, String(val));
@@ -45,7 +45,7 @@ class MockRenderer implements Renderer {
 }
 
 class MockParser implements Parser {
-  async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
+  async parse(_agent: Agent, rendered: string): Promise<Message[]> {
     return [new Message({ role: "user", parts: [text(rendered)] })];
   }
 }
@@ -58,7 +58,7 @@ class MockParser implements Parser {
 class StructuredExecutor implements Executor {
   constructor(private jsonContent: string = WEATHER_JSON) {}
 
-  async execute(_agent: Prompty, _messages: Message[]): Promise<unknown> {
+  async execute(_agent: Agent, _messages: Message[]): Promise<unknown> {
     return {
       choices: [{
         message: {
@@ -105,7 +105,7 @@ class StructuredExecutor implements Executor {
  * JSON in a StructuredResult when the agent has outputs defined.
  */
 class StructuredProcessor implements Processor {
-  async process(agent: Prompty, response: unknown): Promise<unknown> {
+  async process(agent: Agent, response: unknown): Promise<unknown> {
     const r = response as Record<string, unknown>;
     const choices = r.choices as Record<string, unknown>[];
     const msg = choices[0].message as Record<string, unknown>;
@@ -129,8 +129,8 @@ function makeStructuredAgent(overrides?: {
   name?: string;
   instructions?: string;
   jsonContent?: string;
-}): Prompty {
-  const agent = new Prompty({
+}): Agent {
+  const agent = new Agent({
     name: overrides?.name ?? "structured-test",
     instructions: overrides?.instructions ?? "Return weather data for {{city}}.",
     outputs: [
@@ -231,7 +231,7 @@ describe("Structured output through pipeline", () => {
 
     it("returns plain string when agent has no outputs", async () => {
       // Agent without outputs — processor returns raw string content
-      const agent = new Prompty({
+      const agent = new Agent({
         name: "no-outputs",
         instructions: "Hello {{name}}",
       });
@@ -310,7 +310,7 @@ describe("Structured output through pipeline", () => {
     });
 
     it("returns plain string when agent has no outputs", async () => {
-      const agent = new Prompty({
+      const agent = new Agent({
         name: "no-outputs",
         instructions: "Hello",
       });
@@ -336,7 +336,7 @@ describe("Structured output through pipeline", () => {
       registerExecutor("person-mock", new StructuredExecutor(PERSON_JSON));
       registerProcessor("person-mock", new StructuredProcessor());
 
-      const agent = new Prompty({
+      const agent = new Agent({
         name: "person-test",
         instructions: "Return person info",
         outputs: [

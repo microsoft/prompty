@@ -16,13 +16,14 @@ from ..tools._Tool import Tool
 
 
 @dataclass
-class Prompty:
-    """A Prompty is a markdown file format for LLM prompts. The frontmatter defines
-    structured metadata including model configuration, input/output schemas, tools,
-    and template settings. The markdown body becomes the instructions.
+class Agent:
+    """An Agent is the root model produced from a .prompty markdown file for LLM
+    prompts. The frontmatter defines structured metadata including model
+    configuration, input/output schemas, tools, and template settings. The
+    markdown body becomes the instructions.
 
     This is the single root type for the Prompty schema — there is no abstract base
-    class or kind discriminator. A .prompty file always produces a Prompty instance.
+    class or kind discriminator. A .prompty file always produces an Agent instance.
 
     Runtime loaders may resolve frontmatter references such as `${env:VAR}` and
     `${file:relative/path}`. File references must be treated as a host-controlled
@@ -68,13 +69,13 @@ class Prompty:
     instructions: str | None = None
 
     @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "Prompty":
-        """Load a Prompty instance.
+    def load(data: Any, context: LoadContext | None = None) -> "Agent":
+        """Load a Agent instance.
         Args:
             data (Any): The data to load the instance from.
             context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
         Returns:
-            Prompty: The loaded Prompty instance.
+            Agent: The loaded Agent instance.
 
         """
 
@@ -83,10 +84,10 @@ class Prompty:
         data = context.process_input(data)
 
         if not isinstance(data, dict):
-            raise ValueError(f"Invalid data for Prompty: {data}")
+            raise ValueError(f"Invalid data for Agent: {data}")
 
         # create new instance
-        instance = Prompty()
+        instance = Agent()
 
         if data is not None and "name" in data:
             instance.name = data["name"]
@@ -97,13 +98,13 @@ class Prompty:
         if data is not None and "metadata" in data:
             instance.metadata = data["metadata"]
         if data is not None and "inputs" in data:
-            instance.inputs = Prompty.load_inputs(data["inputs"], context.at("inputs"))
+            instance.inputs = Agent.load_inputs(data["inputs"], context.at("inputs"))
         if data is not None and "outputs" in data:
-            instance.outputs = Prompty.load_outputs(data["outputs"], context.at("outputs"))
+            instance.outputs = Agent.load_outputs(data["outputs"], context.at("outputs"))
         if data is not None and "model" in data:
             instance.model = Model.load(data["model"], context.at("model"))
         if data is not None and "tools" in data:
-            instance.tools = Prompty.load_tools(data["tools"], context.at("tools"))
+            instance.tools = Agent.load_tools(data["tools"], context.at("tools"))
         if data is not None and "template" in data:
             instance.template = Template.load(data["template"], context.at("template"))
         if data is not None and "instructions" in data:
@@ -269,7 +270,7 @@ class Prompty:
         return result
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
-        """Save the Prompty instance to a dictionary.
+        """Save the Agent instance to a dictionary.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
         Returns:
@@ -291,13 +292,13 @@ class Prompty:
         if obj.metadata is not None:
             result["metadata"] = obj.metadata
         if obj.inputs is not None:
-            result["inputs"] = Prompty.save_inputs(obj.inputs, context)
+            result["inputs"] = Agent.save_inputs(obj.inputs, context)
         if obj.outputs is not None:
-            result["outputs"] = Prompty.save_outputs(obj.outputs, context)
+            result["outputs"] = Agent.save_outputs(obj.outputs, context)
         if obj.model is not None:
             result["model"] = obj.model.save(context)
         if obj.tools is not None:
-            result["tools"] = Prompty.save_tools(obj.tools, context)
+            result["tools"] = Agent.save_tools(obj.tools, context)
         if obj.template is not None:
             result["template"] = obj.template.save(context)
         if obj.instructions is not None:
@@ -308,7 +309,7 @@ class Prompty:
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:
-        """Convert the Prompty instance to a YAML string.
+        """Convert the Agent instance to a YAML string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
         Returns:
@@ -320,7 +321,7 @@ class Prompty:
         return context.to_yaml(self.save(context))
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
-        """Convert the Prompty instance to a JSON string.
+        """Convert the Agent instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

@@ -5,7 +5,7 @@ namespace Prompty;
 // Behavior vectors for the Renderer.render callable seam, migrated from
 // spec/vectors/render/render_vectors.json. Each vector binds to the CURRENT
 // render(agent, template, inputs): string signature:
-//   - input.agent is an empty Prompty (#{}) because these cases exercise pure
+//   - input.agent is an empty Agent (#{}) because these cases exercise pure
 //     template+inputs rendering and do not read agent configuration.
 //   - provider carries the template engine (dispatch selector), using Typra's
 //     first-class vector provider field rather than an operation parameter.

@@ -3,7 +3,7 @@
 //! Reads `spec/vectors/wire/wire_vectors.json` and tests that our wire format
 //! conversion matches the expected output for all Anthropic-provider vectors.
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use prompty::types::{ContentPart, Message, Role};
 use prompty_anthropic::wire;
@@ -79,7 +79,7 @@ fn build_messages(input: &Value) -> Vec<Message> {
 }
 
 /// Build a Prompty agent from vector input fields.
-fn build_agent(input: &Value) -> Prompty {
+fn build_agent(input: &Value) -> Agent {
     let model_id = input["model_id"].as_str().unwrap_or("claude-3");
     let api_type = input
         .get("apiType")
@@ -119,10 +119,10 @@ fn build_agent(input: &Value) -> Prompty {
         }
     }
 
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
-fn build_agent_for_process(input: &Value) -> Prompty {
+fn build_agent_for_process(input: &Value) -> Agent {
     let has_outputs = input
         .get("has_outputs")
         .and_then(|v| v.as_bool())
@@ -145,7 +145,7 @@ fn build_agent_for_process(input: &Value) -> Prompty {
         ]);
     }
 
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
 /// Compare two JSON values, ignoring key order in objects.

@@ -3,11 +3,11 @@
 
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::{LoadContext, SaveContext};
 
 #[test]
-fn test_prompty_load_json() {
+fn test_agent_load_json() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -76,7 +76,7 @@ fn test_prompty_load_json() {
 }
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &ctx);
+    let result = Agent::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -89,7 +89,7 @@ fn test_prompty_load_json() {
 }
 
 #[test]
-fn test_prompty_load_yaml() {
+fn test_agent_load_yaml() {
     let yaml = r####"
 name: basic-prompt
 displayName: Basic Prompt
@@ -139,7 +139,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_yaml(yaml, &ctx);
+    let result = Agent::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -149,7 +149,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 
 #[test]
-fn test_prompty_roundtrip() {
+fn test_agent_roundtrip() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -218,7 +218,7 @@ fn test_prompty_roundtrip() {
 }
 "####;
     let load_ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &load_ctx);
+    let result = Agent::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
@@ -228,7 +228,7 @@ fn test_prompty_roundtrip() {
 
 #[cfg(feature = "serde")]
 #[test]
-fn test_prompty_serde_roundtrip() {
+fn test_agent_serde_roundtrip() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -296,21 +296,21 @@ fn test_prompty_serde_roundtrip() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let instance: Prompty = serde_json::from_str(json)
+    let instance: Agent = serde_json::from_str(json)
         .expect("serde should deserialize canonical JSON");
     let value = serde_json::to_value(&instance)
         .expect("serde should serialize");
     let canonical: serde_json::Value = serde_json::from_str(json)
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
-    assert_eq!(instance, Prompty::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(instance, Agent::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
     assert!(value.get("inputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("inputs").and_then(|v| v.get("firstName")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("outputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("outputs").and_then(|v| v.get("answer")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("tools").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("tools").and_then(|v| v.get("getCurrentWeather")).is_some(), "keyed collection map must be keyed by the element name");
-    let reparsed: Prompty = serde_json::from_value(value)
+    let reparsed: Agent = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
     let map_json = r####"
@@ -379,7 +379,7 @@ fn test_prompty_serde_roundtrip() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let from_map: Prompty = serde_json::from_str(map_json)
+    let from_map: Agent = serde_json::from_str(map_json)
         .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
     assert_eq!(from_map, instance, "map-form and array-form inputs must load to equal instances");
     let map_value = serde_json::to_value(&from_map)
@@ -388,7 +388,7 @@ fn test_prompty_serde_roundtrip() {
 }
 
 #[test]
-fn test_prompty_load_json_1() {
+fn test_agent_load_json_1() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -456,7 +456,7 @@ fn test_prompty_load_json_1() {
 }
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &ctx);
+    let result = Agent::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -469,7 +469,7 @@ fn test_prompty_load_json_1() {
 }
 
 #[test]
-fn test_prompty_load_yaml_1() {
+fn test_agent_load_yaml_1() {
     let yaml = r####"
 name: basic-prompt
 displayName: Basic Prompt
@@ -519,7 +519,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_yaml(yaml, &ctx);
+    let result = Agent::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -529,7 +529,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 
 #[test]
-fn test_prompty_roundtrip_1() {
+fn test_agent_roundtrip_1() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -597,7 +597,7 @@ fn test_prompty_roundtrip_1() {
 }
 "####;
     let load_ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &load_ctx);
+    let result = Agent::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
@@ -607,7 +607,7 @@ fn test_prompty_roundtrip_1() {
 
 #[cfg(feature = "serde")]
 #[test]
-fn test_prompty_serde_roundtrip_1() {
+fn test_agent_serde_roundtrip_1() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -674,27 +674,27 @@ fn test_prompty_serde_roundtrip_1() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let instance: Prompty = serde_json::from_str(json)
+    let instance: Agent = serde_json::from_str(json)
         .expect("serde should deserialize canonical JSON");
     let value = serde_json::to_value(&instance)
         .expect("serde should serialize");
     let canonical: serde_json::Value = serde_json::from_str(json)
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
-    assert_eq!(instance, Prompty::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(instance, Agent::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
     assert!(value.get("inputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("inputs").and_then(|v| v.get("firstName")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("outputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("outputs").and_then(|v| v.get("answer")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("tools").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("tools").and_then(|v| v.get("getCurrentWeather")).is_some(), "keyed collection map must be keyed by the element name");
-    let reparsed: Prompty = serde_json::from_value(value)
+    let reparsed: Agent = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
 
 #[test]
-fn test_prompty_load_json_2() {
+fn test_agent_load_json_2() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -764,7 +764,7 @@ fn test_prompty_load_json_2() {
 }
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &ctx);
+    let result = Agent::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -777,7 +777,7 @@ fn test_prompty_load_json_2() {
 }
 
 #[test]
-fn test_prompty_load_yaml_2() {
+fn test_agent_load_yaml_2() {
     let yaml = r####"
 name: basic-prompt
 displayName: Basic Prompt
@@ -827,7 +827,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_yaml(yaml, &ctx);
+    let result = Agent::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -837,7 +837,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 
 #[test]
-fn test_prompty_roundtrip_2() {
+fn test_agent_roundtrip_2() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -907,7 +907,7 @@ fn test_prompty_roundtrip_2() {
 }
 "####;
     let load_ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &load_ctx);
+    let result = Agent::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
@@ -917,7 +917,7 @@ fn test_prompty_roundtrip_2() {
 
 #[cfg(feature = "serde")]
 #[test]
-fn test_prompty_serde_roundtrip_2() {
+fn test_agent_serde_roundtrip_2() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -986,21 +986,21 @@ fn test_prompty_serde_roundtrip_2() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let instance: Prompty = serde_json::from_str(json)
+    let instance: Agent = serde_json::from_str(json)
         .expect("serde should deserialize canonical JSON");
     let value = serde_json::to_value(&instance)
         .expect("serde should serialize");
     let canonical: serde_json::Value = serde_json::from_str(json)
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
-    assert_eq!(instance, Prompty::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(instance, Agent::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
     assert!(value.get("inputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("inputs").and_then(|v| v.get("firstName")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("outputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("outputs").and_then(|v| v.get("answer")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("tools").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("tools").and_then(|v| v.get("getCurrentWeather")).is_some(), "keyed collection map must be keyed by the element name");
-    let reparsed: Prompty = serde_json::from_value(value)
+    let reparsed: Agent = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
     let map_json = r####"
@@ -1069,7 +1069,7 @@ fn test_prompty_serde_roundtrip_2() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let from_map: Prompty = serde_json::from_str(map_json)
+    let from_map: Agent = serde_json::from_str(map_json)
         .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
     assert_eq!(from_map, instance, "map-form and array-form inputs must load to equal instances");
     let map_value = serde_json::to_value(&from_map)
@@ -1079,7 +1079,7 @@ fn test_prompty_serde_roundtrip_2() {
 }
 
 #[test]
-fn test_prompty_load_json_3() {
+fn test_agent_load_json_3() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -1148,7 +1148,7 @@ fn test_prompty_load_json_3() {
 }
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &ctx);
+    let result = Agent::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1161,7 +1161,7 @@ fn test_prompty_load_json_3() {
 }
 
 #[test]
-fn test_prompty_load_yaml_3() {
+fn test_agent_load_yaml_3() {
     let yaml = r####"
 name: basic-prompt
 displayName: Basic Prompt
@@ -1211,7 +1211,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_yaml(yaml, &ctx);
+    let result = Agent::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1221,7 +1221,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 
 #[test]
-fn test_prompty_roundtrip_3() {
+fn test_agent_roundtrip_3() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -1290,7 +1290,7 @@ fn test_prompty_roundtrip_3() {
 }
 "####;
     let load_ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &load_ctx);
+    let result = Agent::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
@@ -1300,7 +1300,7 @@ fn test_prompty_roundtrip_3() {
 
 #[cfg(feature = "serde")]
 #[test]
-fn test_prompty_serde_roundtrip_3() {
+fn test_agent_serde_roundtrip_3() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -1368,21 +1368,21 @@ fn test_prompty_serde_roundtrip_3() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let instance: Prompty = serde_json::from_str(json)
+    let instance: Agent = serde_json::from_str(json)
         .expect("serde should deserialize canonical JSON");
     let value = serde_json::to_value(&instance)
         .expect("serde should serialize");
     let canonical: serde_json::Value = serde_json::from_str(json)
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
-    assert_eq!(instance, Prompty::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(instance, Agent::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
     assert!(value.get("inputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("inputs").and_then(|v| v.get("firstName")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("outputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("outputs").and_then(|v| v.get("answer")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("tools").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("tools").and_then(|v| v.get("getCurrentWeather")).is_some(), "keyed collection map must be keyed by the element name");
-    let reparsed: Prompty = serde_json::from_value(value)
+    let reparsed: Agent = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
     let map_json = r####"
@@ -1451,7 +1451,7 @@ fn test_prompty_serde_roundtrip_3() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let from_map: Prompty = serde_json::from_str(map_json)
+    let from_map: Agent = serde_json::from_str(map_json)
         .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
     assert_eq!(from_map, instance, "map-form and array-form inputs must load to equal instances");
     let map_value = serde_json::to_value(&from_map)
@@ -1460,7 +1460,7 @@ fn test_prompty_serde_roundtrip_3() {
 }
 
 #[test]
-fn test_prompty_load_json_4() {
+fn test_agent_load_json_4() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -1532,7 +1532,7 @@ fn test_prompty_load_json_4() {
 }
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &ctx);
+    let result = Agent::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1545,7 +1545,7 @@ fn test_prompty_load_json_4() {
 }
 
 #[test]
-fn test_prompty_load_yaml_4() {
+fn test_agent_load_yaml_4() {
     let yaml = r####"
 name: basic-prompt
 displayName: Basic Prompt
@@ -1595,7 +1595,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_yaml(yaml, &ctx);
+    let result = Agent::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1605,7 +1605,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 
 #[test]
-fn test_prompty_roundtrip_4() {
+fn test_agent_roundtrip_4() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -1677,7 +1677,7 @@ fn test_prompty_roundtrip_4() {
 }
 "####;
     let load_ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &load_ctx);
+    let result = Agent::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
@@ -1687,7 +1687,7 @@ fn test_prompty_roundtrip_4() {
 
 #[cfg(feature = "serde")]
 #[test]
-fn test_prompty_serde_roundtrip_4() {
+fn test_agent_serde_roundtrip_4() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -1758,21 +1758,21 @@ fn test_prompty_serde_roundtrip_4() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let instance: Prompty = serde_json::from_str(json)
+    let instance: Agent = serde_json::from_str(json)
         .expect("serde should deserialize canonical JSON");
     let value = serde_json::to_value(&instance)
         .expect("serde should serialize");
     let canonical: serde_json::Value = serde_json::from_str(json)
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
-    assert_eq!(instance, Prompty::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(instance, Agent::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
     assert!(value.get("inputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("inputs").and_then(|v| v.get("firstName")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("outputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("outputs").and_then(|v| v.get("answer")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("tools").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("tools").and_then(|v| v.get("getCurrentWeather")).is_some(), "keyed collection map must be keyed by the element name");
-    let reparsed: Prompty = serde_json::from_value(value)
+    let reparsed: Agent = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
     let map_json = r####"
@@ -1841,7 +1841,7 @@ fn test_prompty_serde_roundtrip_4() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let from_map: Prompty = serde_json::from_str(map_json)
+    let from_map: Agent = serde_json::from_str(map_json)
         .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
     assert_eq!(from_map, instance, "map-form and array-form inputs must load to equal instances");
     let map_value = serde_json::to_value(&from_map)
@@ -1851,7 +1851,7 @@ fn test_prompty_serde_roundtrip_4() {
 }
 
 #[test]
-fn test_prompty_load_json_5() {
+fn test_agent_load_json_5() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -1922,7 +1922,7 @@ fn test_prompty_load_json_5() {
 }
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &ctx);
+    let result = Agent::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1935,7 +1935,7 @@ fn test_prompty_load_json_5() {
 }
 
 #[test]
-fn test_prompty_load_yaml_5() {
+fn test_agent_load_yaml_5() {
     let yaml = r####"
 name: basic-prompt
 displayName: Basic Prompt
@@ -1985,7 +1985,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_yaml(yaml, &ctx);
+    let result = Agent::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -1995,7 +1995,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 
 #[test]
-fn test_prompty_roundtrip_5() {
+fn test_agent_roundtrip_5() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -2066,7 +2066,7 @@ fn test_prompty_roundtrip_5() {
 }
 "####;
     let load_ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &load_ctx);
+    let result = Agent::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
@@ -2076,7 +2076,7 @@ fn test_prompty_roundtrip_5() {
 
 #[cfg(feature = "serde")]
 #[test]
-fn test_prompty_serde_roundtrip_5() {
+fn test_agent_serde_roundtrip_5() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -2146,21 +2146,21 @@ fn test_prompty_serde_roundtrip_5() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let instance: Prompty = serde_json::from_str(json)
+    let instance: Agent = serde_json::from_str(json)
         .expect("serde should deserialize canonical JSON");
     let value = serde_json::to_value(&instance)
         .expect("serde should serialize");
     let canonical: serde_json::Value = serde_json::from_str(json)
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
-    assert_eq!(instance, Prompty::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(instance, Agent::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
     assert!(value.get("inputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("inputs").and_then(|v| v.get("firstName")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("outputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("outputs").and_then(|v| v.get("answer")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("tools").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("tools").and_then(|v| v.get("getCurrentWeather")).is_some(), "keyed collection map must be keyed by the element name");
-    let reparsed: Prompty = serde_json::from_value(value)
+    let reparsed: Agent = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
     let map_json = r####"
@@ -2229,7 +2229,7 @@ fn test_prompty_serde_roundtrip_5() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let from_map: Prompty = serde_json::from_str(map_json)
+    let from_map: Agent = serde_json::from_str(map_json)
         .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
     assert_eq!(from_map, instance, "map-form and array-form inputs must load to equal instances");
     let map_value = serde_json::to_value(&from_map)
@@ -2238,7 +2238,7 @@ fn test_prompty_serde_roundtrip_5() {
 }
 
 #[test]
-fn test_prompty_load_json_6() {
+fn test_agent_load_json_6() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -2311,7 +2311,7 @@ fn test_prompty_load_json_6() {
 }
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &ctx);
+    let result = Agent::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -2324,7 +2324,7 @@ fn test_prompty_load_json_6() {
 }
 
 #[test]
-fn test_prompty_load_yaml_6() {
+fn test_agent_load_yaml_6() {
     let yaml = r####"
 name: basic-prompt
 displayName: Basic Prompt
@@ -2374,7 +2374,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_yaml(yaml, &ctx);
+    let result = Agent::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -2384,7 +2384,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 
 #[test]
-fn test_prompty_roundtrip_6() {
+fn test_agent_roundtrip_6() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -2457,7 +2457,7 @@ fn test_prompty_roundtrip_6() {
 }
 "####;
     let load_ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &load_ctx);
+    let result = Agent::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
@@ -2467,7 +2467,7 @@ fn test_prompty_roundtrip_6() {
 
 #[cfg(feature = "serde")]
 #[test]
-fn test_prompty_serde_roundtrip_6() {
+fn test_agent_serde_roundtrip_6() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -2539,21 +2539,21 @@ fn test_prompty_serde_roundtrip_6() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let instance: Prompty = serde_json::from_str(json)
+    let instance: Agent = serde_json::from_str(json)
         .expect("serde should deserialize canonical JSON");
     let value = serde_json::to_value(&instance)
         .expect("serde should serialize");
     let canonical: serde_json::Value = serde_json::from_str(json)
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
-    assert_eq!(instance, Prompty::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(instance, Agent::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
     assert!(value.get("inputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("inputs").and_then(|v| v.get("firstName")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("outputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("outputs").and_then(|v| v.get("answer")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("tools").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("tools").and_then(|v| v.get("getCurrentWeather")).is_some(), "keyed collection map must be keyed by the element name");
-    let reparsed: Prompty = serde_json::from_value(value)
+    let reparsed: Agent = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
     let map_json = r####"
@@ -2622,7 +2622,7 @@ fn test_prompty_serde_roundtrip_6() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let from_map: Prompty = serde_json::from_str(map_json)
+    let from_map: Agent = serde_json::from_str(map_json)
         .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
     assert_eq!(from_map, instance, "map-form and array-form inputs must load to equal instances");
     let map_value = serde_json::to_value(&from_map)
@@ -2633,7 +2633,7 @@ fn test_prompty_serde_roundtrip_6() {
 }
 
 #[test]
-fn test_prompty_load_json_7() {
+fn test_agent_load_json_7() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -2705,7 +2705,7 @@ fn test_prompty_load_json_7() {
 }
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &ctx);
+    let result = Agent::from_json(json, &ctx);
     assert!(result.is_ok(), "Failed to load from JSON: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -2718,7 +2718,7 @@ fn test_prompty_load_json_7() {
 }
 
 #[test]
-fn test_prompty_load_yaml_7() {
+fn test_agent_load_yaml_7() {
     let yaml = r####"
 name: basic-prompt
 displayName: Basic Prompt
@@ -2768,7 +2768,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 "####;
     let ctx = LoadContext::default();
-    let result = Prompty::from_yaml(yaml, &ctx);
+    let result = Agent::from_yaml(yaml, &ctx);
     assert!(result.is_ok(), "Failed to load from YAML: {:?}", result.err());
     let instance = result.unwrap();
     assert_eq!(instance.name, "basic-prompt");
@@ -2778,7 +2778,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 
 #[test]
-fn test_prompty_roundtrip_7() {
+fn test_agent_roundtrip_7() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -2850,7 +2850,7 @@ fn test_prompty_roundtrip_7() {
 }
 "####;
     let load_ctx = LoadContext::default();
-    let result = Prompty::from_json(json, &load_ctx);
+    let result = Agent::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
     let instance = result.unwrap();
     let save_ctx = SaveContext::default();
@@ -2860,7 +2860,7 @@ fn test_prompty_roundtrip_7() {
 
 #[cfg(feature = "serde")]
 #[test]
-fn test_prompty_serde_roundtrip_7() {
+fn test_agent_serde_roundtrip_7() {
     let json = r####"
 {
   "name": "basic-prompt",
@@ -2931,21 +2931,21 @@ fn test_prompty_serde_roundtrip_7() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let instance: Prompty = serde_json::from_str(json)
+    let instance: Agent = serde_json::from_str(json)
         .expect("serde should deserialize canonical JSON");
     let value = serde_json::to_value(&instance)
         .expect("serde should serialize");
     let canonical: serde_json::Value = serde_json::from_str(json)
         .expect("canonical json parses");
     assert_eq!(value, instance.to_value(&SaveContext::default()), "serde serialize must equal canonical to_value");
-    assert_eq!(instance, Prompty::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
+    assert_eq!(instance, Agent::load_from_value(&canonical, &LoadContext::default()), "serde deserialize must equal canonical load_from_value");
     assert!(value.get("inputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("inputs").and_then(|v| v.get("firstName")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("outputs").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("outputs").and_then(|v| v.get("answer")).is_some(), "keyed collection map must be keyed by the element name");
     assert!(value.get("tools").map(|v| v.is_object()).unwrap_or(false), "keyed collection must serialize to canonical name-keyed map, not an array");
     assert!(value.get("tools").and_then(|v| v.get("getCurrentWeather")).is_some(), "keyed collection map must be keyed by the element name");
-    let reparsed: Prompty = serde_json::from_value(value)
+    let reparsed: Agent = serde_json::from_value(value)
         .expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
     let map_json = r####"
@@ -3014,7 +3014,7 @@ fn test_prompty_serde_roundtrip_7() {
   "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some \npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to \ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 "####;
-    let from_map: Prompty = serde_json::from_str(map_json)
+    let from_map: Agent = serde_json::from_str(map_json)
         .expect("serde must deserialize the canonical name-keyed MAP form (a plain Vec derive fails here with \"invalid type: map, expected a sequence\")");
     assert_eq!(from_map, instance, "map-form and array-form inputs must load to equal instances");
     let map_value = serde_json::to_value(&from_map)

@@ -162,7 +162,7 @@ export { Tracer,
 // ---------------------------------------------------------------------------
 
 export {
-  Prompty,
+  Agent,
   Model,
   ModelOptions,
   ModelInfo,
@@ -205,8 +205,8 @@ export {
 } from "./model/index.js";
 
 // Backward-compat aliases (will be removed in a future version)
-export { Prompty as PromptAgent } from "./model/index.js";
-export { Prompty as AgentDefinition } from "./model/index.js";
+export { Agent as PromptAgent } from "./model/index.js";
+export { Agent as AgentDefinition } from "./model/index.js";
 
 // ---------------------------------------------------------------------------
 // Auto-register built-in renderers and parsers

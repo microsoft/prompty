@@ -27,7 +27,7 @@ public class EntraIdTests : IntegrationTestBase
     /// Build an Azure/Foundry agent that authenticates via Entra ID (DefaultAzureCredential).
     /// Uses connection kind "foundry" which the FoundryExecutor routes through AzureOpenAIClient.
     /// </summary>
-    private static Core.Prompty MakeEntraIdAgent(
+    private static Core.Agent MakeEntraIdAgent(
         string apiType = "chat",
         string? deployment = null,
         ModelOptions? options = null)
@@ -55,7 +55,7 @@ public class EntraIdTests : IntegrationTestBase
             ["model"] = modelDict,
         };
 
-        var agent = Core.Prompty.Load(data, new LoadContext());
+        var agent = Core.Agent.Load(data, new LoadContext());
 
         if (options is not null && agent.Model is not null)
             agent.Model.Options = options;

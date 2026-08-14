@@ -19,7 +19,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 
 // Core imports
 import {
-  Prompty,
+  Agent,
   Model,
   ModelOptions,
   Property,
@@ -186,7 +186,7 @@ describe("Spec Vectors: Load", () => {
               const ctx = new LoadContext({
                 preProcess: makeTestPreProcess(input.env ?? {}),
               });
-              Prompty.load(data, ctx);
+              Agent.load(data, ctx);
             }).toThrow(/not set/);
             return;
           }
@@ -290,7 +290,7 @@ function buildAgentFromFrontmatter(
   frontmatter: Record<string, unknown>,
   env?: Record<string, string>,
   files?: Record<string, unknown>,
-): Prompty {
+): Agent {
   const data = JSON.parse(JSON.stringify(frontmatter));
 
   // Handle ${file:...} references manually for test
@@ -317,7 +317,7 @@ function buildAgentFromFrontmatter(
   const ctx = new LoadContext({
     preProcess: makeTestPreProcess(env ?? {}),
   });
-  return Prompty.load(data, ctx);
+  return Agent.load(data, ctx);
 }
 
 function resolveFileRefs(data: any, files: Record<string, unknown>): void {
@@ -334,7 +334,7 @@ function resolveFileRefs(data: any, files: Record<string, unknown>): void {
   }
 }
 
-function validateAgentFields(agent: Prompty, expected: any, vecName: string): void {
+function validateAgentFields(agent: Agent, expected: any, vecName: string): void {
   if (expected.kind !== undefined) {
     // TS runtime doesn't have a 'kind' field — this is always "prompt" by design
     // Document as known gap: no kind field in TS Prompty class
@@ -508,7 +508,7 @@ describe("Spec Vectors: Render", () => {
 
       // Build a minimal agent with the right template engine
       // The render() pipeline function uses agent.instructions as the template
-      const agent = new Prompty({
+      const agent = new Agent({
         name: "test",
         model: new Model({ id: "test" }),
         instructions: template,
@@ -561,7 +561,7 @@ describe("Spec Vectors: Parse", () => {
       const expectedMessages = vec.expected.messages;
 
       // Build a minimal agent
-      const agent = new Prompty({
+      const agent = new Agent({
         name: "test",
         model: new Model({ id: "test" }),
         template: new Template({
@@ -730,7 +730,7 @@ describe("Spec Vectors: Wire", () => {
  * Build a Prompty agent from wire vector input data.
  * This constructs the same agent that the production wire functions expect.
  */
-function buildAgentFromWireInput(input: any, name?: string): Prompty {
+function buildAgentFromWireInput(input: any, name?: string): Agent {
   const model = new Model({ id: input.model_id, provider: input.provider, apiType: input.apiType });
   const opts = input.options ?? {};
   model.options = new ModelOptions({
@@ -745,7 +745,7 @@ function buildAgentFromWireInput(input: any, name?: string): Prompty {
     additionalProperties: opts.additionalProperties,
   });
 
-  const agent = new Prompty({ name: name ?? "wire_test", model: model.id });
+  const agent = new Agent({ name: name ?? "wire_test", model: model.id });
   agent.model = model;
 
   // Build tools
@@ -817,7 +817,7 @@ describe("Spec Vectors: Process", () => {
 
       // Build agent with outputs if needed (production processors check agent.outputs
       // to decide whether to JSON-parse structured output)
-      const agent = new Prompty({ name: "process_test", model: "test" });
+      const agent = new Agent({ name: "process_test", model: "test" });
       if (input.has_outputs) {
         agent.outputs = [new Property({ name: "dummy", kind: "string" })];
       }
@@ -883,7 +883,7 @@ describe("Spec Vectors: Agent", () => {
         });
       });
 
-      const agent = new Prompty({
+      const agent = new Agent({
         name: "agent_test",
         model: "gpt-4",
         instructions: "placeholder",
@@ -901,7 +901,7 @@ describe("Spec Vectors: Agent", () => {
 
       // Mock executor: replays canned responses in order
       const mockExecutor: Executor = {
-        async execute(_agent: Prompty, _messages: Message[]): Promise<unknown> {
+        async execute(_agent: Agent, _messages: Message[]): Promise<unknown> {
           if (responseIdx >= mockResponses.length) {
             throw new Error("Mock executor: ran out of canned responses");
           }
@@ -927,7 +927,7 @@ describe("Spec Vectors: Agent", () => {
 
       // Mock processor: extracts content from our mock response format
       const mockProcessor: Processor = {
-        async process(_agent: Prompty, response: unknown): Promise<unknown> {
+        async process(_agent: Agent, response: unknown): Promise<unknown> {
           const r = response as any;
           const choice = r.choices?.[0];
           return choice?.message?.content ?? "";
@@ -1074,7 +1074,7 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
       });
 
       // Build the agent
-      const agent = new Prompty({ name: "agent_ext_test", model: "gpt-4", instructions: "placeholder" });
+      const agent = new Agent({ name: "agent_ext_test", model: "gpt-4", instructions: "placeholder" });
       agent.model = new Model({ id: "gpt-4", provider: "specmock" });
       agent.tools = tools;
       agent.template = new Template({
@@ -1091,7 +1091,7 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
       let responseIdx = 0;
 
       const mockExecutor: Executor = {
-        async execute(_agent: Prompty, _messages: Message[]): Promise<unknown> {
+        async execute(_agent: Agent, _messages: Message[]): Promise<unknown> {
           return responseIdx < mockResponses.length ? mockResponses[responseIdx++] : FALLBACK_STOP;
         },
         formatToolMessages(
@@ -1113,7 +1113,7 @@ describe("Spec Vectors: Agent Extensions (§13)", () => {
       };
 
       const mockProcessor: Processor = {
-        async process(_agent: Prompty, response: unknown): Promise<unknown> {
+        async process(_agent: Agent, response: unknown): Promise<unknown> {
           const r = response as any;
           return r.choices?.[0]?.message?.content ?? "";
         },

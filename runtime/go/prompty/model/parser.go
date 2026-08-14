@@ -7,7 +7,7 @@ package prompty
 
 type Parser interface {
 	// Parse — Parse rendered text into a structured message array
-	Parse(agent Prompty, rendered string, context *map[string]interface{}) ([]Message, error)
+	Parse(agent Agent, rendered string, context *map[string]interface{}) ([]Message, error)
 	// PreRender — Pre-process a template before rendering, returning modified template and context
 	PreRender(template string) *interface{}
 }

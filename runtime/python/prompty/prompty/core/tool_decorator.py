@@ -228,7 +228,7 @@ def bind_tools(
     Parameters
     ----------
     agent:
-        A loaded Prompty agent (has ``.tools`` attribute).
+        A loaded Agent agent (has ``.tools`` attribute).
     tools:
         List of ``@tool``-decorated functions.
 

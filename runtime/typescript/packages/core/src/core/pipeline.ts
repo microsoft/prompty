@@ -31,7 +31,7 @@
  * @module
  */
 
-import { Prompty } from "../model/agent/prompty.js";
+import { Agent } from "../model/agent/agent.js";
 import {
   type ToolCall,
   Message,
@@ -134,7 +134,7 @@ function sanitizeNonces(value: unknown): unknown {
  * Validate and fill defaults for agent inputs.
  */
 export function validateInputs(
-  agent: Prompty,
+  agent: Agent,
   inputs: Record<string, unknown>,
 ): Record<string, unknown> {
   const props = agent.inputs;
@@ -162,19 +162,19 @@ export function validateInputs(
 // Resolve config helpers
 // ---------------------------------------------------------------------------
 
-function resolveFormatKind(agent: Prompty): string {
+function resolveFormatKind(agent: Agent): string {
   return agent.template?.format?.kind ?? DEFAULT_FORMAT;
 }
 
-function resolveParserKind(agent: Prompty): string {
+function resolveParserKind(agent: Agent): string {
   return agent.template?.parser?.kind ?? DEFAULT_PARSER;
 }
 
-function resolveProvider(agent: Prompty): string {
+function resolveProvider(agent: Agent): string {
   return agent.model?.provider ?? DEFAULT_PROVIDER;
 }
 
-function isStrictMode(agent: Prompty): boolean {
+function isStrictMode(agent: Agent): boolean {
   // Default to strict=true to prevent prompt injection via role markers.
   // When strict, preRender wraps real role markers with nonces so the parser
   // rejects any role marker injected through user inputs.
@@ -182,7 +182,7 @@ function isStrictMode(agent: Prompty): boolean {
 }
 
 /** Serialize agent for trace output, matching Python's load result shape. */
-function serializeAgent(agent: Prompty): Record<string, unknown> {
+function serializeAgent(agent: Agent): Record<string, unknown> {
   const model = agent.model;
   return sanitizeValue("agent", {
     name: agent.name ?? "",
@@ -237,7 +237,7 @@ function serializeMessages(messages: Message[]): unknown[] {
  * Discovered by: `agent.template.format.kind` (default: "nunjucks").
  */
 export async function render(
-  agent: Prompty,
+  agent: Agent,
   inputs: Record<string, unknown>,
 ): Promise<string> {
   const formatKind = resolveFormatKind(agent);
@@ -260,7 +260,7 @@ export async function render(
  * Discovered by: `agent.template.parser.kind` (default: "prompty").
  */
 export async function parse(
-  agent: Prompty,
+  agent: Agent,
   rendered: string,
   context?: Record<string, unknown>,
 ): Promise<Message[]> {
@@ -282,7 +282,7 @@ export async function parse(
  * Discovered by: `agent.model.provider` (default: "openai").
  */
 export async function process(
-  agent: Prompty,
+  agent: Agent,
   response: unknown,
 ): Promise<unknown> {
   // Delegates directly — the processor implementation creates its own trace span
@@ -299,7 +299,7 @@ export async function process(
  * Render template + parse into messages + expand thread markers.
  */
 export async function prepare(
-  agent: Prompty,
+  agent: Agent,
   inputs?: Record<string, unknown>,
 ): Promise<Message[]> {
   return traceSpan("prepare", async (emit) => {
@@ -359,7 +359,7 @@ export async function prepare(
  * Execute messages against the LLM and process the response.
  */
 export async function run(
-  agent: Prompty,
+  agent: Agent,
   messages: Message[],
   options?: { raw?: boolean },
 ): Promise<unknown> {
@@ -416,7 +416,7 @@ export interface InvokeOptions {
  * @overload Untyped — returns `unknown`.
  */
 export async function invoke(
-  prompt: string | Prompty,
+  prompt: string | Agent,
   inputs?: Record<string, unknown>,
   options?: InvokeOptions,
 ): Promise<unknown>;
@@ -430,13 +430,13 @@ export async function invoke(
  * @overload Typed — returns `Promise<T>`.
  */
 export async function invoke<T>(
-  prompt: string | Prompty,
+  prompt: string | Agent,
   inputs: Record<string, unknown> | undefined,
   options: InvokeOptions & { validator: (data: unknown) => T },
 ): Promise<T>;
 // Implementation
 export async function invoke<T = unknown>(
-  prompt: string | Prompty,
+  prompt: string | Agent,
   inputs?: Record<string, unknown>,
   options?: InvokeOptions & { validator?: (data: unknown) => T },
 ): Promise<T> {
@@ -487,8 +487,8 @@ export async function invoke<T = unknown>(
  * Respects AbortSignal for cancellation during backoff.
  */
 async function invokeWithRetry(
-  executor: { execute(agent: Prompty, messages: Message[]): Promise<unknown> },
-  agent: Prompty,
+  executor: { execute(agent: Agent, messages: Message[]): Promise<unknown> },
+  agent: Agent,
   messages: Message[],
   maxRetries: number,
   onEvent?: EventCallback,
@@ -643,7 +643,7 @@ async function applyCompaction(
  * @overload Untyped — returns `unknown`.
  */
 export async function turn(
-  prompt: string | Prompty,
+  prompt: string | Agent,
   inputs: Record<string, unknown>,
   options?: TurnOptions,
 ): Promise<unknown>;
@@ -656,13 +656,13 @@ export async function turn(
  * @overload Typed — returns `Promise<T>`.
  */
 export async function turn<T>(
-  prompt: string | Prompty,
+  prompt: string | Agent,
   inputs: Record<string, unknown>,
   options: TurnOptions & { validator: (data: unknown) => T },
 ): Promise<T>;
 // Implementation
 export async function turn<T = unknown>(
-  prompt: string | Prompty,
+  prompt: string | Agent,
   inputs: Record<string, unknown>,
   options?: TurnOptions & { validator?: (data: unknown) => T },
 ): Promise<T> {
@@ -1042,7 +1042,7 @@ export async function turn<T = unknown>(
  * and sets `args[binding.name]` to that value. Returns a new args object.
  */
 export function resolveBindings(
-  agent: Prompty,
+  agent: Agent,
   toolName: string,
   args: Record<string, unknown>,
   parentInputs?: Record<string, unknown>,
@@ -1086,7 +1086,7 @@ function isToolCallLike(item: unknown): item is ToolCall {
  * Returns accumulated text content and any ToolCall objects.
  */
 async function consumeStream(
-  agent: Prompty,
+  agent: Agent,
   response: unknown,
   onEvent?: EventCallback,
 ): Promise<{ toolCalls: ToolCall[]; content: string }> {
@@ -1306,7 +1306,7 @@ interface ToolExtensionOptions {
 async function dispatchOneToolWithExtensions(
   tc: { id: string; name: string; arguments: string; [key: string]: string },
   tools: Record<string, (...args: unknown[]) => unknown>,
-  agent: Prompty,
+  agent: Agent,
   parentInputs: Record<string, unknown>,
   ext: ToolExtensionOptions,
 ): Promise<string> {
@@ -1411,7 +1411,7 @@ async function dispatchOneToolWithExtensions(
 async function dispatchToolsWithExtensions(
   toolCalls: { id: string; name: string; arguments: string; [key: string]: string }[],
   tools: Record<string, (...args: unknown[]) => unknown>,
-  agent: Prompty,
+  agent: Agent,
   parentInputs: Record<string, unknown>,
   ext: ToolExtensionOptions,
 ): Promise<string[]> {
@@ -1436,7 +1436,7 @@ async function dispatchToolsWithExtensions(
 async function buildToolResultMessagesWithExtensions(
   response: unknown,
   tools: Record<string, (...args: unknown[]) => unknown>,
-  agent: Prompty,
+  agent: Agent,
   parentInputs: Record<string, unknown>,
   parentEmit: ((key: string, value: unknown) => void) | undefined,
   ext: ToolExtensionOptions,
@@ -1463,7 +1463,7 @@ async function buildToolMessagesFromCallsWithExtensions(
   toolCalls: ToolCall[],
   textContent: string,
   tools: Record<string, (...args: unknown[]) => unknown>,
-  agent: Prompty,
+  agent: Agent,
   parentInputs: Record<string, unknown>,
   parentEmit: ((key: string, value: unknown) => void) | undefined,
   ext: ToolExtensionOptions,

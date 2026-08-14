@@ -8,7 +8,7 @@ use serde_json::Value;
 use std::sync::LazyLock;
 
 use prompty::interfaces::{Executor, InvokerError};
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::types::Message;
 
 use crate::wire;
@@ -21,7 +21,7 @@ pub struct AnthropicExecutor;
 
 #[async_trait]
 impl Executor for AnthropicExecutor {
-    async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+    async fn execute(&self, agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
             .as_ref()
@@ -91,7 +91,7 @@ impl Executor for AnthropicExecutor {
 
     async fn execute_stream(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         messages: &[Message],
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
         let api_type = agent
@@ -145,7 +145,7 @@ impl Executor for AnthropicExecutor {
 
 impl AnthropicExecutor {
     /// Build the request args without sending — useful for testing wire format.
-    pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+    pub fn build_args(agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
             .as_ref()
@@ -169,7 +169,7 @@ impl AnthropicExecutor {
 /// Resolve the effective connection — if `kind == "reference"`, look up the
 /// named connection from the registry. Otherwise return the connection as-is.
 fn resolve_connection(
-    agent: &Prompty,
+    agent: &Agent,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
     let Some(model) = agent.model.as_ref() else {
         return Ok(std::borrow::Cow::Owned(serde_json::Value::Null));
@@ -196,7 +196,7 @@ fn resolve_connection(
     }
 }
 
-fn build_url(agent: &Prompty) -> Result<String, InvokerError> {
+fn build_url(agent: &Agent) -> Result<String, InvokerError> {
     let conn = resolve_connection(agent)?;
     let endpoint = conn
         .get("endpoint")
@@ -207,7 +207,7 @@ fn build_url(agent: &Prompty) -> Result<String, InvokerError> {
     Ok(format!("{base}/v1/messages"))
 }
 
-fn get_api_key(agent: &Prompty) -> Result<String, InvokerError> {
+fn get_api_key(agent: &Agent) -> Result<String, InvokerError> {
     let conn = resolve_connection(agent)?;
 
     // Try connection.apiKey first
@@ -389,19 +389,19 @@ impl Stream for AnthropicSseParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prompty::model::Prompty;
+    use prompty::model::Agent;
     use prompty::model::context::LoadContext;
     use serde_json::json;
     use serial_test::serial;
 
-    fn make_agent(model_json: Value) -> Prompty {
+    fn make_agent(model_json: Value) -> Agent {
         let mut data = json!({
             "name": "test",
             "kind": "prompt",
             "model": model_json,
         });
         data["instructions"] = json!("test");
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     #[test]

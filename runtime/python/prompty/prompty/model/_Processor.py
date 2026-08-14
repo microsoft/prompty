@@ -7,18 +7,18 @@
 
 from typing import Any, Protocol, runtime_checkable
 
-from .agent._Prompty import Prompty
+from .agent._Agent import Agent
 
 
 @runtime_checkable
 class Processor(Protocol):
     """Extracts a clean, typed result from a raw LLM provider response."""
 
-    def process(self, agent: Prompty, response: Any) -> Any:
+    def process(self, agent: Agent, response: Any) -> Any:
         """Extract a clean result from a raw LLM response"""
         raise NotImplementedError
 
-    async def process_async(self, agent: Prompty, response: Any) -> Any:
+    async def process_async(self, agent: Agent, response: Any) -> Any:
         """Extract a clean result from a raw LLM response (async variant)"""
         raise NotImplementedError
 

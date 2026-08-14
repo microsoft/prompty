@@ -3,10 +3,10 @@ import json
 
 import yaml
 
-from prompty.model import Prompty
+from prompty.model import Agent
 
 
-def test_load_json_prompty():
+def test_load_json_agent():
     json_data = r"""
     {
       "name": "basic-prompt",
@@ -75,7 +75,7 @@ def test_load_json_prompty():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -86,7 +86,7 @@ def test_load_json_prompty():
     )
 
 
-def test_load_yaml_prompty():
+def test_load_yaml_agent():
     yaml_data = r"""
     name: basic-prompt
     displayName: Basic Prompt
@@ -136,7 +136,7 @@ def test_load_yaml_prompty():
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -147,7 +147,7 @@ def test_load_yaml_prompty():
     )
 
 
-def test_roundtrip_json_prompty():
+def test_roundtrip_json_agent():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
@@ -217,9 +217,9 @@ def test_roundtrip_json_prompty():
     }
     """
     original_data = json.loads(json_data, strict=False)
-    instance = Prompty.load(original_data)
+    instance = Agent.load(original_data)
     saved_data = instance.save()
-    reloaded = Prompty.load(saved_data)
+    reloaded = Agent.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.display_name == "Basic Prompt"
@@ -230,7 +230,7 @@ def test_roundtrip_json_prompty():
     )
 
 
-def test_to_json_prompty():
+def test_to_json_agent():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
@@ -300,14 +300,14 @@ def test_to_json_prompty():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
 
-def test_to_yaml_prompty():
+def test_to_yaml_agent():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
@@ -377,14 +377,14 @@ def test_to_yaml_prompty():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
 
-def test_load_json_prompty_1():
+def test_load_json_agent_1():
     json_data = r"""
     {
       "name": "basic-prompt",
@@ -452,7 +452,7 @@ def test_load_json_prompty_1():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -463,7 +463,7 @@ def test_load_json_prompty_1():
     )
 
 
-def test_load_yaml_prompty_1():
+def test_load_yaml_agent_1():
     yaml_data = r"""
     name: basic-prompt
     displayName: Basic Prompt
@@ -513,7 +513,7 @@ def test_load_yaml_prompty_1():
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -524,7 +524,7 @@ def test_load_yaml_prompty_1():
     )
 
 
-def test_roundtrip_json_prompty_1():
+def test_roundtrip_json_agent_1():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
@@ -593,9 +593,9 @@ def test_roundtrip_json_prompty_1():
     }
     """
     original_data = json.loads(json_data, strict=False)
-    instance = Prompty.load(original_data)
+    instance = Agent.load(original_data)
     saved_data = instance.save()
-    reloaded = Prompty.load(saved_data)
+    reloaded = Agent.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.display_name == "Basic Prompt"
@@ -606,7 +606,7 @@ def test_roundtrip_json_prompty_1():
     )
 
 
-def test_to_json_prompty_1():
+def test_to_json_agent_1():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
@@ -675,14 +675,14 @@ def test_to_json_prompty_1():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
 
-def test_to_yaml_prompty_1():
+def test_to_yaml_agent_1():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
@@ -751,14 +751,14 @@ def test_to_yaml_prompty_1():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
 
-def test_load_json_prompty_2():
+def test_load_json_agent_2():
     json_data = r"""
     {
       "name": "basic-prompt",
@@ -828,7 +828,7 @@ def test_load_json_prompty_2():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -839,7 +839,7 @@ def test_load_json_prompty_2():
     )
 
 
-def test_load_yaml_prompty_2():
+def test_load_yaml_agent_2():
     yaml_data = r"""
     name: basic-prompt
     displayName: Basic Prompt
@@ -889,7 +889,7 @@ def test_load_yaml_prompty_2():
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -900,7 +900,7 @@ def test_load_yaml_prompty_2():
     )
 
 
-def test_roundtrip_json_prompty_2():
+def test_roundtrip_json_agent_2():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
@@ -971,9 +971,9 @@ def test_roundtrip_json_prompty_2():
     }
     """
     original_data = json.loads(json_data, strict=False)
-    instance = Prompty.load(original_data)
+    instance = Agent.load(original_data)
     saved_data = instance.save()
-    reloaded = Prompty.load(saved_data)
+    reloaded = Agent.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.display_name == "Basic Prompt"
@@ -984,7 +984,7 @@ def test_roundtrip_json_prompty_2():
     )
 
 
-def test_to_json_prompty_2():
+def test_to_json_agent_2():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
@@ -1055,14 +1055,14 @@ def test_to_json_prompty_2():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
 
-def test_to_yaml_prompty_2():
+def test_to_yaml_agent_2():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
@@ -1133,14 +1133,14 @@ def test_to_yaml_prompty_2():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
 
-def test_load_json_prompty_3():
+def test_load_json_agent_3():
     json_data = r"""
     {
       "name": "basic-prompt",
@@ -1209,7 +1209,7 @@ def test_load_json_prompty_3():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -1220,7 +1220,7 @@ def test_load_json_prompty_3():
     )
 
 
-def test_load_yaml_prompty_3():
+def test_load_yaml_agent_3():
     yaml_data = r"""
     name: basic-prompt
     displayName: Basic Prompt
@@ -1270,7 +1270,7 @@ def test_load_yaml_prompty_3():
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -1281,7 +1281,7 @@ def test_load_yaml_prompty_3():
     )
 
 
-def test_roundtrip_json_prompty_3():
+def test_roundtrip_json_agent_3():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
@@ -1351,9 +1351,9 @@ def test_roundtrip_json_prompty_3():
     }
     """
     original_data = json.loads(json_data, strict=False)
-    instance = Prompty.load(original_data)
+    instance = Agent.load(original_data)
     saved_data = instance.save()
-    reloaded = Prompty.load(saved_data)
+    reloaded = Agent.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.display_name == "Basic Prompt"
@@ -1364,7 +1364,7 @@ def test_roundtrip_json_prompty_3():
     )
 
 
-def test_to_json_prompty_3():
+def test_to_json_agent_3():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
@@ -1434,14 +1434,14 @@ def test_to_json_prompty_3():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
 
-def test_to_yaml_prompty_3():
+def test_to_yaml_agent_3():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
@@ -1511,14 +1511,14 @@ def test_to_yaml_prompty_3():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
 
-def test_load_json_prompty_4():
+def test_load_json_agent_4():
     json_data = r"""
     {
       "name": "basic-prompt",
@@ -1590,7 +1590,7 @@ def test_load_json_prompty_4():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -1601,7 +1601,7 @@ def test_load_json_prompty_4():
     )
 
 
-def test_load_yaml_prompty_4():
+def test_load_yaml_agent_4():
     yaml_data = r"""
     name: basic-prompt
     displayName: Basic Prompt
@@ -1651,7 +1651,7 @@ def test_load_yaml_prompty_4():
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -1662,7 +1662,7 @@ def test_load_yaml_prompty_4():
     )
 
 
-def test_roundtrip_json_prompty_4():
+def test_roundtrip_json_agent_4():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
@@ -1735,9 +1735,9 @@ def test_roundtrip_json_prompty_4():
     }
     """
     original_data = json.loads(json_data, strict=False)
-    instance = Prompty.load(original_data)
+    instance = Agent.load(original_data)
     saved_data = instance.save()
-    reloaded = Prompty.load(saved_data)
+    reloaded = Agent.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.display_name == "Basic Prompt"
@@ -1748,7 +1748,7 @@ def test_roundtrip_json_prompty_4():
     )
 
 
-def test_to_json_prompty_4():
+def test_to_json_agent_4():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
@@ -1821,14 +1821,14 @@ def test_to_json_prompty_4():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
 
-def test_to_yaml_prompty_4():
+def test_to_yaml_agent_4():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
@@ -1901,14 +1901,14 @@ def test_to_yaml_prompty_4():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
 
-def test_load_json_prompty_5():
+def test_load_json_agent_5():
     json_data = r"""
     {
       "name": "basic-prompt",
@@ -1979,7 +1979,7 @@ def test_load_json_prompty_5():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -1990,7 +1990,7 @@ def test_load_json_prompty_5():
     )
 
 
-def test_load_yaml_prompty_5():
+def test_load_yaml_agent_5():
     yaml_data = r"""
     name: basic-prompt
     displayName: Basic Prompt
@@ -2040,7 +2040,7 @@ def test_load_yaml_prompty_5():
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -2051,7 +2051,7 @@ def test_load_yaml_prompty_5():
     )
 
 
-def test_roundtrip_json_prompty_5():
+def test_roundtrip_json_agent_5():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
@@ -2123,9 +2123,9 @@ def test_roundtrip_json_prompty_5():
     }
     """
     original_data = json.loads(json_data, strict=False)
-    instance = Prompty.load(original_data)
+    instance = Agent.load(original_data)
     saved_data = instance.save()
-    reloaded = Prompty.load(saved_data)
+    reloaded = Agent.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.display_name == "Basic Prompt"
@@ -2136,7 +2136,7 @@ def test_roundtrip_json_prompty_5():
     )
 
 
-def test_to_json_prompty_5():
+def test_to_json_agent_5():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
@@ -2208,14 +2208,14 @@ def test_to_json_prompty_5():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
 
-def test_to_yaml_prompty_5():
+def test_to_yaml_agent_5():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
@@ -2287,14 +2287,14 @@ def test_to_yaml_prompty_5():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
 
-def test_load_json_prompty_6():
+def test_load_json_agent_6():
     json_data = r"""
     {
       "name": "basic-prompt",
@@ -2367,7 +2367,7 @@ def test_load_json_prompty_6():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -2378,7 +2378,7 @@ def test_load_json_prompty_6():
     )
 
 
-def test_load_yaml_prompty_6():
+def test_load_yaml_agent_6():
     yaml_data = r"""
     name: basic-prompt
     displayName: Basic Prompt
@@ -2428,7 +2428,7 @@ def test_load_yaml_prompty_6():
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -2439,7 +2439,7 @@ def test_load_yaml_prompty_6():
     )
 
 
-def test_roundtrip_json_prompty_6():
+def test_roundtrip_json_agent_6():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
@@ -2513,9 +2513,9 @@ def test_roundtrip_json_prompty_6():
     }
     """
     original_data = json.loads(json_data, strict=False)
-    instance = Prompty.load(original_data)
+    instance = Agent.load(original_data)
     saved_data = instance.save()
-    reloaded = Prompty.load(saved_data)
+    reloaded = Agent.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.display_name == "Basic Prompt"
@@ -2526,7 +2526,7 @@ def test_roundtrip_json_prompty_6():
     )
 
 
-def test_to_json_prompty_6():
+def test_to_json_agent_6():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
@@ -2600,14 +2600,14 @@ def test_to_json_prompty_6():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
 
-def test_to_yaml_prompty_6():
+def test_to_yaml_agent_6():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
@@ -2681,14 +2681,14 @@ def test_to_yaml_prompty_6():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
 
 
-def test_load_json_prompty_7():
+def test_load_json_agent_7():
     json_data = r"""
     {
       "name": "basic-prompt",
@@ -2760,7 +2760,7 @@ def test_load_json_prompty_7():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -2771,7 +2771,7 @@ def test_load_json_prompty_7():
     )
 
 
-def test_load_yaml_prompty_7():
+def test_load_yaml_agent_7():
     yaml_data = r"""
     name: basic-prompt
     displayName: Basic Prompt
@@ -2821,7 +2821,7 @@ def test_load_yaml_prompty_7():
 
     """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     assert instance is not None
     assert instance.name == "basic-prompt"
     assert instance.display_name == "Basic Prompt"
@@ -2832,7 +2832,7 @@ def test_load_yaml_prompty_7():
     )
 
 
-def test_roundtrip_json_prompty_7():
+def test_roundtrip_json_agent_7():
     """Test that load -> save -> load produces equivalent data."""
     json_data = r"""
     {
@@ -2905,9 +2905,9 @@ def test_roundtrip_json_prompty_7():
     }
     """
     original_data = json.loads(json_data, strict=False)
-    instance = Prompty.load(original_data)
+    instance = Agent.load(original_data)
     saved_data = instance.save()
-    reloaded = Prompty.load(saved_data)
+    reloaded = Agent.load(saved_data)
     assert reloaded is not None
     assert reloaded.name == "basic-prompt"
     assert reloaded.display_name == "Basic Prompt"
@@ -2918,7 +2918,7 @@ def test_roundtrip_json_prompty_7():
     )
 
 
-def test_to_json_prompty_7():
+def test_to_json_agent_7():
     """Test that to_json produces valid JSON."""
     json_data = r"""
     {
@@ -2991,14 +2991,14 @@ def test_to_json_prompty_7():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     json_output = instance.to_json()
     assert json_output is not None
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
 
-def test_to_yaml_prompty_7():
+def test_to_yaml_agent_7():
     """Test that to_yaml produces valid YAML."""
     json_data = r"""
     {
@@ -3071,7 +3071,7 @@ def test_to_yaml_prompty_7():
     }
     """
     data = json.loads(json_data, strict=False)
-    instance = Prompty.load(data)
+    instance = Agent.load(data)
     yaml_output = instance.to_yaml()
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)

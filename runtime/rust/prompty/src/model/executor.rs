@@ -4,9 +4,9 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::conversation::message::Message;
+use super::agent::agent::Agent;
 
-use super::agent::prompty::Prompty;
+use super::conversation::message::Message;
 
 use super::conversation::tool_call::ToolCall;
 
@@ -14,9 +14,9 @@ use super::conversation::tool_call::ToolCall;
 #[async_trait::async_trait]
 pub trait Executor: Send + Sync {
     /// Call an LLM provider with messages and return the raw response
-    async fn execute(&self, agent: &Prompty, messages: &Vec<Message>) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>;
+    async fn execute(&self, agent: &Agent, messages: &Vec<Message>) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>>;
     /// Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support.
-    async fn execute_stream(&self, agent: &Prompty, messages: &Vec<Message>) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
+    async fn execute_stream(&self, agent: &Agent, messages: &Vec<Message>) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
         Err("not supported".into())
     }
     /// Format tool call results into messages for the next iteration

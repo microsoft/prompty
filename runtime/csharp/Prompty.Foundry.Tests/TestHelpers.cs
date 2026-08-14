@@ -12,7 +12,7 @@ internal static class TestHelpers
     /// <summary>
     /// Create a minimal agent for testing with the given configuration.
     /// </summary>
-    internal static Core.Prompty CreateAgent(
+    internal static Core.Agent CreateAgent(
         string provider = "openai",
         string? apiType = "chat",
         string modelId = "gpt-4",
@@ -48,7 +48,7 @@ internal static class TestHelpers
             ["model"] = modelDict,
         };
 
-        var agent = Core.Prompty.Load(data, new LoadContext());
+        var agent = Core.Agent.Load(data, new LoadContext());
 
         if (options is not null && agent.Model is not null)
             agent.Model.Options = options;

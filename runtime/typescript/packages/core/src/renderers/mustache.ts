@@ -5,13 +5,13 @@
  */
 
 import Mustache from "mustache";
-import type { Prompty } from "../model/agent/prompty.js";
+import type { Agent } from "../model/agent/agent.js";
 import type { Renderer } from "../core/interfaces.js";
 import { prepareRenderInputs } from "./common.js";
 
 export class MustacheRenderer implements Renderer {
   async render(
-    agent: Prompty,
+    agent: Agent,
     template: string,
     inputs: Record<string, unknown>,
   ): Promise<string> {

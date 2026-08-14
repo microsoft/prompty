@@ -13,8 +13,8 @@ import (
 	"prompty/model"
 )
 
-// TestPromptyLoadJSON tests loading Prompty from JSON
-func TestPromptyLoadJSON(t *testing.T) {
+// TestAgentLoadJSON tests loading Agent from JSON
+func TestAgentLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -88,9 +88,9 @@ func TestPromptyLoadJSON(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -128,8 +128,8 @@ func TestPromptyLoadJSON(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadYAML tests loading Prompty from YAML
-func TestPromptyLoadYAML(t *testing.T) {
+// TestAgentLoadYAML tests loading Agent from YAML
+func TestAgentLoadYAML(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -184,9 +184,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -224,8 +224,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyFromJSON tests loading Prompty through the generated JSON helper
-func TestPromptyFromJSON(t *testing.T) {
+// TestAgentFromJSON tests loading Agent through the generated JSON helper
+func TestAgentFromJSON(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -294,9 +294,9 @@ func TestPromptyFromJSON(t *testing.T) {
 }
 `
 
-	instance, err := prompty.PromptyFromJSON(jsonData)
+	instance, err := prompty.AgentFromJSON(jsonData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+		t.Fatalf("Failed to load Agent from JSON helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -334,8 +334,8 @@ func TestPromptyFromJSON(t *testing.T) {
 	}
 }
 
-// TestPromptyFromYAML tests loading Prompty through the generated YAML helper
-func TestPromptyFromYAML(t *testing.T) {
+// TestAgentFromYAML tests loading Agent through the generated YAML helper
+func TestAgentFromYAML(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -385,9 +385,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 `
 
-	instance, err := prompty.PromptyFromYAML(yamlData)
+	instance, err := prompty.AgentFromYAML(yamlData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+		t.Fatalf("Failed to load Agent from YAML helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -425,8 +425,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyRoundtrip tests load -> save -> load produces equivalent data
-func TestPromptyRoundtrip(t *testing.T) {
+// TestAgentRoundtrip tests load -> save -> load produces equivalent data
+func TestAgentRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -500,16 +500,16 @@ func TestPromptyRoundtrip(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, loadCtx)
+	instance, err := prompty.LoadAgent(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
-	reloaded, err := prompty.LoadPrompty(savedData, loadCtx)
+	reloaded, err := prompty.LoadAgent(savedData, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to reload Prompty: %v", err)
+		t.Fatalf("Failed to reload Agent: %v", err)
 	}
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
@@ -547,8 +547,8 @@ func TestPromptyRoundtrip(t *testing.T) {
 	}
 }
 
-// TestPromptyToJSON tests that ToJSON produces valid JSON
-func TestPromptyToJSON(t *testing.T) {
+// TestAgentToJSON tests that ToJSON produces valid JSON
+func TestAgentToJSON(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -622,9 +622,9 @@ func TestPromptyToJSON(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
@@ -636,7 +636,7 @@ func TestPromptyToJSON(t *testing.T) {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
@@ -676,8 +676,8 @@ func TestPromptyToJSON(t *testing.T) {
 	}
 }
 
-// TestPromptyToYAML tests that ToYAML produces valid YAML
-func TestPromptyToYAML(t *testing.T) {
+// TestAgentToYAML tests that ToYAML produces valid YAML
+func TestAgentToYAML(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -751,9 +751,9 @@ func TestPromptyToYAML(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
@@ -765,7 +765,7 @@ func TestPromptyToYAML(t *testing.T) {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
@@ -805,8 +805,8 @@ func TestPromptyToYAML(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadJSON1 tests loading Prompty from JSON
-func TestPromptyLoadJSON1(t *testing.T) {
+// TestAgentLoadJSON1 tests loading Agent from JSON
+func TestAgentLoadJSON1(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -879,9 +879,9 @@ func TestPromptyLoadJSON1(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -909,8 +909,8 @@ func TestPromptyLoadJSON1(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadYAML1 tests loading Prompty from YAML
-func TestPromptyLoadYAML1(t *testing.T) {
+// TestAgentLoadYAML1 tests loading Agent from YAML
+func TestAgentLoadYAML1(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -965,9 +965,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -995,8 +995,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyFromJSON1 tests loading Prompty through the generated JSON helper
-func TestPromptyFromJSON1(t *testing.T) {
+// TestAgentFromJSON1 tests loading Agent through the generated JSON helper
+func TestAgentFromJSON1(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -1064,9 +1064,9 @@ func TestPromptyFromJSON1(t *testing.T) {
 }
 `
 
-	instance, err := prompty.PromptyFromJSON(jsonData)
+	instance, err := prompty.AgentFromJSON(jsonData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+		t.Fatalf("Failed to load Agent from JSON helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -1094,8 +1094,8 @@ func TestPromptyFromJSON1(t *testing.T) {
 	}
 }
 
-// TestPromptyFromYAML1 tests loading Prompty through the generated YAML helper
-func TestPromptyFromYAML1(t *testing.T) {
+// TestAgentFromYAML1 tests loading Agent through the generated YAML helper
+func TestAgentFromYAML1(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -1145,9 +1145,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 `
 
-	instance, err := prompty.PromptyFromYAML(yamlData)
+	instance, err := prompty.AgentFromYAML(yamlData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+		t.Fatalf("Failed to load Agent from YAML helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -1175,8 +1175,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyRoundtrip1 tests load -> save -> load produces equivalent data
-func TestPromptyRoundtrip1(t *testing.T) {
+// TestAgentRoundtrip1 tests load -> save -> load produces equivalent data
+func TestAgentRoundtrip1(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -1249,16 +1249,16 @@ func TestPromptyRoundtrip1(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, loadCtx)
+	instance, err := prompty.LoadAgent(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
-	reloaded, err := prompty.LoadPrompty(savedData, loadCtx)
+	reloaded, err := prompty.LoadAgent(savedData, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to reload Prompty: %v", err)
+		t.Fatalf("Failed to reload Agent: %v", err)
 	}
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
@@ -1286,8 +1286,8 @@ func TestPromptyRoundtrip1(t *testing.T) {
 	}
 }
 
-// TestPromptyToJSON1 tests that ToJSON produces valid JSON
-func TestPromptyToJSON1(t *testing.T) {
+// TestAgentToJSON1 tests that ToJSON produces valid JSON
+func TestAgentToJSON1(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -1360,9 +1360,9 @@ func TestPromptyToJSON1(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
@@ -1374,7 +1374,7 @@ func TestPromptyToJSON1(t *testing.T) {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
@@ -1404,8 +1404,8 @@ func TestPromptyToJSON1(t *testing.T) {
 	}
 }
 
-// TestPromptyToYAML1 tests that ToYAML produces valid YAML
-func TestPromptyToYAML1(t *testing.T) {
+// TestAgentToYAML1 tests that ToYAML produces valid YAML
+func TestAgentToYAML1(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -1478,9 +1478,9 @@ func TestPromptyToYAML1(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
@@ -1492,7 +1492,7 @@ func TestPromptyToYAML1(t *testing.T) {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
@@ -1522,8 +1522,8 @@ func TestPromptyToYAML1(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadJSON2 tests loading Prompty from JSON
-func TestPromptyLoadJSON2(t *testing.T) {
+// TestAgentLoadJSON2 tests loading Agent from JSON
+func TestAgentLoadJSON2(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -1598,9 +1598,9 @@ func TestPromptyLoadJSON2(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -1641,8 +1641,8 @@ func TestPromptyLoadJSON2(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadYAML2 tests loading Prompty from YAML
-func TestPromptyLoadYAML2(t *testing.T) {
+// TestAgentLoadYAML2 tests loading Agent from YAML
+func TestAgentLoadYAML2(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -1697,9 +1697,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -1740,8 +1740,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyFromJSON2 tests loading Prompty through the generated JSON helper
-func TestPromptyFromJSON2(t *testing.T) {
+// TestAgentFromJSON2 tests loading Agent through the generated JSON helper
+func TestAgentFromJSON2(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -1811,9 +1811,9 @@ func TestPromptyFromJSON2(t *testing.T) {
 }
 `
 
-	instance, err := prompty.PromptyFromJSON(jsonData)
+	instance, err := prompty.AgentFromJSON(jsonData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+		t.Fatalf("Failed to load Agent from JSON helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -1854,8 +1854,8 @@ func TestPromptyFromJSON2(t *testing.T) {
 	}
 }
 
-// TestPromptyFromYAML2 tests loading Prompty through the generated YAML helper
-func TestPromptyFromYAML2(t *testing.T) {
+// TestAgentFromYAML2 tests loading Agent through the generated YAML helper
+func TestAgentFromYAML2(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -1905,9 +1905,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 `
 
-	instance, err := prompty.PromptyFromYAML(yamlData)
+	instance, err := prompty.AgentFromYAML(yamlData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+		t.Fatalf("Failed to load Agent from YAML helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -1948,8 +1948,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyRoundtrip2 tests load -> save -> load produces equivalent data
-func TestPromptyRoundtrip2(t *testing.T) {
+// TestAgentRoundtrip2 tests load -> save -> load produces equivalent data
+func TestAgentRoundtrip2(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -2024,16 +2024,16 @@ func TestPromptyRoundtrip2(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, loadCtx)
+	instance, err := prompty.LoadAgent(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
-	reloaded, err := prompty.LoadPrompty(savedData, loadCtx)
+	reloaded, err := prompty.LoadAgent(savedData, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to reload Prompty: %v", err)
+		t.Fatalf("Failed to reload Agent: %v", err)
 	}
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
@@ -2074,8 +2074,8 @@ func TestPromptyRoundtrip2(t *testing.T) {
 	}
 }
 
-// TestPromptyToJSON2 tests that ToJSON produces valid JSON
-func TestPromptyToJSON2(t *testing.T) {
+// TestAgentToJSON2 tests that ToJSON produces valid JSON
+func TestAgentToJSON2(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -2150,9 +2150,9 @@ func TestPromptyToJSON2(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
@@ -2164,7 +2164,7 @@ func TestPromptyToJSON2(t *testing.T) {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
@@ -2207,8 +2207,8 @@ func TestPromptyToJSON2(t *testing.T) {
 	}
 }
 
-// TestPromptyToYAML2 tests that ToYAML produces valid YAML
-func TestPromptyToYAML2(t *testing.T) {
+// TestAgentToYAML2 tests that ToYAML produces valid YAML
+func TestAgentToYAML2(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -2283,9 +2283,9 @@ func TestPromptyToYAML2(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
@@ -2297,7 +2297,7 @@ func TestPromptyToYAML2(t *testing.T) {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
@@ -2340,8 +2340,8 @@ func TestPromptyToYAML2(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadJSON3 tests loading Prompty from JSON
-func TestPromptyLoadJSON3(t *testing.T) {
+// TestAgentLoadJSON3 tests loading Agent from JSON
+func TestAgentLoadJSON3(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -2415,9 +2415,9 @@ func TestPromptyLoadJSON3(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -2448,8 +2448,8 @@ func TestPromptyLoadJSON3(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadYAML3 tests loading Prompty from YAML
-func TestPromptyLoadYAML3(t *testing.T) {
+// TestAgentLoadYAML3 tests loading Agent from YAML
+func TestAgentLoadYAML3(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -2504,9 +2504,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -2537,8 +2537,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyFromJSON3 tests loading Prompty through the generated JSON helper
-func TestPromptyFromJSON3(t *testing.T) {
+// TestAgentFromJSON3 tests loading Agent through the generated JSON helper
+func TestAgentFromJSON3(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -2607,9 +2607,9 @@ func TestPromptyFromJSON3(t *testing.T) {
 }
 `
 
-	instance, err := prompty.PromptyFromJSON(jsonData)
+	instance, err := prompty.AgentFromJSON(jsonData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+		t.Fatalf("Failed to load Agent from JSON helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -2640,8 +2640,8 @@ func TestPromptyFromJSON3(t *testing.T) {
 	}
 }
 
-// TestPromptyFromYAML3 tests loading Prompty through the generated YAML helper
-func TestPromptyFromYAML3(t *testing.T) {
+// TestAgentFromYAML3 tests loading Agent through the generated YAML helper
+func TestAgentFromYAML3(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -2691,9 +2691,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 `
 
-	instance, err := prompty.PromptyFromYAML(yamlData)
+	instance, err := prompty.AgentFromYAML(yamlData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+		t.Fatalf("Failed to load Agent from YAML helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -2724,8 +2724,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyRoundtrip3 tests load -> save -> load produces equivalent data
-func TestPromptyRoundtrip3(t *testing.T) {
+// TestAgentRoundtrip3 tests load -> save -> load produces equivalent data
+func TestAgentRoundtrip3(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -2799,16 +2799,16 @@ func TestPromptyRoundtrip3(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, loadCtx)
+	instance, err := prompty.LoadAgent(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
-	reloaded, err := prompty.LoadPrompty(savedData, loadCtx)
+	reloaded, err := prompty.LoadAgent(savedData, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to reload Prompty: %v", err)
+		t.Fatalf("Failed to reload Agent: %v", err)
 	}
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
@@ -2839,8 +2839,8 @@ func TestPromptyRoundtrip3(t *testing.T) {
 	}
 }
 
-// TestPromptyToJSON3 tests that ToJSON produces valid JSON
-func TestPromptyToJSON3(t *testing.T) {
+// TestAgentToJSON3 tests that ToJSON produces valid JSON
+func TestAgentToJSON3(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -2914,9 +2914,9 @@ func TestPromptyToJSON3(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
@@ -2928,7 +2928,7 @@ func TestPromptyToJSON3(t *testing.T) {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
@@ -2961,8 +2961,8 @@ func TestPromptyToJSON3(t *testing.T) {
 	}
 }
 
-// TestPromptyToYAML3 tests that ToYAML produces valid YAML
-func TestPromptyToYAML3(t *testing.T) {
+// TestAgentToYAML3 tests that ToYAML produces valid YAML
+func TestAgentToYAML3(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -3036,9 +3036,9 @@ func TestPromptyToYAML3(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
@@ -3050,7 +3050,7 @@ func TestPromptyToYAML3(t *testing.T) {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
@@ -3083,8 +3083,8 @@ func TestPromptyToYAML3(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadJSON4 tests loading Prompty from JSON
-func TestPromptyLoadJSON4(t *testing.T) {
+// TestAgentLoadJSON4 tests loading Agent from JSON
+func TestAgentLoadJSON4(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -3161,9 +3161,9 @@ func TestPromptyLoadJSON4(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -3183,15 +3183,15 @@ func TestPromptyLoadJSON4(t *testing.T) {
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if instance.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
 	}
@@ -3213,8 +3213,8 @@ func TestPromptyLoadJSON4(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadYAML4 tests loading Prompty from YAML
-func TestPromptyLoadYAML4(t *testing.T) {
+// TestAgentLoadYAML4 tests loading Agent from YAML
+func TestAgentLoadYAML4(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -3269,9 +3269,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -3291,15 +3291,15 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if instance.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
 	}
@@ -3321,8 +3321,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyFromJSON4 tests loading Prompty through the generated JSON helper
-func TestPromptyFromJSON4(t *testing.T) {
+// TestAgentFromJSON4 tests loading Agent through the generated JSON helper
+func TestAgentFromJSON4(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -3394,9 +3394,9 @@ func TestPromptyFromJSON4(t *testing.T) {
 }
 `
 
-	instance, err := prompty.PromptyFromJSON(jsonData)
+	instance, err := prompty.AgentFromJSON(jsonData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+		t.Fatalf("Failed to load Agent from JSON helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -3416,15 +3416,15 @@ func TestPromptyFromJSON4(t *testing.T) {
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if instance.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
 	}
@@ -3446,8 +3446,8 @@ func TestPromptyFromJSON4(t *testing.T) {
 	}
 }
 
-// TestPromptyFromYAML4 tests loading Prompty through the generated YAML helper
-func TestPromptyFromYAML4(t *testing.T) {
+// TestAgentFromYAML4 tests loading Agent through the generated YAML helper
+func TestAgentFromYAML4(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -3497,9 +3497,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 `
 
-	instance, err := prompty.PromptyFromYAML(yamlData)
+	instance, err := prompty.AgentFromYAML(yamlData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+		t.Fatalf("Failed to load Agent from YAML helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -3519,15 +3519,15 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if instance.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
 	}
@@ -3549,8 +3549,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyRoundtrip4 tests load -> save -> load produces equivalent data
-func TestPromptyRoundtrip4(t *testing.T) {
+// TestAgentRoundtrip4 tests load -> save -> load produces equivalent data
+func TestAgentRoundtrip4(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -3627,16 +3627,16 @@ func TestPromptyRoundtrip4(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, loadCtx)
+	instance, err := prompty.LoadAgent(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
-	reloaded, err := prompty.LoadPrompty(savedData, loadCtx)
+	reloaded, err := prompty.LoadAgent(savedData, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to reload Prompty: %v", err)
+		t.Fatalf("Failed to reload Agent: %v", err)
 	}
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
@@ -3656,15 +3656,15 @@ func TestPromptyRoundtrip4(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if reloaded.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
 	}
@@ -3686,8 +3686,8 @@ func TestPromptyRoundtrip4(t *testing.T) {
 	}
 }
 
-// TestPromptyToJSON4 tests that ToJSON produces valid JSON
-func TestPromptyToJSON4(t *testing.T) {
+// TestAgentToJSON4 tests that ToJSON produces valid JSON
+func TestAgentToJSON4(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -3764,9 +3764,9 @@ func TestPromptyToJSON4(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
@@ -3778,7 +3778,7 @@ func TestPromptyToJSON4(t *testing.T) {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
@@ -3800,15 +3800,15 @@ func TestPromptyToJSON4(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if reloaded.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
 	}
@@ -3830,8 +3830,8 @@ func TestPromptyToJSON4(t *testing.T) {
 	}
 }
 
-// TestPromptyToYAML4 tests that ToYAML produces valid YAML
-func TestPromptyToYAML4(t *testing.T) {
+// TestAgentToYAML4 tests that ToYAML produces valid YAML
+func TestAgentToYAML4(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -3908,9 +3908,9 @@ func TestPromptyToYAML4(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
@@ -3922,7 +3922,7 @@ func TestPromptyToYAML4(t *testing.T) {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
@@ -3944,15 +3944,15 @@ func TestPromptyToYAML4(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if reloaded.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
 	}
@@ -3974,8 +3974,8 @@ func TestPromptyToYAML4(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadJSON5 tests loading Prompty from JSON
-func TestPromptyLoadJSON5(t *testing.T) {
+// TestAgentLoadJSON5 tests loading Agent from JSON
+func TestAgentLoadJSON5(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -4051,9 +4051,9 @@ func TestPromptyLoadJSON5(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -4073,15 +4073,15 @@ func TestPromptyLoadJSON5(t *testing.T) {
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if instance.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
 	}
@@ -4093,8 +4093,8 @@ func TestPromptyLoadJSON5(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadYAML5 tests loading Prompty from YAML
-func TestPromptyLoadYAML5(t *testing.T) {
+// TestAgentLoadYAML5 tests loading Agent from YAML
+func TestAgentLoadYAML5(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -4149,9 +4149,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -4171,15 +4171,15 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if instance.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
 	}
@@ -4191,8 +4191,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyFromJSON5 tests loading Prompty through the generated JSON helper
-func TestPromptyFromJSON5(t *testing.T) {
+// TestAgentFromJSON5 tests loading Agent through the generated JSON helper
+func TestAgentFromJSON5(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -4263,9 +4263,9 @@ func TestPromptyFromJSON5(t *testing.T) {
 }
 `
 
-	instance, err := prompty.PromptyFromJSON(jsonData)
+	instance, err := prompty.AgentFromJSON(jsonData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+		t.Fatalf("Failed to load Agent from JSON helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -4285,15 +4285,15 @@ func TestPromptyFromJSON5(t *testing.T) {
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if instance.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
 	}
@@ -4305,8 +4305,8 @@ func TestPromptyFromJSON5(t *testing.T) {
 	}
 }
 
-// TestPromptyFromYAML5 tests loading Prompty through the generated YAML helper
-func TestPromptyFromYAML5(t *testing.T) {
+// TestAgentFromYAML5 tests loading Agent through the generated YAML helper
+func TestAgentFromYAML5(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -4356,9 +4356,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 `
 
-	instance, err := prompty.PromptyFromYAML(yamlData)
+	instance, err := prompty.AgentFromYAML(yamlData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+		t.Fatalf("Failed to load Agent from YAML helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -4378,15 +4378,15 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if instance.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
 	}
@@ -4398,8 +4398,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyRoundtrip5 tests load -> save -> load produces equivalent data
-func TestPromptyRoundtrip5(t *testing.T) {
+// TestAgentRoundtrip5 tests load -> save -> load produces equivalent data
+func TestAgentRoundtrip5(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -4475,16 +4475,16 @@ func TestPromptyRoundtrip5(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, loadCtx)
+	instance, err := prompty.LoadAgent(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
-	reloaded, err := prompty.LoadPrompty(savedData, loadCtx)
+	reloaded, err := prompty.LoadAgent(savedData, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to reload Prompty: %v", err)
+		t.Fatalf("Failed to reload Agent: %v", err)
 	}
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
@@ -4504,15 +4504,15 @@ func TestPromptyRoundtrip5(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if reloaded.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
 	}
@@ -4524,8 +4524,8 @@ func TestPromptyRoundtrip5(t *testing.T) {
 	}
 }
 
-// TestPromptyToJSON5 tests that ToJSON produces valid JSON
-func TestPromptyToJSON5(t *testing.T) {
+// TestAgentToJSON5 tests that ToJSON produces valid JSON
+func TestAgentToJSON5(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -4601,9 +4601,9 @@ func TestPromptyToJSON5(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
@@ -4615,7 +4615,7 @@ func TestPromptyToJSON5(t *testing.T) {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
@@ -4637,15 +4637,15 @@ func TestPromptyToJSON5(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if reloaded.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
 	}
@@ -4657,8 +4657,8 @@ func TestPromptyToJSON5(t *testing.T) {
 	}
 }
 
-// TestPromptyToYAML5 tests that ToYAML produces valid YAML
-func TestPromptyToYAML5(t *testing.T) {
+// TestAgentToYAML5 tests that ToYAML produces valid YAML
+func TestAgentToYAML5(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -4734,9 +4734,9 @@ func TestPromptyToYAML5(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
@@ -4748,7 +4748,7 @@ func TestPromptyToYAML5(t *testing.T) {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
@@ -4770,15 +4770,15 @@ func TestPromptyToYAML5(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if reloaded.Model.Id != "gpt-35-turbo" {
 		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
 	}
@@ -4790,8 +4790,8 @@ func TestPromptyToYAML5(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadJSON6 tests loading Prompty from JSON
-func TestPromptyLoadJSON6(t *testing.T) {
+// TestAgentLoadJSON6 tests loading Agent from JSON
+func TestAgentLoadJSON6(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -4869,9 +4869,9 @@ func TestPromptyLoadJSON6(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -4891,15 +4891,15 @@ func TestPromptyLoadJSON6(t *testing.T) {
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
@@ -4924,8 +4924,8 @@ func TestPromptyLoadJSON6(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadYAML6 tests loading Prompty from YAML
-func TestPromptyLoadYAML6(t *testing.T) {
+// TestAgentLoadYAML6 tests loading Agent from YAML
+func TestAgentLoadYAML6(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -4980,9 +4980,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -5002,15 +5002,15 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
@@ -5035,8 +5035,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyFromJSON6 tests loading Prompty through the generated JSON helper
-func TestPromptyFromJSON6(t *testing.T) {
+// TestAgentFromJSON6 tests loading Agent through the generated JSON helper
+func TestAgentFromJSON6(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -5109,9 +5109,9 @@ func TestPromptyFromJSON6(t *testing.T) {
 }
 `
 
-	instance, err := prompty.PromptyFromJSON(jsonData)
+	instance, err := prompty.AgentFromJSON(jsonData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+		t.Fatalf("Failed to load Agent from JSON helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -5131,15 +5131,15 @@ func TestPromptyFromJSON6(t *testing.T) {
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
@@ -5164,8 +5164,8 @@ func TestPromptyFromJSON6(t *testing.T) {
 	}
 }
 
-// TestPromptyFromYAML6 tests loading Prompty through the generated YAML helper
-func TestPromptyFromYAML6(t *testing.T) {
+// TestAgentFromYAML6 tests loading Agent through the generated YAML helper
+func TestAgentFromYAML6(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -5215,9 +5215,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 `
 
-	instance, err := prompty.PromptyFromYAML(yamlData)
+	instance, err := prompty.AgentFromYAML(yamlData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+		t.Fatalf("Failed to load Agent from YAML helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -5237,15 +5237,15 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
@@ -5270,8 +5270,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyRoundtrip6 tests load -> save -> load produces equivalent data
-func TestPromptyRoundtrip6(t *testing.T) {
+// TestAgentRoundtrip6 tests load -> save -> load produces equivalent data
+func TestAgentRoundtrip6(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -5349,16 +5349,16 @@ func TestPromptyRoundtrip6(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, loadCtx)
+	instance, err := prompty.LoadAgent(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
-	reloaded, err := prompty.LoadPrompty(savedData, loadCtx)
+	reloaded, err := prompty.LoadAgent(savedData, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to reload Prompty: %v", err)
+		t.Fatalf("Failed to reload Agent: %v", err)
 	}
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
@@ -5378,15 +5378,15 @@ func TestPromptyRoundtrip6(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
@@ -5411,8 +5411,8 @@ func TestPromptyRoundtrip6(t *testing.T) {
 	}
 }
 
-// TestPromptyToJSON6 tests that ToJSON produces valid JSON
-func TestPromptyToJSON6(t *testing.T) {
+// TestAgentToJSON6 tests that ToJSON produces valid JSON
+func TestAgentToJSON6(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -5490,9 +5490,9 @@ func TestPromptyToJSON6(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
@@ -5504,7 +5504,7 @@ func TestPromptyToJSON6(t *testing.T) {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
@@ -5526,15 +5526,15 @@ func TestPromptyToJSON6(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
@@ -5559,8 +5559,8 @@ func TestPromptyToJSON6(t *testing.T) {
 	}
 }
 
-// TestPromptyToYAML6 tests that ToYAML produces valid YAML
-func TestPromptyToYAML6(t *testing.T) {
+// TestAgentToYAML6 tests that ToYAML produces valid YAML
+func TestAgentToYAML6(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -5638,9 +5638,9 @@ func TestPromptyToYAML6(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
@@ -5652,7 +5652,7 @@ func TestPromptyToYAML6(t *testing.T) {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
@@ -5674,15 +5674,15 @@ func TestPromptyToYAML6(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
@@ -5707,8 +5707,8 @@ func TestPromptyToYAML6(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadJSON7 tests loading Prompty from JSON
-func TestPromptyLoadJSON7(t *testing.T) {
+// TestAgentLoadJSON7 tests loading Agent from JSON
+func TestAgentLoadJSON7(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -5785,9 +5785,9 @@ func TestPromptyLoadJSON7(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -5807,15 +5807,15 @@ func TestPromptyLoadJSON7(t *testing.T) {
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
@@ -5830,8 +5830,8 @@ func TestPromptyLoadJSON7(t *testing.T) {
 	}
 }
 
-// TestPromptyLoadYAML7 tests loading Prompty from YAML
-func TestPromptyLoadYAML7(t *testing.T) {
+// TestAgentLoadYAML7 tests loading Agent from YAML
+func TestAgentLoadYAML7(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -5886,9 +5886,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -5908,15 +5908,15 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
@@ -5931,8 +5931,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyFromJSON7 tests loading Prompty through the generated JSON helper
-func TestPromptyFromJSON7(t *testing.T) {
+// TestAgentFromJSON7 tests loading Agent through the generated JSON helper
+func TestAgentFromJSON7(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -6004,9 +6004,9 @@ func TestPromptyFromJSON7(t *testing.T) {
 }
 `
 
-	instance, err := prompty.PromptyFromJSON(jsonData)
+	instance, err := prompty.AgentFromJSON(jsonData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from JSON helper: %v", err)
+		t.Fatalf("Failed to load Agent from JSON helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -6026,15 +6026,15 @@ func TestPromptyFromJSON7(t *testing.T) {
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
@@ -6049,8 +6049,8 @@ func TestPromptyFromJSON7(t *testing.T) {
 	}
 }
 
-// TestPromptyFromYAML7 tests loading Prompty through the generated YAML helper
-func TestPromptyFromYAML7(t *testing.T) {
+// TestAgentFromYAML7 tests loading Agent through the generated YAML helper
+func TestAgentFromYAML7(t *testing.T) {
 	yamlData := `
 name: basic-prompt
 displayName: Basic Prompt
@@ -6100,9 +6100,9 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 `
 
-	instance, err := prompty.PromptyFromYAML(yamlData)
+	instance, err := prompty.AgentFromYAML(yamlData)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty from YAML helper: %v", err)
+		t.Fatalf("Failed to load Agent from YAML helper: %v", err)
 	}
 	if instance.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, instance.Name)
@@ -6122,15 +6122,15 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	if len(instance.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(instance.Inputs))
 	}
-	assertPromptyStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, instance.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, instance.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, instance.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, instance.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, instance.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, instance.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
@@ -6145,8 +6145,8 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 	}
 }
 
-// TestPromptyRoundtrip7 tests load -> save -> load produces equivalent data
-func TestPromptyRoundtrip7(t *testing.T) {
+// TestAgentRoundtrip7 tests load -> save -> load produces equivalent data
+func TestAgentRoundtrip7(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -6223,16 +6223,16 @@ func TestPromptyRoundtrip7(t *testing.T) {
 	}
 
 	loadCtx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, loadCtx)
+	instance, err := prompty.LoadAgent(data, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	saveCtx := prompty.NewSaveContext()
 	savedData := instance.Save(saveCtx)
 
-	reloaded, err := prompty.LoadPrompty(savedData, loadCtx)
+	reloaded, err := prompty.LoadAgent(savedData, loadCtx)
 	if err != nil {
-		t.Fatalf("Failed to reload Prompty: %v", err)
+		t.Fatalf("Failed to reload Agent: %v", err)
 	}
 	if reloaded.Name != "basic-prompt" {
 		t.Errorf(`Expected Name to be "basic-prompt", got %v`, reloaded.Name)
@@ -6252,15 +6252,15 @@ func TestPromptyRoundtrip7(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
@@ -6275,8 +6275,8 @@ func TestPromptyRoundtrip7(t *testing.T) {
 	}
 }
 
-// TestPromptyToJSON7 tests that ToJSON produces valid JSON
-func TestPromptyToJSON7(t *testing.T) {
+// TestAgentToJSON7 tests that ToJSON produces valid JSON
+func TestAgentToJSON7(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -6353,9 +6353,9 @@ func TestPromptyToJSON7(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	jsonOutput, err := instance.ToJSON()
 	if err != nil {
@@ -6367,7 +6367,7 @@ func TestPromptyToJSON7(t *testing.T) {
 		t.Fatalf("Failed to parse generated JSON: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
@@ -6389,15 +6389,15 @@ func TestPromptyToJSON7(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
@@ -6412,8 +6412,8 @@ func TestPromptyToJSON7(t *testing.T) {
 	}
 }
 
-// TestPromptyToYAML7 tests that ToYAML produces valid YAML
-func TestPromptyToYAML7(t *testing.T) {
+// TestAgentToYAML7 tests that ToYAML produces valid YAML
+func TestAgentToYAML7(t *testing.T) {
 	jsonData := `
 {
   "name": "basic-prompt",
@@ -6490,9 +6490,9 @@ func TestPromptyToYAML7(t *testing.T) {
 	}
 
 	ctx := prompty.NewLoadContext()
-	instance, err := prompty.LoadPrompty(data, ctx)
+	instance, err := prompty.LoadAgent(data, ctx)
 	if err != nil {
-		t.Fatalf("Failed to load Prompty: %v", err)
+		t.Fatalf("Failed to load Agent: %v", err)
 	}
 	yamlOutput, err := instance.ToYAML()
 	if err != nil {
@@ -6504,7 +6504,7 @@ func TestPromptyToYAML7(t *testing.T) {
 		t.Fatalf("Failed to parse generated YAML: %v", err)
 	}
 
-	reloaded, err := prompty.LoadPrompty(parsed, ctx)
+	reloaded, err := prompty.LoadAgent(parsed, ctx)
 	if err != nil {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
@@ -6526,15 +6526,15 @@ func TestPromptyToYAML7(t *testing.T) {
 	if len(reloaded.Inputs) != 3 {
 		t.Fatalf("Expected Inputs length to be 3, got %d", len(reloaded.Inputs))
 	}
-	assertPromptyStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
-	assertPromptyStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
+	assertAgentStringField(t, reloaded.Inputs[0], "Name", "firstName", "Inputs[0].Name")
+	assertAgentStringField(t, reloaded.Inputs[0], "Kind", "string", "Inputs[0].Kind")
+	assertAgentStringField(t, reloaded.Inputs[0], "Default", "Jane", "Inputs[0].Default")
+	assertAgentStringField(t, reloaded.Inputs[1], "Name", "lastName", "Inputs[1].Name")
+	assertAgentStringField(t, reloaded.Inputs[1], "Kind", "string", "Inputs[1].Kind")
+	assertAgentStringField(t, reloaded.Inputs[1], "Default", "Doe", "Inputs[1].Default")
+	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
+	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
+	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
@@ -6549,14 +6549,14 @@ func TestPromptyToYAML7(t *testing.T) {
 	}
 }
 
-// TestPromptyFromJSONInvalid rejects malformed JSON instead of silently defaulting
-func TestPromptyFromJSONInvalid(t *testing.T) {
-	if _, err := prompty.PromptyFromJSON("{"); err == nil {
+// TestAgentFromJSONInvalid rejects malformed JSON instead of silently defaulting
+func TestAgentFromJSONInvalid(t *testing.T) {
+	if _, err := prompty.AgentFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
 	}
 }
 
-func assertPromptyStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+func assertAgentStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
 	t.Helper()
 	field := reflect.ValueOf(value)
 	if field.Kind() == reflect.Pointer {

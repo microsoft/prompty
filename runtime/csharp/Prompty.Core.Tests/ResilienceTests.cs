@@ -22,7 +22,7 @@ file class ThrowingMockExecutor : IExecutor
     public void EnqueueResponse(object response) => _responses.Enqueue(response);
     public void EnqueueException(Exception ex) => _exceptions.Enqueue(ex);
 
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(Agent agent, List<Message> messages)
     {
         Calls.Add(new List<Message>(messages));
 
@@ -66,14 +66,14 @@ file class ThrowingMockExecutor : IExecutor
 /// <summary>A passthrough renderer for resilience tests.</summary>
 file class PassthroughRenderer : IRenderer
 {
-    public Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs)
+    public Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
         => Task.FromResult(template);
 }
 
 /// <summary>A passthrough parser for resilience tests.</summary>
 file class PassthroughParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
+    public Task<List<Message>> ParseAsync(Agent agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult(new List<Message>
         {
             new() { Role = Role.User, Parts = [new TextPart { Value = rendered }] }
@@ -83,7 +83,7 @@ file class PassthroughParser : IParser
 /// <summary>A passthrough processor for resilience tests.</summary>
 file class PassthroughProcessor : IProcessor
 {
-    public Task<object> ProcessAsync(Prompty agent, object response) =>
+    public Task<object> ProcessAsync(Agent agent, object response) =>
         Task.FromResult(response);
 }
 
@@ -92,9 +92,9 @@ file static class ResilienceHelper
 {
     public const string TestProvider = "test-resilience";
 
-    public static Prompty CreateAgent(string instructions = "Hello")
+    public static Agent CreateAgent(string instructions = "Hello")
     {
-        return new Prompty
+        return new Agent
         {
             Name = "test-resilience-agent",
             Instructions = instructions,

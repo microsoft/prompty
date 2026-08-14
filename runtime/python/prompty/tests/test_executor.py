@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from prompty.core.types import AudioPart, FilePart, ImagePart, Message, TextPart
-from prompty.model import Prompty
+from prompty.model import Agent
 from prompty.providers.foundry.executor import FoundryExecutor
 from prompty.providers.openai.executor import (
     OpenAIExecutor,
@@ -28,7 +28,7 @@ from prompty.providers.openai.executor import (
 # ---------------------------------------------------------------------------
 
 
-def _make_agent(**kwargs) -> Prompty:
+def _make_agent(**kwargs) -> Agent:
     data = {
         "name": "test",
         "model": {
@@ -40,10 +40,10 @@ def _make_agent(**kwargs) -> Prompty:
         },
     }
     data.update(kwargs)
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
-def _make_foundry_agent(**kwargs) -> Prompty:
+def _make_foundry_agent(**kwargs) -> Agent:
     data = {
         "name": "test-foundry",
         "model": {
@@ -59,7 +59,7 @@ def _make_foundry_agent(**kwargs) -> Prompty:
         },
     }
     data.update(kwargs)
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def _make_messages() -> list[Message]:
@@ -516,7 +516,7 @@ class TestFoundryExecutor:
         from prompty.core.connections import clear_connections, register_connection
 
         executor = FoundryExecutor()
-        agent = Prompty.load(
+        agent = Agent.load(
             {
                 "name": "test-ref",
                 "model": {
@@ -740,7 +740,7 @@ class TestBuildArgsResponseFormat:
 # ---------------------------------------------------------------------------
 
 
-def _make_embedding_agent(**kwargs) -> Prompty:
+def _make_embedding_agent(**kwargs) -> Agent:
     data = {
         "name": "test-embed",
         "model": {
@@ -751,10 +751,10 @@ def _make_embedding_agent(**kwargs) -> Prompty:
         },
     }
     data.update(kwargs)
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
-def _make_image_agent(**kwargs) -> Prompty:
+def _make_image_agent(**kwargs) -> Agent:
     data = {
         "name": "test-image",
         "model": {
@@ -765,7 +765,7 @@ def _make_image_agent(**kwargs) -> Prompty:
         },
     }
     data.update(kwargs)
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 class TestEmbeddingDispatch:

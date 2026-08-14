@@ -19,7 +19,7 @@ public class AnthropicExecutor : IExecutor
     private const string ApiVersion = "2023-06-01";
     private const int DefaultMaxTokens = 4096;
 
-    public async Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+    public async Task<object> ExecuteAsync(Core.Agent agent, List<Message> messages)
     {
         var streaming = agent.Metadata?.TryGetValue("stream", out var streamVal) == true && streamVal is true;
 
@@ -29,7 +29,7 @@ public class AnthropicExecutor : IExecutor
         return await ExecuteNonStreamAsync(agent, messages);
     }
 
-    private async Task<object> ExecuteNonStreamAsync(Core.Prompty agent, List<Message> messages)
+    private async Task<object> ExecuteNonStreamAsync(Core.Agent agent, List<Message> messages)
     {
         var body = BuildRequestBody(agent, messages, stream: false);
         var (endpoint, apiKey) = GetConnectionInfo(agent);
@@ -42,7 +42,7 @@ public class AnthropicExecutor : IExecutor
         return json;
     }
 
-    private PromptyStream ExecuteStreamAsync(Core.Prompty agent, List<Message> messages)
+    private PromptyStream ExecuteStreamAsync(Core.Agent agent, List<Message> messages)
     {
         var body = BuildRequestBody(agent, messages, stream: true);
         var (endpoint, apiKey) = GetConnectionInfo(agent);
@@ -72,7 +72,7 @@ public class AnthropicExecutor : IExecutor
         return new PromptyStream(StreamEvents());
     }
 
-    internal Dictionary<string, object?> BuildRequestBody(Core.Prompty agent, List<Message> messages, bool stream)
+    internal Dictionary<string, object?> BuildRequestBody(Core.Agent agent, List<Message> messages, bool stream)
     {
         var model = agent.Model?.Id ?? "claude-sonnet-4-20250514";
         var maxTokens = agent.Model?.Options?.MaxOutputTokens ?? DefaultMaxTokens;
@@ -216,7 +216,7 @@ public class AnthropicExecutor : IExecutor
         return new() { ["role"] = role, ["content"] = content };
     }
 
-    private static List<Dictionary<string, object?>>? ToolsToWire(Core.Prompty agent)
+    private static List<Dictionary<string, object?>>? ToolsToWire(Core.Agent agent)
     {
         if (agent.Tools is null || agent.Tools.Count == 0)
             return null;
@@ -239,7 +239,7 @@ public class AnthropicExecutor : IExecutor
         return tools.Count > 0 ? tools : null;
     }
 
-    private static (string endpoint, string apiKey) GetConnectionInfo(Core.Prompty agent)
+    private static (string endpoint, string apiKey) GetConnectionInfo(Core.Agent agent)
     {
         var conn = agent.Model?.Connection;
 
@@ -280,7 +280,7 @@ public class AnthropicExecutor : IExecutor
     /// Convert outputs to Anthropic output_config format.
     /// Anthropic format: { format: { type: "json_schema", schema: { ... } } }
     /// </summary>
-    internal static Dictionary<string, object?>? OutputSchemaToWire(Core.Prompty agent)
+    internal static Dictionary<string, object?>? OutputSchemaToWire(Core.Agent agent)
     {
         if (agent.Outputs is null || agent.Outputs.Count == 0)
             return null;

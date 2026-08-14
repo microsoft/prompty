@@ -4,7 +4,7 @@ import { processResponse } from "../src/processor.js";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import {
-  Prompty,
+  Agent,
   Model,
   ModelOptions,
   ApiKeyConnection,
@@ -30,12 +30,12 @@ function makeAgent(overrides?: {
   options?: Record<string, unknown>;
   tools?: unknown[];
   outputs?: unknown[];
-}): Prompty {
+}): Agent {
   const opts = overrides?.options
     ? new ModelOptions(overrides.options as Partial<ModelOptions>)
     : undefined;
 
-  return new Prompty({
+  return new Agent({
     name: overrides?.name ?? "test",
     instructions: "system:\nYou are helpful.\n\nuser:\n{{question}}",
     model: new Model({
@@ -49,8 +49,8 @@ function makeAgent(overrides?: {
       }),
       options: opts,
     }),
-    tools: overrides?.tools as Prompty["tools"],
-    outputs: overrides?.outputs as Prompty["outputs"],
+    tools: overrides?.tools as Agent["tools"],
+    outputs: overrides?.outputs as Agent["outputs"],
   });
 }
 
@@ -117,7 +117,7 @@ describe("buildChatArgs", () => {
   });
 
   it("falls back to gpt-4 when model id is empty", () => {
-    const agent = new Prompty({ name: "test", model: new Model({}) });
+    const agent = new Agent({ name: "test", model: new Model({}) });
     const args = buildChatArgs(agent, []);
     expect(args.model).toBe("gpt-4");
   });
@@ -400,7 +400,7 @@ describe("buildEmbeddingArgs", () => {
   });
 
   it("defaults model when id is empty", () => {
-    const agent = new Prompty({ name: "test", model: new Model({}) });
+    const agent = new Agent({ name: "test", model: new Model({}) });
     const args = buildEmbeddingArgs(agent, "test");
     expect(args.model).toBe("text-embedding-ada-002");
   });

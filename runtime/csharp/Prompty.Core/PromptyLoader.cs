@@ -16,7 +16,7 @@ public static class PromptyLoader
     /// <returns>A loaded Prompty instance with instructions from the markdown body.</returns>
     /// <exception cref="FileNotFoundException">If the file does not exist.</exception>
     /// <exception cref="InvalidOperationException">If frontmatter is invalid or env vars are missing.</exception>
-    public static Prompty Load(string path, PromptyLoadOptions? options = null)
+    public static Agent Load(string path, PromptyLoadOptions? options = null)
     {
         var fullPath = Path.GetFullPath(path);
         if (!File.Exists(fullPath))
@@ -32,7 +32,7 @@ public static class PromptyLoader
     /// <param name="path">Path to the .prompty file (absolute or relative to cwd).</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>A loaded Prompty instance with instructions from the markdown body.</returns>
-    public static async Task<Prompty> LoadAsync(string path, CancellationToken cancellationToken = default)
+    public static async Task<Agent> LoadAsync(string path, CancellationToken cancellationToken = default)
     {
         return await LoadAsync(path, options: null, cancellationToken);
     }
@@ -44,7 +44,7 @@ public static class PromptyLoader
     /// <param name="options">Optional load behavior, including additional allowed file roots.</param>
     /// <param name="cancellationToken">Optional cancellation token.</param>
     /// <returns>A loaded Prompty instance with instructions from the markdown body.</returns>
-    public static async Task<Prompty> LoadAsync(
+    public static async Task<Agent> LoadAsync(
         string path,
         PromptyLoadOptions? options,
         CancellationToken cancellationToken = default)
@@ -60,7 +60,7 @@ public static class PromptyLoader
     /// <summary>
     /// Core loading logic shared by sync and async paths.
     /// </summary>
-    private static Prompty Build(string contents, string fullPath, PromptyLoadOptions? options)
+    private static Agent Build(string contents, string fullPath, PromptyLoadOptions? options)
     {
         // 1. Split frontmatter + body
         var data = FrontmatterParser.Parse(contents);
@@ -71,7 +71,7 @@ public static class PromptyLoader
             PreProcess = ReferenceResolver.CreatePreProcess(fullPath, options?.AllowedFileRoots),
         };
 
-        var agent = Prompty.Load(data, ctx);
+        var agent = Agent.Load(data, ctx);
 
         // 3. Attach source path in metadata
         agent.Metadata ??= new Dictionary<string, object>();

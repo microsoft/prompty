@@ -17,7 +17,7 @@ namespace Prompty.Core;
         /// <summary>
         /// Parse rendered text into a structured message array
         /// </summary>
-        Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context);
+        Task<List<Message>> ParseAsync(Agent agent, string rendered, Dictionary<string, object?>? context);
         /// <summary>
         /// Pre-process a template before rendering, returning modified template and context
         /// </summary>

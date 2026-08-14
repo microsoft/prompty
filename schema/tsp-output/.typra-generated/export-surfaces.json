@@ -24,7 +24,7 @@
     ]
   },
   "root": {
-    "object": "Prompty.Prompty",
+    "object": "Prompty.Agent",
     "namespace": "Prompty",
     "alias": "Prompty"
   },
@@ -34,6 +34,7 @@
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "namespace": "Prompty.Core",
       "rootExports": [
+        "Agent",
         "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
@@ -125,7 +126,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "Prompty",
         "PromptyTool",
         "Property",
         "RedactedField",
@@ -264,17 +264,17 @@
           "protocol": true
         },
         {
+          "name": "Agent",
+          "kind": "value",
+          "group": "agent",
+          "source": "agent/Agent.cs",
+          "protocol": false
+        },
+        {
           "name": "GuardrailResult",
           "kind": "value",
           "group": "agent",
           "source": "agent/GuardrailResult.cs",
-          "protocol": false
-        },
-        {
-          "name": "Prompty",
-          "kind": "value",
-          "group": "agent",
-          "source": "agent/Prompty.cs",
           "protocol": false
         },
         {
@@ -1297,12 +1297,12 @@
         {
           "name": "agent",
           "exports": [
-            "GuardrailResult",
-            "Prompty"
+            "Agent",
+            "GuardrailResult"
           ],
           "modules": [
-            "GuardrailResult.cs",
-            "Prompty.cs"
+            "Agent.cs",
+            "GuardrailResult.cs"
           ]
         },
         {
@@ -1789,7 +1789,7 @@
               "name": "execute",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": false,
@@ -1802,7 +1802,7 @@
               "name": "executeStream",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": true,
@@ -1878,7 +1878,7 @@
               "name": "parse",
               "returns": "Message[]",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "context": "Record<unknown>?",
                 "rendered": "string"
               },
@@ -1932,7 +1932,7 @@
               "name": "process",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "response": "unknown"
               },
               "optional": false,
@@ -1965,7 +1965,7 @@
               "name": "render",
               "returns": "string",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "inputs": "Record<unknown>",
                 "template": "string"
               },
@@ -1989,8 +1989,8 @@
         "PermissionResolver.cs",
         "Processor.cs",
         "Renderer.cs",
+        "agent/Agent.cs",
         "agent/GuardrailResult.cs",
-        "agent/Prompty.cs",
         "connection/AuthorizationCodeFlow.cs",
         "connection/Connection.cs",
         "connection/DeviceAuthorization.cs",
@@ -2120,6 +2120,7 @@
       "outputRoot": "../runtime/go/prompty/model",
       "packageName": "prompty",
       "rootExports": [
+        "Agent",
         "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
@@ -2211,7 +2212,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "Prompty",
         "PromptyTool",
         "Property",
         "RedactedField",
@@ -2350,17 +2350,17 @@
           "protocol": true
         },
         {
+          "name": "Agent",
+          "kind": "value",
+          "group": "agent",
+          "source": "agent.go",
+          "protocol": false
+        },
+        {
           "name": "GuardrailResult",
           "kind": "value",
           "group": "agent",
           "source": "guardrail_result.go",
-          "protocol": false
-        },
-        {
-          "name": "Prompty",
-          "kind": "value",
-          "group": "agent",
-          "source": "prompty.go",
           "protocol": false
         },
         {
@@ -3383,12 +3383,12 @@
         {
           "name": "agent",
           "exports": [
-            "GuardrailResult",
-            "Prompty"
+            "Agent",
+            "GuardrailResult"
           ],
           "modules": [
-            "guardrail_result",
-            "prompty"
+            "agent",
+            "guardrail_result"
           ]
         },
         {
@@ -3875,7 +3875,7 @@
               "name": "execute",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": false,
@@ -3888,7 +3888,7 @@
               "name": "executeStream",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": true,
@@ -3964,7 +3964,7 @@
               "name": "parse",
               "returns": "Message[]",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "context": "Record<unknown>?",
                 "rendered": "string"
               },
@@ -4018,7 +4018,7 @@
               "name": "process",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "response": "unknown"
               },
               "optional": false,
@@ -4051,7 +4051,7 @@
               "name": "render",
               "returns": "string",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "inputs": "Record<unknown>",
                 "template": "string"
               },
@@ -4065,6 +4065,7 @@
         }
       ],
       "modules": [
+        "agent.go",
         "ai_resource_info.go",
         "anthropic_image_block.go",
         "anthropic_image_source.go",
@@ -4142,7 +4143,6 @@
         "permission_resolver.go",
         "processor.go",
         "project_info.go",
-        "prompty.go",
         "property.go",
         "redacted_field.go",
         "redaction_metadata.go",
@@ -4205,6 +4205,7 @@
       "target": "markdown",
       "outputRoot": "../web/src/content/docs/reference",
       "rootExports": [
+        "Agent",
         "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
@@ -4296,7 +4297,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "Prompty",
         "PromptyTool",
         "Property",
         "RedactedField",
@@ -4435,17 +4435,17 @@
           "protocol": true
         },
         {
+          "name": "Agent",
+          "kind": "value",
+          "group": "agent",
+          "source": "Agent",
+          "protocol": false
+        },
+        {
           "name": "GuardrailResult",
           "kind": "value",
           "group": "agent",
           "source": "GuardrailResult",
-          "protocol": false
-        },
-        {
-          "name": "Prompty",
-          "kind": "value",
-          "group": "agent",
-          "source": "Prompty",
           "protocol": false
         },
         {
@@ -5468,12 +5468,12 @@
         {
           "name": "agent",
           "exports": [
-            "GuardrailResult",
-            "Prompty"
+            "Agent",
+            "GuardrailResult"
           ],
           "modules": [
-            "guardrail_result",
-            "prompty"
+            "agent",
+            "guardrail_result"
           ]
         },
         {
@@ -5960,7 +5960,7 @@
               "name": "execute",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": false,
@@ -5973,7 +5973,7 @@
               "name": "executeStream",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": true,
@@ -6049,7 +6049,7 @@
               "name": "parse",
               "returns": "Message[]",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "context": "Record<unknown>?",
                 "rendered": "string"
               },
@@ -6103,7 +6103,7 @@
               "name": "process",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "response": "unknown"
               },
               "optional": false,
@@ -6136,7 +6136,7 @@
               "name": "render",
               "returns": "string",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "inputs": "Record<unknown>",
                 "template": "string"
               },
@@ -6150,6 +6150,7 @@
         }
       ],
       "modules": [
+        "Agent",
         "AiResourceInfo",
         "AnthropicImageBlock",
         "AnthropicImageSource",
@@ -6227,7 +6228,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "Prompty",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -6291,6 +6291,7 @@
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "packageName": "prompty",
       "rootExports": [
+        "Agent",
         "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
@@ -6382,7 +6383,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "Prompty",
         "PromptyTool",
         "Property",
         "RedactedField",
@@ -6521,14 +6521,14 @@
           "protocol": true
         },
         {
-          "name": "GuardrailResult",
+          "name": "Agent",
           "kind": "value",
           "group": "agent",
           "source": ".agent",
           "protocol": false
         },
         {
-          "name": "Prompty",
+          "name": "GuardrailResult",
           "kind": "value",
           "group": "agent",
           "source": ".agent",
@@ -7554,12 +7554,12 @@
         {
           "name": "agent",
           "exports": [
-            "GuardrailResult",
-            "Prompty"
+            "Agent",
+            "GuardrailResult"
           ],
           "modules": [
-            "_GuardrailResult",
-            "_Prompty"
+            "_Agent",
+            "_GuardrailResult"
           ]
         },
         {
@@ -8046,7 +8046,7 @@
               "name": "execute",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": false,
@@ -8059,7 +8059,7 @@
               "name": "executeStream",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": true,
@@ -8135,7 +8135,7 @@
               "name": "parse",
               "returns": "Message[]",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "context": "Record<unknown>?",
                 "rendered": "string"
               },
@@ -8189,7 +8189,7 @@
               "name": "process",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "response": "unknown"
               },
               "optional": false,
@@ -8222,7 +8222,7 @@
               "name": "render",
               "returns": "string",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "inputs": "Record<unknown>",
                 "template": "string"
               },
@@ -8265,6 +8265,7 @@
       "target": "rust",
       "outputRoot": "../runtime/rust/prompty/src/model",
       "rootExports": [
+        "Agent",
         "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
@@ -8356,7 +8357,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "Prompty",
         "PromptyTool",
         "Property",
         "RedactedField",
@@ -8495,17 +8495,17 @@
           "protocol": true
         },
         {
+          "name": "Agent",
+          "kind": "value",
+          "group": "agent",
+          "source": "agent::agent",
+          "protocol": false
+        },
+        {
           "name": "GuardrailResult",
           "kind": "value",
           "group": "agent",
           "source": "agent::guardrail_result",
-          "protocol": false
-        },
-        {
-          "name": "Prompty",
-          "kind": "value",
-          "group": "agent",
-          "source": "agent::prompty",
           "protocol": false
         },
         {
@@ -9528,12 +9528,12 @@
         {
           "name": "agent",
           "exports": [
-            "GuardrailResult",
-            "Prompty"
+            "Agent",
+            "GuardrailResult"
           ],
           "modules": [
-            "guardrail_result",
-            "prompty"
+            "agent",
+            "guardrail_result"
           ]
         },
         {
@@ -10020,7 +10020,7 @@
               "name": "execute",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": false,
@@ -10033,7 +10033,7 @@
               "name": "executeStream",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": true,
@@ -10109,7 +10109,7 @@
               "name": "parse",
               "returns": "Message[]",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "context": "Record<unknown>?",
                 "rendered": "string"
               },
@@ -10163,7 +10163,7 @@
               "name": "process",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "response": "unknown"
               },
               "optional": false,
@@ -10196,7 +10196,7 @@
               "name": "render",
               "returns": "string",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "inputs": "Record<unknown>",
                 "template": "string"
               },
@@ -10241,6 +10241,7 @@
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "namespace": "Prompty",
       "rootExports": [
+        "Agent",
         "AiResourceInfo",
         "AnonymousConnection",
         "AnthropicImageBlock",
@@ -10332,7 +10333,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "Prompty",
         "PromptyTool",
         "Property",
         "RedactedField",
@@ -10471,17 +10471,17 @@
           "protocol": true
         },
         {
+          "name": "Agent",
+          "kind": "value",
+          "group": "agent",
+          "source": "./agent/agent",
+          "protocol": false
+        },
+        {
           "name": "GuardrailResult",
           "kind": "value",
           "group": "agent",
           "source": "./agent/guardrail-result",
-          "protocol": false
-        },
-        {
-          "name": "Prompty",
-          "kind": "value",
-          "group": "agent",
-          "source": "./agent/prompty",
           "protocol": false
         },
         {
@@ -11504,12 +11504,12 @@
         {
           "name": "agent",
           "exports": [
-            "GuardrailResult",
-            "Prompty"
+            "Agent",
+            "GuardrailResult"
           ],
           "modules": [
-            "guardrail-result",
-            "prompty"
+            "agent",
+            "guardrail-result"
           ]
         },
         {
@@ -11996,7 +11996,7 @@
               "name": "execute",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": false,
@@ -12009,7 +12009,7 @@
               "name": "executeStream",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "messages": "Message[]"
               },
               "optional": true,
@@ -12085,7 +12085,7 @@
               "name": "parse",
               "returns": "Message[]",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "context": "Record<unknown>?",
                 "rendered": "string"
               },
@@ -12139,7 +12139,7 @@
               "name": "process",
               "returns": "unknown",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "response": "unknown"
               },
               "optional": false,
@@ -12172,7 +12172,7 @@
               "name": "render",
               "returns": "string",
               "params": {
-                "agent": "Prompty",
+                "agent": "Agent",
                 "inputs": "Record<unknown>",
                 "template": "string"
               },
@@ -12186,8 +12186,8 @@
         }
       ],
       "modules": [
+        "./agent/agent",
         "./agent/guardrail-result",
-        "./agent/prompty",
         "./checkpoint-store",
         "./connection/authorization-code-flow",
         "./connection/connection",

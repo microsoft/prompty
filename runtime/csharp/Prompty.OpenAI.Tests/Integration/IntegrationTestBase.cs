@@ -71,7 +71,7 @@ public abstract class IntegrationTestBase
     /// Create an OpenAI agent for integration testing.
     /// Skips the test if OPENAI_API_KEY is not set.
     /// </summary>
-    protected static Core.Prompty MakeOpenAIAgent(
+    protected static Core.Agent MakeOpenAIAgent(
         string apiType = "chat",
         string? model = null,
         ModelOptions? options = null,
@@ -105,7 +105,7 @@ public abstract class IntegrationTestBase
             ["model"] = modelDict,
         };
 
-        var agent = Core.Prompty.Load(data, new LoadContext());
+        var agent = Core.Agent.Load(data, new LoadContext());
 
         if (options is not null && agent.Model is not null)
             agent.Model.Options = options;
@@ -123,7 +123,7 @@ public abstract class IntegrationTestBase
     /// Create an Azure/Foundry agent for integration testing.
     /// Skips the test if Azure env vars are not set.
     /// </summary>
-    protected static Core.Prompty MakeFoundryAgent(
+    protected static Core.Agent MakeFoundryAgent(
         string apiType = "chat",
         string? deployment = null,
         ModelOptions? options = null,
@@ -156,7 +156,7 @@ public abstract class IntegrationTestBase
             ["model"] = modelDict,
         };
 
-        var agent = Core.Prompty.Load(data, new LoadContext());
+        var agent = Core.Agent.Load(data, new LoadContext());
 
         if (options is not null && agent.Model is not null)
             agent.Model.Options = options;
@@ -174,7 +174,7 @@ public abstract class IntegrationTestBase
     /// Create an Anthropic agent for integration testing.
     /// Skips the test if ANTHROPIC_API_KEY is not set.
     /// </summary>
-    protected static Core.Prompty MakeAnthropicAgent(
+    protected static Core.Agent MakeAnthropicAgent(
         string apiType = "chat",
         string model = "claude-sonnet-4-5-20250929",
         ModelOptions? options = null,
@@ -204,7 +204,7 @@ public abstract class IntegrationTestBase
             ["model"] = modelDict,
         };
 
-        var agent = Core.Prompty.Load(data, new LoadContext());
+        var agent = Core.Agent.Load(data, new LoadContext());
 
         if (options is not null && agent.Model is not null)
             agent.Model.Options = options;

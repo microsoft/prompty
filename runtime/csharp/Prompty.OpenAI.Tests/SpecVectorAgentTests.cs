@@ -588,9 +588,9 @@ public class SpecVectorAgentTests : IDisposable
     /// <summary>
     /// Build a Prompty agent from the vector input data.
     /// </summary>
-    private static Core.Prompty BuildAgentFromInput(JsonElement input)
+    private static Core.Agent BuildAgentFromInput(JsonElement input)
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Name = "agent_test",
             Instructions = "placeholder",
@@ -690,13 +690,13 @@ public class SpecVectorAgentTests : IDisposable
 
     private class PassthroughRenderer : IRenderer
     {
-        public Task<string> RenderAsync(Core.Prompty agent, string template, Dictionary<string, object?> inputs)
+        public Task<string> RenderAsync(Core.Agent agent, string template, Dictionary<string, object?> inputs)
             => Task.FromResult(agent.Instructions ?? "");
     }
 
     private class PassthroughParser : IParser
     {
-        public Task<List<Message>> ParseAsync(Core.Prompty agent, string rendered, Dictionary<string, object?>? context)
+        public Task<List<Message>> ParseAsync(Core.Agent agent, string rendered, Dictionary<string, object?>? context)
         {
             var msgs = new List<Message>
             {
@@ -709,13 +709,13 @@ public class SpecVectorAgentTests : IDisposable
 
     private class PassthroughProcessor : IProcessor
     {
-        public Task<object> ProcessAsync(Core.Prompty agent, object response)
+        public Task<object> ProcessAsync(Core.Agent agent, object response)
             => Task.FromResult(response);
     }
 
     private class LambdaExecutor(Func<List<Message>, object> fn) : IExecutor
     {
-        public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(Core.Agent agent, List<Message> messages)
             => Task.FromResult(fn(messages));
 
         public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)

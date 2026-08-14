@@ -8,7 +8,7 @@ import { Property } from "../core/property";
 import { Template } from "../template/template";
 import { Tool } from "../tools/tool";
 
-export class Prompty {
+export class Agent {
   static readonly shorthandProperty: string | undefined = undefined;
 
   name: string = "";
@@ -22,7 +22,7 @@ export class Prompty {
   template?: Template | undefined;
   instructions?: string | undefined;
 
-  constructor(init?: Partial<Prompty>) {
+  constructor(init?: Partial<Agent>) {
     this.name = init?.name ?? "";
     if (init?.displayName !== undefined) {
       this.displayName = init.displayName;
@@ -55,13 +55,13 @@ export class Prompty {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): Prompty {
+  static load(data: Record<string, unknown>, context?: LoadContext): Agent {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
-    const instance = new Prompty();
+    const instance = new Agent();
 
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
@@ -76,13 +76,13 @@ export class Prompty {
       instance.metadata = data["metadata"] as Record<string, unknown>;
     }
     if (data["inputs"] !== undefined && data["inputs"] !== null) {
-      instance.inputs = Prompty.loadInputs(
+      instance.inputs = Agent.loadInputs(
         data["inputs"] as unknown[],
         context.at("inputs"),
       );
     }
     if (data["outputs"] !== undefined && data["outputs"] !== null) {
-      instance.outputs = Prompty.loadOutputs(
+      instance.outputs = Agent.loadOutputs(
         data["outputs"] as unknown[],
         context.at("outputs"),
       );
@@ -94,7 +94,7 @@ export class Prompty {
       );
     }
     if (data["tools"] !== undefined && data["tools"] !== null) {
-      instance.tools = Prompty.loadTools(
+      instance.tools = Agent.loadTools(
         data["tools"] as unknown[],
         context.at("tools"),
       );
@@ -110,7 +110,7 @@ export class Prompty {
     }
 
     if (context) {
-      return context.processOutput(instance) as Prompty;
+      return context.processOutput(instance) as Agent;
     }
     return instance;
   }
@@ -386,16 +386,16 @@ export class Prompty {
       result["metadata"] = obj.metadata;
     }
     if (obj.inputs !== undefined && obj.inputs !== null) {
-      result["inputs"] = Prompty.saveInputs(obj.inputs, context);
+      result["inputs"] = Agent.saveInputs(obj.inputs, context);
     }
     if (obj.outputs !== undefined && obj.outputs !== null) {
-      result["outputs"] = Prompty.saveOutputs(obj.outputs, context);
+      result["outputs"] = Agent.saveOutputs(obj.outputs, context);
     }
     if (obj.model !== undefined && obj.model !== null) {
       result["model"] = obj.model.save(context);
     }
     if (obj.tools !== undefined && obj.tools !== null) {
-      result["tools"] = Prompty.saveTools(obj.tools, context);
+      result["tools"] = Agent.saveTools(obj.tools, context);
     }
     if (obj.template !== undefined && obj.template !== null) {
       result["template"] = obj.template.save(context);
@@ -420,15 +420,15 @@ export class Prompty {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): Prompty {
+  static fromJson(json: string, context?: LoadContext): Agent {
     const data = JSON.parse(json);
-    return Prompty.load(data as Record<string, unknown>, context);
+    return Agent.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): Prompty {
+  static fromYaml(yaml: string, context?: LoadContext): Agent {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return Prompty.load(data as Record<string, unknown>, context);
+    return Agent.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

@@ -8,7 +8,7 @@ use serde_json::Value;
 use prompty::interfaces::{InvokerError, Processor};
 use prompty::model::{
     DelegatedStateReference, InvocationContextPortability, InvocationContextState, InvocationUsage,
-    ModelInvocationRequest, ModelInvocationResponse, ModelToolRequest, Prompty,
+    ModelInvocationRequest, ModelInvocationResponse, ModelToolRequest, Agent,
 };
 use prompty::types::{Message, Role, StreamFailure, ToolCall};
 
@@ -26,13 +26,13 @@ pub struct OpenAIProcessor;
 
 #[async_trait]
 impl Processor for OpenAIProcessor {
-    async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, agent: &Agent, response: Value) -> Result<Value, InvokerError> {
         process_response(agent, &response)
     }
 
     async fn process_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         response: Value,
         request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -41,7 +41,7 @@ impl Processor for OpenAIProcessor {
 
     async fn process_raw_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         response: Value,
         request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -69,7 +69,7 @@ impl Processor for OpenAIProcessor {
 /// continuation. Chat completions remain explicitly portable because their
 /// response IDs cannot restore provider-side context.
 pub fn process_invocation_response(
-    agent: &Prompty,
+    agent: &Agent,
     response: &Value,
     provider: &str,
     supports_responses_continuation: bool,
@@ -93,7 +93,7 @@ pub fn process_invocation_response(
 
 /// Map a response while recording the immutable provider-visible continuation boundary.
 pub fn process_invocation_response_with_context(
-    agent: &Prompty,
+    agent: &Agent,
     response: &Value,
     provider: &str,
     supports_responses_continuation: bool,
@@ -226,7 +226,7 @@ fn invocation_usage(response: &Value) -> Option<InvocationUsage> {
 }
 
 /// Process an OpenAI API response, dispatching by response shape.
-pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, InvokerError> {
+pub fn process_response(agent: &Agent, response: &Value) -> Result<Value, InvokerError> {
     // Responses API — has "object" == "response"
     if response.get("object").and_then(Value::as_str) == Some("response") {
         return process_responses_api(agent, response);
@@ -262,7 +262,7 @@ pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, Invo
 // Chat completion
 // ---------------------------------------------------------------------------
 
-fn process_chat_completion(agent: &Prompty, choices: &[Value]) -> Result<Value, InvokerError> {
+fn process_chat_completion(agent: &Agent, choices: &[Value]) -> Result<Value, InvokerError> {
     let first = choices
         .first()
         .ok_or_else(|| InvokerError::Process("Empty choices array".to_string().into()))?;
@@ -319,7 +319,7 @@ fn process_chat_completion(agent: &Prompty, choices: &[Value]) -> Result<Value, 
 // Responses API (OpenAI new format)
 // ---------------------------------------------------------------------------
 
-fn process_responses_api(agent: &Prompty, response: &Value) -> Result<Value, InvokerError> {
+fn process_responses_api(agent: &Agent, response: &Value) -> Result<Value, InvokerError> {
     // Check for tool calls in output items
     if let Some(output) = response.get("output").and_then(Value::as_array) {
         let tool_calls: Vec<Value> = output
@@ -775,7 +775,7 @@ mod tests {
     use prompty::model::{ModelInvocationContextSnapshot, ModelInvocationRequest};
     use serde_json::json;
 
-    fn make_agent(outputs_json: Value) -> Prompty {
+    fn make_agent(outputs_json: Value) -> Agent {
         let mut data = json!({
             "name": "test",
             "kind": "prompt",
@@ -785,7 +785,7 @@ mod tests {
         if !outputs_json.is_null() {
             data["outputs"] = outputs_json;
         }
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     fn request(messages: Vec<Message>) -> ModelInvocationRequest {
@@ -1022,7 +1022,7 @@ mod tests {
 
     #[test]
     fn test_empty_choices_error() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let response = json!({
             "choices": []
         });
@@ -1032,7 +1032,7 @@ mod tests {
 
     #[test]
     fn test_missing_message_error() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let response = json!({
             "choices": [{"finish_reason": "stop"}]
         });
@@ -1042,7 +1042,7 @@ mod tests {
 
     #[test]
     fn test_tool_calls_with_missing_fields() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         // Tool calls where some entries are malformed
         let response = json!({
             "choices": [{
@@ -1070,7 +1070,7 @@ mod tests {
 
     #[test]
     fn test_null_content_no_refusal() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let response = json!({
             "choices": [{
                 "message": {
@@ -1084,7 +1084,7 @@ mod tests {
 
     #[test]
     fn test_unknown_response_shape_passthrough() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let response = json!({
             "unexpected": "format",
             "custom": 42
@@ -1116,7 +1116,7 @@ mod tests {
             "outputs": [{"name": "result", "kind": "object"}],
             "instructions": "Return JSON"
         });
-        let agent = Prompty::load_from_value(&data, &LoadContext::default());
+        let agent = Agent::load_from_value(&data, &LoadContext::default());
         let response = json!({
             "choices": [{
                 "message": {
@@ -1130,7 +1130,7 @@ mod tests {
 
     #[test]
     fn test_embedding_multiple_vectors() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let response = json!({
             "object": "list",
             "data": [
@@ -1145,7 +1145,7 @@ mod tests {
 
     #[test]
     fn test_image_multiple_urls() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let response = json!({
             "data": [
                 {"url": "https://a.com/1.png"},

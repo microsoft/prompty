@@ -47,7 +47,7 @@ const config = {
   options: {
     "@typra/emitter": {
       "emitter-output-dir": scratch.replace(/\\/g, "/"),
-      "root-object": "Prompty.Prompty",
+      "root-object": "Prompty.Agent",
       "emit-targets": emitTargets.map((type) => ({
         type,
         "output-dir": join(scratch, type).replace(/\\/g, "/"),

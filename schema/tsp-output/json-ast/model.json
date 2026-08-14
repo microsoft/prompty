@@ -1,9 +1,9 @@
 {
   "typeName": {
     "namespace": "Prompty",
-    "name": "Prompty"
+    "name": "Agent"
   },
-  "description": "A Prompty is a markdown file format for LLM prompts. The frontmatter defines\nstructured metadata including model configuration, input/output schemas, tools,\nand template settings. The markdown body becomes the instructions.\n\nThis is the single root type for the Prompty schema — there is no abstract base\nclass or kind discriminator. A .prompty file always produces a Prompty instance.\n\nRuntime loaders may resolve frontmatter references such as `${env:VAR}` and\n`${file:relative/path}`. File references must be treated as a host-controlled\ncapability: by default they are scoped to the containing .prompty file's\ndirectory tree after canonicalization, and any additional allowed roots must\nbe supplied by the host application's load options rather than frontmatter.",
+  "description": "An Agent is the root model produced from a .prompty markdown file for LLM\nprompts. The frontmatter defines structured metadata including model\nconfiguration, input/output schemas, tools, and template settings. The\nmarkdown body becomes the instructions.\n\nThis is the single root type for the Prompty schema — there is no abstract base\nclass or kind discriminator. A .prompty file always produces an Agent instance.\n\nRuntime loaders may resolve frontmatter references such as `${env:VAR}` and\n`${file:relative/path}`. File references must be treated as a host-controlled\ncapability: by default they are scoped to the containing .prompty file's\ndirectory tree after canonicalization, and any additional allowed roots must\nbe supplied by the host application's load options rather than frontmatter.",
   "base": {},
   "isAbstract": false,
   "isProtocol": false,

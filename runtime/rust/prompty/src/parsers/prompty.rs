@@ -20,7 +20,7 @@ use async_trait::async_trait;
 use regex::Regex;
 
 use crate::interfaces::{InvokerError, Parser};
-use crate::model::Prompty;
+use crate::model::Agent;
 use crate::types::{ContentPart, Message, Role};
 
 /// Boundary regex per spec §6.5: role marker on its own line.
@@ -66,7 +66,7 @@ impl Parser for PromptyChatParser {
 
     async fn parse(
         &self,
-        _agent: &Prompty,
+        _agent: &Agent,
         rendered: &str,
         context: Option<&serde_json::Value>,
     ) -> Result<Vec<Message>, InvokerError> {

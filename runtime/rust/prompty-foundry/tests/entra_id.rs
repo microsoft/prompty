@@ -14,7 +14,7 @@
 
 #![cfg(feature = "entra_id")]
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use prompty::{TurnOptions, register_defaults};
 use serde_json::{Value, json};
@@ -87,7 +87,7 @@ fn restore_api_key(old: Option<String>) {
     }
 }
 
-fn build_foundry_chat_agent(question: &str, options: Value) -> Prompty {
+fn build_foundry_chat_agent(question: &str, options: Value) -> Agent {
     let data = json!({
         "name": "entra-id-chat-test",
         "kind": "prompt",
@@ -109,7 +109,7 @@ fn build_foundry_chat_agent(question: &str, options: Value) -> Prompty {
             "system:\nYou are a helpful assistant. Be very brief.\nuser:\n{question}"
         ),
     });
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
 // ---------------------------------------------------------------------------
@@ -229,7 +229,7 @@ async fn test_entra_id_structured_output() {
         ],
         "instructions": "system:\nYou are a geography expert. Return structured data.\nuser:\nTell me about Paris.",
     });
-    let agent = Prompty::load_from_value(&data, &LoadContext::default());
+    let agent = Agent::load_from_value(&data, &LoadContext::default());
 
     let result = prompty::invoke_agent(&agent, None).await;
 
@@ -295,7 +295,7 @@ async fn test_entra_id_agent_tool_calling() {
         ],
         "instructions": "system:\nYou are a helpful assistant with weather tools. Use the get_weather tool when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?",
     });
-    let agent = Prompty::load_from_value(&data, &LoadContext::default());
+    let agent = Agent::load_from_value(&data, &LoadContext::default());
 
     let mut tools = std::collections::HashMap::new();
     tools.insert(

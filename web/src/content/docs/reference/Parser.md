@@ -21,7 +21,7 @@ config:
 classDiagram
     class Parser {
       <<protocol>>
-        +parse(agent: Prompty, rendered: string, context: Record<unknown>?) Message[] [async-capable]
+        +parse(agent: Agent, rendered: string, context: Record<unknown>?) Message[] [async-capable]
         +preRender(template: string) unknown? [sync, optional default]
     }
 ```
@@ -32,5 +32,5 @@ The following helper methods are declared via `@method` and must be implemented 
 
 | Name | Signature | Runtime shape | Description |
 | ---- | --------- | ------------- | ----------- |
-| `parse` | `parse(agent: Prompty, rendered: string, context: Record<unknown>?) -> Message[]` | async-capable | Parse rendered text into a structured message array |
+| `parse` | `parse(agent: Agent, rendered: string, context: Record<unknown>?) -> Message[]` | async-capable | Parse rendered text into a structured message array |
 | `preRender` | `preRender(template: string) -> unknown?` | sync, optional default | Pre-process a template before rendering, returning modified template and context |

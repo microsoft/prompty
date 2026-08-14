@@ -10,7 +10,7 @@
 //! cargo test --test integration -- --ignored
 //! ```
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use prompty::{ToolHandler, TurnOptions, register_defaults};
 use serde_json::{Value, json};
@@ -73,7 +73,7 @@ fn endpoint() -> String {
     std::env::var("AZURE_OPENAI_ENDPOINT").unwrap_or_default()
 }
 
-fn build_azure_chat_agent(question: &str, options: Value) -> Prompty {
+fn build_azure_chat_agent(question: &str, options: Value) -> Agent {
     let data = json!({
         "name": "azure-integration-chat",
         "kind": "prompt",
@@ -95,7 +95,7 @@ fn build_azure_chat_agent(question: &str, options: Value) -> Prompty {
             "system:\nYou are a helpful assistant. Be very brief.\nuser:\n{question}"
         ),
     });
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
 // ---------------------------------------------------------------------------
@@ -154,7 +154,7 @@ async fn test_azure_embedding() {
         },
         "instructions": "The quick brown fox jumps over the lazy dog.",
     });
-    let agent = Prompty::load_from_value(&data, &LoadContext::default());
+    let agent = Agent::load_from_value(&data, &LoadContext::default());
 
     let result = prompty::invoke_agent(&agent, None)
         .await
@@ -206,7 +206,7 @@ async fn test_azure_structured_output() {
         ],
         "instructions": "system:\nYou are a geography expert. Return structured data.\nuser:\nTell me about Paris.",
     });
-    let agent = Prompty::load_from_value(&data, &LoadContext::default());
+    let agent = Agent::load_from_value(&data, &LoadContext::default());
 
     let result = prompty::invoke_agent(&agent, None)
         .await
@@ -273,7 +273,7 @@ async fn test_azure_agent_tool_calling() {
         ],
         "instructions": "system:\nYou are a helpful assistant with weather tools. Use the get_weather tool when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?",
     });
-    let agent = Prompty::load_from_value(&data, &LoadContext::default());
+    let agent = Agent::load_from_value(&data, &LoadContext::default());
 
     let mut tools = HashMap::new();
     tools.insert(

@@ -3,7 +3,7 @@
 //! Reads `spec/vectors/process/process_vectors.json` and tests that our processor
 //! matches the expected output for all OpenAI-provider vectors.
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use serde_json::{Value, json};
 
@@ -25,7 +25,7 @@ fn load_process_vectors() -> Vec<Value> {
     serde_json::from_str(&content).expect("Invalid JSON in process_vectors.json")
 }
 
-fn build_agent_for_process(input: &Value) -> Prompty {
+fn build_agent_for_process(input: &Value) -> Agent {
     let has_outputs = input
         .get("has_outputs")
         .and_then(|v| v.as_bool())
@@ -44,7 +44,7 @@ fn build_agent_for_process(input: &Value) -> Prompty {
         ]);
     }
 
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
 /// Compare two JSON values, ignoring key order in objects.

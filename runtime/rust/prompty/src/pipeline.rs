@@ -18,7 +18,7 @@ use serde_json::{Value, json};
 
 use crate::engine::{DurabilityPort, PermissionPort, PostCommitPort, TurnEngineRequest};
 use crate::interfaces::InvokerError;
-use crate::model::Prompty;
+use crate::model::Agent;
 use crate::parsers::parse_chat;
 use crate::registry;
 use crate::renderers::prepare_render_inputs;
@@ -47,7 +47,7 @@ const DEFAULT_PROVIDER: &str = "openai";
 /// Wrap a processor result in StructuredResult transport if the agent has outputs
 /// and the result is a JSON object or array (i.e., structured data).
 /// This preserves raw JSON for `cast()` while keeping processors clean.
-fn wrap_structured_if_needed(agent: &Prompty, result: Value) -> Value {
+fn wrap_structured_if_needed(agent: &Agent, result: Value) -> Value {
     let has_outputs = agent.as_outputs().map(|o| !o.is_empty()).unwrap_or(false);
     if has_outputs && (result.is_object() || result.is_array()) {
         // The raw_json is the serialized form of the parsed result
@@ -63,7 +63,7 @@ fn wrap_structured_if_needed(agent: &Prompty, result: Value) -> Value {
 // Config resolution helpers
 // ---------------------------------------------------------------------------
 
-fn resolve_format_kind(agent: &Prompty) -> String {
+fn resolve_format_kind(agent: &Agent) -> String {
     agent
         .template
         .as_ref()
@@ -77,7 +77,7 @@ fn resolve_format_kind(agent: &Prompty) -> String {
         .unwrap_or_else(|| DEFAULT_FORMAT.to_string())
 }
 
-fn resolve_parser_kind(agent: &Prompty) -> String {
+fn resolve_parser_kind(agent: &Agent) -> String {
     agent
         .template
         .as_ref()
@@ -91,7 +91,7 @@ fn resolve_parser_kind(agent: &Prompty) -> String {
         .unwrap_or_else(|| DEFAULT_PARSER.to_string())
 }
 
-fn resolve_provider(agent: &Prompty) -> String {
+fn resolve_provider(agent: &Agent) -> String {
     agent
         .model
         .as_ref()
@@ -101,7 +101,7 @@ fn resolve_provider(agent: &Prompty) -> String {
 }
 
 /// Check if the agent's model options request streaming.
-fn is_streaming(agent: &Prompty) -> bool {
+fn is_streaming(agent: &Agent) -> bool {
     agent
         .model
         .as_ref()
@@ -119,7 +119,7 @@ fn is_streaming(agent: &Prompty) -> bool {
 // ---------------------------------------------------------------------------
 
 /// Serialize agent summary for trace output.
-fn serialize_agent(agent: &Prompty) -> Value {
+fn serialize_agent(agent: &Agent) -> Value {
     let metadata = agent
         .as_metadata_dict()
         .map(|m| Value::Object(m.clone()))
@@ -222,7 +222,7 @@ fn serialize_messages(messages: &[Message]) -> Value {
 /// - Fills `default` values for missing optional inputs
 /// - Raises `InvokerError::Validation` for missing required inputs
 pub fn validate_inputs(
-    agent: &Prompty,
+    agent: &Agent,
     inputs: &serde_json::Value,
 ) -> Result<serde_json::Value, InvokerError> {
     let mut result = inputs.clone();
@@ -263,14 +263,14 @@ pub fn validate_inputs(
 ///
 /// Validates inputs (fills defaults, checks required) and injects nonce markers
 /// for rich-kind inputs (thread, image, file, audio) before rendering.
-pub async fn render(agent: &Prompty, inputs: &serde_json::Value) -> Result<String, InvokerError> {
+pub async fn render(agent: &Agent, inputs: &serde_json::Value) -> Result<String, InvokerError> {
     let (rendered, _nonces) = render_with_nonces(agent, inputs).await?;
     Ok(rendered)
 }
 
 /// Internal: render + return nonces for thread expansion in prepare().
 async fn render_with_nonces(
-    agent: &Prompty,
+    agent: &Agent,
     inputs: &serde_json::Value,
 ) -> Result<(String, HashMap<String, String>), InvokerError> {
     let validated = validate_inputs(agent, inputs)?;
@@ -301,7 +301,7 @@ async fn render_with_nonces(
 
 /// Parse rendered text into messages using the registered parser.
 pub async fn parse(
-    agent: &Prompty,
+    agent: &Agent,
     rendered: &str,
     context: Option<&serde_json::Value>,
 ) -> Result<Vec<Message>, InvokerError> {
@@ -336,7 +336,7 @@ pub async fn parse(
 
 /// Process a raw LLM response using the registered processor.
 pub async fn process(
-    agent: &Prompty,
+    agent: &Agent,
     response: serde_json::Value,
 ) -> Result<serde_json::Value, InvokerError> {
     let provider = resolve_provider(agent);
@@ -369,7 +369,7 @@ pub async fn process(
 // ---------------------------------------------------------------------------
 
 /// Check if the agent has strict mode enabled (default: true per spec).
-fn is_strict_mode(agent: &Prompty) -> bool {
+fn is_strict_mode(agent: &Agent) -> bool {
     agent
         .template
         .as_ref()
@@ -382,7 +382,7 @@ fn is_strict_mode(agent: &Prompty) -> bool {
 /// This is the first half of the pipeline: template → messages.
 /// When strict mode is enabled (default), uses nonce-based injection defense.
 pub async fn prepare(
-    agent: &Prompty,
+    agent: &Agent,
     inputs: Option<&serde_json::Value>,
 ) -> Result<Vec<Message>, InvokerError> {
     let span = Tracer::start("prepare");
@@ -440,7 +440,7 @@ pub async fn prepare(
 /// Takes pre-prepared messages (from `prepare`).
 /// When `model.options.stream` is `true`, uses streaming execution and
 /// returns the accumulated text content.
-pub async fn run(agent: &Prompty, messages: &[Message]) -> Result<serde_json::Value, InvokerError> {
+pub async fn run(agent: &Agent, messages: &[Message]) -> Result<serde_json::Value, InvokerError> {
     let provider = resolve_provider(agent);
 
     let span = Tracer::start("run");
@@ -491,7 +491,7 @@ pub async fn run(agent: &Prompty, messages: &[Message]) -> Result<serde_json::Va
 ///
 /// Accepts either a file path (string) or a pre-loaded `Prompty` agent.
 pub async fn invoke(
-    agent: &Prompty,
+    agent: &Agent,
     inputs: Option<&serde_json::Value>,
 ) -> Result<serde_json::Value, InvokerError> {
     let span = Tracer::start("invoke");
@@ -995,7 +995,7 @@ pub async fn apply_compaction(
 /// - **Ordered tools**: Tool effects are durably committed in request order
 /// - **Cancellation**: Checked at each iteration boundary
 pub async fn turn(
-    agent: &Prompty,
+    agent: &Agent,
     inputs: Option<&serde_json::Value>,
     options: Option<TurnOptions>,
 ) -> Result<serde_json::Value, InvokerError> {
@@ -1012,7 +1012,7 @@ pub async fn turn(
 /// canonical engine, preserving its durable event ordering and non-fatal
 /// post-commit semantics.
 pub async fn turn_with_engine_request(
-    agent: &Prompty,
+    agent: &Agent,
     request: TurnEngineRequest,
     options: Option<TurnOptions>,
 ) -> Result<serde_json::Value, InvokerError> {
@@ -1186,12 +1186,12 @@ mod tests {
     use crate::model::context::LoadContext;
     use crate::model::{
         InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
-        ModelInvocationResponse, ModelToolRequest, Prompty,
+        ModelInvocationResponse, ModelToolRequest, Agent,
     };
     use async_trait::async_trait;
     use serial_test::serial;
 
-    fn make_agent_with_inputs() -> Prompty {
+    fn make_agent_with_inputs() -> Agent {
         let data = serde_json::json!({
             "kind": "prompt",
             "name": "test",
@@ -1203,7 +1203,7 @@ mod tests {
             ],
             "instructions": "system:\nHello {{ firstName }} {{ lastName }}\n\nuser:\n{{ question }}"
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     #[derive(Default)]
@@ -1311,7 +1311,7 @@ mod tests {
 
     #[test]
     fn test_validate_inputs_no_schema() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let inputs = serde_json::json!({"anything": "goes"});
         let result = validate_inputs(&agent, &inputs).unwrap();
         assert_eq!(result["anything"], "goes");
@@ -1394,7 +1394,7 @@ mod tests {
 
     #[test]
     fn test_resolve_defaults() {
-        let agent = Prompty::default();
+        let agent = Agent::default();
         assert_eq!(resolve_format_kind(&agent), "nunjucks");
         assert_eq!(resolve_parser_kind(&agent), "prompty");
         assert_eq!(resolve_provider(&agent), "openai");
@@ -1462,7 +1462,7 @@ mod tests {
             arguments: r#"{"name":"Rust"}"#.to_string(),
         };
 
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
         assert_eq!(result, "Hello, Rust!");
     }
@@ -1486,7 +1486,7 @@ mod tests {
             arguments: r#"{"name":"Async"}"#.to_string(),
         };
 
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
         assert_eq!(result, "Hello, Async!");
     }
@@ -1500,7 +1500,7 @@ mod tests {
             arguments: "{}".to_string(),
         };
 
-        let agent = Prompty::default();
+        let agent = Agent::default();
         // Missing tool returns error string (non-fatal), matching TypeScript behavior
         let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
         assert!(result.contains("nonexistent"));
@@ -1574,7 +1574,7 @@ mod tests {
     impl crate::interfaces::Executor for ToolCallThenDoneExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<serde_json::Value, InvokerError> {
             let n = self.call_count.fetch_add(1, Ordering::SeqCst);
@@ -1614,7 +1614,7 @@ mod tests {
     impl crate::interfaces::Executor for AlwaysToolCallExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<serde_json::Value, InvokerError> {
             Ok(serde_json::json!({
@@ -1643,7 +1643,7 @@ mod tests {
     impl crate::interfaces::Executor for MultiToolExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<serde_json::Value, InvokerError> {
             let n = self.call_count.fetch_add(1, Ordering::SeqCst);
@@ -1671,7 +1671,7 @@ mod tests {
     impl crate::interfaces::Processor for MockProcessor {
         async fn process(
             &self,
-            agent: &Prompty,
+            agent: &Agent,
             response: serde_json::Value,
         ) -> Result<serde_json::Value, InvokerError> {
             // Inline minimal OpenAI processing logic
@@ -1719,7 +1719,7 @@ mod tests {
     impl crate::interfaces::Executor for ContextAwareExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<serde_json::Value, InvokerError> {
             Err(InvokerError::Execute(
@@ -1729,7 +1729,7 @@ mod tests {
 
         async fn execute_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             request: &ModelInvocationRequest,
             _cancellation: &crate::engine::CancellationToken,
         ) -> Result<serde_json::Value, InvokerError> {
@@ -1754,7 +1754,7 @@ mod tests {
     impl crate::interfaces::Processor for ContextAwareProcessor {
         async fn process(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _response: serde_json::Value,
         ) -> Result<serde_json::Value, InvokerError> {
             Err(InvokerError::Process(
@@ -1764,7 +1764,7 @@ mod tests {
 
         async fn process_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _response: serde_json::Value,
             _request: &ModelInvocationRequest,
         ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -1802,7 +1802,7 @@ mod tests {
         }
     }
 
-    fn make_simple_agent(provider: &str) -> Prompty {
+    fn make_simple_agent(provider: &str) -> Agent {
         let data = serde_json::json!({
             "kind": "prompt",
             "name": "test-agent",
@@ -1812,7 +1812,7 @@ mod tests {
             },
             "instructions": "system:\nYou are helpful.\n\nuser:\nHello"
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     fn capture_events() -> (Arc<std::sync::Mutex<Vec<AgentEvent>>>, EventCallback) {
@@ -2632,7 +2632,7 @@ mod tests {
             arguments: "not valid json".to_string(),
         };
 
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let result = crate::tool_dispatch::dispatch_tool(&tc, &tools, &agent, None).await;
         assert!(result.contains("Error"));
         assert!(result.contains("Invalid tool arguments"));
@@ -2693,7 +2693,7 @@ mod tests {
     impl crate::interfaces::Executor for FailThenSucceedExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<serde_json::Value, InvokerError> {
             let n = self.call_count.fetch_add(1, Ordering::SeqCst);
@@ -2714,7 +2714,7 @@ mod tests {
     impl crate::interfaces::Executor for AlwaysFailExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<serde_json::Value, InvokerError> {
             Err(InvokerError::Execute("persistent failure".into()))
@@ -2914,7 +2914,7 @@ mod tests {
     impl crate::interfaces::Executor for StreamingExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             Err(InvokerError::Execute("unexpected fallback".into()))
@@ -2922,7 +2922,7 @@ mod tests {
 
         async fn execute_stream(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError>
         {
@@ -2938,7 +2938,7 @@ mod tests {
 
     #[async_trait::async_trait]
     impl crate::interfaces::Processor for StreamingProcessor {
-        async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+        async fn process(&self, _agent: &Agent, response: Value) -> Result<Value, InvokerError> {
             Ok(response)
         }
 
@@ -2969,7 +2969,7 @@ mod tests {
         let key = "turn_live_streaming";
         registry::register_executor(key, StreamingExecutor);
         registry::register_processor(key, StreamingProcessor);
-        let agent = Prompty::load_from_value(
+        let agent = Agent::load_from_value(
             &json!({
                 "name": "streaming",
                 "kind": "prompt",
@@ -3027,7 +3027,7 @@ mod tests {
     impl crate::interfaces::Executor for CapturingExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             messages: &[Message],
         ) -> Result<Value, InvokerError> {
             self.messages.lock().unwrap().push(messages.to_vec());
@@ -3049,7 +3049,7 @@ mod tests {
     impl crate::interfaces::Executor for CustomFormattingExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             messages: &[Message],
         ) -> Result<Value, InvokerError> {
             self.messages.lock().unwrap().push(messages.to_vec());
@@ -3137,7 +3137,7 @@ mod tests {
     impl crate::interfaces::Executor for RawExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             Ok(json!({"raw": true}))
@@ -3148,7 +3148,7 @@ mod tests {
 
     #[async_trait::async_trait]
     impl crate::interfaces::Processor for FailingProcessor {
-        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+        async fn process(&self, _agent: &Agent, _response: Value) -> Result<Value, InvokerError> {
             Err(InvokerError::Process(
                 "raw responses must bypass processing".into(),
             ))
@@ -3201,7 +3201,7 @@ mod tests {
             },
         );
         registry::register_processor(key, MockProcessor);
-        let agent = Prompty::load_from_value(
+        let agent = Agent::load_from_value(
             &json!({
                 "name": "policy",
                 "kind": "prompt",

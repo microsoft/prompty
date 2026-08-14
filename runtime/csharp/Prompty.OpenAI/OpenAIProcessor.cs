@@ -17,7 +17,7 @@ namespace Prompty.OpenAI;
 /// </summary>
 public class OpenAIProcessor : IProcessor
 {
-    public Task<object> ProcessAsync(Core.Prompty agent, object response)
+    public Task<object> ProcessAsync(Core.Agent agent, object response)
     {
         var result = response switch
         {
@@ -32,7 +32,7 @@ public class OpenAIProcessor : IProcessor
         return Task.FromResult(result);
     }
 
-    private static object ProcessChat(ChatCompletion completion, Core.Prompty agent)
+    private static object ProcessChat(ChatCompletion completion, Core.Agent agent)
     {
         // Check for tool calls
         if (completion.ToolCalls is not null && completion.ToolCalls.Count > 0)
@@ -78,7 +78,7 @@ public class OpenAIProcessor : IProcessor
     // Responses API processing
     // -----------------------------------------------------------------------
 
-    private static object ProcessResponses(ResponseResult result, Core.Prompty agent)
+    private static object ProcessResponses(ResponseResult result, Core.Agent agent)
     {
         // Check for API error
         if (result.Error is not null)
@@ -142,7 +142,7 @@ public class OpenAIProcessor : IProcessor
     /// If the stream has already been consumed (e.g., by agent loop),
     /// reconstructs the result from accumulated items.
     /// </summary>
-    private static object ProcessStream(PromptyStream stream, Core.Prompty agent)
+    private static object ProcessStream(PromptyStream stream, Core.Agent agent)
     {
         // If stream was already consumed (agent loop pre-drains it),
         // reconstruct the result from accumulated items
@@ -158,7 +158,7 @@ public class OpenAIProcessor : IProcessor
     /// Reconstructs a final result from accumulated streaming chunks.
     /// Handles tool calls, text content, and structured output.
     /// </summary>
-    private static object ReconstructFromStreamItems(IReadOnlyList<object> items, Core.Prompty agent)
+    private static object ReconstructFromStreamItems(IReadOnlyList<object> items, Core.Agent agent)
     {
         // Accumulate tool calls and text from streaming updates
         var toolCallMap = new Dictionary<int, ToolCall>();

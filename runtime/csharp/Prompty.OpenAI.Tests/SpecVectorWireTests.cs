@@ -413,7 +413,7 @@ public class SpecVectorWireTests
     /// <summary>
     /// Builds a Core.Prompty agent from a wire vector's input data.
     /// </summary>
-    private static Core.Prompty BuildAgentFromVector(JsonElement input)
+    private static Core.Agent BuildAgentFromVector(JsonElement input)
     {
         var modelId = input.GetProperty("model_id").GetString()!;
         var provider = input.GetProperty("provider").GetString()!;
@@ -466,7 +466,7 @@ public class SpecVectorWireTests
             data["outputs"] = outputsList;
         }
 
-        return Core.Prompty.Load(data, new LoadContext());
+        return Core.Agent.Load(data, new LoadContext());
     }
 
     /// <summary>

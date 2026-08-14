@@ -4,7 +4,7 @@
 //! conversion matches the expected output for all OpenAI-provider vectors.
 
 use prompty::model::context::LoadContext;
-use prompty::model::{Prompty, Property, PropertyKind, ToolKind};
+use prompty::model::{Agent, Property, PropertyKind, ToolKind};
 use prompty::types::{ContentPart, Message, Role};
 use prompty_openai::wire;
 use serde_json::{Value, json};
@@ -70,7 +70,7 @@ fn build_messages(input: &Value) -> Vec<Message> {
 }
 
 /// Build a Prompty agent from vector input fields.
-fn build_agent(input: &Value) -> Prompty {
+fn build_agent(input: &Value) -> Agent {
     let model_id = input["model_id"].as_str().unwrap_or("gpt-4");
     let api_type = input
         .get("apiType")
@@ -112,7 +112,7 @@ fn build_agent(input: &Value) -> Prompty {
         }
     }
 
-    let mut agent = Prompty::load_from_value(&data, &LoadContext::default());
+    let mut agent = Agent::load_from_value(&data, &LoadContext::default());
     clear_synthetic_array_items(&mut agent);
     agent
 }
@@ -142,7 +142,7 @@ fn normalize_array_items(value: &mut Value) {
     }
 }
 
-fn clear_synthetic_array_items(agent: &mut Prompty) {
+fn clear_synthetic_array_items(agent: &mut Agent) {
     for tool in agent.tools.iter_mut().flatten() {
         if let ToolKind::Function { parameters, .. } = &mut tool.kind {
             for property in parameters {
@@ -279,7 +279,7 @@ wire_test!(responses_with_tools);
 wire_test!(responses_structured_output);
 
 fn function_parameters_schema(parameters: Value) -> Result<Value, wire::SchemaError> {
-    let agent = Prompty::load_from_value(
+    let agent = Agent::load_from_value(
         &json!({
             "name": "set-row-visual-test",
             "kind": "prompt",

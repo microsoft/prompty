@@ -24,7 +24,7 @@ fn fixtures_dir() -> PathBuf {
 fn load_fixture(
     name: &str,
     env_vars: &[(&str, &str)],
-) -> Result<prompty::model::Prompty, prompty::LoadError> {
+) -> Result<prompty::model::Agent, prompty::LoadError> {
     // Set env vars
     for (k, v) in env_vars {
         unsafe { std::env::set_var(k, v) };
@@ -44,7 +44,7 @@ fn load_fixture(
 fn load_from_frontmatter(
     frontmatter: &serde_json::Value,
     env_vars: &[(&str, &str)],
-) -> Result<prompty::model::Prompty, prompty::LoadError> {
+) -> Result<prompty::model::Agent, prompty::LoadError> {
     // Build a fake .prompty string from the frontmatter
     let yaml = serde_yaml::to_string(frontmatter).unwrap();
     let raw = format!("---\n{yaml}---\n");

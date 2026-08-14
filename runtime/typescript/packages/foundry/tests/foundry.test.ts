@@ -5,7 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
-  Prompty,
+  Agent,
   Model,
   FoundryConnection,
   ApiKeyConnection,
@@ -36,7 +36,7 @@ describe("FoundryExecutor.resolveClient", () => {
     registerConnection("my-foundry", mockClient);
 
     const executor = new FoundryExecutor();
-    const agent = new Prompty({
+    const agent = new Agent({
       name: "test",
       model: new Model({
         id: "gpt-4o",
@@ -53,7 +53,7 @@ describe("FoundryExecutor.resolveClient", () => {
 
   it("throws when connection is missing endpoint and not a reference", async () => {
     const executor = new FoundryExecutor();
-    const agent = new Prompty({
+    const agent = new Agent({
       name: "test",
       model: new Model({
         id: "gpt-4o",
@@ -68,7 +68,7 @@ describe("FoundryExecutor.resolveClient", () => {
 
   it("throws when connection is ApiKeyConnection (wrong type)", async () => {
     const executor = new FoundryExecutor();
-    const agent = new Prompty({
+    const agent = new Agent({
       name: "test",
       model: new Model({
         id: "gpt-4o",
@@ -99,7 +99,7 @@ describe("AzureExecutor.resolveClient", () => {
     registerConnection("my-azure", mockClient);
 
     const executor = new AzureExecutor();
-    const agent = new Prompty({
+    const agent = new Agent({
       name: "test",
       model: new Model({
         id: "gpt-4o",
@@ -119,7 +119,7 @@ describe("AzureExecutor.resolveClient", () => {
 // ---------------------------------------------------------------------------
 
 describe("FoundryProcessor", () => {
-  const agent = new Prompty({ name: "test", model: "gpt-4o" });
+  const agent = new Agent({ name: "test", model: "gpt-4o" });
 
   it("extracts chat content", async () => {
     const response = {
@@ -181,7 +181,7 @@ describe("FoundryProcessor", () => {
 // ---------------------------------------------------------------------------
 
 describe("AzureProcessor", () => {
-  const agent = new Prompty({ name: "test", model: "gpt-4o" });
+  const agent = new Agent({ name: "test", model: "gpt-4o" });
 
   it("extracts chat content", async () => {
     const response = {

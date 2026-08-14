@@ -11,7 +11,7 @@
 //! - `max_tokens` required, defaults to 4096
 //! - Options: `top_k`, `stop_sequences` (not `stop`)
 
-use prompty::model::{Prompty, Property, PropertyKind, Tool, ToolKind};
+use prompty::model::{Agent, Property, PropertyKind, Tool, ToolKind};
 use prompty::types::{ContentPart, ContentPartKind, Message, Role, ToolCall};
 use serde_json::{Map, Value, json};
 
@@ -46,7 +46,7 @@ pub const ANTHROPIC_VERSION: &str = "2023-06-01";
 // ---------------------------------------------------------------------------
 
 /// Build the full request body for `POST /v1/messages`.
-pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
+pub fn build_chat_args(agent: &Agent, messages: &[Message]) -> Result<Value, SchemaError> {
     let mut body = Map::new();
 
     // Model ID
@@ -242,7 +242,7 @@ fn fix_f32_value(v: Value) -> Value {
 }
 
 /// Apply model options to the request body.
-fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
+fn apply_options(agent: &Agent, body: &mut Map<String, Value>) {
     let mut max_tokens = DEFAULT_MAX_TOKENS;
 
     if let Some(opts) = &agent.model.as_ref().and_then(|model| model.options.clone()) {
@@ -281,7 +281,7 @@ fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
 /// Convert `agent.outputs` to Anthropic's `output_config` format.
 ///
 /// Anthropic uses: `output_config: { format: { type: "json_schema", schema: {...} } }`
-fn output_schema_to_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+fn output_schema_to_wire(agent: &Agent) -> Result<Option<Value>, SchemaError> {
     let Some(outputs) = agent.as_outputs() else {
         return Ok(None);
     };
@@ -647,20 +647,20 @@ pub fn format_stream_tool_messages(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prompty::model::Prompty;
+    use prompty::model::Agent;
     use prompty::model::context::LoadContext;
 
-    fn make_agent(model_json: Value) -> Prompty {
+    fn make_agent(model_json: Value) -> Agent {
         let mut data = json!({
             "name": "test",
             "kind": "prompt",
             "model": model_json,
         });
         data["instructions"] = json!("test");
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
-    fn make_agent_with_tools(model_json: Value, tools: Value) -> Prompty {
+    fn make_agent_with_tools(model_json: Value, tools: Value) -> Agent {
         let mut data = json!({
             "name": "test",
             "kind": "prompt",
@@ -668,7 +668,7 @@ mod tests {
             "tools": tools,
         });
         data["instructions"] = json!("test");
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     #[test]
@@ -1080,7 +1080,7 @@ mod tests {
             ],
         });
         data["instructions"] = json!("test");
-        let agent = Prompty::load_from_value(&data, &LoadContext::default());
+        let agent = Agent::load_from_value(&data, &LoadContext::default());
         let messages = vec![Message::with_text(Role::User, "Weather?")];
         let args = build_chat_args(&agent, &messages).expect("valid request schema");
 

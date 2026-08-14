@@ -32,7 +32,7 @@ public static class Pipeline
     /// Validates inputs against the agent's declared input schema.
     /// Fills in defaults for missing optional inputs.
     /// </summary>
-    public static Dictionary<string, object?> ValidateInputs(Prompty agent, Dictionary<string, object?>? inputs)
+    public static Dictionary<string, object?> ValidateInputs(Agent agent, Dictionary<string, object?>? inputs)
     {
         var result = inputs is not null
             ? new Dictionary<string, object?>(inputs)
@@ -74,7 +74,7 @@ public static class Pipeline
     /// <summary>
     /// Render the agent's instructions template with the given inputs.
     /// </summary>
-    public static async Task<string> RenderAsync(Prompty agent, Dictionary<string, object?> inputs)
+    public static async Task<string> RenderAsync(Agent agent, Dictionary<string, object?> inputs)
     {
         return await Trace.TraceAsync<string>("Prompty.Core.Pipeline.RenderAsync", async (emit) =>
         {
@@ -90,7 +90,7 @@ public static class Pipeline
     /// <summary>
     /// Parse rendered text into a list of Messages.
     /// </summary>
-    public static async Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
+    public static async Task<List<Message>> ParseAsync(Agent agent, string rendered, Dictionary<string, object?>? context)
     {
         return await Trace.TraceAsync<List<Message>>("Prompty.Core.Pipeline.ParseAsync", async (emit) =>
         {
@@ -104,7 +104,7 @@ public static class Pipeline
     /// <summary>
     /// Execute an LLM call with the given messages.
     /// </summary>
-    public static async Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public static async Task<object> ExecuteAsync(Agent agent, List<Message> messages)
     {
         return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.ExecuteAsync", async (emit) =>
         {
@@ -118,7 +118,7 @@ public static class Pipeline
     /// <summary>
     /// Post-process a raw LLM response.
     /// </summary>
-    public static async Task<object> ProcessAsync(Prompty agent, object response)
+    public static async Task<object> ProcessAsync(Agent agent, object response)
     {
         return await Trace.TraceAsync<object>("Prompty.Core.Pipeline.ProcessAsync", async (emit) =>
         {
@@ -138,7 +138,7 @@ public static class Pipeline
     /// Handles input validation, template rendering, parsing, and thread expansion.
     /// </summary>
     public static async Task<List<Message>> PrepareAsync(
-        Prompty agent,
+        Agent agent,
         Dictionary<string, object?>? inputs = null)
     {
         return await Trace.TraceAsync<List<Message>>("Prompty.Core.Pipeline.PrepareAsync", async (emit) =>
@@ -176,7 +176,7 @@ public static class Pipeline
     /// Standalone building block with its own trace span.
     /// </summary>
     public static async Task<object> RunAsync(
-        Prompty agent,
+        Agent agent,
         List<Message> messages,
         bool raw = false)
     {
@@ -210,7 +210,7 @@ public static class Pipeline
     /// Full pipeline: Prepare → Execute → Process (directly, not via RunAsync).
     /// </summary>
     public static async Task<object> InvokeAsync(
-        Prompty agent,
+        Agent agent,
         Dictionary<string, object?>? inputs = null,
         bool raw = false)
     {
@@ -234,7 +234,7 @@ public static class Pipeline
     /// Calls executor and processor directly (not via RunAsync).
     /// </summary>
     public static async Task<object> TurnAsync(
-        Prompty agent,
+        Agent agent,
         Dictionary<string, object?>? inputs = null,
         Dictionary<string, Func<string, Task<string>>>? tools = null,
         int maxIterations = 10,
@@ -703,7 +703,7 @@ public static class Pipeline
     /// <summary>
     /// Invoke a prompt and cast the result to a typed object.
     /// </summary>
-    public static async Task<T> InvokeAsync<T>(Prompty agent, Dictionary<string, object?>? inputs = null)
+    public static async Task<T> InvokeAsync<T>(Agent agent, Dictionary<string, object?>? inputs = null)
     {
         var result = await InvokeAsync(agent, inputs);
         return PromptyCast.Cast<T>(result);
@@ -722,7 +722,7 @@ public static class Pipeline
     /// Conversational round-trip and cast the result to a typed object.
     /// </summary>
     public static async Task<T> TurnAsync<T>(
-        Prompty agent,
+        Agent agent,
         Dictionary<string, object?>? inputs = null,
         Dictionary<string, Func<string, Task<string>>>? tools = null,
         int maxIterations = 10,
@@ -831,7 +831,7 @@ public static class Pipeline
     /// Invoke ExecuteAsync with exponential backoff retry on transient failures.
     /// </summary>
     private static async Task<object> InvokeWithRetryAsync(
-        Prompty agent,
+        Agent agent,
         List<Message> messages,
         int maxRetries,
         EventCallback? onEvent,

@@ -25,7 +25,7 @@ from prompty.core.pipeline import (
     turn_async,
 )
 from prompty.core.types import Message, TextPart
-from prompty.model import Prompty
+from prompty.model import Agent
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -36,8 +36,8 @@ def _make_bound_agent(
     *,
     provider: str = "openai",
     bindings: dict[str, str] | None = None,
-) -> Prompty:
-    """Create a Prompty with a function tool that has bindings.
+) -> Agent:
+    """Create a Agent with a function tool that has bindings.
 
     Default tool: get_weather(city: str, unit: str) with unit bound to preferred_unit.
     """
@@ -67,7 +67,7 @@ def _make_bound_agent(
         ],
         "template": {"format": {"kind": "jinja2"}, "parser": {"kind": "prompty"}},
     }
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def _mock_tool_call_response(fn_name: str, fn_args: str, call_id: str = "call_1") -> MagicMock:
@@ -178,7 +178,7 @@ class TestResolveBindings:
             ],
             "template": {"format": {"kind": "jinja2"}, "parser": {"kind": "prompty"}},
         }
-        agent = Prompty.load(data)
+        agent = Agent.load(data)
         fn_args = {"query": "weather"}
         parent_inputs = {"user_language": "en", "max_results": 10}
 
@@ -192,7 +192,7 @@ class TestResolveBindings:
             "model": {"id": "gpt-4", "provider": "openai", "connection": {"kind": "key", "apiKey": "k"}},
             "template": {"format": {"kind": "jinja2"}, "parser": {"kind": "prompty"}},
         }
-        agent = Prompty.load(data)
+        agent = Agent.load(data)
         fn_args = {"x": 1}
 
         result = _resolve_bindings(agent, "fn", fn_args, {})

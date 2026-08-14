@@ -12,12 +12,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Prompty represents A Prompty is a markdown file format for LLM prompts. The frontmatter defines
-// structured metadata including model configuration, input/output schemas, tools,
-// and template settings. The markdown body becomes the instructions.
+// Agent represents An Agent is the root model produced from a .prompty markdown file for LLM
+// prompts. The frontmatter defines structured metadata including model
+// configuration, input/output schemas, tools, and template settings. The
+// markdown body becomes the instructions.
 //
 // This is the single root type for the Prompty schema — there is no abstract base
-// class or kind discriminator. A .prompty file always produces a Prompty instance.
+// class or kind discriminator. A .prompty file always produces an Agent instance.
 //
 // Runtime loaders may resolve frontmatter references such as `${env:VAR}` and
 // `${file:relative/path}`. File references must be treated as a host-controlled
@@ -25,7 +26,7 @@ import (
 // directory tree after canonicalization, and any additional allowed roots must
 // be supplied by the host application's load options rather than frontmatter.
 
-type Prompty struct {
+type Agent struct {
 	Name         string                 `json:"name" yaml:"name"`
 	DisplayName  *string                `json:"displayName" yaml:"displayName"`
 	Description  *string                `json:"description" yaml:"description"`
@@ -38,12 +39,12 @@ type Prompty struct {
 	Instructions *string                `json:"instructions" yaml:"instructions"`
 }
 
-// LoadPrompty creates a Prompty from a map[string]interface{}
-func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
+// LoadAgent creates a Agent from a map[string]interface{}
+func LoadAgent(data interface{}, ctx *LoadContext) (Agent, error) {
 	if ctx == nil {
 		ctx = NewLoadContext()
 	}
-	result := Prompty{}
+	result := Agent{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -231,8 +232,8 @@ func LoadPrompty(data interface{}, ctx *LoadContext) (Prompty, error) {
 	return result, nil
 }
 
-// Save serializes Prompty to map[string]interface{}
-func (obj Prompty) Save(ctx *SaveContext) map[string]interface{} {
+// Save serializes Agent to map[string]interface{}
+func (obj Agent) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 	result["name"] = obj.Name
 	if obj.DisplayName != nil {
@@ -419,8 +420,8 @@ func (obj Prompty) Save(ctx *SaveContext) map[string]interface{} {
 	return result
 }
 
-// ToJSON serializes Prompty to JSON string
-func (obj *Prompty) ToJSON() (string, error) {
+// ToJSON serializes Agent to JSON string
+func (obj *Agent) ToJSON() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
 	bytes, err := json.Marshal(data)
@@ -430,29 +431,29 @@ func (obj *Prompty) ToJSON() (string, error) {
 	return string(bytes), nil
 }
 
-// ToYAML serializes Prompty to YAML string
-func (obj *Prompty) ToYAML() (string, error) {
+// ToYAML serializes Agent to YAML string
+func (obj *Agent) ToYAML() (string, error) {
 	ctx := NewSaveContext()
 	data := obj.Save(ctx)
 	return marshalYAMLDocument(data)
 }
 
-// FromJSON creates Prompty from JSON string
-func PromptyFromJSON(jsonStr string) (Prompty, error) {
+// FromJSON creates Agent from JSON string
+func AgentFromJSON(jsonStr string) (Agent, error) {
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return Prompty{}, err
+		return Agent{}, err
 	}
 	ctx := NewLoadContext()
-	return LoadPrompty(data, ctx)
+	return LoadAgent(data, ctx)
 }
 
-// FromYAML creates Prompty from YAML string
-func PromptyFromYAML(yamlStr string) (Prompty, error) {
+// FromYAML creates Agent from YAML string
+func AgentFromYAML(yamlStr string) (Agent, error) {
 	var data map[string]interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return Prompty{}, err
+		return Agent{}, err
 	}
 	ctx := NewLoadContext()
-	return LoadPrompty(data, ctx)
+	return LoadAgent(data, ctx)
 }

@@ -7,5 +7,5 @@ namespace Prompty;
 interface Renderer {
   @doc("Render the template string with input values")
   @vector(RenderVectors)
-  render(agent: Prompty, template: string, inputs: Record<unknown>): string;
+  render(agent: Agent, template: string, inputs: Record<unknown>): string;
 }

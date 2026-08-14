@@ -14,7 +14,7 @@ import {
   clearConnections,
   registerExecutor,
   registerProcessor,
-  Prompty,
+  Agent,
 } from "@prompty/core";
 import { AnthropicExecutor } from "../src/executor.js";
 import { AnthropicProcessor } from "../src/processor.js";
@@ -50,8 +50,8 @@ function makeAgent(opts: {
   tools?: Record<string, unknown>[];
   outputs?: Record<string, unknown>[];
   inputs?: Record<string, unknown>[];
-} = {}): Prompty {
-  return Prompty.load({
+} = {}): Agent {
+  return Agent.load({
     name: "anthropic-integration",
     model: {
       id: opts.model || "claude-sonnet-4-5-20250929",

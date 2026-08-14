@@ -13,7 +13,7 @@ namespace Prompty.Core.Tests;
 /// </summary>
 file class PassthroughRenderer : IRenderer
 {
-    public Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs)
+    public Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
         => Task.FromResult(template);
 }
 
@@ -22,7 +22,7 @@ file class PassthroughRenderer : IRenderer
 /// </summary>
 file class PassthroughParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
+    public Task<List<Message>> ParseAsync(Agent agent, string rendered, Dictionary<string, object?>? context)
         => Task.FromResult(new List<Message>
         {
             new() { Role = Role.User, Parts = [new TextPart { Value = rendered }] }
@@ -35,7 +35,7 @@ file class PassthroughParser : IParser
 /// </summary>
 file class MultiMessageParser : IParser
 {
-    public Task<List<Message>> ParseAsync(Prompty agent, string rendered, Dictionary<string, object?>? context)
+    public Task<List<Message>> ParseAsync(Agent agent, string rendered, Dictionary<string, object?>? context)
     {
         var filler = new string('z', 300);
         return Task.FromResult(new List<Message>
@@ -64,7 +64,7 @@ file class MockExecutor : IExecutor
 
     public void EnqueueResponse(object response) => _responses.Enqueue(response);
 
-    public Task<object> ExecuteAsync(Prompty agent, List<Message> messages)
+    public Task<object> ExecuteAsync(Agent agent, List<Message> messages)
     {
         // Snapshot the messages at call time
         Calls.Add(new List<Message>(messages));
@@ -105,7 +105,7 @@ file class MockExecutor : IExecutor
 /// </summary>
 file class MockProcessor : IProcessor
 {
-    public Task<object> ProcessAsync(Prompty agent, object response) =>
+    public Task<object> ProcessAsync(Agent agent, object response) =>
         Task.FromResult(response);
 }
 
@@ -121,9 +121,9 @@ file static class AgentLoopHelper
     /// <summary>
     /// Create a minimal Prompty agent whose Model.Provider points at TestProvider.
     /// </summary>
-    public static Prompty CreateAgent(string instructions = "Hello")
+    public static Agent CreateAgent(string instructions = "Hello")
     {
-        return new Prompty
+        return new Agent
         {
             Name = "test-agent",
             Instructions = instructions,

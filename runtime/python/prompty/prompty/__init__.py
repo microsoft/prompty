@@ -67,7 +67,7 @@ __all__ = [
     "ObjectProperty",
     "OpenApiTool",
     "ParserConfig",
-    "Prompty",
+    "Agent",
     "PromptyTool",
     "Property",
     "ReferenceConnection",
@@ -224,7 +224,7 @@ from .model import (
     ObjectProperty,
     OpenApiTool,
     ParserConfig,
-    Prompty,
+    Agent,
     PromptyTool,
     Property,
     ReferenceConnection,
@@ -261,5 +261,5 @@ from .tracing.tracer import (
 # Backward-compat aliases (will be removed in a future version)
 AzureExecutor = FoundryExecutor
 AzureProcessor = FoundryProcessor
-PromptAgent = Prompty
-AgentDefinition = Prompty
+PromptAgent = Agent
+AgentDefinition = Agent

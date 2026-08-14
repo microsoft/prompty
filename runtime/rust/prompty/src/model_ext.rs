@@ -5,7 +5,7 @@
 //! and helper methods used by the pipeline and other hand-written code.
 
 use crate::model::{
-    ContentPart, ContentPartKind, Message, MessageHelpers, Prompty, Property, Role, Tool,
+    ContentPart, ContentPartKind, Message, MessageHelpers, Agent, Property, Role, Tool,
     ToolResult, ToolResultHelpers,
 };
 
@@ -13,7 +13,7 @@ use crate::model::{
 // Prompty helpers
 // ---------------------------------------------------------------------------
 
-impl Prompty {
+impl Agent {
     /// Returns a reference to the input properties, or `None` if absent or empty.
     pub fn as_inputs(&self) -> Option<&Vec<Property>> {
         match &self.inputs {

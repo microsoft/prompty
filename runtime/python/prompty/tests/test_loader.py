@@ -1,4 +1,4 @@
-"""Tests for the Prompty v2 loader."""
+"""Tests for the Agent v2 loader."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from prompty.model import (
     FunctionTool,
     McpTool,
     OpenApiTool,
-    Prompty,
+    Agent,
     ReferenceConnection,
 )
 
@@ -46,14 +46,14 @@ class TestBasicLoading:
         assert agent.model.id == "gpt-4"
 
     def test_load_returns_prompt_agent(self):
-        """load() always returns a Prompty."""
+        """load() always returns a Agent."""
         agent = load(PROMPTS / "minimal.prompty")
-        assert isinstance(agent, Prompty)
+        assert isinstance(agent, Agent)
 
     def test_load_kind_is_prompt(self):
-        """Prompty is always a Prompty (no kind field — flat model)."""
+        """Agent is always a Agent (no kind field — flat model)."""
         agent = load(PROMPTS / "minimal.prompty")
-        assert isinstance(agent, Prompty)
+        assert isinstance(agent, Agent)
 
     def test_load_missing_file(self):
         """FileNotFoundError for non-existent files."""
@@ -442,16 +442,16 @@ class TestShorthand:
         assert "{{question}}" in agent.instructions
 
     def test_empty_frontmatter(self):
-        """Empty frontmatter (---\\n---) produces a valid Prompty."""
+        """Empty frontmatter (---\\n---) produces a valid Agent."""
         agent = load(PROMPTS / "shorthand_empty_frontmatter.prompty")
-        assert isinstance(agent, Prompty)
+        assert isinstance(agent, Agent)
         assert agent.instructions is not None
         assert "helpful assistant" in agent.instructions
 
     def test_body_only(self):
         """File with no frontmatter at all still loads."""
         agent = load(PROMPTS / "shorthand_body_only.prompty")
-        assert isinstance(agent, Prompty)
+        assert isinstance(agent, Agent)
         assert agent.instructions is not None
         assert "answers questions concisely" in agent.instructions
 
@@ -508,7 +508,7 @@ class TestAsyncLoading:
         from prompty import load_async
 
         agent = await load_async(PROMPTS / "minimal.prompty")
-        assert isinstance(agent, Prompty)
+        assert isinstance(agent, Agent)
         assert agent.name == "minimal"
         assert agent.model.id == "gpt-4"
 

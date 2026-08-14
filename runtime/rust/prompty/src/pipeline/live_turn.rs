@@ -26,7 +26,7 @@ use crate::guardrails::Guardrails;
 use crate::interfaces::{ExecuteError, InvokerError};
 use crate::model::{
     InvocationContextPortability, InvocationContextState, InvocationUsage, ModelInvocationRequest,
-    ModelInvocationResponse as GeneratedModelInvocationResponse, ModelToolRequest, Prompty,
+    ModelInvocationResponse as GeneratedModelInvocationResponse, ModelToolRequest, Agent,
 };
 use crate::registry;
 use crate::steering::Steering;
@@ -265,7 +265,7 @@ impl LiveFailureState {
 }
 
 struct LivePolicy {
-    agent: Arc<Prompty>,
+    agent: Arc<Agent>,
     inputs: Value,
     guardrails: Option<Arc<Guardrails>>,
     #[allow(clippy::type_complexity)]
@@ -439,7 +439,7 @@ impl RetryPolicyPort for LiveRetryPolicy {
 }
 
 struct LiveModelPort {
-    agent: Arc<Prompty>,
+    agent: Arc<Agent>,
     provider: String,
     streaming: bool,
     raw_final: bool,
@@ -825,7 +825,7 @@ impl ConversationPort for LiveConversationPort {
 }
 
 struct LivePermissionPort {
-    agent: Arc<Prompty>,
+    agent: Arc<Agent>,
     guardrails: Option<Arc<Guardrails>>,
 }
 
@@ -870,7 +870,7 @@ impl PermissionPort for LivePermissionPort {
 }
 
 struct LiveToolPort {
-    agent: Arc<Prompty>,
+    agent: Arc<Agent>,
     inputs: Value,
     tools: Arc<HashMap<String, ToolHandler>>,
     events: LiveEvents,
@@ -1175,7 +1175,7 @@ static LIVE_TURN_IDS: AtomicU64 = AtomicU64::new(0);
 pub(super) static LIVE_ENGINE_RUNS: AtomicU64 = AtomicU64::new(0);
 
 pub(super) async fn turn(
-    agent: &Prompty,
+    agent: &Agent,
     inputs: Option<&Value>,
     options: Option<TurnOptions>,
 ) -> Result<Value, InvokerError> {
@@ -1190,7 +1190,7 @@ pub(super) async fn turn(
 }
 
 pub(super) async fn turn_with_engine_request(
-    agent: &Prompty,
+    agent: &Agent,
     mut request: TurnEngineRequest,
     options: Option<TurnOptions>,
 ) -> Result<Value, InvokerError> {
@@ -1724,7 +1724,7 @@ mod tests {
     impl Executor for BlockingAwareExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             while !self.lifecycle_backend_entered.load(Ordering::SeqCst) {
@@ -1738,7 +1738,7 @@ mod tests {
 
     #[async_trait]
     impl Processor for EchoProcessor {
-        async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+        async fn process(&self, _agent: &Agent, response: Value) -> Result<Value, InvokerError> {
             Ok(response)
         }
     }
@@ -1749,7 +1749,7 @@ mod tests {
     impl Executor for SensitiveErrorExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             Err(InvokerError::Execute(
@@ -1775,7 +1775,7 @@ mod tests {
         const PROVIDER: &str = "sensitive-provider-error";
         crate::pipeline::register_defaults();
         registry::register_executor(PROVIDER, SensitiveErrorExecutor);
-        let agent = Prompty::load_from_value(
+        let agent = Agent::load_from_value(
             &json!({
                 "kind": "prompt",
                 "name": "sensitive-provider-error",
@@ -1832,7 +1832,7 @@ mod tests {
             },
         );
         registry::register_processor(PROVIDER, EchoProcessor);
-        let agent = Prompty::load_from_value(
+        let agent = Agent::load_from_value(
             &json!({
                 "kind": "prompt",
                 "name": "blocking-lifecycle-telemetry",
@@ -1861,7 +1861,7 @@ mod tests {
     impl Executor for ResponsesStreamExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             unreachable!("the test exercises the streaming path")
@@ -1869,7 +1869,7 @@ mod tests {
 
         async fn execute_stream_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _request: &ModelInvocationRequest,
             _cancellation: &CancellationToken,
         ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
@@ -1901,7 +1901,7 @@ mod tests {
     impl Executor for IndeterminateStreamExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             INDETERMINATE_NON_STREAM_CALLS.fetch_add(1, Ordering::SeqCst);
@@ -1910,7 +1910,7 @@ mod tests {
 
         async fn execute_stream_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _request: &ModelInvocationRequest,
             _cancellation: &CancellationToken,
         ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
@@ -1926,7 +1926,7 @@ mod tests {
     impl Executor for PostOpenIndeterminateStreamExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             unreachable!("the test exercises the streaming path")
@@ -1934,7 +1934,7 @@ mod tests {
 
         async fn execute_stream_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _request: &ModelInvocationRequest,
             _cancellation: &CancellationToken,
         ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
@@ -1971,13 +1971,13 @@ mod tests {
 
     #[async_trait]
     impl Processor for ResponsesStreamProcessor {
-        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+        async fn process(&self, _agent: &Agent, _response: Value) -> Result<Value, InvokerError> {
             unreachable!("the test exercises the context-aware streaming completion path")
         }
 
         async fn process_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             response: Value,
             _request: &ModelInvocationRequest,
         ) -> Result<GeneratedModelInvocationResponse, InvokerError> {
@@ -2022,7 +2022,7 @@ mod tests {
 
     #[async_trait]
     impl Processor for PostOpenIndeterminateStreamProcessor {
-        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+        async fn process(&self, _agent: &Agent, _response: Value) -> Result<Value, InvokerError> {
             unreachable!("the test exercises the streaming path")
         }
 
@@ -2048,8 +2048,8 @@ mod tests {
         }
     }
 
-    fn responses_agent() -> Prompty {
-        Prompty::load_from_value(
+    fn responses_agent() -> Agent {
+        Agent::load_from_value(
             &json!({
                 "kind": "prompt",
                 "name": "streamed-responses",
@@ -2060,8 +2060,8 @@ mod tests {
         )
     }
 
-    fn indeterminate_stream_agent() -> Prompty {
-        Prompty::load_from_value(
+    fn indeterminate_stream_agent() -> Agent {
+        Agent::load_from_value(
             &json!({
                 "kind": "prompt",
                 "name": "indeterminate-stream",
@@ -2184,7 +2184,7 @@ mod tests {
         );
 
         let error = turn_with_engine_request(
-            &Prompty::load_from_value(
+            &Agent::load_from_value(
                 &json!({
                     "kind": "prompt",
                     "name": "post-open-indeterminate-stream",

@@ -16,8 +16,8 @@ from ._PermissionResolver import PermissionResolver
 from ._Processor import Processor
 from ._Renderer import Renderer
 from .agent import (
+    Agent,
     GuardrailResult,
-    Prompty,
 )
 from .connection import (
     AnonymousConnection,
@@ -218,7 +218,7 @@ __all__ = [
     "FormatConfig",
     "ParserConfig",
     "Template",
-    "Prompty",
+    "Agent",
     "ContentPart",
     "TextPart",
     "ImagePart",

@@ -13,7 +13,7 @@ namespace Prompty.Providers.Tests.Integration;
 [Trait("Category", "Integration")]
 public class StreamingTests : IntegrationTestBase
 {
-    private static void EnableStreaming(Core.Prompty agent)
+    private static void EnableStreaming(Core.Agent agent)
     {
         agent.Metadata ??= new Dictionary<string, object>();
         agent.Metadata["stream"] = true;

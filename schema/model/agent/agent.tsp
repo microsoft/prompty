@@ -15,12 +15,13 @@ using TypeSpec.JsonSchema;
 namespace Prompty;
 
 /**
- * A Prompty is a markdown file format for LLM prompts. The frontmatter defines
- * structured metadata including model configuration, input/output schemas, tools,
- * and template settings. The markdown body becomes the instructions.
+ * An Agent is the root model produced from a .prompty markdown file for LLM
+ * prompts. The frontmatter defines structured metadata including model
+ * configuration, input/output schemas, tools, and template settings. The
+ * markdown body becomes the instructions.
  *
  * This is the single root type for the Prompty schema — there is no abstract base
- * class or kind discriminator. A .prompty file always produces a Prompty instance.
+ * class or kind discriminator. A .prompty file always produces an Agent instance.
  *
  * Runtime loaders may resolve frontmatter references such as `${env:VAR}` and
  * `${file:relative/path}`. File references must be treated as a host-controlled
@@ -29,7 +30,7 @@ namespace Prompty;
  * be supplied by the host application's load options rather than frontmatter.
  */
 @extension("additionalProperties", false)
-model Prompty {
+model Agent {
   // Identity & metadata
   @doc("Human-readable name of the prompt")
   @sample(PromptyNameSample)

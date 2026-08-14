@@ -12,15 +12,17 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
     /// <summary>
-    /// A Prompty is a markdown file format for LLM prompts. The frontmatter defines
+    /// An Agent is the root model produced from a .prompty markdown file for LLM
     ///
-    /// structured metadata including model configuration, input/output schemas, tools,
+    /// prompts. The frontmatter defines structured metadata including model
     ///
-    /// and template settings. The markdown body becomes the instructions.
+    /// configuration, input/output schemas, tools, and template settings. The
+    ///
+    /// markdown body becomes the instructions.
     ///
     /// This is the single root type for the Prompty schema — there is no abstract base
     ///
-    /// class or kind discriminator. A .prompty file always produces a Prompty instance.
+    /// class or kind discriminator. A .prompty file always produces an Agent instance.
     ///
     /// Runtime loaders may resolve frontmatter references such as `${env:VAR}` and
     ///
@@ -32,7 +34,7 @@ namespace Prompty.Core;
     ///
     /// be supplied by the host application's load options rather than frontmatter.
     /// </summary>
-public partial class Prompty
+public partial class Agent
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
@@ -40,10 +42,10 @@ public partial class Prompty
     public static string? ShorthandProperty => null;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="Prompty"/>.
+    /// Initializes a new instance of <see cref="Agent"/>.
     /// </summary>
 #pragma warning disable CS8618
-    public Prompty()
+    public Agent()
     {
     }
 #pragma warning restore CS8618
@@ -103,12 +105,12 @@ public partial class Prompty
     #region Load Methods
 
     /// <summary>
-    /// Load a Prompty instance from a dictionary.
+    /// Load a Agent instance from a dictionary.
     /// </summary>
     /// <param name="data">The dictionary containing the data.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Prompty instance.</returns>
-    public static Prompty Load(Dictionary<string, object?> data, LoadContext? context = null)
+    /// <returns>The loaded Agent instance.</returns>
+    public static Agent Load(Dictionary<string, object?> data, LoadContext? context = null)
     {
         context ??= new LoadContext();
         if (context is not null)
@@ -118,7 +120,7 @@ public partial class Prompty
 
 
         // Create new instance
-        var instance = new Prompty();
+        var instance = new Agent();
 
 
         if (data.TryGetValue("name", out var nameValue) && nameValue is not null)
@@ -355,7 +357,7 @@ public partial class Prompty
     #region Save Methods
 
     /// <summary>
-    /// Save the Prompty instance to a dictionary.
+    /// Save the Agent instance to a dictionary.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The dictionary representation of this instance.</returns>
@@ -588,7 +590,7 @@ public partial class Prompty
 
 
     /// <summary>
-    /// Convert the Prompty instance to a YAML string.
+    /// Convert the Agent instance to a YAML string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The YAML string representation of this instance.</returns>
@@ -599,7 +601,7 @@ public partial class Prompty
     }
 
     /// <summary>
-    /// Convert the Prompty instance to a JSON string.
+    /// Convert the Agent instance to a JSON string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <param name="indent">Whether to indent the output. Defaults to true.</param>
@@ -611,12 +613,12 @@ public partial class Prompty
     }
 
     /// <summary>
-    /// Load a Prompty instance from a JSON string.
+    /// Load a Agent instance from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Prompty instance.</returns>
-    public static Prompty FromJson(string json, LoadContext? context = null)
+    /// <returns>The loaded Agent instance.</returns>
+    public static Agent FromJson(string json, LoadContext? context = null)
     {
         using var doc = JsonDocument.Parse(json);
         Dictionary<string, object?> dict;
@@ -627,12 +629,12 @@ public partial class Prompty
     }
 
     /// <summary>
-    /// Load a Prompty instance from a YAML string.
+    /// Load a Agent instance from a YAML string.
     /// </summary>
     /// <param name="yaml">The YAML string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded Prompty instance.</returns>
-    public static Prompty FromYaml(string yaml, LoadContext? context = null)
+    /// <returns>The loaded Agent instance.</returns>
+    public static Agent FromYaml(string yaml, LoadContext? context = null)
     {
         var dict = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml)
             ?? throw new ArgumentException("Failed to parse YAML as dictionary");

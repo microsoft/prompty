@@ -8,7 +8,7 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
 
-public class PromptyConversionTests
+public class AgentConversionTests
 {
     [Fact]
     public void LoadYamlInput()
@@ -62,7 +62,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
@@ -142,7 +142,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
@@ -222,13 +222,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var original = Prompty.FromJson(jsonData);
+        var original = Agent.FromJson(jsonData);
         Assert.NotNull(original);
 
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
 
-        var reloaded = Prompty.FromJson(json);
+        var reloaded = Agent.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -289,13 +289,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var original = Prompty.FromYaml(yamlData);
+        var original = Agent.FromYaml(yamlData);
         Assert.NotNull(original);
 
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
 
-        var reloaded = Prompty.FromYaml(yaml);
+        var reloaded = Agent.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -374,7 +374,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         var json = instance.ToJson();
 
         // Verify it's valid JSON by parsing it
@@ -434,7 +434,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
         var yaml = instance.ToYaml();
 
         // Verify it's valid YAML by parsing it
@@ -494,7 +494,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
@@ -573,7 +573,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
@@ -652,13 +652,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var original = Prompty.FromJson(jsonData);
+        var original = Agent.FromJson(jsonData);
         Assert.NotNull(original);
 
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
 
-        var reloaded = Prompty.FromJson(json);
+        var reloaded = Agent.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -719,13 +719,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var original = Prompty.FromYaml(yamlData);
+        var original = Agent.FromYaml(yamlData);
         Assert.NotNull(original);
 
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
 
-        var reloaded = Prompty.FromYaml(yaml);
+        var reloaded = Agent.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -803,7 +803,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         var json = instance.ToJson();
 
         // Verify it's valid JSON by parsing it
@@ -863,7 +863,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
         var yaml = instance.ToYaml();
 
         // Verify it's valid YAML by parsing it
@@ -923,7 +923,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
@@ -1004,7 +1004,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
@@ -1085,13 +1085,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var original = Prompty.FromJson(jsonData);
+        var original = Agent.FromJson(jsonData);
         Assert.NotNull(original);
 
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
 
-        var reloaded = Prompty.FromJson(json);
+        var reloaded = Agent.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -1152,13 +1152,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var original = Prompty.FromYaml(yamlData);
+        var original = Agent.FromYaml(yamlData);
         Assert.NotNull(original);
 
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
 
-        var reloaded = Prompty.FromYaml(yaml);
+        var reloaded = Agent.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -1238,7 +1238,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         var json = instance.ToJson();
 
         // Verify it's valid JSON by parsing it
@@ -1298,7 +1298,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
         var yaml = instance.ToYaml();
 
         // Verify it's valid YAML by parsing it
@@ -1358,7 +1358,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
@@ -1438,7 +1438,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
@@ -1518,13 +1518,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var original = Prompty.FromJson(jsonData);
+        var original = Agent.FromJson(jsonData);
         Assert.NotNull(original);
 
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
 
-        var reloaded = Prompty.FromJson(json);
+        var reloaded = Agent.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -1585,13 +1585,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var original = Prompty.FromYaml(yamlData);
+        var original = Agent.FromYaml(yamlData);
         Assert.NotNull(original);
 
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
 
-        var reloaded = Prompty.FromYaml(yaml);
+        var reloaded = Agent.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -1670,7 +1670,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         var json = instance.ToJson();
 
         // Verify it's valid JSON by parsing it
@@ -1730,7 +1730,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
         var yaml = instance.ToYaml();
 
         // Verify it's valid YAML by parsing it
@@ -1790,7 +1790,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
@@ -1873,7 +1873,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
@@ -1956,13 +1956,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var original = Prompty.FromJson(jsonData);
+        var original = Agent.FromJson(jsonData);
         Assert.NotNull(original);
 
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
 
-        var reloaded = Prompty.FromJson(json);
+        var reloaded = Agent.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -2023,13 +2023,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var original = Prompty.FromYaml(yamlData);
+        var original = Agent.FromYaml(yamlData);
         Assert.NotNull(original);
 
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
 
-        var reloaded = Prompty.FromYaml(yaml);
+        var reloaded = Agent.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -2111,7 +2111,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         var json = instance.ToJson();
 
         // Verify it's valid JSON by parsing it
@@ -2171,7 +2171,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
         var yaml = instance.ToYaml();
 
         // Verify it's valid YAML by parsing it
@@ -2231,7 +2231,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
@@ -2313,7 +2313,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
@@ -2395,13 +2395,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var original = Prompty.FromJson(jsonData);
+        var original = Agent.FromJson(jsonData);
         Assert.NotNull(original);
 
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
 
-        var reloaded = Prompty.FromJson(json);
+        var reloaded = Agent.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -2462,13 +2462,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var original = Prompty.FromYaml(yamlData);
+        var original = Agent.FromYaml(yamlData);
         Assert.NotNull(original);
 
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
 
-        var reloaded = Prompty.FromYaml(yaml);
+        var reloaded = Agent.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -2549,7 +2549,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         var json = instance.ToJson();
 
         // Verify it's valid JSON by parsing it
@@ -2609,7 +2609,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
         var yaml = instance.ToYaml();
 
         // Verify it's valid YAML by parsing it
@@ -2669,7 +2669,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
@@ -2753,7 +2753,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
@@ -2837,13 +2837,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var original = Prompty.FromJson(jsonData);
+        var original = Agent.FromJson(jsonData);
         Assert.NotNull(original);
 
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
 
-        var reloaded = Prompty.FromJson(json);
+        var reloaded = Agent.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -2904,13 +2904,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var original = Prompty.FromYaml(yamlData);
+        var original = Agent.FromYaml(yamlData);
         Assert.NotNull(original);
 
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
 
-        var reloaded = Prompty.FromYaml(yaml);
+        var reloaded = Agent.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -2993,7 +2993,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         var json = instance.ToJson();
 
         // Verify it's valid JSON by parsing it
@@ -3053,7 +3053,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
         var yaml = instance.ToYaml();
 
         // Verify it's valid YAML by parsing it
@@ -3113,7 +3113,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
 
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
@@ -3196,7 +3196,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         Assert.NotNull(instance);
         Assert.Equal("basic-prompt", instance.Name);
         Assert.Equal("Basic Prompt", instance.DisplayName);
@@ -3279,13 +3279,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var original = Prompty.FromJson(jsonData);
+        var original = Agent.FromJson(jsonData);
         Assert.NotNull(original);
 
         var json = original.ToJson();
         Assert.False(string.IsNullOrEmpty(json));
 
-        var reloaded = Prompty.FromJson(json);
+        var reloaded = Agent.FromJson(json);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -3346,13 +3346,13 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var original = Prompty.FromYaml(yamlData);
+        var original = Agent.FromYaml(yamlData);
         Assert.NotNull(original);
 
         var yaml = original.ToYaml();
         Assert.False(string.IsNullOrEmpty(yaml));
 
-        var reloaded = Prompty.FromYaml(yaml);
+        var reloaded = Agent.FromYaml(yaml);
         Assert.NotNull(reloaded);
         Assert.Equal("basic-prompt", reloaded.Name);
         Assert.Equal("Basic Prompt", reloaded.DisplayName);
@@ -3434,7 +3434,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 }
 """;
 
-        var instance = Prompty.FromJson(jsonData);
+        var instance = Agent.FromJson(jsonData);
         var json = instance.ToJson();
 
         // Verify it's valid JSON by parsing it
@@ -3494,7 +3494,7 @@ instructions: "system:\nYou are an AI assistant who helps people find informatio
 
 """;
 
-        var instance = Prompty.FromYaml(yamlData);
+        var instance = Agent.FromYaml(yamlData);
         var yaml = instance.ToYaml();
 
         // Verify it's valid YAML by parsing it

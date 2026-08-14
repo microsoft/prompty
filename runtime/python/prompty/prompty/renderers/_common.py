@@ -7,7 +7,7 @@ import threading
 from typing import Any
 
 from ..core.types import RICH_KINDS
-from ..model import Prompty
+from ..model import Agent
 
 __all__ = ["THREAD_NONCE_PREFIX", "_prepare_render_inputs", "_thread_nonces_local"]
 
@@ -20,7 +20,7 @@ _thread_nonces_local = threading.local()
 
 
 def _prepare_render_inputs(
-    agent: Prompty,
+    agent: Agent,
     inputs: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, str]]:
     """Replace rich-kind input values with nonce markers.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from prompty.model import Prompty
+from prompty.model import Agent
 from prompty.renderers import Jinja2Renderer, MustacheRenderer
 
 # ---------------------------------------------------------------------------
@@ -12,11 +12,11 @@ from prompty.renderers import Jinja2Renderer, MustacheRenderer
 # ---------------------------------------------------------------------------
 
 
-def _make_agent(**kwargs) -> Prompty:
-    """Create a minimal Prompty for testing."""
+def _make_agent(**kwargs) -> Agent:
+    """Create a minimal Agent for testing."""
     data = {"name": "test", "model": "gpt-4"}
     data.update(kwargs)
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@
 
 from typing import Any, Protocol, runtime_checkable
 
-from .agent._Prompty import Prompty
+from .agent._Agent import Agent
 from .conversation._Message import Message
 from .conversation._ToolCall import ToolCall
 
@@ -16,19 +16,19 @@ from .conversation._ToolCall import ToolCall
 class Executor(Protocol):
     """Calls an LLM provider with messages and returns the raw provider response."""
 
-    def execute(self, agent: Prompty, messages: list[Message]) -> Any:
+    def execute(self, agent: Agent, messages: list[Message]) -> Any:
         """Call an LLM provider with messages and return the raw response"""
         raise NotImplementedError
 
-    async def execute_async(self, agent: Prompty, messages: list[Message]) -> Any:
+    async def execute_async(self, agent: Agent, messages: list[Message]) -> Any:
         """Call an LLM provider with messages and return the raw response (async variant)"""
         raise NotImplementedError
 
-    def execute_stream(self, agent: Prompty, messages: list[Message]) -> Any:
+    def execute_stream(self, agent: Agent, messages: list[Message]) -> Any:
         """Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support."""
         raise NotImplementedError
 
-    async def execute_stream_async(self, agent: Prompty, messages: list[Message]) -> Any:
+    async def execute_stream_async(self, agent: Agent, messages: list[Message]) -> Any:
         """Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. (async variant)"""
         raise NotImplementedError
 

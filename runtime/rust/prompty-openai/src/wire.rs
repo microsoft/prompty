@@ -4,7 +4,7 @@
 //! JSON bodies expected by the OpenAI API.
 
 use prompty::model::{
-    MessageHelpers, ModelOptions, Prompty, Property, PropertyKind, Tool, ToolKind,
+    MessageHelpers, ModelOptions, Agent, Property, PropertyKind, Tool, ToolKind,
 };
 use prompty::types::{ContentPart, ContentPartKind, Message};
 use serde_json::{Map, Value, json};
@@ -126,7 +126,7 @@ fn mime_to_audio_format(mime: &str) -> String {
 // ---------------------------------------------------------------------------
 
 /// Build the full request body for a chat completions call.
-pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
+pub fn build_chat_args(agent: &Agent, messages: &[Message]) -> Result<Value, SchemaError> {
     let mut args = Map::new();
 
     // Model ID
@@ -185,7 +185,7 @@ pub fn enable_streaming(body: &mut Value, api_type: &str) {
 }
 
 /// Build the request body for an embedding call.
-pub fn build_embedding_args(agent: &Prompty, messages: &[Message]) -> Value {
+pub fn build_embedding_args(agent: &Agent, messages: &[Message]) -> Value {
     let model_id = agent
         .model
         .as_ref()
@@ -217,7 +217,7 @@ pub fn build_embedding_args(agent: &Prompty, messages: &[Message]) -> Value {
 }
 
 /// Build the request body for an image generation call.
-pub fn build_image_args(agent: &Prompty, messages: &[Message]) -> Value {
+pub fn build_image_args(agent: &Agent, messages: &[Message]) -> Value {
     let model_id = agent
         .model
         .as_ref()
@@ -316,7 +316,7 @@ fn apply_options(args: &mut Map<String, Value>, opts: &Option<ModelOptions>) {
 // ---------------------------------------------------------------------------
 
 /// Convert agent's tools to OpenAI wire format.
-pub fn tools_to_wire(agent: &Prompty) -> Result<Vec<Value>, SchemaError> {
+pub fn tools_to_wire(agent: &Agent) -> Result<Vec<Value>, SchemaError> {
     let Some(tools) = agent.as_tools() else {
         return Ok(Vec::new());
     };
@@ -537,7 +537,7 @@ fn kind_to_json_type(kind: &str) -> Option<&'static str> {
 // Structured output (outputs → response_format)
 // ---------------------------------------------------------------------------
 
-fn output_schema_to_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+fn output_schema_to_wire(agent: &Agent) -> Result<Option<Value>, SchemaError> {
     let Some(outputs) = agent.as_outputs() else {
         return Ok(None);
     };
@@ -581,7 +581,7 @@ fn output_schema_to_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> 
 /// Build the request body for the OpenAI Responses API.
 ///
 /// System/developer messages become `instructions`; other messages become `input` items.
-pub fn build_responses_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
+pub fn build_responses_args(agent: &Agent, messages: &[Message]) -> Result<Value, SchemaError> {
     let model_id = agent
         .model
         .as_ref()
@@ -700,7 +700,7 @@ fn apply_responses_options(args: &mut Map<String, Value>, opts: &Option<ModelOpt
     }
 }
 
-fn responses_tools_to_wire(agent: &Prompty) -> Result<Vec<Value>, SchemaError> {
+fn responses_tools_to_wire(agent: &Agent) -> Result<Vec<Value>, SchemaError> {
     let Some(tools) = agent.as_tools() else {
         return Ok(Vec::new());
     };
@@ -754,7 +754,7 @@ fn responses_function_tool_to_wire(tool: &Tool) -> Result<Value, SchemaError> {
     Ok(Value::Object(obj))
 }
 
-fn output_schema_to_responses_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+fn output_schema_to_responses_wire(agent: &Agent) -> Result<Option<Value>, SchemaError> {
     let Some(outputs) = agent.as_outputs() else {
         return Ok(None);
     };
@@ -1154,7 +1154,7 @@ mod tests {
 
     #[test]
     fn test_responses_tool_messages_round_trip_to_function_call_items() {
-        let agent = Prompty::load_from_value(
+        let agent = Agent::load_from_value(
             &json!({
                 "name": "responses",
                 "kind": "prompt",

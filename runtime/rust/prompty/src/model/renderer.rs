@@ -4,11 +4,11 @@
 #![allow(unused_imports, dead_code, non_camel_case_types, unused_variables, unexpected_cfgs, clippy::all)]
 
 
-use super::agent::prompty::Prompty;
+use super::agent::agent::Agent;
 
 /// Renders a template string with input values to produce the final prompt text.
 #[async_trait::async_trait]
 pub trait Renderer: Send + Sync {
     /// Render the template string with input values
-    async fn render(&self, agent: &Prompty, template: &String, inputs: &serde_json::Value) -> Result<String, Box<dyn std::error::Error + Send + Sync>>;
+    async fn render(&self, agent: &Agent, template: &String, inputs: &serde_json::Value) -> Result<String, Box<dyn std::error::Error + Send + Sync>>;
 }

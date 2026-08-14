@@ -8,7 +8,7 @@
 //!
 //! The runtime provides 5 public functions (matching TypeScript, Python, C#):
 //!
-//! - [`load()`] — Parse a `.prompty` file → typed `Prompty` agent
+//! - [`load()`] — Parse a `.prompty` file → typed `Agent`
 //! - [`prepare()`] — Render template + parse role markers → `Vec<Message>`
 //! - [`run()`] — Execute LLM call + process response (takes messages)
 //! - [`invoke_agent()`] — One-shot: load → prepare → execute → process
@@ -98,7 +98,7 @@ pub use loader::{
 pub use memory::{
     MemoryCategory, MemoryEntry, MemoryPort, MemoryStore, ScoredMemory, format_recall_results,
 };
-pub use model::Prompty;
+pub use model::Agent;
 pub use pipeline::{
     AgentEvent, AsyncToolFn, Compaction, CompactionFn, EventCallback, ToolFn, ToolHandler,
     TurnOptions, TurnOptionsBuilder, invoke as invoke_agent, invoke_from_path, prepare, process,

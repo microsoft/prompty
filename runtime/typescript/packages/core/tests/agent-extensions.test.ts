@@ -13,7 +13,7 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
-import { Prompty } from "../src/model/index.js";
+import { Agent } from "../src/model/index.js";
 
 // ===========================================================================
 // §13.1 Agent Events
@@ -319,7 +319,7 @@ describe("Steering", () => {
 // --- Mock implementations for integration tests ---
 
 class StubRenderer implements Renderer {
-  async render(_agent: Prompty, template: string, inputs: Record<string, unknown>): Promise<string> {
+  async render(_agent: Agent, template: string, inputs: Record<string, unknown>): Promise<string> {
     let result = template;
     for (const [key, val] of Object.entries(inputs)) {
       result = result.replace(`{{${key}}}`, String(val));
@@ -329,14 +329,14 @@ class StubRenderer implements Renderer {
 }
 
 class StubParser implements Parser {
-  async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
+  async parse(_agent: Agent, rendered: string): Promise<Message[]> {
     return [new Message({ role: "user", parts: [text(rendered)] })];
   }
 }
 
 /** Processor that extracts content from a standard OpenAI chat response shape. */
 class StubProcessor implements Processor {
-  async process(_agent: Prompty, response: unknown): Promise<unknown> {
+  async process(_agent: Agent, response: unknown): Promise<unknown> {
     const r = response as Record<string, unknown>;
     const choices = r.choices as Record<string, unknown>[];
     const msg = choices[0].message as Record<string, unknown>;
@@ -345,7 +345,7 @@ class StubProcessor implements Processor {
 }
 
 /** Helper to build a minimal mock executor with configurable execute(). */
-function makeStubExecutor(executeFn: (agent: Prompty, messages: Message[]) => Promise<unknown>): Executor {
+function makeStubExecutor(executeFn: (agent: Agent, messages: Message[]) => Promise<unknown>): Executor {
   return {
     execute: executeFn,
     formatToolMessages(
@@ -406,8 +406,8 @@ function makeToolCallResponse(calls: { id: string; name: string; args: string }[
   };
 }
 
-function makeTestAgent(): Prompty {
-  const agent = new Prompty({
+function makeTestAgent(): Agent {
+  const agent = new Agent({
     name: "ext-test",
     instructions: "Hello {{name}}",
   });
@@ -482,7 +482,7 @@ describe("turn integration", () => {
 
     // Parser returns very long messages to trigger trimming
     const longParser: Parser = {
-      async parse(_agent: Prompty, _rendered: string): Promise<Message[]> {
+      async parse(_agent: Agent, _rendered: string): Promise<Message[]> {
         return [
           new Message({ role: "system", parts: [text("System prompt")] }),
           new Message({ role: "user", parts: [text("A".repeat(2000))] }),

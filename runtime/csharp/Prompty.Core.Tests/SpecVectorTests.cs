@@ -98,7 +98,7 @@ public class SpecVectorTests
             };
 
             // Create a minimal agent just for rendering
-            var agent = new Prompty { Instructions = template };
+            var agent = new Agent { Instructions = template };
 
             try
             {
@@ -147,7 +147,7 @@ public class SpecVectorTests
                 continue;
             }
 
-            var agent = new Prompty();
+            var agent = new Agent();
 
             try
             {
@@ -257,7 +257,7 @@ public class SpecVectorTests
                         PreProcess = d => ReferenceResolver.ResolveReferences(d, ".", [Path.GetFullPath(".")]),
                     };
 
-                    var agent = Prompty.Load(data, ctx);
+                    var agent = Agent.Load(data, ctx);
 
                     var errors = CompareAgentToExpected(agent, expected);
                     if (errors.Count > 0)
@@ -368,7 +368,7 @@ public class SpecVectorTests
         return errors;
     }
 
-    private static List<string> CompareAgentToExpected(Prompty agent, JsonElement expected)
+    private static List<string> CompareAgentToExpected(Agent agent, JsonElement expected)
     {
         var errors = new List<string>();
 

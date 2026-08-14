@@ -13,9 +13,9 @@ use super::super::template::template::Template;
 
 use super::super::tools::tool::Tool;
 
-/// A Prompty is a markdown file format for LLM prompts. The frontmatter defines structured metadata including model configuration, input/output schemas, tools, and template settings. The markdown body becomes the instructions. This is the single root type for the Prompty schema — there is no abstract base class or kind discriminator. A .prompty file always produces a Prompty instance. Runtime loaders may resolve frontmatter references such as `${env:VAR}` and `${file:relative/path}`. File references must be treated as a host-controlled capability: by default they are scoped to the containing .prompty file's directory tree after canonicalization, and any additional allowed roots must be supplied by the host application's load options rather than frontmatter.
+/// An Agent is the root model produced from a .prompty markdown file for LLM prompts. The frontmatter defines structured metadata including model configuration, input/output schemas, tools, and template settings. The markdown body becomes the instructions. This is the single root type for the Prompty schema — there is no abstract base class or kind discriminator. A .prompty file always produces an Agent instance. Runtime loaders may resolve frontmatter references such as `${env:VAR}` and `${file:relative/path}`. File references must be treated as a host-controlled capability: by default they are scoped to the containing .prompty file's directory tree after canonicalization, and any additional allowed roots must be supplied by the host application's load options rather than frontmatter.
 #[derive(Debug, Clone, Default, PartialEq)]
-pub struct Prompty {
+pub struct Agent {
     /// Human-readable name of the prompt
     pub name: String,
     /// Display name for UI purposes
@@ -38,13 +38,13 @@ pub struct Prompty {
     pub instructions: Option<String>,
 }
 
-impl Prompty {
-    /// Create a new Prompty with default values.
+impl Agent {
+    /// Create a new Agent with default values.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Load Prompty from a JSON string.
+    /// Load Agent from a JSON string.
     pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
         let value: serde_json::Value = serde_json::from_str(json)?;
         Self::validate_input_at(&value, "")
@@ -52,7 +52,7 @@ impl Prompty {
         Ok(Self::load_from_value(&value, ctx))
     }
 
-    /// Load Prompty from a YAML string.
+    /// Load Agent from a YAML string.
     pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
         let value: serde_json::Value = serde_yaml::from_str(yaml)?;
         Self::validate_input_at(&value, "")
@@ -60,7 +60,7 @@ impl Prompty {
         Ok(Self::load_from_value(&value, ctx))
     }
 
-    /// Load Prompty from a `serde_json::Value`.
+    /// Load Agent from a `serde_json::Value`.
     ///
     /// Calls `ctx.process_input` before field extraction.
     pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
@@ -181,7 +181,7 @@ impl Prompty {
         Ok(())
     }
 
-    /// Serialize Prompty to a `serde_json::Value`.
+    /// Serialize Agent to a `serde_json::Value`.
     ///
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
@@ -224,12 +224,12 @@ impl Prompty {
         ctx.process_dict(serde_json::Value::Object(result))
     }
 
-    /// Serialize Prompty to a JSON string.
+    /// Serialize Agent to a JSON string.
     pub fn to_json(&self, ctx: &SaveContext) -> Result<String, serde_json::Error> {
         serde_json::to_string_pretty(&self.to_value(ctx))
     }
 
-    /// Serialize Prompty to a YAML string.
+    /// Serialize Agent to a YAML string.
     pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
         serde_yaml::to_string(&self.to_value(ctx))
     }
@@ -454,18 +454,18 @@ impl Prompty {
     }
 }
 
-// Serde for `Prompty` delegates to the canonical to_value/load_from_value
+// Serde for `Agent` delegates to the canonical to_value/load_from_value
 // logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
 // resolution here — leaving the context-aware LoadContext/SaveContext API intact.
 #[cfg(feature = "serde")]
-impl serde::Serialize for Prompty {
+impl serde::Serialize for Agent {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
     }
 }
 
 #[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for Prompty {
+impl<'de> serde::Deserialize<'de> for Agent {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
         Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;

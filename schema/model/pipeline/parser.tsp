@@ -13,5 +13,5 @@ interface Parser {
 
   @doc("Parse rendered text into a structured message array")
   @vector(ParseVectors)
-  parse(agent: Prompty, rendered: string, context?: Record<unknown>): Message[];
+  parse(agent: Agent, rendered: string, context?: Record<unknown>): Message[];
 }

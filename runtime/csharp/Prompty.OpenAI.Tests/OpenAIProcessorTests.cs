@@ -23,7 +23,7 @@ public class OpenAIProcessorTests
     public async Task ProcessAsync_ChatCompletion_ExtractsText()
     {
         var completion = CreateChatCompletion("Hello, world!");
-        var agent = new Core.Prompty();
+        var agent = new Core.Agent();
 
         var result = await _processor.ProcessAsync(agent, completion);
 
@@ -35,7 +35,7 @@ public class OpenAIProcessorTests
     {
         var completion = CreateChatCompletionWithToolCalls(
             [("call_1", "get_weather", """{"city":"NYC"}""")]);
-        var agent = new Core.Prompty();
+        var agent = new Core.Agent();
 
         var result = await _processor.ProcessAsync(agent, completion);
 
@@ -54,7 +54,7 @@ public class OpenAIProcessorTests
             ("call_1", "get_weather", """{"city":"NYC"}"""),
             ("call_2", "get_time", """{"tz":"EST"}"""),
         ]);
-        var agent = new Core.Prompty();
+        var agent = new Core.Agent();
 
         var result = await _processor.ProcessAsync(agent, completion);
 
@@ -67,7 +67,7 @@ public class OpenAIProcessorTests
     {
         var jsonContent = """{"answer":"42","confidence":0.95}""";
         var completion = CreateChatCompletion(jsonContent);
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Outputs =
             [
@@ -87,7 +87,7 @@ public class OpenAIProcessorTests
     public async Task ProcessAsync_ChatCompletion_StructuredOutput_InvalidJson_FallsBackToString()
     {
         var completion = CreateChatCompletion("not valid json {{{");
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Outputs = [new Property { Name = "x", Kind = "string" }],
         };
@@ -101,7 +101,7 @@ public class OpenAIProcessorTests
     [Fact]
     public async Task ProcessAsync_UnknownType_ReturnsAsIs()
     {
-        var agent = new Core.Prompty();
+        var agent = new Core.Agent();
         var unknownObj = new { custom = "value" };
 
         var result = await _processor.ProcessAsync(agent, unknownObj);

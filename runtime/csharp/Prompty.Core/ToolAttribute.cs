@@ -126,7 +126,7 @@ public class ToolAttribute : Attribute
     /// If a handler has no matching declaration or duplicate handlers exist.
     /// </exception>
     public static Dictionary<string, Func<string, Task<string>>> BindTools(
-        Prompty agent,
+        Agent agent,
         object instance)
     {
         var handlers = new Dictionary<string, Func<string, Task<string>>>();

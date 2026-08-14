@@ -13,7 +13,7 @@ public class Jinja2Renderer : IRenderer
     /// </summary>
     public Dictionary<string, string> LastNonces { get; private set; } = [];
 
-    public Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs)
+    public Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
     {
         var (renderInputs, nonces) = RenderHelpers.PrepareRenderInputs(agent, inputs);
         LastNonces = nonces;

@@ -14,7 +14,7 @@ export type { PermissionResolver } from "./permission-resolver";
 export type { Processor } from "./processor";
 export type { Renderer } from "./renderer";
 
-export { Prompty } from "./agent/prompty";
+export { Agent } from "./agent/agent";
 export { GuardrailResult } from "./agent/guardrail-result";
 
 export {

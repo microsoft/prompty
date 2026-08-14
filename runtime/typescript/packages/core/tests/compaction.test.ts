@@ -10,7 +10,7 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
-import { Prompty } from "../src/model/index.js";
+import { Agent } from "../src/model/index.js";
 
 // ===========================================================================
 // formatDroppedMessages
@@ -73,13 +73,13 @@ describe("formatDroppedMessages", () => {
 
 // Stubs for turn() integration tests
 class StubRenderer implements Renderer {
-  render(_agent: Prompty, _inputs: Record<string, unknown>): string {
+  render(_agent: Agent, _inputs: Record<string, unknown>): string {
     return "system:\nYou are helpful.\n\nuser:\nHello";
   }
 }
 
 class StubParser implements Parser {
-  parse(_agent: Prompty, rendered: string): Message[] {
+  parse(_agent: Agent, rendered: string): Message[] {
     // Simple two-message output
     return [
       new Message({ role: "system", parts: [text("You are helpful.")] }),
@@ -89,13 +89,13 @@ class StubParser implements Parser {
 }
 
 class StubProcessor implements Processor {
-  process(_agent: Prompty, response: unknown): unknown {
+  process(_agent: Agent, response: unknown): unknown {
     const resp = response as { choices: { message: { content: string } }[] };
     return resp.choices?.[0]?.message?.content ?? response;
   }
 }
 
-function makeStubExecutor(fn: (agent: Prompty, messages: Message[]) => Promise<unknown>): Executor {
+function makeStubExecutor(fn: (agent: Agent, messages: Message[]) => Promise<unknown>): Executor {
   return { execute: fn };
 }
 
@@ -108,8 +108,8 @@ function makeFinalResponse(content: string) {
   };
 }
 
-function makeTestAgent(): Prompty {
-  const agent = new Prompty({
+function makeTestAgent(): Agent {
+  const agent = new Agent({
     name: "compact-test",
     instructions: "Hello {{name}}",
   });

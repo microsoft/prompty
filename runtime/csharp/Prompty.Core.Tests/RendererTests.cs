@@ -78,12 +78,12 @@ public class RenderHelpersTests
         Assert.Equal("Jane", result["name"]); // Non-rich kinds unchanged
     }
 
-    private static Prompty CreateAgent() => CreateAgentWithInputs();
+    private static Agent CreateAgent() => CreateAgentWithInputs();
 
-    private static Prompty CreateAgentWithThreadInput(string name) =>
+    private static Agent CreateAgentWithThreadInput(string name) =>
         CreateAgentWithInputs(new Property { Name = name, Kind = "thread" });
 
-    private static Prompty CreateAgentWithInputs(params Property[] props)
+    private static Agent CreateAgentWithInputs(params Property[] props)
     {
         var data = new Dictionary<string, object?>
         {
@@ -92,7 +92,7 @@ public class RenderHelpersTests
             ["instructions"] = "",
             ["model"] = "gpt-4",
         };
-        var agent = Prompty.Load(data, new LoadContext());
+        var agent = Agent.Load(data, new LoadContext());
         agent.Inputs = [.. props];
         return agent;
     }
@@ -177,17 +177,17 @@ public class Jinja2RendererTests
         Assert.Equal("", result);
     }
 
-    private static Prompty CreateAgent() =>
+    private static Agent CreateAgent() =>
         CreateAgentBase();
 
-    private static Prompty CreateAgentWithThreadInput(string name)
+    private static Agent CreateAgentWithThreadInput(string name)
     {
         var agent = CreateAgentBase();
         agent.Inputs = [new Property { Name = name, Kind = "thread" }];
         return agent;
     }
 
-    private static Prompty CreateAgentBase()
+    private static Agent CreateAgentBase()
     {
         var data = new Dictionary<string, object?>
         {
@@ -196,7 +196,7 @@ public class Jinja2RendererTests
             ["instructions"] = "",
             ["model"] = "gpt-4",
         };
-        return Prompty.Load(data, new LoadContext());
+        return Agent.Load(data, new LoadContext());
     }
 }
 
@@ -237,7 +237,7 @@ public class MustacheRendererTests
         Assert.Equal("a b c ", result);
     }
 
-    private static Prompty CreateAgent()
+    private static Agent CreateAgent()
     {
         var data = new Dictionary<string, object?>
         {
@@ -246,6 +246,6 @@ public class MustacheRendererTests
             ["instructions"] = "",
             ["model"] = "gpt-4",
         };
-        return Prompty.Load(data, new LoadContext());
+        return Agent.Load(data, new LoadContext());
     }
 }

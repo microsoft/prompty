@@ -20,7 +20,7 @@ namespace Prompty.OpenAI;
 /// </summary>
 public class OpenAIExecutor : IExecutor
 {
-    public async Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+    public async Task<object> ExecuteAsync(Core.Agent agent, List<Message> messages)
     {
         var apiType = agent.Model?.ApiType ?? "chat";
         var model = agent.Model?.Id ?? "gpt-4";
@@ -39,7 +39,7 @@ public class OpenAIExecutor : IExecutor
         };
     }
 
-    protected virtual OpenAIClient CreateClient(Core.Prompty agent)
+    protected virtual OpenAIClient CreateClient(Core.Agent agent)
     {
         var conn = agent.Model?.Connection;
 
@@ -83,7 +83,7 @@ public class OpenAIExecutor : IExecutor
     }
 
     private static async Task<object> ExecuteChatAsync(
-        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+        OpenAIClient client, string model, Core.Agent agent, List<Message> messages)
     {
         var chatClient = client.GetChatClient(model);
         var chatMessages = messages.Select(WireFormat.MessageToWire).ToList();
@@ -94,7 +94,7 @@ public class OpenAIExecutor : IExecutor
     }
 
     private static PromptyStream ExecuteChatStreamAsync(
-        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+        OpenAIClient client, string model, Core.Agent agent, List<Message> messages)
     {
         var chatClient = client.GetChatClient(model);
         var chatMessages = messages.Select(WireFormat.MessageToWire).ToList();
@@ -117,7 +117,7 @@ public class OpenAIExecutor : IExecutor
     // -----------------------------------------------------------------------
 
     private static async Task<object> ExecuteResponsesAsync(
-        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+        OpenAIClient client, string model, Core.Agent agent, List<Message> messages)
     {
         var responsesClient = client.GetResponsesClient();
         var options = WireFormat.BuildResponsesOptions(model, agent, messages);
@@ -126,7 +126,7 @@ public class OpenAIExecutor : IExecutor
     }
 
     private static PromptyStream ExecuteResponsesStreamAsync(
-        OpenAIClient client, string model, Core.Prompty agent, List<Message> messages)
+        OpenAIClient client, string model, Core.Agent agent, List<Message> messages)
     {
         var responsesClient = client.GetResponsesClient();
         var options = WireFormat.BuildResponsesOptions(model, agent, messages);

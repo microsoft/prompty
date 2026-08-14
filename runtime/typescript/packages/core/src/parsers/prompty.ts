@@ -12,7 +12,7 @@
 
 import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
-import type { Prompty } from "../model/agent/prompty.js";
+import type { Agent } from "../model/agent/agent.js";
 import {
   type TextPart,
   Message,
@@ -53,7 +53,7 @@ export class PromptyChatParser implements Parser {
   // ---- parse ----
 
   async parse(
-    agent: Prompty,
+    agent: Agent,
     rendered: string,
     context?: Record<string, unknown>,
   ): Promise<Message[]> {
@@ -64,7 +64,7 @@ export class PromptyChatParser implements Parser {
 
   // ---- internal parsing ----
 
-  private resolveBasePath(agent: Prompty): string | undefined {
+  private resolveBasePath(agent: Agent): string | undefined {
     const meta = agent.metadata as Record<string, unknown> | undefined;
     if (meta && typeof meta.source_path === "string") {
       return resolve(meta.source_path, "..");

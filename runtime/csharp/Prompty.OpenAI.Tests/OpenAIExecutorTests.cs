@@ -14,7 +14,7 @@ public class OpenAIExecutorTests
     public async Task ExecuteAsync_MissingApiKey_ThrowsInvalidOperationException()
     {
         var executor = new OpenAI.OpenAIExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -31,7 +31,7 @@ public class OpenAIExecutorTests
     public async Task ExecuteAsync_EmptyApiKey_ThrowsInvalidOperationException()
     {
         var executor = new OpenAI.OpenAIExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -48,7 +48,7 @@ public class OpenAIExecutorTests
     public async Task ExecuteAsync_NoConnectionAtAll_ThrowsInvalidOperationException()
     {
         var executor = new OpenAI.OpenAIExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Id = "gpt-4" },
         };
@@ -62,7 +62,7 @@ public class OpenAIExecutorTests
     {
         // Create a test subclass that injects a fake client
         var executor = new TestOpenAIExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -79,7 +79,7 @@ public class OpenAIExecutorTests
     [Fact]
     public void DefaultApiType_IsChatWhenNull()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Id = "gpt-4", ApiType = null },
         };
@@ -91,7 +91,7 @@ public class OpenAIExecutorTests
     [Fact]
     public void DefaultModelId_IsGpt4WhenNull()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Id = null! },
         };
@@ -104,7 +104,7 @@ public class OpenAIExecutorTests
     /// </summary>
     private class TestOpenAIExecutor : OpenAI.OpenAIExecutor
     {
-        protected override global::OpenAI.OpenAIClient CreateClient(Core.Prompty agent)
+        protected override global::OpenAI.OpenAIClient CreateClient(Core.Agent agent)
         {
             // Return a real client with a fake key — the dispatch happens before the API call
             return new global::OpenAI.OpenAIClient("test-fake-key");

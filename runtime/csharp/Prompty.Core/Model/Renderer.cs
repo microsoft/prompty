@@ -17,5 +17,5 @@ namespace Prompty.Core;
         /// <summary>
         /// Render the template string with input values
         /// </summary>
-        Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs);
+        Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs);
     }
