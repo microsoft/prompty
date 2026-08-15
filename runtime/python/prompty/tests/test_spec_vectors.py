@@ -1,9 +1,10 @@
 """Spec vector validation tests.
 
-Loads the 94 spec test vectors from spec/vectors/ and validates that the
-Python runtime produces matching results.  Each vector is parametrized as
-an individual pytest test so failures are reported per-vector with full
-expected vs actual context.
+Loads the conformance vectors emitted by the TypeSpec schema
+(``schema/tsp-output/.typra-generated/vectors.json``) and validates that the
+Python runtime produces matching results. This is the single cross-runtime
+source of truth; each vector is parametrized as an individual pytest test so
+failures are reported per-vector with full expected vs actual context.
 
 Run:
     cd runtime/python/prompty
@@ -33,10 +34,10 @@ from prompty.core.types import (
     TextPart,
 )
 from prompty.model import (
+    Agent,
     Binding,
     FunctionTool,
     Model,
-    Agent,
     Property,
     Template,
 )
@@ -69,15 +70,32 @@ from prompty.renderers.mustache import MustacheRenderer
 # Paths
 # ---------------------------------------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
-SPEC_VECTORS = REPO_ROOT / "spec" / "vectors"
 SPEC_FIXTURES = REPO_ROOT / "spec" / "fixtures"
+
+# Conformance vectors are owned by the TypeSpec schema and emitted by Typra into a
+# single cross-runtime source of truth. Each envelope is
+# ``{contract, operation, params, returns, vector}``; the per-stage payload lives on
+# ``vector`` and is selected by the stable ``operation`` name (not ``contract``, which
+# is the host interface name).
+GENERATED_VECTORS = REPO_ROOT / "schema" / "tsp-output" / ".typra-generated" / "vectors.json"
+
+# Pipeline stage -> emitted operation name (the seam op that carries the @vector set).
+_STAGE_TO_OPERATION = {
+    "load": "load",
+    "render": "render",
+    "parse": "parse",
+    "wire": "toRequest",
+    "process": "process",
+    "agent": "run",
+}
 
 
 def _load_vectors(stage: str) -> list[dict]:
-    """Load vectors for a given pipeline stage."""
-    path = SPEC_VECTORS / stage / f"{stage}_vectors.json"
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+    """Load conformance vectors for a pipeline stage from the emitted single source."""
+    operation = _STAGE_TO_OPERATION[stage]
+    with open(GENERATED_VECTORS, encoding="utf-8") as f:
+        document = json.load(f)
+    return [envelope["vector"] for envelope in document["vectors"] if envelope.get("operation") == operation]
 
 
 # ---------------------------------------------------------------------------
@@ -537,7 +555,33 @@ def _check_template(actual: Template | None, expected: dict, errors: list[str]):
 # RENDER VECTORS
 # ============================================================================
 
-RENDER_VECTORS = _load_vectors("render")
+# The thread-nonce render case is intentionally NOT a cross-runtime literal vector:
+# its expected output embeds a randomly generated 8-hex nonce, so it can only be
+# validated per-runtime via pattern match rather than exact equality. It is kept here
+# as a runtime-local case so render nonce coverage survives the migration of the
+# deterministic vectors to the emitted single source.
+_RENDER_NONCE_VECTOR = {
+    "name": "thread_nonce_injection",
+    "input": {
+        "template": "system:\nYou are helpful.\n\n{{conversation}}\n\nuser:\n{{question}}",
+        "engine": "jinja2",
+        "inputs": {
+            "question": "Hi",
+            "conversation": {
+                "_kind": "thread",
+                "messages": [
+                    {"role": "user", "content": "previous question"},
+                    {"role": "assistant", "content": "previous answer"},
+                ],
+            },
+        },
+    },
+    "expected": {
+        "nonce_pattern": "^system:\nYou are helpful\\.\n\n__PROMPTY_THREAD_[a-f0-9]{8}_conversation__\n\nuser:\nHi$"
+    },
+}
+
+RENDER_VECTORS = _load_vectors("render") + [_RENDER_NONCE_VECTOR]
 RENDER_IDS = [v["name"] for v in RENDER_VECTORS]
 
 
@@ -547,7 +591,9 @@ def test_render_vector(vec: dict):
     inp = vec["input"]
     expected = vec["expected"]
     template = inp["template"]
-    engine = inp.get("engine", "jinja2")
+    # Emitted vectors carry the template engine on the top-level ``provider`` field;
+    # the inline nonce case still uses ``input.engine``.
+    engine = vec.get("provider") or inp.get("engine", "jinja2")
     inputs = inp.get("inputs", {})
 
     # Build a minimal agent to pass to the renderer.
@@ -622,7 +668,8 @@ def test_parse_vector(vec: dict):
         return
 
     messages = parser._parse(agent, rendered)
-    exp_messages = expected["messages"]
+    # Emitted vectors carry the message list directly on ``expected``.
+    exp_messages = expected["messages"] if isinstance(expected, dict) else expected
 
     assert len(messages) == len(exp_messages), (
         f"Parse '{name}': message count {len(messages)} != expected {len(exp_messages)}\n"
@@ -634,8 +681,8 @@ def test_parse_vector(vec: dict):
         # Check role
         assert act.role == exp["role"], f"Parse '{name}' msg[{i}]: role '{act.role}' != expected '{exp['role']}'"
 
-        # Check content
-        exp_content = exp.get("content", [])
+        # Check content — emitted messages expose content parts under ``parts``.
+        exp_content = exp.get("parts", exp.get("content", []))
         if len(exp_content) == 1 and exp_content[0].get("kind") == "text":
             exp_text = exp_content[0]["value"]
             act_text = act.text
@@ -910,24 +957,26 @@ def test_process_vector(vec: dict):
     name = vec["name"]
     inp = vec["input"]
     expected = vec["expected"]
-    provider = inp.get("provider", "openai")
-    api_type = inp.get("apiType", "chat")
+    agent_data = inp.get("agent", {}) or {}
+    model_data = agent_data.get("model", {}) or {}
+    provider = model_data.get("provider", "openai")
+    api_type = model_data.get("apiType", "chat")
 
     response_data = inp["response"]
-    has_outputs = inp.get("has_outputs", False)
+    output_specs = agent_data.get("outputs") or []
 
-    # Build agent with outputs if needed
+    # Build an agent with declared outputs to drive the structured-output path.
     agent = None
-    if has_outputs:
+    if output_specs:
         agent = Agent(
             name="process_test",
-            outputs=[Property(name="dummy", kind="string")],
+            outputs=[Property(name=o.get("name", "result"), kind=o.get("kind", "string")) for o in output_specs],
         )
 
     # Anthropic responses are plain dicts — pass directly to Anthropic processor
     if provider == "anthropic":
         result = _anthropic_process_response(agent, response_data)
-        exp_result = expected["result"]
+        exp_result = expected
         _compare_process_result(name, result, exp_result)
         return
 
@@ -944,7 +993,7 @@ def test_process_vector(vec: dict):
         pytest.skip(f"Unknown apiType: {api_type}")
 
     result = _process_response(response, agent)
-    exp_result = expected["result"]
+    exp_result = expected
 
     _compare_process_result(name, result, exp_result)
 
