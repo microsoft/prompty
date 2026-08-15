@@ -128,11 +128,40 @@ fn replay_vectors() -> ReplayVectors {
         .join("..")
         .join("..")
         .join("..")
-        .join("spec")
-        .join("vectors")
-        .join("harness")
-        .join("replay_vectors.json");
-    let vectors: ReplayVectors = serde_json::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json");
+    let doc: Value = serde_json::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+    // Replay scenarios are emitted under the `replay` operation; each vector's `input`
+    // carries the journal-level clock/sessionId/turnId plus per-scenario inputs.
+    let items: Vec<Value> = doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("replay"))
+        .map(|e| e["vector"].clone())
+        .collect();
+    let first = &items[0]["input"];
+    let scenarios: Vec<Value> = items
+        .iter()
+        .map(|v| {
+            json!({
+                "name": v["name"],
+                "inputs": v["input"].get("inputs").cloned().unwrap_or(Value::Null),
+                "maxIterations": v["input"].get("maxIterations").cloned().unwrap_or(Value::Null),
+                "expected": v["expected"],
+            })
+        })
+        .collect();
+    let reconstructed = json!({
+        "version": 1,
+        "clock": first["clock"],
+        "sessionId": first["sessionId"],
+        "turnId": first["turnId"],
+        "scenarios": scenarios,
+    });
+    let vectors: ReplayVectors = serde_json::from_value(reconstructed).unwrap();
     assert_eq!(vectors.version, 1);
     vectors
 }

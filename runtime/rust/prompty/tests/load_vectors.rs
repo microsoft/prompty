@@ -31,10 +31,10 @@ fn fixtures_dir() -> PathBuf {
 
 fn vectors_path() -> PathBuf {
     repo_root()
-        .join("spec")
-        .join("vectors")
-        .join("load")
-        .join("load_vectors.json")
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json")
 }
 
 // ---------------------------------------------------------------------------
@@ -459,9 +459,15 @@ fn run_validation(
 
 #[test]
 fn spec_load_vectors() {
-    let raw = std::fs::read_to_string(vectors_path()).expect("Failed to read load_vectors.json");
-    let vectors: Vec<Value> =
-        serde_json::from_str(&raw).expect("Failed to parse load_vectors.json");
+    let raw = std::fs::read_to_string(vectors_path()).expect("Failed to read vectors.json");
+    let document: Value = serde_json::from_str(&raw).expect("Failed to parse vectors.json");
+    let vectors: Vec<Value> = document["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("load"))
+        .map(|e| e["vector"].clone())
+        .collect();
 
     let mut failures: Vec<String> = Vec::new();
 

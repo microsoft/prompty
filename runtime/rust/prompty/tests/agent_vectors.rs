@@ -32,16 +32,22 @@ fn vectors_path() -> PathBuf {
         .unwrap() // runtime/
         .parent()
         .unwrap() // repo root
-        .join("spec")
-        .join("vectors")
-        .join("agent")
-        .join("agent_vectors.json")
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json")
 }
 
 fn load_vectors() -> Vec<Value> {
-    let content =
-        std::fs::read_to_string(vectors_path()).expect("failed to read agent_vectors.json");
-    serde_json::from_str(&content).expect("failed to parse agent_vectors.json")
+    let content = std::fs::read_to_string(vectors_path()).expect("failed to read vectors.json");
+    let doc: Value = serde_json::from_str(&content).expect("failed to parse vectors.json");
+    doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("run"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
 fn find_vector(name: &str) -> Value {

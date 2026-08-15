@@ -1244,19 +1244,35 @@ impl IdGenerator for SequentialIds {
     }
 }
 
-fn vector_path() -> PathBuf {
+fn vectors_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
         .join("..")
-        .join("spec")
-        .join("vectors")
-        .join("engine")
-        .join("turn_vectors.json")
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json")
 }
 
 fn load_vectors() -> VectorFile {
-    serde_json::from_str(&std::fs::read_to_string(vector_path()).unwrap()).unwrap()
+    let doc: Value = serde_json::from_str(&std::fs::read_to_string(vectors_path()).unwrap()).unwrap();
+    let cases: Vec<Value> = doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("runTurn"))
+        .map(|e| {
+            let mut case = e["vector"]["input"]
+                .as_object()
+                .cloned()
+                .unwrap_or_default();
+            case.insert("name".into(), e["vector"]["name"].clone());
+            case.insert("expected".into(), e["vector"]["expected"].clone());
+            Value::Object(case)
+        })
+        .collect();
+    serde_json::from_value(serde_json::json!({ "version": "1", "cases": cases })).unwrap()
 }
 
 fn to_message(message: &VectorMessage) -> Message {
