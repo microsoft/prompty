@@ -65,6 +65,7 @@
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
+        "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -97,6 +98,7 @@
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
+        "LoadConformance",
         "McpApprovalMode",
         "McpTool",
         "MemoryEntry",
@@ -178,6 +180,7 @@
         "TraceTime",
         "TrajectoryEvent",
         "TurnCommit",
+        "TurnConformance",
         "TurnEndPayload",
         "TurnEngineResult",
         "TurnEvent",
@@ -190,7 +193,8 @@
         "UnionProperty",
         "UsageChunk",
         "ValidationError",
-        "ValidationResult"
+        "ValidationResult",
+        "WireConformance"
       ],
       "exports": [
         {
@@ -205,6 +209,13 @@
           "kind": "type",
           "group": "",
           "source": "CheckpointStore.cs",
+          "protocol": true
+        },
+        {
+          "name": "DiscoveryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "DiscoveryConformance.cs",
           "protocol": true
         },
         {
@@ -233,6 +244,13 @@
           "kind": "type",
           "group": "",
           "source": "HostToolExecutor.cs",
+          "protocol": true
+        },
+        {
+          "name": "LoadConformance",
+          "kind": "type",
+          "group": "",
+          "source": "LoadConformance.cs",
           "protocol": true
         },
         {
@@ -268,6 +286,20 @@
           "kind": "type",
           "group": "",
           "source": "Renderer.cs",
+          "protocol": true
+        },
+        {
+          "name": "TurnConformance",
+          "kind": "type",
+          "group": "",
+          "source": "TurnConformance.cs",
+          "protocol": true
+        },
+        {
+          "name": "WireConformance",
+          "kind": "type",
+          "group": "",
+          "source": "WireConformance.cs",
           "protocol": true
         },
         {
@@ -1625,6 +1657,38 @@
           ]
         },
         {
+          "name": "DiscoveryConformance",
+          "group": "",
+          "symbol": "DiscoveryConformance",
+          "source": "DiscoveryConformance.cs",
+          "methods": [
+            {
+              "name": "enrich",
+              "returns": "ModelInfo",
+              "params": {
+                "base": "ModelInfo"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "mapModel",
+              "returns": "ModelInfo",
+              "params": {
+                "raw": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -1770,6 +1834,26 @@
           ]
         },
         {
+          "name": "LoadConformance",
+          "group": "",
+          "symbol": "LoadConformance",
+          "source": "LoadConformance.cs",
+          "methods": [
+            {
+              "name": "load",
+              "returns": "Agent",
+              "params": {
+                "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "ModelLister",
           "group": "",
           "symbol": "ModelLister",
@@ -1897,20 +1981,89 @@
               "nonFatal": false
             }
           ]
+        },
+        {
+          "name": "TurnConformance",
+          "group": "",
+          "symbol": "TurnConformance",
+          "source": "TurnConformance.cs",
+          "methods": [
+            {
+              "name": "replay",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "run",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "runTurn",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "WireConformance",
+          "group": "",
+          "symbol": "WireConformance",
+          "source": "WireConformance.cs",
+          "methods": [
+            {
+              "name": "toRequest",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
         }
       ],
       "modules": [
         "Agent.cs",
         "CheckpointStore.cs",
+        "DiscoveryConformance.cs",
         "EventJournalWriter.cs",
         "EventSink.cs",
         "Executor.cs",
         "HostToolExecutor.cs",
+        "LoadConformance.cs",
         "ModelLister.cs",
         "Parser.cs",
         "PermissionResolver.cs",
         "Processor.cs",
         "Renderer.cs",
+        "TurnConformance.cs",
+        "WireConformance.cs",
         "contracts/AiResourceInfo.cs",
         "contracts/AuthorizationCodeFlow.cs",
         "contracts/Binding.cs",
@@ -2072,6 +2225,7 @@
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
+        "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -2104,6 +2258,7 @@
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
+        "LoadConformance",
         "McpApprovalMode",
         "McpTool",
         "MemoryEntry",
@@ -2185,6 +2340,7 @@
         "TraceTime",
         "TrajectoryEvent",
         "TurnCommit",
+        "TurnConformance",
         "TurnEndPayload",
         "TurnEngineResult",
         "TurnEvent",
@@ -2197,7 +2353,8 @@
         "UnionProperty",
         "UsageChunk",
         "ValidationError",
-        "ValidationResult"
+        "ValidationResult",
+        "WireConformance"
       ],
       "exports": [
         {
@@ -2212,6 +2369,13 @@
           "kind": "type",
           "group": "",
           "source": "checkpoint_store.go",
+          "protocol": true
+        },
+        {
+          "name": "DiscoveryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "discovery_conformance.go",
           "protocol": true
         },
         {
@@ -2240,6 +2404,13 @@
           "kind": "type",
           "group": "",
           "source": "host_tool_executor.go",
+          "protocol": true
+        },
+        {
+          "name": "LoadConformance",
+          "kind": "type",
+          "group": "",
+          "source": "load_conformance.go",
           "protocol": true
         },
         {
@@ -2275,6 +2446,20 @@
           "kind": "type",
           "group": "",
           "source": "renderer.go",
+          "protocol": true
+        },
+        {
+          "name": "TurnConformance",
+          "kind": "type",
+          "group": "",
+          "source": "turn_conformance.go",
+          "protocol": true
+        },
+        {
+          "name": "WireConformance",
+          "kind": "type",
+          "group": "",
+          "source": "wire_conformance.go",
           "protocol": true
         },
         {
@@ -3632,6 +3817,38 @@
           ]
         },
         {
+          "name": "DiscoveryConformance",
+          "group": "",
+          "symbol": "DiscoveryConformance",
+          "source": "discovery_conformance.go",
+          "methods": [
+            {
+              "name": "enrich",
+              "returns": "ModelInfo",
+              "params": {
+                "base": "ModelInfo"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "mapModel",
+              "returns": "ModelInfo",
+              "params": {
+                "raw": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -3777,6 +3994,26 @@
           ]
         },
         {
+          "name": "LoadConformance",
+          "group": "",
+          "symbol": "LoadConformance",
+          "source": "load_conformance.go",
+          "methods": [
+            {
+              "name": "load",
+              "returns": "Agent",
+              "params": {
+                "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "ModelLister",
           "group": "",
           "symbol": "ModelLister",
@@ -3904,6 +4141,71 @@
               "nonFatal": false
             }
           ]
+        },
+        {
+          "name": "TurnConformance",
+          "group": "",
+          "symbol": "TurnConformance",
+          "source": "turn_conformance.go",
+          "methods": [
+            {
+              "name": "replay",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "run",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "runTurn",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "WireConformance",
+          "group": "",
+          "symbol": "WireConformance",
+          "source": "wire_conformance.go",
+          "methods": [
+            {
+              "name": "toRequest",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
         }
       ],
       "modules": [
@@ -3933,6 +4235,7 @@
         "context_request.go",
         "delegated_state_reference.go",
         "device_authorization.go",
+        "discovery_conformance.go",
         "done_event_payload.go",
         "engine_checkpoint.go",
         "engine_event.go",
@@ -3960,6 +4263,7 @@
         "invoker_error.go",
         "llm_complete_payload.go",
         "llm_start_payload.go",
+        "load_conformance.go",
         "mcp_approval_mode.go",
         "memory_entry.go",
         "memory_store.go",
@@ -4030,6 +4334,7 @@
         "trace_time.go",
         "trajectory_event.go",
         "turn_commit.go",
+        "turn_conformance.go",
         "turn_end_payload.go",
         "turn_engine_result.go",
         "turn_event.go",
@@ -4040,7 +4345,8 @@
         "turn_summary.go",
         "turn_trace.go",
         "validation_error.go",
-        "validation_result.go"
+        "validation_result.go",
+        "wire_conformance.go"
       ]
     },
     {
@@ -4078,6 +4384,7 @@
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
+        "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -4110,6 +4417,7 @@
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
+        "LoadConformance",
         "McpApprovalMode",
         "McpTool",
         "MemoryEntry",
@@ -4191,6 +4499,7 @@
         "TraceTime",
         "TrajectoryEvent",
         "TurnCommit",
+        "TurnConformance",
         "TurnEndPayload",
         "TurnEngineResult",
         "TurnEvent",
@@ -4203,7 +4512,8 @@
         "UnionProperty",
         "UsageChunk",
         "ValidationError",
-        "ValidationResult"
+        "ValidationResult",
+        "WireConformance"
       ],
       "exports": [
         {
@@ -4218,6 +4528,13 @@
           "kind": "type",
           "group": "",
           "source": "CheckpointStore",
+          "protocol": true
+        },
+        {
+          "name": "DiscoveryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "DiscoveryConformance",
           "protocol": true
         },
         {
@@ -4246,6 +4563,13 @@
           "kind": "type",
           "group": "",
           "source": "HostToolExecutor",
+          "protocol": true
+        },
+        {
+          "name": "LoadConformance",
+          "kind": "type",
+          "group": "",
+          "source": "LoadConformance",
           "protocol": true
         },
         {
@@ -4281,6 +4605,20 @@
           "kind": "type",
           "group": "",
           "source": "Renderer",
+          "protocol": true
+        },
+        {
+          "name": "TurnConformance",
+          "kind": "type",
+          "group": "",
+          "source": "TurnConformance",
+          "protocol": true
+        },
+        {
+          "name": "WireConformance",
+          "kind": "type",
+          "group": "",
+          "source": "WireConformance",
           "protocol": true
         },
         {
@@ -5638,6 +5976,38 @@
           ]
         },
         {
+          "name": "DiscoveryConformance",
+          "group": "",
+          "symbol": "DiscoveryConformance",
+          "source": "DiscoveryConformance",
+          "methods": [
+            {
+              "name": "enrich",
+              "returns": "ModelInfo",
+              "params": {
+                "base": "ModelInfo"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "mapModel",
+              "returns": "ModelInfo",
+              "params": {
+                "raw": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -5783,6 +6153,26 @@
           ]
         },
         {
+          "name": "LoadConformance",
+          "group": "",
+          "symbol": "LoadConformance",
+          "source": "LoadConformance",
+          "methods": [
+            {
+              "name": "load",
+              "returns": "Agent",
+              "params": {
+                "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "ModelLister",
           "group": "",
           "symbol": "ModelLister",
@@ -5910,6 +6300,71 @@
               "nonFatal": false
             }
           ]
+        },
+        {
+          "name": "TurnConformance",
+          "group": "",
+          "symbol": "TurnConformance",
+          "source": "TurnConformance",
+          "methods": [
+            {
+              "name": "replay",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "run",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "runTurn",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "WireConformance",
+          "group": "",
+          "symbol": "WireConformance",
+          "source": "WireConformance",
+          "methods": [
+            {
+              "name": "toRequest",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
         }
       ],
       "modules": [
@@ -5939,6 +6394,7 @@
         "ContextRequest",
         "DelegatedStateReference",
         "DeviceAuthorization",
+        "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -5966,6 +6422,7 @@
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
+        "LoadConformance",
         "McpApprovalMode",
         "MemoryEntry",
         "MemoryStore",
@@ -6036,6 +6493,7 @@
         "TraceTime",
         "TrajectoryEvent",
         "TurnCommit",
+        "TurnConformance",
         "TurnEndPayload",
         "TurnEngineResult",
         "TurnEvent",
@@ -6046,7 +6504,8 @@
         "TurnSummary",
         "TurnTrace",
         "ValidationError",
-        "ValidationResult"
+        "ValidationResult",
+        "WireConformance"
       ]
     },
     {
@@ -6085,6 +6544,7 @@
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
+        "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -6117,6 +6577,7 @@
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
+        "LoadConformance",
         "McpApprovalMode",
         "McpTool",
         "MemoryEntry",
@@ -6198,6 +6659,7 @@
         "TraceTime",
         "TrajectoryEvent",
         "TurnCommit",
+        "TurnConformance",
         "TurnEndPayload",
         "TurnEngineResult",
         "TurnEvent",
@@ -6210,7 +6672,8 @@
         "UnionProperty",
         "UsageChunk",
         "ValidationError",
-        "ValidationResult"
+        "ValidationResult",
+        "WireConformance"
       ],
       "exports": [
         {
@@ -6225,6 +6688,13 @@
           "kind": "type",
           "group": "",
           "source": "._CheckpointStore",
+          "protocol": true
+        },
+        {
+          "name": "DiscoveryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "._DiscoveryConformance",
           "protocol": true
         },
         {
@@ -6253,6 +6723,13 @@
           "kind": "type",
           "group": "",
           "source": "._HostToolExecutor",
+          "protocol": true
+        },
+        {
+          "name": "LoadConformance",
+          "kind": "type",
+          "group": "",
+          "source": "._LoadConformance",
           "protocol": true
         },
         {
@@ -6288,6 +6765,20 @@
           "kind": "type",
           "group": "",
           "source": "._Renderer",
+          "protocol": true
+        },
+        {
+          "name": "TurnConformance",
+          "kind": "type",
+          "group": "",
+          "source": "._TurnConformance",
+          "protocol": true
+        },
+        {
+          "name": "WireConformance",
+          "kind": "type",
+          "group": "",
+          "source": "._WireConformance",
           "protocol": true
         },
         {
@@ -7645,6 +8136,38 @@
           ]
         },
         {
+          "name": "DiscoveryConformance",
+          "group": "",
+          "symbol": "DiscoveryConformance",
+          "source": "._DiscoveryConformance",
+          "methods": [
+            {
+              "name": "enrich",
+              "returns": "ModelInfo",
+              "params": {
+                "base": "ModelInfo"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "mapModel",
+              "returns": "ModelInfo",
+              "params": {
+                "raw": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -7790,6 +8313,26 @@
           ]
         },
         {
+          "name": "LoadConformance",
+          "group": "",
+          "symbol": "LoadConformance",
+          "source": "._LoadConformance",
+          "methods": [
+            {
+              "name": "load",
+              "returns": "Agent",
+              "params": {
+                "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "ModelLister",
           "group": "",
           "symbol": "ModelLister",
@@ -7917,20 +8460,89 @@
               "nonFatal": false
             }
           ]
+        },
+        {
+          "name": "TurnConformance",
+          "group": "",
+          "symbol": "TurnConformance",
+          "source": "._TurnConformance",
+          "methods": [
+            {
+              "name": "replay",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "run",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "runTurn",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "WireConformance",
+          "group": "",
+          "symbol": "WireConformance",
+          "source": "._WireConformance",
+          "methods": [
+            {
+              "name": "toRequest",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
         }
       ],
       "modules": [
         "._Agent",
         "._CheckpointStore",
+        "._DiscoveryConformance",
         "._EventJournalWriter",
         "._EventSink",
         "._Executor",
         "._HostToolExecutor",
+        "._LoadConformance",
         "._ModelLister",
         "._Parser",
         "._PermissionResolver",
         "._Processor",
         "._Renderer",
+        "._TurnConformance",
+        "._WireConformance",
         ".contracts",
         ".wire"
       ]
@@ -7970,6 +8582,7 @@
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
+        "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -8002,6 +8615,7 @@
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
+        "LoadConformance",
         "McpApprovalMode",
         "McpTool",
         "MemoryEntry",
@@ -8083,6 +8697,7 @@
         "TraceTime",
         "TrajectoryEvent",
         "TurnCommit",
+        "TurnConformance",
         "TurnEndPayload",
         "TurnEngineResult",
         "TurnEvent",
@@ -8095,7 +8710,8 @@
         "UnionProperty",
         "UsageChunk",
         "ValidationError",
-        "ValidationResult"
+        "ValidationResult",
+        "WireConformance"
       ],
       "exports": [
         {
@@ -8110,6 +8726,13 @@
           "kind": "type",
           "group": "",
           "source": "checkpoint_store",
+          "protocol": true
+        },
+        {
+          "name": "DiscoveryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "discovery_conformance",
           "protocol": true
         },
         {
@@ -8138,6 +8761,13 @@
           "kind": "type",
           "group": "",
           "source": "host_tool_executor",
+          "protocol": true
+        },
+        {
+          "name": "LoadConformance",
+          "kind": "type",
+          "group": "",
+          "source": "load_conformance",
           "protocol": true
         },
         {
@@ -8173,6 +8803,20 @@
           "kind": "type",
           "group": "",
           "source": "renderer",
+          "protocol": true
+        },
+        {
+          "name": "TurnConformance",
+          "kind": "type",
+          "group": "",
+          "source": "turn_conformance",
+          "protocol": true
+        },
+        {
+          "name": "WireConformance",
+          "kind": "type",
+          "group": "",
+          "source": "wire_conformance",
           "protocol": true
         },
         {
@@ -9530,6 +10174,38 @@
           ]
         },
         {
+          "name": "DiscoveryConformance",
+          "group": "",
+          "symbol": "DiscoveryConformance",
+          "source": "discovery_conformance",
+          "methods": [
+            {
+              "name": "enrich",
+              "returns": "ModelInfo",
+              "params": {
+                "base": "ModelInfo"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "mapModel",
+              "returns": "ModelInfo",
+              "params": {
+                "raw": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -9675,6 +10351,26 @@
           ]
         },
         {
+          "name": "LoadConformance",
+          "group": "",
+          "symbol": "LoadConformance",
+          "source": "load_conformance",
+          "methods": [
+            {
+              "name": "load",
+              "returns": "Agent",
+              "params": {
+                "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "ModelLister",
           "group": "",
           "symbol": "ModelLister",
@@ -9802,6 +10498,71 @@
               "nonFatal": false
             }
           ]
+        },
+        {
+          "name": "TurnConformance",
+          "group": "",
+          "symbol": "TurnConformance",
+          "source": "turn_conformance",
+          "methods": [
+            {
+              "name": "replay",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "run",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "runTurn",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "WireConformance",
+          "group": "",
+          "symbol": "WireConformance",
+          "source": "wire_conformance",
+          "methods": [
+            {
+              "name": "toRequest",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
         }
       ],
       "modules": [
@@ -9809,16 +10570,20 @@
         "checkpoint_store",
         "context",
         "contracts",
+        "discovery_conformance",
         "event_journal_writer",
         "event_sink",
         "executor",
         "host_tool_executor",
+        "load_conformance",
         "model_lister",
         "parser",
         "permission_resolver",
         "processor",
         "renderer",
-        "wire"
+        "turn_conformance",
+        "wire",
+        "wire_conformance"
       ]
     },
     {
@@ -9857,6 +10622,7 @@
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
+        "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
         "EngineEvent",
@@ -9889,6 +10655,7 @@
         "InvokerError",
         "LlmCompletePayload",
         "LlmStartPayload",
+        "LoadConformance",
         "McpApprovalMode",
         "McpTool",
         "MemoryEntry",
@@ -9970,6 +10737,7 @@
         "TraceTime",
         "TrajectoryEvent",
         "TurnCommit",
+        "TurnConformance",
         "TurnEndPayload",
         "TurnEngineResult",
         "TurnEvent",
@@ -9982,7 +10750,8 @@
         "UnionProperty",
         "UsageChunk",
         "ValidationError",
-        "ValidationResult"
+        "ValidationResult",
+        "WireConformance"
       ],
       "exports": [
         {
@@ -9997,6 +10766,13 @@
           "kind": "type",
           "group": "",
           "source": "./checkpoint-store",
+          "protocol": true
+        },
+        {
+          "name": "DiscoveryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "./discovery-conformance",
           "protocol": true
         },
         {
@@ -10025,6 +10801,13 @@
           "kind": "type",
           "group": "",
           "source": "./host-tool-executor",
+          "protocol": true
+        },
+        {
+          "name": "LoadConformance",
+          "kind": "type",
+          "group": "",
+          "source": "./load-conformance",
           "protocol": true
         },
         {
@@ -10060,6 +10843,20 @@
           "kind": "type",
           "group": "",
           "source": "./renderer",
+          "protocol": true
+        },
+        {
+          "name": "TurnConformance",
+          "kind": "type",
+          "group": "",
+          "source": "./turn-conformance",
+          "protocol": true
+        },
+        {
+          "name": "WireConformance",
+          "kind": "type",
+          "group": "",
+          "source": "./wire-conformance",
           "protocol": true
         },
         {
@@ -11417,6 +12214,38 @@
           ]
         },
         {
+          "name": "DiscoveryConformance",
+          "group": "",
+          "symbol": "DiscoveryConformance",
+          "source": "./discovery-conformance",
+          "methods": [
+            {
+              "name": "enrich",
+              "returns": "ModelInfo",
+              "params": {
+                "base": "ModelInfo"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "mapModel",
+              "returns": "ModelInfo",
+              "params": {
+                "raw": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -11562,6 +12391,26 @@
           ]
         },
         {
+          "name": "LoadConformance",
+          "group": "",
+          "symbol": "LoadConformance",
+          "source": "./load-conformance",
+          "methods": [
+            {
+              "name": "load",
+              "returns": "Agent",
+              "params": {
+                "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "ModelLister",
           "group": "",
           "symbol": "ModelLister",
@@ -11689,6 +12538,71 @@
               "nonFatal": false
             }
           ]
+        },
+        {
+          "name": "TurnConformance",
+          "group": "",
+          "symbol": "TurnConformance",
+          "source": "./turn-conformance",
+          "methods": [
+            {
+              "name": "replay",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "run",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "runTurn",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "WireConformance",
+          "group": "",
+          "symbol": "WireConformance",
+          "source": "./wire-conformance",
+          "methods": [
+            {
+              "name": "toRequest",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
         }
       ],
       "modules": [
@@ -11807,15 +12721,19 @@
         "./contracts/turn-trace",
         "./contracts/validation-error",
         "./contracts/validation-result",
+        "./discovery-conformance",
         "./event-journal-writer",
         "./event-sink",
         "./executor",
         "./host-tool-executor",
+        "./load-conformance",
         "./model-lister",
         "./parser",
         "./permission-resolver",
         "./processor",
         "./renderer",
+        "./turn-conformance",
+        "./wire-conformance",
         "./wire/anthropic-image-block",
         "./wire/anthropic-image-source",
         "./wire/anthropic-messages-request",

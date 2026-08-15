@@ -13,6 +13,14 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "DiscoveryConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "DiscoveryConformance.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "csharp",
       "group": "",
@@ -42,6 +50,14 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "HostToolExecutor.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "LoadConformance.cs",
       "seamKind": "protocol-adapter"
     },
     {
@@ -85,11 +101,35 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "TurnConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "TurnConformance.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "WireConformance.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "CheckpointStore",
       "target": "go",
       "group": "",
       "symbol": "CheckpointStore",
       "generatedSource": "checkpoint_store.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "discovery_conformance.go",
       "seamKind": "protocol-adapter"
     },
     {
@@ -122,6 +162,14 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "host_tool_executor.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "load_conformance.go",
       "seamKind": "protocol-adapter"
     },
     {
@@ -165,11 +213,35 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "TurnConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "turn_conformance.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "wire_conformance.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "CheckpointStore",
       "target": "markdown",
       "group": "",
       "symbol": "CheckpointStore",
       "generatedSource": "CheckpointStore",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "DiscoveryConformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -202,6 +274,14 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "HostToolExecutor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "LoadConformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -245,11 +325,35 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "TurnConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "TurnConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "WireConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "CheckpointStore",
       "target": "python",
       "group": "",
       "symbol": "CheckpointStore",
       "generatedSource": "._CheckpointStore",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "._DiscoveryConformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -282,6 +386,14 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "._HostToolExecutor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "._LoadConformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -325,11 +437,35 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "TurnConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "._TurnConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "._WireConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "CheckpointStore",
       "target": "rust",
       "group": "",
       "symbol": "CheckpointStore",
       "generatedSource": "checkpoint_store",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "discovery_conformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -362,6 +498,14 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "host_tool_executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "load_conformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -405,11 +549,35 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "TurnConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "turn_conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "wire_conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "CheckpointStore",
       "target": "typescript",
       "group": "",
       "symbol": "CheckpointStore",
       "generatedSource": "./checkpoint-store",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "./discovery-conformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -442,6 +610,14 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "./host-tool-executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "./load-conformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -482,6 +658,22 @@
       "group": "",
       "symbol": "Renderer",
       "generatedSource": "./renderer",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "TurnConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "./turn-conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "./wire-conformance",
       "seamKind": "protocol-adapter"
     }
   ]

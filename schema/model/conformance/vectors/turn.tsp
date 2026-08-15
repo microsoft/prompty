@@ -1,0 +1,259 @@
+import "@typra/emitter";
+
+namespace Prompty.Conformance.Vectors;
+
+// Behavior vectors migrated from spec/vectors/engine/turn_vectors.json — bound to TurnRunner.runTurn.
+// Authored as a JSON-STRING vector set (Typra 0.7.0+ affordance): a triple-quoted
+// constant Typra parses into vector entries, so raw provider/agent payloads with
+// keyword keys (e.g. "model") are first-class. @vector inputs are opaque (unknown),
+// JSON-compared conformance evidence emitted into the cross-runtime vectors.json.
+const TurnVectors = """
+  [
+    {
+      "name": "final_output",
+      "stage": "turn",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Hello"
+          }
+        ],
+        "model": [
+          {
+            "output": "Hello back"
+          }
+        ]
+      },
+      "expected": {
+        "status": "success",
+        "output": "Hello back",
+        "iterations": 1,
+        "snapshots": 1,
+        "snapshotStablePrefixes": [
+          1
+        ],
+        "toolResults": 0,
+        "eventKinds": [
+          "turn_started",
+          "context_prepared",
+          "model_invocation_started",
+          "model_invocation_completed",
+          "checkpoint_created",
+          "turn_committed",
+          "post_commit_started",
+          "post_commit_completed"
+        ]
+      }
+    },
+    {
+      "name": "ordered_tool_round",
+      "stage": "turn",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Add two values"
+          }
+        ],
+        "model": [
+          {
+            "assistant": "I will use the tools.",
+            "tools": [
+              {
+                "id": "call-a",
+                "name": "echo",
+                "arguments": {
+                  "value": "A"
+                }
+              },
+              {
+                "id": "call-b",
+                "name": "echo",
+                "arguments": {
+                  "value": "B"
+                }
+              }
+            ]
+          },
+          {
+            "output": "A then B"
+          }
+        ],
+        "toolOutputs": {
+          "call-a": "A",
+          "call-b": "B"
+        }
+      },
+      "expected": {
+        "status": "success",
+        "output": "A then B",
+        "iterations": 2,
+        "snapshots": 2,
+        "snapshotStablePrefixes": [
+          1,
+          1
+        ],
+        "toolResults": 2,
+        "toolResultOrder": [
+          "call-a",
+          "call-b"
+        ],
+        "eventKinds": [
+          "turn_started",
+          "context_prepared",
+          "model_invocation_started",
+          "model_invocation_completed",
+          "checkpoint_created",
+          "permission_requested",
+          "permission_resolved",
+          "tool_execution_started",
+          "tool_execution_completed",
+          "checkpoint_created",
+          "permission_requested",
+          "permission_resolved",
+          "tool_execution_started",
+          "tool_execution_completed",
+          "checkpoint_created",
+          "tool_result_committed",
+          "tool_result_committed",
+          "conversation_updated",
+          "checkpoint_created",
+          "context_prepared",
+          "model_invocation_started",
+          "model_invocation_completed",
+          "checkpoint_created",
+          "turn_committed",
+          "post_commit_started",
+          "post_commit_completed"
+        ]
+      }
+    },
+    {
+      "name": "permission_denial_is_model_visible",
+      "stage": "turn",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Read the protected resource"
+          }
+        ],
+        "model": [
+          {
+            "tools": [
+              {
+                "id": "call-denied",
+                "name": "protected",
+                "arguments": {}
+              }
+            ]
+          },
+          {
+            "output": "Permission was denied"
+          }
+        ],
+        "denyTools": [
+          "protected"
+        ]
+      },
+      "expected": {
+        "status": "success",
+        "output": "Permission was denied",
+        "iterations": 2,
+        "snapshots": 2,
+        "snapshotStablePrefixes": [
+          1,
+          1
+        ],
+        "toolResults": 1,
+        "toolResultOrder": [
+          "call-denied"
+        ]
+      }
+    },
+    {
+      "name": "delegated_provider_state",
+      "stage": "turn",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Continue a provider-managed response"
+          }
+        ],
+        "model": [
+          {
+            "tools": [
+              {
+                "id": "call-state",
+                "name": "echo",
+                "arguments": {
+                  "value": "state"
+                }
+              }
+            ],
+            "nextPortability": "delegated",
+            "delegatedState": [
+              {
+                "provider": "openai",
+                "kind": "previous_response",
+                "id": "resp_123"
+              }
+            ]
+          },
+          {
+            "output": "continued"
+          }
+        ],
+        "toolOutputs": {
+          "call-state": "state"
+        }
+      },
+      "expected": {
+        "status": "success",
+        "output": "continued",
+        "iterations": 2,
+        "snapshots": 2,
+        "snapshotStablePrefixes": [
+          1,
+          1
+        ],
+        "snapshotPortability": [
+          "portable",
+          "delegated"
+        ],
+        "toolResults": 1,
+        "toolResultOrder": [
+          "call-state"
+        ],
+        "commitPortability": "delegated",
+        "delegatedState": 1
+      }
+    },
+    {
+      "name": "cancel_before_context",
+      "stage": "turn",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "Do not invoke the model"
+          }
+        ],
+        "model": [],
+        "cancelBeforeRun": true
+      },
+      "expected": {
+        "status": "cancelled",
+        "iterations": 0,
+        "snapshots": 0,
+        "toolResults": 0,
+        "eventKinds": [
+          "turn_started",
+          "turn_cancelled"
+        ]
+      }
+    }
+  ]
+  """;

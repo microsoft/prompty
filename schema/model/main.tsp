@@ -74,6 +74,15 @@ import "./operations/pipeline/executor.tsp";
 import "./operations/pipeline/processor.tsp";
 import "./operations/pipeline/harness.tsp";
 
+// Conformance-only seams hosting the remaining pipeline-stage behavior vectors.
+// These carry @vector evidence into the cross-runtime vectors.json and are not
+// implemented by any runtime; named/namespaced distinctly so they never collide
+// with hand-written runtime contracts (e.g. Go's ReferenceTurnRunner).
+import "./conformance/seams/load-conformance.tsp";
+import "./conformance/seams/wire-conformance.tsp";
+import "./conformance/seams/discovery-conformance.tsp";
+import "./conformance/seams/turn-conformance.tsp";
+
 // Behavior vectors (conformance evidence attached to callable operations)
 import "./conformance/vectors/render.tsp";
 import "./conformance/vectors/parse.tsp";
@@ -81,6 +90,16 @@ import "./conformance/vectors/parse.tsp";
 // so they can carry populated agent.model + raw provider wire payloads (both
 // contain a "model" key, which the #{} object-literal grammar forbids).
 import "./conformance/vectors/process.tsp";
+// Remaining pipeline stages, also authored as JSON-STRING vector sets and bound
+// to dedicated conformance seams (LoadConformance, WireConformance,
+// TurnConformance, DiscoveryConformance) under Prompty.Conformance.Seams.
+import "./conformance/vectors/load.tsp";
+import "./conformance/vectors/wire.tsp";
+import "./conformance/vectors/agent.tsp";
+import "./conformance/vectors/discovery.tsp";
+import "./conformance/vectors/enrichment.tsp";
+import "./conformance/vectors/turn.tsp";
+import "./conformance/vectors/replay.tsp";
 
 // Events
 import "./contracts/events/payloads.tsp";

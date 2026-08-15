@@ -1,0 +1,145 @@
+import "@typra/emitter";
+
+namespace Prompty.Conformance.Vectors;
+
+// Behavior vectors migrated from spec/vectors/harness/replay_vectors.json — bound to TurnRunner.replay.
+// Authored as a JSON-STRING vector set (Typra 0.7.0+ affordance): a triple-quoted
+// constant Typra parses into vector entries, so raw provider/agent payloads with
+// keyword keys (e.g. "model") are first-class. @vector inputs are opaque (unknown),
+// JSON-compared conformance evidence emitted into the cross-runtime vectors.json.
+const ReplayVectors = """
+  [
+    {
+      "name": "no_tool",
+      "stage": "replay",
+      "input": {
+        "clock": "2026-06-28T00:00:00Z",
+        "sessionId": "session-1",
+        "turnId": "turn-1",
+        "inputs": {
+          "name": "Ada"
+        },
+        "maxIterations": 3
+      },
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:turn_end:1:success",
+        "session:session_end:session-1:turn-1:success",
+        "summary:session-1:success:turns=1:checkpoints=1"
+      ]
+    },
+    {
+      "name": "tool_success",
+      "stage": "replay",
+      "input": {
+        "clock": "2026-06-28T00:00:00Z",
+        "sessionId": "session-1",
+        "turnId": "turn-1"
+      },
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:permission_requested:0:exec-1-permission",
+        "turn:permission_completed:0:true",
+        "turn:tool_execution_start:0:add",
+        "turn:tool_execution_complete:0:add:true",
+        "turn:tool_result:0:add:true",
+        "turn:messages_updated:0",
+        "turn:llm_start:1",
+        "turn:llm_complete:1",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:turn_end:2:success",
+        "session:session_end:session-1:turn-1:success",
+        "summary:session-1:success:turns=1:checkpoints=2"
+      ]
+    },
+    {
+      "name": "permission_denied",
+      "stage": "replay",
+      "input": {
+        "clock": "2026-06-28T00:00:00Z",
+        "sessionId": "session-1",
+        "turnId": "turn-1"
+      },
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:permission_requested:0:exec-1-permission",
+        "turn:permission_completed:0:false",
+        "turn:tool_result:0:add:false:permission_denied",
+        "turn:messages_updated:0",
+        "turn:llm_start:1",
+        "turn:llm_complete:1",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:turn_end:2:success",
+        "session:session_end:session-1:turn-1:success",
+        "summary:session-1:success:turns=1:checkpoints=2"
+      ]
+    },
+    {
+      "name": "tool_failure",
+      "stage": "replay",
+      "input": {
+        "clock": "2026-06-28T00:00:00Z",
+        "sessionId": "session-1",
+        "turnId": "turn-1"
+      },
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:permission_requested:0:exec-1-permission",
+        "turn:permission_completed:0:true",
+        "turn:tool_execution_start:0:fail",
+        "turn:tool_execution_complete:0:fail:false:exception",
+        "turn:tool_result:0:fail:false:exception",
+        "turn:messages_updated:0",
+        "turn:llm_start:1",
+        "turn:llm_complete:1",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:turn_end:2:success",
+        "session:session_end:session-1:turn-1:success",
+        "summary:session-1:success:turns=1:checkpoints=2"
+      ]
+    },
+    {
+      "name": "max_iterations",
+      "stage": "replay",
+      "input": {
+        "clock": "2026-06-28T00:00:00Z",
+        "sessionId": "session-1",
+        "turnId": "turn-1",
+        "maxIterations": 1
+      },
+      "expected": [
+        "session:session_start:session-1:turn-1",
+        "turn:turn_start:0",
+        "turn:llm_start:0",
+        "turn:llm_complete:0",
+        "session:checkpoint_created:session-1:turn-1",
+        "turn:permission_requested:0:exec-1-permission",
+        "turn:permission_completed:0:true",
+        "turn:tool_execution_start:0:add",
+        "turn:tool_execution_complete:0:add:true",
+        "turn:tool_result:0:add:true",
+        "turn:messages_updated:0",
+        "turn:error:1:max_iterations",
+        "turn:turn_end:1:error",
+        "session:session_end:session-1:turn-1:error",
+        "summary:session-1:error:turns=1:checkpoints=1"
+      ]
+    }
+  ]
+  """;

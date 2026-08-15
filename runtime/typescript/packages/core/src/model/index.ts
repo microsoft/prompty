@@ -5,15 +5,19 @@
 export { LoadContext, SaveContext } from "./context";
 export { Agent } from "./agent";
 export type { CheckpointStore } from "./checkpoint-store";
+export type { DiscoveryConformance } from "./discovery-conformance";
 export type { EventJournalWriter } from "./event-journal-writer";
 export type { EventSink } from "./event-sink";
 export type { Executor } from "./executor";
 export type { HostToolExecutor } from "./host-tool-executor";
+export type { LoadConformance } from "./load-conformance";
 export type { ModelLister } from "./model-lister";
 export type { Parser } from "./parser";
 export type { PermissionResolver } from "./permission-resolver";
 export type { Processor } from "./processor";
 export type { Renderer } from "./renderer";
+export type { TurnConformance } from "./turn-conformance";
+export type { WireConformance } from "./wire-conformance";
 
 export {
   Connection,

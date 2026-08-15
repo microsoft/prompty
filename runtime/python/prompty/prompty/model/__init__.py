@@ -7,15 +7,19 @@
 from ._Agent import Agent
 from ._CheckpointStore import CheckpointStore
 from ._context import LoadContext, SaveContext
+from ._DiscoveryConformance import DiscoveryConformance
 from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
 from ._HostToolExecutor import HostToolExecutor
+from ._LoadConformance import LoadConformance
 from ._ModelLister import ModelLister
 from ._Parser import Parser
 from ._PermissionResolver import PermissionResolver
 from ._Processor import Processor
 from ._Renderer import Renderer
+from ._TurnConformance import TurnConformance
+from ._WireConformance import WireConformance
 from .contracts.connectivity import (
     AnonymousConnection,
     ApiKeyConnection,
@@ -344,13 +348,17 @@ __all__ = [
     "AnthropicUsage",
     "AnthropicMessagesResponse",
     "CheckpointStore",
+    "DiscoveryConformance",
     "EventJournalWriter",
     "EventSink",
     "Executor",
     "HostToolExecutor",
+    "LoadConformance",
     "ModelLister",
     "Parser",
     "PermissionResolver",
     "Processor",
     "Renderer",
+    "TurnConformance",
+    "WireConformance",
 ]

@@ -1545,6 +1545,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/DiscoveryConformance.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/EventJournalWriter.cs",
       "marker": true
     },
@@ -1561,6 +1566,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/HostToolExecutor.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/LoadConformance.cs",
       "marker": true
     },
     {
@@ -1586,6 +1596,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Renderer.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/TurnConformance.cs",
       "marker": true
     },
     {
@@ -1641,6 +1656,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Wire/Anthropic/AnthropicWireMessage.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/WireConformance.cs",
       "marker": true
     },
     {
@@ -1930,6 +1950,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/discovery_conformance.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/done_event_payload_test.go",
       "marker": true
     },
@@ -2201,6 +2226,11 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/llm_start_payload.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/load_conformance.go",
       "marker": true
     },
     {
@@ -2935,6 +2965,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/turn_conformance.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/turn_end_payload_test.go",
       "marker": true
     },
@@ -3054,6 +3089,11 @@
       "marker": true
     },
     {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/wire_conformance.go",
+      "marker": true
+    },
+    {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/__init__.py",
       "marker": true
@@ -3075,6 +3115,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_DiscoveryConformance.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_EventJournalWriter.py",
       "marker": true
     },
@@ -3091,6 +3136,11 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_HostToolExecutor.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_LoadConformance.py",
       "marker": true
     },
     {
@@ -3116,6 +3166,16 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_Renderer.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_TurnConformance.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_WireConformance.py",
       "marker": true
     },
     {
@@ -5205,6 +5265,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/discovery_conformance.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/event_journal_writer.rs",
       "marker": true
     },
@@ -5221,6 +5286,11 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/host_tool_executor.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/load_conformance.rs",
       "marker": true
     },
     {
@@ -5251,6 +5321,16 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/renderer.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/turn_conformance.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/wire_conformance.rs",
       "marker": true
     },
     {
@@ -6660,6 +6740,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/discovery-conformance.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/event-journal-writer.ts",
       "marker": true
     },
@@ -6685,6 +6770,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/load-conformance.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/model-lister.ts",
       "marker": true
     },
@@ -6706,6 +6796,16 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/renderer.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/turn-conformance.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/wire-conformance.ts",
       "marker": true
     },
     {
@@ -7660,6 +7760,11 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/DiscoveryConformance.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/DoneEventPayload.md",
       "marker": true
     },
@@ -7821,6 +7926,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/LlmStartPayload.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/LoadConformance.md",
       "marker": true
     },
     {
@@ -8230,6 +8340,11 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/TurnConformance.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/TurnEndPayload.md",
       "marker": true
     },
@@ -8291,6 +8406,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ValidationResult.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/WireConformance.md",
       "marker": true
     },
     {

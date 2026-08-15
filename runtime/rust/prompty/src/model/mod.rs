@@ -12,6 +12,9 @@ pub use agent::*;
 pub mod checkpoint_store;
 pub use checkpoint_store::*;
 
+pub mod discovery_conformance;
+pub use discovery_conformance::*;
+
 pub mod event_journal_writer;
 pub use event_journal_writer::*;
 
@@ -23,6 +26,9 @@ pub use executor::*;
 
 pub mod host_tool_executor;
 pub use host_tool_executor::*;
+
+pub mod load_conformance;
+pub use load_conformance::*;
 
 pub mod model_lister;
 pub use model_lister::*;
@@ -38,6 +44,12 @@ pub use processor::*;
 
 pub mod renderer;
 pub use renderer::*;
+
+pub mod turn_conformance;
+pub use turn_conformance::*;
+
+pub mod wire_conformance;
+pub use wire_conformance::*;
 
 pub mod contracts;
 pub use contracts::*;
