@@ -22,7 +22,6 @@ namespace Prompty.OpenAI.Tests;
 public class SpecVectorProcessTests
 {
     private static readonly string SpecDir = FindSpecDir();
-    private static readonly string VectorsDir = Path.Combine(SpecDir, "vectors");
     private static readonly JsonElement[] Vectors = LoadVectors();
 
     private static string FindSpecDir()
@@ -40,8 +39,20 @@ public class SpecVectorProcessTests
 
     private static JsonElement[] LoadVectors()
     {
-        var path = Path.Combine(VectorsDir, "process", "process_vectors.json");
-        return JsonSerializer.Deserialize<JsonElement[]>(File.ReadAllText(path)) ?? [];
+        var path = Path.Combine(
+            Path.GetDirectoryName(SpecDir)!,
+            "schema",
+            "tsp-output",
+            ".typra-generated",
+            "vectors.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var result = new List<JsonElement>();
+        foreach (var env in doc.RootElement.GetProperty("vectors").EnumerateArray())
+        {
+            if (env.GetProperty("operation").GetString() == "process")
+                result.Add(env.GetProperty("vector").Clone());
+        }
+        return [.. result];
     }
 
     // -----------------------------------------------------------------------

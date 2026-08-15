@@ -53,8 +53,20 @@ public class SpecVectorAgentTests : IDisposable
 
     private static JsonElement[] LoadVectors()
     {
-        var path = Path.Combine(SpecDir, "vectors", "agent", "agent_vectors.json");
-        return JsonSerializer.Deserialize<JsonElement[]>(File.ReadAllText(path)) ?? [];
+        var path = Path.Combine(
+            Path.GetDirectoryName(SpecDir)!,
+            "schema",
+            "tsp-output",
+            ".typra-generated",
+            "vectors.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var result = new List<JsonElement>();
+        foreach (var env in doc.RootElement.GetProperty("vectors").EnumerateArray())
+        {
+            if (env.GetProperty("operation").GetString() == "run")
+                result.Add(env.GetProperty("vector").Clone());
+        }
+        return [.. result];
     }
 
     // -----------------------------------------------------------------------

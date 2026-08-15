@@ -21,7 +21,6 @@ public class SpecVectorTests
 {
     // Relative path from test project bin to spec dir
     private static readonly string SpecDir = FindSpecDir();
-    private static readonly string VectorsDir = Path.Combine(SpecDir, "vectors");
     private static readonly string FixturesDir = Path.Combine(SpecDir, "fixtures");
 
     private static string FindSpecDir()
@@ -42,9 +41,23 @@ public class SpecVectorTests
 
     private static JsonElement[] LoadVectors(string stage)
     {
-        var path = Path.Combine(VectorsDir, stage, $"{stage}_vectors.json");
-        var json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<JsonElement[]>(json) ?? [];
+        // All conformance vectors are emitted into a single generated file; each
+        // envelope carries a stable `operation` and the payload under `vector`.
+        // The render/parse/load stage names map 1:1 to their operation names.
+        var path = Path.Combine(
+            Path.GetDirectoryName(SpecDir)!,
+            "schema",
+            "tsp-output",
+            ".typra-generated",
+            "vectors.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var result = new List<JsonElement>();
+        foreach (var env in doc.RootElement.GetProperty("vectors").EnumerateArray())
+        {
+            if (env.GetProperty("operation").GetString() == stage)
+                result.Add(env.GetProperty("vector").Clone());
+        }
+        return [.. result];
     }
 
     // =========================================================================

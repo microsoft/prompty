@@ -413,16 +413,22 @@ public class TurnRunnerTests
     {
         public static ReplayVectors Load()
         {
-            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "spec", "vectors", "harness", "replay_vectors.json"));
+            // Replay scenarios are emitted under the `replay` operation; each vector's
+            // `input` carries the journal-level clock/sessionId/turnId plus per-scenario
+            // inputs, so the file-level fields are hoisted from the first scenario.
+            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "schema", "tsp-output", ".typra-generated", "vectors.json"));
             var document = JsonDocument.Parse(File.ReadAllText(path));
-            var root = document.RootElement;
-            Assert.Equal(1, root.GetProperty("version").GetInt32());
+            var items = document.RootElement.GetProperty("vectors").EnumerateArray()
+                .Where(e => e.GetProperty("operation").GetString() == "replay")
+                .Select(e => e.GetProperty("vector"))
+                .ToList();
+            var firstInput = items[0].GetProperty("input");
             return new ReplayVectors(
-                root.GetProperty("version").GetInt32(),
-                root.GetProperty("clock").GetString()!,
-                root.GetProperty("sessionId").GetString()!,
-                root.GetProperty("turnId").GetString()!,
-                root.GetProperty("scenarios").EnumerateArray().Select(ReplayScenario.Load).ToList());
+                1,
+                firstInput.GetProperty("clock").GetString()!,
+                firstInput.GetProperty("sessionId").GetString()!,
+                firstInput.GetProperty("turnId").GetString()!,
+                items.Select(ReplayScenario.Load).ToList());
         }
     }
 
@@ -432,13 +438,14 @@ public class TurnRunnerTests
         int? MaxIterations,
         string[] Expected)
     {
-        public static ReplayScenario Load(JsonElement element)
+        public static ReplayScenario Load(JsonElement vector)
         {
+            var input = vector.GetProperty("input");
             return new ReplayScenario(
-                element.GetProperty("name").GetString()!,
-                element.TryGetProperty("inputs", out var inputs) ? ToDictionary(inputs) : null,
-                element.TryGetProperty("maxIterations", out var maxIterations) ? maxIterations.GetInt32() : null,
-                element.GetProperty("expected").EnumerateArray().Select(item => item.GetString()!).ToArray());
+                vector.GetProperty("name").GetString()!,
+                input.TryGetProperty("inputs", out var inputs) ? ToDictionary(inputs) : null,
+                input.TryGetProperty("maxIterations", out var maxIterations) ? maxIterations.GetInt32() : null,
+                vector.GetProperty("expected").EnumerateArray().Select(item => item.GetString()!).ToArray());
         }
     }
 
