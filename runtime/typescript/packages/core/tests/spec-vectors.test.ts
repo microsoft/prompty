@@ -1,7 +1,8 @@
 /**
  * Spec Vector Validation Tests
  *
- * Loads the 94 canonical spec test vectors from spec/vectors/ and validates
+ * Loads the canonical conformance vectors emitted by the TypeSpec schema
+ * (schema/tsp-output/.typra-generated/vectors.json) and validates
  * that the TypeScript runtime produces matching results.
  *
  * Vector sources:
@@ -70,12 +71,32 @@ import {
 // ---------------------------------------------------------------------------
 
 const SPEC_DIR = resolve(import.meta.dirname, "../../../../../spec");
-const VECTORS_DIR = join(SPEC_DIR, "vectors");
 const FIXTURES_DIR = join(SPEC_DIR, "fixtures");
 
+// Conformance vectors are owned by the TypeSpec schema and emitted by Typra into a
+// single cross-runtime source of truth. Each envelope is
+// `{contract, operation, params, returns, vector}`; the per-stage payload lives on
+// `vector` and is selected by the stable `operation` name (not `contract`, which is
+// the host interface name).
+const GENERATED_VECTORS = resolve(
+  import.meta.dirname,
+  "../../../../../schema/tsp-output/.typra-generated/vectors.json",
+);
+
+// Pipeline stage -> emitted operation name (the seam op that carries the @vector set).
+const STAGE_TO_OPERATION: Record<string, string> = {
+  load: "load",
+  render: "render",
+  parse: "parse",
+  wire: "toRequest",
+  process: "process",
+  agent: "run",
+};
+
 function loadVectors(stage: string): any[] {
-  const filePath = join(VECTORS_DIR, stage, `${stage}_vectors.json`);
-  return JSON.parse(readFileSync(filePath, "utf-8"));
+  const operation = STAGE_TO_OPERATION[stage];
+  const document = JSON.parse(readFileSync(GENERATED_VECTORS, "utf-8"));
+  return document.vectors.filter((e: any) => e.operation === operation).map((e: any) => e.vector);
 }
 
 // ---------------------------------------------------------------------------

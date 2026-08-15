@@ -11,6 +11,7 @@ const ProcessVectors = """
   [
     {
       "name": "chat_text_content",
+      "description": "Basic chat completion with text content — extracts the message string",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -45,6 +46,7 @@ const ProcessVectors = """
     },
     {
       "name": "chat_tool_calls",
+      "description": "Chat completion with a single tool call — extracts ToolCall list",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -95,6 +97,7 @@ const ProcessVectors = """
     },
     {
       "name": "chat_multiple_tool_calls",
+      "description": "Chat completion with two parallel tool calls — extracts both ToolCall objects",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -158,6 +161,7 @@ const ProcessVectors = """
     },
     {
       "name": "chat_structured_output",
+      "description": "Chat completion with structured output (has_outputs=true) — JSON-parses the content string into an object",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -195,6 +199,7 @@ const ProcessVectors = """
     },
     {
       "name": "chat_structured_invalid_json",
+      "description": "Chat completion with has_outputs=true but content is not valid JSON — falls back to raw string gracefully",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -229,6 +234,7 @@ const ProcessVectors = """
     },
     {
       "name": "chat_refusal",
+      "description": "Chat completion where the model refused the request — returns the refusal string",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -263,6 +269,7 @@ const ProcessVectors = """
     },
     {
       "name": "chat_null_content",
+      "description": "Chat completion with null content and no tool calls — returns empty string",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -297,6 +304,7 @@ const ProcessVectors = """
     },
     {
       "name": "embedding_single",
+      "description": "Single embedding response — extracts the vector directly",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -332,6 +340,7 @@ const ProcessVectors = """
     },
     {
       "name": "embedding_batch",
+      "description": "Batch embedding response with 3 inputs — returns list of 3 vectors",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -391,6 +400,7 @@ const ProcessVectors = """
     },
     {
       "name": "image_url",
+      "description": "Image generation response with URL — extracts the image URL",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -412,6 +422,7 @@ const ProcessVectors = """
     },
     {
       "name": "image_b64",
+      "description": "Image generation response with base64 data — extracts the b64_json string",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -434,6 +445,7 @@ const ProcessVectors = """
     },
     {
       "name": "image_revised_prompt",
+      "description": "Image generation response with revised_prompt — primary result is the URL, revised_prompt is metadata",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -455,6 +467,7 @@ const ProcessVectors = """
     },
     {
       "name": "responses_text",
+      "description": "Responses API with plain text output — extracts output_text",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -495,6 +508,7 @@ const ProcessVectors = """
     },
     {
       "name": "responses_tool_calls",
+      "description": "Responses API with function_call output items — extracts ToolCall list with call_id preserved",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -536,6 +550,7 @@ const ProcessVectors = """
     },
     {
       "name": "responses_structured",
+      "description": "Responses API with structured output (has_outputs=true) — JSON-parses output_text into object",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -578,6 +593,7 @@ const ProcessVectors = """
     },
     {
       "name": "anthropic_text",
+      "description": "Anthropic message response with a single text content block — extracts the text",
       "stage": "process",
       "input": {
         "provider": "anthropic",
@@ -608,6 +624,7 @@ const ProcessVectors = """
     },
     {
       "name": "anthropic_tool_use",
+      "description": "Anthropic message response with tool_use content block — extracts ToolCall with JSON-stringified input",
       "stage": "process",
       "input": {
         "provider": "anthropic",
@@ -648,6 +665,7 @@ const ProcessVectors = """
     },
     {
       "name": "anthropic_multiple_text_blocks",
+      "description": "Anthropic message response with two text content blocks — concatenates them",
       "stage": "process",
       "input": {
         "provider": "anthropic",
@@ -682,6 +700,7 @@ const ProcessVectors = """
     },
     {
       "name": "chat_empty_content",
+      "description": "Chat completion with empty string content returns empty string",
       "stage": "process",
       "input": {
         "provider": "openai",
@@ -716,6 +735,7 @@ const ProcessVectors = """
     },
     {
       "name": "anthropic_structured_output",
+      "description": "Anthropic text response JSON-parsed when has_outputs is true",
       "stage": "process",
       "input": {
         "provider": "anthropic",
@@ -749,6 +769,7 @@ const ProcessVectors = """
     },
     {
       "name": "responses_empty_output",
+      "description": "Responses API with output_text empty returns empty string",
       "stage": "process",
       "input": {
         "provider": "openai",

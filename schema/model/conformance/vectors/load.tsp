@@ -11,6 +11,7 @@ const LoadVectors = """
   [
     {
       "name": "basic_load",
+      "description": "Load basic.prompty with env var resolution and verify all PromptAgent fields",
       "stage": "load",
       "input": {
         "fixture": "basic.prompty",
@@ -72,6 +73,7 @@ const LoadVectors = """
     },
     {
       "name": "minimal_load",
+      "description": "Load minimal.prompty with model shorthand and bare-minimum frontmatter",
       "stage": "load",
       "input": {
         "fixture": "minimal.prompty"
@@ -90,6 +92,7 @@ const LoadVectors = """
     },
     {
       "name": "model_shorthand",
+      "description": "String shorthand 'model: gpt-4o' expands to a Model object with id set",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -107,6 +110,7 @@ const LoadVectors = """
     },
     {
       "name": "env_resolution",
+      "description": "\${env:MY_VAR} resolves to the environment variable value when set",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -134,6 +138,7 @@ const LoadVectors = """
     },
     {
       "name": "env_default",
+      "description": "\${env:MISSING_VAR:fallback_value} resolves to the default when the var is not set",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -159,6 +164,7 @@ const LoadVectors = """
     },
     {
       "name": "env_missing_error",
+      "description": "\${env:NONEXISTENT} with no default and var not set raises an error",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -179,6 +185,7 @@ const LoadVectors = """
     },
     {
       "name": "file_resolution",
+      "description": "\${file:shared_connection.json} resolves to the parsed JSON content of the referenced file",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -211,6 +218,7 @@ const LoadVectors = """
     },
     {
       "name": "tools_function_load",
+      "description": "Load tools_function.prompty and verify FunctionTool with parameters, strict, and bindings",
       "stage": "load",
       "input": {
         "fixture": "tools_function.prompty"
@@ -268,6 +276,7 @@ const LoadVectors = """
     },
     {
       "name": "embedding_load",
+      "description": "Load embedding.prompty and verify apiType=embedding with correct model id",
       "stage": "load",
       "input": {
         "fixture": "embedding.prompty",
@@ -301,6 +310,7 @@ const LoadVectors = """
     },
     {
       "name": "instructions_from_body",
+      "description": "The markdown body after the closing --- becomes the instructions field",
       "stage": "load",
       "input": {
         "fixture": "basic.prompty",
@@ -315,6 +325,7 @@ const LoadVectors = """
     },
     {
       "name": "kind_always_prompt",
+      "description": "The loader always injects kind='prompt' — .prompty files never specify kind themselves",
       "stage": "load",
       "input": {
         "fixture": "minimal.prompty"
@@ -325,6 +336,7 @@ const LoadVectors = """
     },
     {
       "name": "missing_file_error",
+      "description": "Loading a nonexistent .prompty file raises FileNotFoundError",
       "stage": "load",
       "input": {
         "fixture": "nonexistent.prompty"
@@ -335,6 +347,7 @@ const LoadVectors = """
     },
     {
       "name": "invalid_frontmatter_error",
+      "description": "Malformed YAML in frontmatter raises a parse error",
       "stage": "load",
       "input": {
         "frontmatter_raw": "---\\nname: [invalid\\n---\\nHello"
@@ -345,6 +358,7 @@ const LoadVectors = """
     },
     {
       "name": "input_validation_required",
+      "description": "A required input with no default and no value provided raises ValueError",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -367,6 +381,7 @@ const LoadVectors = """
     },
     {
       "name": "input_validation_default_fill",
+      "description": "An input with a default value is filled in when no value is provided",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -390,6 +405,7 @@ const LoadVectors = """
     },
     {
       "name": "input_validation_optional_omit",
+      "description": "A non-required input with no default and no value is omitted (not an error)",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -411,6 +427,7 @@ const LoadVectors = """
     },
     {
       "name": "input_validation_example_not_used",
+      "description": "An input with example='sample' but no default must NOT use the example at runtime",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -433,6 +450,7 @@ const LoadVectors = """
     },
     {
       "name": "tools_mcp_load",
+      "description": "Load a prompty with an MCP tool — kind, serverName, connection preserved",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -463,6 +481,7 @@ const LoadVectors = """
     },
     {
       "name": "tools_openapi_load",
+      "description": "Load a prompty with an OpenAPI tool — specification path preserved",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -493,6 +512,7 @@ const LoadVectors = """
     },
     {
       "name": "tools_prompty_load",
+      "description": "Load a prompty with a PromptyTool — path and mode preserved",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -519,6 +539,7 @@ const LoadVectors = """
     },
     {
       "name": "tools_custom_load",
+      "description": "Load a prompty with an unknown tool kind — falls through to CustomTool",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -547,6 +568,7 @@ const LoadVectors = """
     },
     {
       "name": "template_string_invalid",
+      "description": "Template as a bare string is not valid v2 — must be an object with format/parser",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -563,6 +585,7 @@ const LoadVectors = """
     },
     {
       "name": "input_scalar_shorthand",
+      "description": "Scalar input values create typed Property with default set",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -599,6 +622,7 @@ const LoadVectors = """
     },
     {
       "name": "empty_frontmatter_body_only",
+      "description": "Empty frontmatter with body — instructions extracted, defaults applied",
       "stage": "load",
       "input": {
         "frontmatter": {
@@ -615,6 +639,7 @@ const LoadVectors = """
     },
     {
       "name": "connection_types_load",
+      "description": "All connection kinds (key, reference, remote, anonymous) load correctly",
       "stage": "load",
       "input": {
         "frontmatter": {

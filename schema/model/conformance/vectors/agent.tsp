@@ -11,6 +11,7 @@ const AgentVectors = """
   [
     {
       "name": "no_tool_calls",
+      "description": "LLM returns content immediately with no tool calls â the agent loop completes in a single iteration.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -70,6 +71,7 @@ const AgentVectors = """
     },
     {
       "name": "single_tool_call",
+      "description": "Turn 1: LLM requests get_weather for Paris. Turn 2: after receiving the tool result, LLM returns a final content response.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -208,6 +210,7 @@ const AgentVectors = """
     },
     {
       "name": "multiple_tool_calls_single_turn",
+      "description": "Turn 1: LLM returns two parallel tool calls â get_weather for Paris and London. Both results appended. Turn 2: LLM summarises both.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -380,6 +383,7 @@ const AgentVectors = """
     },
     {
       "name": "multi_turn_tool_calls",
+      "description": "Three-turn chain: Turn 1 calls get_weather, Turn 2 calls convert_temperature with the result, Turn 3 returns the final answer.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -548,6 +552,7 @@ const AgentVectors = """
     },
     {
       "name": "max_iterations_exceeded",
+      "description": "LLM returns tool calls on every turn for 11 iterations, exceeding MAX_ITERATIONS=10. The agent loop must raise an error.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1049,6 +1054,7 @@ const AgentVectors = """
     },
     {
       "name": "bindings_injected",
+      "description": "Tool has a binding {unit: {input: 'preferred_unit'}}. The LLM omits the bound parameter. At execution time, the binding injects the value from the parent inputs, so the tool receives the merged arguments.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1170,6 +1176,7 @@ const AgentVectors = """
     },
     {
       "name": "tool_not_registered_error",
+      "description": "LLM calls a tool named 'unknown_tool' that has no registered handler in tool_functions. The agent loop must raise a ValueError.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1245,6 +1252,7 @@ const AgentVectors = """
     },
     {
       "name": "tool_result_message_format",
+      "description": "After executing a tool, the tool result message appended to the conversation must have role='tool', content as a TextPart with the stringified result, and metadata.tool_call_id matching the original call id.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1357,6 +1365,7 @@ const AgentVectors = """
     },
     {
       "name": "assistant_tool_calls_metadata",
+      "description": "When the LLM returns tool calls, the assistant message appended to the conversation must have role='assistant', empty content, and metadata.tool_calls containing the full tool_calls array with id/type/function for each call.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1500,6 +1509,7 @@ const AgentVectors = """
     },
     {
       "name": "empty_tool_result",
+      "description": "Tool function returns an empty string. The tool result message must still be sent to the LLM with empty content â it must not be skipped or filtered out.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1606,6 +1616,7 @@ const AgentVectors = """
     },
     {
       "name": "async_tool_function",
+      "description": "Agent loop correctly handles async tool functions",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1707,6 +1718,7 @@ const AgentVectors = """
     },
     {
       "name": "events_basic_tool_loop",
+      "description": "Â§13.1 Events â A 2-turn tool-call loop emits the full event lifecycle: status â tool_call_start â tool_result â messages_updated â done.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1844,6 +1856,7 @@ const AgentVectors = """
     },
     {
       "name": "events_no_tools",
+      "description": "Â§13.1 Events â Single-turn completion with no tool calls. Only the done event is emitted.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1913,6 +1926,7 @@ const AgentVectors = """
     },
     {
       "name": "events_error_logged",
+      "description": "§13.1 Events  A tool function raises an exception during execution. The exception is caught and returned as an error string to the LLM. The loop continues normally.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2030,6 +2044,7 @@ const AgentVectors = """
     },
     {
       "name": "cancellation_before_llm",
+      "description": "Â§13.2 Cancellation â Cancel token is already cancelled before the first LLM call. No LLM calls are made and CancelledError is raised.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2082,6 +2097,7 @@ const AgentVectors = """
     },
     {
       "name": "cancellation_between_tools",
+      "description": "Â§13.2 Cancellation â LLM requests 2 tool calls. Cancel fires after the first tool executes. The second tool must NOT be called.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2212,6 +2228,7 @@ const AgentVectors = """
     },
     {
       "name": "cancellation_between_iterations",
+      "description": "Â§13.2 Cancellation â Turn 1 completes (tool call + result). Cancel fires before turn 2. The loop exits with CancelledError after 1 iteration.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2333,6 +2350,7 @@ const AgentVectors = """
     },
     {
       "name": "context_trim_basic",
+      "description": "Â§13.3 Context Window â Messages exceed the context budget. Oldest user/assistant pairs are dropped and a summary is inserted after the system message.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2482,6 +2500,7 @@ const AgentVectors = """
     },
     {
       "name": "context_no_trim_when_fits",
+      "description": "Â§13.3 Context Window â Messages fit within the context budget. No trimming occurs and all messages are preserved.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2544,6 +2563,7 @@ const AgentVectors = """
     },
     {
       "name": "context_preserves_system_messages",
+      "description": "Â§13.3 Context Window â Two system messages plus many user/assistant pairs. After trimming, both system messages MUST still be present.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2642,6 +2662,7 @@ const AgentVectors = """
     },
     {
       "name": "guardrail_input_deny",
+      "description": "Â§13.4 Guardrails â Input guardrail denies the request before any LLM call is made. Returns GuardrailError with the denial reason.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2689,6 +2710,7 @@ const AgentVectors = """
     },
     {
       "name": "guardrail_output_deny",
+      "description": "Â§13.4 Guardrails â Input guardrail passes, LLM returns a response, but the output guardrail denies it. Returns GuardrailError.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2758,6 +2780,7 @@ const AgentVectors = """
     },
     {
       "name": "guardrail_tool_deny",
+      "description": "Â§13.4 Guardrails â LLM requests 2 tool calls. Tool guardrail denies one (dangerous_tool) but allows the other (get_weather). Denied tool gets a synthetic error result.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2903,6 +2926,7 @@ const AgentVectors = """
     },
     {
       "name": "guardrail_all_pass",
+      "description": "Â§13.4 Guardrails â All guardrails (input, output, tool) are configured but all pass. The agent loop completes normally.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3017,6 +3041,7 @@ const AgentVectors = """
     },
     {
       "name": "steering_inject_message",
+      "description": "Â§13.5 Steering â After turn 1 (tool call + result), a steering message is injected before turn 2's LLM call. The LLM sees the injected message in context.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3216,6 +3241,7 @@ const AgentVectors = """
     },
     {
       "name": "steering_multiple_messages",
+      "description": "Â§13.5 Steering â Two steering messages are queued and both injected before iteration 2. Tests atomic drain â both appear in order.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3377,6 +3403,7 @@ const AgentVectors = """
     },
     {
       "name": "parallel_tools_basic",
+      "description": "Â§13.6 Parallel Tools â LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3542,6 +3569,7 @@ const AgentVectors = """
     },
     {
       "name": "parallel_tools_with_guardrail_deny",
+      "description": "Â§13.6 Parallel Tools + Â§13.4 Guardrails â 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.",
       "stage": "agent",
       "input": {
         "messages": [

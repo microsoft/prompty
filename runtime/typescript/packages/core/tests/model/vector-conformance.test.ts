@@ -469,6 +469,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "basic_load",
+      description:
+        "Load basic.prompty with env var resolution and verify all PromptAgent fields",
       stage: "load",
       input: {
         fixture: "basic.prompty",
@@ -538,6 +540,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "connection_types_load",
+      description:
+        "All connection kinds (key, reference, remote, anonymous) load correctly",
       stage: "load",
       input: {
         frontmatter: {
@@ -572,6 +576,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "embedding_load",
+      description:
+        "Load embedding.prompty and verify apiType=embedding with correct model id",
       stage: "load",
       input: {
         fixture: "embedding.prompty",
@@ -614,6 +620,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "empty_frontmatter_body_only",
+      description:
+        "Empty frontmatter with body — instructions extracted, defaults applied",
       stage: "load",
       input: {
         frontmatter: {
@@ -639,6 +647,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "env_default",
+      description:
+        "${env:MISSING_VAR:fallback_value} resolves to the default when the var is not set",
       stage: "load",
       input: {
         frontmatter: {
@@ -673,6 +683,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "env_missing_error",
+      description:
+        "${env:NONEXISTENT} with no default and var not set raises an error",
       stage: "load",
       input: {
         frontmatter: {
@@ -702,6 +714,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "env_resolution",
+      description:
+        "${env:MY_VAR} resolves to the environment variable value when set",
       stage: "load",
       input: {
         frontmatter: {
@@ -738,6 +752,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "file_resolution",
+      description:
+        "${file:shared_connection.json} resolves to the parsed JSON content of the referenced file",
       stage: "load",
       input: {
         frontmatter: {
@@ -779,6 +795,7 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "input_scalar_shorthand",
+      description: "Scalar input values create typed Property with default set",
       stage: "load",
       input: {
         frontmatter: {
@@ -824,6 +841,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "input_validation_default_fill",
+      description:
+        "An input with a default value is filled in when no value is provided",
       stage: "load",
       input: {
         frontmatter: {
@@ -856,6 +875,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "input_validation_example_not_used",
+      description:
+        "An input with example='sample' but no default must NOT use the example at runtime",
       stage: "load",
       input: {
         frontmatter: {
@@ -887,6 +908,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "input_validation_optional_omit",
+      description:
+        "A non-required input with no default and no value is omitted (not an error)",
       stage: "load",
       input: {
         frontmatter: {
@@ -917,6 +940,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "input_validation_required",
+      description:
+        "A required input with no default and no value provided raises ValueError",
       stage: "load",
       input: {
         frontmatter: {
@@ -948,6 +973,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "instructions_from_body",
+      description:
+        "The markdown body after the closing --- becomes the instructions field",
       stage: "load",
       input: {
         fixture: "basic.prompty",
@@ -972,6 +999,7 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "invalid_frontmatter_error",
+      description: "Malformed YAML in frontmatter raises a parse error",
       stage: "load",
       input: {
         frontmatter_raw: "---\nname: [invalid\n---\nHello",
@@ -991,6 +1019,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "kind_always_prompt",
+      description:
+        "The loader always injects kind='prompt' — .prompty files never specify kind themselves",
       stage: "load",
       input: {
         fixture: "minimal.prompty",
@@ -1010,6 +1040,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "minimal_load",
+      description:
+        "Load minimal.prompty with model shorthand and bare-minimum frontmatter",
       stage: "load",
       input: {
         fixture: "minimal.prompty",
@@ -1037,6 +1069,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "missing_file_error",
+      description:
+        "Loading a nonexistent .prompty file raises FileNotFoundError",
       stage: "load",
       input: {
         fixture: "nonexistent.prompty",
@@ -1056,6 +1090,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "model_shorthand",
+      description:
+        "String shorthand 'model: gpt-4o' expands to a Model object with id set",
       stage: "load",
       input: {
         frontmatter: {
@@ -1082,6 +1118,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "template_string_invalid",
+      description:
+        "Template as a bare string is not valid v2 — must be an object with format/parser",
       stage: "load",
       input: {
         frontmatter: {
@@ -1107,6 +1145,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "tools_custom_load",
+      description:
+        "Load a prompty with an unknown tool kind — falls through to CustomTool",
       stage: "load",
       input: {
         frontmatter: {
@@ -1144,6 +1184,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "tools_function_load",
+      description:
+        "Load tools_function.prompty and verify FunctionTool with parameters, strict, and bindings",
       stage: "load",
       input: {
         fixture: "tools_function.prompty",
@@ -1208,6 +1250,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "tools_mcp_load",
+      description:
+        "Load a prompty with an MCP tool — kind, serverName, connection preserved",
       stage: "load",
       input: {
         frontmatter: {
@@ -1247,6 +1291,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "tools_openapi_load",
+      description:
+        "Load a prompty with an OpenAPI tool — specification path preserved",
       stage: "load",
       input: {
         frontmatter: {
@@ -1286,6 +1332,8 @@ const vectors = [
     returns: "Agent",
     vector: {
       name: "tools_prompty_load",
+      description:
+        "Load a prompty with a PromptyTool — path and mode preserved",
       stage: "load",
       input: {
         frontmatter: {
@@ -1323,6 +1371,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "assistant_with_code_block",
+      description:
+        "Code blocks with triple backticks inside a role block are preserved as literal text content",
       stage: "parse",
       input: {
         rendered:
@@ -1364,6 +1414,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "consecutive_newlines_between_roles",
+      description:
+        "Extra blank lines between role markers are part of the preceding message's content but are stripped by trailing-newline trimming, resulting in clean content",
       stage: "parse",
       input: {
         rendered: "system:\nHelper\n\n\n\nuser:\nHi",
@@ -1404,6 +1456,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "content_trimmed",
+      description:
+        "Leading and trailing newlines are stripped from each message's content, but internal whitespace (spaces, indentation) is preserved",
       stage: "parse",
       input: {
         rendered: "system:\n  \n  You are helpful.  \n  \n\nuser:\n  Hello  ",
@@ -1444,6 +1498,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "empty_content",
+      description:
+        "A role marker followed immediately by another role marker produces a message with empty string content",
       stage: "parse",
       input: {
         rendered: "system:\n\nuser:\nHello",
@@ -1484,6 +1540,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "markdown_in_content",
+      description:
+        "Markdown formatting (headers, bold, lists) within a role block is preserved verbatim as text content",
       stage: "parse",
       input: {
         rendered:
@@ -1525,6 +1583,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "multiline_content",
+      description:
+        "Multiple lines within a single role block are preserved as multiline content",
       stage: "parse",
       input: {
         rendered:
@@ -1566,6 +1626,7 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "multiple_assistant_turns",
+      description: "Multiple assistant messages in a conversation",
       stage: "parse",
       input: {
         rendered:
@@ -1634,6 +1695,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "multiple_user_turns",
+      description:
+        "Alternating user and assistant turns produce four messages in conversation order",
       stage: "parse",
       input: {
         rendered:
@@ -1693,6 +1756,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "no_role_marker_defaults_to_system",
+      description:
+        "Content with no role marker at all defaults to a single system message",
       stage: "parse",
       input: {
         rendered: "Just a plain message with no role marker",
@@ -1724,6 +1789,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "role_marker_at_line_start_only",
+      description:
+        "A role name followed by colon mid-line (e.g. 'The user: said') is NOT treated as a role boundary — only lines matching the boundary regex (role name at line start, colon at end) split messages",
       stage: "parse",
       input: {
         rendered: "system:\nThe user: said hello\n\nuser:\nHi",
@@ -1764,6 +1831,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "role_marker_colon_in_content",
+      description:
+        "Colons in content (not at line start) are not treated as role markers",
       stage: "parse",
       input: {
         rendered:
@@ -1805,6 +1874,7 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "single_system",
+      description: "A single system role marker produces one system message",
       stage: "parse",
       input: {
         rendered: "system:\nYou are helpful.",
@@ -1836,6 +1906,7 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "system_user",
+      description: "System and user role markers produce two messages in order",
       stage: "parse",
       input: {
         rendered: "system:\nYou are helpful.\n\nuser:\nHello",
@@ -1876,6 +1947,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "system_user_assistant",
+      description:
+        "Three role markers (system, user, assistant) produce three messages in order",
       stage: "parse",
       input: {
         rendered:
@@ -1926,6 +1999,8 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "thread_nonce_expansion",
+      description:
+        "Thread nonce markers emitted by the renderer are expanded into actual conversation messages by the prepare pipeline. The nonce placeholder is replaced by the thread's message list, interleaved at the correct position.",
       stage: "parse",
       input: {
         rendered:
@@ -2006,6 +2081,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_multiple_text_blocks",
+      description:
+        "Anthropic message response with two text content blocks — concatenates them",
       stage: "process",
       input: {
         provider: "anthropic",
@@ -2050,6 +2127,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_structured_output",
+      description:
+        "Anthropic text response JSON-parsed when has_outputs is true",
       stage: "process",
       input: {
         provider: "anthropic",
@@ -2093,6 +2172,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_text",
+      description:
+        "Anthropic message response with a single text content block — extracts the text",
       stage: "process",
       input: {
         provider: "anthropic",
@@ -2133,6 +2214,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_tool_use",
+      description:
+        "Anthropic message response with tool_use content block — extracts ToolCall with JSON-stringified input",
       stage: "process",
       input: {
         provider: "anthropic",
@@ -2183,6 +2266,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_empty_content",
+      description:
+        "Chat completion with empty string content returns empty string",
       stage: "process",
       input: {
         provider: "openai",
@@ -2227,6 +2312,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_multiple_tool_calls",
+      description:
+        "Chat completion with two parallel tool calls — extracts both ToolCall objects",
       stage: "process",
       input: {
         provider: "openai",
@@ -2300,6 +2387,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_null_content",
+      description:
+        "Chat completion with null content and no tool calls — returns empty string",
       stage: "process",
       input: {
         provider: "openai",
@@ -2344,6 +2433,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_refusal",
+      description:
+        "Chat completion where the model refused the request — returns the refusal string",
       stage: "process",
       input: {
         provider: "openai",
@@ -2388,6 +2479,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_structured_invalid_json",
+      description:
+        "Chat completion with has_outputs=true but content is not valid JSON — falls back to raw string gracefully",
       stage: "process",
       input: {
         provider: "openai",
@@ -2432,6 +2525,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_structured_output",
+      description:
+        "Chat completion with structured output (has_outputs=true) — JSON-parses the content string into an object",
       stage: "process",
       input: {
         provider: "openai",
@@ -2479,6 +2574,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_text_content",
+      description:
+        "Basic chat completion with text content — extracts the message string",
       stage: "process",
       input: {
         provider: "openai",
@@ -2523,6 +2620,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_tool_calls",
+      description:
+        "Chat completion with a single tool call — extracts ToolCall list",
       stage: "process",
       input: {
         provider: "openai",
@@ -2583,6 +2682,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "embedding_batch",
+      description:
+        "Batch embedding response with 3 inputs — returns list of 3 vectors",
       stage: "process",
       input: {
         provider: "openai",
@@ -2634,6 +2735,7 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "embedding_single",
+      description: "Single embedding response — extracts the vector directly",
       stage: "process",
       input: {
         provider: "openai",
@@ -2671,6 +2773,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "image_b64",
+      description:
+        "Image generation response with base64 data — extracts the b64_json string",
       stage: "process",
       input: {
         provider: "openai",
@@ -2703,6 +2807,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "image_revised_prompt",
+      description:
+        "Image generation response with revised_prompt — primary result is the URL, revised_prompt is metadata",
       stage: "process",
       input: {
         provider: "openai",
@@ -2735,6 +2841,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "image_url",
+      description:
+        "Image generation response with URL — extracts the image URL",
       stage: "process",
       input: {
         provider: "openai",
@@ -2766,6 +2874,7 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_empty_output",
+      description: "Responses API with output_text empty returns empty string",
       stage: "process",
       input: {
         provider: "openai",
@@ -2796,6 +2905,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_structured",
+      description:
+        "Responses API with structured output (has_outputs=true) — JSON-parses output_text into object",
       stage: "process",
       input: {
         provider: "openai",
@@ -2848,6 +2959,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_text",
+      description:
+        "Responses API with plain text output — extracts output_text",
       stage: "process",
       input: {
         provider: "openai",
@@ -2898,6 +3011,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_tool_calls",
+      description:
+        "Responses API with function_call output items — extracts ToolCall list with call_id preserved",
       stage: "process",
       input: {
         provider: "openai",
@@ -2950,6 +3065,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "conditional_block",
+      description: "Jinja2 if/else block where condition is true",
       stage: "render",
       input: {
         template: "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
@@ -2975,6 +3091,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "conditional_false",
+      description: "Jinja2 if/else block where condition is false",
       stage: "render",
       input: {
         template: "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
@@ -3000,6 +3117,8 @@ const vectors = [
     returns: "string",
     vector: {
       name: "default_filter",
+      description:
+        "Jinja2 default filter provides fallback for missing variables",
       stage: "render",
       input: {
         template: '{{name|default("stranger")}}',
@@ -3023,6 +3142,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_basic",
+      description: "Jinja2 built-in filter (upper) works in prompty templates",
       stage: "render",
       input: {
         template: "{{name|upper}}",
@@ -3048,6 +3168,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_join",
+      description: "Jinja2 join filter joins a list with separator",
       stage: "render",
       input: {
         template: "{{ items | join(', ') }}",
@@ -3073,6 +3194,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_length",
+      description: "Jinja2 length filter returns collection size",
       stage: "render",
       input: {
         template: "{{ items | length }}",
@@ -3098,6 +3220,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_lower",
+      description: "Jinja2 lower filter converts to lowercase",
       stage: "render",
       input: {
         template: "{{ name | lower }}",
@@ -3123,6 +3246,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_trim",
+      description: "Jinja2 trim filter removes surrounding whitespace",
       stage: "render",
       input: {
         template: "{{ name | trim }}",
@@ -3148,6 +3272,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_upper",
+      description: "Jinja2 upper filter converts to uppercase",
       stage: "render",
       input: {
         template: "{{ name | upper }}",
@@ -3173,6 +3298,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "for_loop",
+      description: "Jinja2 for loop iterating over a list of items",
       stage: "render",
       input: {
         template: "Items: {% for item in items %}{{item}} {% endfor %}",
@@ -3198,6 +3324,8 @@ const vectors = [
     returns: "string",
     vector: {
       name: "html_not_escaped",
+      description:
+        "HTML content is NOT escaped — prompty templates are not HTML templates",
       stage: "render",
       input: {
         template: "{{content}}",
@@ -3223,6 +3351,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "jinja2_comment",
+      description: "Jinja2 comments are stripped from output",
       stage: "render",
       input: {
         template: "Hello{# this is a comment #} World",
@@ -3246,6 +3375,8 @@ const vectors = [
     returns: "string",
     vector: {
       name: "missing_variable_renders_empty",
+      description:
+        "Undefined Jinja2 variable renders as empty string with default Undefined config",
       stage: "render",
       input: {
         template: "Hello {{name}}!",
@@ -3269,6 +3400,8 @@ const vectors = [
     returns: "string",
     vector: {
       name: "multiple_variables",
+      description:
+        "Multiple Jinja2 variables of different types including an integer",
       stage: "render",
       input: {
         template: "{{first}} {{last}} is {{age}}",
@@ -3296,6 +3429,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "mustache_inverted",
+      description: "Mustache inverted section renders when value is falsy",
       stage: "render",
       input: {
         template: "{{^show}}Hidden{{/show}}",
@@ -3321,6 +3455,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "mustache_loop",
+      description: "Mustache section iterates over list items",
       stage: "render",
       input: {
         template: "{{#items}}{{.}} {{/items}}",
@@ -3346,6 +3481,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "mustache_section",
+      description: "Mustache truthy section renders its content",
       stage: "render",
       input: {
         template: "{{#show}}Visible{{/show}}",
@@ -3371,6 +3507,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "mustache_simple",
+      description: "Basic Mustache variable substitution",
       stage: "render",
       input: {
         template: "Hello {{name}}!",
@@ -3396,6 +3533,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "nested_object",
+      description: "Jinja2 dot notation access into a nested object",
       stage: "render",
       input: {
         template: "{{user.name}} ({{user.email}})",
@@ -3424,6 +3562,8 @@ const vectors = [
     returns: "string",
     vector: {
       name: "role_markers_preserved",
+      description:
+        "Role markers (system:/user:) are passed through by the renderer — parsing is the parser's job",
       stage: "render",
       input: {
         template: "system:\nYou are helpful.\n\nuser:\n{{question}}",
@@ -3449,6 +3589,7 @@ const vectors = [
     returns: "string",
     vector: {
       name: "simple_substitution",
+      description: "Basic Jinja2 variable substitution with a single variable",
       stage: "render",
       input: {
         template: "Hello {{name}}!",
@@ -3474,6 +3615,8 @@ const vectors = [
     returns: "string",
     vector: {
       name: "thread_nonce_injection",
+      description:
+        "Thread-kind input is replaced with a nonce marker instead of being rendered directly",
       stage: "render",
       input: {
         template:
@@ -3514,6 +3657,8 @@ const vectors = [
     returns: "string",
     vector: {
       name: "whitespace_preserved",
+      description:
+        "Whitespace including indentation and newlines is exactly preserved",
       stage: "render",
       input: {
         template: "line1\n  line2\n    line3",
@@ -3712,6 +3857,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "assistant_tool_calls_metadata",
+      description:
+        "When the LLM returns tool calls, the assistant message appended to the conversation must have role='assistant', empty content, and metadata.tool_calls containing the full tool_calls array with id/type/function for each call.",
       stage: "agent",
       input: {
         messages: [
@@ -3864,6 +4011,7 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "async_tool_function",
+      description: "Agent loop correctly handles async tool functions",
       stage: "agent",
       input: {
         messages: [
@@ -3974,6 +4122,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "bindings_injected",
+      description:
+        "Tool has a binding {unit: {input: 'preferred_unit'}}. The LLM omits the bound parameter. At execution time, the binding injects the value from the parent inputs, so the tool receives the merged arguments.",
       stage: "agent",
       input: {
         messages: [
@@ -4105,6 +4255,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "cancellation_before_llm",
+      description:
+        "Â§13.2 Cancellation â Cancel token is already cancelled before the first LLM call. No LLM calls are made and CancelledError is raised.",
       stage: "agent",
       input: {
         messages: [
@@ -4167,6 +4319,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "cancellation_between_iterations",
+      description:
+        "Â§13.2 Cancellation â Turn 1 completes (tool call + result). Cancel fires before turn 2. The loop exits with CancelledError after 1 iteration.",
       stage: "agent",
       input: {
         messages: [
@@ -4298,6 +4452,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "cancellation_between_tools",
+      description:
+        "Â§13.2 Cancellation â LLM requests 2 tool calls. Cancel fires after the first tool executes. The second tool must NOT be called.",
       stage: "agent",
       input: {
         messages: [
@@ -4438,6 +4594,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "context_no_trim_when_fits",
+      description:
+        "Â§13.3 Context Window â Messages fit within the context budget. No trimming occurs and all messages are preserved.",
       stage: "agent",
       input: {
         messages: [
@@ -4510,6 +4668,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "context_preserves_system_messages",
+      description:
+        "Â§13.3 Context Window â Two system messages plus many user/assistant pairs. After trimming, both system messages MUST still be present.",
       stage: "agent",
       input: {
         messages: [
@@ -4624,6 +4784,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "context_trim_basic",
+      description:
+        "Â§13.3 Context Window â Messages exceed the context budget. Oldest user/assistant pairs are dropped and a summary is inserted after the system message.",
       stage: "agent",
       input: {
         messages: [
@@ -4791,6 +4953,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "empty_tool_result",
+      description:
+        "Tool function returns an empty string. The tool result message must still be sent to the LLM with empty content â it must not be skipped or filtered out.",
       stage: "agent",
       input: {
         messages: [
@@ -4908,6 +5072,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "events_basic_tool_loop",
+      description:
+        "Â§13.1 Events â A 2-turn tool-call loop emits the full event lifecycle: status â tool_call_start â tool_result â messages_updated â done.",
       stage: "agent",
       input: {
         messages: [
@@ -5055,6 +5221,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "events_error_logged",
+      description:
+        "§13.1 Events  A tool function raises an exception during execution. The exception is caught and returned as an error string to the LLM. The loop continues normally.",
       stage: "agent",
       input: {
         messages: [
@@ -5184,6 +5352,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "events_no_tools",
+      description:
+        "Â§13.1 Events â Single-turn completion with no tool calls. Only the done event is emitted.",
       stage: "agent",
       input: {
         messages: [
@@ -5263,6 +5433,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "guardrail_all_pass",
+      description:
+        "Â§13.4 Guardrails â All guardrails (input, output, tool) are configured but all pass. The agent loop completes normally.",
       stage: "agent",
       input: {
         messages: [
@@ -5387,6 +5559,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "guardrail_input_deny",
+      description:
+        "Â§13.4 Guardrails â Input guardrail denies the request before any LLM call is made. Returns GuardrailError with the denial reason.",
       stage: "agent",
       input: {
         messages: [
@@ -5444,6 +5618,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "guardrail_output_deny",
+      description:
+        "Â§13.4 Guardrails â Input guardrail passes, LLM returns a response, but the output guardrail denies it. Returns GuardrailError.",
       stage: "agent",
       input: {
         messages: [
@@ -5524,6 +5700,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "guardrail_tool_deny",
+      description:
+        "Â§13.4 Guardrails â LLM requests 2 tool calls. Tool guardrail denies one (dangerous_tool) but allows the other (get_weather). Denied tool gets a synthetic error result.",
       stage: "agent",
       input: {
         messages: [
@@ -5677,6 +5855,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "max_iterations_exceeded",
+      description:
+        "LLM returns tool calls on every turn for 11 iterations, exceeding MAX_ITERATIONS=10. The agent loop must raise an error.",
       stage: "agent",
       input: {
         messages: [
@@ -6187,6 +6367,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "multi_turn_tool_calls",
+      description:
+        "Three-turn chain: Turn 1 calls get_weather, Turn 2 calls convert_temperature with the result, Turn 3 returns the final answer.",
       stage: "agent",
       input: {
         messages: [
@@ -6367,6 +6549,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "multiple_tool_calls_single_turn",
+      description:
+        "Turn 1: LLM returns two parallel tool calls â get_weather for Paris and London. Both results appended. Turn 2: LLM summarises both.",
       stage: "agent",
       input: {
         messages: [
@@ -6550,6 +6734,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "no_tool_calls",
+      description:
+        "LLM returns content immediately with no tool calls â the agent loop completes in a single iteration.",
       stage: "agent",
       input: {
         messages: [
@@ -6618,6 +6804,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "parallel_tools_basic",
+      description:
+        "Â§13.6 Parallel Tools â LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.",
       stage: "agent",
       input: {
         messages: [
@@ -6795,6 +6983,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "parallel_tools_with_guardrail_deny",
+      description:
+        "Â§13.6 Parallel Tools + Â§13.4 Guardrails â 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.",
       stage: "agent",
       input: {
         messages: [
@@ -6984,6 +7174,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "single_tool_call",
+      description:
+        "Turn 1: LLM requests get_weather for Paris. Turn 2: after receiving the tool result, LLM returns a final content response.",
       stage: "agent",
       input: {
         messages: [
@@ -7131,6 +7323,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "steering_inject_message",
+      description:
+        "Â§13.5 Steering â After turn 1 (tool call + result), a steering message is injected before turn 2's LLM call. The LLM sees the injected message in context.",
       stage: "agent",
       input: {
         messages: [
@@ -7344,6 +7538,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "steering_multiple_messages",
+      description:
+        "Â§13.5 Steering â Two steering messages are queued and both injected before iteration 2. Tests atomic drain â both appear in order.",
       stage: "agent",
       input: {
         messages: [
@@ -7518,6 +7714,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "tool_not_registered_error",
+      description:
+        "LLM calls a tool named 'unknown_tool' that has no registered handler in tool_functions. The agent loop must raise a ValueError.",
       stage: "agent",
       input: {
         messages: [
@@ -7602,6 +7800,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "tool_result_message_format",
+      description:
+        "After executing a tool, the tool result message appended to the conversation must have role='tool', content as a TextPart with the stringified result, and metadata.tool_call_id matching the original call id.",
       stage: "agent",
       input: {
         messages: [
@@ -7989,6 +8189,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_image_format",
+      description:
+        "§7.5 — Anthropic: ImagePart uses base64 source block with media_type, not image_url format.",
       stage: "wire",
       provider: "anthropic",
       targetApi: "chat",
@@ -8056,6 +8258,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_max_tokens_required",
+      description:
+        "§7.5 — Anthropic: when maxOutputTokens is not set, max_tokens MUST default to 4096 (required by API).",
       stage: "wire",
       provider: "anthropic",
       targetApi: "chat",
@@ -8108,6 +8312,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_options",
+      description:
+        "Anthropic: option names map correctly (topK, stopSequences)",
       stage: "wire",
       provider: "anthropic",
       targetApi: "chat",
@@ -8170,6 +8376,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_system_separate",
+      description:
+        "§7.5 — Anthropic: system message extracted to top-level 'system' field; messages array contains only non-system messages.",
       stage: "wire",
       provider: "anthropic",
       targetApi: "chat",
@@ -8234,6 +8442,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_tool_wire",
+      description:
+        "Anthropic: tools use input_schema (not parameters), name at top level",
       stage: "wire",
       provider: "anthropic",
       targetApi: "chat",
@@ -8314,6 +8524,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_audio_mp3",
+      description:
+        "§7.1.2 — AudioPart with mediaType audio/mpeg MUST map to format 'mp3', not 'mpeg'.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8369,6 +8581,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_audio_part",
+      description:
+        "§7.1.2 — AudioPart with mediaType audio/wav maps to input_audio with format 'wav'.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8424,6 +8638,7 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_image_base64",
+      description: "Base64 data URI image part preserved as-is in image_url",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8485,6 +8700,7 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_image_part",
+      description: "Image content part converted to OpenAI image_url format",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8546,6 +8762,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_multipart_content",
+      description:
+        "§7.1.1/§7.1.2 — Message with TextPart + ImagePart MUST produce an array of typed content blocks.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8607,6 +8825,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_simple",
+      description:
+        "§7.1.7 — Two messages (system + user), no tools, no options. Minimal chat request.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8666,6 +8886,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_single_text_optimized",
+      description:
+        "§7.1.1 — Message with exactly 1 TextPart MUST produce a plain string content, not an array.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8712,6 +8934,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_with_options",
+      description:
+        "§7.1.5 — All standard ModelOptions mapped to OpenAI parameter names.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8773,6 +8997,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "embedding_wire",
+      description:
+        "§7.2 — Embedding request: text extracted from messages, single string input (not array).",
       stage: "wire",
       provider: "openai",
       targetApi: "embedding",
@@ -8814,6 +9040,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "image_wire",
+      description:
+        "§7.3 — Image generation request: prompt extracted from last user message.",
       stage: "wire",
       provider: "openai",
       targetApi: "image",
@@ -8855,6 +9083,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "kind_to_json_type_mapping",
+      description:
+        "§7.1.4 — All Property kind values mapped to JSON Schema types: string→string, integer→integer, float→number, boolean→boolean, array→array, object→object.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -8971,6 +9201,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "options_additional_properties",
+      description:
+        "§7.1.5 — additionalProperties from ModelOptions MUST be merged into the request as top-level keys.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -9022,6 +9254,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "options_max_completion_tokens",
+      description:
+        "§7.1.5 — maxOutputTokens MUST map to max_completion_tokens, NOT the deprecated max_tokens.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -9071,6 +9305,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "options_stop_sequences",
+      description:
+        "§7.1.5 — stopSequences MUST map to 'stop' in the OpenAI wire format.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -9120,6 +9356,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_simple",
+      description:
+        "Responses API: system becomes instructions, messages become input items",
       stage: "wire",
       provider: "openai",
       targetApi: "responses",
@@ -9176,6 +9414,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_structured_output",
+      description:
+        "Responses API: structured output uses text.format.json_schema",
       stage: "wire",
       provider: "openai",
       targetApi: "responses",
@@ -9251,6 +9491,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_with_tools",
+      description:
+        "Responses API: tools use flat format (no nested function key)",
       stage: "wire",
       provider: "openai",
       targetApi: "responses",
@@ -9326,6 +9568,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "structured_output",
+      description:
+        "§7.1.6 — outputs converted to response_format with json_schema, strict=true, additionalProperties=false.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -9403,6 +9647,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "tools_bindings_stripped",
+      description:
+        "§7.1.3 — Parameters listed in bindings MUST be stripped from wire tools (properties AND required).",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -9490,6 +9736,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "tools_function_wire",
+      description:
+        "§7.1.3 — FunctionTool projected as OpenAI function definition with JSON Schema parameters.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -9567,6 +9815,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "tools_null_when_empty",
+      description:
+        "§7.1.3 — When no tools are defined, the tools key MUST be absent from the request entirely.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",
@@ -9613,6 +9863,8 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "tools_strict_mode",
+      description:
+        "§7.1.3 — FunctionTool with strict=true: strict lives on function def, additionalProperties=false in parameters schema.",
       stage: "wire",
       provider: "openai",
       targetApi: "chat",

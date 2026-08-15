@@ -11,6 +11,7 @@ const WireVectors = """
   [
     {
       "name": "chat_simple",
+      "description": "§7.1.7 — Two messages (system + user), no tools, no options. Minimal chat request.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -60,6 +61,7 @@ const WireVectors = """
     },
     {
       "name": "chat_with_options",
+      "description": "§7.1.5 — All standard ModelOptions mapped to OpenAI parameter names.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -115,6 +117,7 @@ const WireVectors = """
     },
     {
       "name": "chat_single_text_optimized",
+      "description": "§7.1.1 — Message with exactly 1 TextPart MUST produce a plain string content, not an array.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -151,6 +154,7 @@ const WireVectors = """
     },
     {
       "name": "chat_multipart_content",
+      "description": "§7.1.1/§7.1.2 — Message with TextPart + ImagePart MUST produce an array of typed content blocks.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -202,6 +206,7 @@ const WireVectors = """
     },
     {
       "name": "chat_audio_part",
+      "description": "§7.1.2 — AudioPart with mediaType audio/wav maps to input_audio with format 'wav'.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -247,6 +252,7 @@ const WireVectors = """
     },
     {
       "name": "chat_audio_mp3",
+      "description": "§7.1.2 — AudioPart with mediaType audio/mpeg MUST map to format 'mp3', not 'mpeg'.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -292,6 +298,7 @@ const WireVectors = """
     },
     {
       "name": "tools_function_wire",
+      "description": "§7.1.3 — FunctionTool projected as OpenAI function definition with JSON Schema parameters.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -361,6 +368,7 @@ const WireVectors = """
     },
     {
       "name": "tools_strict_mode",
+      "description": "§7.1.3 — FunctionTool with strict=true: strict lives on function def, additionalProperties=false in parameters schema.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -433,6 +441,7 @@ const WireVectors = """
     },
     {
       "name": "tools_bindings_stripped",
+      "description": "§7.1.3 — Parameters listed in bindings MUST be stripped from wire tools (properties AND required).",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -512,6 +521,7 @@ const WireVectors = """
     },
     {
       "name": "tools_null_when_empty",
+      "description": "§7.1.3 — When no tools are defined, the tools key MUST be absent from the request entirely.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -548,6 +558,7 @@ const WireVectors = """
     },
     {
       "name": "structured_output",
+      "description": "§7.1.6 — outputs converted to response_format with json_schema, strict=true, additionalProperties=false.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -618,6 +629,7 @@ const WireVectors = """
     },
     {
       "name": "kind_to_json_type_mapping",
+      "description": "§7.1.4 — All Property kind values mapped to JSON Schema types: string→string, integer→integer, float→number, boolean→boolean, array→array, object→object.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -724,6 +736,7 @@ const WireVectors = """
     },
     {
       "name": "embedding_wire",
+      "description": "§7.2 — Embedding request: text extracted from messages, single string input (not array).",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "embedding",
@@ -755,6 +768,7 @@ const WireVectors = """
     },
     {
       "name": "image_wire",
+      "description": "§7.3 — Image generation request: prompt extracted from last user message.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "image",
@@ -786,6 +800,7 @@ const WireVectors = """
     },
     {
       "name": "options_max_completion_tokens",
+      "description": "§7.1.5 — maxOutputTokens MUST map to max_completion_tokens, NOT the deprecated max_tokens.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -825,6 +840,7 @@ const WireVectors = """
     },
     {
       "name": "options_stop_sequences",
+      "description": "§7.1.5 — stopSequences MUST map to 'stop' in the OpenAI wire format.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -870,6 +886,7 @@ const WireVectors = """
     },
     {
       "name": "options_additional_properties",
+      "description": "§7.1.5 — additionalProperties from ModelOptions MUST be merged into the request as top-level keys.",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -911,6 +928,7 @@ const WireVectors = """
     },
     {
       "name": "anthropic_system_separate",
+      "description": "§7.5 — Anthropic: system message extracted to top-level 'system' field; messages array contains only non-system messages.",
       "stage": "wire",
       "provider": "anthropic",
       "targetApi": "chat",
@@ -965,6 +983,7 @@ const WireVectors = """
     },
     {
       "name": "anthropic_max_tokens_required",
+      "description": "§7.5 — Anthropic: when maxOutputTokens is not set, max_tokens MUST default to 4096 (required by API).",
       "stage": "wire",
       "provider": "anthropic",
       "targetApi": "chat",
@@ -1007,6 +1026,7 @@ const WireVectors = """
     },
     {
       "name": "anthropic_image_format",
+      "description": "§7.5 — Anthropic: ImagePart uses base64 source block with media_type, not image_url format.",
       "stage": "wire",
       "provider": "anthropic",
       "targetApi": "chat",
@@ -1064,6 +1084,7 @@ const WireVectors = """
     },
     {
       "name": "chat_image_part",
+      "description": "Image content part converted to OpenAI image_url format",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -1115,6 +1136,7 @@ const WireVectors = """
     },
     {
       "name": "chat_image_base64",
+      "description": "Base64 data URI image part preserved as-is in image_url",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "chat",
@@ -1166,6 +1188,7 @@ const WireVectors = """
     },
     {
       "name": "responses_simple",
+      "description": "Responses API: system becomes instructions, messages become input items",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "responses",
@@ -1212,6 +1235,7 @@ const WireVectors = """
     },
     {
       "name": "responses_with_tools",
+      "description": "Responses API: tools use flat format (no nested function key)",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "responses",
@@ -1279,6 +1303,7 @@ const WireVectors = """
     },
     {
       "name": "anthropic_tool_wire",
+      "description": "Anthropic: tools use input_schema (not parameters), name at top level",
       "stage": "wire",
       "provider": "anthropic",
       "targetApi": "chat",
@@ -1351,6 +1376,7 @@ const WireVectors = """
     },
     {
       "name": "anthropic_options",
+      "description": "Anthropic: option names map correctly (topK, stopSequences)",
       "stage": "wire",
       "provider": "anthropic",
       "targetApi": "chat",
@@ -1407,6 +1433,7 @@ const WireVectors = """
     },
     {
       "name": "responses_structured_output",
+      "description": "Responses API: structured output uses text.format.json_schema",
       "stage": "wire",
       "provider": "openai",
       "targetApi": "responses",

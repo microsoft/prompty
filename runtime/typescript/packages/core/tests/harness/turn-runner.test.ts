@@ -38,13 +38,28 @@ type ReplayVector = {
 };
 
 function replayVectors(): ReplayVector {
-  const vectors = JSON.parse(
-    readFileSync(new URL("../../../../../../spec/vectors/harness/replay_vectors.json", import.meta.url), "utf8"),
+  const document = JSON.parse(
+    readFileSync(
+      new URL("../../../../../../schema/tsp-output/.typra-generated/vectors.json", import.meta.url),
+      "utf8",
+    ),
   );
-  if (vectors.version !== 1) {
-    throw new Error(`Unsupported replay vector version ${vectors.version}`);
-  }
-  return vectors;
+  // Replay scenarios are emitted under the `replay` operation; each vector's `input`
+  // carries the journal-level clock/sessionId/turnId plus per-scenario inputs.
+  const items: any[] = document.vectors.filter((e: any) => e.operation === "replay").map((e: any) => e.vector);
+  const first = items[0].input;
+  return {
+    version: 1,
+    clock: first.clock,
+    sessionId: first.sessionId,
+    turnId: first.turnId,
+    scenarios: items.map((v: any) => ({
+      name: v.name,
+      inputs: v.input.inputs,
+      maxIterations: v.input.maxIterations,
+      expected: v.expected,
+    })),
+  };
 }
 
 function normalizeJournal(records: unknown[]): string[] {
