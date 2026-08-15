@@ -1,252 +1,363 @@
 import "@typra/emitter";
 
-using Prompty;
-using Prompty.Operations.Pipeline;
 namespace Prompty.Conformance.Vectors;
 
-// Behavior vectors for the Renderer.render callable seam, migrated from
-// spec/vectors/render/render_vectors.json. Each vector binds to the CURRENT
-// render(agent, template, inputs): string signature:
-//   - input.agent is an empty Agent (#{}) because these cases exercise pure
-//     template+inputs rendering and do not read agent configuration.
-//   - provider carries the template engine (dispatch selector), using Typra's
-//     first-class vector provider field rather than an operation parameter.
-//   - expected is the bare rendered string (the op returns string, not a wrapper).
-// EXCLUDED: the 'thread_nonce_injection' case asserts a regex nonce_pattern,
-// which value-equality vectors cannot express; it remains in the JSON catalog.
-const RenderVectors = #[
-  #{
-    name: "simple_substitution",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "Hello {{name}}!",
-      inputs: #{ name: "World" },
+// Behavior vectors migrated from spec/vectors/render/render_vectors.json — bound to Renderer.render.
+// Authored as a JSON-STRING vector set (Typra 0.7.0+ affordance): a triple-quoted
+// constant Typra parses into vector entries, so raw provider/agent payloads with
+// keyword keys (e.g. "model") are first-class. @vector inputs are opaque (unknown),
+// JSON-compared conformance evidence emitted into the cross-runtime vectors.json.
+const RenderVectors = """
+  [
+    {
+      "name": "simple_substitution",
+      "stage": "render",
+      "input": {
+        "template": "Hello {{name}}!",
+        "engine": "jinja2",
+        "inputs": {
+          "name": "World"
+        }
+      },
+      "expected": {
+        "rendered": "Hello World!"
+      }
     },
-    expected: "Hello World!",
-  },
-  #{
-    name: "multiple_variables",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{first}} {{last}} is {{age}}",
-      inputs: #{ first: "Jane", last: "Doe", age: 30 },
+    {
+      "name": "multiple_variables",
+      "stage": "render",
+      "input": {
+        "template": "{{first}} {{last}} is {{age}}",
+        "engine": "jinja2",
+        "inputs": {
+          "first": "Jane",
+          "last": "Doe",
+          "age": 30
+        }
+      },
+      "expected": {
+        "rendered": "Jane Doe is 30"
+      }
     },
-    expected: "Jane Doe is 30",
-  },
-  #{
-    name: "conditional_block",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
-      inputs: #{ premium: true },
+    {
+      "name": "conditional_block",
+      "stage": "render",
+      "input": {
+        "template": "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
+        "engine": "jinja2",
+        "inputs": {
+          "premium": true
+        }
+      },
+      "expected": {
+        "rendered": "Welcome VIP!"
+      }
     },
-    expected: "Welcome VIP!",
-  },
-  #{
-    name: "conditional_false",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
-      inputs: #{ premium: false },
+    {
+      "name": "conditional_false",
+      "stage": "render",
+      "input": {
+        "template": "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
+        "engine": "jinja2",
+        "inputs": {
+          "premium": false
+        }
+      },
+      "expected": {
+        "rendered": "Hello!"
+      }
     },
-    expected: "Hello!",
-  },
-  #{
-    name: "for_loop",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "Items: {% for item in items %}{{item}} {% endfor %}",
-      inputs: #{ items: #["a", "b", "c"] },
+    {
+      "name": "for_loop",
+      "stage": "render",
+      "input": {
+        "template": "Items: {% for item in items %}{{item}} {% endfor %}",
+        "engine": "jinja2",
+        "inputs": {
+          "items": [
+            "a",
+            "b",
+            "c"
+          ]
+        }
+      },
+      "expected": {
+        "rendered": "Items: a b c "
+      }
     },
-    expected: "Items: a b c ",
-  },
-  #{
-    name: "nested_object",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{user.name}} ({{user.email}})",
-      inputs: #{ user: #{ name: "Jane", email: "jane@test.com" } },
+    {
+      "name": "nested_object",
+      "stage": "render",
+      "input": {
+        "template": "{{user.name}} ({{user.email}})",
+        "engine": "jinja2",
+        "inputs": {
+          "user": {
+            "name": "Jane",
+            "email": "jane@test.com"
+          }
+        }
+      },
+      "expected": {
+        "rendered": "Jane (jane@test.com)"
+      }
     },
-    expected: "Jane (jane@test.com)",
-  },
-  #{
-    name: "mustache_simple",
-    stage: "callable",
-    provider: "mustache",
-    input: #{
-      agent: #{},
-      template: "Hello {{name}}!",
-      inputs: #{ name: "World" },
+    {
+      "name": "mustache_simple",
+      "stage": "render",
+      "input": {
+        "template": "Hello {{name}}!",
+        "engine": "mustache",
+        "inputs": {
+          "name": "World"
+        }
+      },
+      "expected": {
+        "rendered": "Hello World!"
+      }
     },
-    expected: "Hello World!",
-  },
-  #{
-    name: "mustache_section",
-    stage: "callable",
-    provider: "mustache",
-    input: #{
-      agent: #{},
-      template: "{{#show}}Visible{{/show}}",
-      inputs: #{ show: true },
+    {
+      "name": "mustache_section",
+      "stage": "render",
+      "input": {
+        "template": "{{#show}}Visible{{/show}}",
+        "engine": "mustache",
+        "inputs": {
+          "show": true
+        }
+      },
+      "expected": {
+        "rendered": "Visible"
+      }
     },
-    expected: "Visible",
-  },
-  #{
-    name: "mustache_inverted",
-    stage: "callable",
-    provider: "mustache",
-    input: #{
-      agent: #{},
-      template: "{{^show}}Hidden{{/show}}",
-      inputs: #{ show: false },
+    {
+      "name": "mustache_inverted",
+      "stage": "render",
+      "input": {
+        "template": "{{^show}}Hidden{{/show}}",
+        "engine": "mustache",
+        "inputs": {
+          "show": false
+        }
+      },
+      "expected": {
+        "rendered": "Hidden"
+      }
     },
-    expected: "Hidden",
-  },
-  #{
-    name: "missing_variable_renders_empty",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{ agent: #{}, template: "Hello {{name}}!", inputs: #{} },
-    expected: "Hello !",
-  },
-  #{
-    name: "html_not_escaped",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{content}}",
-      inputs: #{ content: "<b>bold</b>" },
+    {
+      "name": "thread_nonce_injection",
+      "stage": "render",
+      "input": {
+        "template": "system:\\nYou are helpful.\\n\\n{{conversation}}\\n\\nuser:\\n{{question}}",
+        "engine": "jinja2",
+        "inputs": {
+          "question": "Hi",
+          "conversation": {
+            "_kind": "thread",
+            "messages": [
+              {
+                "role": "user",
+                "content": "previous question"
+              },
+              {
+                "role": "assistant",
+                "content": "previous answer"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "nonce_pattern": "^system:\\nYou are helpful\\\\.\\n\\n__PROMPTY_THREAD_[a-f0-9]{8}_conversation__\\n\\nuser:\\nHi$"
+      }
     },
-    expected: "<b>bold</b>",
-  },
-  #{
-    name: "whitespace_preserved",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{ agent: #{}, template: "line1\n  line2\n    line3", inputs: #{} },
-    expected: "line1\n  line2\n    line3",
-  },
-  #{
-    name: "role_markers_preserved",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "system:\nYou are helpful.\n\nuser:\n{{question}}",
-      inputs: #{ question: "Hello" },
+    {
+      "name": "missing_variable_renders_empty",
+      "stage": "render",
+      "input": {
+        "template": "Hello {{name}}!",
+        "engine": "jinja2",
+        "inputs": {}
+      },
+      "expected": {
+        "rendered": "Hello !"
+      }
     },
-    expected: "system:\nYou are helpful.\n\nuser:\nHello",
-  },
-  #{
-    name: "filter_basic",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{name|upper}}",
-      inputs: #{ name: "hello" },
+    {
+      "name": "html_not_escaped",
+      "stage": "render",
+      "input": {
+        "template": "{{content}}",
+        "engine": "jinja2",
+        "inputs": {
+          "content": "<b>bold</b>"
+        }
+      },
+      "expected": {
+        "rendered": "<b>bold</b>"
+      }
     },
-    expected: "HELLO",
-  },
-  #{
-    name: "default_filter",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{name|default(\"stranger\")}}",
-      inputs: #{},
+    {
+      "name": "whitespace_preserved",
+      "stage": "render",
+      "input": {
+        "template": "line1\\n  line2\\n    line3",
+        "engine": "jinja2",
+        "inputs": {}
+      },
+      "expected": {
+        "rendered": "line1\\n  line2\\n    line3"
+      }
     },
-    expected: "stranger",
-  },
-  #{
-    name: "jinja2_comment",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "Hello{# this is a comment #} World",
-      inputs: #{},
+    {
+      "name": "role_markers_preserved",
+      "stage": "render",
+      "input": {
+        "template": "system:\\nYou are helpful.\\n\\nuser:\\n{{question}}",
+        "engine": "jinja2",
+        "inputs": {
+          "question": "Hello"
+        }
+      },
+      "expected": {
+        "rendered": "system:\\nYou are helpful.\\n\\nuser:\\nHello"
+      }
     },
-    expected: "Hello World",
-  },
-  #{
-    name: "filter_upper",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{ name | upper }}",
-      inputs: #{ name: "hello" },
+    {
+      "name": "filter_basic",
+      "stage": "render",
+      "input": {
+        "template": "{{name|upper}}",
+        "engine": "jinja2",
+        "inputs": {
+          "name": "hello"
+        }
+      },
+      "expected": {
+        "rendered": "HELLO"
+      }
     },
-    expected: "HELLO",
-  },
-  #{
-    name: "filter_lower",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{ name | lower }}",
-      inputs: #{ name: "HELLO" },
+    {
+      "name": "default_filter",
+      "stage": "render",
+      "input": {
+        "template": "{{name|default(\\"stranger\\")}}",
+        "engine": "jinja2",
+        "inputs": {}
+      },
+      "expected": {
+        "rendered": "stranger"
+      }
     },
-    expected: "hello",
-  },
-  #{
-    name: "filter_trim",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{ name | trim }}",
-      inputs: #{ name: "  hello  " },
+    {
+      "name": "jinja2_comment",
+      "stage": "render",
+      "input": {
+        "template": "Hello{# this is a comment #} World",
+        "engine": "jinja2",
+        "inputs": {}
+      },
+      "expected": {
+        "rendered": "Hello World"
+      }
     },
-    expected: "hello",
-  },
-  #{
-    name: "filter_join",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{ items | join(', ') }}",
-      inputs: #{ items: #["a", "b", "c"] },
+    {
+      "name": "filter_upper",
+      "stage": "render",
+      "input": {
+        "template": "{{ name | upper }}",
+        "engine": "jinja2",
+        "inputs": {
+          "name": "hello"
+        }
+      },
+      "expected": {
+        "rendered": "HELLO"
+      }
     },
-    expected: "a, b, c",
-  },
-  #{
-    name: "filter_length",
-    stage: "callable",
-    provider: "jinja2",
-    input: #{
-      agent: #{},
-      template: "{{ items | length }}",
-      inputs: #{ items: #[1, 2, 3, 4, 5] },
+    {
+      "name": "filter_lower",
+      "stage": "render",
+      "input": {
+        "template": "{{ name | lower }}",
+        "engine": "jinja2",
+        "inputs": {
+          "name": "HELLO"
+        }
+      },
+      "expected": {
+        "rendered": "hello"
+      }
     },
-    expected: "5",
-  },
-  #{
-    name: "mustache_loop",
-    stage: "callable",
-    provider: "mustache",
-    input: #{
-      agent: #{},
-      template: "{{#items}}{{.}} {{/items}}",
-      inputs: #{ items: #["a", "b", "c"] },
+    {
+      "name": "filter_trim",
+      "stage": "render",
+      "input": {
+        "template": "{{ name | trim }}",
+        "engine": "jinja2",
+        "inputs": {
+          "name": "  hello  "
+        }
+      },
+      "expected": {
+        "rendered": "hello"
+      }
     },
-    expected: "a b c ",
-  }
-];
+    {
+      "name": "filter_join",
+      "stage": "render",
+      "input": {
+        "template": "{{ items | join(', ') }}",
+        "engine": "jinja2",
+        "inputs": {
+          "items": [
+            "a",
+            "b",
+            "c"
+          ]
+        }
+      },
+      "expected": {
+        "rendered": "a, b, c"
+      }
+    },
+    {
+      "name": "filter_length",
+      "stage": "render",
+      "input": {
+        "template": "{{ items | length }}",
+        "engine": "jinja2",
+        "inputs": {
+          "items": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      },
+      "expected": {
+        "rendered": "5"
+      }
+    },
+    {
+      "name": "mustache_loop",
+      "stage": "render",
+      "input": {
+        "template": "{{#items}}{{.}} {{/items}}",
+        "engine": "mustache",
+        "inputs": {
+          "items": [
+            "a",
+            "b",
+            "c"
+          ]
+        }
+      },
+      "expected": {
+        "rendered": "a b c "
+      }
+    }
+  ]
+  """;

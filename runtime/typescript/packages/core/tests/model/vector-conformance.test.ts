@@ -1323,34 +1323,33 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "assistant_with_code_block",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered:
           "assistant:\nHere is code:\n```python\nprint('hello')\n```\n\nuser:\nThanks",
       },
-      expected: [
-        {
-          role: "assistant",
-          parts: [
-            {
-              kind: "text",
-              value: "Here is code:\n```python\nprint('hello')\n```",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Thanks",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "assistant",
+            content: [
+              {
+                kind: "text",
+                value: "Here is code:\n```python\nprint('hello')\n```",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Thanks",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1365,33 +1364,32 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "consecutive_newlines_between_roles",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered: "system:\nHelper\n\n\n\nuser:\nHi",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "Helper",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Hi",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "Helper",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Hi",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1406,33 +1404,32 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "content_trimmed",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered: "system:\n  \n  You are helpful.  \n  \n\nuser:\n  Hello  ",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "  \n  You are helpful.  \n  ",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "  Hello  ",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "  \n  You are helpful.  \n  ",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "  Hello  ",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1447,33 +1444,32 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "empty_content",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered: "system:\n\nuser:\nHello",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Hello",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Hello",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1488,34 +1484,33 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "markdown_in_content",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered:
           "system:\n# Title\n\nSome **bold** text\n\n- item 1\n- item 2\n\nuser:\nHello",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "# Title\n\nSome **bold** text\n\n- item 1\n- item 2",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Hello",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "# Title\n\nSome **bold** text\n\n- item 1\n- item 2",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Hello",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1530,34 +1525,33 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "multiline_content",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered:
           "system:\nLine one.\nLine two.\nLine three.\n\nuser:\nQuestion",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "Line one.\nLine two.\nLine three.",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Question",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "Line one.\nLine two.\nLine three.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Question",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1572,64 +1566,60 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "multiple_assistant_turns",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered:
           "system:\nYou are helpful.\n\nuser:\nHi\n\nassistant:\nHello!\n\nuser:\nThanks\n\nassistant:\nYou're welcome!",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "You are helpful.",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Hi",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "assistant",
-          parts: [
-            {
-              kind: "text",
-              value: "Hello!",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Thanks",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "assistant",
-          parts: [
-            {
-              kind: "text",
-              value: "You're welcome!",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "You are helpful.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Hi",
+              },
+            ],
+          },
+          {
+            role: "assistant",
+            content: [
+              {
+                kind: "text",
+                value: "Hello!",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Thanks",
+              },
+            ],
+          },
+          {
+            role: "assistant",
+            content: [
+              {
+                kind: "text",
+                value: "You're welcome!",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1644,54 +1634,51 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "multiple_user_turns",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered:
           "system:\nHelper\n\nuser:\nFirst question\n\nassistant:\nFirst answer\n\nuser:\nSecond question",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "Helper",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "First question",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "assistant",
-          parts: [
-            {
-              kind: "text",
-              value: "First answer",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Second question",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "Helper",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "First question",
+              },
+            ],
+          },
+          {
+            role: "assistant",
+            content: [
+              {
+                kind: "text",
+                value: "First answer",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Second question",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1706,23 +1693,23 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "no_role_marker_defaults_to_system",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered: "Just a plain message with no role marker",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "Just a plain message with no role marker",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "Just a plain message with no role marker",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1737,33 +1724,32 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "role_marker_at_line_start_only",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered: "system:\nThe user: said hello\n\nuser:\nHi",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "The user: said hello",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Hi",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "The user: said hello",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Hi",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1778,34 +1764,33 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "role_marker_colon_in_content",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered:
           "system:\nHere is a tip: always be kind.\n\nuser:\nTime is 3:30pm",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "Here is a tip: always be kind.",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Time is 3:30pm",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "Here is a tip: always be kind.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Time is 3:30pm",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1820,23 +1805,23 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "single_system",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered: "system:\nYou are helpful.",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "You are helpful.",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "You are helpful.",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1851,33 +1836,32 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "system_user",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered: "system:\nYou are helpful.\n\nuser:\nHello",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "You are helpful.",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Hello",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "You are helpful.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Hello",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1892,44 +1876,42 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "system_user_assistant",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered:
           "system:\nBe concise.\n\nuser:\nHi\n\nassistant:\nHello! How can I help?",
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "Be concise.",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Hi",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "assistant",
-          parts: [
-            {
-              kind: "text",
-              value: "Hello! How can I help?",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "Be concise.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Hi",
+              },
+            ],
+          },
+          {
+            role: "assistant",
+            content: [
+              {
+                kind: "text",
+                value: "Hello! How can I help?",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -1944,78 +1926,73 @@ const vectors = [
     returns: "Message[]",
     vector: {
       name: "thread_nonce_expansion",
-      stage: "callable",
+      stage: "parse",
       input: {
-        agent: {},
         rendered:
           "system:\nYou are helpful.\n\n__PROMPTY_THREAD_abcd1234_conversation__\n\nuser:\nHi",
-        context: {
+        thread_inputs: {
           conversation: [
             {
               role: "user",
-              parts: [
+              content: [
                 {
                   kind: "text",
                   value: "prev question",
                 },
               ],
-              metadata: {},
             },
             {
               role: "assistant",
-              parts: [
+              content: [
                 {
                   kind: "text",
                   value: "prev answer",
                 },
               ],
-              metadata: {},
             },
           ],
         },
       },
-      expected: [
-        {
-          role: "system",
-          parts: [
-            {
-              kind: "text",
-              value: "You are helpful.",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "prev question",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "assistant",
-          parts: [
-            {
-              kind: "text",
-              value: "prev answer",
-            },
-          ],
-          metadata: {},
-        },
-        {
-          role: "user",
-          parts: [
-            {
-              kind: "text",
-              value: "Hi",
-            },
-          ],
-          metadata: {},
-        },
-      ],
+      expected: {
+        messages: [
+          {
+            role: "system",
+            content: [
+              {
+                kind: "text",
+                value: "You are helpful.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "prev question",
+              },
+            ],
+          },
+          {
+            role: "assistant",
+            content: [
+              {
+                kind: "text",
+                value: "prev answer",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Hi",
+              },
+            ],
+          },
+        ],
+      },
       operation: "parse",
     },
   },
@@ -2029,16 +2006,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_multiple_text_blocks",
-      stage: "callable",
-      provider: "anthropic",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "anthropic",
-            apiType: "chat",
-          },
-        },
+        provider: "anthropic",
+        apiType: "chat",
         response: {
           id: "msg_03ZHFVFLIiCCEzvnrwxXqaNO",
           type: "message",
@@ -2061,8 +2032,11 @@ const vectors = [
             output_tokens: 12,
           },
         },
+        has_outputs: false,
       },
-      expected: "Here is the answer: The weather in Paris is sunny.",
+      expected: {
+        result: "Here is the answer: The weather in Paris is sunny.",
+      },
       operation: "process",
     },
   },
@@ -2076,22 +2050,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_structured_output",
-      stage: "callable",
-      provider: "anthropic",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "anthropic",
-            apiType: "chat",
-          },
-          outputs: [
-            {
-              name: "result",
-              kind: "string",
-            },
-          ],
-        },
+        provider: "anthropic",
+        apiType: "chat",
         response: {
           id: "msg-struct",
           type: "message",
@@ -2110,10 +2072,13 @@ const vectors = [
             output_tokens: 10,
           },
         },
+        has_outputs: true,
       },
       expected: {
-        city: "Paris",
-        temp: 22,
+        result: {
+          city: "Paris",
+          temp: 22,
+        },
       },
       operation: "process",
     },
@@ -2128,16 +2093,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_text",
-      stage: "callable",
-      provider: "anthropic",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "anthropic",
-            apiType: "chat",
-          },
-        },
+        provider: "anthropic",
+        apiType: "chat",
         response: {
           id: "msg_01XFDUDYJgAACzvnptvVoYEL",
           type: "message",
@@ -2156,8 +2115,11 @@ const vectors = [
             output_tokens: 3,
           },
         },
+        has_outputs: false,
       },
-      expected: "Hello!",
+      expected: {
+        result: "Hello!",
+      },
       operation: "process",
     },
   },
@@ -2171,16 +2133,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "anthropic_tool_use",
-      stage: "callable",
-      provider: "anthropic",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "anthropic",
-            apiType: "chat",
-          },
-        },
+        provider: "anthropic",
+        apiType: "chat",
         response: {
           id: "msg_02YGEUEKHgBBDzvnquwWpZMN",
           type: "message",
@@ -2203,14 +2159,17 @@ const vectors = [
             output_tokens: 20,
           },
         },
+        has_outputs: false,
       },
-      expected: [
-        {
-          id: "toolu_1",
-          name: "get_weather",
-          arguments: '{"city":"Paris"}',
-        },
-      ],
+      expected: {
+        result: [
+          {
+            id: "toolu_1",
+            name: "get_weather",
+            arguments: '{"city":"Paris"}',
+          },
+        ],
+      },
       operation: "process",
     },
   },
@@ -2224,16 +2183,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_empty_content",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "chat",
-          },
-        },
+        provider: "openai",
+        apiType: "chat",
         response: {
           id: "chatcmpl-empty",
           object: "chat.completion",
@@ -2256,8 +2209,11 @@ const vectors = [
             total_tokens: 5,
           },
         },
+        has_outputs: false,
       },
-      expected: "",
+      expected: {
+        result: "",
+      },
       operation: "process",
     },
   },
@@ -2271,16 +2227,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_multiple_tool_calls",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "chat",
-          },
-        },
+        provider: "openai",
+        apiType: "chat",
         response: {
           id: "chatcmpl-tool2",
           object: "chat.completion",
@@ -2321,19 +2271,22 @@ const vectors = [
             total_tokens: 58,
           },
         },
+        has_outputs: false,
       },
-      expected: [
-        {
-          id: "call_a",
-          name: "get_weather",
-          arguments: '{"city":"Paris"}',
-        },
-        {
-          id: "call_b",
-          name: "get_time",
-          arguments: '{"timezone":"Europe/Paris"}',
-        },
-      ],
+      expected: {
+        result: [
+          {
+            id: "call_a",
+            name: "get_weather",
+            arguments: '{"city":"Paris"}',
+          },
+          {
+            id: "call_b",
+            name: "get_time",
+            arguments: '{"timezone":"Europe/Paris"}',
+          },
+        ],
+      },
       operation: "process",
     },
   },
@@ -2347,16 +2300,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_null_content",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "chat",
-          },
-        },
+        provider: "openai",
+        apiType: "chat",
         response: {
           id: "chatcmpl-null1",
           object: "chat.completion",
@@ -2379,8 +2326,11 @@ const vectors = [
             total_tokens: 10,
           },
         },
+        has_outputs: false,
       },
-      expected: "",
+      expected: {
+        result: "",
+      },
       operation: "process",
     },
   },
@@ -2394,16 +2344,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_refusal",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "chat",
-          },
-        },
+        provider: "openai",
+        apiType: "chat",
         response: {
           id: "chatcmpl-refusal1",
           object: "chat.completion",
@@ -2426,8 +2370,11 @@ const vectors = [
             total_tokens: 23,
           },
         },
+        has_outputs: false,
       },
-      expected: "I cannot help with that",
+      expected: {
+        result: "I cannot help with that",
+      },
       operation: "process",
     },
   },
@@ -2441,22 +2388,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_structured_invalid_json",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "chat",
-          },
-          outputs: [
-            {
-              name: "result",
-              kind: "string",
-            },
-          ],
-        },
+        provider: "openai",
+        apiType: "chat",
         response: {
           id: "chatcmpl-struct2",
           object: "chat.completion",
@@ -2479,8 +2414,11 @@ const vectors = [
             total_tokens: 25,
           },
         },
+        has_outputs: true,
       },
-      expected: "not valid json",
+      expected: {
+        result: "not valid json",
+      },
       operation: "process",
     },
   },
@@ -2494,22 +2432,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_structured_output",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "chat",
-          },
-          outputs: [
-            {
-              name: "result",
-              kind: "string",
-            },
-          ],
-        },
+        provider: "openai",
+        apiType: "chat",
         response: {
           id: "chatcmpl-struct1",
           object: "chat.completion",
@@ -2532,10 +2458,13 @@ const vectors = [
             total_tokens: 32,
           },
         },
+        has_outputs: true,
       },
       expected: {
-        city: "Paris",
-        temp: 72,
+        result: {
+          city: "Paris",
+          temp: 72,
+        },
       },
       operation: "process",
     },
@@ -2550,16 +2479,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_text_content",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "chat",
-          },
-        },
+        provider: "openai",
+        apiType: "chat",
         response: {
           id: "chatcmpl-abc123",
           object: "chat.completion",
@@ -2582,8 +2505,11 @@ const vectors = [
             total_tokens: 12,
           },
         },
+        has_outputs: false,
       },
-      expected: "Hello!",
+      expected: {
+        result: "Hello!",
+      },
       operation: "process",
     },
   },
@@ -2597,16 +2523,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "chat_tool_calls",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "chat",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "chat",
-          },
-        },
+        provider: "openai",
+        apiType: "chat",
         response: {
           id: "chatcmpl-tool1",
           object: "chat.completion",
@@ -2639,14 +2559,17 @@ const vectors = [
             total_tokens: 40,
           },
         },
+        has_outputs: false,
       },
-      expected: [
-        {
-          id: "call_1",
-          name: "get_weather",
-          arguments: '{"city":"Paris"}',
-        },
-      ],
+      expected: {
+        result: [
+          {
+            id: "call_1",
+            name: "get_weather",
+            arguments: '{"city":"Paris"}',
+          },
+        ],
+      },
       operation: "process",
     },
   },
@@ -2660,16 +2583,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "embedding_batch",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "embedding",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "embedding",
-          },
-        },
+        provider: "openai",
+        apiType: "embedding",
         response: {
           object: "list",
           data: [
@@ -2695,12 +2612,15 @@ const vectors = [
             total_tokens: 15,
           },
         },
+        has_outputs: false,
       },
-      expected: [
-        [0.1, 0.2],
-        [0.3, 0.4],
-        [0.5, 0.6],
-      ],
+      expected: {
+        result: [
+          [0.1, 0.2],
+          [0.3, 0.4],
+          [0.5, 0.6],
+        ],
+      },
       operation: "process",
     },
   },
@@ -2714,16 +2634,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "embedding_single",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "embedding",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "embedding",
-          },
-        },
+        provider: "openai",
+        apiType: "embedding",
         response: {
           object: "list",
           data: [
@@ -2739,8 +2653,11 @@ const vectors = [
             total_tokens: 5,
           },
         },
+        has_outputs: false,
       },
-      expected: [0.1, 0.2, 0.3],
+      expected: {
+        result: [0.1, 0.2, 0.3],
+      },
       operation: "process",
     },
   },
@@ -2754,16 +2671,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "image_b64",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "image",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "image",
-          },
-        },
+        provider: "openai",
+        apiType: "image",
         response: {
           created: 1700000011,
           data: [
@@ -2774,8 +2685,11 @@ const vectors = [
             },
           ],
         },
+        has_outputs: false,
       },
-      expected: "base64data",
+      expected: {
+        result: "base64data",
+      },
       operation: "process",
     },
   },
@@ -2789,16 +2703,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "image_revised_prompt",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "image",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "image",
-          },
-        },
+        provider: "openai",
+        apiType: "image",
         response: {
           created: 1700000012,
           data: [
@@ -2809,8 +2717,11 @@ const vectors = [
             },
           ],
         },
+        has_outputs: false,
       },
-      expected: "https://img.example.com/cat.png",
+      expected: {
+        result: "https://img.example.com/cat.png",
+      },
       operation: "process",
     },
   },
@@ -2824,16 +2735,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "image_url",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "image",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "image",
-          },
-        },
+        provider: "openai",
+        apiType: "image",
         response: {
           created: 1700000010,
           data: [
@@ -2843,8 +2748,11 @@ const vectors = [
             },
           ],
         },
+        has_outputs: false,
       },
-      expected: "https://img.example.com/generated.png",
+      expected: {
+        result: "https://img.example.com/generated.png",
+      },
       operation: "process",
     },
   },
@@ -2858,16 +2766,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_empty_output",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "responses",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "responses",
-          },
-        },
+        provider: "openai",
+        apiType: "responses",
         response: {
           id: "resp-empty",
           object: "response",
@@ -2876,8 +2778,11 @@ const vectors = [
           output_text: "",
           model: "gpt-4o",
         },
+        has_outputs: false,
       },
-      expected: "",
+      expected: {
+        result: "",
+      },
       operation: "process",
     },
   },
@@ -2891,22 +2796,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_structured",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "responses",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "responses",
-          },
-          outputs: [
-            {
-              name: "result",
-              kind: "string",
-            },
-          ],
-        },
+        provider: "openai",
+        apiType: "responses",
         response: {
           id: "resp_struct1",
           object: "response",
@@ -2935,9 +2828,12 @@ const vectors = [
             total_tokens: 28,
           },
         },
+        has_outputs: true,
       },
       expected: {
-        city: "Paris",
+        result: {
+          city: "Paris",
+        },
       },
       operation: "process",
     },
@@ -2952,16 +2848,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_text",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "responses",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "responses",
-          },
-        },
+        provider: "openai",
+        apiType: "responses",
         response: {
           id: "resp_abc123",
           object: "response",
@@ -2990,8 +2880,11 @@ const vectors = [
             total_tokens: 12,
           },
         },
+        has_outputs: false,
       },
-      expected: "Hello!",
+      expected: {
+        result: "Hello!",
+      },
       operation: "process",
     },
   },
@@ -3005,16 +2898,10 @@ const vectors = [
     returns: "unknown",
     vector: {
       name: "responses_tool_calls",
-      stage: "callable",
-      provider: "openai",
-      targetApi: "responses",
+      stage: "process",
       input: {
-        agent: {
-          model: {
-            provider: "openai",
-            apiType: "responses",
-          },
-        },
+        provider: "openai",
+        apiType: "responses",
         response: {
           id: "resp_tool1",
           object: "response",
@@ -3038,14 +2925,17 @@ const vectors = [
             total_tokens: 43,
           },
         },
+        has_outputs: false,
       },
-      expected: [
-        {
-          id: "call_1",
-          name: "get_weather",
-          arguments: '{"city":"Paris"}',
-        },
-      ],
+      expected: {
+        result: [
+          {
+            id: "call_1",
+            name: "get_weather",
+            arguments: '{"city":"Paris"}',
+          },
+        ],
+      },
       operation: "process",
     },
   },
@@ -3060,16 +2950,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "conditional_block",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
+        engine: "jinja2",
         inputs: {
           premium: true,
         },
       },
-      expected: "Welcome VIP!",
+      expected: {
+        rendered: "Welcome VIP!",
+      },
       operation: "render",
     },
   },
@@ -3084,16 +2975,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "conditional_false",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
+        engine: "jinja2",
         inputs: {
           premium: false,
         },
       },
-      expected: "Hello!",
+      expected: {
+        rendered: "Hello!",
+      },
       operation: "render",
     },
   },
@@ -3108,14 +3000,15 @@ const vectors = [
     returns: "string",
     vector: {
       name: "default_filter",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: '{{name|default("stranger")}}',
+        engine: "jinja2",
         inputs: {},
       },
-      expected: "stranger",
+      expected: {
+        rendered: "stranger",
+      },
       operation: "render",
     },
   },
@@ -3130,16 +3023,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_basic",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{name|upper}}",
+        engine: "jinja2",
         inputs: {
           name: "hello",
         },
       },
-      expected: "HELLO",
+      expected: {
+        rendered: "HELLO",
+      },
       operation: "render",
     },
   },
@@ -3154,16 +3048,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_join",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{ items | join(', ') }}",
+        engine: "jinja2",
         inputs: {
           items: ["a", "b", "c"],
         },
       },
-      expected: "a, b, c",
+      expected: {
+        rendered: "a, b, c",
+      },
       operation: "render",
     },
   },
@@ -3178,16 +3073,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_length",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{ items | length }}",
+        engine: "jinja2",
         inputs: {
           items: [1, 2, 3, 4, 5],
         },
       },
-      expected: "5",
+      expected: {
+        rendered: "5",
+      },
       operation: "render",
     },
   },
@@ -3202,16 +3098,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_lower",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{ name | lower }}",
+        engine: "jinja2",
         inputs: {
           name: "HELLO",
         },
       },
-      expected: "hello",
+      expected: {
+        rendered: "hello",
+      },
       operation: "render",
     },
   },
@@ -3226,16 +3123,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_trim",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{ name | trim }}",
+        engine: "jinja2",
         inputs: {
           name: "  hello  ",
         },
       },
-      expected: "hello",
+      expected: {
+        rendered: "hello",
+      },
       operation: "render",
     },
   },
@@ -3250,16 +3148,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "filter_upper",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{ name | upper }}",
+        engine: "jinja2",
         inputs: {
           name: "hello",
         },
       },
-      expected: "HELLO",
+      expected: {
+        rendered: "HELLO",
+      },
       operation: "render",
     },
   },
@@ -3274,16 +3173,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "for_loop",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "Items: {% for item in items %}{{item}} {% endfor %}",
+        engine: "jinja2",
         inputs: {
           items: ["a", "b", "c"],
         },
       },
-      expected: "Items: a b c ",
+      expected: {
+        rendered: "Items: a b c ",
+      },
       operation: "render",
     },
   },
@@ -3298,16 +3198,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "html_not_escaped",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{content}}",
+        engine: "jinja2",
         inputs: {
           content: "<b>bold</b>",
         },
       },
-      expected: "<b>bold</b>",
+      expected: {
+        rendered: "<b>bold</b>",
+      },
       operation: "render",
     },
   },
@@ -3322,14 +3223,15 @@ const vectors = [
     returns: "string",
     vector: {
       name: "jinja2_comment",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "Hello{# this is a comment #} World",
+        engine: "jinja2",
         inputs: {},
       },
-      expected: "Hello World",
+      expected: {
+        rendered: "Hello World",
+      },
       operation: "render",
     },
   },
@@ -3344,14 +3246,15 @@ const vectors = [
     returns: "string",
     vector: {
       name: "missing_variable_renders_empty",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "Hello {{name}}!",
+        engine: "jinja2",
         inputs: {},
       },
-      expected: "Hello !",
+      expected: {
+        rendered: "Hello !",
+      },
       operation: "render",
     },
   },
@@ -3366,18 +3269,19 @@ const vectors = [
     returns: "string",
     vector: {
       name: "multiple_variables",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{first}} {{last}} is {{age}}",
+        engine: "jinja2",
         inputs: {
           first: "Jane",
           last: "Doe",
           age: 30,
         },
       },
-      expected: "Jane Doe is 30",
+      expected: {
+        rendered: "Jane Doe is 30",
+      },
       operation: "render",
     },
   },
@@ -3392,16 +3296,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "mustache_inverted",
-      stage: "callable",
-      provider: "mustache",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{^show}}Hidden{{/show}}",
+        engine: "mustache",
         inputs: {
           show: false,
         },
       },
-      expected: "Hidden",
+      expected: {
+        rendered: "Hidden",
+      },
       operation: "render",
     },
   },
@@ -3416,16 +3321,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "mustache_loop",
-      stage: "callable",
-      provider: "mustache",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{#items}}{{.}} {{/items}}",
+        engine: "mustache",
         inputs: {
           items: ["a", "b", "c"],
         },
       },
-      expected: "a b c ",
+      expected: {
+        rendered: "a b c ",
+      },
       operation: "render",
     },
   },
@@ -3440,16 +3346,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "mustache_section",
-      stage: "callable",
-      provider: "mustache",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{#show}}Visible{{/show}}",
+        engine: "mustache",
         inputs: {
           show: true,
         },
       },
-      expected: "Visible",
+      expected: {
+        rendered: "Visible",
+      },
       operation: "render",
     },
   },
@@ -3464,16 +3371,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "mustache_simple",
-      stage: "callable",
-      provider: "mustache",
+      stage: "render",
       input: {
-        agent: {},
         template: "Hello {{name}}!",
+        engine: "mustache",
         inputs: {
           name: "World",
         },
       },
-      expected: "Hello World!",
+      expected: {
+        rendered: "Hello World!",
+      },
       operation: "render",
     },
   },
@@ -3488,11 +3396,10 @@ const vectors = [
     returns: "string",
     vector: {
       name: "nested_object",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "{{user.name}} ({{user.email}})",
+        engine: "jinja2",
         inputs: {
           user: {
             name: "Jane",
@@ -3500,7 +3407,9 @@ const vectors = [
           },
         },
       },
-      expected: "Jane (jane@test.com)",
+      expected: {
+        rendered: "Jane (jane@test.com)",
+      },
       operation: "render",
     },
   },
@@ -3515,16 +3424,17 @@ const vectors = [
     returns: "string",
     vector: {
       name: "role_markers_preserved",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "system:\nYou are helpful.\n\nuser:\n{{question}}",
+        engine: "jinja2",
         inputs: {
           question: "Hello",
         },
       },
-      expected: "system:\nYou are helpful.\n\nuser:\nHello",
+      expected: {
+        rendered: "system:\nYou are helpful.\n\nuser:\nHello",
+      },
       operation: "render",
     },
   },
@@ -3539,16 +3449,57 @@ const vectors = [
     returns: "string",
     vector: {
       name: "simple_substitution",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "Hello {{name}}!",
+        engine: "jinja2",
         inputs: {
           name: "World",
         },
       },
-      expected: "Hello World!",
+      expected: {
+        rendered: "Hello World!",
+      },
+      operation: "render",
+    },
+  },
+  {
+    contract: "Renderer",
+    operation: "render",
+    params: {
+      agent: "Agent",
+      template: "string",
+      inputs: "Record<unknown>",
+    },
+    returns: "string",
+    vector: {
+      name: "thread_nonce_injection",
+      stage: "render",
+      input: {
+        template:
+          "system:\nYou are helpful.\n\n{{conversation}}\n\nuser:\n{{question}}",
+        engine: "jinja2",
+        inputs: {
+          question: "Hi",
+          conversation: {
+            _kind: "thread",
+            messages: [
+              {
+                role: "user",
+                content: "previous question",
+              },
+              {
+                role: "assistant",
+                content: "previous answer",
+              },
+            ],
+          },
+        },
+      },
+      expected: {
+        nonce_pattern:
+          "^system:\nYou are helpful\\.\n\n__PROMPTY_THREAD_[a-f0-9]{8}_conversation__\n\nuser:\nHi$",
+      },
       operation: "render",
     },
   },
@@ -3563,14 +3514,15 @@ const vectors = [
     returns: "string",
     vector: {
       name: "whitespace_preserved",
-      stage: "callable",
-      provider: "jinja2",
+      stage: "render",
       input: {
-        agent: {},
         template: "line1\n  line2\n    line3",
+        engine: "jinja2",
         inputs: {},
       },
-      expected: "line1\n  line2\n    line3",
+      expected: {
+        rendered: "line1\n  line2\n    line3",
+      },
       operation: "render",
     },
   },

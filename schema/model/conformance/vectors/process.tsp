@@ -1,49 +1,20 @@
 import "@typra/emitter";
 
-using Prompty.Contracts.Models;
-using Prompty.Operations.Pipeline;
 namespace Prompty.Conformance.Vectors;
 
-// Behavior vectors for the Processor.process callable seam, migrated from
-// spec/vectors/process/process_vectors.json.
-//
-// Authored as a JSON-STRING vector set (Typra 0.7.0+ affordance, branch
-// sethjuarez/vector-keyword-key-input @ db3c188): a triple-quoted constant
-// Typra parses into entries, bypassing the #{} object-literal grammar. This
-// is REQUIRED here because both the populated agent.model field AND the raw
-// provider wire response carry a "model" key, which TypeSpec forbids as a
-// bare object-value-literal key. @vector inputs are opaque (unknown),
-// JSON-compared conformance evidence, so raw wire payloads are first-class.
-//
-// Shape (bound to process(agent, response): unknown):
-//   - input.agent.model.{provider,apiType}: where the runtime processor reads
-//     dispatch info; input.agent.outputs present iff the source has_outputs=true
-//     (triggers structured/JSON-parsed extraction).
-//   - input.response: the raw provider wire object (contains a "model" key).
-//   - expected: the BARE extracted result (string | tool-call list | parsed
-//     object | vector), matching what process_response returns (the hand-written
-//     Rust test in prompty-openai/tests/process_vectors.rs compares against
-//     expected.result, i.e. this same bare value).
-//   - provider + targetApi carried as first-class vector dispatch selectors.
-//
-// NOTE: the authoritative wire-form catalog stays at
-// spec/vectors/process/process_vectors.json (read directly by the Rust
-// conformance test); this file mirrors it as canonical model-form evidence in
-// the generated vectors.json for cross-runtime oracles.
+// Behavior vectors migrated from spec/vectors/process/process_vectors.json — bound to Processor.process.
+// Authored as a JSON-STRING vector set (Typra 0.7.0+ affordance): a triple-quoted
+// constant Typra parses into vector entries, so raw provider/agent payloads with
+// keyword keys (e.g. "model") are first-class. @vector inputs are opaque (unknown),
+// JSON-compared conformance evidence emitted into the cross-runtime vectors.json.
 const ProcessVectors = """
   [
     {
       "name": "chat_text_content",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "chat"
-          }
-        },
+        "provider": "openai",
+        "apiType": "chat",
         "response": {
           "id": "chatcmpl-abc123",
           "object": "chat.completion",
@@ -65,22 +36,19 @@ const ProcessVectors = """
             "completion_tokens": 2,
             "total_tokens": 12
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": "Hello!"
+      "expected": {
+        "result": "Hello!"
+      }
     },
     {
       "name": "chat_tool_calls",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "chat"
-          }
-        },
+        "provider": "openai",
+        "apiType": "chat",
         "response": {
           "id": "chatcmpl-tool1",
           "object": "chat.completion",
@@ -112,28 +80,25 @@ const ProcessVectors = """
             "completion_tokens": 15,
             "total_tokens": 40
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": [
-        {
-          "id": "call_1",
-          "name": "get_weather",
-          "arguments": "{\\"city\\":\\"Paris\\"}"
-        }
-      ]
+      "expected": {
+        "result": [
+          {
+            "id": "call_1",
+            "name": "get_weather",
+            "arguments": "{\\"city\\":\\"Paris\\"}"
+          }
+        ]
+      }
     },
     {
       "name": "chat_multiple_tool_calls",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "chat"
-          }
-        },
+        "provider": "openai",
+        "apiType": "chat",
         "response": {
           "id": "chatcmpl-tool2",
           "object": "chat.completion",
@@ -173,39 +138,30 @@ const ProcessVectors = """
             "completion_tokens": 28,
             "total_tokens": 58
           }
-        }
-      },
-      "expected": [
-        {
-          "id": "call_a",
-          "name": "get_weather",
-          "arguments": "{\\"city\\":\\"Paris\\"}"
         },
-        {
-          "id": "call_b",
-          "name": "get_time",
-          "arguments": "{\\"timezone\\":\\"Europe/Paris\\"}"
-        }
-      ]
+        "has_outputs": false
+      },
+      "expected": {
+        "result": [
+          {
+            "id": "call_a",
+            "name": "get_weather",
+            "arguments": "{\\"city\\":\\"Paris\\"}"
+          },
+          {
+            "id": "call_b",
+            "name": "get_time",
+            "arguments": "{\\"timezone\\":\\"Europe/Paris\\"}"
+          }
+        ]
+      }
     },
     {
       "name": "chat_structured_output",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "chat"
-          },
-          "outputs": [
-            {
-              "name": "result",
-              "kind": "string"
-            }
-          ]
-        },
+        "provider": "openai",
+        "apiType": "chat",
         "response": {
           "id": "chatcmpl-struct1",
           "object": "chat.completion",
@@ -227,31 +183,22 @@ const ProcessVectors = """
             "completion_tokens": 12,
             "total_tokens": 32
           }
-        }
+        },
+        "has_outputs": true
       },
       "expected": {
-        "city": "Paris",
-        "temp": 72
+        "result": {
+          "city": "Paris",
+          "temp": 72
+        }
       }
     },
     {
       "name": "chat_structured_invalid_json",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "chat"
-          },
-          "outputs": [
-            {
-              "name": "result",
-              "kind": "string"
-            }
-          ]
-        },
+        "provider": "openai",
+        "apiType": "chat",
         "response": {
           "id": "chatcmpl-struct2",
           "object": "chat.completion",
@@ -273,22 +220,19 @@ const ProcessVectors = """
             "completion_tokens": 5,
             "total_tokens": 25
           }
-        }
+        },
+        "has_outputs": true
       },
-      "expected": "not valid json"
+      "expected": {
+        "result": "not valid json"
+      }
     },
     {
       "name": "chat_refusal",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "chat"
-          }
-        },
+        "provider": "openai",
+        "apiType": "chat",
         "response": {
           "id": "chatcmpl-refusal1",
           "object": "chat.completion",
@@ -310,22 +254,19 @@ const ProcessVectors = """
             "completion_tokens": 8,
             "total_tokens": 23
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": "I cannot help with that"
+      "expected": {
+        "result": "I cannot help with that"
+      }
     },
     {
       "name": "chat_null_content",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "chat"
-          }
-        },
+        "provider": "openai",
+        "apiType": "chat",
         "response": {
           "id": "chatcmpl-null1",
           "object": "chat.completion",
@@ -347,22 +288,19 @@ const ProcessVectors = """
             "completion_tokens": 0,
             "total_tokens": 10
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": ""
+      "expected": {
+        "result": ""
+      }
     },
     {
       "name": "embedding_single",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "embedding",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "embedding"
-          }
-        },
+        "provider": "openai",
+        "apiType": "embedding",
         "response": {
           "object": "list",
           "data": [
@@ -381,26 +319,23 @@ const ProcessVectors = """
             "prompt_tokens": 5,
             "total_tokens": 5
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": [
-        0.1,
-        0.2,
-        0.3
-      ]
+      "expected": {
+        "result": [
+          0.1,
+          0.2,
+          0.3
+        ]
+      }
     },
     {
       "name": "embedding_batch",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "embedding",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "embedding"
-          }
-        },
+        "provider": "openai",
+        "apiType": "embedding",
         "response": {
           "object": "list",
           "data": [
@@ -434,35 +369,32 @@ const ProcessVectors = """
             "prompt_tokens": 15,
             "total_tokens": 15
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": [
-        [
-          0.1,
-          0.2
-        ],
-        [
-          0.3,
-          0.4
-        ],
-        [
-          0.5,
-          0.6
+      "expected": {
+        "result": [
+          [
+            0.1,
+            0.2
+          ],
+          [
+            0.3,
+            0.4
+          ],
+          [
+            0.5,
+            0.6
+          ]
         ]
-      ]
+      }
     },
     {
       "name": "image_url",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "image",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "image"
-          }
-        },
+        "provider": "openai",
+        "apiType": "image",
         "response": {
           "created": 1700000010,
           "data": [
@@ -471,22 +403,19 @@ const ProcessVectors = """
               "revised_prompt": null
             }
           ]
-        }
+        },
+        "has_outputs": false
       },
-      "expected": "https://img.example.com/generated.png"
+      "expected": {
+        "result": "https://img.example.com/generated.png"
+      }
     },
     {
       "name": "image_b64",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "image",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "image"
-          }
-        },
+        "provider": "openai",
+        "apiType": "image",
         "response": {
           "created": 1700000011,
           "data": [
@@ -496,22 +425,19 @@ const ProcessVectors = """
               "revised_prompt": null
             }
           ]
-        }
+        },
+        "has_outputs": false
       },
-      "expected": "base64data"
+      "expected": {
+        "result": "base64data"
+      }
     },
     {
       "name": "image_revised_prompt",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "image",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "image"
-          }
-        },
+        "provider": "openai",
+        "apiType": "image",
         "response": {
           "created": 1700000012,
           "data": [
@@ -520,22 +446,19 @@ const ProcessVectors = """
               "revised_prompt": "A cute cat sitting on a windowsill in warm sunlight"
             }
           ]
-        }
+        },
+        "has_outputs": false
       },
-      "expected": "https://img.example.com/cat.png"
+      "expected": {
+        "result": "https://img.example.com/cat.png"
+      }
     },
     {
       "name": "responses_text",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "responses",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "responses"
-          }
-        },
+        "provider": "openai",
+        "apiType": "responses",
         "response": {
           "id": "resp_abc123",
           "object": "response",
@@ -563,22 +486,19 @@ const ProcessVectors = """
             "output_tokens": 2,
             "total_tokens": 12
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": "Hello!"
+      "expected": {
+        "result": "Hello!"
+      }
     },
     {
       "name": "responses_tool_calls",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "responses",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "responses"
-          }
-        },
+        "provider": "openai",
+        "apiType": "responses",
         "response": {
           "id": "resp_tool1",
           "object": "response",
@@ -601,34 +521,25 @@ const ProcessVectors = """
             "output_tokens": 18,
             "total_tokens": 43
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": [
-        {
-          "id": "call_1",
-          "name": "get_weather",
-          "arguments": "{\\"city\\":\\"Paris\\"}"
-        }
-      ]
+      "expected": {
+        "result": [
+          {
+            "id": "call_1",
+            "name": "get_weather",
+            "arguments": "{\\"city\\":\\"Paris\\"}"
+          }
+        ]
+      }
     },
     {
       "name": "responses_structured",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "responses",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "responses"
-          },
-          "outputs": [
-            {
-              "name": "result",
-              "kind": "string"
-            }
-          ]
-        },
+        "provider": "openai",
+        "apiType": "responses",
         "response": {
           "id": "resp_struct1",
           "object": "response",
@@ -656,24 +567,21 @@ const ProcessVectors = """
             "output_tokens": 8,
             "total_tokens": 28
           }
-        }
+        },
+        "has_outputs": true
       },
       "expected": {
-        "city": "Paris"
+        "result": {
+          "city": "Paris"
+        }
       }
     },
     {
       "name": "anthropic_text",
-      "stage": "callable",
-      "provider": "anthropic",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "anthropic",
-            "apiType": "chat"
-          }
-        },
+        "provider": "anthropic",
+        "apiType": "chat",
         "response": {
           "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
           "type": "message",
@@ -691,22 +599,19 @@ const ProcessVectors = """
             "input_tokens": 10,
             "output_tokens": 3
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": "Hello!"
+      "expected": {
+        "result": "Hello!"
+      }
     },
     {
       "name": "anthropic_tool_use",
-      "stage": "callable",
-      "provider": "anthropic",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "anthropic",
-            "apiType": "chat"
-          }
-        },
+        "provider": "anthropic",
+        "apiType": "chat",
         "response": {
           "id": "msg_02YGEUEKHgBBDzvnquwWpZMN",
           "type": "message",
@@ -728,28 +633,25 @@ const ProcessVectors = """
             "input_tokens": 25,
             "output_tokens": 20
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": [
-        {
-          "id": "toolu_1",
-          "name": "get_weather",
-          "arguments": "{\\"city\\":\\"Paris\\"}"
-        }
-      ]
+      "expected": {
+        "result": [
+          {
+            "id": "toolu_1",
+            "name": "get_weather",
+            "arguments": "{\\"city\\":\\"Paris\\"}"
+          }
+        ]
+      }
     },
     {
       "name": "anthropic_multiple_text_blocks",
-      "stage": "callable",
-      "provider": "anthropic",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "anthropic",
-            "apiType": "chat"
-          }
-        },
+        "provider": "anthropic",
+        "apiType": "chat",
         "response": {
           "id": "msg_03ZHFVFLIiCCEzvnrwxXqaNO",
           "type": "message",
@@ -771,22 +673,19 @@ const ProcessVectors = """
             "input_tokens": 15,
             "output_tokens": 12
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": "Here is the answer: The weather in Paris is sunny."
+      "expected": {
+        "result": "Here is the answer: The weather in Paris is sunny."
+      }
     },
     {
       "name": "chat_empty_content",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "chat"
-          }
-        },
+        "provider": "openai",
+        "apiType": "chat",
         "response": {
           "id": "chatcmpl-empty",
           "object": "chat.completion",
@@ -808,28 +707,19 @@ const ProcessVectors = """
             "completion_tokens": 0,
             "total_tokens": 5
           }
-        }
+        },
+        "has_outputs": false
       },
-      "expected": ""
+      "expected": {
+        "result": ""
+      }
     },
     {
       "name": "anthropic_structured_output",
-      "stage": "callable",
-      "provider": "anthropic",
-      "targetApi": "chat",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "anthropic",
-            "apiType": "chat"
-          },
-          "outputs": [
-            {
-              "name": "result",
-              "kind": "string"
-            }
-          ]
-        },
+        "provider": "anthropic",
+        "apiType": "chat",
         "response": {
           "id": "msg-struct",
           "type": "message",
@@ -847,25 +737,22 @@ const ProcessVectors = """
             "input_tokens": 20,
             "output_tokens": 10
           }
-        }
+        },
+        "has_outputs": true
       },
       "expected": {
-        "city": "Paris",
-        "temp": 22
+        "result": {
+          "city": "Paris",
+          "temp": 22
+        }
       }
     },
     {
       "name": "responses_empty_output",
-      "stage": "callable",
-      "provider": "openai",
-      "targetApi": "responses",
+      "stage": "process",
       "input": {
-        "agent": {
-          "model": {
-            "provider": "openai",
-            "apiType": "responses"
-          }
-        },
+        "provider": "openai",
+        "apiType": "responses",
         "response": {
           "id": "resp-empty",
           "object": "response",
@@ -873,9 +760,12 @@ const ProcessVectors = """
           "output": [],
           "output_text": "",
           "model": "gpt-4o"
-        }
+        },
+        "has_outputs": false
       },
-      "expected": ""
+      "expected": {
+        "result": ""
+      }
     }
   ]
   """;

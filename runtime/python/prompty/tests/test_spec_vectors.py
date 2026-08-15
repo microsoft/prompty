@@ -555,33 +555,7 @@ def _check_template(actual: Template | None, expected: dict, errors: list[str]):
 # RENDER VECTORS
 # ============================================================================
 
-# The thread-nonce render case is intentionally NOT a cross-runtime literal vector:
-# its expected output embeds a randomly generated 8-hex nonce, so it can only be
-# validated per-runtime via pattern match rather than exact equality. It is kept here
-# as a runtime-local case so render nonce coverage survives the migration of the
-# deterministic vectors to the emitted single source.
-_RENDER_NONCE_VECTOR = {
-    "name": "thread_nonce_injection",
-    "input": {
-        "template": "system:\nYou are helpful.\n\n{{conversation}}\n\nuser:\n{{question}}",
-        "engine": "jinja2",
-        "inputs": {
-            "question": "Hi",
-            "conversation": {
-                "_kind": "thread",
-                "messages": [
-                    {"role": "user", "content": "previous question"},
-                    {"role": "assistant", "content": "previous answer"},
-                ],
-            },
-        },
-    },
-    "expected": {
-        "nonce_pattern": "^system:\nYou are helpful\\.\n\n__PROMPTY_THREAD_[a-f0-9]{8}_conversation__\n\nuser:\nHi$"
-    },
-}
-
-RENDER_VECTORS = _load_vectors("render") + [_RENDER_NONCE_VECTOR]
+RENDER_VECTORS = _load_vectors("render")
 RENDER_IDS = [v["name"] for v in RENDER_VECTORS]
 
 
@@ -591,9 +565,7 @@ def test_render_vector(vec: dict):
     inp = vec["input"]
     expected = vec["expected"]
     template = inp["template"]
-    # Emitted vectors carry the template engine on the top-level ``provider`` field;
-    # the inline nonce case still uses ``input.engine``.
-    engine = vec.get("provider") or inp.get("engine", "jinja2")
+    engine = inp.get("engine", "jinja2")
     inputs = inp.get("inputs", {})
 
     # Build a minimal agent to pass to the renderer.
@@ -668,8 +640,7 @@ def test_parse_vector(vec: dict):
         return
 
     messages = parser._parse(agent, rendered)
-    # Emitted vectors carry the message list directly on ``expected``.
-    exp_messages = expected["messages"] if isinstance(expected, dict) else expected
+    exp_messages = expected["messages"]
 
     assert len(messages) == len(exp_messages), (
         f"Parse '{name}': message count {len(messages)} != expected {len(exp_messages)}\n"
@@ -681,8 +652,8 @@ def test_parse_vector(vec: dict):
         # Check role
         assert act.role == exp["role"], f"Parse '{name}' msg[{i}]: role '{act.role}' != expected '{exp['role']}'"
 
-        # Check content — emitted messages expose content parts under ``parts``.
-        exp_content = exp.get("parts", exp.get("content", []))
+        # Check content
+        exp_content = exp.get("content", [])
         if len(exp_content) == 1 and exp_content[0].get("kind") == "text":
             exp_text = exp_content[0]["value"]
             act_text = act.text
@@ -957,26 +928,24 @@ def test_process_vector(vec: dict):
     name = vec["name"]
     inp = vec["input"]
     expected = vec["expected"]
-    agent_data = inp.get("agent", {}) or {}
-    model_data = agent_data.get("model", {}) or {}
-    provider = model_data.get("provider", "openai")
-    api_type = model_data.get("apiType", "chat")
+    provider = inp.get("provider", "openai")
+    api_type = inp.get("apiType", "chat")
 
     response_data = inp["response"]
-    output_specs = agent_data.get("outputs") or []
+    has_outputs = inp.get("has_outputs", False)
 
-    # Build an agent with declared outputs to drive the structured-output path.
+    # Build agent with outputs if needed
     agent = None
-    if output_specs:
+    if has_outputs:
         agent = Agent(
             name="process_test",
-            outputs=[Property(name=o.get("name", "result"), kind=o.get("kind", "string")) for o in output_specs],
+            outputs=[Property(name="dummy", kind="string")],
         )
 
     # Anthropic responses are plain dicts — pass directly to Anthropic processor
     if provider == "anthropic":
         result = _anthropic_process_response(agent, response_data)
-        exp_result = expected
+        exp_result = expected["result"]
         _compare_process_result(name, result, exp_result)
         return
 
@@ -993,7 +962,7 @@ def test_process_vector(vec: dict):
         pytest.skip(f"Unknown apiType: {api_type}")
 
     result = _process_response(response, agent)
-    exp_result = expected
+    exp_result = expected["result"]
 
     _compare_process_result(name, result, exp_result)
 
