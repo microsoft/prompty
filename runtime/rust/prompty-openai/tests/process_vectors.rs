@@ -1,6 +1,6 @@
 //! Process vector tests — validate against shared spec vectors.
 //!
-//! Reads `spec/vectors/process/process_vectors.json` and tests that our processor
+//! Reads the generated `vectors.json` (process operation) and tests that our processor
 //! matches the expected output for all OpenAI-provider vectors.
 
 use prompty::model::Agent;

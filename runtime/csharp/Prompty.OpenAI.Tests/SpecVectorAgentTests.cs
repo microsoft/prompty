@@ -7,8 +7,8 @@ using Prompty.Core;
 namespace Prompty.OpenAI.Tests;
 
 /// <summary>
-/// Spec vector tests for the agent stage — loads canonical vectors from
-/// spec/vectors/agent/agent_vectors.json and runs them through the real
+/// Spec vector tests for the agent stage — loads canonical vectors from the
+/// generated schema/tsp-output/.typra-generated/vectors.json (run operation) and runs them through the real
 /// Pipeline.TurnAsync with mock executor/processor.
 ///
 /// The mock executor replays canned responses (pre-processed from vector data).

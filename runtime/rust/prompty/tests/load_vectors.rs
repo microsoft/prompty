@@ -1,4 +1,4 @@
-//! Data-driven load tests powered by `spec/vectors/load/load_vectors.json`.
+//! Data-driven load tests powered by the generated `vectors.json` (load operation).
 //!
 //! Each vector in the JSON array specifies input (fixture file, inline
 //! frontmatter, env vars, virtual files) and expected output (agent fields or

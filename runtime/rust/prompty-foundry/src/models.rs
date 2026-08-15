@@ -177,7 +177,7 @@ async fn list_azure_model_catalog(connection: &Value) -> Result<Vec<ModelInfo>, 
 /// [`ModelInfo`] contract. Handles both the flat `/deployments?api-version=v1`
 /// shape and the nested ARM management-plane shape.
 ///
-/// Exercised by the shared `spec/vectors/discovery` vectors so every runtime
+/// Exercised by the generated `vectors.json` (mapModel operation) so every runtime
 /// converges on the same canonical mapping.
 pub fn deployment_to_model_info(raw: &Value) -> ModelInfo {
     parse_deployment_object(raw)
@@ -186,7 +186,7 @@ pub fn deployment_to_model_info(raw: &Value) -> ModelInfo {
 /// Map one raw Azure OpenAI model-catalog entry into the provider-neutral
 /// [`ModelInfo`] contract.
 ///
-/// Exercised by the shared `spec/vectors/discovery` vectors.
+/// Exercised by the generated `vectors.json` (mapModel operation).
 pub fn catalog_model_to_model_info(raw: &Value) -> ModelInfo {
     parse_catalog_model_object(raw)
 }

@@ -1,5 +1,5 @@
 //! Agent vector tests — exercises the agent loop (`turn()`) using canned
-//! LLM responses from `spec/vectors/agent/agent_vectors.json`.
+//! LLM responses from the generated `vectors.json` (run operation).
 //!
 //! Each vector provides a `sequence` of mock LLM responses and the expected
 //! final result (or error). A `MockExecutor` replays the canned responses;

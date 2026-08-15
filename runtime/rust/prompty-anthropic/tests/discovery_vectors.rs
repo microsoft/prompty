@@ -1,5 +1,5 @@
 //! Model-discovery vector tests — validate the Anthropic wire → `ModelInfo`
-//! mapping against the shared spec vectors in `spec/vectors/discovery/`.
+//! mapping against the generated `vectors.json` (mapModel operation).
 //!
 //! The same fixture file is consumed by every runtime so all providers converge
 //! on one canonical `ModelInfo` shape. This test only maps (no network), so it

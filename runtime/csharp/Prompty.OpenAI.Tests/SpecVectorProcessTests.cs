@@ -15,8 +15,8 @@ using Prompty.Anthropic;
 namespace Prompty.OpenAI.Tests;
 
 /// <summary>
-/// Spec vector tests for the process stage — loads canonical vectors from
-/// spec/vectors/process/process_vectors.json and passes them through real
+/// Spec vector tests for the process stage — loads canonical vectors from the
+/// generated schema/tsp-output/.typra-generated/vectors.json (process operation) and passes them through real
 /// production processors (OpenAIProcessor, AnthropicProcessor).
 /// </summary>
 public class SpecVectorProcessTests

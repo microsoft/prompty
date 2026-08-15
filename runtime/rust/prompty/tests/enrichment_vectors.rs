@@ -1,6 +1,5 @@
 //! Enrichment vector tests — validate the shared model-capability enrichment
-//! primitive against the cross-runtime fixtures in
-//! `spec/vectors/discovery/enrichment_vectors.json`.
+//! primitive against the generated `vectors.json` (enrich operation).
 //!
 //! These vectors exercise `prompty::discovery::enrich` in isolation (no provider
 //! wire mapping, no network): load a base `ModelInfo` from `input`, enrich it for

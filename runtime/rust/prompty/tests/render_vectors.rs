@@ -1,6 +1,6 @@
 //! Spec vector tests for the **render** pipeline stage.
 //!
-//! Loads the 23 test cases from `spec/vectors/render/render_vectors.json` and
+//! Loads the 23 test cases from the generated `vectors.json` (render operation) and
 //! exercises the full render path: build a `Prompty` agent → register renderers
 //! → call `prompty::pipeline::render()` → compare output.
 

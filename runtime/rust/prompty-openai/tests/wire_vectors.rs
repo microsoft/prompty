@@ -1,6 +1,6 @@
 //! Wire format vector tests — validate against shared spec vectors.
 //!
-//! Reads `spec/vectors/wire/wire_vectors.json` and tests that our wire format
+//! Reads the generated `vectors.json` (toRequest operation) and tests that our wire format
 //! conversion matches the expected output for all OpenAI-provider vectors.
 
 use prompty::model::context::LoadContext;

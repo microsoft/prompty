@@ -87,7 +87,7 @@ Console.WriteLine(result);
 - **Agent mode** — Automatic tool-call loop with configurable max iterations
 - **Tracing** — Pluggable backends: console, `.tracy` files, OpenTelemetry
 - **Connection registry** — Pre-register SDK clients for reuse across prompts
-- **Spec compliance** — Passes [Prompty spec test vectors](https://github.com/microsoft/prompty/tree/main/spec/vectors)
+- **Spec compliance** — Passes [Prompty spec test vectors](https://github.com/microsoft/prompty/tree/main/schema/model/conformance/vectors)
 
 ## Core API
 

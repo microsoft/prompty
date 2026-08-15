@@ -1,4 +1,4 @@
-//! Loader integration tests using shared spec vectors from `spec/vectors/load/`.
+//! Loader integration tests using the shared `.prompty` fixtures in `spec/fixtures/`.
 //!
 //! These tests exercise the full load pipeline: frontmatter splitting, reference
 //! resolution, model shorthand expansion, and typed construction.

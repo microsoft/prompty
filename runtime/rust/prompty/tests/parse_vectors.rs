@@ -1,5 +1,5 @@
-//! Parse spec-vector tests — drives `parse_chat` against the shared
-//! `spec/vectors/parse/parse_vectors.json` fixture (15 vectors).
+//! Parse spec-vector tests — drives `parse_chat` against the generated
+//! `vectors.json` (parse operation, 15 vectors).
 
 use std::path::PathBuf;
 

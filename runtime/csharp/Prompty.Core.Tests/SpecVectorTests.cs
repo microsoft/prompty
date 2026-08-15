@@ -6,7 +6,8 @@ using Prompty.Core;
 namespace Prompty.Core.Tests;
 
 /// <summary>
-/// Spec vector validation tests — loads canonical test vectors from spec/vectors/
+/// Spec vector validation tests — loads canonical vectors from the generated
+/// schema/tsp-output/.typra-generated/vectors.json (render, parse, load operations).
 /// and verifies the C# runtime produces matching results.
 ///
 /// Vector sources:

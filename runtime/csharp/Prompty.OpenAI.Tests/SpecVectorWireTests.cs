@@ -13,8 +13,8 @@ using Prompty.Anthropic;
 namespace Prompty.OpenAI.Tests;
 
 /// <summary>
-/// Spec vector tests for the wire stage — loads canonical vectors from
-/// spec/vectors/wire/wire_vectors.json and verifies that the C# runtime
+/// Spec vector tests for the wire stage — loads canonical vectors from the
+/// generated schema/tsp-output/.typra-generated/vectors.json (toRequest operation) and verifies that the C# runtime
 /// produces correct JSON payloads for LLM API requests.
 ///
 /// For OpenAI: tests use ModelReaderWriter to serialize SDK types and

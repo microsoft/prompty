@@ -1,5 +1,5 @@
 //! Model-discovery vector tests — validate the Foundry wire → `ModelInfo`
-//! mapping against the shared spec vectors in `spec/vectors/discovery/`.
+//! mapping against the generated `vectors.json` (mapModel operation).
 //!
 //! Foundry exposes two response shapes: project `deployment` objects (flat v1
 //! data-plane or nested ARM) and Azure OpenAI `catalog` model objects. The
