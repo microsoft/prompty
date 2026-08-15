@@ -55,17 +55,53 @@ type replayScenario struct {
 
 func loadReplayVectors(t *testing.T) replayVectors {
 	t.Helper()
-	path := filepath.Join("..", "..", "..", "..", "spec", "vectors", "harness", "replay_vectors.json")
+	// Replay scenarios are emitted under the `replay` operation in the single
+	// generated vectors file; each vector's `input` carries the journal-level
+	// clock/sessionId/turnId plus per-scenario inputs.
+	path := filepath.Join("..", "..", "..", "..", "schema", "tsp-output", ".typra-generated", "vectors.json")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var vectors replayVectors
-	if err := json.Unmarshal(content, &vectors); err != nil {
+	var doc struct {
+		Vectors []struct {
+			Operation string          `json:"operation"`
+			Vector    json.RawMessage `json:"vector"`
+		} `json:"vectors"`
+	}
+	if err := json.Unmarshal(content, &doc); err != nil {
 		t.Fatal(err)
 	}
-	if vectors.Version != 1 {
-		t.Fatalf("unsupported replay vector version: %d", vectors.Version)
+	vectors := replayVectors{Version: 1}
+	for _, env := range doc.Vectors {
+		if env.Operation != "replay" {
+			continue
+		}
+		var v struct {
+			Name  string `json:"name"`
+			Input struct {
+				Clock         string                 `json:"clock"`
+				SessionId     string                 `json:"sessionId"`
+				TurnId        string                 `json:"turnId"`
+				Inputs        map[string]interface{} `json:"inputs"`
+				MaxIterations *int32                 `json:"maxIterations"`
+			} `json:"input"`
+			Expected []string `json:"expected"`
+		}
+		if err := json.Unmarshal(env.Vector, &v); err != nil {
+			t.Fatal(err)
+		}
+		if vectors.Clock == "" {
+			vectors.Clock = v.Input.Clock
+			vectors.SessionId = v.Input.SessionId
+			vectors.TurnId = v.Input.TurnId
+		}
+		vectors.Scenarios = append(vectors.Scenarios, replayScenario{
+			Name:          v.Name,
+			Inputs:        v.Input.Inputs,
+			MaxIterations: v.Input.MaxIterations,
+			Expected:      v.Expected,
+		})
 	}
 	return vectors
 }
