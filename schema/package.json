@@ -6,11 +6,11 @@
     "format:tsp": "npx tsp format \"model/**/*.tsp\"",
     "format:tsp:check": "npx tsp format \"model/**/*.tsp\" --check",
     "format:rust": "cargo fmt --all --manifest-path ../runtime/rust/prompty/Cargo.toml",
-    "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml && node scripts/normalize-typra-output.mjs",
+    "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml && node scripts/normalize-typra-output.mjs && npm run format:rust",
     "lint:fixtures": "node scripts/lint-fixtures.mjs",
     "verify:typra": "node scripts/verify-typra.mjs",
     "smoke:emit": "node scripts/smoke-emit.mjs",
-    "build": "npm run lint:fixtures && npm run format:tsp && npm run generate && npm run format:rust"
+    "build": "npm run lint:fixtures && npm run format:tsp && npm run generate"
   },
   "dependencies": {
     "@typespec/compiler": "1.10.0",
