@@ -12,8 +12,8 @@ use serde_json::{Value, json};
 
 use prompty::interfaces::{InvokerError, Processor};
 use prompty::model::{
-    InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
-    ModelInvocationResponse, ModelToolRequest, Agent,
+    Agent, InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+    ModelInvocationResponse, ModelToolRequest,
 };
 use prompty::types::{Message, Role, ToolCall};
 

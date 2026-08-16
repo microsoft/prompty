@@ -175,7 +175,7 @@ pub fn resolve_bindings(
     if tool_def
         .bindings
         .as_ref()
-        .map_or(true, |bindings| bindings.is_empty())
+        .is_none_or(|bindings| bindings.is_empty())
     {
         return args;
     }

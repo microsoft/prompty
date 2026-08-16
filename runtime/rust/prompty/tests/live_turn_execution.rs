@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use futures::StreamExt;
 use prompty::interfaces::{Executor, InvokerError, Processor};
 use prompty::model::context::LoadContext;
-use prompty::model::{ModelInvocationRequest, Agent};
+use prompty::model::{Agent, ModelInvocationRequest};
 use prompty::structured::to_structured_value;
 use prompty::types::{Message, StreamChunk};
 use prompty::{
@@ -54,11 +54,7 @@ struct ScriptedExecutor {
 
 #[async_trait]
 impl Executor for ScriptedExecutor {
-    async fn execute(
-        &self,
-        _agent: &Agent,
-        _messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    async fn execute(&self, _agent: &Agent, _messages: &[Message]) -> Result<Value, InvokerError> {
         self.calls.fetch_add(1, Ordering::SeqCst);
         self.responses
             .lock()
@@ -96,11 +92,7 @@ struct PendingAfterOpenStreamExecutor {
 
 #[async_trait]
 impl Executor for PendingAfterOpenStreamExecutor {
-    async fn execute(
-        &self,
-        _agent: &Agent,
-        _messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    async fn execute(&self, _agent: &Agent, _messages: &[Message]) -> Result<Value, InvokerError> {
         unreachable!("the test exercises the streaming path")
     }
 

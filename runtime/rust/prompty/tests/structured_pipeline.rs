@@ -31,11 +31,7 @@ impl MockStructuredExecutor {
 
 #[async_trait]
 impl Executor for MockStructuredExecutor {
-    async fn execute(
-        &self,
-        _agent: &Agent,
-        _messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    async fn execute(&self, _agent: &Agent, _messages: &[Message]) -> Result<Value, InvokerError> {
         Ok(self.response.clone())
     }
 }

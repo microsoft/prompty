@@ -5,8 +5,8 @@
 //! and helper methods used by the pipeline and other hand-written code.
 
 use crate::model::{
-    ContentPart, ContentPartKind, Message, MessageHelpers, Agent, Property, Role, Tool,
-    ToolResult, ToolResultHelpers,
+    Agent, ContentPart, ContentPartKind, Message, MessageHelpers, Property, Role, Tool, ToolResult,
+    ToolResultHelpers,
 };
 
 // ---------------------------------------------------------------------------

@@ -25,8 +25,9 @@ use crate::engine::{
 use crate::guardrails::Guardrails;
 use crate::interfaces::{ExecuteError, InvokerError};
 use crate::model::{
-    InvocationContextPortability, InvocationContextState, InvocationUsage, ModelInvocationRequest,
-    ModelInvocationResponse as GeneratedModelInvocationResponse, ModelToolRequest, Agent,
+    Agent, InvocationContextPortability, InvocationContextState, InvocationUsage,
+    ModelInvocationRequest, ModelInvocationResponse as GeneratedModelInvocationResponse,
+    ModelToolRequest,
 };
 use crate::registry;
 use crate::steering::Steering;
@@ -500,7 +501,7 @@ impl LiveModelPort {
         } else if response
             .tool_requests
             .as_ref()
-            .map_or(true, |requests| requests.is_empty())
+            .is_none_or(|requests| requests.is_empty())
         {
             response.output = response.output.map(|output| unwrap_structured(&output));
         }
@@ -660,7 +661,7 @@ impl ModelPort for LiveModelPort {
             if response
                 .tool_requests
                 .as_ref()
-                .map_or(true, |requests| requests.is_empty())
+                .is_none_or(|requests| requests.is_empty())
             {
                 response.output = response.output.map(|output| unwrap_structured(&output));
             }
@@ -762,7 +763,7 @@ impl ConversationPort for LiveConversationPort {
         if response
             .tool_requests
             .as_ref()
-            .map_or(true, |requests| requests.is_empty())
+            .is_none_or(|requests| requests.is_empty())
             || results.is_empty()
         {
             return Err(PortError::configuration(
@@ -1142,7 +1143,7 @@ impl DurabilityPort for LiveDurabilityPort {
         }) && checkpoint
             .pending_tool_requests
             .as_ref()
-            .map_or(true, |requests| requests.is_empty())
+            .is_none_or(|requests| requests.is_empty())
             && checkpoint.pending_model_response.is_none()
         {
             self.events.emit(AgentEvent::MessagesUpdated {
@@ -1256,7 +1257,7 @@ pub(super) async fn turn_with_engine_request(
         || agent
             .tools
             .as_ref()
-            .map_or(false, |agent_tools| !agent_tools.is_empty());
+            .is_some_and(|agent_tools| !agent_tools.is_empty());
     let failures = Arc::new(LiveFailureState::default());
     let guardrails = guardrails.map(Arc::new);
     let tools = Arc::new(tools);

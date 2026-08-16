@@ -993,7 +993,7 @@ where
             }) && checkpoint
                 .pending_tool_requests
                 .as_ref()
-                .map_or(true, |v| v.is_empty())
+                .is_none_or(|v| v.is_empty())
                 && checkpoint.pending_model_response.is_none())
         {
             let results = self

@@ -3,9 +3,7 @@
 //! Converts Prompty `Message`s, tools, options, and output schemas into the
 //! JSON bodies expected by the OpenAI API.
 
-use prompty::model::{
-    MessageHelpers, ModelOptions, Agent, Property, PropertyKind, Tool, ToolKind,
-};
+use prompty::model::{Agent, MessageHelpers, ModelOptions, Property, PropertyKind, Tool, ToolKind};
 use prompty::types::{ContentPart, ContentPartKind, Message};
 use serde_json::{Map, Value, json};
 

@@ -77,11 +77,7 @@ impl MockExecutor {
 
 #[async_trait]
 impl Executor for MockExecutor {
-    async fn execute(
-        &self,
-        _agent: &Agent,
-        _messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    async fn execute(&self, _agent: &Agent, _messages: &[Message]) -> Result<Value, InvokerError> {
         let idx = self.call_idx.fetch_add(1, Ordering::SeqCst);
         if idx >= self.responses.len() {
             return Err(InvokerError::Execute(

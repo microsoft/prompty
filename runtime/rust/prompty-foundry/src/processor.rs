@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use serde_json::Value;
 
 use prompty::interfaces::{InvokerError, Processor};
-use prompty::model::{ModelInvocationRequest, ModelInvocationResponse, Agent};
+use prompty::model::{Agent, ModelInvocationRequest, ModelInvocationResponse};
 
 /// Foundry/Azure OpenAI processor implementing the `Processor` trait.
 ///

@@ -55,7 +55,7 @@ impl ModelInvocationContextSnapshot {
                 .context_state
                 .delegated_state
                 .as_ref()
-                .map_or(true, |state| state.is_empty())
+                .is_none_or(|state| state.is_empty())
         {
             return Err(ContextError::InvalidSnapshot(
                 "portable snapshots cannot contain delegated provider state".to_string(),
@@ -66,7 +66,7 @@ impl ModelInvocationContextSnapshot {
                 .context_state
                 .delegated_state
                 .as_ref()
-                .map_or(true, |state| state.is_empty())
+                .is_none_or(|state| state.is_empty())
         {
             return Err(ContextError::InvalidSnapshot(
                 "delegated snapshots must identify provider-held state".to_string(),

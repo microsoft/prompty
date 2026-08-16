@@ -7,8 +7,8 @@ use serde_json::Value;
 
 use prompty::interfaces::{InvokerError, Processor};
 use prompty::model::{
-    DelegatedStateReference, InvocationContextPortability, InvocationContextState, InvocationUsage,
-    ModelInvocationRequest, ModelInvocationResponse, ModelToolRequest, Agent,
+    Agent, DelegatedStateReference, InvocationContextPortability, InvocationContextState,
+    InvocationUsage, ModelInvocationRequest, ModelInvocationResponse, ModelToolRequest,
 };
 use prompty::types::{Message, Role, StreamFailure, ToolCall};
 

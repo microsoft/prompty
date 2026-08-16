@@ -1185,8 +1185,8 @@ mod tests {
     };
     use crate::model::context::LoadContext;
     use crate::model::{
-        InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
-        ModelInvocationResponse, ModelToolRequest, Agent,
+        Agent, InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+        ModelInvocationResponse, ModelToolRequest,
     };
     use async_trait::async_trait;
     use serial_test::serial;

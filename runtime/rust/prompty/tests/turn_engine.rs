@@ -1256,7 +1256,8 @@ fn vectors_path() -> PathBuf {
 }
 
 fn load_vectors() -> VectorFile {
-    let doc: Value = serde_json::from_str(&std::fs::read_to_string(vectors_path()).unwrap()).unwrap();
+    let doc: Value =
+        serde_json::from_str(&std::fs::read_to_string(vectors_path()).unwrap()).unwrap();
     let cases: Vec<Value> = doc["vectors"]
         .as_array()
         .expect("vectors.json must have a 'vectors' array")

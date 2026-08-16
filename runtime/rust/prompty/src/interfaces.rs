@@ -13,8 +13,8 @@ use futures::StreamExt;
 
 use crate::engine::CancellationToken;
 use crate::model::{
-    InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
-    ModelInvocationResponse, ModelToolRequest, Agent,
+    Agent, InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+    ModelInvocationResponse, ModelToolRequest,
 };
 use crate::types::Message;
 

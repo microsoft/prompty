@@ -26,9 +26,8 @@ fn load_vectors() -> Vec<Value> {
         .join("tsp-output")
         .join(".typra-generated")
         .join("vectors.json");
-    let content = std::fs::read_to_string(&path).unwrap_or_else(|e| {
-        panic!("Failed to read vectors at {}: {e}", path.display())
-    });
+    let content = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("Failed to read vectors at {}: {e}", path.display()));
     let doc: Value = serde_json::from_str(&content).expect("Invalid JSON in vectors.json");
     doc["vectors"]
         .as_array()

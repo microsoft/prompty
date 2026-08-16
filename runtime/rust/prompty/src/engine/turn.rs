@@ -127,7 +127,7 @@ impl TurnEngineRequest {
             } else if checkpoint
                 .pending_tool_requests
                 .as_ref()
-                .map_or(true, |requests| requests.is_empty())
+                .is_none_or(|requests| requests.is_empty())
                 && checkpoint.pending_model_response.is_none()
                 && !checkpoint.final_output_ready
                 && !checkpoint.reconciliation_required
@@ -861,7 +861,7 @@ impl TurnEngine {
         if response
             .tool_requests
             .as_ref()
-            .map_or(true, |requests| requests.is_empty())
+            .is_none_or(|requests| requests.is_empty())
         {
             return Ok(Vec::new());
         }
@@ -1698,7 +1698,7 @@ impl TurnState {
         if response
             .tool_requests
             .as_ref()
-            .map_or(true, |requests| requests.is_empty())
+            .is_none_or(|requests| requests.is_empty())
         {
             self.messages
                 .extend(response.assistant_messages.clone().unwrap_or_default());

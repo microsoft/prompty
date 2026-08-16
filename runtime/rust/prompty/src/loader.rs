@@ -41,10 +41,7 @@ pub fn load(path: impl AsRef<Path>) -> Result<Agent, LoadError> {
 /// By default, `${file:...}` references are limited to the prompt file's
 /// directory tree. Use `LoadOptions::allowed_file_roots` to opt into
 /// additional directories.
-pub fn load_with_options(
-    path: impl AsRef<Path>,
-    options: LoadOptions,
-) -> Result<Agent, LoadError> {
+pub fn load_with_options(path: impl AsRef<Path>, options: LoadOptions) -> Result<Agent, LoadError> {
     let resolved = path
         .as_ref()
         .canonicalize()

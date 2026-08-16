@@ -9,7 +9,7 @@ use std::sync::LazyLock;
 
 use prompty::engine::CancellationToken;
 use prompty::interfaces::{Executor, InvokerError, cancellable_stream};
-use prompty::model::{InvocationContextPortability, ModelInvocationRequest, Agent};
+use prompty::model::{Agent, InvocationContextPortability, ModelInvocationRequest};
 use prompty::types::Message;
 
 use crate::processor::RESPONSES_CONTINUATION_BOUNDARY;
