@@ -205,6 +205,7 @@ from .invoker import (
     validate_inputs,
 )
 from .model import (
+    Agent,
     AnonymousConnection,
     ApiKeyConnection,
     ArrayProperty,
@@ -224,7 +225,6 @@ from .model import (
     ObjectProperty,
     OpenApiTool,
     ParserConfig,
-    Agent,
     PromptyTool,
     Property,
     ReferenceConnection,

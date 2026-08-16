@@ -9,12 +9,12 @@ import pytest
 
 from prompty import load
 from prompty.model import (
+    Agent,
     ApiKeyConnection,
     CustomTool,
     FunctionTool,
     McpTool,
     OpenApiTool,
-    Agent,
     ReferenceConnection,
 )
 

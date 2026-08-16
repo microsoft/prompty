@@ -24,8 +24,8 @@ from ...core.types import (
     TextPart,
 )
 from ...model import (
-    ApiKeyConnection,
     Agent,
+    ApiKeyConnection,
     ReferenceConnection,
 )
 from ...tracing.tracer import trace

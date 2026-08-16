@@ -20,9 +20,9 @@ from urllib.parse import urlsplit, urlunsplit
 from ..._version import VERSION
 from ...core.connections import get_connection
 from ...model import (
+    Agent,
     ApiKeyConnection,
     FoundryConnection,
-    Agent,
     ReferenceConnection,
 )
 from ...tracing.tracer import Tracer, trace
