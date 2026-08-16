@@ -872,7 +872,7 @@ async fn test_bindings_injected() {
         "get_weather".to_string(),
         ToolHandler::Sync(Box::new(move |args: Value| {
             *captured_args_for_tool.lock().unwrap() = Some(args);
-            Ok("22Â°C sunny".to_string())
+            Ok("22°C sunny".to_string())
         })),
     );
     let opts = TurnOptions {

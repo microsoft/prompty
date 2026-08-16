@@ -11,7 +11,7 @@ const AgentVectors = """
   [
     {
       "name": "no_tool_calls",
-      "description": "LLM returns content immediately with no tool calls â the agent loop completes in a single iteration.",
+      "description": "LLM returns content immediately with no tool calls — the agent loop completes in a single iteration.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -141,7 +141,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_abc123",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         },
@@ -155,7 +155,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "The weather in Paris is 72Â°F and sunny.",
+                  "content": "The weather in Paris is 72°F and sunny.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -166,7 +166,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "The weather in Paris is 72Â°F and sunny.",
+        "result": "The weather in Paris is 72°F and sunny.",
         "iterations": 2,
         "total_messages": 6,
         "message_sequence": [
@@ -196,21 +196,21 @@ const AgentVectors = """
           },
           {
             "role": "tool",
-            "content": "72Â°F sunny",
+            "content": "72°F sunny",
             "metadata": {
               "tool_call_id": "call_abc123"
             }
           },
           {
             "role": "assistant",
-            "content": "The weather in Paris is 72Â°F and sunny."
+            "content": "The weather in Paris is 72°F and sunny."
           }
         ]
       }
     },
     {
       "name": "multiple_tool_calls_single_turn",
-      "description": "Turn 1: LLM returns two parallel tool calls â get_weather for Paris and London. Both results appended. Turn 2: LLM summarises both.",
+      "description": "Turn 1: LLM returns two parallel tool calls — get_weather for Paris and London. Both results appended. Turn 2: LLM summarises both.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -295,11 +295,11 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_paris_001",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             },
             {
               "tool_call_id": "call_london_001",
-              "result": "59Â°F cloudy"
+              "result": "59°F cloudy"
             }
           ]
         },
@@ -313,7 +313,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "Paris is 72Â°F and sunny, while London is 59Â°F and cloudy.",
+                  "content": "Paris is 72°F and sunny, while London is 59°F and cloudy.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -324,7 +324,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "Paris is 72Â°F and sunny, while London is 59Â°F and cloudy.",
+        "result": "Paris is 72°F and sunny, while London is 59°F and cloudy.",
         "iterations": 2,
         "total_messages": 7,
         "message_sequence": [
@@ -362,21 +362,21 @@ const AgentVectors = """
           },
           {
             "role": "tool",
-            "content": "72Â°F sunny",
+            "content": "72°F sunny",
             "metadata": {
               "tool_call_id": "call_paris_001"
             }
           },
           {
             "role": "tool",
-            "content": "59Â°F cloudy",
+            "content": "59°F cloudy",
             "metadata": {
               "tool_call_id": "call_london_001"
             }
           },
           {
             "role": "assistant",
-            "content": "Paris is 72Â°F and sunny, while London is 59Â°F and cloudy."
+            "content": "Paris is 72°F and sunny, while London is 59°F and cloudy."
           }
         ]
       }
@@ -476,7 +476,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_weather_001",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         },
@@ -520,7 +520,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_convert_001",
-              "result": "22.2Â°C"
+              "result": "22.2°C"
             }
           ]
         },
@@ -534,7 +534,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "The weather in Paris is 22.2Â°C and sunny.",
+                  "content": "The weather in Paris is 22.2°C and sunny.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -545,7 +545,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "The weather in Paris is 22.2Â°C and sunny.",
+        "result": "The weather in Paris is 22.2°C and sunny.",
         "iterations": 3,
         "total_messages": 8
       }
@@ -622,7 +622,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_01",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         },
@@ -664,7 +664,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_02",
-              "result": "59Â°F cloudy"
+              "result": "59°F cloudy"
             }
           ]
         },
@@ -706,7 +706,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_03",
-              "result": "80Â°F humid"
+              "result": "80°F humid"
             }
           ]
         },
@@ -748,7 +748,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_04",
-              "result": "65Â°F rainy"
+              "result": "65°F rainy"
             }
           ]
         },
@@ -790,7 +790,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_05",
-              "result": "55Â°F windy"
+              "result": "55°F windy"
             }
           ]
         },
@@ -832,7 +832,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_06",
-              "result": "95Â°F dry"
+              "result": "95°F dry"
             }
           ]
         },
@@ -874,7 +874,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_07",
-              "result": "88Â°F humid"
+              "result": "88°F humid"
             }
           ]
         },
@@ -916,7 +916,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_08",
-              "result": "30Â°F snowy"
+              "result": "30°F snowy"
             }
           ]
         },
@@ -958,7 +958,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_09",
-              "result": "85Â°F tropical"
+              "result": "85°F tropical"
             }
           ]
         },
@@ -1000,7 +1000,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_10",
-              "result": "68Â°F clear"
+              "result": "68°F clear"
             }
           ]
         },
@@ -1042,7 +1042,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_loop_11",
-              "result": "40Â°F foggy"
+              "result": "40°F foggy"
             }
           ]
         }
@@ -1143,7 +1143,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_bind_001",
-              "result": "22Â°C sunny"
+              "result": "22°C sunny"
             }
           ]
         },
@@ -1157,7 +1157,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "The weather in Paris is 22Â°C and sunny.",
+                  "content": "The weather in Paris is 22°C and sunny.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -1168,7 +1168,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "The weather in Paris is 22Â°C and sunny.",
+        "result": "The weather in Paris is 22°C and sunny.",
         "iterations": 2,
         "total_messages": 6,
         "notes": "The binding {unit: {input: 'preferred_unit'}} resolves 'preferred_unit' from parent_inputs to 'celsius' and injects it into the tool call arguments before execution, overriding any LLM-provided value."
@@ -1322,7 +1322,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_fmt_001",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         },
@@ -1336,7 +1336,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "It is 72Â°F and sunny.",
+                  "content": "It is 72°F and sunny.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -1347,14 +1347,14 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "It is 72Â°F and sunny.",
+        "result": "It is 72°F and sunny.",
         "iterations": 2,
         "tool_result_message": {
           "role": "tool",
           "content": [
             {
               "type": "text",
-              "text": "72Â°F sunny"
+              "text": "72°F sunny"
             }
           ],
           "metadata": {
@@ -1450,11 +1450,11 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_meta_paris",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             },
             {
               "tool_call_id": "call_meta_london",
-              "result": "59Â°F cloudy"
+              "result": "59°F cloudy"
             }
           ]
         },
@@ -1509,7 +1509,7 @@ const AgentVectors = """
     },
     {
       "name": "empty_tool_result",
-      "description": "Tool function returns an empty string. The tool result message must still be sent to the LLM with empty content â it must not be skipped or filtered out.",
+      "description": "Tool function returns an empty string. The tool result message must still be sent to the LLM with empty content — it must not be skipped or filtered out.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1718,7 +1718,7 @@ const AgentVectors = """
     },
     {
       "name": "events_basic_tool_loop",
-      "description": "Â§13.1 Events â A 2-turn tool-call loop emits the full event lifecycle: status â tool_call_start â tool_result â messages_updated â done.",
+      "description": "§13.1 Events — A 2-turn tool-call loop emits the full event lifecycle: status → tool_call_start → tool_result → messages_updated → done.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -1789,7 +1789,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_evt_w001",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         },
@@ -1803,7 +1803,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "The weather in Paris is 72Â°F and sunny.",
+                  "content": "The weather in Paris is 72°F and sunny.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -1814,7 +1814,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "The weather in Paris is 72Â°F and sunny.",
+        "result": "The weather in Paris is 72°F and sunny.",
         "iterations": 2,
         "total_messages": 6,
         "events": [
@@ -1835,7 +1835,7 @@ const AgentVectors = """
             "type": "tool_result",
             "data": {
               "name": "get_weather",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           },
           {
@@ -1847,7 +1847,7 @@ const AgentVectors = """
           {
             "type": "done",
             "data": {
-              "response": "The weather in Paris is 72Â°F and sunny."
+              "response": "The weather in Paris is 72°F and sunny."
             }
           }
         ],
@@ -1856,7 +1856,7 @@ const AgentVectors = """
     },
     {
       "name": "events_no_tools",
-      "description": "Â§13.1 Events â Single-turn completion with no tool calls. Only the done event is emitted.",
+      "description": "§13.1 Events — Single-turn completion with no tool calls. Only the done event is emitted.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2044,7 +2044,7 @@ const AgentVectors = """
     },
     {
       "name": "cancellation_before_llm",
-      "description": "Â§13.2 Cancellation â Cancel token is already cancelled before the first LLM call. No LLM calls are made and CancelledError is raised.",
+      "description": "§13.2 Cancellation — Cancel token is already cancelled before the first LLM call. No LLM calls are made and CancelledError is raised.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2097,7 +2097,7 @@ const AgentVectors = """
     },
     {
       "name": "cancellation_between_tools",
-      "description": "Â§13.2 Cancellation â LLM requests 2 tool calls. Cancel fires after the first tool executes. The second tool must NOT be called.",
+      "description": "§13.2 Cancellation — LLM requests 2 tool calls. Cancel fires after the first tool executes. The second tool must NOT be called.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2186,7 +2186,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_cancel_paris",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         }
@@ -2213,7 +2213,7 @@ const AgentVectors = """
             "type": "tool_result",
             "data": {
               "name": "get_weather",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           },
           {
@@ -2228,7 +2228,7 @@ const AgentVectors = """
     },
     {
       "name": "cancellation_between_iterations",
-      "description": "Â§13.2 Cancellation â Turn 1 completes (tool call + result). Cancel fires before turn 2. The loop exits with CancelledError after 1 iteration.",
+      "description": "§13.2 Cancellation — Turn 1 completes (tool call + result). Cancel fires before turn 2. The loop exits with CancelledError after 1 iteration.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2302,7 +2302,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_cancel_iter001",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         }
@@ -2329,7 +2329,7 @@ const AgentVectors = """
             "type": "tool_result",
             "data": {
               "name": "get_weather",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           },
           {
@@ -2350,7 +2350,7 @@ const AgentVectors = """
     },
     {
       "name": "context_trim_basic",
-      "description": "Â§13.3 Context Window â Messages exceed the context budget. Oldest user/assistant pairs are dropped and a summary is inserted after the system message.",
+      "description": "§13.3 Context Window — Messages exceed the context budget. Oldest user/assistant pairs are dropped and a summary is inserted after the system message.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2453,7 +2453,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_ctx_w001",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         },
@@ -2467,7 +2467,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "The weather in Paris is 72Â°F and sunny.",
+                  "content": "The weather in Paris is 72°F and sunny.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -2478,7 +2478,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "The weather in Paris is 72Â°F and sunny.",
+        "result": "The weather in Paris is 72°F and sunny.",
         "iterations": 2,
         "trimmed_messages": [
           {
@@ -2500,7 +2500,7 @@ const AgentVectors = """
     },
     {
       "name": "context_no_trim_when_fits",
-      "description": "Â§13.3 Context Window â Messages fit within the context budget. No trimming occurs and all messages are preserved.",
+      "description": "§13.3 Context Window — Messages fit within the context budget. No trimming occurs and all messages are preserved.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2563,7 +2563,7 @@ const AgentVectors = """
     },
     {
       "name": "context_preserves_system_messages",
-      "description": "Â§13.3 Context Window â Two system messages plus many user/assistant pairs. After trimming, both system messages MUST still be present.",
+      "description": "§13.3 Context Window — Two system messages plus many user/assistant pairs. After trimming, both system messages MUST still be present.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2657,12 +2657,12 @@ const AgentVectors = """
             "content": "What is the weather today?"
           }
         ],
-        "notes": "ALL system messages are preserved during context trimming â they are never dropped regardless of budget. A summary is inserted after the last system message. The most recent user message is always kept."
+        "notes": "ALL system messages are preserved during context trimming — they are never dropped regardless of budget. A summary is inserted after the last system message. The most recent user message is always kept."
       }
     },
     {
       "name": "guardrail_input_deny",
-      "description": "Â§13.4 Guardrails â Input guardrail denies the request before any LLM call is made. Returns GuardrailError with the denial reason.",
+      "description": "§13.4 Guardrails — Input guardrail denies the request before any LLM call is made. Returns GuardrailError with the denial reason.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2710,7 +2710,7 @@ const AgentVectors = """
     },
     {
       "name": "guardrail_output_deny",
-      "description": "Â§13.4 Guardrails â Input guardrail passes, LLM returns a response, but the output guardrail denies it. Returns GuardrailError.",
+      "description": "§13.4 Guardrails — Input guardrail passes, LLM returns a response, but the output guardrail denies it. Returns GuardrailError.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2780,7 +2780,7 @@ const AgentVectors = """
     },
     {
       "name": "guardrail_tool_deny",
-      "description": "Â§13.4 Guardrails â LLM requests 2 tool calls. Tool guardrail denies one (dangerous_tool) but allows the other (get_weather). Denied tool gets a synthetic error result.",
+      "description": "§13.4 Guardrails — LLM requests 2 tool calls. Tool guardrail denies one (dangerous_tool) but allows the other (get_weather). Denied tool gets a synthetic error result.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -2886,7 +2886,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_guard_weather",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             },
             {
               "tool_call_id": "call_guard_danger",
@@ -2904,7 +2904,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "The weather in Paris is 72Â°F and sunny. I was unable to run the dangerous operation as it was not authorized.",
+                  "content": "The weather in Paris is 72°F and sunny. I was unable to run the dangerous operation as it was not authorized.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -2915,18 +2915,18 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "The weather in Paris is 72Â°F and sunny. I was unable to run the dangerous operation as it was not authorized.",
+        "result": "The weather in Paris is 72°F and sunny. I was unable to run the dangerous operation as it was not authorized.",
         "iterations": 2,
         "total_messages": 7,
         "denied_tools": [
           "dangerous_tool"
         ],
-        "notes": "The tool guardrail intercepts tool calls before execution. get_weather is allowed and executes normally. dangerous_tool is denied â its tool result message contains a synthetic denial string instead of actual execution output. Both results are sent to the LLM so it can respond appropriately."
+        "notes": "The tool guardrail intercepts tool calls before execution. get_weather is allowed and executes normally. dangerous_tool is denied — its tool result message contains a synthetic denial string instead of actual execution output. Both results are sent to the LLM so it can respond appropriately."
       }
     },
     {
       "name": "guardrail_all_pass",
-      "description": "Â§13.4 Guardrails â All guardrails (input, output, tool) are configured but all pass. The agent loop completes normally.",
+      "description": "§13.4 Guardrails — All guardrails (input, output, tool) are configured but all pass. The agent loop completes normally.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3007,7 +3007,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_guard_pass001",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         },
@@ -3021,7 +3021,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "The weather in Paris is 72Â°F and sunny.",
+                  "content": "The weather in Paris is 72°F and sunny.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -3032,7 +3032,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "The weather in Paris is 72Â°F and sunny.",
+        "result": "The weather in Paris is 72°F and sunny.",
         "iterations": 2,
         "total_messages": 6,
         "denied_tools": [],
@@ -3041,7 +3041,7 @@ const AgentVectors = """
     },
     {
       "name": "steering_inject_message",
-      "description": "Â§13.5 Steering â After turn 1 (tool call + result), a steering message is injected before turn 2's LLM call. The LLM sees the injected message in context.",
+      "description": "§13.5 Steering — After turn 1 (tool call + result), a steering message is injected before turn 2's LLM call. The LLM sees the injected message in context.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3121,7 +3121,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_steer_w001",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           ]
         },
@@ -3135,7 +3135,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "The temperature in Paris is approximately 22Â°C and it is sunny.",
+                  "content": "The temperature in Paris is approximately 22°C and it is sunny.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -3146,7 +3146,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "The temperature in Paris is approximately 22Â°C and it is sunny.",
+        "result": "The temperature in Paris is approximately 22°C and it is sunny.",
         "iterations": 2,
         "total_messages": 7,
         "events": [
@@ -3167,7 +3167,7 @@ const AgentVectors = """
             "type": "tool_result",
             "data": {
               "name": "get_weather",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             }
           },
           {
@@ -3191,7 +3191,7 @@ const AgentVectors = """
           {
             "type": "done",
             "data": {
-              "response": "The temperature in Paris is approximately 22Â°C and it is sunny."
+              "response": "The temperature in Paris is approximately 22°C and it is sunny."
             }
           }
         ],
@@ -3222,7 +3222,7 @@ const AgentVectors = """
           },
           {
             "role": "tool",
-            "content": "72Â°F sunny",
+            "content": "72°F sunny",
             "metadata": {
               "tool_call_id": "call_steer_w001"
             }
@@ -3233,7 +3233,7 @@ const AgentVectors = """
           },
           {
             "role": "assistant",
-            "content": "The temperature in Paris is approximately 22Â°C and it is sunny."
+            "content": "The temperature in Paris is approximately 22°C and it is sunny."
           }
         ],
         "notes": "The steering message is injected as a user message before iteration 2's LLM call. total_messages is 7 (system + user + assistant_tool + tool_result + steering_user + assistant_final = 6 shown, but 7 when including the final assistant). The steering message appears between the tool result and the final LLM call."
@@ -3241,7 +3241,7 @@ const AgentVectors = """
     },
     {
       "name": "steering_multiple_messages",
-      "description": "Â§13.5 Steering â Two steering messages are queued and both injected before iteration 2. Tests atomic drain â both appear in order.",
+      "description": "§13.5 Steering — Two steering messages are queued and both injected before iteration 2. Tests atomic drain — both appear in order.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3325,7 +3325,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_steer_m001",
-              "result": "72Â°F sunny, 45% humidity"
+              "result": "72°F sunny, 45% humidity"
             }
           ]
         },
@@ -3339,7 +3339,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "Le temps Ã  Paris est de 22Â°C et ensoleillÃ© avec une humiditÃ© de 45%.",
+                  "content": "Le temps à Paris est de 22°C et ensoleillé avec une humidité de 45%.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -3350,7 +3350,7 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "result": "Le temps Ã  Paris est de 22Â°C et ensoleillÃ© avec une humiditÃ© de 45%.",
+        "result": "Le temps à Paris est de 22°C et ensoleillé avec une humidité de 45%.",
         "iterations": 2,
         "total_messages": 8,
         "message_sequence": [
@@ -3380,7 +3380,7 @@ const AgentVectors = """
           },
           {
             "role": "tool",
-            "content": "72Â°F sunny, 45% humidity",
+            "content": "72°F sunny, 45% humidity",
             "metadata": {
               "tool_call_id": "call_steer_m001"
             }
@@ -3395,7 +3395,7 @@ const AgentVectors = """
           },
           {
             "role": "assistant",
-            "content": "Le temps Ã  Paris est de 22Â°C et ensoleillÃ© avec une humiditÃ© de 45%."
+            "content": "Le temps à Paris est de 22°C et ensoleillé avec une humidité de 45%."
           }
         ],
         "notes": "Both steering messages are drained atomically and inserted in order before iteration 2's LLM call. They appear as consecutive user messages between the tool result and the final assistant response. total_messages is 8 (system + user + assistant_tool + tool_result + steer1 + steer2 + assistant_final = 7 content messages, but counting from 1-indexed gives 8 including all roles)."
@@ -3403,7 +3403,7 @@ const AgentVectors = """
     },
     {
       "name": "parallel_tools_basic",
-      "description": "Â§13.6 Parallel Tools â LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.",
+      "description": "§13.6 Parallel Tools — LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3522,7 +3522,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_par_weather",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             },
             {
               "tool_call_id": "call_par_time",
@@ -3544,7 +3544,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "Here's your update: Paris is 72Â°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
+                  "content": "Here's your update: Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -3556,7 +3556,7 @@ const AgentVectors = """
       ],
       "expected": {
         "rust_expected_error": "parallel_tool_calls=true is not supported by the canonical Rust engine",
-        "result": "Here's your update: Paris is 72Â°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
+        "result": "Here's your update: Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
         "iterations": 2,
         "total_messages": 8,
         "tool_execution_order": [
@@ -3569,7 +3569,7 @@ const AgentVectors = """
     },
     {
       "name": "parallel_tools_with_guardrail_deny",
-      "description": "Â§13.6 Parallel Tools + Â§13.4 Guardrails â 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.",
+      "description": "§13.6 Parallel Tools + §13.4 Guardrails — 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.",
       "stage": "agent",
       "input": {
         "messages": [
@@ -3704,7 +3704,7 @@ const AgentVectors = """
           "tool_results": [
             {
               "tool_call_id": "call_pg_weather",
-              "result": "72Â°F sunny"
+              "result": "72°F sunny"
             },
             {
               "tool_call_id": "call_pg_danger",
@@ -3726,7 +3726,7 @@ const AgentVectors = """
                 "index": 0,
                 "message": {
                   "role": "assistant",
-                  "content": "Paris is 72Â°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
+                  "content": "Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
                   "tool_calls": null
                 },
                 "finish_reason": "stop"
@@ -3738,7 +3738,7 @@ const AgentVectors = """
       ],
       "expected": {
         "rust_expected_error": "parallel_tool_calls=true is not supported by the canonical Rust engine",
-        "result": "Paris is 72Â°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
+        "result": "Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
         "iterations": 2,
         "total_messages": 8,
         "denied_tools": [
