@@ -23,6 +23,6 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "starlight-links-validator": "^0.24.0"
+    "starlight-links-validator": "0.24.0"
   }
 }
