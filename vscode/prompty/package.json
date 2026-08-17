@@ -377,6 +377,9 @@
   "overrides": {
     "mocha": {
       "serialize-javascript": "7.0.5"
+    },
+    "minimatch@3": {
+      "brace-expansion": "1.1.18"
     }
   },
   "dependencies": {
