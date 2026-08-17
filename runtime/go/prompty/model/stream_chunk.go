@@ -113,9 +113,6 @@ type TextChunk struct {
 
 // LoadTextChunk creates a TextChunk from a map[string]interface{}
 func LoadTextChunk(data interface{}, ctx *LoadContext) (TextChunk, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := TextChunk{}
 
 	// Load from map
@@ -187,9 +184,6 @@ type ThinkingChunk struct {
 
 // LoadThinkingChunk creates a ThinkingChunk from a map[string]interface{}
 func LoadThinkingChunk(data interface{}, ctx *LoadContext) (ThinkingChunk, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ThinkingChunk{}
 
 	// Load from map
@@ -429,9 +423,6 @@ type ErrorChunk struct {
 
 // LoadErrorChunk creates a ErrorChunk from a map[string]interface{}
 func LoadErrorChunk(data interface{}, ctx *LoadContext) (ErrorChunk, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ErrorChunk{}
 
 	// Load from map

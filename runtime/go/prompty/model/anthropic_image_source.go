@@ -20,9 +20,6 @@ type AnthropicImageSource struct {
 
 // LoadAnthropicImageSource creates a AnthropicImageSource from a map[string]interface{}
 func LoadAnthropicImageSource(data interface{}, ctx *LoadContext) (AnthropicImageSource, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := AnthropicImageSource{}
 
 	// Load from map

@@ -19,9 +19,6 @@ type FinalOutputPolicyResult struct {
 
 // LoadFinalOutputPolicyResult creates a FinalOutputPolicyResult from a map[string]interface{}
 func LoadFinalOutputPolicyResult(data interface{}, ctx *LoadContext) (FinalOutputPolicyResult, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := FinalOutputPolicyResult{}
 
 	// Load from map

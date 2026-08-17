@@ -20,9 +20,6 @@ type TraceTime struct {
 
 // LoadTraceTime creates a TraceTime from a map[string]interface{}
 func LoadTraceTime(data interface{}, ctx *LoadContext) (TraceTime, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := TraceTime{}
 
 	// Load from map

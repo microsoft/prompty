@@ -18,9 +18,6 @@ type TokenEventPayload struct {
 
 // LoadTokenEventPayload creates a TokenEventPayload from a map[string]interface{}
 func LoadTokenEventPayload(data interface{}, ctx *LoadContext) (TokenEventPayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := TokenEventPayload{}
 
 	// Load from map

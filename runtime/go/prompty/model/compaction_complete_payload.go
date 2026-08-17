@@ -20,9 +20,6 @@ type CompactionCompletePayload struct {
 
 // LoadCompactionCompletePayload creates a CompactionCompletePayload from a map[string]interface{}
 func LoadCompactionCompletePayload(data interface{}, ctx *LoadContext) (CompactionCompletePayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := CompactionCompletePayload{}
 
 	// Load from map

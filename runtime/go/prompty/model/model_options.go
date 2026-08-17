@@ -27,9 +27,6 @@ type ModelOptions struct {
 
 // LoadModelOptions creates a ModelOptions from a map[string]interface{}
 func LoadModelOptions(data interface{}, ctx *LoadContext) (ModelOptions, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ModelOptions{}
 
 	// Load from map

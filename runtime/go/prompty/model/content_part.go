@@ -111,9 +111,6 @@ type TextPart struct {
 
 // LoadTextPart creates a TextPart from a map[string]interface{}
 func LoadTextPart(data interface{}, ctx *LoadContext) (TextPart, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := TextPart{}
 
 	// Load from map
@@ -187,9 +184,6 @@ type ImagePart struct {
 
 // LoadImagePart creates a ImagePart from a map[string]interface{}
 func LoadImagePart(data interface{}, ctx *LoadContext) (ImagePart, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ImagePart{}
 
 	// Load from map
@@ -276,9 +270,6 @@ type FilePart struct {
 
 // LoadFilePart creates a FilePart from a map[string]interface{}
 func LoadFilePart(data interface{}, ctx *LoadContext) (FilePart, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := FilePart{}
 
 	// Load from map
@@ -358,9 +349,6 @@ type AudioPart struct {
 
 // LoadAudioPart creates a AudioPart from a map[string]interface{}
 func LoadAudioPart(data interface{}, ctx *LoadContext) (AudioPart, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := AudioPart{}
 
 	// Load from map

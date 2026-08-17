@@ -23,9 +23,6 @@ type AiResourceInfo struct {
 
 // LoadAiResourceInfo creates a AiResourceInfo from a map[string]interface{}
 func LoadAiResourceInfo(data interface{}, ctx *LoadContext) (AiResourceInfo, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := AiResourceInfo{}
 
 	// Load from map

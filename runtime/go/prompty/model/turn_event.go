@@ -57,9 +57,6 @@ type TurnEvent struct {
 
 // LoadTurnEvent creates a TurnEvent from a map[string]interface{}
 func LoadTurnEvent(data interface{}, ctx *LoadContext) (TurnEvent, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := TurnEvent{}
 
 	// Load from map

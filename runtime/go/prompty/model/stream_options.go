@@ -19,9 +19,6 @@ type StreamOptions struct {
 
 // LoadStreamOptions creates a StreamOptions from a map[string]interface{}
 func LoadStreamOptions(data interface{}, ctx *LoadContext) (StreamOptions, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := StreamOptions{}
 
 	// Load from map

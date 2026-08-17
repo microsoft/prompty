@@ -18,9 +18,6 @@ type CompactionFailedPayload struct {
 
 // LoadCompactionFailedPayload creates a CompactionFailedPayload from a map[string]interface{}
 func LoadCompactionFailedPayload(data interface{}, ctx *LoadContext) (CompactionFailedPayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := CompactionFailedPayload{}
 
 	// Load from map

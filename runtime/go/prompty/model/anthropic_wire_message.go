@@ -21,9 +21,6 @@ type AnthropicWireMessage struct {
 
 // LoadAnthropicWireMessage creates a AnthropicWireMessage from a map[string]interface{}
 func LoadAnthropicWireMessage(data interface{}, ctx *LoadContext) (AnthropicWireMessage, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := AnthropicWireMessage{}
 
 	// Load from map

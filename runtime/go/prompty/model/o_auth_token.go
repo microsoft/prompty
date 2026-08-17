@@ -22,9 +22,6 @@ type OAuthToken struct {
 
 // LoadOAuthToken creates a OAuthToken from a map[string]interface{}
 func LoadOAuthToken(data interface{}, ctx *LoadContext) (OAuthToken, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := OAuthToken{}
 
 	// Load from map

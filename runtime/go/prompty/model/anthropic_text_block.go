@@ -19,9 +19,6 @@ type AnthropicTextBlock struct {
 
 // LoadAnthropicTextBlock creates a AnthropicTextBlock from a map[string]interface{}
 func LoadAnthropicTextBlock(data interface{}, ctx *LoadContext) (AnthropicTextBlock, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := AnthropicTextBlock{}
 
 	// Load from map

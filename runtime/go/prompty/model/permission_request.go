@@ -25,9 +25,6 @@ type PermissionRequest struct {
 
 // LoadPermissionRequest creates a PermissionRequest from a map[string]interface{}
 func LoadPermissionRequest(data interface{}, ctx *LoadContext) (PermissionRequest, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := PermissionRequest{}
 
 	// Load from map

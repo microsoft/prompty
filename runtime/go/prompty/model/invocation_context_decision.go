@@ -31,9 +31,6 @@ type InvocationContextDecision struct {
 
 // LoadInvocationContextDecision creates a InvocationContextDecision from a map[string]interface{}
 func LoadInvocationContextDecision(data interface{}, ctx *LoadContext) (InvocationContextDecision, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := InvocationContextDecision{}
 
 	// Load from map

@@ -21,9 +21,6 @@ type ValidationError struct {
 
 // LoadValidationError creates a ValidationError from a map[string]interface{}
 func LoadValidationError(data interface{}, ctx *LoadContext) (ValidationError, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ValidationError{}
 
 	// Load from map

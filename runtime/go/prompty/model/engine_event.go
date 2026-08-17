@@ -62,9 +62,6 @@ type EngineEvent struct {
 
 // LoadEngineEvent creates a EngineEvent from a map[string]interface{}
 func LoadEngineEvent(data interface{}, ctx *LoadContext) (EngineEvent, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := EngineEvent{}
 
 	// Load from map

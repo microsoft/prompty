@@ -22,9 +22,6 @@ type RetryPayload struct {
 
 // LoadRetryPayload creates a RetryPayload from a map[string]interface{}
 func LoadRetryPayload(data interface{}, ctx *LoadContext) (RetryPayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := RetryPayload{}
 
 	// Load from map

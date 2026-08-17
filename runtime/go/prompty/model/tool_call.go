@@ -21,9 +21,6 @@ type ToolCall struct {
 
 // LoadToolCall creates a ToolCall from a map[string]interface{}
 func LoadToolCall(data interface{}, ctx *LoadContext) (ToolCall, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ToolCall{}
 
 	// Load from map

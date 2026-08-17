@@ -135,9 +135,6 @@ type ReferenceConnection struct {
 
 // LoadReferenceConnection creates a ReferenceConnection from a map[string]interface{}
 func LoadReferenceConnection(data interface{}, ctx *LoadContext) (ReferenceConnection, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ReferenceConnection{}
 
 	// Load from map
@@ -233,9 +230,6 @@ type RemoteConnection struct {
 
 // LoadRemoteConnection creates a RemoteConnection from a map[string]interface{}
 func LoadRemoteConnection(data interface{}, ctx *LoadContext) (RemoteConnection, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := RemoteConnection{}
 
 	// Load from map
@@ -328,9 +322,6 @@ type ApiKeyConnection struct {
 
 // LoadApiKeyConnection creates a ApiKeyConnection from a map[string]interface{}
 func LoadApiKeyConnection(data interface{}, ctx *LoadContext) (ApiKeyConnection, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ApiKeyConnection{}
 
 	// Load from map
@@ -421,9 +412,6 @@ type AnonymousConnection struct {
 
 // LoadAnonymousConnection creates a AnonymousConnection from a map[string]interface{}
 func LoadAnonymousConnection(data interface{}, ctx *LoadContext) (AnonymousConnection, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := AnonymousConnection{}
 
 	// Load from map
@@ -517,9 +505,6 @@ type OAuthConnection struct {
 
 // LoadOAuthConnection creates a OAuthConnection from a map[string]interface{}
 func LoadOAuthConnection(data interface{}, ctx *LoadContext) (OAuthConnection, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := OAuthConnection{}
 
 	// Load from map
@@ -637,9 +622,6 @@ type FoundryConnection struct {
 
 // LoadFoundryConnection creates a FoundryConnection from a map[string]interface{}
 func LoadFoundryConnection(data interface{}, ctx *LoadContext) (FoundryConnection, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := FoundryConnection{}
 
 	// Load from map

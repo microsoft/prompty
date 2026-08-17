@@ -22,9 +22,6 @@ type AnthropicToolDefinition struct {
 
 // LoadAnthropicToolDefinition creates a AnthropicToolDefinition from a map[string]interface{}
 func LoadAnthropicToolDefinition(data interface{}, ctx *LoadContext) (AnthropicToolDefinition, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := AnthropicToolDefinition{}
 
 	// Load from map

@@ -22,9 +22,6 @@ type GuardrailResult struct {
 
 // LoadGuardrailResult creates a GuardrailResult from a map[string]interface{}
 func LoadGuardrailResult(data interface{}, ctx *LoadContext) (GuardrailResult, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := GuardrailResult{}
 
 	// Load from map

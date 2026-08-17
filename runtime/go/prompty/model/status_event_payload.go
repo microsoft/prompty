@@ -18,9 +18,6 @@ type StatusEventPayload struct {
 
 // LoadStatusEventPayload creates a StatusEventPayload from a map[string]interface{}
 func LoadStatusEventPayload(data interface{}, ctx *LoadContext) (StatusEventPayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := StatusEventPayload{}
 
 	// Load from map

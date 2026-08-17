@@ -22,9 +22,6 @@ type HostToolRequest struct {
 
 // LoadHostToolRequest creates a HostToolRequest from a map[string]interface{}
 func LoadHostToolRequest(data interface{}, ctx *LoadContext) (HostToolRequest, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := HostToolRequest{}
 
 	// Load from map

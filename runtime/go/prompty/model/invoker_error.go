@@ -22,9 +22,6 @@ type InvokerError struct {
 
 // LoadInvokerError creates a InvokerError from a map[string]interface{}
 func LoadInvokerError(data interface{}, ctx *LoadContext) (InvokerError, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := InvokerError{}
 
 	// Load from map

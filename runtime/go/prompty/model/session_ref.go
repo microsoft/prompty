@@ -22,9 +22,6 @@ type SessionRef struct {
 
 // LoadSessionRef creates a SessionRef from a map[string]interface{}
 func LoadSessionRef(data interface{}, ctx *LoadContext) (SessionRef, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := SessionRef{}
 
 	// Load from map

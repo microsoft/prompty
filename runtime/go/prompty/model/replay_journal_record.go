@@ -51,9 +51,6 @@ type ReplayJournalRecord struct {
 
 // LoadReplayJournalRecord creates a ReplayJournalRecord from a map[string]interface{}
 func LoadReplayJournalRecord(data interface{}, ctx *LoadContext) (ReplayJournalRecord, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ReplayJournalRecord{}
 
 	// Load from map

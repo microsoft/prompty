@@ -29,9 +29,6 @@ type ModelInfo struct {
 
 // LoadModelInfo creates a ModelInfo from a map[string]interface{}
 func LoadModelInfo(data interface{}, ctx *LoadContext) (ModelInfo, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ModelInfo{}
 
 	// Load from map

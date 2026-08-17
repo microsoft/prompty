@@ -31,9 +31,6 @@ type RedactedField struct {
 
 // LoadRedactedField creates a RedactedField from a map[string]interface{}
 func LoadRedactedField(data interface{}, ctx *LoadContext) (RedactedField, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := RedactedField{}
 
 	// Load from map

@@ -20,9 +20,6 @@ type ToolCallStartPayload struct {
 
 // LoadToolCallStartPayload creates a ToolCallStartPayload from a map[string]interface{}
 func LoadToolCallStartPayload(data interface{}, ctx *LoadContext) (ToolCallStartPayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := ToolCallStartPayload{}
 
 	// Load from map

@@ -24,9 +24,6 @@ type InvocationUsage struct {
 
 // LoadInvocationUsage creates a InvocationUsage from a map[string]interface{}
 func LoadInvocationUsage(data interface{}, ctx *LoadContext) (InvocationUsage, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
 	result := InvocationUsage{}
 
 	// Load from map
