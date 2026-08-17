@@ -17,8 +17,8 @@
       },
       {
         "name": "@typra/emitter",
-        "version": "0.8.5",
-        "supportedRange": "0.8.5",
+        "version": "0.8.6",
+        "supportedRange": "0.8.6",
         "supported": true
       }
     ]

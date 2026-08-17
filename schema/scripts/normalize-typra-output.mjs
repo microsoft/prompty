@@ -11,59 +11,11 @@ if (existsSync(manifestPath)) {
 }
 
 trimEmptyPythonGeneratedTests(join("..", "runtime", "python", "prompty", "tests", "model"));
-elideUnusedLoadContextGuard(join("..", "runtime", "go", "prompty", "model"));
 trimTrailingWhitespace(join("..", "runtime", "go", "prompty", "model"));
 
-// The typra emitter opens every generated Go `LoadX` loader with a uniform
-// `if ctx == nil { ctx = NewLoadContext() }` guard. Leaf loaders that never
-// thread `ctx` into a nested load leave that assignment dead, which CodeQL
-// flags as a useless local assignment. Strip the guard only where `ctx` is
-// used solely in the signature and the guard itself (three references); the
-// `ctx *LoadContext` parameter is left in place so the loader signature stays
-// consistent across the generated API (Go permits unused parameters).
-function elideUnusedLoadContextGuard(root) {
-  if (!existsSync(root)) {
-    return;
-  }
-  const guard = "\tif ctx == nil {\n\t\tctx = NewLoadContext()\n\t}\n";
-  for (const entry of readdirSync(root)) {
-    const path = join(root, entry);
-    if (statSync(path).isDirectory()) {
-      elideUnusedLoadContextGuard(path);
-      continue;
-    }
-    if (!path.endsWith(".go")) {
-      continue;
-    }
-    const content = readFileSync(path, "utf8");
-    if (!content.includes(guard)) {
-      continue;
-    }
-    const starts = [];
-    const funcRe = /^func /gmu;
-    let match;
-    while ((match = funcRe.exec(content)) !== null) {
-      starts.push(match.index);
-    }
-    starts.push(content.length);
-    let normalized = "";
-    let cursor = 0;
-    for (let i = 0; i < starts.length - 1; i += 1) {
-      normalized += content.slice(cursor, starts[i]);
-      let chunk = content.slice(starts[i], starts[i + 1]);
-      const refs = (chunk.match(/\bctx\b/gu) || []).length;
-      if (chunk.includes(guard) && refs === 3) {
-        chunk = chunk.replace(guard, "");
-      }
-      normalized += chunk;
-      cursor = starts[i + 1];
-    }
-    normalized += content.slice(cursor);
-    if (normalized !== content) {
-      writeFileSync(path, normalized);
-    }
-  }
-}
+// Note: the dead `if ctx == nil { ctx = NewLoadContext() }` guard in leaf Go
+// loaders is now elided natively by @typra/emitter (>= 0.8.6), so no
+// post-generation guard stripping is required here.
 
 function trimEmptyPythonGeneratedTests(root) {
   if (!existsSync(root)) {
