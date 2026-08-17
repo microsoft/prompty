@@ -20,5 +20,8 @@
   },
   "devDependencies": {
     "prettier": "^3.8.3"
+  },
+  "overrides": {
+    "esbuild": "0.28.2"
   }
 }
