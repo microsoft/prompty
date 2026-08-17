@@ -14,7 +14,7 @@ import {
   clearConnections,
   registerExecutor,
   registerProcessor,
-  Prompty,
+  Agent,
   ApiKeyConnection,
 } from "@prompty/core";
 import { OpenAIExecutor } from "../src/executor.js";
@@ -60,8 +60,8 @@ function makeAgent(opts: {
   tools?: Record<string, unknown>[];
   outputs?: Record<string, unknown>[];
   inputs?: Record<string, unknown>[];
-} = {}): Prompty {
-  return Prompty.load({
+} = {}): Agent {
+  return Agent.load({
     name: "openai-integration",
     model: {
       id: opts.model || OPENAI_MODEL,
@@ -90,8 +90,8 @@ function makeDirectAgent(opts: {
   tools?: Record<string, unknown>[];
   outputs?: Record<string, unknown>[];
   inputs?: Record<string, unknown>[];
-} = {}): Prompty {
-  return Prompty.load({
+} = {}): Agent {
+  return Agent.load({
     name: "direct-openai-integration",
     model: {
       id: opts.model || DIRECT_OPENAI_MODEL,

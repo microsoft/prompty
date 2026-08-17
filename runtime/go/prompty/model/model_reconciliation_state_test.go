@@ -17,7 +17,18 @@ func TestModelReconciliationStateLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "invocationId": "inv_abc123",
-  "message": "provider connection dropped after request was sent"
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "messages": [],
+      "contextState": {}
+    }
+  }
 }
 `
 	var data map[string]interface{}
@@ -43,6 +54,15 @@ func TestModelReconciliationStateLoadYAML(t *testing.T) {
 	yamlData := `
 invocationId: inv_abc123
 message: provider connection dropped after request was sent
+request:
+  context:
+    id: "context:inv_abc123"
+    sessionId: sess_abc123
+    turnId: turn_abc123
+    invocationId: inv_abc123
+    iteration: 1
+    messages: []
+    contextState: {}
 
 `
 	var data map[string]interface{}
@@ -68,7 +88,18 @@ func TestModelReconciliationStateFromJSON(t *testing.T) {
 	jsonData := `
 {
   "invocationId": "inv_abc123",
-  "message": "provider connection dropped after request was sent"
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "messages": [],
+      "contextState": {}
+    }
+  }
 }
 `
 
@@ -89,6 +120,15 @@ func TestModelReconciliationStateFromYAML(t *testing.T) {
 	yamlData := `
 invocationId: inv_abc123
 message: provider connection dropped after request was sent
+request:
+  context:
+    id: "context:inv_abc123"
+    sessionId: sess_abc123
+    turnId: turn_abc123
+    invocationId: inv_abc123
+    iteration: 1
+    messages: []
+    contextState: {}
 
 `
 
@@ -109,7 +149,18 @@ func TestModelReconciliationStateRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "invocationId": "inv_abc123",
-  "message": "provider connection dropped after request was sent"
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "messages": [],
+      "contextState": {}
+    }
+  }
 }
 `
 	var data map[string]interface{}
@@ -142,7 +193,18 @@ func TestModelReconciliationStateToJSON(t *testing.T) {
 	jsonData := `
 {
   "invocationId": "inv_abc123",
-  "message": "provider connection dropped after request was sent"
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "messages": [],
+      "contextState": {}
+    }
+  }
 }
 `
 	var data map[string]interface{}
@@ -182,7 +244,18 @@ func TestModelReconciliationStateToYAML(t *testing.T) {
 	jsonData := `
 {
   "invocationId": "inv_abc123",
-  "message": "provider connection dropped after request was sent"
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "messages": [],
+      "contextState": {}
+    }
+  }
 }
 `
 	var data map[string]interface{}

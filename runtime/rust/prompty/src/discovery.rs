@@ -19,8 +19,8 @@
 //! `vendored_copy_matches_spec` test enforces this whenever the repo layout is
 //! available (it is a no-op in an unpacked/published context). Every other
 //! runtime follows the same pattern: vendor a copy into its own package tree and
-//! guard drift, so the shared `spec/vectors/discovery/enrichment_vectors.json`
-//! fixtures converge.
+//! guard drift, so the generated `vectors.json` (enrich operation)
+//! keeps them convergent.
 //!
 //! To refresh: edit `spec/data/model_capabilities.json`, then copy it to
 //! `runtime/rust/prompty/data/model_capabilities.json` (the drift test will fail

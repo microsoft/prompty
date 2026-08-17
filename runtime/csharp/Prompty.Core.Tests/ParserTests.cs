@@ -179,7 +179,7 @@ public class PromptyChatParserTests
     // Helpers
     // -----------------------------------------------------------------------
 
-    private static Prompty CreateAgent()
+    private static Agent CreateAgent()
     {
         var data = new Dictionary<string, object?>
         {
@@ -188,6 +188,6 @@ public class PromptyChatParserTests
             ["instructions"] = "",
             ["model"] = "gpt-4",
         };
-        return Prompty.Load(data, new LoadContext());
+        return Agent.Load(data, new LoadContext());
     }
 }

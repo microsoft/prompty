@@ -25,7 +25,6 @@ properties:
     type: array
     items:
       $ref: Message.yaml
-    default: []
     description: Canonical conversation messages at commit time
   iterations:
     type: integer

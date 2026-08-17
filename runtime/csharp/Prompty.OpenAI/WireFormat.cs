@@ -86,7 +86,7 @@ public static class WireFormat
     /// <summary>
     /// Convert Prompty tools to OpenAI ChatTool definitions.
     /// </summary>
-    public static List<ChatTool>? ToolsToWire(Core.Prompty agent)
+    public static List<ChatTool>? ToolsToWire(Core.Agent agent)
     {
         if (agent.Tools is null || agent.Tools.Count == 0)
             return null;
@@ -118,7 +118,7 @@ public static class WireFormat
     /// <summary>
     /// Convert outputs to OpenAI response_format.
     /// </summary>
-    public static ChatResponseFormat? OutputSchemaToWire(Core.Prompty agent)
+    public static ChatResponseFormat? OutputSchemaToWire(Core.Agent agent)
     {
         if (agent.Outputs is null || agent.Outputs.Count == 0)
             return null;
@@ -136,7 +136,7 @@ public static class WireFormat
     /// Note: ModelOptions.ToWire("openai") is available for raw HTTP providers,
     /// but this method uses the strongly-typed OpenAI SDK ChatCompletionOptions object.
     /// </summary>
-    public static ChatCompletionOptions BuildOptions(Core.Prompty agent)
+    public static ChatCompletionOptions BuildOptions(Core.Agent agent)
     {
         var options = new ChatCompletionOptions();
         var opts = agent.Model?.Options;
@@ -186,7 +186,7 @@ public static class WireFormat
     /// Build CreateResponseOptions for the Responses API.
     /// Converts messages to input items, extracts instructions from system/developer messages.
     /// </summary>
-    public static CreateResponseOptions BuildResponsesOptions(string model, Core.Prompty agent, List<Message> messages)
+    public static CreateResponseOptions BuildResponsesOptions(string model, Core.Agent agent, List<Message> messages)
     {
         var options = new CreateResponseOptions
         {
@@ -284,7 +284,7 @@ public static class WireFormat
     /// <summary>
     /// Convert Prompty tools to Responses API tool definitions (flat format).
     /// </summary>
-    public static List<ResponseTool>? ToolsToResponsesWire(Core.Prompty agent)
+    public static List<ResponseTool>? ToolsToResponsesWire(Core.Agent agent)
     {
         if (agent.Tools is null || agent.Tools.Count == 0)
             return null;

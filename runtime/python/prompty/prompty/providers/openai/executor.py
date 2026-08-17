@@ -25,8 +25,8 @@ from ...core.types import (
     TextPart,
 )
 from ...model import (
+    Agent,
     ApiKeyConnection,
-    Prompty,
     ReferenceConnection,
 )
 from ...tracing.tracer import Tracer, trace
@@ -97,7 +97,7 @@ def _audio_format(media_type: str | None) -> str:
     return "wav"
 
 
-def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
+def _tools_to_wire(agent: Agent) -> list[dict[str, Any]] | None:
     """Convert agent tools to OpenAI function tool format.
 
     Supports ``kind: function`` (direct schema) and ``kind: prompty``
@@ -133,7 +133,7 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
     return wire_tools if wire_tools else None
 
 
-def _project_prompty_tool(tool: Any, parent: Prompty) -> dict[str, Any]:
+def _project_prompty_tool(tool: Any, parent: Agent) -> dict[str, Any]:
     """Project a PromptyTool as an OpenAI function definition.
 
     Loads the child ``.prompty`` file, uses its ``inputs`` as the
@@ -223,9 +223,7 @@ def _property_to_json_schema(prop: Any, *, optional: bool = False, strict: bool 
             props: dict[str, Any] = {}
             required: list[str] = []
             for p in prop.properties:
-                props[p.name] = _property_to_json_schema(
-                    p, optional=strict and not bool(p.required), strict=strict
-                )
+                props[p.name] = _property_to_json_schema(p, optional=strict and not bool(p.required), strict=strict)
                 if strict or p.required:
                     required.append(p.name)
             schema["properties"] = props
@@ -265,7 +263,7 @@ def _add_nullability(schema: dict[str, Any]) -> None:
         schema["enum"].append(None)
 
 
-def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
+def _output_schema_to_wire(agent: Agent) -> dict[str, Any] | None:
     """Convert ``agent.outputs`` to OpenAI ``response_format``.
 
     Returns ``None`` when no output schema is defined.  When present,
@@ -302,7 +300,7 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
     }
 
 
-def _build_options(agent: Prompty) -> dict[str, Any]:
+def _build_options(agent: Agent) -> dict[str, Any]:
     """Extract model options into kwargs for the chat completions API call."""
     if agent.model.options is None:
         return {}
@@ -326,7 +324,7 @@ def _build_options(agent: Prompty) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def _build_responses_options(agent: Prompty) -> dict[str, Any]:
+def _build_responses_options(agent: Agent) -> dict[str, Any]:
     """Extract model options for the Responses API (different param names)."""
     if agent.model.options is None:
         return {}
@@ -345,7 +343,7 @@ def _build_responses_options(agent: Prompty) -> dict[str, Any]:
     return opts
 
 
-def _responses_tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
+def _responses_tools_to_wire(agent: Agent) -> list[dict[str, Any]] | None:
     """Convert agent tools to Responses API flat tool format.
 
     Unlike Chat Completions (``{type: "function", function: {...}}``),
@@ -366,9 +364,7 @@ def _responses_tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
             if tool.description:
                 tool_def["description"] = tool.description
             if hasattr(tool, "parameters") and tool.parameters:
-                tool_def["parameters"] = _schema_to_wire(
-                    tool.parameters, strict=bool(getattr(tool, "strict", False))
-                )
+                tool_def["parameters"] = _schema_to_wire(tool.parameters, strict=bool(getattr(tool, "strict", False)))
             if hasattr(tool, "strict") and tool.strict:
                 tool_def["strict"] = True
                 if "parameters" in tool_def:
@@ -395,7 +391,7 @@ def _responses_tools_to_wire(agent: Prompty) -> list[dict[str, Any]] | None:
     return wire_tools if wire_tools else None
 
 
-def _output_schema_to_responses_wire(agent: Prompty) -> dict[str, Any] | None:
+def _output_schema_to_responses_wire(agent: Agent) -> dict[str, Any] | None:
     """Convert ``agent.outputs`` to Responses API ``text.format`` config.
 
     Returns ``None`` when no output schema is defined. The Responses API
@@ -471,7 +467,7 @@ class _BaseExecutor:
 
     # -- Chat ---------------------------------------------------------------
 
-    def _execute_chat(self, client: Any, agent: Prompty, messages: Any) -> Any:
+    def _execute_chat(self, client: Any, agent: Agent, messages: Any) -> Any:
         with Tracer.start("chat.completions.create") as t:
             t("type", "LLM")
             t("signature", f"{self._trace_prefix}.chat.completions.create")
@@ -483,7 +479,7 @@ class _BaseExecutor:
             t("result", response)
         return response
 
-    async def _execute_chat_async(self, client: Any, agent: Prompty, messages: Any) -> Any:
+    async def _execute_chat_async(self, client: Any, agent: Agent, messages: Any) -> Any:
         with Tracer.start("chat.completions.create") as t:
             t("type", "LLM")
             t("signature", f"Async{self._trace_prefix}.chat.completions.create")
@@ -497,7 +493,7 @@ class _BaseExecutor:
 
     # -- Embedding ----------------------------------------------------------
 
-    def _execute_embedding(self, client: Any, agent: Prompty, data: Any) -> Any:
+    def _execute_embedding(self, client: Any, agent: Agent, data: Any) -> Any:
         with Tracer.start("embeddings.create") as t:
             t("type", "LLM")
             t("signature", f"{self._trace_prefix}.embeddings.create")
@@ -507,7 +503,7 @@ class _BaseExecutor:
             t("result", response)
         return response
 
-    async def _execute_embedding_async(self, client: Any, agent: Prompty, data: Any) -> Any:
+    async def _execute_embedding_async(self, client: Any, agent: Agent, data: Any) -> Any:
         with Tracer.start("embeddings.create") as t:
             t("type", "LLM")
             t("signature", f"Async{self._trace_prefix}.embeddings.create")
@@ -519,7 +515,7 @@ class _BaseExecutor:
 
     # -- Image --------------------------------------------------------------
 
-    def _execute_image(self, client: Any, agent: Prompty, data: Any) -> Any:
+    def _execute_image(self, client: Any, agent: Agent, data: Any) -> Any:
         with Tracer.start("images.generate") as t:
             t("type", "LLM")
             t("signature", f"{self._trace_prefix}.images.generate")
@@ -529,7 +525,7 @@ class _BaseExecutor:
             t("result", response)
         return response
 
-    async def _execute_image_async(self, client: Any, agent: Prompty, data: Any) -> Any:
+    async def _execute_image_async(self, client: Any, agent: Agent, data: Any) -> Any:
         with Tracer.start("images.generate") as t:
             t("type", "LLM")
             t("signature", f"Async{self._trace_prefix}.images.generate")
@@ -541,7 +537,7 @@ class _BaseExecutor:
 
     # -- Arg builders -------------------------------------------------------
 
-    def _build_chat_args(self, agent: Prompty, messages: list[Message]) -> dict[str, Any]:
+    def _build_chat_args(self, agent: Agent, messages: list[Message]) -> dict[str, Any]:
         """Build the full arguments dict for chat.completions.create."""
         model = agent.model.id or "gpt-4"
         wire_messages = [_message_to_wire(m) for m in messages]
@@ -561,7 +557,7 @@ class _BaseExecutor:
 
         return args
 
-    def _build_embedding_args(self, agent: Prompty, data: Any) -> dict[str, Any]:
+    def _build_embedding_args(self, agent: Agent, data: Any) -> dict[str, Any]:
         """Build arguments dict for embeddings.create."""
         model = agent.model.id or "text-embedding-ada-002"
         args: dict[str, Any] = {
@@ -575,7 +571,7 @@ class _BaseExecutor:
                 args[k] = v
         return args
 
-    def _build_image_args(self, agent: Prompty, data: Any) -> dict[str, Any]:
+    def _build_image_args(self, agent: Agent, data: Any) -> dict[str, Any]:
         """Build arguments dict for images.generate."""
         model = agent.model.id or "dall-e-3"
         args: dict[str, Any] = {
@@ -591,7 +587,7 @@ class _BaseExecutor:
 
     # -- Responses API -------------------------------------------------------
 
-    def _execute_responses(self, client: Any, agent: Prompty, messages: Any) -> Any:
+    def _execute_responses(self, client: Any, agent: Agent, messages: Any) -> Any:
         with Tracer.start("responses.create") as t:
             t("type", "LLM")
             t("signature", f"{self._trace_prefix}.responses.create")
@@ -603,7 +599,7 @@ class _BaseExecutor:
             t("result", response)
         return response
 
-    async def _execute_responses_async(self, client: Any, agent: Prompty, messages: Any) -> Any:
+    async def _execute_responses_async(self, client: Any, agent: Agent, messages: Any) -> Any:
         with Tracer.start("responses.create") as t:
             t("type", "LLM")
             t("signature", f"Async{self._trace_prefix}.responses.create")
@@ -615,7 +611,7 @@ class _BaseExecutor:
             t("result", response)
         return response
 
-    def _build_responses_args(self, agent: Prompty, messages: list[Message]) -> dict[str, Any]:
+    def _build_responses_args(self, agent: Agent, messages: list[Message]) -> dict[str, Any]:
         """Build the full arguments dict for responses.create.
 
         Key differences from chat.completions.create:
@@ -753,7 +749,7 @@ class OpenAIExecutor(_BaseExecutor):
     _trace_prefix = "OpenAI"
 
     @trace
-    def execute(self, agent: Prompty, data: Any) -> Any:
+    def execute(self, agent: Agent, data: Any) -> Any:
         client = self._resolve_client(agent)
         api_type = agent.model.api_type or "chat"
 
@@ -769,7 +765,7 @@ class OpenAIExecutor(_BaseExecutor):
             raise ValueError(f"Unsupported apiType: {api_type}")
 
     @trace
-    async def execute_async(self, agent: Prompty, data: Any) -> Any:
+    async def execute_async(self, agent: Agent, data: Any) -> Any:
         client = self._resolve_client_async(agent)
         api_type = agent.model.api_type or "chat"
 
@@ -784,7 +780,7 @@ class OpenAIExecutor(_BaseExecutor):
         else:
             raise ValueError(f"Unsupported apiType: {api_type}")
 
-    def _resolve_client(self, agent: Prompty) -> Any:
+    def _resolve_client(self, agent: Agent) -> Any:
         """Resolve the sync OpenAI client from connection config."""
         from openai import OpenAI
 
@@ -806,7 +802,7 @@ class OpenAIExecutor(_BaseExecutor):
             )
         return client
 
-    def _resolve_client_async(self, agent: Prompty) -> Any:
+    def _resolve_client_async(self, agent: Agent) -> Any:
         """Resolve the async OpenAI client from connection config."""
         from openai import AsyncOpenAI
 
@@ -828,7 +824,7 @@ class OpenAIExecutor(_BaseExecutor):
             )
         return client
 
-    def _client_kwargs(self, agent: Prompty) -> dict[str, Any]:
+    def _client_kwargs(self, agent: Agent) -> dict[str, Any]:
         """Extract client constructor kwargs from an ApiKeyConnection."""
         kwargs: dict[str, Any] = {}
         conn = agent.model.connection

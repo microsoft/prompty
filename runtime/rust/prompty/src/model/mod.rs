@@ -6,6 +6,7 @@
     dead_code,
     non_camel_case_types,
     unused_variables,
+    unexpected_cfgs,
     clippy::all
 )]
 
@@ -15,38 +16,50 @@ pub use context::*;
 pub mod agent;
 pub use agent::*;
 
-pub mod connection;
-pub use connection::*;
+pub mod checkpoint_store;
+pub use checkpoint_store::*;
 
-pub mod conversation;
-pub use conversation::*;
+pub mod discovery_conformance;
+pub use discovery_conformance::*;
 
-pub mod core;
-pub use core::*;
+pub mod event_journal_writer;
+pub use event_journal_writer::*;
 
-pub mod events;
-pub use events::*;
+pub mod event_sink;
+pub use event_sink::*;
 
-pub mod memory;
-pub use memory::*;
+pub mod executor;
+pub use executor::*;
 
-pub mod model;
-pub use model::*;
+pub mod host_tool_executor;
+pub use host_tool_executor::*;
 
-pub mod pipeline;
-pub use pipeline::*;
+pub mod load_conformance;
+pub use load_conformance::*;
 
-pub mod streaming;
-pub use streaming::*;
+pub mod model_lister;
+pub use model_lister::*;
 
-pub mod template;
-pub use template::*;
+pub mod parser;
+pub use parser::*;
 
-pub mod tools;
-pub use tools::*;
+pub mod permission_resolver;
+pub use permission_resolver::*;
 
-pub mod tracing;
-pub use tracing::*;
+pub mod processor;
+pub use processor::*;
+
+pub mod renderer;
+pub use renderer::*;
+
+pub mod turn_conformance;
+pub use turn_conformance::*;
+
+pub mod wire_conformance;
+pub use wire_conformance::*;
+
+pub mod contracts;
+pub use contracts::*;
 
 pub mod wire;
 pub use wire::*;

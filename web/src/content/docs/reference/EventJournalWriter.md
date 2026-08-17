@@ -21,9 +21,9 @@ config:
 classDiagram
     class EventJournalWriter {
       <<protocol>>
-        +appendTurn(turnEvent: TurnEvent) boolean [sync]
-        +appendSession(sessionEvent: SessionEvent) boolean [sync]
-        +close(summary: SessionSummary?) boolean [sync]
+        +appendSession(sessionEvent: SessionEvent) boolean [sync, atomic]
+        +appendTurn(turnEvent: TurnEvent) boolean [sync, atomic]
+        +close(summary: SessionSummary?) boolean [sync, atomic]
     }
 ```
 
@@ -33,6 +33,6 @@ The following helper methods are declared via `@method` and must be implemented 
 
 | Name | Signature | Runtime shape | Description |
 | ---- | --------- | ------------- | ----------- |
-| `appendTurn` | `appendTurn(turnEvent: TurnEvent) -> boolean` | sync | Append a turn event to a durable replay journal |
-| `appendSession` | `appendSession(sessionEvent: SessionEvent) -> boolean` | sync | Append a session event to a durable replay journal |
-| `close` | `close(summary: SessionSummary?) -> boolean` | sync | Finalize the journal with an optional session summary |
+| `appendSession` | `appendSession(sessionEvent: SessionEvent) -> boolean` | sync, atomic | Append a session event to a durable replay journal |
+| `appendTurn` | `appendTurn(turnEvent: TurnEvent) -> boolean` | sync, atomic | Append a turn event to a durable replay journal |
+| `close` | `close(summary: SessionSummary?) -> boolean` | sync, atomic | Finalize the journal with an optional session summary |

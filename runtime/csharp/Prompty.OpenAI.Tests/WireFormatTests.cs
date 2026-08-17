@@ -94,7 +94,7 @@ public class WireFormatTests
         {
             Role = Role.Assistant,
             Parts = [new TextPart { Value = "" }],
-            Metadata = new Dictionary<string, object>
+            Metadata = new Dictionary<string, object?>
             {
                 ["tool_calls"] = new List<ToolCall>
                 {
@@ -116,7 +116,7 @@ public class WireFormatTests
         {
             Role = Role.Tool,
             Parts = [new TextPart { Value = "72°F and sunny" }],
-            Metadata = new Dictionary<string, object> { ["tool_call_id"] = "call_1" },
+            Metadata = new Dictionary<string, object?> { ["tool_call_id"] = "call_1" },
         };
 
         var result = WireFormat.MessageToWire(msg);
@@ -145,21 +145,21 @@ public class WireFormatTests
     [Fact]
     public void ToolsToWire_NullTools_ReturnsNull()
     {
-        var agent = new Core.Prompty { Tools = null };
+        var agent = new Core.Agent { Tools = null };
         Assert.Null(WireFormat.ToolsToWire(agent));
     }
 
     [Fact]
     public void ToolsToWire_EmptyTools_ReturnsNull()
     {
-        var agent = new Core.Prompty { Tools = [] };
+        var agent = new Core.Agent { Tools = [] };
         Assert.Null(WireFormat.ToolsToWire(agent));
     }
 
     [Fact]
     public void ToolsToWire_FunctionTool_ProducesCorrectFormat()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools =
             [
@@ -181,7 +181,7 @@ public class WireFormatTests
     [Fact]
     public void ToolsToWire_NonFunctionTool_Skipped()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools =
             [
@@ -197,7 +197,7 @@ public class WireFormatTests
     [Fact]
     public void ToolsToWire_StrictFunctionTool_SetsStrictFlag()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools =
             [
@@ -224,21 +224,21 @@ public class WireFormatTests
     [Fact]
     public void OutputSchemaToWire_NullOutputs_ReturnsNull()
     {
-        var agent = new Core.Prompty { Outputs = null };
+        var agent = new Core.Agent { Outputs = null };
         Assert.Null(WireFormat.OutputSchemaToWire(agent));
     }
 
     [Fact]
     public void OutputSchemaToWire_EmptyOutputs_ReturnsNull()
     {
-        var agent = new Core.Prompty { Outputs = [] };
+        var agent = new Core.Agent { Outputs = [] };
         Assert.Null(WireFormat.OutputSchemaToWire(agent));
     }
 
     [Fact]
     public void OutputSchemaToWire_WithOutputs_ReturnsJsonSchemaFormat()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Outputs =
             [
@@ -260,7 +260,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_NullModelOptions_ReturnsDefaults()
     {
-        var agent = new Core.Prompty { Model = null! };
+        var agent = new Core.Agent { Model = null! };
 
         var result = WireFormat.BuildOptions(agent);
 
@@ -271,7 +271,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithTemperature_SetsCorrectly()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions { Temperature = 0.7f } },
         };
@@ -284,7 +284,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithMaxOutputTokens_SetsMaxOutputTokenCount()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions { MaxOutputTokens = 1024 } },
         };
@@ -297,7 +297,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithTopP_SetsCorrectly()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions { TopP = 0.9f } },
         };
@@ -310,7 +310,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithFrequencyPenalty_SetsCorrectly()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions { FrequencyPenalty = 0.5f } },
         };
@@ -323,7 +323,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithPresencePenalty_SetsCorrectly()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions { PresencePenalty = 0.3f } },
         };
@@ -336,7 +336,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithSeed_SetsCorrectly()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions { Seed = 42 } },
         };
@@ -349,7 +349,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithStopSequences_SetsCorrectly()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions { StopSequences = ["END", "STOP"] } },
         };
@@ -364,7 +364,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithTools_AddsToolsToOptions()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions { Temperature = 0.5f } },
             Tools =
@@ -386,7 +386,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_WithOutputSchema_SetsResponseFormat()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Options = new ModelOptions() },
             Outputs =
@@ -403,7 +403,7 @@ public class WireFormatTests
     [Fact]
     public void BuildOptions_AllOptions_SetsEverything()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -431,4 +431,3 @@ public class WireFormatTests
         Assert.Single(result.StopSequences);
     }
 }
-

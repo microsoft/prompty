@@ -8,15 +8,15 @@ use prompty::harness::{
     FunctionHostToolExecutor, InMemoryCheckpointStore, JsonlEventJournalWriter,
     ReferenceTurnRunner,
 };
+use prompty::model::checkpoint_store::CheckpointStore;
 use prompty::model::events::host_tool_request::HostToolRequest;
 use prompty::model::events::permission_decision::PermissionDecision;
 use prompty::model::events::permission_request::PermissionRequest;
+use prompty::model::host_tool_executor::HostToolExecutor;
+use prompty::model::permission_resolver::PermissionResolver;
 use prompty::model::pipeline::RunTurnRequest;
 use prompty::model::pipeline::TurnModelRequest;
 use prompty::model::pipeline::TurnModelResponse;
-use prompty::model::pipeline::checkpoint_store::CheckpointStore;
-use prompty::model::pipeline::host_tool_executor::HostToolExecutor;
-use prompty::model::pipeline::permission_resolver::PermissionResolver;
 use prompty::model::pipeline::run_turn_result::RunTurnStatus;
 use prompty::model::pipeline::turn_options::TurnOptions;
 use serde::Deserialize;
@@ -128,11 +128,40 @@ fn replay_vectors() -> ReplayVectors {
         .join("..")
         .join("..")
         .join("..")
-        .join("spec")
-        .join("vectors")
-        .join("harness")
-        .join("replay_vectors.json");
-    let vectors: ReplayVectors = serde_json::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json");
+    let doc: Value = serde_json::from_str(&fs::read_to_string(path).unwrap()).unwrap();
+    // Replay scenarios are emitted under the `replay` operation; each vector's `input`
+    // carries the journal-level clock/sessionId/turnId plus per-scenario inputs.
+    let items: Vec<Value> = doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("replay"))
+        .map(|e| e["vector"].clone())
+        .collect();
+    let first = &items[0]["input"];
+    let scenarios: Vec<Value> = items
+        .iter()
+        .map(|v| {
+            json!({
+                "name": v["name"],
+                "inputs": v["input"].get("inputs").cloned().unwrap_or(Value::Null),
+                "maxIterations": v["input"].get("maxIterations").cloned().unwrap_or(Value::Null),
+                "expected": v["expected"],
+            })
+        })
+        .collect();
+    let reconstructed = json!({
+        "version": 1,
+        "clock": first["clock"],
+        "sessionId": first["sessionId"],
+        "turnId": first["turnId"],
+        "scenarios": scenarios,
+    });
+    let vectors: ReplayVectors = serde_json::from_value(reconstructed).unwrap();
     assert_eq!(vectors.version, 1);
     vectors
 }
@@ -235,7 +264,7 @@ fn model_for_scenario(
         }
         if request.iteration == 0 {
             return Ok(TurnModelResponse {
-                tool_requests: vec![HostToolRequest {
+                tool_requests: Some(vec![HostToolRequest {
                     request_id: Some("exec-1".to_string()),
                     tool_call_id: Some("call-1".to_string()),
                     tool_name: if name == "tool_failure" {
@@ -246,14 +275,14 @@ fn model_for_scenario(
                     .to_string(),
                     arguments: json!({ "a": 2, "b": 3 }),
                     ..Default::default()
-                }],
+                }]),
                 ..Default::default()
             });
         }
         Ok(TurnModelResponse {
             output: Some(json!({
-                "toolResult": request.tool_results[0].result,
-                "errorKind": request.tool_results[0].error_kind,
+                "toolResult": request.tool_results.as_ref().unwrap()[0].result,
+                "errorKind": request.tool_results.as_ref().unwrap()[0].error_kind,
             })),
             ..Default::default()
         })
@@ -358,18 +387,20 @@ async fn reference_turn_runner_executes_host_tools() {
         Arc::new(|request: TurnModelRequest| {
             if request.iteration == 0 {
                 return Ok(TurnModelResponse {
-                    tool_requests: vec![HostToolRequest {
+                    tool_requests: Some(vec![HostToolRequest {
                         request_id: Some("exec-1".to_string()),
                         tool_call_id: Some("call-1".to_string()),
                         tool_name: "add".to_string(),
                         arguments: json!({ "a": 2, "b": 3 }),
                         ..Default::default()
-                    }],
+                    }]),
                     ..Default::default()
                 });
             }
             Ok(TurnModelResponse {
-                output: Some(json!({ "toolResult": request.tool_results[0].result })),
+                output: Some(
+                    json!({ "toolResult": request.tool_results.as_ref().unwrap()[0].result }),
+                ),
                 ..Default::default()
             })
         }),
@@ -383,7 +414,7 @@ async fn reference_turn_runner_executes_host_tools() {
         .unwrap();
 
     assert_eq!(result.output, Some(json!({ "toolResult": 5 })));
-    assert!(result.tool_results[0].success);
+    assert!(result.tool_results.as_ref().unwrap()[0].success);
     assert_eq!(
         sink.turn_events()
             .iter()
@@ -420,10 +451,10 @@ async fn reference_turn_runner_preserves_missing_request_id_allocation_order() {
         Arc::new(|request: TurnModelRequest| {
             if request.iteration == 0 {
                 return Ok(TurnModelResponse {
-                    tool_requests: vec![HostToolRequest {
+                    tool_requests: Some(vec![HostToolRequest {
                         tool_name: "generated".to_string(),
                         ..Default::default()
-                    }],
+                    }]),
                     ..Default::default()
                 });
             }
@@ -475,16 +506,18 @@ async fn reference_turn_runner_denied_permission_skips_execution() {
         Arc::new(|request: TurnModelRequest| {
             if request.iteration == 0 {
                 return Ok(TurnModelResponse {
-                    tool_requests: vec![HostToolRequest {
+                    tool_requests: Some(vec![HostToolRequest {
                         request_id: Some("exec-1".to_string()),
                         tool_name: "shell".to_string(),
                         ..Default::default()
-                    }],
+                    }]),
                     ..Default::default()
                 });
             }
             Ok(TurnModelResponse {
-                output: Some(json!({ "denied": request.tool_results[0].error_kind })),
+                output: Some(
+                    json!({ "denied": request.tool_results.as_ref().unwrap()[0].error_kind }),
+                ),
                 ..Default::default()
             })
         }),
@@ -568,11 +601,11 @@ async fn reference_turn_runner_propagates_host_executor_errors() {
         FailingHostToolExecutor,
         Arc::new(|_request: TurnModelRequest| {
             Ok(TurnModelResponse {
-                tool_requests: vec![HostToolRequest {
+                tool_requests: Some(vec![HostToolRequest {
                     request_id: Some("exec-1".to_string()),
                     tool_name: "unavailable".to_string(),
                     ..Default::default()
-                }],
+                }]),
                 ..Default::default()
             })
         }),
@@ -624,7 +657,12 @@ async fn reference_turn_runner_preserves_zero_iteration_behavior() {
 
     assert_eq!(result.status, RunTurnStatus::Success);
     assert_eq!(result.iterations, 0);
-    assert!(result.checkpoints.is_empty());
+    assert!(
+        result
+            .checkpoints
+            .as_ref()
+            .map_or(true, |checkpoints| checkpoints.is_empty())
+    );
     assert_eq!(*calls.lock().unwrap(), 0);
     assert_eq!(
         sink.turn_events()
@@ -659,17 +697,18 @@ async fn reference_turn_runner_host_tool_failure_is_replayable() {
         Arc::new(|request: TurnModelRequest| {
             if request.iteration == 0 {
                 return Ok(TurnModelResponse {
-                    tool_requests: vec![HostToolRequest {
+                    tool_requests: Some(vec![HostToolRequest {
                         request_id: Some("exec-1".to_string()),
                         tool_name: "fail".to_string(),
                         ..Default::default()
-                    }],
+                    }]),
                     ..Default::default()
                 });
             }
             Ok(TurnModelResponse {
                 output: Some(
-                    request.tool_results[0].to_value(&prompty::model::context::SaveContext::new()),
+                    request.tool_results.as_ref().unwrap()[0]
+                        .to_value(&prompty::model::context::SaveContext::new()),
                 ),
                 ..Default::default()
             })

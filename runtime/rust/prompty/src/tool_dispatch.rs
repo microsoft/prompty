@@ -15,7 +15,7 @@ use std::path::Path;
 use std::pin::Pin;
 use std::sync::{Arc, OnceLock, RwLock};
 
-use crate::model::Prompty;
+use crate::model::Agent;
 use crate::types::ToolCall;
 
 // ---------------------------------------------------------------------------
@@ -38,7 +38,7 @@ pub trait ToolHandlerTrait: Send + Sync {
         &self,
         tool_def: &serde_json::Value,
         args: serde_json::Value,
-        agent: &Prompty,
+        agent: &Agent,
         parent_inputs: Option<&serde_json::Value>,
     ) -> Result<String, ToolHandlerError>;
 }
@@ -159,7 +159,7 @@ pub fn clear_tool_handlers() {
 ///
 /// Matches TypeScript `resolveBindings()`.
 pub fn resolve_bindings(
-    agent: &Prompty,
+    agent: &Agent,
     tool_name: &str,
     mut args: serde_json::Value,
     parent_inputs: &serde_json::Value,
@@ -172,7 +172,11 @@ pub fn resolve_bindings(
         return args;
     };
 
-    if tool_def.bindings.is_empty() {
+    if tool_def
+        .bindings
+        .as_ref()
+        .is_none_or(|bindings| bindings.is_empty())
+    {
         return args;
     }
 
@@ -181,7 +185,7 @@ pub fn resolve_bindings(
         None => return args,
     };
 
-    for binding in &tool_def.bindings {
+    for binding in tool_def.bindings.iter().flatten() {
         if let Some(value) = parent_obj.get(&binding.input) {
             args_obj.insert(binding.name.clone(), value.clone());
         }
@@ -293,7 +297,7 @@ fn extract_first_json_block(text: &str) -> Option<String> {
 pub async fn dispatch_tool(
     tool_call: &ToolCall,
     user_tools: &HashMap<String, crate::pipeline::ToolHandler>,
-    agent: &Prompty,
+    agent: &Agent,
     parent_inputs: Option<&serde_json::Value>,
 ) -> String {
     let mut args = match resilient_json_parse(&tool_call.arguments) {
@@ -367,8 +371,8 @@ pub async fn dispatch_tool(
 }
 
 /// Find a tool definition in `agent.tools` by name.
-fn find_tool_def<'a>(agent: &'a Prompty, name: &str) -> Option<&'a crate::model::Tool> {
-    agent.tools.iter().find(|t| t.name == name)
+fn find_tool_def<'a>(agent: &'a Agent, name: &str) -> Option<&'a crate::model::Tool> {
+    agent.tools.iter().flatten().find(|t| t.name == name)
 }
 
 /// Execute a user-provided tool handler (from TurnOptions.tools).
@@ -427,7 +431,7 @@ impl ToolHandlerTrait for FunctionToolHandler {
         &self,
         _tool_def: &serde_json::Value,
         _args: serde_json::Value,
-        _agent: &Prompty,
+        _agent: &Agent,
         _parent_inputs: Option<&serde_json::Value>,
     ) -> Result<String, ToolHandlerError> {
         // Function tools delegate to user-provided callables — if the tool
@@ -451,7 +455,7 @@ impl ToolHandlerTrait for PromptyToolHandler {
         &self,
         tool_def: &serde_json::Value,
         args: serde_json::Value,
-        agent: &Prompty,
+        agent: &Agent,
         _parent_inputs: Option<&serde_json::Value>,
     ) -> Result<String, ToolHandlerError> {
         let tool_name = tool_def
@@ -567,7 +571,7 @@ impl ToolHandlerTrait for McpToolHandler {
         &self,
         _tool_def: &serde_json::Value,
         _args: serde_json::Value,
-        _agent: &Prompty,
+        _agent: &Agent,
         _parent_inputs: Option<&serde_json::Value>,
     ) -> Result<String, ToolHandlerError> {
         Err(ToolHandlerError::Execution(
@@ -586,7 +590,7 @@ impl ToolHandlerTrait for OpenApiToolHandler {
         &self,
         _tool_def: &serde_json::Value,
         _args: serde_json::Value,
-        _agent: &Prompty,
+        _agent: &Agent,
         _parent_inputs: Option<&serde_json::Value>,
     ) -> Result<String, ToolHandlerError> {
         Err(ToolHandlerError::Execution(
@@ -605,7 +609,7 @@ impl ToolHandlerTrait for CustomToolHandler {
         &self,
         tool_def: &serde_json::Value,
         _args: serde_json::Value,
-        _agent: &Prompty,
+        _agent: &Agent,
         _parent_inputs: Option<&serde_json::Value>,
     ) -> Result<String, ToolHandlerError> {
         let kind = tool_def
@@ -647,19 +651,20 @@ mod tests {
         }
     }
 
-    fn default_agent() -> Prompty {
-        Prompty::default()
+    fn default_agent() -> Agent {
+        Agent::default()
     }
 
-    fn agent_with_tools(tools: serde_json::Value) -> Prompty {
+    fn agent_with_tools(tools: serde_json::Value) -> Agent {
         use crate::model::context::LoadContext;
-        let mut agent = Prompty::default();
+        let mut agent = Agent::default();
         if let Some(arr) = tools.as_array() {
             let ctx = LoadContext::default();
-            agent.tools = arr
-                .iter()
-                .map(|v| crate::model::Tool::load_from_value(v, &ctx))
-                .collect();
+            agent.tools = Some(
+                arr.iter()
+                    .map(|v| crate::model::Tool::load_from_value(v, &ctx))
+                    .collect(),
+            );
         }
         agent
     }
@@ -1050,7 +1055,9 @@ mod tests {
         let agent = agent_with_tools(serde_json::json!([{
             "name": "my_mcp_tool",
             "kind": "mcp",
-            "serverName": "test-server"
+            "serverName": "test-server",
+            "connection": { "kind": "reference" },
+            "approvalMode": { "kind": "always" }
         }]));
 
         let tc = make_tool_call("my_mcp_tool", "{}");
@@ -1070,7 +1077,8 @@ mod tests {
         // Agent has a tool with unknown kind — should fall through to "*" wildcard
         let agent = agent_with_tools(serde_json::json!([{
             "name": "my_exotic_tool",
-            "kind": "exotic_provider"
+            "kind": "exotic_provider",
+            "connection": { "kind": "reference" }
         }]));
 
         let tc = make_tool_call("my_exotic_tool", "{}");

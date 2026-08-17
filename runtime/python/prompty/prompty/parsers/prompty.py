@@ -1,4 +1,4 @@
-"""Prompty chat parser — splits rendered text into abstract messages.
+"""Agent chat parser — splits rendered text into abstract messages.
 
 Recognizes role markers (``system:``, ``user:``, ``assistant:``, ``developer:``).
 Supports nonce-based sanitization when ``FormatConfig.strict`` is enabled.
@@ -21,7 +21,7 @@ from ..core.types import (
     Message,
     TextPart,
 )
-from ..model import Prompty
+from ..model import Agent
 from ..tracing.tracer import trace
 
 __all__ = ["PromptyChatParser"]
@@ -74,7 +74,7 @@ class PromptyChatParser:
     @trace
     def parse(
         self,
-        agent: Prompty,
+        agent: Agent,
         rendered: str,
         **context: Any,
     ) -> list[Message]:
@@ -83,7 +83,7 @@ class PromptyChatParser:
         Parameters
         ----------
         agent:
-            The loaded Prompty (used for resolving file paths).
+            The loaded Agent (used for resolving file paths).
         rendered:
             The rendered template text.
         **context:
@@ -97,7 +97,7 @@ class PromptyChatParser:
 
     def _parse(
         self,
-        agent: Prompty,
+        agent: Agent,
         rendered: str,
         **context: Any,
     ) -> list[Message]:
@@ -108,7 +108,7 @@ class PromptyChatParser:
     @trace
     async def parse_async(
         self,
-        agent: Prompty,
+        agent: Agent,
         rendered: str,
         **context: Any,
     ) -> list[Message]:
@@ -116,7 +116,7 @@ class PromptyChatParser:
 
     # ---- internal parsing ----
 
-    def _resolve_base_path(self, agent: Prompty) -> Path | None:
+    def _resolve_base_path(self, agent: Agent) -> Path | None:
         """Try to find a base path from agent metadata for resolving relative images."""
         # The agent doesn't store the file path directly, but metadata may have it
         if agent.metadata and "source_path" in agent.metadata:

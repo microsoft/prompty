@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from prompty.core.types import Message, TextPart
-from prompty.model import Prompty
+from prompty.model import Agent
 from prompty.providers.openai.executor import (
     _BaseExecutor,
     _build_responses_options,
@@ -45,8 +45,8 @@ def _make_agent(
     tools: list[dict[str, Any]] | None = None,
     outputs: list[dict[str, Any]] | None = None,
     name: str = "test-agent",
-) -> Prompty:
-    """Build a Prompty agent via Prompty.load()."""
+) -> Agent:
+    """Build a Agent agent via Agent.load()."""
     data: dict[str, Any] = {
         "name": name,
         "model": {
@@ -65,7 +65,7 @@ def _make_agent(
     if outputs:
         data["outputs"] = outputs
 
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def _make_response(
@@ -231,7 +231,7 @@ class TestOutputSchemaToResponsesWire:
         assert schema["type"] == "object"
         assert "temperature" in schema["properties"]
         assert "condition" in schema["properties"]
-        assert schema["properties"]["temperature"]["type"] == "integer"
+        assert schema["properties"]["temperature"]["type"] == ["integer", "null"]
         assert schema["additionalProperties"] is False
 
 

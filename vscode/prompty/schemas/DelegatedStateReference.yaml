@@ -13,7 +13,6 @@ properties:
     description: Provider-defined identifier for the retained state
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque provider-specific state reference metadata
 required:
   - provider

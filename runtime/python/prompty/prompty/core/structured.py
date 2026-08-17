@@ -1,4 +1,4 @@
-"""Structured result casting — §8.8 of the Prompty spec.
+"""Structured result casting — §8.8 of the Agent spec.
 
 Provides ``StructuredResult`` (a dict subclass carrying raw JSON) and
 ``cast()`` for deserializing directly to typed objects without an

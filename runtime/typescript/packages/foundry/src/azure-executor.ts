@@ -5,14 +5,14 @@
  */
 
 import OpenAI, { AzureOpenAI } from "openai";
-import type { Prompty, Message } from "@prompty/core";
+import type { Agent, Message } from "@prompty/core";
 import { ApiKeyConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
 import { getConnection, traceSpan, sanitizeValue } from "@prompty/core";
 import { OpenAIExecutor } from "@prompty/openai";
 import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "@prompty/openai";
 
 export class AzureExecutor extends OpenAIExecutor {
-  override async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
+  override async execute(agent: Agent, messages: Message[]): Promise<unknown> {
     return traceSpan("AzureExecutor", async (emit) => {
       emit("signature", "prompty.azure.executor.AzureExecutor.invoke");
       emit("inputs", { data: messages });
@@ -42,7 +42,7 @@ export class AzureExecutor extends OpenAIExecutor {
   private async dispatchApiCall(
     client: OpenAI,
     clientName: string,
-    agent: Prompty,
+    agent: Agent,
     messages: Message[],
     apiType: string,
   ): Promise<unknown> {
@@ -108,7 +108,7 @@ export class AzureExecutor extends OpenAIExecutor {
     }
   }
 
-  protected override resolveClient(agent: Prompty): OpenAI {
+  protected override resolveClient(agent: Agent): OpenAI {
     const conn = agent.model?.connection;
 
     if (conn instanceof ReferenceConnection) {
@@ -119,7 +119,7 @@ export class AzureExecutor extends OpenAIExecutor {
     return new AzureOpenAI(kwargs as ConstructorParameters<typeof AzureOpenAI>[0]);
   }
 
-  protected override clientKwargs(agent: Prompty): Record<string, unknown> {
+  protected override clientKwargs(agent: Agent): Record<string, unknown> {
     const kwargs: Record<string, unknown> = {};
     const conn = agent.model?.connection;
 

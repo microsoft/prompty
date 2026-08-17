@@ -89,8 +89,8 @@ impl ModelPort for StreamingModel {
         Ok(ModelInvocationResponse {
             output: Some(Value::String("hello".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         })
@@ -111,13 +111,13 @@ impl ModelPort for CancellingModel {
         Ok(ModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "should-not-run".to_string(),
                 name: "echo".to_string(),
                 arguments: Some(Value::Null),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: None,
             metadata: Value::Null,
         })
@@ -138,8 +138,8 @@ impl ModelPort for CancellingFinalModel {
         Ok(ModelInvocationResponse {
             output: Some(Value::String("must not commit".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         })
@@ -223,13 +223,13 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "call-unknown".to_string(),
                 name: "external-write".to_string(),
                 arguments: Some(Value::Null),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -279,8 +279,8 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
             ModelInvocationResponse {
                 output: Some(Value::String("wrong resolution type".to_string())),
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: Vec::new(),
+                assistant_messages: None,
+                tool_requests: None,
                 next_context_state: None,
                 metadata: Value::Null,
             },
@@ -288,7 +288,7 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
         .is_err()
     );
     assert_eq!(
-        checkpoint.completed_tool_results[0].outcome,
+        checkpoint.completed_tool_results.as_ref().unwrap()[0].outcome,
         ToolOutcome::Indeterminate
     );
     let resumed_model = Arc::new(IndeterminateModel {
@@ -317,8 +317,8 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("reconciled".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -355,7 +355,11 @@ async fn indeterminate_tool_effect_stops_for_reconciliation() {
     .unwrap();
     assert_eq!(resolved.commit.status, TurnStatus::Success);
     assert_eq!(
-        resolved_checkpoints.0.lock().unwrap()[0].completed_tool_results[0].outcome,
+        resolved_checkpoints.0.lock().unwrap()[0]
+            .completed_tool_results
+            .as_ref()
+            .unwrap()[0]
+            .outcome,
         ToolOutcome::Success
     );
     assert!(
@@ -442,27 +446,27 @@ async fn portable_assistant_history_is_checkpointed_and_reused_after_tool_round(
             ModelInvocationResponse {
                 output: None,
                 usage: None,
-                assistant_messages: vec![assistant],
-                tool_requests: vec![EngineToolRequest {
+                assistant_messages: Some(vec![assistant]),
+                tool_requests: Some(vec![EngineToolRequest {
                     id: "call_1".to_string(),
                     name: "weather".to_string(),
                     arguments: Some(serde_json::json!({"city": "Paris"})),
                     metadata: Value::Null,
-                }],
+                }]),
                 next_context_state: Some(InvocationContextState {
                     portability: ContextPortability::Portable,
-                    delegated_state: Vec::new(),
+                    delegated_state: None,
                 }),
                 metadata: Value::Null,
             },
             ModelInvocationResponse {
                 output: Some(Value::String("sunny".to_string())),
                 usage: None,
-                assistant_messages: vec![Message::with_text(Role::Assistant, "sunny")],
-                tool_requests: Vec::new(),
+                assistant_messages: Some(vec![Message::with_text(Role::Assistant, "sunny")]),
+                tool_requests: None,
                 next_context_state: Some(InvocationContextState {
                     portability: ContextPortability::Portable,
-                    delegated_state: Vec::new(),
+                    delegated_state: None,
                 }),
                 metadata: Value::Null,
             },
@@ -702,8 +706,11 @@ async fn indeterminate_model_invocation_is_not_retried() {
         ModelInvocationResponse {
             output: Some(Value::String("provider-confirmed".to_string())),
             usage: None,
-            assistant_messages: vec![Message::with_text(Role::Assistant, "provider-confirmed")],
-            tool_requests: Vec::new(),
+            assistant_messages: Some(vec![Message::with_text(
+                Role::Assistant,
+                "provider-confirmed",
+            )]),
+            tool_requests: None,
             next_context_state: None,
             metadata: serde_json::json!({"providerResponseId": "resp-confirmed"}),
         },
@@ -752,13 +759,13 @@ async fn permission_port_failure_commits_a_failed_turn() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "call-permission".to_string(),
                 name: "restricted".to_string(),
                 arguments: Some(Value::Null),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -817,13 +824,13 @@ async fn unknown_tool_is_a_terminal_configuration_failure() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "call-missing".to_string(),
                 name: "missing".to_string(),
                 arguments: Some(Value::Null),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -866,13 +873,13 @@ async fn cancellation_after_permission_prevents_tool_execution() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "call-cancelled".to_string(),
                 name: "write".to_string(),
                 arguments: Some(Value::Null),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -924,13 +931,13 @@ async fn durability_failure_after_tool_effect_returns_recovery_state() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "call-durable".to_string(),
                 name: "write".to_string(),
                 arguments: Some(Value::Null),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -983,7 +990,10 @@ async fn durability_failure_after_tool_effect_returns_recovery_state() {
         } => {
             assert_eq!(request_id, "call-durable");
             assert!(checkpoint.pending_model_response.is_some());
-            assert_eq!(checkpoint.completed_tool_results[0].model_text(), "written");
+            assert_eq!(
+                checkpoint.completed_tool_results.as_ref().unwrap()[0].model_text(),
+                "written"
+            );
             assert_eq!(tool_results.len(), 1);
         }
         other => panic!("expected recovery state, got {other}"),
@@ -1234,19 +1244,36 @@ impl IdGenerator for SequentialIds {
     }
 }
 
-fn vector_path() -> PathBuf {
+fn vectors_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
         .join("..")
-        .join("spec")
-        .join("vectors")
-        .join("engine")
-        .join("turn_vectors.json")
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json")
 }
 
 fn load_vectors() -> VectorFile {
-    serde_json::from_str(&std::fs::read_to_string(vector_path()).unwrap()).unwrap()
+    let doc: Value =
+        serde_json::from_str(&std::fs::read_to_string(vectors_path()).unwrap()).unwrap();
+    let cases: Vec<Value> = doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("runTurn"))
+        .map(|e| {
+            let mut case = e["vector"]["input"]
+                .as_object()
+                .cloned()
+                .unwrap_or_default();
+            case.insert("name".into(), e["vector"]["name"].clone());
+            case.insert("expected".into(), e["vector"]["expected"].clone());
+            Value::Object(case)
+        })
+        .collect();
+    serde_json::from_value(serde_json::json!({ "version": "1", "cases": cases })).unwrap()
 }
 
 fn to_message(message: &VectorMessage) -> Message {
@@ -1264,18 +1291,20 @@ fn to_response(response: &VectorModelResponse) -> ModelInvocationResponse {
         (None, None) => None,
         (portability, delegated) => Some(InvocationContextState {
             portability: portability.unwrap_or(ContextPortability::Portable),
-            delegated_state: delegated.clone().unwrap_or_default(),
+            delegated_state: Some(delegated.clone().unwrap_or_default()),
         }),
     };
     ModelInvocationResponse {
         output: response.output.clone(),
         usage: None,
-        assistant_messages: response
-            .assistant
-            .iter()
-            .map(|text| Message::with_text(Role::Assistant, text.clone()))
-            .collect(),
-        tool_requests: response.tools.clone(),
+        assistant_messages: Some(
+            response
+                .assistant
+                .iter()
+                .map(|text| Message::with_text(Role::Assistant, text.clone()))
+                .collect(),
+        ),
+        tool_requests: Some(response.tools.clone()),
         next_context_state,
         metadata: Value::Null,
     }
@@ -1405,7 +1434,12 @@ async fn canonical_turn_engine_matches_vectors() {
         }
         if let Some(count) = vector.expected.delegated_state {
             assert_eq!(
-                result.commit.context_state.delegated_state.len(),
+                result
+                    .commit
+                    .context_state
+                    .delegated_state
+                    .as_ref()
+                    .map_or(0, |state| state.len()),
                 count,
                 "{} delegated state",
                 vector.name
@@ -1572,8 +1606,8 @@ async fn retry_reuses_the_same_context_snapshot() {
         response: ModelInvocationResponse {
             output: Some(Value::String("recovered".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         },
@@ -1627,21 +1661,21 @@ async fn tool_failure_is_committed_as_a_model_visible_result() {
             ModelInvocationResponse {
                 output: None,
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: vec![EngineToolRequest {
+                assistant_messages: None,
+                tool_requests: Some(vec![EngineToolRequest {
                     id: "call-fail".to_string(),
                     name: "failing".to_string(),
                     arguments: Some(Value::Null),
                     metadata: Value::Null,
-                }],
+                }]),
                 next_context_state: None,
                 metadata: Value::Null,
             },
             ModelInvocationResponse {
                 output: Some(Value::String("recovered from tool failure".to_string())),
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: Vec::new(),
+                assistant_messages: None,
+                tool_requests: None,
                 next_context_state: None,
                 metadata: Value::Null,
             },
@@ -1694,21 +1728,21 @@ async fn no_op_durability_allows_tool_turns_without_a_state_store() {
             ModelInvocationResponse {
                 output: None,
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: vec![EngineToolRequest {
+                assistant_messages: None,
+                tool_requests: Some(vec![EngineToolRequest {
                     id: "call-project-files".to_string(),
                     name: "list_project_files".to_string(),
                     arguments: Some(Value::Null),
                     metadata: Value::Null,
-                }],
+                }]),
                 next_context_state: None,
                 metadata: Value::Null,
             },
             ModelInvocationResponse {
                 output: Some(Value::String("Project files inspected.".to_string())),
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: Vec::new(),
+                assistant_messages: None,
+                tool_requests: None,
                 next_context_state: None,
                 metadata: Value::Null,
             },
@@ -1766,8 +1800,8 @@ async fn memory_recall_composes_as_a_context_source() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("concise".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -1808,7 +1842,10 @@ async fn memory_recall_composes_as_a_context_source() {
             .iter()
             .any(|message| message.text_content().contains("Remembered preference"))
     );
-    assert_eq!(requests[0].context.decisions[0].candidate_id, "memory-1");
+    assert_eq!(
+        requests[0].context.decisions.as_ref().unwrap()[0].candidate_id,
+        "memory-1"
+    );
 }
 
 #[tokio::test]
@@ -1829,8 +1866,8 @@ async fn resume_continues_after_the_checkpoint_sequence_and_iteration() {
         stable_prefix_messages: 1,
         inputs: Some(serde_json::json!({ "tenant": "contoso" })),
         active_invocation_id: None,
-        pending_tool_requests: Vec::new(),
-        completed_tool_results: Vec::new(),
+        pending_tool_requests: None,
+        completed_tool_results: None,
         completed_model_iterations: 1,
         reconciliation_required: false,
         model_reconciliation: None,
@@ -1841,7 +1878,7 @@ async fn resume_continues_after_the_checkpoint_sequence_and_iteration() {
         policy_applied_for_iteration: false,
         context_state: InvocationContextState {
             portability: ContextPortability::Portable,
-            delegated_state: Vec::new(),
+            delegated_state: None,
         },
         metadata: Value::Null,
     };
@@ -1849,8 +1886,8 @@ async fn resume_continues_after_the_checkpoint_sequence_and_iteration() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("resumed".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -1919,8 +1956,8 @@ async fn resume_commits_checkpointed_final_model_response_without_reinvoking() {
                 responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
                     output: Some(Value::String("checkpointed".to_string())),
                     usage: None,
-                    assistant_messages: Vec::new(),
-                    tool_requests: Vec::new(),
+                    assistant_messages: None,
+                    tool_requests: None,
                     next_context_state: None,
                     metadata: Value::Null,
                 }])),
@@ -2001,20 +2038,20 @@ async fn resume_continues_remaining_tools_without_replaying_completed_effects() 
         stable_prefix_messages: 1,
         inputs: Some(Value::Null),
         active_invocation_id: Some("invocation-original".to_string()),
-        pending_tool_requests: vec![EngineToolRequest {
+        pending_tool_requests: Some(vec![EngineToolRequest {
             id: "call-second".to_string(),
             name: "second".to_string(),
             arguments: Some(Value::Null),
             metadata: Value::Null,
-        }],
-        completed_tool_results: vec![EngineToolResult {
+        }]),
+        completed_tool_results: Some(vec![EngineToolResult {
             request_id: "call-first".to_string(),
             name: "first".to_string(),
             outcome: ToolOutcome::Success,
             output: Some(Value::String("first complete".to_string())),
             error_kind: None,
             metadata: Value::Null,
-        }],
+        }]),
         completed_model_iterations: 1,
         reconciliation_required: false,
         model_reconciliation: None,
@@ -2025,7 +2062,7 @@ async fn resume_continues_remaining_tools_without_replaying_completed_effects() 
         policy_applied_for_iteration: false,
         context_state: InvocationContextState {
             portability: ContextPortability::Portable,
-            delegated_state: Vec::new(),
+            delegated_state: None,
         },
         metadata: Value::Null,
     };
@@ -2033,8 +2070,8 @@ async fn resume_continues_remaining_tools_without_replaying_completed_effects() 
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("all complete".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -2101,15 +2138,15 @@ async fn resume_after_final_iteration_tools_commits_max_iterations_failure() {
         stable_prefix_messages: 1,
         inputs: Some(Value::Null),
         active_invocation_id: Some("invocation-final".to_string()),
-        pending_tool_requests: Vec::new(),
-        completed_tool_results: vec![EngineToolResult {
+        pending_tool_requests: None,
+        completed_tool_results: Some(vec![EngineToolResult {
             request_id: "call-final".to_string(),
             name: "final".to_string(),
             outcome: ToolOutcome::Success,
             output: Some(Value::String("complete".to_string())),
             error_kind: None,
             metadata: Value::Null,
-        }],
+        }]),
         completed_model_iterations: 1,
         reconciliation_required: false,
         model_reconciliation: None,
@@ -2120,7 +2157,7 @@ async fn resume_after_final_iteration_tools_commits_max_iterations_failure() {
         policy_applied_for_iteration: false,
         context_state: InvocationContextState {
             portability: ContextPortability::Portable,
-            delegated_state: Vec::new(),
+            delegated_state: None,
         },
         metadata: Value::Null,
     };
@@ -2163,8 +2200,8 @@ async fn post_commit_failure_does_not_uncommit_the_turn() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("committed".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -2229,8 +2266,8 @@ async fn post_commit_completion_journal_failure_is_non_fatal() {
                 responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
                     output: Some(Value::String("committed".to_string())),
                     usage: None,
-                    assistant_messages: Vec::new(),
-                    tool_requests: Vec::new(),
+                    assistant_messages: None,
+                    tool_requests: None,
                     next_context_state: None,
                     metadata: Value::Null,
                 }])),
@@ -2315,8 +2352,8 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("model output".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -2397,8 +2434,8 @@ async fn host_policy_rewrites_are_checkpointed_before_model_effects() {
                 "resumed without duplicate policy".to_string(),
             )),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -2498,8 +2535,8 @@ async fn cancellation_during_failing_final_policy_commits_cancelled() {
             responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
                 output: Some(Value::String("model output".to_string())),
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: Vec::new(),
+                assistant_messages: None,
+                tool_requests: None,
                 next_context_state: None,
                 metadata: Value::Null,
             }])),
@@ -2627,8 +2664,8 @@ async fn retry_policy_runs_between_retryable_model_attempts() {
         response: ModelInvocationResponse {
             output: Some(Value::String("recovered".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         },
@@ -2678,6 +2715,7 @@ impl ConversationPort for RecordingConversation {
         let ordered = response
             .tool_requests
             .iter()
+            .flatten()
             .map(|request| {
                 results
                     .iter()
@@ -2714,13 +2752,13 @@ async fn conversation_failure_occurs_after_the_tool_result_is_durable() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "call-durable-format".to_string(),
                 name: "write".to_string(),
                 arguments: Some(Value::Null),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -2762,11 +2800,15 @@ async fn conversation_failure_occurs_after_the_tool_result_is_durable() {
         "conversation_format_error"
     );
     assert!(checkpoints.0.lock().unwrap().iter().any(|checkpoint| {
-        checkpoint.pending_tool_requests.is_empty()
+        checkpoint
+            .pending_tool_requests
+            .as_ref()
+            .map_or(true, |requests| requests.is_empty())
             && checkpoint.pending_model_response.is_some()
             && checkpoint
                 .completed_tool_results
                 .iter()
+                .flatten()
                 .any(|result| result.request_id == "call-durable-format")
     }));
     let kinds = events
@@ -2793,8 +2835,8 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
             ModelInvocationResponse {
                 output: None,
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: vec![
+                assistant_messages: None,
+                tool_requests: Some(vec![
                     EngineToolRequest {
                         id: "call-a".to_string(),
                         name: "a".to_string(),
@@ -2807,15 +2849,15 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
                         arguments: Some(Value::Null),
                         metadata: Value::Null,
                     },
-                ],
+                ]),
                 next_context_state: None,
                 metadata: Value::Null,
             },
             ModelInvocationResponse {
                 output: Some(Value::String("done".to_string())),
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: Vec::new(),
+                assistant_messages: None,
+                tool_requests: None,
                 next_context_state: None,
                 metadata: Value::Null,
             },
@@ -2922,9 +2964,16 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
         checkpoints
             .iter()
             .find(|checkpoint| {
-                checkpoint.pending_tool_requests.is_empty()
+                checkpoint
+                    .pending_tool_requests
+                    .as_ref()
+                    .map_or(true, |requests| requests.is_empty())
                     && checkpoint.pending_model_response.is_some()
-                    && checkpoint.completed_tool_results.len() == 2
+                    && checkpoint
+                        .completed_tool_results
+                        .as_ref()
+                        .map_or(0, |results| results.len())
+                        == 2
             })
             .unwrap()
             .clone()
@@ -2934,8 +2983,8 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("resumed".to_string())),
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: Vec::new(),
+            assistant_messages: None,
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -3006,8 +3055,8 @@ async fn run_identity_round_trips_through_persisted_event_and_checkpoint_json() 
         responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
             output: Some(Value::String("done".to_string())),
             usage: None,
-            assistant_messages: vec![Message::with_text(Role::Assistant, "done")],
-            tool_requests: Vec::new(),
+            assistant_messages: Some(vec![Message::with_text(Role::Assistant, "done")]),
+            tool_requests: None,
             next_context_state: None,
             metadata: Value::Null,
         }])),
@@ -3087,8 +3136,8 @@ fn resume_fixture_checkpoint(last_sequence: i64) -> EngineCheckpoint {
         stable_prefix_messages: 1,
         inputs: Some(serde_json::json!({ "tenant": "contoso" })),
         active_invocation_id: None,
-        pending_tool_requests: Vec::new(),
-        completed_tool_results: Vec::new(),
+        pending_tool_requests: None,
+        completed_tool_results: None,
         completed_model_iterations: 1,
         reconciliation_required: false,
         model_reconciliation: None,
@@ -3099,7 +3148,7 @@ fn resume_fixture_checkpoint(last_sequence: i64) -> EngineCheckpoint {
         policy_applied_for_iteration: false,
         context_state: InvocationContextState {
             portability: ContextPortability::Portable,
-            delegated_state: Vec::new(),
+            delegated_state: None,
         },
         metadata: Value::Null,
     }
@@ -3135,10 +3184,7 @@ fn resume_context_bridge_threads_budgets_and_journal_tail() {
     assert_eq!(ahead_back, ahead);
 
     let at_checkpoint_json = serde_json::to_value(&at_checkpoint).unwrap();
-    assert!(
-        at_checkpoint_json.get("lastJournalSequence").is_none(),
-        "lastJournalSequence must be omitted when zero (conditional-emit)"
-    );
+    assert_eq!(at_checkpoint_json["lastJournalSequence"], 0);
     let at_checkpoint_back: ResumeContext = serde_json::from_value(at_checkpoint_json).unwrap();
     assert_eq!(at_checkpoint_back, at_checkpoint);
 }
@@ -3186,8 +3232,8 @@ async fn resume_via_generated_resume_context_avoids_duplicate_effects() {
                 responses: Mutex::new(VecDeque::from([ModelInvocationResponse {
                     output: Some(Value::String("checkpointed".to_string())),
                     usage: None,
-                    assistant_messages: Vec::new(),
-                    tool_requests: Vec::new(),
+                    assistant_messages: None,
+                    tool_requests: None,
                     next_context_state: None,
                     metadata: Value::Null,
                 }])),

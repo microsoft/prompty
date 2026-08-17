@@ -13,7 +13,6 @@ properties:
     type: array
     items:
       $ref: ReplayMismatch.yaml
-    default: []
     description: Record mismatches, empty when verification passed
   expectedCount:
     type: integer

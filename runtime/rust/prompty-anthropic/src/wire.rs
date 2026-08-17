@@ -11,7 +11,7 @@
 //! - `max_tokens` required, defaults to 4096
 //! - Options: `top_k`, `stop_sequences` (not `stop`)
 
-use prompty::model::{Prompty, Property, PropertyKind, Tool, ToolKind};
+use prompty::model::{Agent, Property, PropertyKind, Tool, ToolKind};
 use prompty::types::{ContentPart, ContentPartKind, Message, Role, ToolCall};
 use serde_json::{Map, Value, json};
 
@@ -46,11 +46,20 @@ pub const ANTHROPIC_VERSION: &str = "2023-06-01";
 // ---------------------------------------------------------------------------
 
 /// Build the full request body for `POST /v1/messages`.
-pub fn build_chat_args(agent: &Prompty, messages: &[Message]) -> Result<Value, SchemaError> {
+pub fn build_chat_args(agent: &Agent, messages: &[Message]) -> Result<Value, SchemaError> {
     let mut body = Map::new();
 
     // Model ID
-    body.insert("model".into(), json!(agent.model.id));
+    body.insert(
+        "model".into(),
+        json!(
+            agent
+                .model
+                .as_ref()
+                .map(|model| model.id.clone())
+                .unwrap_or_default()
+        ),
+    );
 
     // Extract system messages → top-level `system` field
     let system_text = extract_system(messages);
@@ -233,10 +242,10 @@ fn fix_f32_value(v: Value) -> Value {
 }
 
 /// Apply model options to the request body.
-fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
+fn apply_options(agent: &Agent, body: &mut Map<String, Value>) {
     let mut max_tokens = DEFAULT_MAX_TOKENS;
 
-    if let Some(opts) = &agent.model.options {
+    if let Some(opts) = &agent.model.as_ref().and_then(|model| model.options.clone()) {
         let wire = opts.to_wire("anthropic");
         if let Value::Object(map) = wire {
             for (k, v) in map {
@@ -272,7 +281,7 @@ fn apply_options(agent: &Prompty, body: &mut Map<String, Value>) {
 /// Convert `agent.outputs` to Anthropic's `output_config` format.
 ///
 /// Anthropic uses: `output_config: { format: { type: "json_schema", schema: {...} } }`
-fn output_schema_to_wire(agent: &Prompty) -> Result<Option<Value>, SchemaError> {
+fn output_schema_to_wire(agent: &Agent) -> Result<Option<Value>, SchemaError> {
     let Some(outputs) = agent.as_outputs() else {
         return Ok(None);
     };
@@ -349,8 +358,12 @@ fn property_to_json_schema(prop: &Property) -> Result<Value, SchemaError> {
     if let Some(ref desc) = prop.description {
         schema.insert("description".into(), json!(desc));
     }
-    if let Some(ref enum_vals) = prop.enum_values {
-        schema.insert("enum".into(), Value::Array(enum_vals.clone()));
+    if let Some(enum_values) = prop
+        .enum_values
+        .as_ref()
+        .filter(|values| !values.is_empty())
+    {
+        schema.insert("enum".into(), Value::Array(enum_values.clone()));
     }
 
     match &prop.kind {
@@ -385,23 +398,27 @@ fn property_to_json_schema(prop: &Property) -> Result<Value, SchemaError> {
             }
             schema.insert("additionalProperties".into(), Value::Bool(false));
         }
-        PropertyKind::Union { one_of, any_of } => match (!one_of.is_empty(), !any_of.is_empty()) {
-            (true, false) => {
-                let branches = one_of
-                    .iter()
-                    .map(property_to_json_schema)
-                    .collect::<Result<Vec<_>, _>>()?;
-                schema.insert("oneOf".into(), Value::Array(branches));
+        PropertyKind::Union { one_of, any_of } => {
+            let one_of_items = one_of.as_deref().unwrap_or(&[]);
+            let any_of_items = any_of.as_deref().unwrap_or(&[]);
+            match (!one_of_items.is_empty(), !any_of_items.is_empty()) {
+                (true, false) => {
+                    let branches = one_of_items
+                        .iter()
+                        .map(property_to_json_schema)
+                        .collect::<Result<Vec<_>, _>>()?;
+                    schema.insert("oneOf".into(), Value::Array(branches));
+                }
+                (false, true) => {
+                    let branches = any_of_items
+                        .iter()
+                        .map(property_to_json_schema)
+                        .collect::<Result<Vec<_>, _>>()?;
+                    schema.insert("anyOf".into(), Value::Array(branches));
+                }
+                _ => return Err(SchemaError::invalid_union()),
             }
-            (false, true) => {
-                let branches = any_of
-                    .iter()
-                    .map(property_to_json_schema)
-                    .collect::<Result<Vec<_>, _>>()?;
-                schema.insert("anyOf".into(), Value::Array(branches));
-            }
-            _ => return Err(SchemaError::invalid_union()),
-        },
+        }
         _ => {}
     }
 
@@ -630,20 +647,20 @@ pub fn format_stream_tool_messages(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prompty::model::Prompty;
+    use prompty::model::Agent;
     use prompty::model::context::LoadContext;
 
-    fn make_agent(model_json: Value) -> Prompty {
+    fn make_agent(model_json: Value) -> Agent {
         let mut data = json!({
             "name": "test",
             "kind": "prompt",
             "model": model_json,
         });
         data["instructions"] = json!("test");
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
-    fn make_agent_with_tools(model_json: Value, tools: Value) -> Prompty {
+    fn make_agent_with_tools(model_json: Value, tools: Value) -> Agent {
         let mut data = json!({
             "name": "test",
             "kind": "prompt",
@@ -651,7 +668,7 @@ mod tests {
             "tools": tools,
         });
         data["instructions"] = json!("test");
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     #[test]
@@ -1063,7 +1080,7 @@ mod tests {
             ],
         });
         data["instructions"] = json!("test");
-        let agent = Prompty::load_from_value(&data, &LoadContext::default());
+        let agent = Agent::load_from_value(&data, &LoadContext::default());
         let messages = vec![Message::with_text(Role::User, "Weather?")];
         let args = build_chat_args(&agent, &messages).expect("valid request schema");
 

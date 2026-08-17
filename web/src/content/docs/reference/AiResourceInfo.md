@@ -29,6 +29,12 @@ classDiagram
     }
 ```
 
+## Yaml Example
+
+```yaml
+serviceUrl: https://my-resource.services.ai.azure.com
+```
+
 ## Properties
 
 | Name | Type | Description |

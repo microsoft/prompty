@@ -11,20 +11,17 @@ properties:
     type: array
     items:
       $ref: Message.yaml
-    default: []
     description: Assistant messages to commit before tool results are made visible
   toolRequests:
     type: array
     items:
       $ref: ModelToolRequest.yaml
-    default: []
     description: Tool requests returned by the provider
   nextContextState:
     $ref: InvocationContextState.yaml
     description: Provider-context state to carry into the next invocation
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque provider-specific response metadata
 description: |-
   Provider-neutral result of a single model invocation.

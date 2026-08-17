@@ -10,14 +10,14 @@
  * @module
  */
 
-import type { Prompty } from "@prompty/core";
+import type { Agent } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
 export class AnthropicProcessor implements Processor {
-  async process(agent: Prompty, response: unknown): Promise<unknown> {
+  async process(agent: Agent, response: unknown): Promise<unknown> {
     return traceSpan("AnthropicProcessor", async (emit) => {
       emit("signature", "prompty.anthropic.processor.AnthropicProcessor.invoke");
       emit("inputs", { data: response });
@@ -34,7 +34,7 @@ export class AnthropicProcessor implements Processor {
 /**
  * Extract clean content from an Anthropic Messages API response.
  */
-export function processResponse(agent: Prompty, response: unknown): unknown {
+export function processResponse(agent: Agent, response: unknown): unknown {
   if (typeof response !== "object" || response === null) return response;
 
   // Streaming response — return content-extracting async generator
@@ -143,7 +143,7 @@ async function* streamGenerator(
  * ```
  */
 function processMessages(
-  agent: Prompty,
+  agent: Agent,
   response: Record<string, unknown>,
 ): unknown {
   const content = response.content as Record<string, unknown>[];

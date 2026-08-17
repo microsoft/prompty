@@ -15,7 +15,6 @@ properties:
     description: Zero-based model loop iteration
   inputs:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Inputs supplied to the deterministic single-turn run
   options:
     $ref: TurnOptions.yaml
@@ -24,7 +23,6 @@ properties:
     type: array
     items:
       $ref: HostToolResult.yaml
-    default: []
     description: Host tool results produced by the previous iteration
 required:
   - sessionId

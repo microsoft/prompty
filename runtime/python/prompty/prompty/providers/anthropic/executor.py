@@ -24,8 +24,8 @@ from ...core.types import (
     TextPart,
 )
 from ...model import (
+    Agent,
     ApiKeyConnection,
-    Prompty,
     ReferenceConnection,
 )
 from ...tracing.tracer import trace
@@ -124,7 +124,7 @@ def _part_to_wire(part: ContentPart) -> dict[str, Any]:
     return {"type": "text", "text": str(part)}
 
 
-def _build_options(agent: Prompty) -> dict[str, Any]:
+def _build_options(agent: Agent) -> dict[str, Any]:
     """Map ModelOptions to Anthropic API parameters."""
     opts = agent.model.options
     if opts is None:
@@ -237,7 +237,7 @@ def _schema_to_wire(properties: list[Any]) -> dict[str, Any]:
     return result
 
 
-def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]]:
+def _tools_to_wire(agent: Agent) -> list[dict[str, Any]]:
     """Convert agent tools to Anthropic format: {name, description, input_schema}."""
     if not agent.tools:
         return []
@@ -261,7 +261,7 @@ def _tools_to_wire(agent: Prompty) -> list[dict[str, Any]]:
     return result
 
 
-def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
+def _output_schema_to_wire(agent: Agent) -> dict[str, Any] | None:
     """Convert outputs to Anthropic output_config.format.
 
     Anthropic format: ``output_config: { format: { type: "json_schema", schema: {...} } }``
@@ -297,7 +297,7 @@ def _output_schema_to_wire(agent: Prompty) -> dict[str, Any] | None:
     }
 
 
-def _build_chat_args(agent: Prompty, messages: list[Message]) -> dict[str, Any]:
+def _build_chat_args(agent: Agent, messages: list[Message]) -> dict[str, Any]:
     """Build Anthropic Messages API arguments."""
     model = agent.model.id or "claude-sonnet-4-5-20250929"
 
@@ -351,7 +351,7 @@ class AnthropicExecutor:
     """
 
     @trace
-    def execute(self, agent: Prompty, data: Any) -> Any:
+    def execute(self, agent: Agent, data: Any) -> Any:
         client = self._resolve_client(agent)
         api_type = agent.model.api_type or "chat"
 
@@ -363,7 +363,7 @@ class AnthropicExecutor:
             )
 
     @trace
-    async def execute_async(self, agent: Prompty, data: Any) -> Any:
+    async def execute_async(self, agent: Agent, data: Any) -> Any:
         client = self._resolve_client_async(agent)
         api_type = agent.model.api_type or "chat"
 
@@ -374,7 +374,7 @@ class AnthropicExecutor:
                 f"Unsupported apiType '{api_type}' for Anthropic. Anthropic only supports 'chat' (Messages API)."
             )
 
-    def _execute_chat(self, client: Any, agent: Prompty, data: Any) -> Any:
+    def _execute_chat(self, client: Any, agent: Agent, data: Any) -> Any:
         args = _build_chat_args(agent, data)
         is_streaming = args.pop("stream", False) or (
             agent.model.options
@@ -389,7 +389,7 @@ class AnthropicExecutor:
 
         return client.messages.create(**args)
 
-    async def _execute_chat_async(self, client: Any, agent: Prompty, data: Any) -> Any:
+    async def _execute_chat_async(self, client: Any, agent: Agent, data: Any) -> Any:
         args = _build_chat_args(agent, data)
         is_streaming = args.pop("stream", False) or (
             agent.model.options
@@ -404,7 +404,7 @@ class AnthropicExecutor:
 
         return await client.messages.create(**args)
 
-    def _resolve_client(self, agent: Prompty) -> Any:
+    def _resolve_client(self, agent: Agent) -> Any:
         """Resolve the sync Anthropic client from connection config."""
         from anthropic import Anthropic
 
@@ -416,7 +416,7 @@ class AnthropicExecutor:
         kwargs = self._client_kwargs(agent)
         return Anthropic(**kwargs)
 
-    def _resolve_client_async(self, agent: Prompty) -> Any:
+    def _resolve_client_async(self, agent: Agent) -> Any:
         """Resolve the async Anthropic client from connection config."""
         from anthropic import AsyncAnthropic
 
@@ -428,7 +428,7 @@ class AnthropicExecutor:
         kwargs = self._client_kwargs(agent)
         return AsyncAnthropic(**kwargs)
 
-    def _client_kwargs(self, agent: Prompty) -> dict[str, Any]:
+    def _client_kwargs(self, agent: Agent) -> dict[str, Any]:
         kwargs: dict[str, Any] = {}
         conn = agent.model.connection
 

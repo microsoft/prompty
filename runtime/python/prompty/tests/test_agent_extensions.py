@@ -18,14 +18,14 @@ from prompty.core.guardrails import GuardrailError, GuardrailResult, Guardrails
 from prompty.core.pipeline import turn, turn_async
 from prompty.core.steering import Steering
 from prompty.core.types import Message, TextPart
-from prompty.model import Prompty
+from prompty.model import Agent
 
 # ---------------------------------------------------------------------------
 # Shared helpers (same pattern as test_run_agent.py)
 # ---------------------------------------------------------------------------
 
 
-def _make_agent() -> Prompty:
+def _make_agent() -> Agent:
     data = {
         "name": "test-agent",
         "model": {
@@ -45,7 +45,7 @@ def _make_agent() -> Prompty:
         ],
         "template": {"format": {"kind": "jinja2"}, "parser": {"kind": "prompty"}},
     }
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def _mock_tool_call_response(

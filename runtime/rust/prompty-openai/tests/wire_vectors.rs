@@ -1,10 +1,10 @@
 //! Wire format vector tests — validate against shared spec vectors.
 //!
-//! Reads `spec/vectors/wire/wire_vectors.json` and tests that our wire format
+//! Reads the generated `vectors.json` (toRequest operation) and tests that our wire format
 //! conversion matches the expected output for all OpenAI-provider vectors.
 
-use prompty::model::Prompty;
 use prompty::model::context::LoadContext;
+use prompty::model::{Agent, Property, PropertyKind, ToolKind};
 use prompty::types::{ContentPart, Message, Role};
 use prompty_openai::wire;
 use serde_json::{Value, json};
@@ -20,12 +20,22 @@ fn spec_root() -> std::path::PathBuf {
 
 fn load_wire_vectors() -> Vec<Value> {
     let path = spec_root()
-        .join("vectors")
-        .join("wire")
-        .join("wire_vectors.json");
+        .parent()
+        .unwrap()
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json");
     let content = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("Failed to read wire vectors at {}: {e}", path.display()));
-    serde_json::from_str(&content).expect("Invalid JSON in wire_vectors.json")
+        .unwrap_or_else(|e| panic!("Failed to read vectors at {}: {e}", path.display()));
+    let doc: Value = serde_json::from_str(&content).expect("Invalid JSON in vectors.json");
+    doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("toRequest"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
 /// Build messages from vector input content/messages format.
@@ -70,7 +80,7 @@ fn build_messages(input: &Value) -> Vec<Message> {
 }
 
 /// Build a Prompty agent from vector input fields.
-fn build_agent(input: &Value) -> Prompty {
+fn build_agent(input: &Value) -> Agent {
     let model_id = input["model_id"].as_str().unwrap_or("gpt-4");
     let api_type = input
         .get("apiType")
@@ -100,7 +110,9 @@ fn build_agent(input: &Value) -> Prompty {
 
     if let Some(tools) = input.get("tools") {
         if tools.is_array() && !tools.as_array().unwrap().is_empty() {
-            data["tools"] = tools.clone();
+            let mut tools = tools.clone();
+            normalize_array_items(&mut tools);
+            data["tools"] = tools;
         }
     }
 
@@ -110,7 +122,76 @@ fn build_agent(input: &Value) -> Prompty {
         }
     }
 
-    Prompty::load_from_value(&data, &LoadContext::default())
+    let mut agent = Agent::load_from_value(&data, &LoadContext::default());
+    clear_synthetic_array_items(&mut agent);
+    agent
+}
+
+fn normalize_array_items(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            if map.get("kind").and_then(Value::as_str) == Some("array")
+                && !map.contains_key("items")
+            {
+                map.insert(
+                    "items".to_string(),
+                    json!({"kind": "__prompty_unspecified_array_item"}),
+                );
+            }
+
+            for child in map.values_mut() {
+                normalize_array_items(child);
+            }
+        }
+        Value::Array(values) => {
+            for child in values {
+                normalize_array_items(child);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn clear_synthetic_array_items(agent: &mut Agent) {
+    for tool in agent.tools.iter_mut().flatten() {
+        if let ToolKind::Function { parameters, .. } = &mut tool.kind {
+            for property in parameters {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+    }
+}
+
+fn clear_property_synthetic_array_items(property: &mut Property) {
+    match &mut property.kind {
+        PropertyKind::Array { items }
+            if items.get("kind").and_then(Value::as_str)
+                == Some("__prompty_unspecified_array_item") =>
+        {
+            *items = Value::Null;
+        }
+        PropertyKind::Array { items } => normalize_loaded_property_value(items),
+        PropertyKind::Object { properties } => {
+            for property in properties {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+        PropertyKind::Union { one_of, any_of } => {
+            for property in one_of.iter_mut().flatten() {
+                clear_property_synthetic_array_items(property);
+            }
+            for property in any_of.iter_mut().flatten() {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+        PropertyKind::Custom { .. } => {}
+    }
+}
+
+fn normalize_loaded_property_value(value: &mut Value) {
+    if value.get("kind").and_then(Value::as_str) == Some("__prompty_unspecified_array_item") {
+        *value = Value::Null;
+    }
 }
 
 /// Compare two JSON values, ignoring key order in objects.
@@ -208,7 +289,7 @@ wire_test!(responses_with_tools);
 wire_test!(responses_structured_output);
 
 fn function_parameters_schema(parameters: Value) -> Result<Value, wire::SchemaError> {
-    let agent = Prompty::load_from_value(
+    let agent = Agent::load_from_value(
         &json!({
             "name": "set-row-visual-test",
             "kind": "prompt",

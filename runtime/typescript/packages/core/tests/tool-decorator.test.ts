@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { tool, bindTools, type ToolFunction } from "../src/core/tool-decorator.js";
 import { getTool, clearTools } from "../src/core/tool-dispatch.js";
 import { FunctionTool } from "../src/model/index.js";
-import { Prompty } from "../src/model/index.js";
+import { Agent } from "../src/model/index.js";
 
 // ===========================================================================
 // tool() wrapper
@@ -146,11 +146,11 @@ describe("bindTools", () => {
     clearTools();
   });
 
-  function makeAgent(toolNames: string[]): Prompty {
+  function makeAgent(toolNames: string[]): Agent {
     const tools = toolNames.map(
       (name) => new FunctionTool({ name, kind: "function" }),
     );
-    return new Prompty({ name: "test", tools });
+    return new Agent({ name: "test", tools });
   }
 
   it("returns handler dict for matching tools", () => {
@@ -232,7 +232,7 @@ describe("bindTools", () => {
   it("ignores non-function tools in declarations", () => {
     const funcTool = new FunctionTool({ name: "get_weather", kind: "function" });
     const mcpTool = { name: "filesystem", kind: "mcp" } as unknown as FunctionTool;
-    const agent = new Prompty({ name: "test", tools: [funcTool, mcpTool] });
+    const agent = new Agent({ name: "test", tools: [funcTool, mcpTool] });
 
     const fn = tool((x: string) => x, {
       name: "get_weather",
@@ -244,7 +244,7 @@ describe("bindTools", () => {
   });
 
   it("returns empty dict for empty inputs", () => {
-    const agent = new Prompty({ name: "test" });
+    const agent = new Agent({ name: "test" });
     const result = bindTools(agent, []);
     expect(result).toEqual({});
   });

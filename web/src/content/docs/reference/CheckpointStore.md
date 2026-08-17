@@ -21,9 +21,9 @@ config:
 classDiagram
     class CheckpointStore {
       <<protocol>>
-        +save(checkpoint: Checkpoint) Checkpoint [async-capable]
-        +load(sessionId: string, checkpointId: string) Checkpoint? [async-capable]
         +listCheckpoints(sessionId: string) Checkpoint[] [async-capable]
+        +load(sessionId: string, checkpointId: string) Checkpoint? [async-capable]
+        +save(checkpoint: Checkpoint) Checkpoint [async-capable, atomic]
     }
 ```
 
@@ -33,6 +33,6 @@ The following helper methods are declared via `@method` and must be implemented 
 
 | Name | Signature | Runtime shape | Description |
 | ---- | --------- | ------------- | ----------- |
-| `save` | `save(checkpoint: Checkpoint) -> Checkpoint` | async-capable | Persist a session checkpoint and return the stored checkpoint |
-| `load` | `load(sessionId: string, checkpointId: string) -> Checkpoint?` | async-capable | Load a checkpoint by session and checkpoint identifier |
 | `listCheckpoints` | `listCheckpoints(sessionId: string) -> Checkpoint[]` | async-capable | List checkpoints for a session |
+| `load` | `load(sessionId: string, checkpointId: string) -> Checkpoint?` | async-capable | Load a checkpoint by session and checkpoint identifier |
+| `save` | `save(checkpoint: Checkpoint) -> Checkpoint` | async-capable, atomic | Persist a session checkpoint and return the stored checkpoint |

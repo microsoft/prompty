@@ -6,7 +6,7 @@
 use async_trait::async_trait;
 
 use crate::interfaces::{InvokerError, Renderer};
-use crate::model::Prompty;
+use crate::model::Agent;
 
 /// Mustache renderer powered by `ribboncurls` (Mustache v1.4.2 spec compliant).
 pub struct MustacheRenderer;
@@ -15,7 +15,7 @@ pub struct MustacheRenderer;
 impl Renderer for MustacheRenderer {
     async fn render(
         &self,
-        _agent: &Prompty,
+        _agent: &Agent,
         template: &str,
         inputs: &serde_json::Value,
     ) -> Result<String, InvokerError> {
@@ -85,7 +85,7 @@ mod tests {
     #[tokio::test]
     async fn test_renderer_trait() {
         let renderer = MustacheRenderer;
-        let agent = Prompty::default();
+        let agent = Agent::default();
         let result = renderer
             .render(
                 &agent,

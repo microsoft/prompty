@@ -112,7 +112,7 @@ fn string_array(model: &Value, field: &str) -> Option<Vec<String>> {
 /// [`ModelInfo`] contract.
 ///
 /// This is the single source of truth for the Anthropic wire → `ModelInfo`
-/// mapping and is exercised by the shared `spec/vectors/discovery` vectors so
+/// mapping and is exercised by the generated `vectors.json` (mapModel operation) so
 /// every runtime converges on the same canonical shape.
 pub fn model_info_from_wire(raw: &Value) -> ModelInfo {
     to_model_info(raw)

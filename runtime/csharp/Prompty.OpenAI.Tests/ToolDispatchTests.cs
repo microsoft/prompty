@@ -94,7 +94,7 @@ public class ToolDispatchTests : IDisposable
         // Register in global name registry
         ToolDispatch.RegisterTool("greet", _ => Task.FromResult("global"));
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools =
             [
@@ -119,7 +119,7 @@ public class ToolDispatchTests : IDisposable
     {
         ToolDispatch.RegisterTool("greet", _ => Task.FromResult("global-registered"));
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new FunctionTool { Name = "greet", Kind = "function" }],
         };
@@ -136,7 +136,7 @@ public class ToolDispatchTests : IDisposable
         ToolDispatch.RegisterToolHandler("custom_kind",
             (agent, tool, args) => Task.FromResult($"kind-handler:{tool.Name}"));
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new CustomTool { Name = "my_tool", Kind = "custom_kind" }],
         };
@@ -153,7 +153,7 @@ public class ToolDispatchTests : IDisposable
         ToolDispatch.RegisterToolHandler("*",
             (agent, tool, args) => Task.FromResult("wildcard-handled"));
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new CustomTool { Name = "exotic", Kind = "exotic_kind" }],
         };
@@ -167,7 +167,7 @@ public class ToolDispatchTests : IDisposable
     [Fact]
     public async Task Dispatch_NoHandler_ThrowsToolHandlerError()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new FunctionTool { Name = "unknown_fn", Kind = "function" }],
         };
@@ -181,7 +181,7 @@ public class ToolDispatchTests : IDisposable
     [Fact]
     public async Task Dispatch_NoToolDefinition_ThrowsToolHandlerError()
     {
-        var agent = new Core.Prompty { Tools = [] };
+        var agent = new Core.Agent { Tools = [] };
         var call = new ToolCall { Id = "c1", Name = "missing", Arguments = """{}""" };
 
         await Assert.ThrowsAsync<ToolHandlerError>(
@@ -233,7 +233,7 @@ public class ToolDispatchTests : IDisposable
     {
         ToolDispatch.RegisterBuiltins();
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new FunctionTool { Name = "no_impl", Kind = "function" }],
         };
@@ -250,7 +250,7 @@ public class ToolDispatchTests : IDisposable
         ToolDispatch.RegisterBuiltins();
         ToolDispatch.RegisterTool("my_func", args => Task.FromResult("called!"));
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new FunctionTool { Name = "my_func", Kind = "function" }],
         };
@@ -275,7 +275,7 @@ public class ToolDispatchTests : IDisposable
                 return Task.FromResult($"location={location}");
             });
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools =
             [
@@ -304,7 +304,7 @@ public class ToolDispatchTests : IDisposable
             return Task.FromResult("called");
         });
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools =
             [
@@ -337,7 +337,7 @@ public class ToolDispatchTests : IDisposable
     {
         ToolDispatch.RegisterBuiltins();
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new McpTool { Name = "fs_server", Kind = "mcp" }],
         };
@@ -354,7 +354,7 @@ public class ToolDispatchTests : IDisposable
     {
         ToolDispatch.RegisterBuiltins();
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new OpenApiTool { Name = "weather_api", Kind = "openapi" }],
         };
@@ -371,7 +371,7 @@ public class ToolDispatchTests : IDisposable
     {
         ToolDispatch.RegisterBuiltins();
 
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Tools = [new McpTool { Name = "mcp_tool", Kind = "mcp" }],
         };

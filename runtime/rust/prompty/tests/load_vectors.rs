@@ -1,4 +1,4 @@
-//! Data-driven load tests powered by `spec/vectors/load/load_vectors.json`.
+//! Data-driven load tests powered by the generated `vectors.json` (load operation).
 //!
 //! Each vector in the JSON array specifies input (fixture file, inline
 //! frontmatter, env vars, virtual files) and expected output (agent fields or
@@ -31,10 +31,10 @@ fn fixtures_dir() -> PathBuf {
 
 fn vectors_path() -> PathBuf {
     repo_root()
-        .join("spec")
-        .join("vectors")
-        .join("load")
-        .join("load_vectors.json")
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json")
 }
 
 // ---------------------------------------------------------------------------
@@ -64,7 +64,7 @@ fn clear_env_vars(keys: &[String]) {
 // Load helpers
 // ---------------------------------------------------------------------------
 
-fn load_fixture(name: &str, env: &Value) -> Result<prompty::model::Prompty, prompty::LoadError> {
+fn load_fixture(name: &str, env: &Value) -> Result<prompty::model::Agent, prompty::LoadError> {
     let keys = set_env_vars(env);
     let result = prompty::load(fixtures_dir().join(name));
     clear_env_vars(&keys);
@@ -74,7 +74,7 @@ fn load_fixture(name: &str, env: &Value) -> Result<prompty::model::Prompty, prom
 fn load_from_frontmatter(
     frontmatter: &Value,
     env: &Value,
-) -> Result<prompty::model::Prompty, prompty::LoadError> {
+) -> Result<prompty::model::Agent, prompty::LoadError> {
     let yaml = serde_yaml::to_string(frontmatter).unwrap();
     let raw = format!("---\n{yaml}---\n");
     let keys = set_env_vars(env);
@@ -83,7 +83,7 @@ fn load_from_frontmatter(
     result
 }
 
-fn load_from_raw(raw: &str, env: &Value) -> Result<prompty::model::Prompty, prompty::LoadError> {
+fn load_from_raw(raw: &str, env: &Value) -> Result<prompty::model::Agent, prompty::LoadError> {
     let keys = set_env_vars(env);
     let result = prompty::load_from_string(raw, std::env::current_dir().unwrap());
     clear_env_vars(&keys);
@@ -120,7 +120,7 @@ fn load_with_files(
     frontmatter: &Value,
     env: &Value,
     files: &Value,
-) -> Result<prompty::model::Prompty, prompty::LoadError> {
+) -> Result<prompty::model::Agent, prompty::LoadError> {
     let tmp = TempDir::new("file_res");
 
     // Write virtual files into the temp dir
@@ -156,7 +156,7 @@ fn load_with_files(
 // Assertion helpers
 // ---------------------------------------------------------------------------
 
-fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_name: &str) {
+fn validate_agent_fields(agent: &prompty::model::Agent, expected: &Value, vec_name: &str) {
     // name
     if let Some(name) = expected.get("name").and_then(Value::as_str) {
         assert_eq!(agent.name, name, "[{vec_name}] name mismatch");
@@ -194,12 +194,19 @@ fn validate_agent_fields(agent: &prompty::model::Prompty, expected: &Value, vec_
         if model.is_null() {
             // expected null model → id should be empty (default)
             assert!(
-                agent.model.id.is_empty(),
+                agent
+                    .model
+                    .as_ref()
+                    .map_or(true, |model| model.id.is_empty()),
                 "[{vec_name}] expected null/empty model, got id='{}'",
-                agent.model.id
+                agent
+                    .model
+                    .as_ref()
+                    .map(|model| model.id.as_str())
+                    .unwrap_or("")
             );
         } else {
-            validate_model(&agent.model, model, vec_name);
+            validate_model(agent.model.as_ref().unwrap(), model, vec_name);
         }
     }
 
@@ -439,7 +446,7 @@ fn validate_tool(tool: &prompty::model::tool::Tool, expected: &Value, vec_name: 
 // ---------------------------------------------------------------------------
 
 fn run_validation(
-    agent: &prompty::model::Prompty,
+    agent: &prompty::model::Agent,
     inputs: &Value,
     _vec_name: &str,
 ) -> Result<Value, prompty::InvokerError> {
@@ -452,9 +459,15 @@ fn run_validation(
 
 #[test]
 fn spec_load_vectors() {
-    let raw = std::fs::read_to_string(vectors_path()).expect("Failed to read load_vectors.json");
-    let vectors: Vec<Value> =
-        serde_json::from_str(&raw).expect("Failed to parse load_vectors.json");
+    let raw = std::fs::read_to_string(vectors_path()).expect("Failed to read vectors.json");
+    let document: Value = serde_json::from_str(&raw).expect("Failed to parse vectors.json");
+    let vectors: Vec<Value> = document["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("load"))
+        .map(|e| e["vector"].clone())
+        .collect();
 
     let mut failures: Vec<String> = Vec::new();
 
@@ -516,7 +529,7 @@ fn run_single_vector(vec_name: &str, input: &Value, expected: &Value, env: &Valu
 // Load an agent from the vector's input
 // ---------------------------------------------------------------------------
 
-fn load_agent(vec_name: &str, input: &Value, env: &Value) -> prompty::model::Prompty {
+fn load_agent(vec_name: &str, input: &Value, env: &Value) -> prompty::model::Agent {
     if let Some(fixture) = input.get("fixture").and_then(Value::as_str) {
         load_fixture(fixture, env)
             .unwrap_or_else(|e| panic!("[{vec_name}] load_fixture({fixture}) failed: {e}"))
@@ -691,7 +704,7 @@ impl std::fmt::Display for LoadResult {
     }
 }
 
-fn attempt_load(input: &Value, env: &Value) -> Result<prompty::model::Prompty, LoadResult> {
+fn attempt_load(input: &Value, env: &Value) -> Result<prompty::model::Agent, LoadResult> {
     if let Some(fixture) = input.get("fixture").and_then(Value::as_str) {
         load_fixture(fixture, env).map_err(LoadResult::Load)
     } else if input.get("files").is_some() {

@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -19,7 +20,22 @@ func TestModelInvocationContextSnapshotLoadJSON(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -44,6 +60,10 @@ func TestModelInvocationContextSnapshotLoadJSON(t *testing.T) {
 	if instance.InvocationId != "inv_abc123" {
 		t.Errorf(`Expected InvocationId to be "inv_abc123", got %v`, instance.InvocationId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertModelInvocationContextSnapshotStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestModelInvocationContextSnapshotLoadYAML tests loading ModelInvocationContextSnapshot from YAML
@@ -53,6 +73,14 @@ id: "context:inv_abc123"
 sessionId: sess_abc123
 turnId: turn_abc123
 invocationId: inv_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
 `
 	var data map[string]interface{}
@@ -77,6 +105,10 @@ invocationId: inv_abc123
 	if instance.InvocationId != "inv_abc123" {
 		t.Errorf(`Expected InvocationId to be "inv_abc123", got %v`, instance.InvocationId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertModelInvocationContextSnapshotStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestModelInvocationContextSnapshotFromJSON tests loading ModelInvocationContextSnapshot through the generated JSON helper
@@ -86,7 +118,22 @@ func TestModelInvocationContextSnapshotFromJSON(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 
@@ -106,6 +153,10 @@ func TestModelInvocationContextSnapshotFromJSON(t *testing.T) {
 	if instance.InvocationId != "inv_abc123" {
 		t.Errorf(`Expected InvocationId to be "inv_abc123", got %v`, instance.InvocationId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertModelInvocationContextSnapshotStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestModelInvocationContextSnapshotFromYAML tests loading ModelInvocationContextSnapshot through the generated YAML helper
@@ -115,6 +166,14 @@ id: "context:inv_abc123"
 sessionId: sess_abc123
 turnId: turn_abc123
 invocationId: inv_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
 `
 
@@ -134,6 +193,10 @@ invocationId: inv_abc123
 	if instance.InvocationId != "inv_abc123" {
 		t.Errorf(`Expected InvocationId to be "inv_abc123", got %v`, instance.InvocationId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertModelInvocationContextSnapshotStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestModelInvocationContextSnapshotRoundtrip tests load -> save -> load produces equivalent data
@@ -143,7 +206,22 @@ func TestModelInvocationContextSnapshotRoundtrip(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -175,6 +253,10 @@ func TestModelInvocationContextSnapshotRoundtrip(t *testing.T) {
 	if reloaded.InvocationId != "inv_abc123" {
 		t.Errorf(`Expected InvocationId to be "inv_abc123", got %v`, reloaded.InvocationId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertModelInvocationContextSnapshotStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestModelInvocationContextSnapshotToJSON tests that ToJSON produces valid JSON
@@ -184,7 +266,22 @@ func TestModelInvocationContextSnapshotToJSON(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -223,6 +320,10 @@ func TestModelInvocationContextSnapshotToJSON(t *testing.T) {
 	if reloaded.InvocationId != "inv_abc123" {
 		t.Errorf(`Expected InvocationId to be "inv_abc123", got %v`, reloaded.InvocationId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertModelInvocationContextSnapshotStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestModelInvocationContextSnapshotToYAML tests that ToYAML produces valid YAML
@@ -232,7 +333,22 @@ func TestModelInvocationContextSnapshotToYAML(t *testing.T) {
   "id": "context:inv_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "invocationId": "inv_abc123"
+  "invocationId": "inv_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -271,11 +387,51 @@ func TestModelInvocationContextSnapshotToYAML(t *testing.T) {
 	if reloaded.InvocationId != "inv_abc123" {
 		t.Errorf(`Expected InvocationId to be "inv_abc123", got %v`, reloaded.InvocationId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertModelInvocationContextSnapshotStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestModelInvocationContextSnapshotFromJSONInvalid rejects malformed JSON instead of silently defaulting
 func TestModelInvocationContextSnapshotFromJSONInvalid(t *testing.T) {
 	if _, err := prompty.ModelInvocationContextSnapshotFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertModelInvocationContextSnapshotStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

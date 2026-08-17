@@ -20,7 +20,7 @@ from prompty.core.types import (
     PromptyStream,
     TextPart,
 )
-from prompty.model import Prompty
+from prompty.model import Agent
 from prompty.providers.anthropic.executor import (
     AnthropicExecutor,
     _build_chat_args,
@@ -50,7 +50,7 @@ def _make_agent(
     tools: list | None = None,
     outputs: list | None = None,
     metadata: dict | None = None,
-) -> Prompty:
+) -> Agent:
     """Build a test agent for Anthropic."""
     conn = connection or {"kind": "key", "apiKey": "test-key"}
     data: dict = {
@@ -70,7 +70,7 @@ def _make_agent(
         data["outputs"] = outputs
     if metadata:
         data["metadata"] = metadata
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def _make_messages() -> list[Message]:

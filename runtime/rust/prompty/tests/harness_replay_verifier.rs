@@ -22,7 +22,7 @@ fn reference_replay_verifier_passes_identical_records() {
     });
 
     assert_eq!(result.status, ReplayVerificationStatus::Passed);
-    assert!(result.mismatches.is_empty());
+    assert!(result.mismatches.as_ref().map_or(true, |m| m.is_empty()));
     assert_eq!(result.expected_count, 1);
     assert_eq!(result.actual_count, 1);
 }
@@ -45,6 +45,7 @@ fn reference_replay_verifier_reports_mismatches() {
     });
 
     assert_eq!(result.status, ReplayVerificationStatus::Failed);
-    assert_eq!(result.mismatches[0].index, 0);
-    assert_eq!(result.mismatches[0].message, "Replay record mismatch");
+    let mismatches = result.mismatches.as_ref().unwrap();
+    assert_eq!(mismatches[0].index, 0);
+    assert_eq!(mismatches[0].message, "Replay record mismatch");
 }

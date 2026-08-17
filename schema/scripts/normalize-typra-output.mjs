@@ -13,6 +13,10 @@ if (existsSync(manifestPath)) {
 trimEmptyPythonGeneratedTests(join("..", "runtime", "python", "prompty", "tests", "model"));
 trimTrailingWhitespace(join("..", "runtime", "go", "prompty", "model"));
 
+// Note: the dead `if ctx == nil { ctx = NewLoadContext() }` guard in leaf Go
+// loaders is now elided natively by @typra/emitter (>= 0.8.6), so no
+// post-generation guard stripping is required here.
+
 function trimEmptyPythonGeneratedTests(root) {
   if (!existsSync(root)) {
     return;

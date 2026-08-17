@@ -805,8 +805,8 @@ describe("Foundry E2E Pipeline", () => {
     it("throws on unsupported apiType", async () => {
       // Directly invoke the executor with an unsupported apiType
       const executor = new FoundryExecutor();
-      const { Prompty, Model, ReferenceConnection } = await import("@prompty/core");
-      const agent = new Prompty({
+      const { Agent, Model, ReferenceConnection } = await import("@prompty/core");
+      const agent = new Agent({
         name: "bad-api-type",
         model: new Model({
           id: "gpt-4o",

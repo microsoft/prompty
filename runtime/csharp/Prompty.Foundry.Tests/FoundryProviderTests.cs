@@ -28,7 +28,7 @@ public class FoundryProviderTests
                 },
             },
         };
-        var agent = Core.Prompty.Load(data, new LoadContext());
+        var agent = Core.Agent.Load(data, new LoadContext());
         var executor = new FoundryExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -54,7 +54,7 @@ public class FoundryProviderTests
                 },
             },
         };
-        var agent = Core.Prompty.Load(data, new LoadContext());
+        var agent = Core.Agent.Load(data, new LoadContext());
         var executor = new FoundryExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -108,7 +108,7 @@ public class FoundryProviderTests
                 },
             },
         };
-        var agent = Core.Prompty.Load(data, new LoadContext());
+        var agent = Core.Agent.Load(data, new LoadContext());
         var executor = new FoundryExecutor();
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(

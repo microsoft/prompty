@@ -13,7 +13,7 @@ public class AnthropicExecutorTests
     public async Task ExecuteAsync_MissingApiKey_ThrowsInvalidOperationException()
     {
         var executor = new Anthropic.AnthropicExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -30,7 +30,7 @@ public class AnthropicExecutorTests
     public async Task ExecuteAsync_EmptyApiKey_ThrowsInvalidOperationException()
     {
         var executor = new Anthropic.AnthropicExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -47,7 +47,7 @@ public class AnthropicExecutorTests
     public async Task ExecuteAsync_NoConnection_ThrowsInvalidOperationException()
     {
         var executor = new Anthropic.AnthropicExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Id = "claude-sonnet-4-20250514" },
         };
@@ -59,7 +59,7 @@ public class AnthropicExecutorTests
     [Fact]
     public void DefaultModel_IsClaude()
     {
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model { Id = null! },
         };

@@ -18,7 +18,12 @@ func TestTraceSpanLoadJSON(t *testing.T) {
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 `
 	var data map[string]interface{}
@@ -40,6 +45,12 @@ func TestTraceSpanLoadJSON(t *testing.T) {
 	if instance.Error == nil || *instance.Error != "Connection refused" {
 		t.Errorf(`Expected Error to be "Connection refused", got %v`, instance.Error)
 	}
+	if instance.Time.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Time.Start to be "2026-04-04T12:00:00Z", got %v`, instance.Time.Start)
+	}
+	if instance.Time.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected Time.End to be "2026-04-04T12:00:01Z", got %v`, instance.Time.End)
+	}
 }
 
 // TestTraceSpanLoadYAML tests loading TraceSpan from YAML
@@ -48,6 +59,10 @@ func TestTraceSpanLoadYAML(t *testing.T) {
 name: prompty.core.pipeline.run
 signature: prompty.core.pipeline.run
 error: Connection refused
+__time:
+  start: "2026-04-04T12:00:00Z"
+  end: "2026-04-04T12:00:01Z"
+  duration: 1000
 
 `
 	var data map[string]interface{}
@@ -69,6 +84,12 @@ error: Connection refused
 	if instance.Error == nil || *instance.Error != "Connection refused" {
 		t.Errorf(`Expected Error to be "Connection refused", got %v`, instance.Error)
 	}
+	if instance.Time.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Time.Start to be "2026-04-04T12:00:00Z", got %v`, instance.Time.Start)
+	}
+	if instance.Time.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected Time.End to be "2026-04-04T12:00:01Z", got %v`, instance.Time.End)
+	}
 }
 
 // TestTraceSpanFromJSON tests loading TraceSpan through the generated JSON helper
@@ -77,7 +98,12 @@ func TestTraceSpanFromJSON(t *testing.T) {
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 `
 
@@ -94,6 +120,12 @@ func TestTraceSpanFromJSON(t *testing.T) {
 	if instance.Error == nil || *instance.Error != "Connection refused" {
 		t.Errorf(`Expected Error to be "Connection refused", got %v`, instance.Error)
 	}
+	if instance.Time.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Time.Start to be "2026-04-04T12:00:00Z", got %v`, instance.Time.Start)
+	}
+	if instance.Time.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected Time.End to be "2026-04-04T12:00:01Z", got %v`, instance.Time.End)
+	}
 }
 
 // TestTraceSpanFromYAML tests loading TraceSpan through the generated YAML helper
@@ -102,6 +134,10 @@ func TestTraceSpanFromYAML(t *testing.T) {
 name: prompty.core.pipeline.run
 signature: prompty.core.pipeline.run
 error: Connection refused
+__time:
+  start: "2026-04-04T12:00:00Z"
+  end: "2026-04-04T12:00:01Z"
+  duration: 1000
 
 `
 
@@ -118,6 +154,12 @@ error: Connection refused
 	if instance.Error == nil || *instance.Error != "Connection refused" {
 		t.Errorf(`Expected Error to be "Connection refused", got %v`, instance.Error)
 	}
+	if instance.Time.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Time.Start to be "2026-04-04T12:00:00Z", got %v`, instance.Time.Start)
+	}
+	if instance.Time.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected Time.End to be "2026-04-04T12:00:01Z", got %v`, instance.Time.End)
+	}
 }
 
 // TestTraceSpanRoundtrip tests load -> save -> load produces equivalent data
@@ -126,7 +168,12 @@ func TestTraceSpanRoundtrip(t *testing.T) {
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 `
 	var data map[string]interface{}
@@ -155,6 +202,12 @@ func TestTraceSpanRoundtrip(t *testing.T) {
 	if reloaded.Error == nil || *reloaded.Error != "Connection refused" {
 		t.Errorf(`Expected Error to be "Connection refused", got %v`, reloaded.Error)
 	}
+	if reloaded.Time.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Time.Start to be "2026-04-04T12:00:00Z", got %v`, reloaded.Time.Start)
+	}
+	if reloaded.Time.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected Time.End to be "2026-04-04T12:00:01Z", got %v`, reloaded.Time.End)
+	}
 }
 
 // TestTraceSpanToJSON tests that ToJSON produces valid JSON
@@ -163,7 +216,12 @@ func TestTraceSpanToJSON(t *testing.T) {
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 `
 	var data map[string]interface{}
@@ -199,6 +257,12 @@ func TestTraceSpanToJSON(t *testing.T) {
 	if reloaded.Error == nil || *reloaded.Error != "Connection refused" {
 		t.Errorf(`Expected Error to be "Connection refused", got %v`, reloaded.Error)
 	}
+	if reloaded.Time.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Time.Start to be "2026-04-04T12:00:00Z", got %v`, reloaded.Time.Start)
+	}
+	if reloaded.Time.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected Time.End to be "2026-04-04T12:00:01Z", got %v`, reloaded.Time.End)
+	}
 }
 
 // TestTraceSpanToYAML tests that ToYAML produces valid YAML
@@ -207,7 +271,12 @@ func TestTraceSpanToYAML(t *testing.T) {
 {
   "name": "prompty.core.pipeline.run",
   "signature": "prompty.core.pipeline.run",
-  "error": "Connection refused"
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
 }
 `
 	var data map[string]interface{}
@@ -242,6 +311,12 @@ func TestTraceSpanToYAML(t *testing.T) {
 	}
 	if reloaded.Error == nil || *reloaded.Error != "Connection refused" {
 		t.Errorf(`Expected Error to be "Connection refused", got %v`, reloaded.Error)
+	}
+	if reloaded.Time.Start != "2026-04-04T12:00:00Z" {
+		t.Errorf(`Expected Time.Start to be "2026-04-04T12:00:00Z", got %v`, reloaded.Time.Start)
+	}
+	if reloaded.Time.End != "2026-04-04T12:00:01Z" {
+		t.Errorf(`Expected Time.End to be "2026-04-04T12:00:01Z", got %v`, reloaded.Time.End)
 	}
 }
 

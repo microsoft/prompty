@@ -1,5 +1,5 @@
-//! Parse spec-vector tests — drives `parse_chat` against the shared
-//! `spec/vectors/parse/parse_vectors.json` fixture (15 vectors).
+//! Parse spec-vector tests — drives `parse_chat` against the generated
+//! `vectors.json` (parse operation, 15 vectors).
 
 use std::path::PathBuf;
 
@@ -9,7 +9,7 @@ use serde_json::Value;
 use prompty::parsers::parse_chat;
 use prompty::types::{ContentPartKind, Message, Role};
 
-/// Path to the parse vectors JSON file.
+/// Path to the emitted conformance vectors JSON file.
 fn vectors_path() -> PathBuf {
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     manifest
@@ -19,16 +19,23 @@ fn vectors_path() -> PathBuf {
         .unwrap()
         .parent() // repo root
         .unwrap()
-        .join("spec")
-        .join("vectors")
-        .join("parse")
-        .join("parse_vectors.json")
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json")
 }
 
-/// Load the parse vectors from disk.
+/// Load the parse vectors from the emitted single source of truth.
 fn load_parse_vectors() -> Vec<Value> {
-    let raw = std::fs::read_to_string(vectors_path()).expect("parse_vectors.json should exist");
-    serde_json::from_str(&raw).expect("parse_vectors.json should be a JSON array")
+    let raw = std::fs::read_to_string(vectors_path()).expect("vectors.json should exist");
+    let doc: Value = serde_json::from_str(&raw).expect("vectors.json should be valid JSON");
+    doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("parse"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
 /// Extract concatenated text content from a message (mirrors `Message::text_content`).

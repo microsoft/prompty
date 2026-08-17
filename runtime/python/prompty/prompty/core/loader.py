@@ -1,8 +1,8 @@
-"""Prompty loader — loads .prompty files into typed Prompty objects.
+"""Agent loader — loads .prompty files into typed Agent objects.
 
 The loader splits frontmatter (YAML) from the markdown body, resolves
 ``${protocol:value}`` references (env vars, file includes), and
-delegates to ``Prompty.load()`` from the generated model package.
+delegates to ``Agent.load()`` from the generated model package.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from typing import Any
 
 import yaml
 
-from ..model import LoadContext, Prompty, SaveContext
+from ..model import Agent, LoadContext, SaveContext
 from .utils import load_prompty, load_prompty_async
 
 __all__ = ["load", "load_async", "default_save_context"]
@@ -26,8 +26,8 @@ __all__ = ["load", "load_async", "default_save_context"]
 # ---------------------------------------------------------------------------
 
 
-def load(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = None) -> Prompty:
-    """Load a ``.prompty`` file and return a typed ``Prompty``.
+def load(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = None) -> Agent:
+    """Load a ``.prompty`` file and return a typed ``Agent``.
 
     Parameters
     ----------
@@ -40,7 +40,7 @@ def load(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = 
 
     Returns
     -------
-    Prompty
+    Agent
         Fully typed prompt definition.
     """
     path = Path(path).resolve()
@@ -54,7 +54,7 @@ def load(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = 
     return _build_agent(data, path, allowed_file_roots=allowed_file_roots)
 
 
-async def load_async(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = None) -> Prompty:
+async def load_async(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = None) -> Agent:
     """Async variant of :func:`load`."""
     path = Path(path).resolve()
     if not path.exists():
@@ -95,8 +95,8 @@ def _build_agent(
     path: Path,
     *,
     allowed_file_roots: Sequence[str | Path] | None = None,
-) -> Prompty:
-    """Shared pipeline that transforms raw frontmatter dict into a Prompty."""
+) -> Agent:
+    """Shared pipeline that transforms raw frontmatter dict into a Agent."""
 
     # Handle body-only files (no frontmatter — parse returns a string)
     if isinstance(data, str):
@@ -104,9 +104,9 @@ def _build_agent(
     if not isinstance(data, dict):
         data = {}
 
-    # 2. Load via Prompty.load() with pre_process for ${protocol:value} expansion
+    # 2. Load via Agent.load() with pre_process for ${protocol:value} expansion
     ctx = LoadContext(pre_process=_pre_process(path, allowed_file_roots=allowed_file_roots))
-    agent = Prompty.load(data, ctx)
+    agent = Agent.load(data, ctx)
 
     # Store source path for PromptyTool resolution (relative path lookups)
     if agent.metadata is None:

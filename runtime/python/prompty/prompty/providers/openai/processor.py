@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ...core.structured import StructuredResult
-from ...model import Prompty
+from ...model import Agent
 from ...tracing.tracer import trace
 
 __all__ = ["OpenAIProcessor", "ToolCall"]
@@ -39,7 +39,7 @@ class OpenAIProcessor:
     @trace
     def process(
         self,
-        agent: Prompty,
+        agent: Agent,
         response: Any,
     ) -> Any:
         return _process_response(response, agent)
@@ -47,7 +47,7 @@ class OpenAIProcessor:
     @trace
     async def process_async(
         self,
-        agent: Prompty,
+        agent: Agent,
         response: Any,
     ) -> Any:
         return _process_response(response, agent)
@@ -58,7 +58,7 @@ class OpenAIProcessor:
 # ---------------------------------------------------------------------------
 
 
-def _process_response(response: Any, agent: Prompty | None = None) -> Any:
+def _process_response(response: Any, agent: Agent | None = None) -> Any:
     """Extract clean result from a raw LLM response object.
 
     Supports:
@@ -168,7 +168,7 @@ def _process_image(response: Any) -> Any:
         return [d.url or d.b64_json for d in response.data]
 
 
-def _process_responses_api(response: Any, agent: Prompty | None = None) -> Any:
+def _process_responses_api(response: Any, agent: Agent | None = None) -> Any:
     """Extract from a Responses API response.
 
     Handles:

@@ -106,7 +106,7 @@ public static class FoundryModels
             OutputModalities = capabilities is not null
                 ? GetStringList(capabilities.Value, "outputModalities", "output_modalities", "supportedOutputModalities")
                 : null,
-            AdditionalProperties = new Dictionary<string, object> { ["deployment"] = deployment.Clone() },
+            AdditionalProperties = new Dictionary<string, object?> { ["deployment"] = deployment.Clone() },
         };
     }
 

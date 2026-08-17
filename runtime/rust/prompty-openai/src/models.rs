@@ -112,7 +112,7 @@ fn to_model_info(model: &Value) -> ModelInfo {
 /// [`ModelInfo`] contract.
 ///
 /// This is the single source of truth for the OpenAI wire → `ModelInfo`
-/// mapping and is exercised by the shared `spec/vectors/discovery` vectors so
+/// mapping and is exercised by the generated `vectors.json` (mapModel operation) so
 /// every runtime converges on the same canonical shape. Enrichment from the
 /// built-in known-model table is applied here but is provider-optional per the
 /// `ModelInfo` contract, so discovery vectors deliberately use ids outside that

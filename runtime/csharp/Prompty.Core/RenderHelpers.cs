@@ -24,7 +24,7 @@ public static class RenderHelpers
     /// A tuple of (modified inputs for rendering, nonce → property name mapping).
     /// </returns>
     public static (Dictionary<string, object?> Inputs, Dictionary<string, string> Nonces) PrepareRenderInputs(
-        Prompty agent,
+        Agent agent,
         Dictionary<string, object?> inputs)
     {
         var renderInputs = new Dictionary<string, object?>(inputs);

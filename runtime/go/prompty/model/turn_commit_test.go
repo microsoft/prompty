@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -17,7 +18,22 @@ func TestTurnCommitLoadJSON(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -36,6 +52,10 @@ func TestTurnCommitLoadJSON(t *testing.T) {
 	if instance.TurnId != "turn_abc123" {
 		t.Errorf(`Expected TurnId to be "turn_abc123", got %v`, instance.TurnId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertTurnCommitStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestTurnCommitLoadYAML tests loading TurnCommit from YAML
@@ -43,6 +63,14 @@ func TestTurnCommitLoadYAML(t *testing.T) {
 	yamlData := `
 sessionId: sess_abc123
 turnId: turn_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
 `
 	var data map[string]interface{}
@@ -61,6 +89,10 @@ turnId: turn_abc123
 	if instance.TurnId != "turn_abc123" {
 		t.Errorf(`Expected TurnId to be "turn_abc123", got %v`, instance.TurnId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertTurnCommitStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestTurnCommitFromJSON tests loading TurnCommit through the generated JSON helper
@@ -68,7 +100,22 @@ func TestTurnCommitFromJSON(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 
@@ -82,6 +129,10 @@ func TestTurnCommitFromJSON(t *testing.T) {
 	if instance.TurnId != "turn_abc123" {
 		t.Errorf(`Expected TurnId to be "turn_abc123", got %v`, instance.TurnId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertTurnCommitStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestTurnCommitFromYAML tests loading TurnCommit through the generated YAML helper
@@ -89,6 +140,14 @@ func TestTurnCommitFromYAML(t *testing.T) {
 	yamlData := `
 sessionId: sess_abc123
 turnId: turn_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
 `
 
@@ -102,6 +161,10 @@ turnId: turn_abc123
 	if instance.TurnId != "turn_abc123" {
 		t.Errorf(`Expected TurnId to be "turn_abc123", got %v`, instance.TurnId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertTurnCommitStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestTurnCommitRoundtrip tests load -> save -> load produces equivalent data
@@ -109,7 +172,22 @@ func TestTurnCommitRoundtrip(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -135,6 +213,10 @@ func TestTurnCommitRoundtrip(t *testing.T) {
 	if reloaded.TurnId != "turn_abc123" {
 		t.Errorf(`Expected TurnId to be "turn_abc123", got %v`, reloaded.TurnId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertTurnCommitStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestTurnCommitToJSON tests that ToJSON produces valid JSON
@@ -142,7 +224,22 @@ func TestTurnCommitToJSON(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -175,6 +272,10 @@ func TestTurnCommitToJSON(t *testing.T) {
 	if reloaded.TurnId != "turn_abc123" {
 		t.Errorf(`Expected TurnId to be "turn_abc123", got %v`, reloaded.TurnId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertTurnCommitStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestTurnCommitToYAML tests that ToYAML produces valid YAML
@@ -182,7 +283,22 @@ func TestTurnCommitToYAML(t *testing.T) {
 	jsonData := `
 {
   "sessionId": "sess_abc123",
-  "turnId": "turn_abc123"
+  "turnId": "turn_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -215,11 +331,51 @@ func TestTurnCommitToYAML(t *testing.T) {
 	if reloaded.TurnId != "turn_abc123" {
 		t.Errorf(`Expected TurnId to be "turn_abc123", got %v`, reloaded.TurnId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertTurnCommitStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestTurnCommitFromJSONInvalid rejects malformed JSON instead of silently defaulting
 func TestTurnCommitFromJSONInvalid(t *testing.T) {
 	if _, err := prompty.TurnCommitFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertTurnCommitStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

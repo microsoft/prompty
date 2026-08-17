@@ -25,7 +25,7 @@ Loads `.prompty` files → typed `Prompty` objects.
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `prompty/loader.py` | 163 | `load()` / `load_async()` — parse frontmatter, migrate legacy, resolve `${env:}` / `${file:}`, call `Prompty.load()` |
+| `prompty/loader.py` | 163 | `load()` / `load_async()` — parse frontmatter, migrate legacy, resolve `${env:}` / `${file:}`, call `Agent.load()` |
 | `prompty/migration.py` | 236 | `_migrate_legacy()` — converts v1 property names → v2 Prompty names with deprecation warnings |
 | `prompty/utils.py` | 67 | `parse()` — regex frontmatter/body split; `load_prompty()` / `load_prompty_async()` — file I/O |
 | `prompty/tracer.py` | 639 | `Tracer` class, `@trace` decorator (sync+async), `PromptyTracer` (JSON file backend), `console_tracer` |

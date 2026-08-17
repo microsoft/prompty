@@ -45,7 +45,10 @@ jobs:
 
       - name: Check packaged crates without dev features
         run: |
-          cargo check -p prompty --lib --no-default-features
+          # prompty requires serde (engine journal/checkpoint/replay serialization
+          # and the generated model serde impls), so it is validated with its one
+          # required non-dev feature rather than a fully feature-less build.
+          cargo check -p prompty --lib --no-default-features --features serde
           cargo check -p prompty-openai --lib --no-default-features
           cargo check -p prompty-anthropic --lib --no-default-features
           cargo check -p prompty-foundry --lib --no-default-features

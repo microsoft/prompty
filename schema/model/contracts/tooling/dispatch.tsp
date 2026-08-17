@@ -1,0 +1,40 @@
+import "@typra/emitter";
+import "../conversation/message.tsp";
+import "../conversation/tool-invocation.tsp";
+
+using Prompty.Conformance.Samples;
+using Prompty.Contracts.Conversation;
+namespace Prompty.Contracts.Tooling;
+
+/**
+ * Context passed to tool handlers during agent loop execution. Provides
+ * access to the agent configuration, current conversation state, and
+ * arbitrary metadata for tool implementations that need broader context.
+ */
+model ToolContext {
+  @doc("The current conversation messages at the point of tool invocation")
+  messages: Message[];
+
+  @doc("Optional metadata for tool-specific context (e.g., user session info)")
+  @sample(ToolContextMetadataSample)
+  metadata?: Record<unknown>;
+}
+
+/**
+ * The result of dispatching a single tool call. Pairs the tool call
+ * identifier with the tool's name and result for correlation in the
+ * agent loop's message assembly.
+ */
+model ToolDispatchResult {
+  @doc("The tool call ID from the LLM response, used to correlate results")
+  @sample(ToolDispatchResultToolCallIdSample)
+  toolCallId: string;
+
+  @doc("The name of the tool that was called")
+  @sample(ToolDispatchResultNameSample)
+  name: string;
+
+  @doc("The result produced by the tool handler")
+  @sample(ToolDispatchResultResultSample)
+  result: ToolResult;
+}

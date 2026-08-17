@@ -12,8 +12,8 @@ use serde_json::{Value, json};
 
 use prompty::interfaces::{InvokerError, Processor};
 use prompty::model::{
-    InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
-    ModelInvocationResponse, ModelToolRequest, Prompty,
+    Agent, InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+    ModelInvocationResponse, ModelToolRequest,
 };
 use prompty::types::{Message, Role, ToolCall};
 
@@ -22,13 +22,13 @@ pub struct AnthropicProcessor;
 
 #[async_trait]
 impl Processor for AnthropicProcessor {
-    async fn process(&self, agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, agent: &Agent, response: Value) -> Result<Value, InvokerError> {
         process_response(agent, &response)
     }
 
     async fn process_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         response: Value,
         _request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -49,11 +49,11 @@ impl Processor for AnthropicProcessor {
         Ok(ModelInvocationResponse {
             output: tool_requests.is_empty().then_some(output),
             usage: None,
-            assistant_messages: portable_assistant_messages(&response),
-            tool_requests,
+            assistant_messages: Some(portable_assistant_messages(&response)),
+            tool_requests: Some(tool_requests),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
             metadata: Value::Null,
         })
@@ -61,7 +61,7 @@ impl Processor for AnthropicProcessor {
 
     async fn process_raw_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         response: Value,
         request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -69,7 +69,7 @@ impl Processor for AnthropicProcessor {
             .process_with_context(agent, response.clone(), request)
             .await?;
         mapped.output = Some(response);
-        mapped.tool_requests.clear();
+        mapped.tool_requests = None;
         Ok(mapped)
     }
 
@@ -109,7 +109,7 @@ fn portable_assistant_messages(response: &Value) -> Vec<Message> {
 ///
 /// This is the shared logic used by both the `AnthropicProcessor` trait impl
 /// and can be called directly for testing.
-pub fn process_response(agent: &Prompty, response: &Value) -> Result<Value, InvokerError> {
+pub fn process_response(agent: &Agent, response: &Value) -> Result<Value, InvokerError> {
     let content = response
         .get("content")
         .and_then(|c| c.as_array())
@@ -442,17 +442,17 @@ mod tests {
     use prompty::model::context::LoadContext;
     use serde_json::json;
 
-    fn make_agent() -> Prompty {
+    fn make_agent() -> Agent {
         let data = json!({
             "name": "test",
             "kind": "prompt",
             "model": {"id": "claude-3", "provider": "anthropic"},
             "instructions": "test"
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
-    fn make_agent_with_outputs() -> Prompty {
+    fn make_agent_with_outputs() -> Agent {
         let data = json!({
             "name": "test",
             "kind": "prompt",
@@ -463,7 +463,7 @@ mod tests {
                 {"name": "temp", "kind": "integer"}
             ]
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     #[tokio::test]
@@ -523,21 +523,23 @@ mod tests {
         });
 
         let result = AnthropicProcessor
-            .process_with_context(
-                &agent,
-                response,
-                &ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default()),
-            )
+            .process_with_context(&agent, response, &ModelInvocationRequest::default())
             .await
             .unwrap();
 
         let state = result.next_context_state.expect("context state");
         assert_eq!(state.portability, InvocationContextPortability::Portable);
-        assert!(state.delegated_state.is_empty());
-        assert_eq!(result.assistant_messages.len(), 1);
-        assert_eq!(result.assistant_messages[0].text_content(), "Hello!");
+        assert!(
+            state
+                .delegated_state
+                .as_ref()
+                .map_or(true, |state| state.is_empty())
+        );
+        let assistant_messages = result.assistant_messages.as_ref().unwrap();
+        assert_eq!(assistant_messages.len(), 1);
+        assert_eq!(assistant_messages[0].text_content(), "Hello!");
         assert_eq!(
-            result.assistant_messages[0].metadata["content"][1]["type"],
+            assistant_messages[0].metadata["content"][1]["type"],
             "tool_use"
         );
     }

@@ -25,8 +25,9 @@ use crate::engine::{
 use crate::guardrails::Guardrails;
 use crate::interfaces::{ExecuteError, InvokerError};
 use crate::model::{
-    InvocationContextPortability, InvocationContextState, InvocationUsage, ModelInvocationRequest,
-    ModelInvocationResponse as GeneratedModelInvocationResponse, ModelToolRequest, Prompty,
+    Agent, InvocationContextPortability, InvocationContextState, InvocationUsage,
+    ModelInvocationRequest, ModelInvocationResponse as GeneratedModelInvocationResponse,
+    ModelToolRequest,
 };
 use crate::registry;
 use crate::steering::Steering;
@@ -265,7 +266,7 @@ impl LiveFailureState {
 }
 
 struct LivePolicy {
-    agent: Arc<Prompty>,
+    agent: Arc<Agent>,
     inputs: Value,
     guardrails: Option<Arc<Guardrails>>,
     #[allow(clippy::type_complexity)]
@@ -439,7 +440,7 @@ impl RetryPolicyPort for LiveRetryPolicy {
 }
 
 struct LiveModelPort {
-    agent: Arc<Prompty>,
+    agent: Arc<Agent>,
     provider: String,
     streaming: bool,
     raw_final: bool,
@@ -496,8 +497,12 @@ impl LiveModelPort {
         if self.raw_final && !self.agent_mode {
             self.skip_output_guardrail.store(true, Ordering::Release);
             response.output = Some(raw_response.clone());
-            response.tool_requests.clear();
-        } else if response.tool_requests.is_empty() {
+            response.tool_requests = None;
+        } else if response
+            .tool_requests
+            .as_ref()
+            .is_none_or(|requests| requests.is_empty())
+        {
             response.output = response.output.map(|output| unwrap_structured(&output));
         }
         Ok((response, raw_response))
@@ -653,7 +658,11 @@ impl ModelPort for LiveModelPort {
             )
             .await
             .map_err(|error| self.failures.record_invoker(error))?;
-            if response.tool_requests.is_empty() {
+            if response
+                .tool_requests
+                .as_ref()
+                .is_none_or(|requests| requests.is_empty())
+            {
                 response.output = response.output.map(|output| unwrap_structured(&output));
             }
             let provider_metadata = std::mem::take(&mut response.metadata);
@@ -696,11 +705,11 @@ impl ModelPort for LiveModelPort {
                     })
                 })
                 .transpose()?,
-            assistant_messages: Vec::new(),
-            tool_requests,
+            assistant_messages: None,
+            tool_requests: Some(tool_requests),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
             metadata: json!({
                 "rawResponse": raw_response,
@@ -751,7 +760,12 @@ impl ConversationPort for LiveConversationPort {
         response: &EngineModelInvocationResponse,
         results: &[EngineToolResult],
     ) -> Result<Vec<Message>, PortError> {
-        if response.tool_requests.is_empty() || results.is_empty() {
+        if response
+            .tool_requests
+            .as_ref()
+            .is_none_or(|requests| requests.is_empty())
+            || results.is_empty()
+        {
             return Err(PortError::configuration(
                 "tool conversation formatting requires non-empty requests and results",
             ));
@@ -759,6 +773,7 @@ impl ConversationPort for LiveConversationPort {
         let tool_calls = response
             .tool_requests
             .iter()
+            .flatten()
             .map(|request| ToolCall {
                 id: request.id.clone(),
                 name: request.name.clone(),
@@ -768,6 +783,7 @@ impl ConversationPort for LiveConversationPort {
         let tool_results = response
             .tool_requests
             .iter()
+            .flatten()
             .map(|request| {
                 results
                     .iter()
@@ -810,7 +826,7 @@ impl ConversationPort for LiveConversationPort {
 }
 
 struct LivePermissionPort {
-    agent: Arc<Prompty>,
+    agent: Arc<Agent>,
     guardrails: Option<Arc<Guardrails>>,
 }
 
@@ -855,7 +871,7 @@ impl PermissionPort for LivePermissionPort {
 }
 
 struct LiveToolPort {
-    agent: Arc<Prompty>,
+    agent: Arc<Agent>,
     inputs: Value,
     tools: Arc<HashMap<String, ToolHandler>>,
     events: LiveEvents,
@@ -1124,7 +1140,10 @@ impl DurabilityPort for LiveDurabilityPort {
                 event.kind,
                 EngineEventKind::Tool_execution_completed | EngineEventKind::Tool_result_committed
             )
-        }) && checkpoint.pending_tool_requests.is_empty()
+        }) && checkpoint
+            .pending_tool_requests
+            .as_ref()
+            .is_none_or(|requests| requests.is_empty())
             && checkpoint.pending_model_response.is_none()
         {
             self.events.emit(AgentEvent::MessagesUpdated {
@@ -1157,7 +1176,7 @@ static LIVE_TURN_IDS: AtomicU64 = AtomicU64::new(0);
 pub(super) static LIVE_ENGINE_RUNS: AtomicU64 = AtomicU64::new(0);
 
 pub(super) async fn turn(
-    agent: &Prompty,
+    agent: &Agent,
     inputs: Option<&Value>,
     options: Option<TurnOptions>,
 ) -> Result<Value, InvokerError> {
@@ -1172,7 +1191,7 @@ pub(super) async fn turn(
 }
 
 pub(super) async fn turn_with_engine_request(
-    agent: &Prompty,
+    agent: &Agent,
     mut request: TurnEngineRequest,
     options: Option<TurnOptions>,
 ) -> Result<Value, InvokerError> {
@@ -1234,7 +1253,11 @@ pub(super) async fn turn_with_engine_request(
     let agent = Arc::new(agent.clone());
     let provider = super::resolve_provider(&agent);
     let streaming = super::is_streaming(&agent);
-    let agent_mode = !tools.is_empty() || !agent.tools.is_empty();
+    let agent_mode = !tools.is_empty()
+        || agent
+            .tools
+            .as_ref()
+            .is_some_and(|agent_tools| !agent_tools.is_empty());
     let failures = Arc::new(LiveFailureState::default());
     let guardrails = guardrails.map(Arc::new);
     let tools = Arc::new(tools);
@@ -1251,7 +1274,10 @@ pub(super) async fn turn_with_engine_request(
         events: events.clone(),
         agent_name: Some(agent.name.clone()),
         provider: provider.clone(),
-        model_id: (!agent.model.id.is_empty()).then(|| agent.model.id.clone()),
+        model_id: agent
+            .model
+            .as_ref()
+            .and_then(|model| (!model.id.is_empty()).then(|| model.id.clone())),
         configured_max_iterations: max_iterations,
         agent_mode,
         persistence,
@@ -1699,7 +1725,7 @@ mod tests {
     impl Executor for BlockingAwareExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             while !self.lifecycle_backend_entered.load(Ordering::SeqCst) {
@@ -1713,7 +1739,7 @@ mod tests {
 
     #[async_trait]
     impl Processor for EchoProcessor {
-        async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+        async fn process(&self, _agent: &Agent, response: Value) -> Result<Value, InvokerError> {
             Ok(response)
         }
     }
@@ -1724,7 +1750,7 @@ mod tests {
     impl Executor for SensitiveErrorExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             Err(InvokerError::Execute(
@@ -1750,7 +1776,7 @@ mod tests {
         const PROVIDER: &str = "sensitive-provider-error";
         crate::pipeline::register_defaults();
         registry::register_executor(PROVIDER, SensitiveErrorExecutor);
-        let agent = Prompty::load_from_value(
+        let agent = Agent::load_from_value(
             &json!({
                 "kind": "prompt",
                 "name": "sensitive-provider-error",
@@ -1807,7 +1833,7 @@ mod tests {
             },
         );
         registry::register_processor(PROVIDER, EchoProcessor);
-        let agent = Prompty::load_from_value(
+        let agent = Agent::load_from_value(
             &json!({
                 "kind": "prompt",
                 "name": "blocking-lifecycle-telemetry",
@@ -1836,7 +1862,7 @@ mod tests {
     impl Executor for ResponsesStreamExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             unreachable!("the test exercises the streaming path")
@@ -1844,7 +1870,7 @@ mod tests {
 
         async fn execute_stream_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _request: &ModelInvocationRequest,
             _cancellation: &CancellationToken,
         ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
@@ -1876,7 +1902,7 @@ mod tests {
     impl Executor for IndeterminateStreamExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             INDETERMINATE_NON_STREAM_CALLS.fetch_add(1, Ordering::SeqCst);
@@ -1885,7 +1911,7 @@ mod tests {
 
         async fn execute_stream_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _request: &ModelInvocationRequest,
             _cancellation: &CancellationToken,
         ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
@@ -1901,7 +1927,7 @@ mod tests {
     impl Executor for PostOpenIndeterminateStreamExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Value, InvokerError> {
             unreachable!("the test exercises the streaming path")
@@ -1909,7 +1935,7 @@ mod tests {
 
         async fn execute_stream_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _request: &ModelInvocationRequest,
             _cancellation: &CancellationToken,
         ) -> Result<Pin<Box<dyn Stream<Item = Value> + Send>>, InvokerError> {
@@ -1946,13 +1972,13 @@ mod tests {
 
     #[async_trait]
     impl Processor for ResponsesStreamProcessor {
-        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+        async fn process(&self, _agent: &Agent, _response: Value) -> Result<Value, InvokerError> {
             unreachable!("the test exercises the context-aware streaming completion path")
         }
 
         async fn process_with_context(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             response: Value,
             _request: &ModelInvocationRequest,
         ) -> Result<GeneratedModelInvocationResponse, InvokerError> {
@@ -1960,21 +1986,21 @@ mod tests {
             Ok(GeneratedModelInvocationResponse {
                 output: None,
                 usage: None,
-                assistant_messages: Vec::new(),
-                tool_requests: vec![ModelToolRequest {
+                assistant_messages: None,
+                tool_requests: Some(vec![ModelToolRequest {
                     id: "call_weather".to_string(),
                     name: "weather".to_string(),
                     arguments: Some(json!({"city": "Paris"})),
                     metadata: Value::Null,
-                }],
+                }]),
                 next_context_state: Some(InvocationContextState {
                     portability: InvocationContextPortability::Delegated,
-                    delegated_state: vec![crate::model::DelegatedStateReference {
+                    delegated_state: Some(vec![crate::model::DelegatedStateReference {
                         provider: "openai".to_string(),
                         kind: "response".to_string(),
                         id: "resp_streamed_tool_round".to_string(),
                         metadata: Value::Null,
-                    }],
+                    }]),
                 }),
                 metadata: Value::Null,
             })
@@ -1997,7 +2023,7 @@ mod tests {
 
     #[async_trait]
     impl Processor for PostOpenIndeterminateStreamProcessor {
-        async fn process(&self, _agent: &Prompty, _response: Value) -> Result<Value, InvokerError> {
+        async fn process(&self, _agent: &Agent, _response: Value) -> Result<Value, InvokerError> {
             unreachable!("the test exercises the streaming path")
         }
 
@@ -2023,8 +2049,8 @@ mod tests {
         }
     }
 
-    fn responses_agent() -> Prompty {
-        Prompty::load_from_value(
+    fn responses_agent() -> Agent {
+        Agent::load_from_value(
             &json!({
                 "kind": "prompt",
                 "name": "streamed-responses",
@@ -2035,8 +2061,8 @@ mod tests {
         )
     }
 
-    fn indeterminate_stream_agent() -> Prompty {
-        Prompty::load_from_value(
+    fn indeterminate_stream_agent() -> Agent {
+        Agent::load_from_value(
             &json!({
                 "kind": "prompt",
                 "name": "indeterminate-stream",
@@ -2066,7 +2092,7 @@ mod tests {
             skip_output_guardrail: Arc::new(AtomicBool::new(false)),
             failures: Arc::new(LiveFailureState::default()),
         };
-        let request = ModelInvocationRequest::load_from_value(&json!({}), &LoadContext::default());
+        let request = ModelInvocationRequest::default();
 
         let response = port
             .invoke(
@@ -2081,11 +2107,15 @@ mod tests {
             .next_context_state
             .expect("the next invocation must receive a context state");
         assert_eq!(context.portability, InvocationContextPortability::Delegated);
-        assert_eq!(context.delegated_state.len(), 1);
-        assert_eq!(context.delegated_state[0].provider, "openai");
-        assert_eq!(context.delegated_state[0].kind, "response");
-        assert_eq!(context.delegated_state[0].id, "resp_streamed_tool_round");
-        assert_eq!(response.tool_requests[0].id, "call_weather");
+        let delegated_state = context.delegated_state.as_ref().unwrap();
+        assert_eq!(delegated_state.len(), 1);
+        assert_eq!(delegated_state[0].provider, "openai");
+        assert_eq!(delegated_state[0].kind, "response");
+        assert_eq!(delegated_state[0].id, "resp_streamed_tool_round");
+        assert_eq!(
+            response.tool_requests.as_ref().unwrap()[0].id,
+            "call_weather"
+        );
     }
 
     #[test]
@@ -2098,21 +2128,21 @@ mod tests {
         let response = EngineModelInvocationResponse {
             output: None,
             usage: None,
-            assistant_messages: Vec::new(),
-            tool_requests: vec![EngineToolRequest {
+            assistant_messages: None,
+            tool_requests: Some(vec![EngineToolRequest {
                 id: "call_weather".to_string(),
                 name: "weather".to_string(),
                 arguments: Some(json!({"city": "Paris"})),
                 metadata: Value::Null,
-            }],
+            }]),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Delegated,
-                delegated_state: vec![crate::model::DelegatedStateReference {
+                delegated_state: Some(vec![crate::model::DelegatedStateReference {
                     provider: RESPONSES_STREAM_PROVIDER.to_string(),
                     kind: "response".to_string(),
                     id: "resp_123".to_string(),
                     metadata: Value::Null,
-                }],
+                }]),
             }),
             metadata: Value::Null,
         };
@@ -2155,7 +2185,7 @@ mod tests {
         );
 
         let error = turn_with_engine_request(
-            &Prompty::load_from_value(
+            &Agent::load_from_value(
                 &json!({
                     "kind": "prompt",
                     "name": "post-open-indeterminate-stream",

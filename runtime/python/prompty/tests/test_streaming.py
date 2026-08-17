@@ -195,9 +195,9 @@ class TestProcessorStreaming:
         stream = PromptyStream("test", iter(chunks))
 
         processor = OpenAIProcessor()
-        from prompty.model import Prompty
+        from prompty.model import Agent
 
-        agent = Prompty.load({"name": "test", "model": "gpt-4"})
+        agent = Agent.load({"name": "test", "model": "gpt-4"})
         result = processor.process(agent, stream)
         # Result should be a generator
         collected = list(result)
@@ -214,9 +214,9 @@ class TestProcessorStreaming:
         stream = PromptyStream("test", iter(chunks))
 
         processor = OpenAIProcessor()
-        from prompty.model import Prompty
+        from prompty.model import Agent
 
-        agent = Prompty.load({"name": "test", "model": "gpt-4"})
+        agent = Agent.load({"name": "test", "model": "gpt-4"})
         result = processor.process(agent, stream)
         collected = list(result)
         assert collected == ["Hello", "world"]
@@ -232,9 +232,9 @@ class TestProcessorStreaming:
         stream = AsyncPromptyStream("test", _AsyncIter(chunks))
 
         processor = OpenAIProcessor()
-        from prompty.model import Prompty
+        from prompty.model import Agent
 
-        agent = Prompty.load({"name": "test", "model": "gpt-4"})
+        agent = Agent.load({"name": "test", "model": "gpt-4"})
         result = processor.process(agent, stream)
         # Result should be an async generator
         collected = [item async for item in result]

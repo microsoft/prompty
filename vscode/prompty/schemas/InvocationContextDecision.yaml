@@ -27,7 +27,6 @@ properties:
     description: Estimated token count for the candidate, when available
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque host-specific decision metadata
 required:
   - candidateId

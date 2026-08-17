@@ -12,7 +12,7 @@ import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, extname, isAbsolute, relative, resolve } from "node:path";
 import matter from "gray-matter";
 import { LoadContext, SaveContext } from "../model/context.js";
-import { Prompty } from "../model/agent/prompty.js";
+import { Agent } from "../model/agent.js";
 
 export interface LoadOptions {
   /**
@@ -33,7 +33,7 @@ export interface LoadOptions {
  * @param options - Optional load behavior, including additional allowed file roots.
  * @returns Fully typed Prompty definition.
  */
-export function load(path: string, options: LoadOptions = {}): Prompty {
+export function load(path: string, options: LoadOptions = {}): Agent {
   const resolved = resolve(path);
   const raw = readFileSync(resolved, "utf-8");
   return buildAgent(raw, resolved, options);
@@ -77,7 +77,7 @@ export function defaultSaveContext(
 // Internal pipeline
 // ---------------------------------------------------------------------------
 
-function buildAgent(raw: string, filePath: string, options: LoadOptions): Prompty {
+function buildAgent(raw: string, filePath: string, options: LoadOptions): Agent {
   // 1. Split frontmatter + body
   const { data, content } = matter(raw, {
     engines: {
@@ -96,7 +96,7 @@ function buildAgent(raw: string, filePath: string, options: LoadOptions): Prompt
   const ctx = new LoadContext({
     preProcess: makePreProcess(filePath, options) as (data: Record<string, unknown>) => Record<string, unknown>,
   });
-  const agent = Prompty.load(frontmatter, ctx);
+  const agent = Agent.load(frontmatter, ctx);
 
   // Store source path for PromptyTool resolution (relative path lookups)
   if (!agent.metadata) {

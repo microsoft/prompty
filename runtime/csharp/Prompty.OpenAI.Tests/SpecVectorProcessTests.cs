@@ -15,14 +15,13 @@ using Prompty.Anthropic;
 namespace Prompty.OpenAI.Tests;
 
 /// <summary>
-/// Spec vector tests for the process stage — loads canonical vectors from
-/// spec/vectors/process/process_vectors.json and passes them through real
+/// Spec vector tests for the process stage — loads canonical vectors from the
+/// generated schema/tsp-output/.typra-generated/vectors.json (process operation) and passes them through real
 /// production processors (OpenAIProcessor, AnthropicProcessor).
 /// </summary>
 public class SpecVectorProcessTests
 {
     private static readonly string SpecDir = FindSpecDir();
-    private static readonly string VectorsDir = Path.Combine(SpecDir, "vectors");
     private static readonly JsonElement[] Vectors = LoadVectors();
 
     private static string FindSpecDir()
@@ -40,8 +39,20 @@ public class SpecVectorProcessTests
 
     private static JsonElement[] LoadVectors()
     {
-        var path = Path.Combine(VectorsDir, "process", "process_vectors.json");
-        return JsonSerializer.Deserialize<JsonElement[]>(File.ReadAllText(path)) ?? [];
+        var path = Path.Combine(
+            Path.GetDirectoryName(SpecDir)!,
+            "schema",
+            "tsp-output",
+            ".typra-generated",
+            "vectors.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var result = new List<JsonElement>();
+        foreach (var env in doc.RootElement.GetProperty("vectors").EnumerateArray())
+        {
+            if (env.GetProperty("operation").GetString() == "process")
+                result.Add(env.GetProperty("vector").Clone());
+        }
+        return [.. result];
     }
 
     // -----------------------------------------------------------------------
@@ -241,9 +252,9 @@ public class SpecVectorProcessTests
     // Helpers
     // -----------------------------------------------------------------------
 
-    private static Core.Prompty BuildAgent(bool hasOutputs)
+    private static Core.Agent BuildAgent(bool hasOutputs)
     {
-        var agent = new Core.Prompty { Name = "process_test" };
+        var agent = new Core.Agent { Name = "process_test" };
         if (hasOutputs)
         {
             agent.Outputs = [new Property { Name = "dummy", Kind = "string" }];

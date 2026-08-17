@@ -1,13 +1,13 @@
 //! Spec vector tests for the **render** pipeline stage.
 //!
-//! Loads the 23 test cases from `spec/vectors/render/render_vectors.json` and
+//! Loads the 23 test cases from the generated `vectors.json` (render operation) and
 //! exercises the full render path: build a `Prompty` agent → register renderers
 //! → call `prompty::pipeline::render()` → compare output.
 
 use std::path::PathBuf;
 use std::sync::Once;
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use serde_json::Value;
 
@@ -20,7 +20,7 @@ fn ensure_renderers() {
     });
 }
 
-/// Repo-root-relative path to the render vectors JSON.
+/// Repo-root-relative path to the emitted conformance vectors JSON.
 fn vectors_path() -> PathBuf {
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     manifest
@@ -30,16 +30,23 @@ fn vectors_path() -> PathBuf {
         .unwrap()
         .parent() // repo root
         .unwrap()
-        .join("spec")
-        .join("vectors")
-        .join("render")
-        .join("render_vectors.json")
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json")
 }
 
-/// Load all 23 render vectors from the JSON file.
+/// Load all render vectors from the emitted single source of truth.
 fn load_vectors() -> Vec<Value> {
-    let raw = std::fs::read_to_string(vectors_path()).expect("failed to read render_vectors.json");
-    serde_json::from_str::<Vec<Value>>(&raw).expect("failed to parse render_vectors.json")
+    let raw = std::fs::read_to_string(vectors_path()).expect("failed to read vectors.json");
+    let doc: Value = serde_json::from_str(&raw).expect("failed to parse vectors.json");
+    doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("render"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
 /// Mustache engine names that we skip when no MustacheRenderer exists.
@@ -54,7 +61,7 @@ const MUSTACHE_VECTORS: &[&str] = &[
 ///
 /// For the `thread_nonce_injection` vector the agent needs a `kind: thread`
 /// input declaration so that `prepare_render_inputs` replaces it with a nonce.
-fn build_agent(name: &str, template: &str, engine: &str) -> Prompty {
+fn build_agent(name: &str, template: &str, engine: &str) -> Agent {
     if name == "thread_nonce_injection" {
         let data = serde_json::json!({
             "name": "test",
@@ -70,7 +77,7 @@ fn build_agent(name: &str, template: &str, engine: &str) -> Prompty {
                 "parser": { "kind": "prompty" }
             }
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     } else {
         let data = serde_json::json!({
             "name": "test",
@@ -82,7 +89,7 @@ fn build_agent(name: &str, template: &str, engine: &str) -> Prompty {
                 "parser": { "kind": "prompty" }
             }
         });
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 }
 

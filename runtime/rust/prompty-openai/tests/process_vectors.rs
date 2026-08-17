@@ -1,9 +1,9 @@
 //! Process vector tests — validate against shared spec vectors.
 //!
-//! Reads `spec/vectors/process/process_vectors.json` and tests that our processor
+//! Reads the generated `vectors.json` (process operation) and tests that our processor
 //! matches the expected output for all OpenAI-provider vectors.
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use serde_json::{Value, json};
 
@@ -17,15 +17,25 @@ fn spec_root() -> std::path::PathBuf {
 
 fn load_process_vectors() -> Vec<Value> {
     let path = spec_root()
-        .join("vectors")
-        .join("process")
-        .join("process_vectors.json");
+        .parent()
+        .unwrap()
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json");
     let content = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("Failed to read process vectors at {}: {e}", path.display()));
-    serde_json::from_str(&content).expect("Invalid JSON in process_vectors.json")
+        .unwrap_or_else(|e| panic!("Failed to read vectors at {}: {e}", path.display()));
+    let doc: Value = serde_json::from_str(&content).expect("Invalid JSON in vectors.json");
+    doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("process"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
-fn build_agent_for_process(input: &Value) -> Prompty {
+fn build_agent_for_process(input: &Value) -> Agent {
     let has_outputs = input
         .get("has_outputs")
         .and_then(|v| v.as_bool())
@@ -44,7 +54,7 @@ fn build_agent_for_process(input: &Value) -> Prompty {
         ]);
     }
 
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
 /// Compare two JSON values, ignoring key order in objects.

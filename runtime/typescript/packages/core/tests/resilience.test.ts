@@ -14,7 +14,7 @@ import {
   registerProcessor,
 } from "../src/core/registry.js";
 import { Message, text } from "../src/core/types.js";
-import { Prompty } from "@prompty/core";
+import { Agent } from "@prompty/core";
 import type { Renderer, Parser, Executor, Processor } from "../src/core/interfaces.js";
 
 // ---------------------------------------------------------------------------
@@ -124,7 +124,7 @@ describe("extractFirstJsonBlock", () => {
 // ---------------------------------------------------------------------------
 
 class MockRenderer implements Renderer {
-  async render(_agent: Prompty, template: string, inputs: Record<string, unknown>): Promise<string> {
+  async render(_agent: Agent, template: string, inputs: Record<string, unknown>): Promise<string> {
     let result = template;
     for (const [key, val] of Object.entries(inputs)) {
       result = result.replace(`{{${key}}}`, String(val));
@@ -134,13 +134,13 @@ class MockRenderer implements Renderer {
 }
 
 class MockParser implements Parser {
-  async parse(_agent: Prompty, rendered: string): Promise<Message[]> {
+  async parse(_agent: Agent, rendered: string): Promise<Message[]> {
     return [new Message({ role: "user", parts: [text(rendered)] })];
   }
 }
 
 class MockProcessor implements Processor {
-  async process(_agent: Prompty, response: unknown): Promise<unknown> {
+  async process(_agent: Agent, response: unknown): Promise<unknown> {
     const r = response as Record<string, unknown>;
     const choices = r.choices as Record<string, unknown>[];
     const msg = choices[0].message as Record<string, unknown>;
@@ -148,8 +148,8 @@ class MockProcessor implements Processor {
   }
 }
 
-function makeAgent(): Prompty {
-  const agent = new Prompty({
+function makeAgent(): Agent {
+  const agent = new Agent({
     name: "test",
     model: "gpt-4o",
     instructions: "Hello, {{name}}!",
@@ -173,7 +173,7 @@ describe("LLM Call Retry (§9.10)", () => {
   it("retries on transient failure and succeeds", async () => {
     let callCount = 0;
     const retryExecutor: Executor = {
-      async execute(_agent: Prompty, _messages: Message[]): Promise<unknown> {
+      async execute(_agent: Agent, _messages: Message[]): Promise<unknown> {
         callCount++;
         if (callCount === 1) {
           throw new Error("Transient network error");
@@ -267,7 +267,7 @@ describe("LLM Call Retry (§9.10)", () => {
   it("emits status event before retry", async () => {
     let callCount = 0;
     const flakeyExecutor: Executor = {
-      async execute(_agent: Prompty, _messages: Message[]): Promise<unknown> {
+      async execute(_agent: Agent, _messages: Message[]): Promise<unknown> {
         callCount++;
         if (callCount === 1) throw new Error("Temporary failure");
         // Return tool call then final
@@ -393,7 +393,7 @@ describe("Tool Execution Error Safety (§9.9)", () => {
   it("emits error event when tool execution fails", async () => {
     let callCount = 0;
     const toolCallExecutor: Executor = {
-      async execute(_agent: Prompty, _messages: Message[]): Promise<unknown> {
+      async execute(_agent: Agent, _messages: Message[]): Promise<unknown> {
         callCount++;
         if (callCount === 1) {
           return {
@@ -464,7 +464,7 @@ describe("Tool Execution Error Safety (§9.9)", () => {
   it("tool errors are returned as strings, not thrown", async () => {
     let callCount = 0;
     const toolCallExecutor: Executor = {
-      async execute(_agent: Prompty, messages: Message[]): Promise<unknown> {
+      async execute(_agent: Agent, messages: Message[]): Promise<unknown> {
         callCount++;
         if (callCount === 1) {
           return {

@@ -5,105 +5,137 @@
   "hydrationZones": [],
   "seams": [
     {
-      "contract": "ModelLister",
+      "contract": "CheckpointStore",
       "target": "csharp",
-      "group": "model",
-      "symbol": "ModelLister",
-      "generatedSource": "model/ModelLister.cs",
+      "group": "",
+      "symbol": "CheckpointStore",
+      "generatedSource": "CheckpointStore.cs",
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "CheckpointStore",
+      "contract": "DiscoveryConformance",
       "target": "csharp",
-      "group": "pipeline",
-      "symbol": "CheckpointStore",
-      "generatedSource": "pipeline/CheckpointStore.cs",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "DiscoveryConformance.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "EventJournalWriter",
       "target": "csharp",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventJournalWriter",
-      "generatedSource": "pipeline/EventJournalWriter.cs",
+      "generatedSource": "EventJournalWriter.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "EventSink",
       "target": "csharp",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventSink",
-      "generatedSource": "pipeline/EventSink.cs",
+      "generatedSource": "EventSink.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Executor",
       "target": "csharp",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Executor",
-      "generatedSource": "pipeline/Executor.cs",
+      "generatedSource": "Executor.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "HostToolExecutor",
       "target": "csharp",
-      "group": "pipeline",
+      "group": "",
       "symbol": "HostToolExecutor",
-      "generatedSource": "pipeline/HostToolExecutor.cs",
+      "generatedSource": "HostToolExecutor.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "LoadConformance.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "csharp",
+      "group": "",
+      "symbol": "ModelLister",
+      "generatedSource": "ModelLister.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Parser",
       "target": "csharp",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Parser",
-      "generatedSource": "pipeline/Parser.cs",
+      "generatedSource": "Parser.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "PermissionResolver",
       "target": "csharp",
-      "group": "pipeline",
+      "group": "",
       "symbol": "PermissionResolver",
-      "generatedSource": "pipeline/PermissionResolver.cs",
+      "generatedSource": "PermissionResolver.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Processor",
       "target": "csharp",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Processor",
-      "generatedSource": "pipeline/Processor.cs",
+      "generatedSource": "Processor.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Renderer",
       "target": "csharp",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Renderer",
-      "generatedSource": "pipeline/Renderer.cs",
+      "generatedSource": "Renderer.cs",
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "ModelLister",
-      "target": "go",
-      "group": "model",
-      "symbol": "ModelLister",
-      "generatedSource": "model_lister.go",
+      "contract": "TurnConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "TurnConformance.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "WireConformance.cs",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "CheckpointStore",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "CheckpointStore",
       "generatedSource": "checkpoint_store.go",
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "DiscoveryConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "discovery_conformance.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventJournalWriter",
       "generatedSource": "event_journal_writer.go",
       "seamKind": "protocol-adapter"
@@ -111,7 +143,7 @@
     {
       "contract": "EventSink",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventSink",
       "generatedSource": "event_sink.go",
       "seamKind": "protocol-adapter"
@@ -119,7 +151,7 @@
     {
       "contract": "Executor",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Executor",
       "generatedSource": "executor.go",
       "seamKind": "protocol-adapter"
@@ -127,15 +159,31 @@
     {
       "contract": "HostToolExecutor",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "host_tool_executor.go",
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LoadConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "load_conformance.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "go",
+      "group": "",
+      "symbol": "ModelLister",
+      "generatedSource": "model_lister.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "Parser",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Parser",
       "generatedSource": "parser.go",
       "seamKind": "protocol-adapter"
@@ -143,7 +191,7 @@
     {
       "contract": "PermissionResolver",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "PermissionResolver",
       "generatedSource": "permission_resolver.go",
       "seamKind": "protocol-adapter"
@@ -151,7 +199,7 @@
     {
       "contract": "Processor",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Processor",
       "generatedSource": "processor.go",
       "seamKind": "protocol-adapter"
@@ -159,31 +207,47 @@
     {
       "contract": "Renderer",
       "target": "go",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Renderer",
       "generatedSource": "renderer.go",
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "ModelLister",
-      "target": "markdown",
-      "group": "model",
-      "symbol": "ModelLister",
-      "generatedSource": "ModelLister",
+      "contract": "TurnConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "turn_conformance.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "wire_conformance.go",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "CheckpointStore",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "CheckpointStore",
       "generatedSource": "CheckpointStore",
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "DiscoveryConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "DiscoveryConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventJournalWriter",
       "generatedSource": "EventJournalWriter",
       "seamKind": "protocol-adapter"
@@ -191,7 +255,7 @@
     {
       "contract": "EventSink",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventSink",
       "generatedSource": "EventSink",
       "seamKind": "protocol-adapter"
@@ -199,7 +263,7 @@
     {
       "contract": "Executor",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Executor",
       "generatedSource": "Executor",
       "seamKind": "protocol-adapter"
@@ -207,15 +271,31 @@
     {
       "contract": "HostToolExecutor",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "HostToolExecutor",
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LoadConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "LoadConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "markdown",
+      "group": "",
+      "symbol": "ModelLister",
+      "generatedSource": "ModelLister",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "Parser",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Parser",
       "generatedSource": "Parser",
       "seamKind": "protocol-adapter"
@@ -223,7 +303,7 @@
     {
       "contract": "PermissionResolver",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "PermissionResolver",
       "generatedSource": "PermissionResolver",
       "seamKind": "protocol-adapter"
@@ -231,7 +311,7 @@
     {
       "contract": "Processor",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Processor",
       "generatedSource": "Processor",
       "seamKind": "protocol-adapter"
@@ -239,249 +319,361 @@
     {
       "contract": "Renderer",
       "target": "markdown",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Renderer",
       "generatedSource": "Renderer",
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "ModelLister",
-      "target": "python",
-      "group": "model",
-      "symbol": "ModelLister",
-      "generatedSource": ".model",
+      "contract": "TurnConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "TurnConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "WireConformance",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "CheckpointStore",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "CheckpointStore",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._CheckpointStore",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "._DiscoveryConformance",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "EventJournalWriter",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventJournalWriter",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._EventJournalWriter",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "EventSink",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventSink",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._EventSink",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Executor",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Executor",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._Executor",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "HostToolExecutor",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "HostToolExecutor",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._HostToolExecutor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "._LoadConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "python",
+      "group": "",
+      "symbol": "ModelLister",
+      "generatedSource": "._ModelLister",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Parser",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Parser",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._Parser",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "PermissionResolver",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "PermissionResolver",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._PermissionResolver",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Processor",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Processor",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._Processor",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Renderer",
       "target": "python",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Renderer",
-      "generatedSource": ".pipeline",
+      "generatedSource": "._Renderer",
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "ModelLister",
-      "target": "rust",
-      "group": "model",
-      "symbol": "ModelLister",
-      "generatedSource": "model::model_lister",
+      "contract": "TurnConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "._TurnConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "._WireConformance",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "CheckpointStore",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "CheckpointStore",
-      "generatedSource": "pipeline::checkpoint_store",
+      "generatedSource": "checkpoint_store",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "discovery_conformance",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "EventJournalWriter",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventJournalWriter",
-      "generatedSource": "pipeline::event_journal_writer",
+      "generatedSource": "event_journal_writer",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "EventSink",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventSink",
-      "generatedSource": "pipeline::event_sink",
+      "generatedSource": "event_sink",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Executor",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Executor",
-      "generatedSource": "pipeline::executor",
+      "generatedSource": "executor",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "HostToolExecutor",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "HostToolExecutor",
-      "generatedSource": "pipeline::host_tool_executor",
+      "generatedSource": "host_tool_executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "load_conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "rust",
+      "group": "",
+      "symbol": "ModelLister",
+      "generatedSource": "model_lister",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Parser",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Parser",
-      "generatedSource": "pipeline::parser",
+      "generatedSource": "parser",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "PermissionResolver",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "PermissionResolver",
-      "generatedSource": "pipeline::permission_resolver",
+      "generatedSource": "permission_resolver",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Processor",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Processor",
-      "generatedSource": "pipeline::processor",
+      "generatedSource": "processor",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Renderer",
       "target": "rust",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Renderer",
-      "generatedSource": "pipeline::renderer",
+      "generatedSource": "renderer",
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "ModelLister",
-      "target": "typescript",
-      "group": "model",
-      "symbol": "ModelLister",
-      "generatedSource": "./model/model-lister",
+      "contract": "TurnConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "turn_conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "wire_conformance",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "CheckpointStore",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "CheckpointStore",
-      "generatedSource": "./pipeline/checkpoint-store",
+      "generatedSource": "./checkpoint-store",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "./discovery-conformance",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "EventJournalWriter",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventJournalWriter",
-      "generatedSource": "./pipeline/event-journal-writer",
+      "generatedSource": "./event-journal-writer",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "EventSink",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "EventSink",
-      "generatedSource": "./pipeline/event-sink",
+      "generatedSource": "./event-sink",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Executor",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Executor",
-      "generatedSource": "./pipeline/executor",
+      "generatedSource": "./executor",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "HostToolExecutor",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "HostToolExecutor",
-      "generatedSource": "./pipeline/host-tool-executor",
+      "generatedSource": "./host-tool-executor",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "./load-conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "typescript",
+      "group": "",
+      "symbol": "ModelLister",
+      "generatedSource": "./model-lister",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Parser",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Parser",
-      "generatedSource": "./pipeline/parser",
+      "generatedSource": "./parser",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "PermissionResolver",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "PermissionResolver",
-      "generatedSource": "./pipeline/permission-resolver",
+      "generatedSource": "./permission-resolver",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Processor",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Processor",
-      "generatedSource": "./pipeline/processor",
+      "generatedSource": "./processor",
       "seamKind": "protocol-adapter"
     },
     {
       "contract": "Renderer",
       "target": "typescript",
-      "group": "pipeline",
+      "group": "",
       "symbol": "Renderer",
-      "generatedSource": "./pipeline/renderer",
+      "generatedSource": "./renderer",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "TurnConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "./turn-conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "./wire-conformance",
       "seamKind": "protocol-adapter"
     }
   ]

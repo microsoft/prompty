@@ -37,10 +37,28 @@ def _records(path: Path) -> list[dict[str, Any]]:
 
 
 def _replay_vectors() -> dict[str, Any]:
-    path = Path(__file__).parents[4] / "spec" / "vectors" / "harness" / "replay_vectors.json"
-    vectors = json.loads(path.read_text(encoding="utf-8"))
-    assert vectors["version"] == 1
-    return vectors
+    # Replay scenarios are emitted under the ``replay`` operation in the single
+    # generated vectors file; each vector's ``input`` carries the journal-level
+    # clock/sessionId/turnId plus per-scenario inputs.
+    path = Path(__file__).parents[4] / "schema" / "tsp-output" / ".typra-generated" / "vectors.json"
+    document = json.loads(path.read_text(encoding="utf-8"))
+    items = [e["vector"] for e in document["vectors"] if e.get("operation") == "replay"]
+    first = items[0]["input"]
+    return {
+        "version": 1,
+        "clock": first["clock"],
+        "sessionId": first["sessionId"],
+        "turnId": first["turnId"],
+        "scenarios": [
+            {
+                "name": v["name"],
+                "inputs": v["input"].get("inputs"),
+                "maxIterations": v["input"].get("maxIterations"),
+                "expected": v["expected"],
+            }
+            for v in items
+        ],
+    }
 
 
 def _normalize_journal(records: list[dict[str, Any]]) -> list[str]:

@@ -33,7 +33,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
-from ..model import Prompty
+from ..model import Agent
 from ..renderers._common import _thread_nonces_local
 from ..tracing.tracer import trace
 from .agent_events import EventCallback, emit_event
@@ -105,7 +105,7 @@ class ExecuteError(Exception):
 
 
 def validate_inputs(
-    agent: Prompty,
+    agent: Agent,
     inputs: dict[str, Any],
 ) -> dict[str, Any]:
     """Validate and fill defaults for inputs against ``agent.inputs``.
@@ -113,7 +113,7 @@ def validate_inputs(
     Parameters
     ----------
     agent:
-        The loaded Prompty.
+        The loaded Agent.
     inputs:
         User-provided input values.
 
@@ -149,7 +149,7 @@ def validate_inputs(
 # ---------------------------------------------------------------------------
 
 
-def _get_rich_input_names(agent: Prompty) -> dict[str, str]:
+def _get_rich_input_names(agent: Agent) -> dict[str, str]:
     """Return {property_name: kind} for all rich-kind inputs."""
     if not agent.inputs:
         return {}
@@ -376,7 +376,7 @@ def _dict_content_to_part(d: dict[str, Any]) -> ContentPart:
 
 
 def _resolve_prepare_config(
-    agent: Prompty,
+    agent: Agent,
 ) -> tuple[str, str, bool]:
     """Extract format kind, parser kind, and strict flag from an agent's template config."""
     format_kind = "jinja2"
@@ -420,7 +420,7 @@ def _finalize_messages(
 
 @trace
 def render(
-    agent: Prompty,
+    agent: Agent,
     inputs: dict[str, Any] | None = None,
 ) -> str:
     """Render the agent's template with the given inputs.
@@ -432,7 +432,7 @@ def render(
     Parameters
     ----------
     agent:
-        A loaded ``Prompty``.
+        A loaded ``Agent``.
     inputs:
         Input values for template rendering.
 
@@ -450,7 +450,7 @@ def render(
 
 @trace
 async def render_async(
-    agent: Prompty,
+    agent: Agent,
     inputs: dict[str, Any] | None = None,
 ) -> str:
     """Async variant of :func:`render`."""
@@ -468,7 +468,7 @@ async def render_async(
 
 @trace
 def parse(
-    agent: Prompty,
+    agent: Agent,
     rendered: str,
 ) -> list[Message]:
     """Parse a rendered template string into an abstract message array.
@@ -480,7 +480,7 @@ def parse(
     Parameters
     ----------
     agent:
-        A loaded ``Prompty``.
+        A loaded ``Agent``.
     rendered:
         The rendered template string (output from :func:`render`).
 
@@ -499,7 +499,7 @@ def parse(
 
 @trace
 async def parse_async(
-    agent: Prompty,
+    agent: Agent,
     rendered: str,
 ) -> list[Message]:
     """Async variant of :func:`parse`."""
@@ -518,7 +518,7 @@ async def parse_async(
 
 @trace
 def prepare(
-    agent: Prompty,
+    agent: Agent,
     inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Render, parse, and expand a prompt into a message array.
@@ -533,7 +533,7 @@ def prepare(
     Parameters
     ----------
     agent:
-        A loaded ``Prompty``.
+        A loaded ``Agent``.
     inputs:
         Input values for template rendering.
 
@@ -565,7 +565,7 @@ def prepare(
 
 @trace
 async def prepare_async(
-    agent: Prompty,
+    agent: Agent,
     inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async variant of :func:`prepare`."""
@@ -596,7 +596,7 @@ async def prepare_async(
 
 
 def _invoke_executor(
-    agent: Prompty,
+    agent: Agent,
     messages: list[Message],
 ) -> Any:
     """Discover and call the executor for the agent's provider.
@@ -613,7 +613,7 @@ def _invoke_executor(
 
 
 async def _invoke_executor_async(
-    agent: Prompty,
+    agent: Agent,
     messages: list[Message],
 ) -> Any:
     """Async variant of :func:`_invoke_executor`."""
@@ -630,7 +630,7 @@ async def _invoke_executor_async(
 
 
 def _invoke_with_retry(
-    agent: Prompty,
+    agent: Agent,
     messages: list[Message],
     max_retries: int,
     on_event: EventCallback | None = None,
@@ -673,7 +673,7 @@ def _invoke_with_retry(
 
 
 async def _invoke_with_retry_async(
-    agent: Prompty,
+    agent: Agent,
     messages: list[Message],
     max_retries: int,
     on_event: EventCallback | None = None,
@@ -719,7 +719,7 @@ async def _invoke_with_retry_async(
 
 @trace
 def process(
-    agent: Prompty,
+    agent: Agent,
     response: Any,
 ) -> Any:
     """Extract a clean result from a raw LLM response.
@@ -727,7 +727,7 @@ def process(
     Parameters
     ----------
     agent:
-        The ``Prompty`` used for the call.
+        The ``Agent`` used for the call.
     response:
         Raw response from :func:`execute`.
 
@@ -745,7 +745,7 @@ def process(
 
 @trace
 async def process_async(
-    agent: Prompty,
+    agent: Agent,
     response: Any,
 ) -> Any:
     """Async variant of :func:`process`."""
@@ -763,7 +763,7 @@ async def process_async(
 
 @trace
 def run(
-    agent: Prompty,
+    agent: Agent,
     messages: list[Message],
     *,
     raw: bool = False,
@@ -777,7 +777,7 @@ def run(
     Parameters
     ----------
     agent:
-        A loaded ``Prompty`` with model configuration.
+        A loaded ``Agent`` with model configuration.
     messages:
         Abstract message array from :func:`prepare`.
     raw:
@@ -796,7 +796,7 @@ def run(
 
 @trace
 async def run_async(
-    agent: Prompty,
+    agent: Agent,
     messages: list[Message],
     *,
     raw: bool = False,
@@ -815,7 +815,7 @@ async def run_async(
 
 @trace
 def invoke(
-    prompt: str | Prompty,
+    prompt: str | Agent,
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
@@ -829,7 +829,7 @@ def invoke(
     Parameters
     ----------
     prompt:
-        Path to a ``.prompty`` file, or a pre-loaded ``Prompty``.
+        Path to a ``.prompty`` file, or a pre-loaded ``Agent``.
     inputs:
         Input values for template rendering.
     raw:
@@ -857,7 +857,7 @@ def invoke(
 
 @trace
 async def invoke_async(
-    prompt: str | Prompty,
+    prompt: str | Agent,
     inputs: dict[str, Any] | None = None,
     *,
     raw: bool = False,
@@ -904,7 +904,7 @@ def _emit_failed_turn_end(
 
 @trace
 def turn(
-    prompt: str | Prompty,
+    prompt: str | Agent,
     inputs: dict[str, Any] | None = None,
     *,
     tools: dict[str, Callable[..., Any]] | None = None,
@@ -934,7 +934,7 @@ def turn(
     Parameters
     ----------
     prompt:
-        Path to a ``.prompty`` file, or a pre-loaded ``Prompty``.
+        Path to a ``.prompty`` file, or a pre-loaded ``Agent``.
     inputs:
         Input values for template rendering.
     tools:
@@ -1254,7 +1254,7 @@ def turn(
 
 @trace
 async def turn_async(
-    prompt: str | Prompty,
+    prompt: str | Agent,
     inputs: dict[str, Any] | None = None,
     *,
     tools: dict[str, Callable[..., Any]] | None = None,
@@ -1766,7 +1766,7 @@ def _extract_tool_info(response: Any) -> tuple[list[Any], str]:
 def _build_tool_result_messages(
     response: Any,
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any] | None = None,
 ) -> tuple[list[Message], bool]:
     """Execute tool calls from the response and build result messages.
@@ -1797,7 +1797,7 @@ def _build_tool_result_messages(
 async def _build_tool_result_messages_async(
     response: Any,
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async variant of :func:`_build_tool_result_messages`."""
@@ -1825,7 +1825,7 @@ def _is_stream(response: Any) -> bool:
 
 
 def _consume_stream(
-    agent: Prompty,
+    agent: Agent,
     response: Any,
     on_event: EventCallback | None = None,
 ) -> tuple[list[Any], str]:
@@ -1857,7 +1857,7 @@ def _consume_stream(
 
 
 async def _consume_stream_async(
-    agent: Prompty,
+    agent: Agent,
     response: Any,
     on_event: EventCallback | None = None,
 ) -> tuple[list[Any], str]:
@@ -1897,7 +1897,7 @@ def _build_tool_messages_from_calls(
     tool_calls: list[Any],
     text_content: str,
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Build tool result messages from processed ToolCall objects (streaming path).
@@ -1922,7 +1922,7 @@ async def _build_tool_messages_from_calls_async(
     tool_calls: list[Any],
     text_content: str,
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any] | None = None,
 ) -> list[Message]:
     """Async: build tool result messages from processed ToolCall objects."""
@@ -1948,7 +1948,7 @@ async def _build_tool_messages_from_calls_async(
 def _build_tool_result_messages_with_extensions(
     response: Any,
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any] | None = None,
     *,
     on_event: EventCallback | None = None,
@@ -1981,7 +1981,7 @@ def _build_tool_result_messages_with_extensions(
 async def _build_tool_result_messages_with_extensions_async(
     response: Any,
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any] | None = None,
     *,
     on_event: EventCallback | None = None,
@@ -2014,7 +2014,7 @@ def _build_tool_messages_from_calls_with_extensions(
     tool_calls: list[Any],
     text_content: str,
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any] | None = None,
     *,
     on_event: EventCallback | None = None,
@@ -2045,7 +2045,7 @@ async def _build_tool_messages_from_calls_with_extensions_async(
     tool_calls: list[Any],
     text_content: str,
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any] | None = None,
     *,
     on_event: EventCallback | None = None,
@@ -2075,7 +2075,7 @@ async def _build_tool_messages_from_calls_with_extensions_async(
 def _dispatch_tools_with_extensions(
     tool_calls: list[Any],
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any],
     *,
     on_event: EventCallback | None = None,
@@ -2156,7 +2156,7 @@ def _dispatch_tools_with_extensions(
 async def _dispatch_tools_with_extensions_async(
     tool_calls: list[Any],
     tools: dict[str, Callable[..., Any]],
-    agent: Prompty,
+    agent: Agent,
     parent_inputs: dict[str, Any],
     *,
     on_event: EventCallback | None = None,

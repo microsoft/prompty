@@ -39,7 +39,6 @@ properties:
     description: Trace span identifier associated with this event
   payload:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Event-specific payload. Use the typed payload model matching 'type'.
   redaction:
     $ref: RedactionMetadata.yaml

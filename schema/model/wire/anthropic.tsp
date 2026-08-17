@@ -1,9 +1,10 @@
 import "@typra/emitter";
-import "../model/discovery.tsp";
-import "../model/model.tsp";
-import "../model/usage.tsp";
+import "../contracts/models/discovery.tsp";
+import "../contracts/models/model.tsp";
+import "../contracts/models/usage.tsp";
 
 using Prompty;
+using Prompty.Contracts.Models;
 
 // ModelInfo → Anthropic model-list response field names.
 @@knownAs(ModelInfo.id, "anthropic", "id");

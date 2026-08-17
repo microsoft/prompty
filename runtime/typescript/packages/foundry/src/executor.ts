@@ -14,7 +14,7 @@
 
 import OpenAI from "openai";
 import { DefaultAzureCredential } from "@azure/identity";
-import type { Prompty, Message } from "@prompty/core";
+import type { Agent, Message } from "@prompty/core";
 import { FoundryConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
 import { getConnection, traceSpan, sanitizeValue } from "@prompty/core";
 import { OpenAIExecutor } from "@prompty/openai";
@@ -40,7 +40,7 @@ function getOpenAIBaseURL(projectEndpoint: string): string {
 const FOUNDRY_TOKEN_SCOPE = "https://ai.azure.com/.default";
 
 export class FoundryExecutor extends OpenAIExecutor {
-  override async execute(agent: Prompty, messages: Message[]): Promise<unknown> {
+  override async execute(agent: Agent, messages: Message[]): Promise<unknown> {
     return traceSpan("FoundryExecutor", async (emit) => {
       emit("signature", "prompty.foundry.executor.FoundryExecutor.invoke");
       emit("inputs", { data: messages });
@@ -74,7 +74,7 @@ export class FoundryExecutor extends OpenAIExecutor {
   private async dispatchApiCall(
     client: OpenAI,
     clientName: string,
-    agent: Prompty,
+    agent: Agent,
     messages: Message[],
     apiType: string,
   ): Promise<unknown> {
@@ -140,7 +140,7 @@ export class FoundryExecutor extends OpenAIExecutor {
     }
   }
 
-  protected override resolveClient(agent: Prompty): OpenAI {
+  protected override resolveClient(agent: Agent): OpenAI {
     const conn = agent.model?.connection;
 
     // Pre-registered client by name

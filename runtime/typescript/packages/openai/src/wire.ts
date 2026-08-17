@@ -4,7 +4,7 @@
  * @module
  */
 
-import type { Prompty } from "@prompty/core";
+import type { Agent } from "@prompty/core";
 import type { ContentPart, Message } from "@prompty/core";
 import { load as loadPrompty } from "@prompty/core";
 import { dirname, resolve } from "node:path";
@@ -78,7 +78,7 @@ function mimeToAudioFormat(mediaType: string): string {
  * Build chat completion arguments from agent config and messages.
  */
 export function buildChatArgs(
-  agent: Prompty,
+  agent: Agent,
   messages: Message[],
 ): Record<string, unknown> {
   const model = agent.model?.id || "gpt-4";
@@ -110,7 +110,7 @@ export function buildChatArgs(
  * Only additionalProperties are passed — chat options are not valid here.
  */
 export function buildEmbeddingArgs(
-  agent: Prompty,
+  agent: Agent,
   data: unknown,
 ): Record<string, unknown> {
   const model = agent.model?.id || "text-embedding-ada-002";
@@ -150,7 +150,7 @@ export function buildEmbeddingArgs(
  * Only additionalProperties are passed — chat options are not valid here.
  */
 export function buildImageArgs(
-  agent: Prompty,
+  agent: Agent,
   data: unknown,
 ): Record<string, unknown> {
   const model = agent.model?.id || "dall-e-3";
@@ -203,7 +203,7 @@ const KIND_TO_JSON_TYPE: Record<string, string> = {
   object: "object",
 };
 
-function buildOptions(agent: Prompty): Record<string, unknown> {
+function buildOptions(agent: Agent): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
@@ -348,7 +348,7 @@ function addNullability(schema: Record<string, unknown>): void {
   }
 }
 
-function toolsToWire(agent: Prompty): Record<string, unknown>[] {
+function toolsToWire(agent: Agent): Record<string, unknown>[] {
   const tools = agent.tools;
   if (!tools || tools.length === 0) return [];
 
@@ -396,7 +396,7 @@ function toolsToWire(agent: Prompty): Record<string, unknown>[] {
  * Loads the child `.prompty` file, uses its `inputs` as the
  * function parameters, and applies binding/strict stripping.
  */
-function projectPromptyTool(tool: Record<string, unknown>, parent: Prompty): Record<string, unknown> {
+function projectPromptyTool(tool: Record<string, unknown>, parent: Agent): Record<string, unknown> {
   const toolPath = tool.path as string | undefined;
   if (!toolPath) {
     throw new Error(`PromptyTool '${tool.name}' has no path`);
@@ -437,7 +437,7 @@ function projectPromptyTool(tool: Record<string, unknown>, parent: Prompty): Rec
   return funcDef;
 }
 
-function outputsToWire(agent: Prompty): Record<string, unknown> | null {
+function outputsToWire(agent: Agent): Record<string, unknown> | null {
   const outputs = agent.outputs;
   if (!outputs || outputs.length === 0) return null;
 
@@ -486,7 +486,7 @@ function outputsToWire(agent: Prompty): Record<string, unknown> | null {
  * - Tools use flat `{ type: "function", name, parameters }` (not nested `function:`)
  */
 export function buildResponsesArgs(
-  agent: Prompty,
+  agent: Agent,
   messages: Message[],
 ): Record<string, unknown> {
   const model = agent.model?.id || "gpt-4o";
@@ -555,7 +555,7 @@ function messageToResponsesInput(msg: Message): Record<string, unknown> {
 }
 
 /** Build Responses-specific model options. */
-function buildResponsesOptions(agent: Prompty): Record<string, unknown> {
+function buildResponsesOptions(agent: Agent): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
@@ -574,7 +574,7 @@ function buildResponsesOptions(agent: Prompty): Record<string, unknown> {
 }
 
 /** Convert agent tools to Responses API tool format. */
-function responsesToolsToWire(agent: Prompty): Record<string, unknown>[] {
+function responsesToolsToWire(agent: Agent): Record<string, unknown>[] {
   const tools = agent.tools;
   if (!tools || tools.length === 0) return [];
 
@@ -629,7 +629,7 @@ function responsesToolsToWire(agent: Prompty): Record<string, unknown>[] {
 }
 
 /** Convert outputs to Responses API text.format config. */
-function outputsToResponsesWire(agent: Prompty): Record<string, unknown> | null {
+function outputsToResponsesWire(agent: Agent): Record<string, unknown> | null {
   const outputs = agent.outputs;
   if (!outputs || outputs.length === 0) return null;
 

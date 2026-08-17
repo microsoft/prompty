@@ -35,7 +35,6 @@ properties:
     type: array
     items:
       $ref: Message.yaml
-    default: []
     description: Canonical conversation messages at checkpoint time
   stablePrefixMessages:
     type: integer
@@ -52,13 +51,11 @@ properties:
     type: array
     items:
       $ref: ModelToolRequest.yaml
-    default: []
     description: Tool requests awaiting execution or commitment
   completedToolResults:
     type: array
     items:
       $ref: ModelToolResult.yaml
-    default: []
     description: Tool results already executed in this round
   completedModelIterations:
     type: integer
@@ -95,7 +92,6 @@ properties:
     description: Provider-context state carried by this checkpoint
   metadata:
     $ref: RecordUnknown.yaml
-    default: {}
     description: Opaque host-specific checkpoint metadata
 required:
   - id

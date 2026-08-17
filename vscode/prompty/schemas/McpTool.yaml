@@ -27,7 +27,6 @@ required:
   - kind
   - connection
   - serverName
-  - approvalMode
 allOf:
   - $ref: Tool.yaml
 description: The MCP Server tool.

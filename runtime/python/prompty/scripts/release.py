@@ -98,7 +98,7 @@ def main() -> None:
     is_prerelease = re.search(r"(a|b|rc|dev)", new_version) is not None
     tag = f"{TAG_PREFIX}{new_version}"
 
-    print("\n📦 Prompty Python Release")
+    print("\n📦 Agent Python Release")
     print(f"   {current} → {new_version}")
     print(f"   Tag: {tag}")
     print(f"   PyPI: {'prerelease' if is_prerelease else 'stable'}\n")

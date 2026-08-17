@@ -9,7 +9,7 @@ use std::sync::LazyLock;
 
 use prompty::engine::CancellationToken;
 use prompty::interfaces::{Executor, InvokerError, cancellable_stream};
-use prompty::model::{InvocationContextPortability, ModelInvocationRequest, Prompty};
+use prompty::model::{Agent, InvocationContextPortability, ModelInvocationRequest};
 use prompty::types::Message;
 
 use crate::processor::RESPONSES_CONTINUATION_BOUNDARY;
@@ -26,13 +26,13 @@ pub struct OpenAIExecutor;
 
 #[async_trait]
 impl Executor for OpenAIExecutor {
-    async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+    async fn execute(&self, agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
         Self::execute_request(agent, messages, None).await
     }
 
     async fn execute_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         request: &ModelInvocationRequest,
         cancellation: &CancellationToken,
     ) -> Result<Value, InvokerError> {
@@ -84,7 +84,7 @@ impl Executor for OpenAIExecutor {
 
     async fn execute_stream(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         messages: &[Message],
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
         Self::execute_stream_request(agent, messages, None).await
@@ -92,7 +92,7 @@ impl Executor for OpenAIExecutor {
 
     async fn execute_stream_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         request: &ModelInvocationRequest,
         cancellation: &CancellationToken,
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
@@ -113,14 +113,14 @@ impl Executor for OpenAIExecutor {
 
 impl OpenAIExecutor {
     async fn execute_request(
-        agent: &Prompty,
+        agent: &Agent,
         messages: &[Message],
         request: Option<&ModelInvocationRequest>,
     ) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
 
@@ -170,14 +170,14 @@ impl OpenAIExecutor {
     }
 
     async fn execute_stream_request(
-        agent: &Prompty,
+        agent: &Agent,
         messages: &[Message],
         request: Option<&ModelInvocationRequest>,
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
 
@@ -222,19 +222,19 @@ impl OpenAIExecutor {
     }
 
     /// Build the request args without sending — useful for testing wire format.
-    pub fn build_args(agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+    pub fn build_args(agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
         Self::build_request_args(agent, messages, None)
     }
 
     fn build_request_args(
-        agent: &Prompty,
+        agent: &Agent,
         messages: &[Message],
         request: Option<&ModelInvocationRequest>,
     ) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
         Ok(match api_type {
@@ -306,6 +306,7 @@ fn responses_continuation(
         .context_state
         .delegated_state
         .iter()
+        .flatten()
         .find(|state| state.provider == "openai" && state.kind == "response")
         .filter(|state| !state.id.is_empty())
     else {
@@ -346,9 +347,12 @@ fn responses_continuation(
 /// Resolve the effective connection — if `kind == "reference"`, look up the
 /// named connection from the registry. Otherwise return the connection as-is.
 fn resolve_connection(
-    agent: &Prompty,
+    agent: &Agent,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
-    let conn = &agent.model.connection;
+    let Some(model) = agent.model.as_ref() else {
+        return Ok(std::borrow::Cow::Owned(serde_json::Value::Null));
+    };
+    let conn = &model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {
@@ -371,7 +375,7 @@ fn resolve_connection(
     }
 }
 
-fn build_url(agent: &Prompty, path: &str) -> Result<String, InvokerError> {
+fn build_url(agent: &Agent, path: &str) -> Result<String, InvokerError> {
     let conn = resolve_connection(agent)?;
 
     // 1. connection.endpoint from the agent
@@ -402,7 +406,7 @@ fn build_url(agent: &Prompty, path: &str) -> Result<String, InvokerError> {
     Ok(format!("{base}{adjusted_path}"))
 }
 
-fn get_api_key(agent: &Prompty) -> Result<String, InvokerError> {
+fn get_api_key(agent: &Agent) -> Result<String, InvokerError> {
     let conn = resolve_connection(agent)?;
 
     // Try connection.apiKey first
@@ -565,19 +569,19 @@ impl Stream for SseParser {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use prompty::model::Prompty;
+    use prompty::model::Agent;
     use prompty::model::context::LoadContext;
     use serde_json::json;
     use serial_test::serial;
 
-    fn make_agent(model_json: Value) -> Prompty {
+    fn make_agent(model_json: Value) -> Agent {
         let mut data = json!({
             "name": "test",
             "kind": "prompt",
             "model": model_json,
         });
         data["instructions"] = json!("test");
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     #[tokio::test]

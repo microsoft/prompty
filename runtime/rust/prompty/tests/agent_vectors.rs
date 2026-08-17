@@ -1,5 +1,5 @@
 //! Agent vector tests — exercises the agent loop (`turn()`) using canned
-//! LLM responses from `spec/vectors/agent/agent_vectors.json`.
+//! LLM responses from the generated `vectors.json` (run operation).
 //!
 //! Each vector provides a `sequence` of mock LLM responses and the expected
 //! final result (or error). A `MockExecutor` replays the canned responses;
@@ -15,7 +15,7 @@ use async_trait::async_trait;
 use serde_json::{Value, json};
 
 use prompty::interfaces::{Executor, InvokerError, Processor};
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use prompty::pipeline::{AgentEvent, EventCallback, ToolHandler, TurnOptions, turn};
 use prompty::types::{Message, Role};
@@ -32,16 +32,22 @@ fn vectors_path() -> PathBuf {
         .unwrap() // runtime/
         .parent()
         .unwrap() // repo root
-        .join("spec")
-        .join("vectors")
-        .join("agent")
-        .join("agent_vectors.json")
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json")
 }
 
 fn load_vectors() -> Vec<Value> {
-    let content =
-        std::fs::read_to_string(vectors_path()).expect("failed to read agent_vectors.json");
-    serde_json::from_str(&content).expect("failed to parse agent_vectors.json")
+    let content = std::fs::read_to_string(vectors_path()).expect("failed to read vectors.json");
+    let doc: Value = serde_json::from_str(&content).expect("failed to parse vectors.json");
+    doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("run"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
 fn find_vector(name: &str) -> Value {
@@ -71,11 +77,7 @@ impl MockExecutor {
 
 #[async_trait]
 impl Executor for MockExecutor {
-    async fn execute(
-        &self,
-        _agent: &Prompty,
-        _messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    async fn execute(&self, _agent: &Agent, _messages: &[Message]) -> Result<Value, InvokerError> {
         let idx = self.call_idx.fetch_add(1, Ordering::SeqCst);
         if idx >= self.responses.len() {
             return Err(InvokerError::Execute(
@@ -96,7 +98,7 @@ struct MockProcessor;
 
 #[async_trait]
 impl Processor for MockProcessor {
-    async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, _agent: &Agent, response: Value) -> Result<Value, InvokerError> {
         // Navigate OpenAI-style response: choices[0].message
         let message = &response["choices"][0]["message"];
 
@@ -143,7 +145,7 @@ fn register_mocks(key: &str, responses: Vec<Value>) {
 // Helper — build a Prompty agent from a vector's input section
 // ---------------------------------------------------------------------------
 
-fn build_agent(vector: &Value, provider_key: &str) -> Prompty {
+fn build_agent(vector: &Value, provider_key: &str) -> Agent {
     let tools = vector["input"]["tools"].clone();
     let data = json!({
         "name": format!("agent_test_{}", vector["name"].as_str().unwrap_or("unknown")),
@@ -159,7 +161,7 @@ fn build_agent(vector: &Value, provider_key: &str) -> Prompty {
             "parser": { "kind": "prompty" }
         }
     });
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
 // ---------------------------------------------------------------------------
@@ -870,7 +872,7 @@ async fn test_bindings_injected() {
         "get_weather".to_string(),
         ToolHandler::Sync(Box::new(move |args: Value| {
             *captured_args_for_tool.lock().unwrap() = Some(args);
-            Ok("22Â°C sunny".to_string())
+            Ok("22°C sunny".to_string())
         })),
     );
     let opts = TurnOptions {

@@ -31,7 +31,11 @@ opentelemetry_sdk = { version = "0.29", optional = true }
 opentelemetry-stdout = { version = "0.29", features = ["trace"], optional = true }
 
 [features]
-default = []
+default = ["serde"]
+# Enables the Typra-generated native serde implementations (opt-in native
+# serialization in @typra/emitter >= 0.6). Prompty's runtime relies on these,
+# so it is enabled by default.
+serde = []
 otel = ["opentelemetry", "opentelemetry_sdk", "opentelemetry-stdout"]
 
 [dev-dependencies]

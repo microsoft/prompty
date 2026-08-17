@@ -24,8 +24,8 @@ public class TurnRunnerTests
                 new FunctionHostToolExecutor(new Dictionary<string, HostToolHandler>()),
                 request => Task.FromResult(new TurnModelResponse
                 {
-                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs["name"]}" },
-                    CheckpointState = new Dictionary<string, object> { ["stable"] = true }
+                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs!["name"]}" },
+                    CheckpointState = new Dictionary<string, object?> { ["stable"] = true }
                 }),
                 FixedClock(),
                 FixedIds());
@@ -34,7 +34,7 @@ public class TurnRunnerTests
             {
                 SessionId = "session-1",
                 TurnId = "turn-1",
-                Inputs = new Dictionary<string, object> { ["name"] = "Ada" },
+                Inputs = new Dictionary<string, object?> { ["name"] = "Ada" },
                 Options = new TurnOptions { MaxIterations = 3 }
             });
 
@@ -49,7 +49,7 @@ public class TurnRunnerTests
                 sink.SessionEvents.Select(sessionEvent => sessionEvent.Type).ToArray());
             var checkpoint = await checkpointStore.LoadAsync("session-1", "turn-1-checkpoint-0");
             Assert.NotNull(checkpoint);
-            Assert.True((bool)checkpoint.State!["stable"]);
+            Assert.True((bool)checkpoint.State!["stable"]!);
             Assert.Equal(
                 ["session", "turn", "turn", "turn", "session", "turn", "session", "summary"],
                 JournalKinds(journalPath));
@@ -89,7 +89,7 @@ public class TurnRunnerTests
                                     RequestId = "exec-1",
                                     ToolCallId = "call-1",
                                     ToolName = "add",
-                                    Arguments = new Dictionary<string, object> { ["a"] = 2, ["b"] = 3 }
+                                    Arguments = new Dictionary<string, object?> { ["a"] = 2, ["b"] = 3 }
                                 }
                             ]
                         });
@@ -97,7 +97,7 @@ public class TurnRunnerTests
 
                     return Task.FromResult(new TurnModelResponse
                     {
-                        Output = new Dictionary<string, object?> { ["toolResult"] = request.ToolResults[0].Result }
+                        Output = new Dictionary<string, object?> { ["toolResult"] = request.ToolResults![0].Result }
                     });
                 },
                 FixedClock(),
@@ -106,7 +106,7 @@ public class TurnRunnerTests
             var result = await runner.RunAsync(new RunTurnRequest { SessionId = "session-1", TurnId = "turn-1" });
 
             Assert.Equal(5, Assert.IsType<Dictionary<string, object?>>(result.Output)["toolResult"]);
-            Assert.True(result.ToolResults[0].Success);
+            Assert.True(result.ToolResults![0].Success);
             Assert.Equal(
                 [
                     TurnEventType.TurnStart,
@@ -158,7 +158,7 @@ public class TurnRunnerTests
 
                     return Task.FromResult(new TurnModelResponse
                     {
-                        Output = new Dictionary<string, object?> { ["denied"] = request.ToolResults[0].ErrorKind }
+                        Output = new Dictionary<string, object?> { ["denied"] = request.ToolResults![0].ErrorKind }
                     });
                 },
                 FixedClock(),
@@ -200,7 +200,7 @@ public class TurnRunnerTests
                         });
                     }
 
-                    return Task.FromResult(new TurnModelResponse { Output = request.ToolResults[0].Save() });
+                    return Task.FromResult(new TurnModelResponse { Output = request.ToolResults![0].Save() });
                 },
                 FixedClock(),
                 FixedIds());
@@ -277,7 +277,7 @@ public class TurnRunnerTests
                 {
                     SessionId = vectors.SessionId,
                     TurnId = vectors.TurnId,
-                    Inputs = scenario.Inputs ?? new Dictionary<string, object>(),
+                    Inputs = scenario.Inputs ?? new Dictionary<string, object?>(),
                     Options = new TurnOptions { MaxIterations = scenario.MaxIterations }
                 });
 
@@ -314,8 +314,8 @@ public class TurnRunnerTests
             {
                 return Task.FromResult(new TurnModelResponse
                 {
-                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs["name"]}" },
-                    CheckpointState = new Dictionary<string, object> { ["stable"] = true }
+                    Output = new Dictionary<string, object> { ["text"] = $"hello {request.Inputs!["name"]}" },
+                    CheckpointState = new Dictionary<string, object?> { ["stable"] = true }
                 });
             }
 
@@ -330,7 +330,7 @@ public class TurnRunnerTests
                             RequestId = "exec-1",
                             ToolCallId = "call-1",
                             ToolName = name == "tool_failure" ? "fail" : "add",
-                            Arguments = new Dictionary<string, object> { ["a"] = 2, ["b"] = 3 }
+                            Arguments = new Dictionary<string, object?> { ["a"] = 2, ["b"] = 3 }
                         }
                     ]
                 });
@@ -340,8 +340,8 @@ public class TurnRunnerTests
             {
                 Output = new Dictionary<string, object?>
                 {
-                    ["toolResult"] = request.ToolResults[0].Result,
-                    ["errorKind"] = request.ToolResults[0].ErrorKind
+                    ["toolResult"] = request.ToolResults![0].Result,
+                    ["errorKind"] = request.ToolResults![0].ErrorKind
                 }
             });
         };
@@ -413,38 +413,45 @@ public class TurnRunnerTests
     {
         public static ReplayVectors Load()
         {
-            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "spec", "vectors", "harness", "replay_vectors.json"));
+            // Replay scenarios are emitted under the `replay` operation; each vector's
+            // `input` carries the journal-level clock/sessionId/turnId plus per-scenario
+            // inputs, so the file-level fields are hoisted from the first scenario.
+            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "..", "schema", "tsp-output", ".typra-generated", "vectors.json"));
             var document = JsonDocument.Parse(File.ReadAllText(path));
-            var root = document.RootElement;
-            Assert.Equal(1, root.GetProperty("version").GetInt32());
+            var items = document.RootElement.GetProperty("vectors").EnumerateArray()
+                .Where(e => e.GetProperty("operation").GetString() == "replay")
+                .Select(e => e.GetProperty("vector"))
+                .ToList();
+            var firstInput = items[0].GetProperty("input");
             return new ReplayVectors(
-                root.GetProperty("version").GetInt32(),
-                root.GetProperty("clock").GetString()!,
-                root.GetProperty("sessionId").GetString()!,
-                root.GetProperty("turnId").GetString()!,
-                root.GetProperty("scenarios").EnumerateArray().Select(ReplayScenario.Load).ToList());
+                1,
+                firstInput.GetProperty("clock").GetString()!,
+                firstInput.GetProperty("sessionId").GetString()!,
+                firstInput.GetProperty("turnId").GetString()!,
+                items.Select(ReplayScenario.Load).ToList());
         }
     }
 
     private sealed record ReplayScenario(
         string Name,
-        Dictionary<string, object>? Inputs,
+        Dictionary<string, object?>? Inputs,
         int? MaxIterations,
         string[] Expected)
     {
-        public static ReplayScenario Load(JsonElement element)
+        public static ReplayScenario Load(JsonElement vector)
         {
+            var input = vector.GetProperty("input");
             return new ReplayScenario(
-                element.GetProperty("name").GetString()!,
-                element.TryGetProperty("inputs", out var inputs) ? ToDictionary(inputs) : null,
-                element.TryGetProperty("maxIterations", out var maxIterations) ? maxIterations.GetInt32() : null,
-                element.GetProperty("expected").EnumerateArray().Select(item => item.GetString()!).ToArray());
+                vector.GetProperty("name").GetString()!,
+                input.TryGetProperty("inputs", out var inputs) ? ToDictionary(inputs) : null,
+                input.TryGetProperty("maxIterations", out var maxIterations) ? maxIterations.GetInt32() : null,
+                vector.GetProperty("expected").EnumerateArray().Select(item => item.GetString()!).ToArray());
         }
     }
 
-    private static Dictionary<string, object> ToDictionary(JsonElement element)
+    private static Dictionary<string, object?> ToDictionary(JsonElement element)
     {
-        return element.EnumerateObject().ToDictionary(property => property.Name, property => ToObject(property.Value)!);
+        return element.EnumerateObject().ToDictionary(property => property.Name, property => ToObject(property.Value));
     }
 
     private static object? ToObject(JsonElement element)

@@ -9,7 +9,8 @@ options:
     file-type: yaml
   "@typra/emitter":
     emitter-output-dir: "{cwd}/tsp-output"
-    root-object: "Prompty.Prompty"
+    root-object: "Prompty.Agent"
+    root-namespace: "Prompty"
     emit-targets:
       - type: TypeScript
         output-dir: "../runtime/typescript/packages/core/src/model"

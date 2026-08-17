@@ -6,6 +6,7 @@ package prompty
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gopkg.in/yaml.v3"
 )
@@ -24,10 +25,16 @@ type AnthropicMessagesResponse struct {
 
 // LoadAnthropicMessagesResponse creates a AnthropicMessagesResponse from a map[string]interface{}
 func LoadAnthropicMessagesResponse(data interface{}, ctx *LoadContext) (AnthropicMessagesResponse, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AnthropicMessagesResponse{}
 
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["usage"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("usage").Path)
+		}
 		if val, ok := m["id"]; ok && val != nil {
 			result.Id = string(val.(string))
 		}
@@ -51,7 +58,7 @@ func LoadAnthropicMessagesResponse(data interface{}, ctx *LoadContext) (Anthropi
 		}
 		if val, ok := m["usage"]; ok && val != nil {
 			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadAnthropicUsage(m, ctx)
+				loaded, err := LoadAnthropicUsage(m, ctx.At("usage"))
 				if err != nil {
 					return result, err
 				}

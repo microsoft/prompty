@@ -9,7 +9,7 @@
  */
 
 import nunjucks from "nunjucks";
-import type { Prompty } from "../model/agent/prompty.js";
+import type { Agent } from "../model/agent.js";
 import type { Renderer } from "../core/interfaces.js";
 import { prepareRenderInputs } from "./common.js";
 
@@ -100,7 +100,7 @@ function renderSafely(template: string, inputs: Record<string, unknown>): string
 
 export class NunjucksRenderer implements Renderer {
   async render(
-    agent: Prompty,
+    agent: Agent,
     template: string,
     inputs: Record<string, unknown>,
   ): Promise<string> {

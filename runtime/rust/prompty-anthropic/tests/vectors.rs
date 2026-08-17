@@ -1,9 +1,9 @@
 //! Wire format vector tests — validate against shared spec vectors.
 //!
-//! Reads `spec/vectors/wire/wire_vectors.json` and tests that our wire format
+//! Reads the generated `vectors.json` (toRequest operation) and tests that our wire format
 //! conversion matches the expected output for all Anthropic-provider vectors.
 
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use prompty::types::{ContentPart, Message, Role};
 use prompty_anthropic::wire;
@@ -19,22 +19,42 @@ fn spec_root() -> std::path::PathBuf {
 
 fn load_wire_vectors() -> Vec<Value> {
     let path = spec_root()
-        .join("vectors")
-        .join("wire")
-        .join("wire_vectors.json");
+        .parent()
+        .unwrap()
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json");
     let content = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("Failed to read wire vectors at {}: {e}", path.display()));
-    serde_json::from_str(&content).expect("Invalid JSON in wire_vectors.json")
+        .unwrap_or_else(|e| panic!("Failed to read vectors at {}: {e}", path.display()));
+    let doc: Value = serde_json::from_str(&content).expect("Invalid JSON in vectors.json");
+    doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("toRequest"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
 fn load_process_vectors() -> Vec<Value> {
     let path = spec_root()
-        .join("vectors")
-        .join("process")
-        .join("process_vectors.json");
+        .parent()
+        .unwrap()
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json");
     let content = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("Failed to read process vectors at {}: {e}", path.display()));
-    serde_json::from_str(&content).expect("Invalid JSON in process_vectors.json")
+        .unwrap_or_else(|e| panic!("Failed to read vectors at {}: {e}", path.display()));
+    let doc: Value = serde_json::from_str(&content).expect("Invalid JSON in vectors.json");
+    doc["vectors"]
+        .as_array()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("process"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
 /// Build messages from vector input content/messages format.
@@ -79,7 +99,7 @@ fn build_messages(input: &Value) -> Vec<Message> {
 }
 
 /// Build a Prompty agent from vector input fields.
-fn build_agent(input: &Value) -> Prompty {
+fn build_agent(input: &Value) -> Agent {
     let model_id = input["model_id"].as_str().unwrap_or("claude-3");
     let api_type = input
         .get("apiType")
@@ -119,10 +139,10 @@ fn build_agent(input: &Value) -> Prompty {
         }
     }
 
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
-fn build_agent_for_process(input: &Value) -> Prompty {
+fn build_agent_for_process(input: &Value) -> Agent {
     let has_outputs = input
         .get("has_outputs")
         .and_then(|v| v.as_bool())
@@ -145,7 +165,7 @@ fn build_agent_for_process(input: &Value) -> Prompty {
         ]);
     }
 
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
 /// Compare two JSON values, ignoring key order in objects.

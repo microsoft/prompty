@@ -18,7 +18,7 @@ public class MustacheRenderer : IRenderer
     /// </summary>
     public Dictionary<string, string> LastNonces { get; private set; } = [];
 
-    public async Task<string> RenderAsync(Prompty agent, string template, Dictionary<string, object?> inputs)
+    public async Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
     {
         var (renderInputs, nonces) = RenderHelpers.PrepareRenderInputs(agent, inputs);
         LastNonces = nonces;

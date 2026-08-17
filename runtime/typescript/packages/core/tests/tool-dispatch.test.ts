@@ -10,7 +10,7 @@ import {
   clearToolHandlers,
   dispatchTool,
 } from "../src/core/tool-dispatch.js";
-import { Prompty } from "../src/model/index.js";
+import { Agent } from "../src/model/index.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -20,11 +20,11 @@ import { Prompty } from "../src/model/index.js";
 function makeAgent(opts?: {
   tools?: Array<{ name: string; kind: string; [k: string]: unknown }>;
   metadata?: Record<string, unknown>;
-}): Prompty {
-  const agent = new Prompty();
+}): Agent {
+  const agent = new Agent();
   if (opts?.tools) {
     // Tools need a `name` and `kind` property — plain objects suffice for dispatch lookup
-    agent.tools = opts.tools as unknown as Prompty["tools"];
+    agent.tools = opts.tools as unknown as Agent["tools"];
   }
   agent.metadata = opts?.metadata ?? {};
   return agent;

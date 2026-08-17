@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from prompty.model import Prompty
+from prompty.model import Agent
 from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.providers.openai.processor import (
     OpenAIProcessor,
@@ -18,8 +18,8 @@ from prompty.providers.openai.processor import (
 # ---------------------------------------------------------------------------
 
 
-def _make_agent() -> Prompty:
-    return Prompty.load({"name": "test", "model": "gpt-4"})
+def _make_agent() -> Agent:
+    return Agent.load({"name": "test", "model": "gpt-4"})
 
 
 def _mock_chat_completion(content: str | None = "Hello!", tool_calls=None, refusal=None):  # type: ignore[assignment]
@@ -202,10 +202,10 @@ class TestAsync:
 # ---------------------------------------------------------------------------
 
 
-def _make_agent_with_schema(**schema_properties) -> Prompty:
+def _make_agent_with_schema(**schema_properties) -> Agent:
     """Create an agent with outputs."""
     props = schema_properties.get("properties", [])
-    return Prompty.load(
+    return Agent.load(
         {
             "name": "test",
             "model": "gpt-4",

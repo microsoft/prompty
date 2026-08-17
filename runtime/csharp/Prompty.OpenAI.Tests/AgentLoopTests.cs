@@ -230,11 +230,11 @@ public class AgentLoopTests : IDisposable
     // Helpers
     // -----------------------------------------------------------------------
 
-    private static Core.Prompty CreateTestAgent(
+    private static Core.Agent CreateTestAgent(
         IList<Tool>? tools = null,
         string provider = "openai")
     {
-        return new Core.Prompty
+        return new Core.Agent
         {
             Name = "test-agent",
             Instructions = "You are a test assistant.",
@@ -255,21 +255,21 @@ public class AgentLoopTests : IDisposable
     /// <summary>Renderer that returns instructions as-is.</summary>
     private class PassthroughRenderer : IRenderer
     {
-        public Task<string> RenderAsync(Core.Prompty agent, string template, Dictionary<string, object?> inputs)
+        public Task<string> RenderAsync(Core.Agent agent, string template, Dictionary<string, object?> inputs)
             => Task.FromResult(template);
     }
 
     /// <summary>Parser that returns a single user message.</summary>
     private class PassthroughParser : IParser
     {
-        public Task<List<Message>> ParseAsync(Core.Prompty agent, string rendered, Dictionary<string, object?>? context)
+        public Task<List<Message>> ParseAsync(Core.Agent agent, string rendered, Dictionary<string, object?>? context)
             => Task.FromResult<List<Message>>([new() { Role = Role.User, Parts = [new TextPart { Value = rendered }] }]);
     }
 
     /// <summary>Executor that returns a fixed response.</summary>
     private class MockExecutor(object response) : IExecutor
     {
-        public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(Core.Agent agent, List<Message> messages)
             => Task.FromResult(response);
 
         public List<Message> FormatToolMessages(object rawResponse, List<ToolCall> toolCalls, List<string> toolResults, string? textContent = null)
@@ -279,14 +279,14 @@ public class AgentLoopTests : IDisposable
     /// <summary>Processor that returns the value as-is (identity).</summary>
     private class PassthroughProcessor : IProcessor
     {
-        public Task<object> ProcessAsync(Core.Prompty agent, object response)
+        public Task<object> ProcessAsync(Core.Agent agent, object response)
             => Task.FromResult(response);
     }
 
     /// <summary>Simple processor that just returns text responses as strings.</summary>
     private class MockProcessor : IProcessor
     {
-        public Task<object> ProcessAsync(Core.Prompty agent, object response)
+        public Task<object> ProcessAsync(Core.Agent agent, object response)
             => Task.FromResult(response);
     }
 
@@ -296,7 +296,7 @@ public class AgentLoopTests : IDisposable
         private int _index;
         public int CallCount => _index;
 
-        public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(Core.Agent agent, List<Message> messages)
         {
             if (_index >= responses.Count)
                 throw new InvalidOperationException("SequenceExecutor ran out of responses.");
@@ -310,7 +310,7 @@ public class AgentLoopTests : IDisposable
     /// <summary>Executor that always returns a tool call — for testing max iterations.</summary>
     private class InfiniteToolCallExecutor : IExecutor
     {
-        public Task<object> ExecuteAsync(Core.Prompty agent, List<Message> messages)
+        public Task<object> ExecuteAsync(Core.Agent agent, List<Message> messages)
         {
             return Task.FromResult<object>(new ToolCallResult
             {
@@ -327,10 +327,10 @@ public class AgentLoopTests : IDisposable
     {
         var messages = new List<Message>
         {
-            new() { Role = Role.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new Dictionary<string, object> { ["tool_calls"] = toolCalls } },
+            new() { Role = Role.Assistant, Parts = string.IsNullOrEmpty(textContent) ? [] : [new TextPart { Value = textContent }], Metadata = new Dictionary<string, object?> { ["tool_calls"] = toolCalls } },
         };
         for (var i = 0; i < toolCalls.Count; i++)
-            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
+            messages.Add(new() { Role = Role.Tool, Parts = [new TextPart { Value = toolResults[i] }], Metadata = new Dictionary<string, object?> { ["tool_call_id"] = toolCalls[i].Id, ["name"] = toolCalls[i].Name } });
         return messages;
     }
 }

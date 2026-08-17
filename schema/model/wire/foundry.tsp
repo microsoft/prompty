@@ -1,9 +1,11 @@
 import "@typra/emitter";
-import "../connection/oauth-flow.tsp";
-import "../model/discovery.tsp";
-import "../model/resource-discovery.tsp";
+import "../contracts/connectivity/oauth-flow.tsp";
+import "../contracts/models/discovery.tsp";
+import "../contracts/models/resource-discovery.tsp";
 
 using Prompty;
+using Prompty.Contracts.Connectivity;
+using Prompty.Contracts.Models;
 
 // OAuth contracts → Microsoft Entra OAuth response field names.
 @@knownAs(OAuthToken.accessToken, "foundry", "access_token");

@@ -102,13 +102,13 @@ def make_openai_agent(
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a Prompty for direct OpenAI.
+    """Build a Agent for direct OpenAI.
 
     When ``OPENAI_BASE_URL`` is set, the OpenAI client is pointed at that
     endpoint (e.g. Azure's ``/openai/v1/`` compat path), allowing Azure
     credentials to drive the OpenAI code path.
     """
-    from prompty.model import Prompty
+    from prompty.model import Agent
 
     if model is None:
         model = _OPENAI_MODEL
@@ -139,7 +139,7 @@ def make_openai_agent(
         )
     if metadata is not None:
         data["metadata"] = metadata
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def make_direct_openai_agent(
@@ -151,11 +151,11 @@ def make_direct_openai_agent(
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a Prompty for direct OpenAI (api.openai.com, no proxy).
+    """Build a Agent for direct OpenAI (api.openai.com, no proxy).
 
     Uses ``DIRECT_OPENAI_API_KEY`` — no base URL override.
     """
-    from prompty.model import Prompty
+    from prompty.model import Agent
 
     if model is None:
         model = _DIRECT_OPENAI_MODEL
@@ -184,7 +184,7 @@ def make_direct_openai_agent(
         )
     if metadata is not None:
         data["metadata"] = metadata
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def make_foundry_agent(
@@ -196,8 +196,8 @@ def make_foundry_agent(
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a Prompty for Azure OpenAI via the Foundry provider."""
-    from prompty.model import Prompty
+    """Build a Agent for Azure OpenAI via the Foundry provider."""
+    from prompty.model import Agent
 
     if deployment is None:
         deployment = _AZURE_CHAT_DEPLOYMENT
@@ -225,7 +225,7 @@ def make_foundry_agent(
         )
     if metadata is not None:
         data["metadata"] = metadata
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 # Backward-compat alias
@@ -241,8 +241,8 @@ def make_anthropic_agent(
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a Prompty for Anthropic Messages API."""
-    from prompty.model import Prompty
+    """Build a Agent for Anthropic Messages API."""
+    from prompty.model import Agent
 
     data: dict[str, Any] = {
         "name": "integration-test-anthropic",
@@ -266,7 +266,7 @@ def make_anthropic_agent(
         )
     if metadata is not None:
         data["metadata"] = metadata
-    return Prompty.load(data)
+    return Agent.load(data)
 
 
 def make_entra_agent(
@@ -278,12 +278,12 @@ def make_entra_agent(
     output_schema: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> Any:
-    """Build a Prompty for Azure OpenAI via Entra ID (DefaultAzureCredential).
+    """Build a Agent for Azure OpenAI via Entra ID (DefaultAzureCredential).
 
     Uses ``FoundryConnection`` (``kind: foundry``) with no API key — authenticates
     via ``DefaultAzureCredential`` from ``azure-identity``.
     """
-    from prompty.model import Prompty
+    from prompty.model import Agent
 
     if deployment is None:
         deployment = _AZURE_CHAT_DEPLOYMENT
@@ -310,4 +310,4 @@ def make_entra_agent(
         )
     if metadata is not None:
         data["metadata"] = metadata
-    return Prompty.load(data)
+    return Agent.load(data)

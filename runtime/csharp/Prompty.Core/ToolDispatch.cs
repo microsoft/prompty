@@ -10,7 +10,7 @@ namespace Prompty.Core;
 /// Receives the agent, tool definition, and parsed arguments.
 /// Returns the tool result as a string.
 /// </summary>
-public delegate Task<string> ToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments);
+public delegate Task<string> ToolHandler(Agent agent, Tool tool, Dictionary<string, object?> arguments);
 
 /// <summary>
 /// Exception thrown when no handler is registered for a tool kind.
@@ -107,7 +107,7 @@ public static class ToolDispatch
     /// Built-in handler for kind="function".
     /// Function tools require a callable registered in the name registry.
     /// </summary>
-    private static Task<string> FunctionToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    private static Task<string> FunctionToolHandler(Agent agent, Tool tool, Dictionary<string, object?> arguments)
     {
         // Function tools are dispatched via name registry — if we reach the kind handler,
         // it means no callable was registered for this function name.
@@ -120,7 +120,7 @@ public static class ToolDispatch
     /// Built-in handler for kind="prompty".
     /// Loads and executes a child .prompty file as a tool.
     /// </summary>
-    private static async Task<string> PromptyToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    private static async Task<string> PromptyToolHandler(Agent agent, Tool tool, Dictionary<string, object?> arguments)
     {
         if (tool is not PromptyTool promptyTool || string.IsNullOrEmpty(promptyTool.Path))
             throw new ToolHandlerError($"Prompty tool '{tool.Name}' has no path.");
@@ -141,7 +141,7 @@ public static class ToolDispatch
     /// Built-in handler for kind="mcp".
     /// MCP tool execution requires an external MCP server connection, which is not yet implemented.
     /// </summary>
-    private static Task<string> McpToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    private static Task<string> McpToolHandler(Agent agent, Tool tool, Dictionary<string, object?> arguments)
     {
         throw new ToolHandlerError(
             $"MCP tool '{tool.Name}' cannot be executed in-process. " +
@@ -152,7 +152,7 @@ public static class ToolDispatch
     /// Built-in handler for kind="openapi".
     /// OpenAPI tool execution requires parsing an OpenAPI specification and making HTTP calls, which is not yet implemented.
     /// </summary>
-    private static Task<string> OpenApiToolHandler(Prompty agent, Tool tool, Dictionary<string, object?> arguments)
+    private static Task<string> OpenApiToolHandler(Agent agent, Tool tool, Dictionary<string, object?> arguments)
     {
         throw new ToolHandlerError(
             $"OpenAPI tool '{tool.Name}' cannot be executed in-process. " +
@@ -172,7 +172,7 @@ public static class ToolDispatch
     /// <param name="userTools">Per-call tool overrides (highest priority).</param>
     /// <param name="parentInputs">Original turn inputs used to resolve tool bindings.</param>
     public static async Task<string> DispatchAsync(
-        Prompty agent,
+        Agent agent,
         ToolCall call,
         Dictionary<string, Func<string, Task<string>>>? userTools = null,
         Dictionary<string, object?>? parentInputs = null)
@@ -236,7 +236,7 @@ public static class ToolDispatch
     /// <summary>
     /// Find the tool definition in the agent's tools list by name.
     /// </summary>
-    private static Tool? FindToolDefinition(Prompty agent, string toolName)
+    private static Tool? FindToolDefinition(Agent agent, string toolName)
     {
         if (agent.Tools is null) return null;
         return agent.Tools.FirstOrDefault(t =>

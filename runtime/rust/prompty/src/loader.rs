@@ -6,7 +6,7 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::model::Prompty;
+use crate::model::Agent;
 use crate::model::context::LoadContext;
 
 mod error;
@@ -32,7 +32,7 @@ pub struct LoadOptions {
 ///
 /// Returns `LoadError` if the file cannot be read, the frontmatter is
 /// malformed, or `${env:VAR}` / `${file:path}` references cannot be resolved.
-pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
+pub fn load(path: impl AsRef<Path>) -> Result<Agent, LoadError> {
     load_with_options(path, LoadOptions::default())
 }
 
@@ -41,10 +41,7 @@ pub fn load(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
 /// By default, `${file:...}` references are limited to the prompt file's
 /// directory tree. Use `LoadOptions::allowed_file_roots` to opt into
 /// additional directories.
-pub fn load_with_options(
-    path: impl AsRef<Path>,
-    options: LoadOptions,
-) -> Result<Prompty, LoadError> {
+pub fn load_with_options(path: impl AsRef<Path>, options: LoadOptions) -> Result<Agent, LoadError> {
     let resolved = path
         .as_ref()
         .canonicalize()
@@ -86,7 +83,7 @@ pub fn load_with_options(
 ///
 /// Returns `LoadError` if the file cannot be read, the frontmatter is
 /// malformed, or `${env:VAR}` / `${file:path}` references cannot be resolved.
-pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
+pub async fn load_async(path: impl AsRef<Path>) -> Result<Agent, LoadError> {
     load_async_with_options(path, LoadOptions::default()).await
 }
 
@@ -94,7 +91,7 @@ pub async fn load_async(path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
 pub async fn load_async_with_options(
     path: impl AsRef<Path>,
     options: LoadOptions,
-) -> Result<Prompty, LoadError> {
+) -> Result<Agent, LoadError> {
     let path_buf = path.as_ref().to_path_buf();
     let resolved = tokio::fs::canonicalize(&path_buf)
         .await
@@ -138,7 +135,7 @@ pub async fn load_async_with_options(
 /// `${file:...}` resolution.
 ///
 /// Useful when the `.prompty` content comes from a string rather than a file.
-pub fn load_from_string(raw: &str, base_path: impl AsRef<Path>) -> Result<Prompty, LoadError> {
+pub fn load_from_string(raw: &str, base_path: impl AsRef<Path>) -> Result<Agent, LoadError> {
     load_from_string_with_options(raw, base_path, LoadOptions::default())
 }
 
@@ -147,7 +144,7 @@ pub fn load_from_string_with_options(
     raw: &str,
     base_path: impl AsRef<Path>,
     options: LoadOptions,
-) -> Result<Prompty, LoadError> {
+) -> Result<Agent, LoadError> {
     build_agent(raw, base_path.as_ref(), &options)
 }
 
@@ -155,7 +152,7 @@ pub fn load_from_string_with_options(
 // Internal pipeline
 // ---------------------------------------------------------------------------
 
-fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Prompty, LoadError> {
+fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Agent, LoadError> {
     // 1. Split frontmatter + body
     let (mut data, body) = frontmatter::split(raw)?;
 
@@ -184,8 +181,18 @@ fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Pro
     let mut value = serde_json::Value::Object(data);
     resolve::resolve_references(&mut value, &agent_dir, &options.allowed_file_roots)?;
 
-    // 6. Load via emitter-generated typed constructor with context
-    let agent = Prompty::load_from_value(&value, &ctx);
+    // 6. Validate before loading. In Typra 0.6.2 the generated
+    //    `load_from_value` panics on validation failure (missing required
+    //    fields, malformed collections). Surface those as a recoverable
+    //    `LoadError` by validating first — this keeps negative-path callers
+    //    (e.g. a bare-string `template`) on the `Result` seam instead of
+    //    unwinding.
+    if let Err(message) = Agent::validate_input_at(&value, "") {
+        return Err(LoadError::InvalidFrontmatter(message));
+    }
+
+    // 7. Load via emitter-generated typed constructor with context
+    let agent = Agent::load_from_value(&value, &ctx);
 
     // 7. Store source path in metadata for PromptyTool resolution
     let mut result = agent;
@@ -221,7 +228,7 @@ fn make_load_context(agent_dir: PathBuf, allowed_file_roots: Vec<PathBuf>) -> Lo
 }
 
 /// Ensure `metadata` is an object; create one if it's null or not already an object.
-fn ensure_metadata_object(agent: &mut Prompty) -> &mut serde_json::Map<String, serde_json::Value> {
+fn ensure_metadata_object(agent: &mut Agent) -> &mut serde_json::Map<String, serde_json::Value> {
     if !agent.metadata.is_object() {
         agent.metadata = serde_json::Value::Object(serde_json::Map::new());
     }

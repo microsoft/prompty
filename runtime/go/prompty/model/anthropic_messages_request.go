@@ -26,6 +26,9 @@ type AnthropicMessagesRequest struct {
 
 // LoadAnthropicMessagesRequest creates a AnthropicMessagesRequest from a map[string]interface{}
 func LoadAnthropicMessagesRequest(data interface{}, ctx *LoadContext) (AnthropicMessagesRequest, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
 	result := AnthropicMessagesRequest{}
 
 	// Load from map
@@ -38,7 +41,7 @@ func LoadAnthropicMessagesRequest(data interface{}, ctx *LoadContext) (Anthropic
 				result.Messages = make([]AnthropicWireMessage, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadAnthropicWireMessage(item, ctx)
+						loaded, err := LoadAnthropicWireMessage(item, ctx.At("messages").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -127,7 +130,7 @@ func LoadAnthropicMessagesRequest(data interface{}, ctx *LoadContext) (Anthropic
 				result.Tools = make([]AnthropicToolDefinition, len(arr))
 				for i, v := range arr {
 					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadAnthropicToolDefinition(item, ctx)
+						loaded, err := LoadAnthropicToolDefinition(item, ctx.At("tools").AtIndex(i))
 						if err != nil {
 							return result, err
 						}
@@ -165,7 +168,9 @@ func (obj AnthropicMessagesRequest) Save(ctx *SaveContext) map[string]interface{
 	if obj.TopK != nil {
 		result["top_k"] = *obj.TopK
 	}
-	result["stop_sequences"] = obj.StopSequences
+	if obj.StopSequences != nil {
+		result["stop_sequences"] = obj.StopSequences
+	}
 	if obj.Tools != nil {
 		arr := make([]interface{}, len(obj.Tools))
 		for i, item := range obj.Tools {

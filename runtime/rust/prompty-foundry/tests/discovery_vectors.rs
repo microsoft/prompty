@@ -1,5 +1,5 @@
 //! Model-discovery vector tests — validate the Foundry wire → `ModelInfo`
-//! mapping against the shared spec vectors in `spec/vectors/discovery/`.
+//! mapping against the generated `vectors.json` (mapModel operation).
 //!
 //! Foundry exposes two response shapes: project `deployment` objects (flat v1
 //! data-plane or nested ARM) and Azure OpenAI `catalog` model objects. The
@@ -22,21 +22,22 @@ fn spec_root() -> std::path::PathBuf {
 
 fn load_vectors() -> Vec<Value> {
     let path = spec_root()
-        .join("vectors")
-        .join("discovery")
-        .join("discovery_vectors.json");
-    let content = std::fs::read_to_string(&path).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read discovery vectors at {}: {e}",
-            path.display()
-        )
-    });
-    let doc: Value =
-        serde_json::from_str(&content).expect("Invalid JSON in discovery_vectors.json");
+        .parent()
+        .unwrap()
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json");
+    let content = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("Failed to read vectors at {}: {e}", path.display()));
+    let doc: Value = serde_json::from_str(&content).expect("Invalid JSON in vectors.json");
     doc["vectors"]
         .as_array()
-        .expect("discovery_vectors.json must have a 'vectors' array")
-        .clone()
+        .expect("vectors.json must have a 'vectors' array")
+        .iter()
+        .filter(|e| e.get("operation").and_then(Value::as_str) == Some("mapModel"))
+        .map(|e| e["vector"].clone())
+        .collect()
 }
 
 /// Compare two JSON values, ignoring key order in objects.

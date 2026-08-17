@@ -7,7 +7,7 @@
 pub use crate::connections::{register_connection, with_connection};
 pub use crate::interfaces::{ExecuteError, Executor, Processor};
 pub use crate::loader::load;
-pub use crate::model::Prompty;
+pub use crate::model::Agent;
 pub use crate::pipeline::{
     AgentEvent, Compaction, EventCallback, ToolHandler, TurnOptions, TurnOptionsBuilder,
     invoke as invoke_agent, prepare, run, turn,

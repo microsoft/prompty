@@ -13,7 +13,7 @@ public class FoundryExecutorTests
     public async Task ExecuteAsync_MissingEndpoint_ThrowsInvalidOperationException()
     {
         var executor = new Foundry.FoundryExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -30,7 +30,7 @@ public class FoundryExecutorTests
     public async Task ExecuteAsync_EmptyEndpoint_ThrowsInvalidOperationException()
     {
         var executor = new Foundry.FoundryExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -50,7 +50,7 @@ public class FoundryExecutorTests
         // We can't test the actual credential here, but we can verify it doesn't throw
         // on connection setup (it will fail later when trying to actually call the API)
         var executor = new Foundry.FoundryExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {
@@ -69,7 +69,7 @@ public class FoundryExecutorTests
     public async Task ExecuteAsync_ApiKeyConnection_WithEndpointAndKey_Creates()
     {
         var executor = new Foundry.FoundryExecutor();
-        var agent = new Core.Prompty
+        var agent = new Core.Agent
         {
             Model = new Model
             {

@@ -228,7 +228,7 @@ public class ToolAttributeTests : IDisposable
     [Fact]
     public void BindTools_MatchingDeclarations_ReturnsDictionary()
     {
-        var agent = new Prompty
+        var agent = new Agent
         {
             Name = "test",
             Model = new Model { Id = "gpt-4" },
@@ -252,7 +252,7 @@ public class ToolAttributeTests : IDisposable
     [Fact]
     public void BindTools_HandlerNotDeclared_Throws()
     {
-        var agent = new Prompty
+        var agent = new Agent
         {
             Name = "test",
             Model = new Model { Id = "gpt-4" },
@@ -269,7 +269,7 @@ public class ToolAttributeTests : IDisposable
     [Fact]
     public void BindTools_IgnoresNonFunctionTools()
     {
-        var agent = new Prompty
+        var agent = new Agent
         {
             Name = "test",
             Model = new Model { Id = "gpt-4" },
@@ -294,7 +294,7 @@ public class ToolAttributeTests : IDisposable
     {
         ToolDispatch.ClearTools();
 
-        var agent = new Prompty
+        var agent = new Agent
         {
             Name = "test",
             Model = new Model { Id = "gpt-4" },
@@ -317,7 +317,7 @@ public class ToolAttributeTests : IDisposable
     [Fact]
     public void BindTools_EmptyTools_ReturnsEmpty()
     {
-        var agent = new Prompty
+        var agent = new Agent
         {
             Name = "test",
             Model = new Model { Id = "gpt-4" }
@@ -331,7 +331,7 @@ public class ToolAttributeTests : IDisposable
     [Fact]
     public async Task BindTools_HandlersAreCallable()
     {
-        var agent = new Prompty
+        var agent = new Agent
         {
             Name = "test",
             Model = new Model { Id = "gpt-4" },

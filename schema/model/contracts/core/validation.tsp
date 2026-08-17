@@ -1,0 +1,20 @@
+import "@typra/emitter";
+import "./errors.tsp";
+
+using Prompty.Conformance.Samples;
+namespace Prompty.Contracts.Core;
+
+/**
+ * The result of validating inputs against a Prompty's inputs.
+ * Returned by `validate_inputs` (§12.2) to indicate whether all
+ * required inputs are present and satisfy their constraints.
+ */
+model ValidationResult {
+  @doc("Whether all inputs passed validation")
+  @sample(ValidationResultValidSample)
+  valid: boolean;
+
+  @doc("List of validation errors (empty when valid is true)")
+  @sample(ValidationResultErrorsSample)
+  errors: ValidationError[];
+}

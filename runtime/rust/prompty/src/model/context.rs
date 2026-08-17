@@ -7,6 +7,7 @@
     dead_code,
     non_camel_case_types,
     unused_variables,
+    unexpected_cfgs,
     clippy::all
 )]
 

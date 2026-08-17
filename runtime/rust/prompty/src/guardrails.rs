@@ -3,7 +3,7 @@
 //! Matches TypeScript `core/guardrails.ts`. Guardrails are optional hooks
 //! that run before/after LLM calls and tool dispatch to enforce policies.
 
-use crate::model::Prompty;
+use crate::model::Agent;
 use crate::types::Message;
 
 // ---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ pub enum GuardrailPhase {
 pub type InputGuardrail = Box<
     dyn Fn(
             &[Message],
-            &Prompty,
+            &Agent,
         ) -> std::pin::Pin<Box<dyn std::future::Future<Output = GuardrailResult> + Send>>
         + Send
         + Sync,
@@ -90,7 +90,7 @@ pub type InputGuardrail = Box<
 pub type OutputGuardrail = Box<
     dyn Fn(
             &serde_json::Value,
-            &Prompty,
+            &Agent,
         ) -> std::pin::Pin<Box<dyn std::future::Future<Output = GuardrailResult> + Send>>
         + Send
         + Sync,
@@ -101,7 +101,7 @@ pub type ToolGuardrail = Box<
     dyn Fn(
             &str,
             &serde_json::Value,
-            &Prompty,
+            &Agent,
         ) -> std::pin::Pin<Box<dyn std::future::Future<Output = GuardrailResult> + Send>>
         + Send
         + Sync,
@@ -126,7 +126,7 @@ pub struct Guardrails {
 
 impl Guardrails {
     /// Run the input guardrail. Returns `GuardrailResult::allow()` if no guardrail is set.
-    pub async fn check_input(&self, messages: &[Message], agent: &Prompty) -> GuardrailResult {
+    pub async fn check_input(&self, messages: &[Message], agent: &Agent) -> GuardrailResult {
         match &self.input {
             Some(g) => g(messages, agent).await,
             None => GuardrailResult::allow(),
@@ -137,7 +137,7 @@ impl Guardrails {
     pub async fn check_output(
         &self,
         response: &serde_json::Value,
-        agent: &Prompty,
+        agent: &Agent,
     ) -> GuardrailResult {
         match &self.output {
             Some(g) => g(response, agent).await,
@@ -150,7 +150,7 @@ impl Guardrails {
         &self,
         tool_name: &str,
         args: &serde_json::Value,
-        agent: &Prompty,
+        agent: &Agent,
     ) -> GuardrailResult {
         match &self.tool {
             Some(g) => g(tool_name, args, agent).await,
@@ -168,8 +168,8 @@ mod tests {
     use super::*;
     use crate::types::Role;
 
-    fn default_agent() -> Prompty {
-        Prompty::default()
+    fn default_agent() -> Agent {
+        Agent::default()
     }
 
     #[tokio::test]

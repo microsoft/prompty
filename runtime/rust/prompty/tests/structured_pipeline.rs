@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use serde_json::{Value, json};
 
 use prompty::interfaces::{Executor, InvokerError, Processor};
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::model::context::LoadContext;
 use prompty::types::{Message, Role};
 
@@ -31,11 +31,7 @@ impl MockStructuredExecutor {
 
 #[async_trait]
 impl Executor for MockStructuredExecutor {
-    async fn execute(
-        &self,
-        _agent: &Prompty,
-        _messages: &[Message],
-    ) -> Result<Value, InvokerError> {
+    async fn execute(&self, _agent: &Agent, _messages: &[Message]) -> Result<Value, InvokerError> {
         Ok(self.response.clone())
     }
 }
@@ -52,7 +48,7 @@ struct MockStructuredProcessor;
 
 #[async_trait]
 impl Processor for MockStructuredProcessor {
-    async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, _agent: &Agent, response: Value) -> Result<Value, InvokerError> {
         let content_str = response["choices"][0]["message"]["content"]
             .as_str()
             .unwrap_or("{}");
@@ -74,7 +70,7 @@ fn register_structured_mocks(key: &str, response: Value) {
 }
 
 /// Build a Prompty agent with outputs defined (triggers structured wrapping).
-fn build_structured_agent(provider_key: &str) -> Prompty {
+fn build_structured_agent(provider_key: &str) -> Agent {
     let data = json!({
         "name": "structured_test",
         "kind": "prompt",
@@ -92,7 +88,7 @@ fn build_structured_agent(provider_key: &str) -> Prompty {
             "parser": { "kind": "prompty" },
         },
     });
-    Prompty::load_from_value(&data, &LoadContext::default())
+    Agent::load_from_value(&data, &LoadContext::default())
 }
 
 /// Canned OpenAI-style chat completion with JSON content.
@@ -182,7 +178,7 @@ struct MockPlainProcessor;
 
 #[async_trait]
 impl Processor for MockPlainProcessor {
-    async fn process(&self, _agent: &Prompty, response: Value) -> Result<Value, InvokerError> {
+    async fn process(&self, _agent: &Agent, response: Value) -> Result<Value, InvokerError> {
         let content = response["choices"][0]["message"]["content"]
             .as_str()
             .unwrap_or("");
@@ -221,7 +217,7 @@ async fn test_invoke_plain_output_unchanged() {
             "parser": { "kind": "prompty" },
         },
     });
-    let agent = Prompty::load_from_value(&data, &LoadContext::default());
+    let agent = Agent::load_from_value(&data, &LoadContext::default());
     let inputs = json!({"question": "Capital of France?"});
 
     let result = prompty::invoke_agent(&agent, Some(&inputs)).await.unwrap();
@@ -263,7 +259,7 @@ async fn test_run_plain_output_unchanged() {
             "parser": { "kind": "prompty" },
         },
     });
-    let agent = Prompty::load_from_value(&data, &LoadContext::default());
+    let agent = Agent::load_from_value(&data, &LoadContext::default());
     let messages = vec![
         Message::with_text(Role::System, "Answer."),
         Message::with_text(Role::User, "What is 6*7?"),

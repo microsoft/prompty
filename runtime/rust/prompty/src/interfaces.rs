@@ -13,8 +13,8 @@ use futures::StreamExt;
 
 use crate::engine::CancellationToken;
 use crate::model::{
-    InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
-    ModelInvocationResponse, ModelToolRequest, Prompty,
+    Agent, InvocationContextPortability, InvocationContextState, ModelInvocationRequest,
+    ModelInvocationResponse, ModelToolRequest,
 };
 use crate::types::Message;
 
@@ -134,7 +134,7 @@ pub trait Renderer: Send + Sync {
     /// Render the template with the provided inputs.
     async fn render(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         template: &str,
         inputs: &serde_json::Value,
     ) -> Result<String, InvokerError>;
@@ -161,7 +161,7 @@ pub trait Parser: Send + Sync {
     /// Parse rendered text into messages.
     async fn parse(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         rendered: &str,
         context: Option<&serde_json::Value>,
     ) -> Result<Vec<Message>, InvokerError>;
@@ -180,7 +180,7 @@ pub trait Executor: Send + Sync {
     /// Execute an LLM call with the given messages.
     async fn execute(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         messages: &[Message],
     ) -> Result<serde_json::Value, InvokerError>;
 
@@ -191,7 +191,7 @@ pub trait Executor: Send + Sync {
     /// override this to consume delegated provider state.
     async fn execute_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         request: &ModelInvocationRequest,
         cancellation: &CancellationToken,
     ) -> Result<serde_json::Value, InvokerError> {
@@ -216,7 +216,7 @@ pub trait Executor: Send + Sync {
     /// is a raw SSE chunk from the provider (e.g., OpenAI delta events).
     async fn execute_stream(
         &self,
-        _agent: &Prompty,
+        _agent: &Agent,
         _messages: &[Message],
     ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
         Err(InvokerError::Execute(
@@ -230,7 +230,7 @@ pub trait Executor: Send + Sync {
     /// its response stream when cancellation is requested.
     async fn execute_stream_cancellable(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         messages: &[Message],
         cancellation: CancellationToken,
     ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
@@ -257,7 +257,7 @@ pub trait Executor: Send + Sync {
     /// [`Self::execute_stream_cancellable`].
     async fn execute_stream_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         request: &ModelInvocationRequest,
         cancellation: &CancellationToken,
     ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError> {
@@ -345,7 +345,7 @@ pub trait Processor: Send + Sync {
     /// Process the raw response into a usable result.
     async fn process(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         response: serde_json::Value,
     ) -> Result<serde_json::Value, InvokerError>;
 
@@ -357,7 +357,7 @@ pub trait Processor: Send + Sync {
     /// and return a typed delegated state reference.
     async fn process_with_context(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         response: serde_json::Value,
         _request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -367,11 +367,11 @@ pub trait Processor: Send + Sync {
         Ok(ModelInvocationResponse {
             output: tool_requests.is_empty().then_some(output),
             usage: None,
-            assistant_messages,
-            tool_requests,
+            assistant_messages: Some(assistant_messages),
+            tool_requests: Some(tool_requests),
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
             metadata: serde_json::Value::Null,
         })
@@ -384,7 +384,7 @@ pub trait Processor: Send + Sync {
     /// continuation state from an otherwise raw response.
     async fn process_raw_with_context(
         &self,
-        _agent: &Prompty,
+        _agent: &Agent,
         response: serde_json::Value,
         _request: &ModelInvocationRequest,
     ) -> Result<ModelInvocationResponse, InvokerError> {
@@ -392,11 +392,11 @@ pub trait Processor: Send + Sync {
         Ok(ModelInvocationResponse {
             output: Some(response),
             usage: None,
-            assistant_messages,
-            tool_requests: Vec::new(),
+            assistant_messages: Some(assistant_messages),
+            tool_requests: None,
             next_context_state: Some(InvocationContextState {
                 portability: InvocationContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             }),
             metadata: serde_json::Value::Null,
         })
@@ -494,7 +494,7 @@ mod tests {
     impl Executor for DefaultFormatExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<serde_json::Value, InvokerError> {
             Ok(serde_json::json!({}))
@@ -508,7 +508,7 @@ mod tests {
     impl Executor for PendingStreamExecutor {
         async fn execute(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<serde_json::Value, InvokerError> {
             Ok(serde_json::Value::Null)
@@ -516,7 +516,7 @@ mod tests {
 
         async fn execute_stream(
             &self,
-            _agent: &Prompty,
+            _agent: &Agent,
             _messages: &[Message],
         ) -> Result<Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError>
         {
@@ -536,7 +536,7 @@ mod tests {
 
         let result = tokio::time::timeout(
             std::time::Duration::from_millis(100),
-            executor.execute_stream_cancellable(&Prompty::default(), &[], cancellation),
+            executor.execute_stream_cancellable(&Agent::default(), &[], cancellation),
         )
         .await
         .expect("cancellation should not leave the provider invocation pending");

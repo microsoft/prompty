@@ -6,7 +6,7 @@
 use async_trait::async_trait;
 
 use crate::interfaces::{InvokerError, Renderer};
-use crate::model::Prompty;
+use crate::model::Agent;
 
 /// Jinja2/Nunjucks-compatible renderer powered by MiniJinja.
 pub struct NunjucksRenderer;
@@ -15,7 +15,7 @@ pub struct NunjucksRenderer;
 impl Renderer for NunjucksRenderer {
     async fn render(
         &self,
-        _agent: &Prompty,
+        _agent: &Agent,
         template: &str,
         inputs: &serde_json::Value,
     ) -> Result<String, InvokerError> {

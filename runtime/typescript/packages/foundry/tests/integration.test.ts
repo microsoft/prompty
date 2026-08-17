@@ -14,7 +14,7 @@ import {
   clearConnections,
   registerExecutor,
   registerProcessor,
-  Prompty,
+  Agent,
   ReferenceConnection,
 } from "@prompty/core";
 import { FoundryExecutor } from "../src/executor.js";
@@ -60,8 +60,8 @@ function makeAgent(opts: {
   tools?: Record<string, unknown>[];
   outputs?: Record<string, unknown>[];
   inputs?: Record<string, unknown>[];
-} = {}): Prompty {
-  return Prompty.load({
+} = {}): Agent {
+  return Agent.load({
     name: "foundry-integration",
     model: {
       id: opts.deployment || AZURE_CHAT_DEPLOYMENT,

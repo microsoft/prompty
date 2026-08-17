@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ...model import Prompty
+from ...model import Agent
 from ...tracing.tracer import trace
 from ..openai.processor import _process_response
 
@@ -27,7 +27,7 @@ class FoundryProcessor:
     @trace
     def process(
         self,
-        agent: Prompty,
+        agent: Agent,
         response: Any,
     ) -> Any:
         return _process_response(response, agent)
@@ -35,7 +35,7 @@ class FoundryProcessor:
     @trace
     async def process_async(
         self,
-        agent: Prompty,
+        agent: Agent,
         response: Any,
     ) -> Any:
         return _process_response(response, agent)

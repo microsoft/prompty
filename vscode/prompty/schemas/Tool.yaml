@@ -26,7 +26,6 @@ properties:
           required:
             - name
             - input
-    default: []
     description: Tool argument bindings to input properties
 required:
   - kind

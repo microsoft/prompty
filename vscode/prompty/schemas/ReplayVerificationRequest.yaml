@@ -6,13 +6,11 @@ properties:
     type: array
     items:
       $ref: ReplayJournalRecord.yaml
-    default: []
     description: Expected normalized replay records
   actual:
     type: array
     items:
       $ref: ReplayJournalRecord.yaml
-    default: []
     description: Actual normalized replay records
 required:
   - expected

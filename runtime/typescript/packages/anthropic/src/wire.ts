@@ -10,7 +10,7 @@
  * @module
  */
 
-import type { Prompty } from "@prompty/core";
+import type { Agent } from "@prompty/core";
 import type { ContentPart, Message } from "@prompty/core";
 
 // ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ const DEFAULT_MAX_TOKENS = 4096;
  * Build Anthropic Messages API arguments from agent config and messages.
  */
 export function buildChatArgs(
-  agent: Prompty,
+  agent: Agent,
   messages: Message[],
 ): Record<string, unknown> {
   const model = agent.model?.id || "claude-sonnet-4-5-20250929";
@@ -181,7 +181,7 @@ const KIND_TO_JSON_TYPE: Record<string, string> = {
   object: "object",
 };
 
-function buildOptions(agent: Prompty): Record<string, unknown> {
+function buildOptions(agent: Agent): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
@@ -325,7 +325,7 @@ function addNullability(schema: Record<string, unknown>): void {
  * Anthropic uses: { name, description, input_schema }
  * (no `{type: "function", function: {...}}` wrapper like OpenAI)
  */
-export function toolsToWire(agent: Prompty): Record<string, unknown>[] {
+export function toolsToWire(agent: Agent): Record<string, unknown>[] {
   const tools = agent.tools;
   if (!tools || tools.length === 0) return [];
 
@@ -361,7 +361,7 @@ export function toolsToWire(agent: Prompty): Record<string, unknown>[] {
  *
  * Anthropic uses: output_config: { format: { type: "json_schema", schema: {...} } }
  */
-export function outputsToWire(agent: Prompty): Record<string, unknown> | null {
+export function outputsToWire(agent: Agent): Record<string, unknown> | null {
   const outputs = agent.outputs;
   if (!outputs || outputs.length === 0) return null;
 

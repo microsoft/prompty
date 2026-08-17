@@ -24,7 +24,7 @@ public class FoundryExecutor : OpenAI.OpenAIExecutor
     private const string FoundryServicesHostSuffix = ".services.ai.azure.com";
     private const string AzureOpenAIHostSuffix = ".openai.azure.com";
 
-    protected override OpenAIClient CreateClient(Core.Prompty agent)
+    protected override OpenAIClient CreateClient(Core.Agent agent)
     {
         var conn = agent.Model?.Connection;
 

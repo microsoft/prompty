@@ -96,11 +96,11 @@ public class ChatTests : IDisposable
         var mockProcessor = Substitute.For<IProcessor>();
 
         // Mock executor returns a fake response
-        mockExecutor.ExecuteAsync(Arg.Any<Prompty.Core.Prompty>(), Arg.Any<List<Message>>())
+        mockExecutor.ExecuteAsync(Arg.Any<Prompty.Core.Agent>(), Arg.Any<List<Message>>())
             .Returns(Task.FromResult<object>("Prompty is an asset class for LLM prompts."));
 
         // Mock processor passes through
-        mockProcessor.ProcessAsync(Arg.Any<Prompty.Core.Prompty>(), Arg.Any<object>())
+        mockProcessor.ProcessAsync(Arg.Any<Prompty.Core.Agent>(), Arg.Any<object>())
             .Returns(callInfo => Task.FromResult(callInfo.ArgAt<object>(1)));
 
         InvokerRegistry.RegisterExecutor("openai", mockExecutor);
@@ -114,7 +114,7 @@ public class ChatTests : IDisposable
 
         // Verify executor was called with messages
         await mockExecutor.Received(1).ExecuteAsync(
-            Arg.Any<Prompty.Core.Prompty>(),
+            Arg.Any<Prompty.Core.Agent>(),
             Arg.Is<List<Message>>(m => m.Count >= 2));
     }
 

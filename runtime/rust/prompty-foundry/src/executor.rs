@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::sync::LazyLock;
 
 use prompty::interfaces::{Executor, InvokerError};
-use prompty::model::Prompty;
+use prompty::model::Agent;
 use prompty::types::Message;
 
 use prompty_openai::wire;
@@ -33,11 +33,11 @@ pub struct FoundryExecutor;
 
 #[async_trait]
 impl Executor for FoundryExecutor {
-    async fn execute(&self, agent: &Prompty, messages: &[Message]) -> Result<Value, InvokerError> {
+    async fn execute(&self, agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
 
@@ -96,13 +96,13 @@ impl Executor for FoundryExecutor {
 
     async fn execute_stream(
         &self,
-        agent: &Prompty,
+        agent: &Agent,
         messages: &[Message],
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
         let api_type = agent
             .model
-            .api_type
             .as_ref()
+            .and_then(|model| model.api_type.as_ref())
             .map(|t| t.as_str())
             .unwrap_or("chat");
         if api_type != "chat" && api_type != "agent" {
@@ -153,9 +153,12 @@ impl Executor for FoundryExecutor {
 /// Resolve the effective connection — if `kind == "reference"`, look up the
 /// named connection from the registry. Otherwise return the connection as-is.
 fn resolve_connection(
-    agent: &Prompty,
+    agent: &Agent,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
-    let conn = &agent.model.connection;
+    let Some(model) = agent.model.as_ref() else {
+        return Ok(std::borrow::Cow::Owned(serde_json::Value::Null));
+    };
+    let conn = &model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {
@@ -179,7 +182,7 @@ fn resolve_connection(
 
 /// Returns `(url, (header_name, header_value))` for the Azure OpenAI request.
 async fn build_azure_request(
-    agent: &Prompty,
+    agent: &Agent,
     api_type: &str,
 ) -> Result<(String, (&'static str, String)), InvokerError> {
     let endpoint = get_endpoint(agent)?;
@@ -217,7 +220,7 @@ async fn build_azure_request(
 }
 
 /// Extract the endpoint URL from the agent's connection configuration.
-fn get_endpoint(agent: &Prompty) -> Result<String, InvokerError> {
+fn get_endpoint(agent: &Agent) -> Result<String, InvokerError> {
     let conn = resolve_connection(agent)?;
     let kind = conn.get("kind").and_then(|v| v.as_str()).unwrap_or("");
 
@@ -276,10 +279,10 @@ fn strip_project_path(endpoint: &str) -> String {
 }
 
 /// Extract the deployment name from the agent's model configuration.
-fn get_deployment(agent: &Prompty) -> Result<String, InvokerError> {
+fn get_deployment(agent: &Agent) -> Result<String, InvokerError> {
     // model.id is the deployment name for Azure
-    if !agent.model.id.is_empty() {
-        return Ok(agent.model.id.clone());
+    if let Some(model) = agent.model.as_ref().filter(|model| !model.id.is_empty()) {
+        return Ok(model.id.clone());
     }
 
     // Fall back to environment variable
@@ -297,9 +300,9 @@ fn get_deployment(agent: &Prompty) -> Result<String, InvokerError> {
 }
 
 /// Get the API version, defaulting to the latest preview.
-fn get_api_version(agent: &Prompty) -> String {
+fn get_api_version(agent: &Agent) -> String {
     // Check model options for custom api version
-    if let Some(opts) = &agent.model.options {
+    if let Some(opts) = &agent.model.as_ref().and_then(|model| model.options.clone()) {
         if let Some(version) = opts
             .additional_properties
             .get("apiVersion")
@@ -317,7 +320,7 @@ fn get_api_version(agent: &Prompty) -> String {
 /// Returns `(header_name, header_value)`:
 /// - API key auth: `("api-key", key)` — Azure uses `api-key` header, not `Authorization: Bearer`
 /// - Foundry (Entra ID): `("Authorization", "Bearer <token>")` — requires `entra_id` feature
-async fn get_auth_header(agent: &Prompty) -> Result<(&'static str, String), InvokerError> {
+async fn get_auth_header(agent: &Agent) -> Result<(&'static str, String), InvokerError> {
     let conn = resolve_connection(agent)?;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
@@ -513,14 +516,14 @@ mod tests {
     use serde_json::json;
     use serial_test::serial;
 
-    fn make_agent(model_json: Value) -> Prompty {
+    fn make_agent(model_json: Value) -> Agent {
         let mut data = json!({
             "name": "test",
             "kind": "prompt",
             "model": model_json,
         });
         data["instructions"] = json!("test");
-        Prompty::load_from_value(&data, &LoadContext::default())
+        Agent::load_from_value(&data, &LoadContext::default())
     }
 
     #[tokio::test]

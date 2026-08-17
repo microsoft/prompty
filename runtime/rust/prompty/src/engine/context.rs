@@ -51,14 +51,22 @@ impl ModelInvocationContextSnapshot {
             )));
         }
         if self.context_state.portability == ContextPortability::Portable
-            && !self.context_state.delegated_state.is_empty()
+            && !self
+                .context_state
+                .delegated_state
+                .as_ref()
+                .is_none_or(|state| state.is_empty())
         {
             return Err(ContextError::InvalidSnapshot(
                 "portable snapshots cannot contain delegated provider state".to_string(),
             ));
         }
         if self.context_state.portability == ContextPortability::Delegated
-            && self.context_state.delegated_state.is_empty()
+            && self
+                .context_state
+                .delegated_state
+                .as_ref()
+                .is_none_or(|state| state.is_empty())
         {
             return Err(ContextError::InvalidSnapshot(
                 "delegated snapshots must identify provider-held state".to_string(),
@@ -172,7 +180,7 @@ impl ContextPackingStrategy for AppendContextPackingStrategy {
             invocation_id: request.invocation_id.clone(),
             iteration: request.iteration,
             messages,
-            decisions,
+            decisions: Some(decisions),
             stable_prefix_messages: request.stable_prefix_messages,
             context_state: InvocationContextState {
                 portability: request.context_state.portability,
@@ -272,6 +280,7 @@ impl ContextPipeline {
         let decided: HashSet<String> = snapshot
             .decisions
             .iter()
+            .flatten()
             .map(|decision| decision.candidate_id.clone())
             .collect();
         excluded.extend(
@@ -290,7 +299,10 @@ impl ContextPipeline {
                     metadata: candidate.metadata,
                 }),
         );
-        snapshot.decisions.extend(excluded);
+        snapshot
+            .decisions
+            .get_or_insert_with(Vec::new)
+            .extend(excluded);
         snapshot.validate_for(request)?;
         Ok(snapshot)
     }
@@ -374,10 +386,10 @@ mod tests {
                 iteration: request.iteration,
                 stable_prefix_messages: request.messages.len() as i32,
                 messages,
-                decisions,
+                decisions: Some(decisions),
                 context_state: InvocationContextState {
                     portability: ContextPortability::Portable,
-                    delegated_state: Vec::new(),
+                    delegated_state: None,
                 },
                 metadata: Value::Null,
             })
@@ -405,10 +417,10 @@ mod tests {
                 iteration: request.iteration,
                 stable_prefix_messages: request.messages.len() as i32,
                 messages: request.messages.clone(),
-                decisions: Vec::new(),
+                decisions: None,
                 context_state: InvocationContextState {
                     portability: ContextPortability::Portable,
-                    delegated_state: Vec::new(),
+                    delegated_state: None,
                 },
                 metadata: Value::Null,
             })
@@ -434,7 +446,7 @@ mod tests {
             stable_prefix_messages: 1,
             context_state: InvocationContextState {
                 portability: ContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             },
             inputs: None,
         }
@@ -459,14 +471,12 @@ mod tests {
         let snapshot = pipeline.prepare(&request()).await.unwrap();
 
         assert_eq!(snapshot.messages.len(), 3);
-        assert_eq!(snapshot.decisions.len(), 3);
-        assert_eq!(snapshot.decisions[0].candidate_id, "history-1");
-        assert_eq!(snapshot.decisions[1].candidate_id, "memory-1");
-        assert_eq!(snapshot.decisions[2].candidate_id, "memory-2");
-        assert_eq!(
-            snapshot.decisions[2].disposition,
-            ContextDisposition::Excluded
-        );
+        let decisions = snapshot.decisions.as_ref().unwrap();
+        assert_eq!(decisions.len(), 3);
+        assert_eq!(decisions[0].candidate_id, "history-1");
+        assert_eq!(decisions[1].candidate_id, "memory-1");
+        assert_eq!(decisions[2].candidate_id, "memory-2");
+        assert_eq!(decisions[2].disposition, ContextDisposition::Excluded);
         assert_eq!(snapshot.stable_prefix_messages, 1);
     }
 
@@ -480,13 +490,11 @@ mod tests {
 
         let snapshot = pipeline.prepare(&request()).await.unwrap();
 
-        assert_eq!(snapshot.decisions.len(), 1);
-        assert_eq!(snapshot.decisions[0].candidate_id, "memory-1");
-        assert_eq!(
-            snapshot.decisions[0].disposition,
-            ContextDisposition::Excluded
-        );
-        assert!(snapshot.decisions[0].reason.contains("drop_all"));
+        let decisions = snapshot.decisions.as_ref().unwrap();
+        assert_eq!(decisions.len(), 1);
+        assert_eq!(decisions[0].candidate_id, "memory-1");
+        assert_eq!(decisions[0].disposition, ContextDisposition::Excluded);
+        assert!(decisions[0].reason.contains("drop_all"));
     }
 
     #[tokio::test]
@@ -515,16 +523,16 @@ mod tests {
             invocation_id: "invocation-1".to_string(),
             iteration: 0,
             messages: Vec::new(),
-            decisions: Vec::new(),
+            decisions: None,
             stable_prefix_messages: 0,
             context_state: InvocationContextState {
                 portability: ContextPortability::Portable,
-                delegated_state: vec![DelegatedStateReference {
+                delegated_state: Some(vec![DelegatedStateReference {
                     provider: "openai".to_string(),
                     kind: "previous_response".to_string(),
                     id: "response-1".to_string(),
                     metadata: Value::Null,
-                }],
+                }]),
             },
             metadata: Value::Null,
         };
@@ -541,11 +549,11 @@ mod tests {
             invocation_id: "invocation-1".to_string(),
             iteration: 0,
             messages: Vec::new(),
-            decisions: Vec::new(),
+            decisions: None,
             stable_prefix_messages: 0,
             context_state: InvocationContextState {
                 portability: ContextPortability::Delegated,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             },
             metadata: Value::Null,
         };
@@ -562,11 +570,11 @@ mod tests {
             invocation_id: "invocation-1".to_string(),
             iteration: 0,
             messages: Vec::new(),
-            decisions: Vec::new(),
+            decisions: None,
             stable_prefix_messages: 1,
             context_state: InvocationContextState {
                 portability: ContextPortability::Portable,
-                delegated_state: Vec::new(),
+                delegated_state: None,
             },
             metadata: Value::Null,
         };
@@ -596,11 +604,11 @@ mod tests {
                     invocation_id: "different-invocation".to_string(),
                     iteration: request.iteration,
                     messages: request.messages.clone(),
-                    decisions: Vec::new(),
+                    decisions: None,
                     stable_prefix_messages: request.messages.len() as i32,
                     context_state: InvocationContextState {
                         portability: ContextPortability::Portable,
-                        delegated_state: Vec::new(),
+                        delegated_state: None,
                     },
                     metadata: Value::Null,
                 })

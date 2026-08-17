@@ -142,7 +142,7 @@ pub fn clear_cache() {
 /// Returns `InvokerError::NotFound` if no renderer is registered for `key`.
 pub async fn invoke_renderer(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     template: &str,
     inputs: &serde_json::Value,
 ) -> Result<String, InvokerError> {
@@ -163,7 +163,7 @@ pub async fn invoke_renderer(
 /// Returns `InvokerError::NotFound` if no parser is registered for `key`.
 pub async fn invoke_parser(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     rendered: &str,
     context: Option<&serde_json::Value>,
 ) -> Result<Vec<crate::types::Message>, InvokerError> {
@@ -184,7 +184,7 @@ pub async fn invoke_parser(
 /// Returns `InvokerError::NotFound` if no executor is registered for `key`.
 pub async fn invoke_executor(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     messages: &[crate::types::Message],
 ) -> Result<serde_json::Value, InvokerError> {
     let executor = {
@@ -202,7 +202,7 @@ pub async fn invoke_executor(
 /// Legacy executors are supported by the trait's default implementation.
 pub async fn invoke_executor_with_context(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     request: &crate::model::ModelInvocationRequest,
     cancellation: &crate::engine::CancellationToken,
 ) -> Result<serde_json::Value, InvokerError> {
@@ -228,7 +228,7 @@ pub async fn invoke_executor_with_context(
 /// Returns `InvokerError::Execute` if the executor does not support streaming.
 pub async fn invoke_executor_stream(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     messages: &[crate::types::Message],
 ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError>
 {
@@ -247,7 +247,7 @@ pub async fn invoke_executor_stream(
 /// Legacy executors are supported by the trait's default implementation.
 pub async fn invoke_executor_stream_with_context(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     request: &crate::model::ModelInvocationRequest,
     cancellation: &crate::engine::CancellationToken,
 ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = serde_json::Value> + Send>>, InvokerError>
@@ -271,7 +271,7 @@ pub async fn invoke_executor_stream_with_context(
 /// Returns `InvokerError::NotFound` if no processor is registered for `key`.
 pub async fn invoke_processor(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     response: serde_json::Value,
 ) -> Result<serde_json::Value, InvokerError> {
     let processor = {
@@ -289,7 +289,7 @@ pub async fn invoke_processor(
 /// Legacy processors receive a portable state mapping from the trait default.
 pub async fn invoke_processor_with_context(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     response: serde_json::Value,
     request: &crate::model::ModelInvocationRequest,
 ) -> Result<crate::model::ModelInvocationResponse, InvokerError> {
@@ -308,7 +308,7 @@ pub async fn invoke_processor_with_context(
 /// Map a raw response while preserving the legacy raw execution boundary.
 pub async fn invoke_processor_raw_with_context(
     key: &str,
-    agent: &crate::model::Prompty,
+    agent: &crate::model::Agent,
     response: serde_json::Value,
     request: &crate::model::ModelInvocationRequest,
 ) -> Result<crate::model::ModelInvocationResponse, InvokerError> {
@@ -410,7 +410,7 @@ mod tests {
     impl Renderer for DummyRenderer {
         async fn render(
             &self,
-            _agent: &crate::model::Prompty,
+            _agent: &crate::model::Agent,
             template: &str,
             _inputs: &serde_json::Value,
         ) -> Result<String, InvokerError> {
@@ -423,7 +423,7 @@ mod tests {
     impl Parser for DummyParser {
         async fn parse(
             &self,
-            _agent: &crate::model::Prompty,
+            _agent: &crate::model::Agent,
             _rendered: &str,
             _context: Option<&serde_json::Value>,
         ) -> Result<Vec<crate::types::Message>, InvokerError> {
@@ -439,7 +439,7 @@ mod tests {
     impl Executor for DummyExecutor {
         async fn execute(
             &self,
-            _agent: &crate::model::Prompty,
+            _agent: &crate::model::Agent,
             _messages: &[crate::types::Message],
         ) -> Result<serde_json::Value, InvokerError> {
             Ok(serde_json::json!({"result": "ok"}))
@@ -451,7 +451,7 @@ mod tests {
     impl Processor for DummyProcessor {
         async fn process(
             &self,
-            _agent: &crate::model::Prompty,
+            _agent: &crate::model::Agent,
             response: serde_json::Value,
         ) -> Result<serde_json::Value, InvokerError> {
             Ok(response)
@@ -508,7 +508,7 @@ mod tests {
     async fn test_invoke_renderer() {
         clear_cache();
         register_renderer("inv_test", DummyRenderer);
-        let agent = crate::model::Prompty::default();
+        let agent = crate::model::Agent::default();
         let result = invoke_renderer("inv_test", &agent, "hello", &serde_json::json!({})).await;
         assert_eq!(result.unwrap(), "HELLO");
     }
@@ -517,7 +517,7 @@ mod tests {
     #[serial]
     async fn test_invoke_missing_renderer_error() {
         clear_cache();
-        let agent = crate::model::Prompty::default();
+        let agent = crate::model::Agent::default();
         let err = invoke_renderer("nope", &agent, "hi", &serde_json::json!({}))
             .await
             .unwrap_err();
@@ -529,7 +529,7 @@ mod tests {
     async fn test_invoke_parser() {
         clear_cache();
         register_parser("test_parser", DummyParser);
-        let agent = crate::model::Prompty::default();
+        let agent = crate::model::Agent::default();
         let msgs = invoke_parser("test_parser", &agent, "hello", None)
             .await
             .unwrap();
@@ -541,7 +541,7 @@ mod tests {
     #[serial]
     async fn test_invoke_parser_missing() {
         clear_cache();
-        let agent = crate::model::Prompty::default();
+        let agent = crate::model::Agent::default();
         let err = invoke_parser("nope", &agent, "hello", None)
             .await
             .unwrap_err();
@@ -554,7 +554,7 @@ mod tests {
     async fn test_invoke_executor() {
         clear_cache();
         register_executor("test_exec", DummyExecutor);
-        let agent = crate::model::Prompty::default();
+        let agent = crate::model::Agent::default();
         let result = invoke_executor("test_exec", &agent, &[]).await.unwrap();
         assert_eq!(result["result"], "ok");
     }
@@ -563,7 +563,7 @@ mod tests {
     #[serial]
     async fn test_invoke_executor_missing() {
         clear_cache();
-        let agent = crate::model::Prompty::default();
+        let agent = crate::model::Agent::default();
         let err = invoke_executor("nope", &agent, &[]).await.unwrap_err();
         assert!(err.to_string().contains("executor"));
         assert!(err.to_string().contains("nope"));
@@ -574,7 +574,7 @@ mod tests {
     async fn test_invoke_processor() {
         clear_cache();
         register_processor("test_proc", DummyProcessor);
-        let agent = crate::model::Prompty::default();
+        let agent = crate::model::Agent::default();
         let result = invoke_processor("test_proc", &agent, serde_json::json!({"x": 1}))
             .await
             .unwrap();
@@ -585,7 +585,7 @@ mod tests {
     #[serial]
     async fn test_invoke_processor_missing() {
         clear_cache();
-        let agent = crate::model::Prompty::default();
+        let agent = crate::model::Agent::default();
         let err = invoke_processor("nope", &agent, serde_json::json!({}))
             .await
             .unwrap_err();

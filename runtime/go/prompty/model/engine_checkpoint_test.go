@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -19,7 +20,22 @@ func TestEngineCheckpointLoadJSON(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -44,6 +60,10 @@ func TestEngineCheckpointLoadJSON(t *testing.T) {
 	if instance.RunId != "run_abc123" {
 		t.Errorf(`Expected RunId to be "run_abc123", got %v`, instance.RunId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertEngineCheckpointStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestEngineCheckpointLoadYAML tests loading EngineCheckpoint from YAML
@@ -53,6 +73,14 @@ id: ckpt_abc123
 sessionId: sess_abc123
 turnId: turn_abc123
 runId: run_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
 `
 	var data map[string]interface{}
@@ -77,6 +105,10 @@ runId: run_abc123
 	if instance.RunId != "run_abc123" {
 		t.Errorf(`Expected RunId to be "run_abc123", got %v`, instance.RunId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertEngineCheckpointStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestEngineCheckpointFromJSON tests loading EngineCheckpoint through the generated JSON helper
@@ -86,7 +118,22 @@ func TestEngineCheckpointFromJSON(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 
@@ -106,6 +153,10 @@ func TestEngineCheckpointFromJSON(t *testing.T) {
 	if instance.RunId != "run_abc123" {
 		t.Errorf(`Expected RunId to be "run_abc123", got %v`, instance.RunId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertEngineCheckpointStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestEngineCheckpointFromYAML tests loading EngineCheckpoint through the generated YAML helper
@@ -115,6 +166,14 @@ id: ckpt_abc123
 sessionId: sess_abc123
 turnId: turn_abc123
 runId: run_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
 `
 
@@ -134,6 +193,10 @@ runId: run_abc123
 	if instance.RunId != "run_abc123" {
 		t.Errorf(`Expected RunId to be "run_abc123", got %v`, instance.RunId)
 	}
+	if len(instance.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(instance.Messages))
+	}
+	assertEngineCheckpointStringField(t, instance.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestEngineCheckpointRoundtrip tests load -> save -> load produces equivalent data
@@ -143,7 +206,22 @@ func TestEngineCheckpointRoundtrip(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -175,6 +253,10 @@ func TestEngineCheckpointRoundtrip(t *testing.T) {
 	if reloaded.RunId != "run_abc123" {
 		t.Errorf(`Expected RunId to be "run_abc123", got %v`, reloaded.RunId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertEngineCheckpointStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestEngineCheckpointToJSON tests that ToJSON produces valid JSON
@@ -184,7 +266,22 @@ func TestEngineCheckpointToJSON(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -223,6 +320,10 @@ func TestEngineCheckpointToJSON(t *testing.T) {
 	if reloaded.RunId != "run_abc123" {
 		t.Errorf(`Expected RunId to be "run_abc123", got %v`, reloaded.RunId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertEngineCheckpointStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestEngineCheckpointToYAML tests that ToYAML produces valid YAML
@@ -232,7 +333,22 @@ func TestEngineCheckpointToYAML(t *testing.T) {
   "id": "ckpt_abc123",
   "sessionId": "sess_abc123",
   "turnId": "turn_abc123",
-  "runId": "run_abc123"
+  "runId": "run_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
+      }
+    }
+  ],
+  "contextState": {}
 }
 `
 	var data map[string]interface{}
@@ -271,11 +387,51 @@ func TestEngineCheckpointToYAML(t *testing.T) {
 	if reloaded.RunId != "run_abc123" {
 		t.Errorf(`Expected RunId to be "run_abc123", got %v`, reloaded.RunId)
 	}
+	if len(reloaded.Messages) != 1 {
+		t.Fatalf("Expected Messages length to be 1, got %d", len(reloaded.Messages))
+	}
+	assertEngineCheckpointStringField(t, reloaded.Messages[0], "Role", "user", "Messages[0].Role")
 }
 
 // TestEngineCheckpointFromJSONInvalid rejects malformed JSON instead of silently defaulting
 func TestEngineCheckpointFromJSONInvalid(t *testing.T) {
 	if _, err := prompty.EngineCheckpointFromJSON("{"); err == nil {
 		t.Fatalf("Expected malformed JSON to fail")
+	}
+}
+
+func assertEngineCheckpointStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

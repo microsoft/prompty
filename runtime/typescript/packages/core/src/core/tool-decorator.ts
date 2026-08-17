@@ -7,8 +7,8 @@
  * @module
  */
 
-import { FunctionTool } from "../model/tools/tool.js";
-import { Property } from "../model/core/property.js";
+import { FunctionTool } from "../model/contracts/tooling/tool.js";
+import { Property } from "../model/contracts/core/property.js";
 import { registerTool } from "./tool-dispatch.js";
 
 /** Options for the tool() wrapper. */

@@ -13,8 +13,8 @@ using Prompty.Anthropic;
 namespace Prompty.OpenAI.Tests;
 
 /// <summary>
-/// Spec vector tests for the wire stage — loads canonical vectors from
-/// spec/vectors/wire/wire_vectors.json and verifies that the C# runtime
+/// Spec vector tests for the wire stage — loads canonical vectors from the
+/// generated schema/tsp-output/.typra-generated/vectors.json (toRequest operation) and verifies that the C# runtime
 /// produces correct JSON payloads for LLM API requests.
 ///
 /// For OpenAI: tests use ModelReaderWriter to serialize SDK types and
@@ -26,7 +26,6 @@ namespace Prompty.OpenAI.Tests;
 public class SpecVectorWireTests
 {
     private static readonly string SpecDir = FindSpecDir();
-    private static readonly string VectorsDir = Path.Combine(SpecDir, "vectors");
     private static readonly JsonElement[] Vectors = LoadVectors();
 
     private static string FindSpecDir()
@@ -44,8 +43,20 @@ public class SpecVectorWireTests
 
     private static JsonElement[] LoadVectors()
     {
-        var path = Path.Combine(VectorsDir, "wire", "wire_vectors.json");
-        return JsonSerializer.Deserialize<JsonElement[]>(File.ReadAllText(path)) ?? [];
+        var path = Path.Combine(
+            Path.GetDirectoryName(SpecDir)!,
+            "schema",
+            "tsp-output",
+            ".typra-generated",
+            "vectors.json");
+        using var doc = JsonDocument.Parse(File.ReadAllText(path));
+        var result = new List<JsonElement>();
+        foreach (var env in doc.RootElement.GetProperty("vectors").EnumerateArray())
+        {
+            if (env.GetProperty("operation").GetString() == "toRequest")
+                result.Add(env.GetProperty("vector").Clone());
+        }
+        return [.. result];
     }
 
     // =======================================================================
@@ -413,7 +424,7 @@ public class SpecVectorWireTests
     /// <summary>
     /// Builds a Core.Prompty agent from a wire vector's input data.
     /// </summary>
-    private static Core.Prompty BuildAgentFromVector(JsonElement input)
+    private static Core.Agent BuildAgentFromVector(JsonElement input)
     {
         var modelId = input.GetProperty("model_id").GetString()!;
         var provider = input.GetProperty("provider").GetString()!;
@@ -466,7 +477,7 @@ public class SpecVectorWireTests
             data["outputs"] = outputsList;
         }
 
-        return Core.Prompty.Load(data, new LoadContext());
+        return Core.Agent.Load(data, new LoadContext());
     }
 
     /// <summary>

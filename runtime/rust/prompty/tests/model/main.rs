@@ -6,19 +6,10 @@
     dead_code,
     non_camel_case_types,
     unused_variables,
+    unexpected_cfgs,
     clippy::all
 )]
 
-mod agent;
-mod connection;
-mod conversation;
-mod core;
-mod events;
-mod memory;
-mod model;
-mod pipeline;
-mod streaming;
-mod template;
-mod tools;
-mod tracing;
+mod agent_test;
+mod contracts;
 mod wire;

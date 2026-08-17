@@ -85,9 +85,9 @@ def _enrich(model_id: str, info: ModelInfo) -> ModelInfo:
 
     if info.context_window is None and known.get("context_window") is not None:
         info.context_window = known["context_window"]
-    if not info.input_modalities and known.get("input_modalities"):
+    if not info.input_modalities and known.get("input_modalities") is not None:
         info.input_modalities = known["input_modalities"]
-    if not info.output_modalities and known.get("output_modalities"):
+    if not info.output_modalities and known.get("output_modalities") is not None:
         info.output_modalities = known["output_modalities"]
 
     return info
