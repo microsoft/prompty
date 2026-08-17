@@ -15,16 +15,16 @@ categories = ["development-tools"]
 prompty = { version = "2.0.0-beta.4", path = "../prompty" }
 prompty-openai = { version = "2.0.0-beta.4", path = "../prompty-openai" }
 async-trait = "0.1"
-azure_identity = { version = "0.23", optional = true }
-azure_core = { version = "0.23", optional = true }
-base64 = "0.22"
+azure_identity = { version = "1.0", optional = true }
+azure_core = { version = "1.1", optional = true }
+base64 = "0.23"
 bytes = "1"
 futures = "0.3"
-rand = "0.9"
-reqwest = { version = "0.12", features = ["json", "stream"] }
+rand = "0.10"
+reqwest = { version = "0.13", features = ["json", "stream"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-sha2 = "0.10"
+sha2 = "0.11"
 tokio = { version = "1", features = ["full"] }
 
 [features]
@@ -33,4 +33,4 @@ entra_id = ["azure_identity", "azure_core"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }
-serial_test = "3"
+serial_test = "4"

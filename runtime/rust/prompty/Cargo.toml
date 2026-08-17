@@ -19,10 +19,10 @@ thiserror = "2"
 async-trait = "0.1"
 tokio = { version = "1", features = ["sync", "fs", "rt", "time", "macros"] }
 minijinja = "2"
-rand = "0.9"
+rand = "0.10"
 regex = "1"
 chrono = "0.4"
-ribboncurls = "0.2"
+ribboncurls = "0.5"
 futures = "0.3"
 
 # OTel (optional)
@@ -40,4 +40,4 @@ otel = ["opentelemetry", "opentelemetry_sdk", "opentelemetry-stdout"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-serial_test = "3"
+serial_test = "4"
