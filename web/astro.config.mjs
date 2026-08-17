@@ -76,44 +76,44 @@ export default defineConfig({
         },
         {
           label: "Getting Started",
-          autogenerate: { directory: "getting-started" },
+          items: [{ autogenerate: { directory: "getting-started" } }],
         },
         {
           label: "Tutorials",
-          autogenerate: { directory: "tutorials" },
+          items: [{ autogenerate: { directory: "tutorials" } }],
         },
         {
           label: "Core Concepts",
-          autogenerate: { directory: "core-concepts" },
+          items: [{ autogenerate: { directory: "core-concepts" } }],
         },
         {
           label: "Agentic Concepts",
-          autogenerate: { directory: "agentic-concepts" },
+          items: [{ autogenerate: { directory: "agentic-concepts" } }],
         },
         {
           label: "Implementation",
-          autogenerate: { directory: "implementation" },
+          items: [{ autogenerate: { directory: "implementation" } }],
         },
         {
           label: "How-To Guides",
-          autogenerate: { directory: "how-to" },
+          items: [{ autogenerate: { directory: "how-to" } }],
         },
         {
           label: "VS Code Extension",
-          autogenerate: { directory: "vscode" },
+          items: [{ autogenerate: { directory: "vscode" } }],
         },
         {
           label: "Schema Reference",
-          autogenerate: { directory: "reference" },
+          items: [{ autogenerate: { directory: "reference" } }],
         },
         {
           label: "API Reference",
-          autogenerate: { directory: "api-reference" },
+          items: [{ autogenerate: { directory: "api-reference" } }],
         },
         {
           label: "Specification",
-          autogenerate: { directory: "specification" },
           badge: { text: "spec", variant: "tip" },
+          items: [{ autogenerate: { directory: "specification" } }],
         },
         {
           label: "Migration",
@@ -122,12 +122,12 @@ export default defineConfig({
         {
           label: "Legacy (v1)",
           collapsed: true,
-          autogenerate: { directory: "legacy" },
           badge: { text: "v1", variant: "note" },
+          items: [{ autogenerate: { directory: "legacy" } }],
         },
         {
           label: "Contributing",
-          autogenerate: { directory: "contributing" },
+          items: [{ autogenerate: { directory: "contributing" } }],
         },
       ],
     }),
