@@ -1,0 +1,112 @@
+# Dependabot configuration.
+#
+# Goals:
+#   1. Group updates per ecosystem so security/version PRs land as a handful of
+#      consolidated PRs instead of dozens of single-dependency PRs.
+#   2. Cover BOTH the default branch (2.x) and the maintained `v1` line, whose
+#      manifest layout differs, via a second set of entries using target-branch.
+#
+# Grouping note: each `groups` block declares `applies-to` explicitly so that
+# both security updates and scheduled version updates are consolidated.
+version: 2
+updates:
+  # ---------------------------------------------------------------------------
+  # 2.x line (default branch: main)
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "npm"
+    directories:
+      - "/web"
+      - "/web/docs-examples/typescript"
+      - "/schema"
+      - "/runtime/typescript"
+      - "/vscode/prompty"
+      - "/vscode/prompty/packages/core"
+      - "/vscode/prompty/packages/server"
+      - "/vscode/prompty/packages/trace"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      npm-version:
+        applies-to: version-updates
+        patterns: ["*"]
+
+  # 2.x Python runtime uses uv (uv.lock). Dependabot requires the dedicated
+  # "uv" ecosystem to maintain uv.lock; the "pip" ecosystem does not.
+  - package-ecosystem: "uv"
+    directory: "/runtime/python/prompty"
+    schedule:
+      interval: "weekly"
+    groups:
+      uv-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      uv-version:
+        applies-to: version-updates
+        patterns: ["*"]
+
+  - package-ecosystem: "cargo"
+    directory: "/runtime/rust"
+    schedule:
+      interval: "weekly"
+    groups:
+      cargo-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      cargo-version:
+        applies-to: version-updates
+        patterns: ["*"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions-security:
+        applies-to: security-updates
+        patterns: ["*"]
+      actions-version:
+        applies-to: version-updates
+        patterns: ["*"]
+
+  # ---------------------------------------------------------------------------
+  # v1 line (maintained release branch: v1)
+  # Different layout: root lockfile, runtime/promptyjs, pip at runtime/prompty,
+  # no cargo crate.
+  #
+  # NOTE: Dependabot *security* updates only ever run against the default
+  # branch and ignore `target-branch`. So the v1 entries below only drive
+  # scheduled *version* updates (which still pull in fixed versions over time).
+  # Branch-specific security fixes should be backported from the main-branch
+  # security PRs.
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+      - "/web"
+      - "/runtime/promptyjs"
+      - "/vscode/prompty"
+      - "/vscode/prompty/packages/core"
+      - "/vscode/prompty/packages/server"
+      - "/vscode/prompty/packages/trace"
+    target-branch: "v1"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      npm-v1-version:
+        applies-to: version-updates
+        patterns: ["*"]
+
+  - package-ecosystem: "pip"
+    directory: "/runtime/prompty"
+    target-branch: "v1"
+    schedule:
+      interval: "weekly"
+    groups:
+      pip-v1-version:
+        applies-to: version-updates
+        patterns: ["*"]
