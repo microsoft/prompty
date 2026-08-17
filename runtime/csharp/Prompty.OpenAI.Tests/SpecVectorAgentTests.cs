@@ -742,4 +742,3 @@ public class SpecVectorAgentTests : IDisposable
         }
     }
 }
-

@@ -431,5 +431,3 @@ public class WireFormatTests
         Assert.Single(result.StopSequences);
     }
 }
-
-

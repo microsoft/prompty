@@ -238,4 +238,3 @@ public class StreamingTests : IDisposable
         public void Dispose() => _onDispose();
     }
 }
-

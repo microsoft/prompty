@@ -345,4 +345,3 @@ public class ResponsesApiTests
         Assert.Equal("raw string result", result);
     }
 }
-

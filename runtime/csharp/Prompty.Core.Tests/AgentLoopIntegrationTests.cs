@@ -451,4 +451,3 @@ public class AgentLoopIntegrationTests : IDisposable
         Assert.Contains($"{maxIter}", ex.Message);
     }
 }
-

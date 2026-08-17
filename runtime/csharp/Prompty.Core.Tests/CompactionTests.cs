@@ -268,4 +268,3 @@ public class CompactionTests
         Assert.Null((CompactionStrategy?)null);
     }
 }
-

@@ -321,4 +321,3 @@ public abstract class IntegrationTestBase
         new Property { Name = "country", Kind = "string", Description = "The country" },
     ];
 }
-

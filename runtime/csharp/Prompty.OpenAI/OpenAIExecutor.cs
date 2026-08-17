@@ -245,4 +245,3 @@ public class OpenAIExecutor : IExecutor
         return messages;
     }
 }
-

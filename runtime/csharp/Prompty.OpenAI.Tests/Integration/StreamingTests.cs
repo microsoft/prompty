@@ -109,4 +109,3 @@ public class StreamingTests : IntegrationTestBase
         Assert.Contains("hello", fullText, StringComparison.OrdinalIgnoreCase);
     }
 }
-

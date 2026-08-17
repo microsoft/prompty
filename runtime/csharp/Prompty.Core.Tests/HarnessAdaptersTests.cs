@@ -180,4 +180,3 @@ public class HarnessAdaptersTests
         Payload = new Dictionary<string, object?> { ["phase"] = "start" }
     };
 }
-

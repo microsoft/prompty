@@ -144,4 +144,3 @@ internal static class TestHelpers
         return tool;
     }
 }
-

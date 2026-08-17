@@ -674,4 +674,3 @@ internal class ToolCallingProcessor : IProcessor
         return Task.FromResult<object>("The weather is 72°F and sunny");
     }
 }
-
