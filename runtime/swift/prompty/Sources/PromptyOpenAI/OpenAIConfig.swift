@@ -19,8 +19,8 @@ struct OpenAIConfig {
   /// The API key is read from the connection when present, otherwise from
   /// `OPENAI_API_KEY`. Populating the environment is the host's job — the
   /// runtime never reads `.env` files itself.
-  static func resolve(_ agent: Prompty) throws -> OpenAIConfig {
-    let connection = agent.model.connection
+  static func resolve(_ agent: Agent) throws -> OpenAIConfig {
+    let connection = agent.model?.connection
     var endpoint = "https://api.openai.com/v1"
     var apiKey = ""
     var headers: [String: String] = [:]
@@ -43,7 +43,7 @@ struct OpenAIConfig {
       )
     }
 
-    let model = agent.model.id
+    let model = agent.modelId
     guard !model.isEmpty else {
       throw InvokerError.execution("no model id — set model.id in the prompt frontmatter")
     }

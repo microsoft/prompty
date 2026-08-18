@@ -115,33 +115,29 @@ final class PropertyKindDispatchTests: XCTestCase {
     }
   }
 
-  // MARK: - @coerce shorthand (tripwire)
+  // MARK: - @coerce shorthand
 
-  /// The `@coerce` shorthand is not emitted, and `Property.load` demands an
-  /// object before it inspects `kind`, so a bare scalar throws rather than
-  /// becoming `#{ kind: ..., example: "{value}" }`.
-  ///
-  /// The specific error matters. Accepting any thrown error would let this
-  /// stay green if a partial emitter change moved the failure somewhere else
-  /// — the tripwire would then be pinning a coincidence rather than the
-  /// missing coercion. `Property.load` gates on `TypraRuntime.object` before
-  /// it reads the discriminator, so `invalidObject(type: "Property")` is the
-  /// one outcome that actually means "no shorthand support".
-  func testBareScalarShorthandIsNotCoerced() throws {
+  /// The `@coerce` shorthand IS emitted at the current emitter version:
+  /// `Property.load` normalizes a bare scalar into
+  /// `#{ kind: <scalar-type>, example: <value> }` before it inspects the
+  /// discriminator. Scalar kinds (`string`/`integer`/`float`/`boolean`) are not
+  /// modeled subtypes, so the coerced object resolves to the open `.unknown`
+  /// case carrying that `{ kind, example }` payload verbatim.
+  func testBareScalarShorthandIsCoerced() throws {
     for (kind, literal) in Self.scalarKinds {
-      XCTAssertThrowsError(
-        try Property.load(literal),
-        "\(kind) shorthand now loads — the emitter grew @coerce support. "
-          + "Assert kind == \"\(kind)\" and example == the literal instead"
-      ) { error in
-        guard case TypraRuntimeError.invalidObject(let type) = error else {
-          XCTFail(
-            "\(kind) shorthand failed for an unrelated reason (\(error)) — the "
-              + "object gate in Property.load moved, so this test no longer "
-              + "measures missing @coerce support")
-          return
-        }
-        XCTAssertEqual(type, "Property", "\(kind): unexpected failing type")
+      let loaded = try Property.load(literal)
+      guard case .unknown(let raw) = loaded else {
+        XCTFail(
+          "\(kind): bare scalar should coerce to an unknown-kind Property carrying {kind, example}")
+        continue
+      }
+      XCTAssertEqual(raw["kind"] as? String, kind, "\(kind): coerced kind mismatch")
+      switch kind {
+      case "string": XCTAssertEqual(raw["example"] as? String, literal as? String)
+      case "integer": XCTAssertEqual(raw["example"] as? Int, literal as? Int)
+      case "float": XCTAssertEqual(raw["example"] as? Double, literal as? Double)
+      case "boolean": XCTAssertEqual(raw["example"] as? Bool, literal as? Bool)
+      default: XCTFail("\(kind): unexpected scalar kind")
       }
     }
   }

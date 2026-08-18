@@ -27,7 +27,7 @@ public struct SchemaError: Error, CustomStringConvertible, Equatable {
 }
 public enum JSONSchema {
 
-  /// Map a Prompty property kind onto its JSON Schema type.
+  /// Map a Agent property kind onto its JSON Schema type.
   ///
   /// Unrecognized kinds return `nil`; the caller then emits a bare `{}` so
   /// provider-specific extension kinds degrade to "any value" rather than being
@@ -72,7 +72,7 @@ public enum JSONSchema {
         for child in children where !child.name.isEmpty {
           nested[child.name] = try JSONSchema.schema(
             for: child, optional: !child.isRequired, strict: strict)
-          if child.isRequired { required.append(child.name) }
+          if strict || child.isRequired { required.append(child.name) }
         }
         schema["properties"] = nested
         if !required.isEmpty { schema["required"] = required }

@@ -54,7 +54,7 @@ final class LiveOpenAITests: XCTestCase {
   func testLiveChatCompletion() async throws {
     _ = try requireCredentials()
 
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "live-chat",
       "model": ["id": modelId, "provider": "openai", "apiType": "chat"],
@@ -82,7 +82,7 @@ final class LiveOpenAITests: XCTestCase {
     _ = try requireCredentials()
 
     func answer(maxOutputTokens: Int) async throws -> String {
-      let agent = try Prompty.load([
+      let agent = try Agent.load([
         "kind": "prompt",
         "name": "live-capped",
         "model": [
@@ -119,7 +119,7 @@ final class LiveOpenAITests: XCTestCase {
   func testLiveStreaming() async throws {
     _ = try requireCredentials()
 
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "live-stream",
       "model": [
@@ -170,7 +170,7 @@ final class LiveOpenAITests: XCTestCase {
   func testLiveRunAccumulatesStream() async throws {
     _ = try requireCredentials()
 
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "live-stream-run",
       "model": [
@@ -203,7 +203,7 @@ final class LiveOpenAITests: XCTestCase {
       let population: Int
     }
 
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "live-structured",
       "model": [
@@ -236,7 +236,7 @@ final class LiveOpenAITests: XCTestCase {
   func testLiveToolCalling() async throws {
     _ = try requireCredentials()
 
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "live-tools",
       "model": [

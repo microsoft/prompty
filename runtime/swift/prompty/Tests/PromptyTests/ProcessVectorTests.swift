@@ -43,7 +43,7 @@ final class ProcessVectorTests: XCTestCase {
     run.assertClean()
   }
 
-  private static func agent(hasOutputs: Bool) throws -> Prompty {
+  private static func agent(hasOutputs: Bool) throws -> Agent {
     var data: [String: Any] = [
       "kind": "prompt",
       "name": "process-vectors",
@@ -53,7 +53,7 @@ final class ProcessVectorTests: XCTestCase {
     if hasOutputs {
       data["outputs"] = [["name": "result", "kind": "string"]]
     }
-    return try Prompty.load(data)
+    return try Agent.load(data)
   }
 
   private static func isEmptyish(_ value: Any?) -> Bool {

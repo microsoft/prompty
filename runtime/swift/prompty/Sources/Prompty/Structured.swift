@@ -11,7 +11,7 @@ import PromptyModel
 public enum Structured {
 
   /// Wrap a processed result when the prompt declares outputs.
-  public static func wrapIfNeeded(_ agent: Prompty, result: Any?) -> Any? {
+  public static func wrapIfNeeded(_ agent: Agent, result: Any?) -> Any? {
     guard agent.hasStructuredOutputs else { return result }
     guard result is [String: Any] || result is [Any] else { return result }
 
@@ -71,7 +71,7 @@ public enum Structured {
   ///
   /// Providers use this to request schema-constrained responses. Structured
   /// output is always strict.
-  public static func outputSchema(_ agent: Prompty) throws -> [String: Any]? {
+  public static func outputSchema(_ agent: Agent) throws -> [String: Any]? {
     let outputs = agent.outputProperties
     guard !outputs.isEmpty else { return nil }
     return try JSONSchema.outputs(outputs)

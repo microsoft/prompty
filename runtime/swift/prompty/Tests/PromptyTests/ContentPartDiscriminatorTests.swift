@@ -8,7 +8,7 @@ import XCTest
 
 /// Strict-discriminator acceptance gate for `ContentPart`.
 ///
-/// This is the Swift half of the shared acceptance strengthened by Prompty
+/// This is the Swift half of the shared acceptance strengthened by Agent
 /// PR #447 commit `0c64ef33`, whose canonical vector is
 /// `spec/vectors/model/content_part_discriminator_vectors.json`.
 ///
@@ -245,24 +245,29 @@ final class ContentPartDiscriminatorTests: XCTestCase {
     }
   }
 
-  /// An explicitly empty discriminator is rejected and reported as `""`.
+  /// An explicitly empty discriminator is rejected. The generated loader gates
+  /// on `discriminator.isEmpty` before dispatch, so an empty `kind` surfaces as
+  /// `.invalidField(field: "kind", expected: "non-blank string")` rather than an
+  /// unknown-discriminator (there is no value to echo).
   func testEmptyKindIsRejected() {
-    assertRejects(["kind": "", "value": "empty kind"], expectedValue: "")
+    XCTAssertThrowsError(try ContentPart.load(["kind": "", "value": "empty kind"])) { error in
+      guard case .invalidField(let field, let expected)? = error as? TypraRuntimeError else {
+        return XCTFail("expected .invalidField, got \(error)")
+      }
+      XCTAssertEqual(field, "kind")
+      XCTAssertEqual(expected, "non-blank string")
+    }
   }
 
-  /// A *missing* `kind` is rejected too — that is the part of the behaviour
-  /// this pins, and all that the acceptance requires.
-  ///
-  /// The generated loader coalesces an absent value to `""` before dispatching
-  /// (`object["kind"] ?? ""`), so today it reports a missing field as though
-  /// the caller had written `kind: ""`. That is a diagnostic-quality wart:
-  /// there is no raw value to echo, so echoing `""` misrepresents the input.
-  /// It is reported upstream rather than frozen here — asserting the exact
-  /// `""` value would turn a future emitter *improvement* into a red test.
+  /// A *missing* `kind` is rejected too. The loader coalesces an absent value to
+  /// `NSNull`, which fails the `TypraRuntime.string` gate, so it surfaces as
+  /// `.invalidField(field: "kind", expected: "string")`. Only the field is
+  /// pinned; the exact `expected` text is a diagnostic detail owned by the
+  /// runtime.
   func testMissingKindIsRejected() {
     XCTAssertThrowsError(try ContentPart.load(["value": "no kind at all"])) { error in
-      guard case .unknownDiscriminator(_, let field, _)? = error as? TypraRuntimeError else {
-        return XCTFail("expected .unknownDiscriminator, got \(error)")
+      guard case .invalidField(let field, _)? = error as? TypraRuntimeError else {
+        return XCTFail("expected .invalidField, got \(error)")
       }
       XCTAssertEqual(field, "kind")
     }
@@ -307,33 +312,26 @@ final class ContentPartDiscriminatorTests: XCTestCase {
     }
   }
 
-  // MARK: - Closed ContentPart vs the open unions
+  // MARK: - Closed ContentPart vs the open Tool union
 
-  /// Pins all three unknown-kind policies against each other using the
+  /// Pins the two opposing unknown-kind policies against each other using the
   /// *identical* payload, so no shape-based heuristic can satisfy this by
-  /// accident: `Connection` preserves it losslessly, `Tool` dispatches it to
-  /// `CustomTool`, and `ContentPart` refuses it outright.
-  ///
-  /// The Connection half asserts the *whole* passthrough dictionary, not just
-  /// the discriminator, because "lossless" is a claim about the entire payload.
+  /// accident: `Tool` is an open union that dispatches an unknown kind to
+  /// `CustomTool`, while `ContentPart` is closed and refuses it outright.
   ///
   /// This is not the only thing keeping the policies apart — the rejection
-  /// tests above and `ConnectionRoundTripTests` each pin one side — but it is
-  /// the only place the contrast is asserted against one shared input.
+  /// tests above pin the closed side — but it is the only place the contrast is
+  /// asserted against one shared input.
   func testClosedContentPartIsIndependentOfOpenUnions() throws {
     let shared: [String: Any] = [
       "kind": "future-auth",
       "name": "shared",
-      "endpoint": "https://example.test",
+      "connection": [
+        "kind": "key",
+        "endpoint": "https://example.test",
+        "apiKey": "x",
+      ],
     ]
-
-    let connection = try Connection.load(shared)
-    guard case .unknown(let passthrough) = connection else {
-      return XCTFail("Connection must stay open and pass unknown kinds through")
-    }
-    XCTAssertEqual(
-      try canonical(passthrough), try canonical(shared),
-      "Connection passthrough must be lossless, not just discriminator-preserving")
 
     let tool = try Tool.load(shared)
     guard case .customTool = tool else {

@@ -59,11 +59,11 @@ final class NamedCollectionSaveFormTests: XCTestCase {
   /// projections. Comparing sorted names and sorted descriptions separately
   /// proves both multisets survived but not their association, so an
   /// implementation that reattached the wrong payload to a name would pass.
-  private func toolSignatures(_ agent: Prompty) -> [String] {
+  private func toolSignatures(_ agent: Agent) -> [String] {
     (agent.tools ?? []).map { tool in
       switch tool {
       case .functionTool(let value): return "\(value.name)|\(value.description ?? "<nil>")"
-      case .customTool(let value): return "\(value.name)|\(value.description ?? "<nil>")"
+      case .customTool(let value, _): return "\(value.name)|\(value.description ?? "<nil>")"
       default: return "<unexpected-tool-case>"
       }
     }
@@ -113,8 +113,8 @@ final class NamedCollectionSaveFormTests: XCTestCase {
     return entries
   }
 
-  private func agent(tools: [[String: Any]]) throws -> Prompty {
-    try Prompty.load([
+  private func agent(tools: [[String: Any]]) throws -> Agent {
+    try Agent.load([
       "kind": "prompt",
       "name": "save-form",
       "model": ["id": "gpt-4o-mini", "apiType": "chat"],
@@ -148,7 +148,7 @@ final class NamedCollectionSaveFormTests: XCTestCase {
       return
     }
 
-    let reloaded = try Prompty.load(saved)
+    let reloaded = try Agent.load(saved)
     XCTAssertEqual(
       reloaded.tools?.count, 3,
       "duplicate-named tools collapsed on save/reload — saved as \(saveForm(saved, "tools"))")
@@ -165,7 +165,7 @@ final class NamedCollectionSaveFormTests: XCTestCase {
   /// collapse-then-clone implementation that restores the count with the wrong
   /// content still fails.
   func testDuplicatePropertyNamesSurviveSaveAndReload() throws {
-    let loaded = try Prompty.load([
+    let loaded = try Agent.load([
       "kind": "prompt",
       "name": "dup-props",
       "model": ["id": "gpt-4o-mini", "apiType": "chat"],
@@ -194,7 +194,7 @@ final class NamedCollectionSaveFormTests: XCTestCase {
       propertySignatures(of: savedEntries), ["dup|a", "dup|b", "unique|c"],
       "the first save lost, exchanged or reordered a duplicate-named input's default")
 
-    let reloaded = try Prompty.load(saved)
+    let reloaded = try Agent.load(saved)
     XCTAssertEqual(
       reloaded.inputs?.count, 3,
       "duplicate-named inputs collapsed on save/reload — saved as \(saveForm(saved, "inputs"))")
@@ -237,7 +237,7 @@ final class NamedCollectionSaveFormTests: XCTestCase {
       return
     }
 
-    let reloaded = try Prompty.load(saved)
+    let reloaded = try Agent.load(saved)
     XCTAssertEqual(
       reloaded.tools?.count, 2,
       "an empty-named tool was dropped on save/reload — saved as \(saveForm(saved, "tools"))")
@@ -258,7 +258,7 @@ final class NamedCollectionSaveFormTests: XCTestCase {
   /// entries cleanly and satisfies every payload assertion. Only the form check
   /// rejects it.
   func testEmptyPropertyNameForcesTheArrayFallback() throws {
-    let loaded = try Prompty.load([
+    let loaded = try Agent.load([
       "kind": "prompt",
       "name": "empty-name-prop",
       "model": ["id": "gpt-4o-mini", "apiType": "chat"],
@@ -284,7 +284,7 @@ final class NamedCollectionSaveFormTests: XCTestCase {
       propertySignatures(of: savedEntries), ["|blank", "named|ok"],
       "the first save lost, exchanged or reordered the empty-named input")
 
-    let reloaded = try Prompty.load(saved)
+    let reloaded = try Agent.load(saved)
     XCTAssertEqual(
       reloaded.inputs?.count, 2,
       "an empty-named input was dropped on save/reload — saved as \(saveForm(saved, "inputs"))")
@@ -320,7 +320,7 @@ final class NamedCollectionSaveFormTests: XCTestCase {
       return
     }
 
-    let reloaded = try Prompty.load(saved)
+    let reloaded = try Agent.load(saved)
 
     // Declaration order, not alphabetical order — the third tool sorts first by
     // name, so an accidental re-sort would move it and fail here.
@@ -347,7 +347,7 @@ final class NamedCollectionSaveFormTests: XCTestCase {
     ])
 
     let saved = try loaded.save()
-    let reloaded = try Prompty.load(saved)
+    let reloaded = try Agent.load(saved)
 
     XCTAssertEqual(
       reloaded.tools?.count, 2,

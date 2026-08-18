@@ -16,7 +16,7 @@ final class ParseVectorTests: XCTestCase {
     Registry.shared.registerDefaults()
     var run = VectorRun(stage: "parse")
 
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "parse-vectors",
       "template": ["format": ["kind": "jinja2"], "parser": ["kind": "prompty"]],

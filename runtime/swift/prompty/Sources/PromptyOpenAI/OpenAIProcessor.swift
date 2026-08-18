@@ -12,7 +12,7 @@ import PromptyModel
 public struct OpenAIProcessor: Processor {
   public init() {}
 
-  public func process(agent: Prompty, response: Any) async throws -> Any {
+  public func process(agent: Agent, response: Any) async throws -> Any {
     try OpenAIProcessor.processResponse(agent, response: response)
   }
 
@@ -53,7 +53,7 @@ public struct OpenAIProcessor: Processor {
   /// - Images become the URL or base64 payload.
   /// - When the prompt declares outputs, text is JSON-parsed; unparseable text
   ///   falls back to the raw string rather than failing the call.
-  public static func processResponse(_ agent: Prompty, response: Any) throws -> Any {
+  public static func processResponse(_ agent: Agent, response: Any) throws -> Any {
     guard let body = response as? [String: Any] else {
       return response
     }
@@ -72,7 +72,7 @@ public struct OpenAIProcessor: Processor {
 
   // MARK: - Chat Completions
 
-  private static func processChat(_ agent: Prompty, choices: [Any]) throws -> Any {
+  private static func processChat(_ agent: Agent, choices: [Any]) throws -> Any {
     guard let first = choices.first as? [String: Any],
       let message = first["message"] as? [String: Any]
     else {
@@ -101,7 +101,7 @@ public struct OpenAIProcessor: Processor {
 
   // MARK: - Responses API
 
-  private static func processResponses(_ agent: Prompty, body: [String: Any]) throws -> Any {
+  private static func processResponses(_ agent: Agent, body: [String: Any]) throws -> Any {
     let output = body["output"] as? [Any] ?? []
 
     let calls: [[String: Any]] = output.compactMap { entry in
@@ -159,7 +159,7 @@ public struct OpenAIProcessor: Processor {
 
   // MARK: - Structured output
 
-  private static func finalize(_ agent: Prompty, text: String) -> Any {
+  private static func finalize(_ agent: Agent, text: String) -> Any {
     guard agent.hasStructuredOutputs, !text.isEmpty else { return text }
     guard let parsed = JSONSupport.parse(json: text),
       parsed is [String: Any] || parsed is [Any]

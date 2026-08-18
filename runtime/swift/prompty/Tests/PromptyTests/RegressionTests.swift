@@ -15,37 +15,60 @@ final class RegressionTests: XCTestCase {
 
   // MARK: - Wildcard template kinds
 
-  /// A prompt that configures only one half of `template` must still resolve
-  /// the other half to its default.
+  /// With no `template` block both halves resolve to their defaults; a present
+  /// but half-specified `template` object is rejected.
   ///
-  /// The generated model fills an unset `kind` with the schema wildcard `"*"`,
-  /// which is never a registry key. Treating it as a real key made a prompt
-  /// that set only `format` fail to find a parser.
-  func testPartialTemplateFallsBackToDefaults() throws {
-    let formatOnly = try Prompty.load([
-      "kind": "prompt",
-      "name": "format-only",
-      "template": ["format": ["kind": "mustache"]],
-    ])
-    XCTAssertEqual(formatOnly.formatKind, "mustache")
-    XCTAssertEqual(formatOnly.parserKind, Defaults.parser)
-
-    let parserOnly = try Prompty.load([
-      "kind": "prompt",
-      "name": "parser-only",
-      "template": ["parser": ["kind": "prompty"]],
-    ])
-    XCTAssertEqual(parserOnly.formatKind, Defaults.templateFormat)
-    XCTAssertEqual(parserOnly.parserKind, "prompty")
-
-    let noTemplate = try Prompty.load(["kind": "prompt", "name": "bare"])
+  /// `template` is optional on `Agent`, so omitting it leaves `formatKind` /
+  /// `parserKind` to fall back to the runtime defaults (the generated model
+  /// fills an unset `kind` with the schema wildcard `"*"`, which is never a
+  /// registry key and must resolve to the default rather than fail lookup).
+  ///
+  /// But when a `template` object IS present it must be complete: `format` and
+  /// `parser` are both required. The `template_string_invalid` load vector pins
+  /// this — "Template as a bare string is not valid v2 — must be an object with
+  /// format/parser" — so the generated loader throws on a half-specified object,
+  /// matching every other runtime's strict `validate_input_at` contract (Rust
+  /// `Template::from_json` errors identically). This is the cross-runtime
+  /// strict-complex contract, not a Swift quirk to paper over in the runtime.
+  func testTemplateDefaultsAndPartialRejection() throws {
+    let noTemplate = try Agent.load(["kind": "prompt", "name": "bare"])
     XCTAssertEqual(noTemplate.formatKind, Defaults.templateFormat)
     XCTAssertEqual(noTemplate.parserKind, Defaults.parser)
+
+    // format present, parser absent -> the required `parser` is missing.
+    XCTAssertThrowsError(
+      try Agent.load([
+        "kind": "prompt", "name": "format-only",
+        "template": ["format": ["kind": "mustache"]],
+      ])
+    ) { error in
+      guard case TypraRuntimeError.unsupported(let message) = error else {
+        return XCTFail("expected a missing-required-field error, got \(error)")
+      }
+      XCTAssertTrue(
+        message.contains("parser") && message.contains("missing required field"),
+        "unexpected error message: \(message)")
+    }
+
+    // parser present, format absent -> the required `format` is missing.
+    XCTAssertThrowsError(
+      try Agent.load([
+        "kind": "prompt", "name": "parser-only",
+        "template": ["parser": ["kind": "prompty"]],
+      ])
+    ) { error in
+      guard case TypraRuntimeError.unsupported(let message) = error else {
+        return XCTFail("expected a missing-required-field error, got \(error)")
+      }
+      XCTAssertTrue(
+        message.contains("format") && message.contains("missing required field"),
+        "unexpected error message: \(message)")
+    }
   }
 
   /// An explicitly empty kind is as unset as a missing one.
   func testEmptyTemplateKindFallsBackToDefaults() throws {
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "empty-kinds",
       "template": ["format": ["kind": ""], "parser": ["kind": ""]],
@@ -63,7 +86,7 @@ final class RegressionTests: XCTestCase {
   /// searched the output for its own now-absent first one, and every thread,
   /// image, file, and audio input was silently dropped.
   func testPrepareExpandsThreadInputs() async throws {
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "threaded",
       "instructions": "system:\nYou are helpful.\n\n{{history}}\n\nuser:\n{{question}}",
@@ -95,7 +118,7 @@ final class RegressionTests: XCTestCase {
 
   /// The nonce must not survive into the messages handed to a provider.
   func testPrepareLeavesNoNonceResidue() async throws {
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "threaded-residue",
       "instructions": "system:\nBe brief.\n\n{{history}}\n\nuser:\nhi",
@@ -171,7 +194,7 @@ final class RegressionTests: XCTestCase {
     var run = VectorRun(stage: "expression")
     for (template, inputs, expected) in cases {
       run.started()
-      let agent = try Prompty.load([
+      let agent = try Agent.load([
         "kind": "prompt", "name": "expr", "instructions": template,
       ])
       do {
@@ -189,7 +212,7 @@ final class RegressionTests: XCTestCase {
 
   /// Syntax the runtime does not implement must be reported, not ignored.
   func testRendererRejectsUnsupportedExpressions() async throws {
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "unsupported",
       "instructions": "{{ value ** }}",
@@ -214,7 +237,7 @@ final class RegressionTests: XCTestCase {
     registry.registerDefaults()
     registry.register(parser: StubParser(preRenderResult: "not a PreRenderResult"), for: "stub")
 
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "strict-stub",
       "instructions": "system:\nhi",
@@ -237,7 +260,7 @@ final class RegressionTests: XCTestCase {
     registry.registerDefaults()
     registry.register(parser: StubParser(preRenderResult: nil), for: "stub-nil")
 
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "strict-nil",
       "instructions": "system:\nhi",
@@ -284,21 +307,21 @@ final class RegressionTests: XCTestCase {
   /// Routing a streaming request through the buffered path hands raw SSE
   /// frames to a JSON decoder.
   func testIsStreamingReadsModelOptions() throws {
-    let streaming = try Prompty.load([
+    let streaming = try Agent.load([
       "kind": "prompt",
       "name": "streams",
       "model": ["id": "gpt-4o-mini", "options": ["additionalProperties": ["stream": true]]],
     ])
     XCTAssertTrue(Pipeline.isStreaming(streaming))
 
-    let buffered = try Prompty.load([
+    let buffered = try Agent.load([
       "kind": "prompt",
       "name": "buffered",
       "model": ["id": "gpt-4o-mini", "options": ["additionalProperties": ["stream": false]]],
     ])
     XCTAssertFalse(Pipeline.isStreaming(buffered))
 
-    let unset = try Prompty.load([
+    let unset = try Agent.load([
       "kind": "prompt", "name": "unset", "model": ["id": "gpt-4o-mini"],
     ])
     XCTAssertFalse(Pipeline.isStreaming(unset))
@@ -309,7 +332,7 @@ private struct StubParser: Parser {
 
   func preRender(template: String) throws -> Any? { preRenderResult }
 
-  func parse(agent: Prompty, rendered: String, context: [String: Any]?) async throws -> [Message] {
+  func parse(agent: Agent, rendered: String, context: [String: Any]?) async throws -> [Message] {
     [Message.user(text: rendered)]
   }
 }

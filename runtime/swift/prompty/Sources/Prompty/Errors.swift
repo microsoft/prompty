@@ -1,6 +1,6 @@
 /// Errors raised while loading a `.prompty` file.
 ///
-/// Message formats are shared across every Prompty runtime so that host
+/// Message formats are shared across every Agent runtime so that host
 /// applications can match on them consistently.
 
 /// Errors raised while resolving or running a pipeline stage.
@@ -13,7 +13,7 @@ public enum LoadError: Error, CustomStringConvertible, Equatable {
   case envVarNotSet(varName: String, key: String)
   /// A `${file:path}` reference could not be read, parsed, or was out of bounds.
   case fileReference(path: String, detail: String)
-  /// The frontmatter did not satisfy the Prompty model schema.
+  /// The frontmatter did not satisfy the Agent model schema.
   case invalidModel(String)
   /// A name-keyed collection (`inputs`, `outputs`, nested `properties`) held a
   /// value that can never be a property. `path` is the full dotted path to the

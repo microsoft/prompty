@@ -20,7 +20,7 @@ final class LineEndingTests: XCTestCase {
   /// never passes through it, so every role marker was missed and parsing
   /// produced one lumped message.
   func testParserHandlesCarriageReturnLineEndings() async throws {
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "crlf",
       "instructions": "system:\r\nYou are helpful.\r\n\r\nuser:\r\nHello there.",

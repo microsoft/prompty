@@ -1,6 +1,6 @@
 import Foundation
 
-/// Renders the Jinja2 subset that Prompty templates use.
+/// Renders the Jinja2 subset that Agent templates use.
 ///
 /// Supported: `{{ expr }}` with dotted paths and filters, `{% if %}` /
 /// `{% else %}` / `{% endif %}`, `{% for x in xs %}` / `{% endfor %}`, and
@@ -25,7 +25,7 @@ public struct Jinja2Renderer: Renderer {
   /// with nonce placeholders. Preparing again here would mint a *second* nonce
   /// and leave the pipeline expanding a placeholder that no longer appears in
   /// the output, so this stage is deliberately a plain render.
-  public func render(agent: Prompty, template: String, inputs: [String: Any]) async throws
+  public func render(agent: Agent, template: String, inputs: [String: Any]) async throws
     -> String
   {
     try render(template: template, inputs: inputs)

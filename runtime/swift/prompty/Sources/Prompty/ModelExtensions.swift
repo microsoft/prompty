@@ -104,7 +104,7 @@ extension Tool {
     case .mcpTool(let tool): return tool.bindings ?? []
     case .openApiTool(let tool): return tool.bindings ?? []
     case .promptyTool(let tool): return tool.bindings ?? []
-    case .customTool(let tool): return tool.bindings ?? []
+    case .customTool(let tool, _): return tool.bindings ?? []
     }
   }
 
@@ -131,7 +131,7 @@ extension Tool {
     return false
   }
 }
-extension Prompty {
+extension Agent {
   /// The renderer key: `template.format.kind`, defaulting to `jinja2`.
   ///
   /// The generated model defaults `kind` to the wildcard sentinel `"*"`, which
@@ -154,19 +154,25 @@ extension Prompty {
 
   /// The executor/processor key: `model.provider`, defaulting to `openai`.
   public var providerKind: String {
-    guard let provider = model.provider, !provider.isEmpty else { return Defaults.provider }
+    guard let provider = model?.provider, !provider.isEmpty else { return Defaults.provider }
     return provider
   }
 
   /// The API surface to call: `model.apiType`, defaulting to `chat`.
   public var apiTypeName: String {
-    let name = model.apiType?.rawValue ?? ""
+    let name = model?.apiType?.rawValue ?? ""
     return name.isEmpty ? "chat" : name
   }
 
+  /// The configured model id, or an empty string when no `model` block is present.
+  public var modelId: String { model?.id ?? "" }
+
+  /// The configured model options, when a `model` block is present.
+  public var modelOptions: ModelOptions? { model?.options }
+
   /// Whether the prompt asks the provider to stream its response.
   public var isStreaming: Bool {
-    JSONSupport.isTruthy(model.options?.additionalProperties?["stream"])
+    JSONSupport.isTruthy(model?.options?.additionalProperties?["stream"])
   }
 
   /// Declared inputs, or an empty list.

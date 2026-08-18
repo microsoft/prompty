@@ -1,6 +1,6 @@
 import Foundation
 
-/// The Prompty execution pipeline.
+/// The Agent execution pipeline.
 ///
 /// ```text
 /// load → validateInputs → render → parse → prepare → run → process
@@ -31,7 +31,7 @@ public enum Pipeline {
   ///
   /// `example` is documentation and is never substituted — only `default` is.
   public static func validateInputs(
-    _ agent: Prompty,
+    _ agent: Agent,
     inputs: [String: Any]
   ) throws -> [String: Any] {
     var result = inputs
@@ -54,7 +54,7 @@ public enum Pipeline {
 
   /// Render the prompt's instructions with the supplied inputs.
   public static func render(
-    _ agent: Prompty,
+    _ agent: Agent,
     inputs: [String: Any] = [:],
     registry: Registry = .shared
   ) async throws -> String {
@@ -66,7 +66,7 @@ public enum Pipeline {
   /// `context` carries the strict-mode nonce produced by the parser's
   /// `preRender`. Passing `nil` parses without injection validation.
   public static func parse(
-    _ agent: Prompty,
+    _ agent: Agent,
     rendered: String,
     context: [String: Any]? = nil,
     registry: Registry = .shared
@@ -83,7 +83,7 @@ public enum Pipeline {
   /// parsing. Role markers that appear only after interpolation therefore fail
   /// validation instead of silently becoming new turns.
   public static func prepare(
-    _ agent: Prompty,
+    _ agent: Agent,
     inputs: [String: Any] = [:],
     registry: Registry = .shared
   ) async throws -> [Message] {
@@ -118,7 +118,7 @@ public enum Pipeline {
 
   /// Normalize a provider response.
   public static func process(
-    _ agent: Prompty,
+    _ agent: Agent,
     response: Any,
     registry: Registry = .shared
   ) async throws -> Any? {
@@ -134,7 +134,7 @@ public enum Pipeline {
   /// a streaming response through the non-streaming decoder would hand SSE
   /// frames to a JSON parser.
   public static func run(
-    _ agent: Prompty,
+    _ agent: Agent,
     messages: [Message],
     registry: Registry = .shared
   ) async throws -> Any? {
@@ -154,8 +154,8 @@ public enum Pipeline {
   }
 
   /// Whether the prompt asked for a streamed response.
-  static func isStreaming(_ agent: Prompty) -> Bool {
-    guard let value = agent.model.options?.additionalProperties?["stream"] else { return false }
+  static func isStreaming(_ agent: Agent) -> Bool {
+    guard let value = agent.model?.options?.additionalProperties?["stream"] else { return false }
     return (JSONSupport.normalize(value) as? Bool) ?? false
   }
 
@@ -172,7 +172,7 @@ public enum Pipeline {
 
   /// Run the full pipeline for a loaded prompt.
   public static func invoke(
-    _ agent: Prompty,
+    _ agent: Agent,
     inputs: [String: Any] = [:],
     registry: Registry = .shared
   ) async throws -> Any? {
@@ -194,7 +194,7 @@ public enum Pipeline {
   /// Stream a prepared conversation, yielding decoded chunks as the provider
   /// emits them.
   public static func stream(
-    _ agent: Prompty,
+    _ agent: Agent,
     messages: [Message],
     registry: Registry = .shared
   ) async throws -> ChunkStream {
@@ -216,7 +216,7 @@ public enum Pipeline {
   /// Appending these to the conversation and calling ``run(_:messages:registry:)``
   /// again continues the exchange.
   public static func toolMessages(
-    _ agent: Prompty,
+    _ agent: Agent,
     rawResponse: Any = [:] as [String: Any],
     toolCalls: [ToolCall],
     toolResults: [String],
@@ -274,7 +274,7 @@ public enum Pipeline {
   /// Unknown tool names and tools without bindings pass through untouched, so
   /// this is safe to call unconditionally on every tool call.
   public static func applyBindings(
-    _ agent: Prompty,
+    _ agent: Agent,
     toolName: String,
     arguments: [String: Any],
     inputs: [String: Any]
@@ -306,7 +306,7 @@ public enum Pipeline {
   /// argument object, so it is passed through rather than replaced by one that
   /// contains only the bound values.
   public static func boundArguments(
-    _ agent: Prompty,
+    _ agent: Agent,
     call: ToolCall,
     inputs: [String: Any]
   ) -> [String: Any] {
@@ -330,12 +330,12 @@ public enum Pipeline {
 
   /// Strict mode defaults to on — role-marker injection is the risk being
   /// mitigated, so it must be opted out of explicitly.
-  static func isStrict(_ agent: Prompty) -> Bool {
+  static func isStrict(_ agent: Agent) -> Bool {
     agent.template?.format.strict ?? true
   }
 
   static func renderWithNonces(
-    _ agent: Prompty,
+    _ agent: Agent,
     inputs: [String: Any],
     registry: Registry
   ) async throws -> (rendered: String, nonces: [String: String]) {
@@ -451,23 +451,23 @@ public enum Pipeline {
     }
   }
 }
-public func render(_ agent: Prompty, inputs: [String: Any] = [:]) async throws -> String {
+public func render(_ agent: Agent, inputs: [String: Any] = [:]) async throws -> String {
   try await Pipeline.render(agent, inputs: inputs)
 }
-public func prepare(_ agent: Prompty, inputs: [String: Any] = [:]) async throws -> [Message] {
+public func prepare(_ agent: Agent, inputs: [String: Any] = [:]) async throws -> [Message] {
   try await Pipeline.prepare(agent, inputs: inputs)
 }
-public func run(_ agent: Prompty, messages: [Message]) async throws -> Any? {
+public func run(_ agent: Agent, messages: [Message]) async throws -> Any? {
   try await Pipeline.run(agent, messages: messages)
 }
-public func invoke(_ agent: Prompty, inputs: [String: Any] = [:]) async throws -> Any? {
+public func invoke(_ agent: Agent, inputs: [String: Any] = [:]) async throws -> Any? {
   try await Pipeline.invoke(agent, inputs: inputs)
 }
 public func invoke(path: String, inputs: [String: Any] = [:]) async throws -> Any? {
   try await Pipeline.invoke(path: path, inputs: inputs)
 }
 public func boundArguments(
-  _ agent: Prompty, call: ToolCall, inputs: [String: Any] = [:]
+  _ agent: Agent, call: ToolCall, inputs: [String: Any] = [:]
 ) -> [String: Any] {
   Pipeline.boundArguments(agent, call: call, inputs: inputs)
 }

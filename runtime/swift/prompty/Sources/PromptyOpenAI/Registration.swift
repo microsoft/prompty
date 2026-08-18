@@ -5,7 +5,7 @@ import Foundation
 /// Call once during host startup:
 ///
 /// ```swift
-/// import Prompty
+/// import Agent
 /// import PromptyOpenAI
 ///
 /// registerOpenAI()

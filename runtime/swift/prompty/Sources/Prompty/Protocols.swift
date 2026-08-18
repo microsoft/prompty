@@ -48,7 +48,7 @@ extension Parser {
 }
 extension Executor {
   /// Report that this provider cannot stream.
-  public func executeStream(agent: Prompty, messages: [Message]) async throws -> Any {
+  public func executeStream(agent: Agent, messages: [Message]) async throws -> Any {
     throw InvokerError.execution("streaming is not supported by this executor")
   }
 

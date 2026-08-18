@@ -140,7 +140,7 @@ final class OptionalCollectionPresenceTests: XCTestCase {
   /// The same rule at the document level: a prompt that declares no tools must
   /// not acquire an empty `tools` collection by being saved.
   func testAbsentToolsStaysOmitted() throws {
-    let saved = try Prompty.load([
+    let saved = try Agent.load([
       "kind": "prompt",
       "name": "no-tools",
       "instructions": "hello",
@@ -164,7 +164,7 @@ final class OptionalCollectionPresenceTests: XCTestCase {
   /// that reason — so absence has to be proven separately too. An
   /// implementation can synthesize one while correctly omitting another.
   func testAbsentInputsAndOutputsStayOmitted() throws {
-    let saved = try Prompty.load([
+    let saved = try Agent.load([
       "kind": "prompt",
       "name": "no-io",
       "instructions": "hello",

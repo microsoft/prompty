@@ -5,7 +5,7 @@ import PromptyModel
 /// Calls the OpenAI API over HTTP.
 ///
 /// The executor is deliberately thin: request bodies come from ``OpenAIWire``
-/// so they stay identical to every other Prompty runtime, and responses are
+/// so they stay identical to every other Agent runtime, and responses are
 /// handed to ``OpenAIProcessor`` unmodified.
 #if canImport(FoundationNetworking)
   import FoundationNetworking
@@ -21,14 +21,14 @@ public struct OpenAIExecutor: Executor {
 
   // MARK: - Execute
 
-  public func execute(agent: Prompty, messages: [Message]) async throws -> Any {
+  public func execute(agent: Agent, messages: [Message]) async throws -> Any {
     let config = try OpenAIConfig.resolve(agent)
     let (path, body) = try OpenAIExecutor.request(agent, messages: messages)
     return try await send(config.request(path: path, body: body))
   }
 
   /// Build the endpoint path and request body for a prompt's API type.
-  public static func request(_ agent: Prompty, messages: [Message]) throws -> (
+  public static func request(_ agent: Agent, messages: [Message]) throws -> (
     path: String, body: [String: Any]
   ) {
     switch agent.apiTypeName {
@@ -50,8 +50,8 @@ public struct OpenAIExecutor: Executor {
   /// Stream raw provider chunks.
   ///
   /// Returns a ``RawChunkStream``; decoding into `StreamChunk` values is the
-  /// processor's job, matching every other Prompty runtime.
-  public func executeStream(agent: Prompty, messages: [Message]) async throws -> Any {
+  /// processor's job, matching every other Agent runtime.
+  public func executeStream(agent: Agent, messages: [Message]) async throws -> Any {
     let config = try OpenAIConfig.resolve(agent)
     var (path, body) = try OpenAIExecutor.request(agent, messages: messages)
     OpenAIWire.enableStreaming(&body, apiType: agent.apiTypeName)

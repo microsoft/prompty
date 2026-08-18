@@ -4,7 +4,7 @@ import XCTest
 
 /// Shared spec-vector plumbing.
 ///
-/// Every Prompty runtime is validated against the same JSON vectors under
+/// Every Agent runtime is validated against the same JSON vectors under
 /// `spec/vectors/`, so conformance is comparable across languages. This file
 /// locates that directory relative to the test source and provides the
 /// order-insensitive JSON comparison the vectors are written against.
@@ -26,33 +26,58 @@ enum Spec {
   ///
   /// Resolved from `#filePath` rather than the working directory so the tests
   /// run identically from an IDE, `swift test`, and CI.
-  static let root: URL = {
+  static let repoRoot: URL = {
     // .../runtime/swift/prompty/Tests/PromptyTests/SpecVectors.swift
     var url = URL(fileURLWithPath: #filePath)
     for _ in 0..<6 { url = url.deletingLastPathComponent() }
-    return url.appendingPathComponent("spec")
+    return url
   }()
+
+  static let root: URL = repoRoot.appendingPathComponent("spec")
 
   static var fixtures: URL { root.appendingPathComponent("fixtures") }
 
-  /// Read one stage's vector file.
-  static func vectors(_ stage: String, file: String? = nil) throws -> [[String: Any]] {
-    let name = file ?? "\(stage)_vectors.json"
-    let url =
-      root
-      .appendingPathComponent("vectors")
-      .appendingPathComponent(stage)
-      .appendingPathComponent(name)
+  /// The single generated conformance-vector file — the cross-runtime source of
+  /// truth every language suite is validated against.
+  static let generatedVectorsURL: URL =
+    repoRoot
+    .appendingPathComponent("schema")
+    .appendingPathComponent("tsp-output")
+    .appendingPathComponent(".typra-generated")
+    .appendingPathComponent("vectors.json")
 
-    let data = try Data(contentsOf: url)
-    guard let array = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-      throw SpecError.malformed("\(url.path) is not a JSON array of objects")
+  /// Every entry's inner `vector` object from the generated file.
+  private static func allVectors() throws -> [[String: Any]] {
+    let data = try Data(contentsOf: generatedVectorsURL)
+    guard let doc = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+      let entries = doc["vectors"] as? [[String: Any]]
+    else {
+      throw SpecError.malformed("\(generatedVectorsURL.path) has no 'vectors' array")
     }
-    return array
+    return entries.compactMap { $0["vector"] as? [String: Any] }
   }
 
-  /// Read a vector file whose root is an object rather than an array.
+  /// Read one stage's vectors from the generated single source of truth.
+  ///
+  /// Vectors are filtered by their inner `stage` field, which matches the stage
+  /// names the per-language suites request (`load`, `parse`, `render`,
+  /// `process`, `agent`, `wire`, `replay`).
+  static func vectors(_ stage: String, file: String? = nil) throws -> [[String: Any]] {
+    try allVectors().filter { ($0["stage"] as? String) == stage }
+  }
+
+  /// Read a vector document whose root is an object rather than an array.
+  ///
+  /// The only such document consumed on `main` is the replay harness fixture,
+  /// which the generator emits as per-scenario entries under the `replay`
+  /// stage; it is reconstructed here into the object shape the replay suite
+  /// expects, mirroring the Rust reference harness. Any other path falls back
+  /// to a literal file under `spec/vectors/` (feature-branch fixtures).
   static func vectorObject(_ relativePath: String) throws -> [String: Any] {
+    if relativePath == "harness/replay_vectors.json" {
+      return try reconstructReplayObject()
+    }
+
     var url = root.appendingPathComponent("vectors")
     for component in relativePath.split(separator: "/") {
       url = url.appendingPathComponent(String(component))
@@ -63,6 +88,38 @@ enum Spec {
       throw SpecError.malformed("\(url.path) is not a JSON object")
     }
     return object
+  }
+
+  /// Rebuild the replay harness object from the generated `replay` vectors.
+  ///
+  /// The generator emits each scenario as its own entry carrying the
+  /// journal-level `clock`/`sessionId`/`turnId` plus per-scenario `inputs` and
+  /// `maxIterations`; the shared object form hoists the journal fields to the
+  /// top and nests the scenarios, exactly as the Rust harness reconstructs it.
+  private static func reconstructReplayObject() throws -> [String: Any] {
+    let items = try allVectors().filter { ($0["stage"] as? String) == "replay" }
+    guard let first = items.first, let firstInput = first["input"] as? [String: Any] else {
+      throw SpecError.malformed("no replay vectors found in \(generatedVectorsURL.path)")
+    }
+
+    let scenarios: [[String: Any]] = items.map { vector in
+      let input = vector["input"] as? [String: Any] ?? [:]
+      var scenario: [String: Any] = [
+        "name": vector["name"] as? String ?? "<unnamed>",
+        "expected": vector["expected"] as? [String] ?? [],
+      ]
+      if let inputs = input["inputs"] { scenario["inputs"] = inputs }
+      if let maxIterations = input["maxIterations"] { scenario["maxIterations"] = maxIterations }
+      return scenario
+    }
+
+    return [
+      "version": 1,
+      "clock": firstInput["clock"] as Any,
+      "sessionId": firstInput["sessionId"] as Any,
+      "turnId": firstInput["turnId"] as Any,
+      "scenarios": scenarios,
+    ]
   }
 
   enum SpecError: Error, CustomStringConvertible {

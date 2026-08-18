@@ -161,8 +161,8 @@ final class LoadVectorTests: XCTestCase {
 
   // MARK: - Loading
 
-  /// Build a `Prompty` from whichever input form the vector uses.
-  static func loadAgent(_ input: [String: Any]) throws -> Prompty {
+  /// Build a `Agent` from whichever input form the vector uses.
+  static func loadAgent(_ input: [String: Any]) throws -> Agent {
     if let fixture = input["fixture"] as? String {
       return try Loader.load(path: Spec.fixtures.appendingPathComponent(fixture).path)
     }
@@ -313,7 +313,7 @@ final class LoadVectorTests: XCTestCase {
 
   // MARK: - Assertions
 
-  private static func validate(agent: Prompty, expected: [String: Any]) throws {
+  private static func validate(agent: Agent, expected: [String: Any]) throws {
     if let kind = expected["kind"] as? String {
       try expect(kind == "prompt", "vector expected kind=prompt, declared '\(kind)'")
     }
@@ -329,9 +329,9 @@ final class LoadVectorTests: XCTestCase {
 
     if let model = expected["model"] {
       if model is NSNull {
-        try expect(agent.model.id.isEmpty, "expected no model, got id='\(agent.model.id)'")
+        try expect(agent.model?.id.isEmpty ?? true, "expected no model, got id='\(agent.model?.id ?? "")'")
       } else if let model = model as? [String: Any] {
-        try validateModel(agent.model, expected: model)
+        try validateModel(try XCTUnwrap(agent.model), expected: model)
       }
     }
 

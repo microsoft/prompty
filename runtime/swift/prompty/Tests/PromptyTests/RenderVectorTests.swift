@@ -65,14 +65,14 @@ final class RenderVectorTests: XCTestCase {
   /// thread-kind property.
   private static func agent(
     name: String, template: String, engine: String, inputs: [String: Any]
-  ) throws -> Prompty {
+  ) throws -> Agent {
     var properties: [[String: Any]] = []
     for (key, value) in inputs.sorted(by: { $0.key < $1.key }) {
       let kind = (value as? [String: Any])?["_kind"] as? String ?? "string"
       properties.append(["name": key, "kind": kind])
     }
 
-    return try Prompty.load([
+    return try Agent.load([
       "kind": "prompt",
       "name": name,
       "instructions": template,

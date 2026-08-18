@@ -67,13 +67,13 @@ public enum OpenAIWire {
   // MARK: - Request bodies
 
   /// Build the request body for a chat completions call.
-  public static func chatArgs(_ agent: Prompty, messages: [Message]) throws -> [String: Any] {
+  public static func chatArgs(_ agent: Agent, messages: [Message]) throws -> [String: Any] {
     var args: [String: Any] = [
-      "model": agent.model.id,
+      "model": agent.modelId,
       "messages": messages.map(message),
     ]
 
-    applyOptions(&args, agent.model.options, provider: "openai")
+    applyOptions(&args, agent.modelOptions, provider: "openai")
 
     let tools = try self.tools(agent)
     if !tools.isEmpty { args["tools"] = tools }
@@ -88,7 +88,7 @@ public enum OpenAIWire {
   ///
   /// System and developer messages collapse into `instructions`; everything
   /// else becomes an `input` item.
-  public static func responsesArgs(_ agent: Prompty, messages: [Message]) throws -> [String: Any] {
+  public static func responsesArgs(_ agent: Agent, messages: [Message]) throws -> [String: Any] {
     var systemParts: [String] = []
     var input: [Any] = []
 
@@ -102,14 +102,14 @@ public enum OpenAIWire {
     }
 
     var args: [String: Any] = [
-      "model": agent.model.id.isEmpty ? "gpt-4o" : agent.model.id,
+      "model": agent.modelId.isEmpty ? "gpt-4o" : agent.modelId,
       "input": input,
     ]
     if !systemParts.isEmpty {
       args["instructions"] = systemParts.joined(separator: "\n\n")
     }
 
-    applyOptions(&args, agent.model.options, provider: "responses")
+    applyOptions(&args, agent.modelOptions, provider: "responses")
 
     let tools = try responsesTools(agent)
     if !tools.isEmpty { args["tools"] = tools }
@@ -121,17 +121,17 @@ public enum OpenAIWire {
   }
 
   /// Build the request body for an embedding call.
-  public static func embeddingArgs(_ agent: Prompty, messages: [Message]) -> [String: Any] {
+  public static func embeddingArgs(_ agent: Agent, messages: [Message]) -> [String: Any] {
     var args: [String: Any] = [
-      "model": agent.model.id.isEmpty ? "text-embedding-ada-002" : agent.model.id,
+      "model": agent.modelId.isEmpty ? "text-embedding-ada-002" : agent.modelId,
       "input": textInput(messages),
     ]
-    mergeAdditionalProperties(&args, agent.model.options, overwrite: true)
+    mergeAdditionalProperties(&args, agent.modelOptions, overwrite: true)
     return args
   }
 
   /// Build the request body for an image generation call.
-  public static func imageArgs(_ agent: Prompty, messages: [Message]) -> [String: Any] {
+  public static func imageArgs(_ agent: Agent, messages: [Message]) -> [String: Any] {
     let prompt: String
     switch textInput(messages) {
     case let single as String: prompt = single
@@ -140,10 +140,10 @@ public enum OpenAIWire {
     }
 
     var args: [String: Any] = [
-      "model": agent.model.id.isEmpty ? "dall-e-3" : agent.model.id,
+      "model": agent.modelId.isEmpty ? "dall-e-3" : agent.modelId,
       "prompt": prompt,
     ]
-    mergeAdditionalProperties(&args, agent.model.options, overwrite: true)
+    mergeAdditionalProperties(&args, agent.modelOptions, overwrite: true)
     return args
   }
 
@@ -193,7 +193,7 @@ public enum OpenAIWire {
   // MARK: - Tools
 
   /// Project every function tool onto the Chat Completions tool shape.
-  public static func tools(_ agent: Prompty) throws -> [[String: Any]] {
+  public static func tools(_ agent: Agent) throws -> [[String: Any]] {
     try (agent.tools ?? [])
       .filter { $0.kindName == "function" }
       .map(functionTool)
@@ -218,7 +218,7 @@ public enum OpenAIWire {
   }
 
   /// Project every function tool onto the Responses API's flat tool shape.
-  public static func responsesTools(_ agent: Prompty) throws -> [[String: Any]] {
+  public static func responsesTools(_ agent: Agent) throws -> [[String: Any]] {
     try (agent.tools ?? [])
       .filter { $0.kindName == "function" }
       .map(responsesFunctionTool)
@@ -244,7 +244,7 @@ public enum OpenAIWire {
 
   // MARK: - Structured output
 
-  static func responseFormat(_ agent: Prompty) throws -> [String: Any]? {
+  static func responseFormat(_ agent: Agent) throws -> [String: Any]? {
     guard let schema = try Structured.outputSchema(agent) else { return nil }
     return [
       "type": "json_schema",
@@ -256,7 +256,7 @@ public enum OpenAIWire {
     ]
   }
 
-  static func responsesTextFormat(_ agent: Prompty) throws -> [String: Any]? {
+  static func responsesTextFormat(_ agent: Agent) throws -> [String: Any]? {
     guard let schema = try Structured.outputSchema(agent) else { return nil }
     return [
       "format": [

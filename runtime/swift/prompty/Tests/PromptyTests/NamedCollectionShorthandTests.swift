@@ -218,14 +218,15 @@ final class NamedCollectionShorthandTests: XCTestCase {
       ].joined(separator: "\n"))
 
     XCTAssertEqual(entries.count, 1)
-    let nested = entries[0]["properties"] as? [[String: Any]]
-    XCTAssertEqual(nested?.count, 1)
-    XCTAssertEqual(nested?.first?["name"] as? String, "nested")
-    XCTAssertEqual(nested?.first?["kind"] as? String, "string")
+    // The generated model round-trips nested collections in the canonical
+    // object (name-keyed map) form, so read the nested entry by its key.
+    let nested = entries[0]["properties"] as? [String: Any]
+    let kept = nested?["nested"] as? [String: Any]
+    XCTAssertEqual(kept?["kind"] as? String, "string")
     XCTAssertEqual(
-      nested?.first?["default"] as? String, "kept",
+      kept?["default"] as? String, "kept",
       "the shorthand applies at every nesting depth, not just the top level")
-    XCTAssertNil(nested?.first?["example"])
+    XCTAssertNil(kept?["example"])
   }
 
   // MARK: - Helper

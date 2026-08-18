@@ -63,7 +63,7 @@ final class WireVectorTests: XCTestCase {
 
   // MARK: - Vector input decoding
 
-  private static func agent(from input: [String: Any]) throws -> Prompty {
+  private static func agent(from input: [String: Any]) throws -> Agent {
     var model: [String: Any] = [
       "provider": input["provider"] as? String ?? "openai"
     ]
@@ -81,7 +81,7 @@ final class WireVectorTests: XCTestCase {
     if let tools = input["tools"] as? [Any], !tools.isEmpty { data["tools"] = tools }
     if let outputs = input["outputs"] as? [Any], !outputs.isEmpty { data["outputs"] = outputs }
 
-    return try Prompty.load(data)
+    return try Agent.load(data)
   }
 
   private static func messages(from input: [String: Any]) throws -> [Message] {

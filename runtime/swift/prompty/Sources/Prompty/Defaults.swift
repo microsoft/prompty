@@ -1,4 +1,4 @@
-/// Cross-runtime constants. These values are part of the Prompty spec and must
+/// Cross-runtime constants. These values are part of the Agent spec and must
 /// match every other runtime exactly.
 public enum Defaults {
   /// Renderer key used when `template.format.kind` is absent or empty.
@@ -25,6 +25,6 @@ public enum Defaults {
   /// Input kinds replaced by nonce placeholders during rendering.
   public static let richKinds: Set<String> = ["thread", "image", "file", "audio"]
 
-  /// Role markers the Prompty parser recognizes.
+  /// Role markers the Agent parser recognizes.
   public static let roleMarkers: Set<String> = ["system", "user", "assistant"]
 }

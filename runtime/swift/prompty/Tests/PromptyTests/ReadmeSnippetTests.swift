@@ -8,7 +8,7 @@ import PromptyOpenAI
 
 /// Compiles the snippets in `runtime/swift/README.md`.
 ///
-/// The README claimed a `Prompty.load(path:)` entry point that never existed.
+/// The README claimed a `Agent.load(path:)` entry point that never existed.
 /// Documented calls are API surface, so they are type-checked here rather than
 /// trusted. Nothing is executed — a compile is the whole assertion.
 import XCTest
@@ -34,7 +34,7 @@ final class ReadmeSnippetTests: XCTestCase {
     }
 
     func toolLoop(
-      agent: Prompty, raw: Any?, inputs: [String: Any],
+      agent: Agent, raw: Any?, inputs: [String: Any],
       myTools: [String: ([String: Any]) throws -> String]
     ) throws -> [String] {
       var results: [String] = []

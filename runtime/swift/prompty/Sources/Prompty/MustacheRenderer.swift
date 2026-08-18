@@ -20,7 +20,7 @@ public struct MustacheRenderer: Renderer {
   ///
   /// Inputs arrive already prepared by the pipeline; see the note on
   /// ``Jinja2Renderer/render(agent:template:inputs:)``.
-  public func render(agent: Prompty, template: String, inputs: [String: Any]) async throws
+  public func render(agent: Agent, template: String, inputs: [String: Any]) async throws
     -> String
   {
     try render(template: template, inputs: inputs)

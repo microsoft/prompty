@@ -96,13 +96,19 @@ final class GeneratedModelRoundTripTests: XCTestCase {
 
   /// Every `Tool` subtype must retain the base `name` / `description`.
   func testToolBaseFieldsRoundTripOnEverySubtype() throws {
+    // mcp/openapi and the wildcard CustomTool all carry a required `connection`.
+    let connection: [String: Any] = [
+      "kind": "key",
+      "endpoint": "https://example.test",
+      "apiKey": "x",
+    ]
     let subtypes: [[String: Any]] = [
       ["kind": "function", "parameters": [["name": "city", "kind": "string"]]],
-      ["kind": "mcp", "serverName": "files"],
-      ["kind": "openapi", "specification": "./api.json"],
+      ["kind": "mcp", "serverName": "files", "connection": connection],
+      ["kind": "openapi", "specification": "./api.json", "connection": connection],
       ["kind": "prompty", "path": "./child.prompty"],
       // Unknown kinds fall through to the wildcard CustomTool case.
-      ["kind": "vendor_specific"],
+      ["kind": "vendor_specific", "connection": connection],
     ]
 
     for extra in subtypes {
@@ -160,14 +166,16 @@ final class GeneratedModelRoundTripTests: XCTestCase {
     XCTAssertEqual(tool.boundParameterNames, ["tenant"])
   }
 
-  // MARK: - Wildcard cases
+  // MARK: - Wildcard / closed-union cases
 
-  /// `Tool` and `Connection` both need a wildcard case so unknown kinds survive
-  /// a round trip instead of throwing.
+  /// `Tool` is an open union: an unknown kind survives a round trip through the
+  /// wildcard `CustomTool` case instead of throwing. `CustomTool` still carries
+  /// a required `connection`, so the fixture supplies one.
   func testUnknownToolKindRoundTrips() throws {
     let source: [String: Any] = [
       "name": "vendor_tool",
       "kind": "vendor.custom",
+      "connection": ["kind": "key", "endpoint": "https://example.test", "apiKey": "x"],
       "options": ["setting": "value"],
     ]
     let saved = try Tool.load(source).save()
@@ -176,27 +184,31 @@ final class GeneratedModelRoundTripTests: XCTestCase {
     XCTAssertTrue(Spec.equal(saved["name"], "vendor_tool"))
   }
 
-  func testUnknownConnectionKindRoundTrips() throws {
+  /// `Connection`, unlike `Tool`, is a *closed* union: an unknown discriminator
+  /// is rejected outright rather than dispatched to a wildcard case. This is the
+  /// cross-runtime contract (Rust `panic!`s on the same input).
+  func testUnknownConnectionKindIsRejected() throws {
     let source: [String: Any] = ["kind": "vendor.auth", "endpoint": "https://example.test"]
-    let saved = try Connection.load(source).save()
-    XCTAssertTrue(Spec.equal(saved, source), "unknown connection kind was not preserved")
+    XCTAssertThrowsError(try Connection.load(source)) { error in
+      guard case .unknownDiscriminator(let type, let field, let value)? = error as? TypraRuntimeError
+      else {
+        return XCTFail("expected .unknownDiscriminator, got \(error)")
+      }
+      XCTAssertEqual(type, "Connection")
+      XCTAssertEqual(field, "kind")
+      XCTAssertEqual(value, "vendor.auth")
+    }
   }
 
-  /// Characterizes a base-field gap the shim deliberately leaves open.
+  /// The base `Connection` fields survive a load/save round trip on every
+  /// subtype.
   ///
   /// `model Connection` declares `authenticationMode` and `usageDescription`
   /// (`schema/model/connection/connection.tsp`), and every subtype `extends`
-  /// it — so the emitter defect that drops `Property` / `Tool` base fields
-  /// drops these too. The shim does not inject them; see the Defect 10 scope
-  /// note in `schema/scripts/patch-swift-emitter-defects.mjs`.
-  ///
-  /// The cost is real even though no runtime code reads the fields: both are
-  /// lost between `load` and `save` with zero compile diagnostics, which is
-  /// precisely the failure mode this file exists to catch. Covering all six
-  /// subtypes keeps the gap measured rather than assumed, and makes the test
-  /// fail if either field starts surviving — at which point re-audit the
-  /// emitter and this shim, then assert preservation instead.
-  func testConnectionBaseFieldsAreDroppedOnEverySubtype() throws {
+  /// it. The emitter now declares, loads, and saves these inherited fields on
+  /// each subtype, so both must round-trip. Covering all six subtypes keeps the
+  /// guarantee measured rather than assumed.
+  func testConnectionBaseFieldsRoundTripOnEverySubtype() throws {
     let subtypes: [(kind: String, declared: [String: String])] = [
       ("reference", ["name": "my-connection", "target": "some-target"]),
       ("remote", ["name": "my-connection", "endpoint": "https://example.test"]),
@@ -213,12 +225,6 @@ final class GeneratedModelRoundTripTests: XCTestCase {
       source["usageDescription"] = "respond to email on your behalf"
 
       let loaded = try Connection.load(source)
-      // `.unknown` preserves its payload verbatim, so the assertions below
-      // would pass for the wrong reason if a discriminator stopped resolving.
-      if case .unknown = loaded {
-        XCTFail("\(kind) fell through to .unknown instead of its subtype")
-        continue
-      }
 
       let saved = try loaded.save()
       XCTAssertEqual(saved["kind"] as? String, kind, "\(kind): discriminator lost")
@@ -226,14 +232,12 @@ final class GeneratedModelRoundTripTests: XCTestCase {
         XCTAssertEqual(saved[key] as? String, value, "\(kind): declared field \(key) lost")
       }
 
-      XCTAssertNil(
-        saved["authenticationMode"],
-        "\(kind): authenticationMode now survives — re-audit the emitter and the "
-          + "shim, then replace this characterization with a preservation assertion")
-      XCTAssertNil(
-        saved["usageDescription"],
-        "\(kind): usageDescription now survives — re-audit the emitter and the "
-          + "shim, then replace this characterization with a preservation assertion")
+      XCTAssertEqual(
+        saved["authenticationMode"] as? String, "system",
+        "\(kind): authenticationMode lost on round trip")
+      XCTAssertEqual(
+        saved["usageDescription"] as? String, "respond to email on your behalf",
+        "\(kind): usageDescription lost on round trip")
     }
   }
 

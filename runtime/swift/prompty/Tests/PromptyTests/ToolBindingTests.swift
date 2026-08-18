@@ -31,8 +31,8 @@ final class ToolBindingTests: XCTestCase {
   /// from a parent input (`preferred_unit`), one free parameter (`city`).
   private func weatherAgent(
     bindings: Any = ["unit": ["input": "preferred_unit"]]
-  ) throws -> Prompty {
-    try Prompty.load([
+  ) throws -> Agent {
+    try Agent.load([
       "kind": "prompt",
       "name": "weather",
       "model": ["id": "gpt-4o-mini", "apiType": "chat"],
@@ -52,7 +52,7 @@ final class ToolBindingTests: XCTestCase {
     ])
   }
 
-  private func tool(_ agent: Prompty) throws -> Tool {
+  private func tool(_ agent: Agent) throws -> Tool {
     let tool = try XCTUnwrap(agent.tools?.first)
     return tool
   }
@@ -100,7 +100,7 @@ final class ToolBindingTests: XCTestCase {
       ["unit": "preferred_unit"] as Any,
     ] {
       let agent = try weatherAgent(bindings: declared)
-      let reloaded = try Prompty.load(try agent.save())
+      let reloaded = try Agent.load(try agent.save())
       let bindings = try tool(reloaded).bindings
 
       XCTAssertEqual(bindings.count, 1, "declared as \(declared)")
@@ -239,7 +239,7 @@ final class ToolBindingTests: XCTestCase {
 
   /// A prompt with no tools at all passes through.
   func testAgentWithoutToolsPassesThrough() throws {
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt", "name": "bare", "model": ["id": "gpt-4o-mini"],
       "instructions": "user:\nhi",
     ])
@@ -275,55 +275,6 @@ final class ToolBindingTests: XCTestCase {
   }
 
   // MARK: - Shared vector
-  /// Rewrite a vector tool's `parameters` from the non-canonical
-  /// `{properties: [...]}` wrapper to the shape the schema actually declares.
-  ///
-  /// `spec/spec.md` §2.9.1's prose example writes `parameters: {properties: [...]}`,
-  /// and `agent_vectors.json` follows it. The canonical TypeSpec disagrees:
-  /// `FunctionTool.parameters` is `Properties`, and
-  /// `schema/model/core/properties.tsp` defines
-  /// `Properties = Record<Property> | Named<Property>[]` — a name-keyed map or a
-  /// list, with no wrapper. `spec/fixtures/tools_function.prompty` uses the list
-  /// form, and so does every other fixture.
-  ///
-  /// Rust does not notice the divergence because its generated `FunctionTool`
-  /// carries no `parameters` field at all, so the wrapper is silently dropped
-  /// during load. Swift's generated model does carry the field, so the wrapper
-  /// is a hard load error — which is how this surfaced.
-  ///
-  /// Bindings do not depend on `parameters`, so normalizing here keeps the
-  /// binding contract executable without editing the shared vector. When the
-  /// vector is corrected upstream, ``testVectorParametersStillUseNonCanonicalWrapper``
-  /// goes red and this helper can be deleted.
-  private func canonicalizeParameters(_ tool: [String: Any]) -> [String: Any] {
-    guard let params = tool["parameters"] as? [String: Any],
-      let unwrapped = params["properties"]
-    else { return tool }
-
-    var copy = tool
-    copy["parameters"] = unwrapped
-    return copy
-  }
-
-  /// Tripwire for the divergence ``canonicalizeParameters`` works around.
-  ///
-  /// If this fails, the shared vector has been corrected to the canonical
-  /// `Properties` shape — delete `canonicalizeParameters` and this test, and
-  /// pass the vector's tools through verbatim.
-  func testVectorParametersStillUseNonCanonicalWrapper() throws {
-    let vectors = try Spec.vectors("agent")
-    let vector = try XCTUnwrap(vectors.first { $0["name"] as? String == "bindings_injected" })
-    let tools = try XCTUnwrap((vector["input"] as? [String: Any])?["tools"] as? [[String: Any]])
-    let params = try XCTUnwrap(tools.first?["parameters"] as? [String: Any])
-
-    XCTAssertNotNil(
-      params["properties"],
-      """
-      agent_vectors.json bindings_injected now declares canonical `parameters`. \
-      Remove canonicalizeParameters() and this tripwire, and load the vector's \
-      tools verbatim.
-      """)
-  }
 
   /// Execute the canonical `bindings_injected` case from
   /// `spec/vectors/agent/agent_vectors.json` rather than restating it.
@@ -342,11 +293,11 @@ final class ToolBindingTests: XCTestCase {
     let parentInputs = try XCTUnwrap(input["parent_inputs"] as? [String: Any])
 
     // Build a prompt carrying the vector's own tool declarations.
-    let agent = try Prompty.load([
+    let agent = try Agent.load([
       "kind": "prompt",
       "name": "bindings-vector",
       "model": ["id": "gpt-4o-mini", "apiType": "chat"],
-      "tools": tools.map(canonicalizeParameters),
+      "tools": tools,
       "instructions": "user:\nWhat is the weather?",
     ])
 

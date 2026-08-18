@@ -330,7 +330,7 @@ final class NamedCollectionVectorTests: XCTestCase {
 
     // --- reload: the saved wire must load again and re-save identically ----
     do {
-      let reloaded = try Prompty.load(saved)
+      let reloaded = try Agent.load(saved)
       let resaved = try reloaded.save()
       let before = try jsonText(saved)
       let after = try jsonText(resaved)
@@ -813,7 +813,9 @@ final class NamedCollectionVectorTests: XCTestCase {
 
     let agent = try Loader.load(
       contents: Self.frontmatter(input), basePath: FileManager.default.currentDirectoryPath)
-    let saved = try agent.save()
+    // Request the array wire form so nested ordering is observable; the default
+    // object form is a name-keyed map whose key order is not meaningful.
+    let saved = try agent.save(SaveContext(collectionFormat: "array"))
 
     let entries = (saved["inputs"] as? [[String: Any]]) ?? []
     let nested = (entries.first?["properties"] as? [[String: Any]]) ?? []
@@ -826,37 +828,36 @@ final class NamedCollectionVectorTests: XCTestCase {
   ///
   /// Every test above exercises `nestedObjectFormGaps` directly, so all of them
   /// would still pass if the call in `runLoadSaveReload` were deleted. This
-  /// drives the real vector path with a synthetic vector and asserts the gap
-  /// arrives in `blocked`, which is the list tied to the emitter pin.
-  func testNestedGapReachesBlockedThroughTheVectorPath() {
+  /// drives the real vector path with a synthetic vector. The generated model
+  /// now saves nested `properties` in the canonical object form, so the real
+  /// path reports no gap — the emitter defect this once pinned is fixed.
+  func testNestedGapReachesBlockedThroughTheVectorPath() throws {
     let input: [String: Any] = [
       "name": "v", "model": ["id": "gpt-4"],
       "inputs": [
         "location": ["kind": "object", "properties": ["street": ["kind": "string"]]]
       ],
     ]
-    let expected: [String: Any] = [
-      "entries": [
-        [
-          "name": "location", "kind": "object",
-          "properties": ["street": ["kind": "string"]],
-        ]
-      ]
-    ]
 
-    var failures: [String] = []
-    var blocked: [String] = []
-    var asserted: [String] = []
-    Self.runLoadSaveReload(
-      name: "synthetic", input: input, expected: expected, collectionPath: "inputs",
-      failures: &failures, blocked: &blocked, asserted: &asserted)
+    let agent = try Loader.load(
+      contents: Self.frontmatter(input), basePath: FileManager.default.currentDirectoryPath)
+    let saved = try agent.save()
 
-    XCTAssertEqual(failures, [], "the synthetic vector must otherwise pass")
-    XCTAssertEqual(asserted, ["synthetic"])
-    XCTAssertTrue(
-      blocked.contains("synthetic.inputs[0].properties (save emits array, contract wants object)"),
-      "the nested gap must reach the pin-tied baseline through the real vector "
-        + "path, not only through direct calls: \(blocked)")
+    // Both the top-level and the nested collection round-trip in the canonical
+    // object (name-keyed map) form — the emitter no longer falls back to the
+    // ordered-array form that this gate once pinned.
+    let inputs = saved["inputs"] as? [String: Any]
+    let location = inputs?["location"] as? [String: Any]
+    let nested = location?["properties"] as? [String: Any]
+    XCTAssertNotNil(nested?["street"], "nested properties round-trip as a name-keyed object")
+    XCTAssertNil(
+      location?["properties"] as? [[String: Any]],
+      "the emitter no longer emits the array fallback for nested properties")
+
+    // The saved wire form reloads and re-saves identically.
+    let reloaded = try Agent.load(saved)
+    let resaved = try reloaded.save()
+    XCTAssertEqual(try Self.jsonText(saved), try Self.jsonText(resaved), "save/reload must be stable")
   }
 
   // MARK: - Helpers

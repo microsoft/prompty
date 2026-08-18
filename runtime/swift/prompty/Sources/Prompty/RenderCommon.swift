@@ -13,7 +13,7 @@ public enum RenderCommon {
   /// parsing. Doing it this way keeps injected content out of the template
   /// engine entirely.
   public static func prepareRenderInputs(
-    _ agent: Prompty,
+    _ agent: Agent,
     inputs: [String: Any]
   ) -> (inputs: [String: Any], nonces: [String: String]) {
     var prepared = inputs

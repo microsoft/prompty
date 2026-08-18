@@ -2,7 +2,7 @@ import Foundation
 /// Options controlling how a `.prompty` file is loaded.
 import PromptyModel
 
-/// Loads `.prompty` files into the Typra-generated `Prompty` model.
+/// Loads `.prompty` files into the Typra-generated `Agent` model.
 
 /// Load a `.prompty` file. Shorthand for ``Loader/load(path:options:)``.
 
@@ -27,7 +27,7 @@ public enum Loader {
   public static func load(
     path: String,
     options: LoadOptions = .default
-  ) throws -> Prompty {
+  ) throws -> Agent {
     let url = URL(fileURLWithPath: path)
     guard FileManager.default.fileExists(atPath: url.path) else {
       throw LoadError.fileNotFound(path: path, detail: "No such file")
@@ -45,7 +45,7 @@ public enum Loader {
   public static func loadAsync(
     path: String,
     options: LoadOptions = .default
-  ) async throws -> Prompty {
+  ) async throws -> Agent {
     try await Task.detached(priority: .userInitiated) {
       try load(path: path, options: options)
     }.value
@@ -58,7 +58,7 @@ public enum Loader {
     contents: String,
     basePath: String,
     options: LoadOptions = .default
-  ) throws -> Prompty {
+  ) throws -> Agent {
     try build(raw: contents, filePath: URL(fileURLWithPath: basePath), options: options)
   }
 
@@ -68,7 +68,7 @@ public enum Loader {
     raw: String,
     filePath: URL,
     options: LoadOptions
-  ) throws -> Prompty {
+  ) throws -> Agent {
     // 1. Split frontmatter from the markdown body. `Frontmatter.split` owns line
     //    ending normalization and returns an LF body; normalizing here as well
     //    would run a second pass and swallow a lone CR in `\r\r\n`.
@@ -100,9 +100,9 @@ public enum Loader {
     try normalizeProperties(&resolved, key: "outputs", path: "outputs")
 
     // 6. Hand off to the generated model — the canonical type layer.
-    var agent: Prompty
+    var agent: Agent
     do {
-      agent = try Prompty.load(resolved)
+      agent = try Agent.load(resolved)
     } catch {
       throw LoadError.invalidModel(String(describing: error))
     }
@@ -223,9 +223,9 @@ public enum Loader {
     }
   }
 }
-public func load(_ path: String, options: LoadOptions = .default) throws -> Prompty {
+public func load(_ path: String, options: LoadOptions = .default) throws -> Agent {
   try Loader.load(path: path, options: options)
 }
-public func loadAsync(_ path: String, options: LoadOptions = .default) async throws -> Prompty {
+public func loadAsync(_ path: String, options: LoadOptions = .default) async throws -> Agent {
   try await Loader.loadAsync(path: path, options: options)
 }
