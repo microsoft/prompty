@@ -13,9 +13,9 @@
     "build": "npm run lint:fixtures && npm run format:tsp && npm run generate"
   },
   "dependencies": {
-    "@typespec/compiler": "1.10.0",
-    "@typespec/http": "1.10.0",
-    "@typespec/json-schema": "1.10.0",
-    "@typra/emitter": "0.8.7"
+    "@typespec/compiler": "^1.15.0",
+    "@typespec/http": "^1.15.0",
+    "@typespec/json-schema": "^1.15.0",
+    "@typra/emitter": "^0.9.0"
   }
 }

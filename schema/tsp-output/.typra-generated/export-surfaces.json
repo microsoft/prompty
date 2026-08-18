@@ -5,20 +5,20 @@
     "packages": [
       {
         "name": "@typespec/compiler",
-        "version": "1.10.0",
-        "supportedRange": "1.10.0",
+        "version": "1.15.0",
+        "supportedRange": ">=1.10.0 <2.0.0",
         "supported": true
       },
       {
         "name": "@typespec/json-schema",
-        "version": "1.10.0",
-        "supportedRange": "1.10.0",
+        "version": "1.15.0",
+        "supportedRange": ">=1.10.0 <2.0.0",
         "supported": true
       },
       {
         "name": "@typra/emitter",
-        "version": "0.8.7",
-        "supportedRange": "0.8.7",
+        "version": "0.9.0",
+        "supportedRange": "0.9.0",
         "supported": true
       }
     ]
