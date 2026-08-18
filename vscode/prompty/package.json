@@ -149,15 +149,15 @@
 		"package-pre": "vsce package --no-dependencies --allow-missing-repository --pre-release"
 	},
 	"devDependencies": {
-		"@eslint/js": "^10.0.1",
-		"@stylistic/eslint-plugin": "^5.10.0",
+		"@eslint/js": "^9.13.0",
+		"@stylistic/eslint-plugin": "^2.9.0",
 		"@types/mocha": "^10.0.6",
-		"@types/node": "^26",
+		"@types/node": "^20",
 		"@vscode/vsce": "^3.3.2",
-		"eslint": "^10.8.1",
-		"js-yaml": "^5.3.0",
-		"mocha": "^11.8.0",
-		"typescript": "^7.0.2",
+		"eslint": "^9.13.0",
+		"js-yaml": "^4.1.0",
+		"mocha": "^10.3.0",
+		"typescript": "^5.8.2",
 		"typescript-eslint": "^8.26.0"
 	}
 }
