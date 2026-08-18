@@ -8,10 +8,7 @@ import { Message } from "../../contracts/conversation/message";
 import { ModelReconciliationState } from "./model-reconciliation-state";
 
 export type EngineTurnStatus =
-  | "success"
-  | "failed"
-  | "cancelled"
-  | "reconciliation_required";
+  "success" | "failed" | "cancelled" | "reconciliation_required";
 
 export class TurnCommit {
   static readonly shorthandProperty: string | undefined = undefined;
