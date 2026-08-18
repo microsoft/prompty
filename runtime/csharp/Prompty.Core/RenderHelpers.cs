@@ -71,33 +71,33 @@ public static class RenderHelpers
             switch (value)
             {
                 case IDictionary<string, object?> typed:
-                {
-                    var map = new Dictionary<string, object?>(typed.Count);
-                    foreach (var kvp in typed)
                     {
-                        if (!UnsafeTemplateKeys.Contains(kvp.Key))
-                            map[kvp.Key] = SanitizeValue(kvp.Value, seen);
+                        var map = new Dictionary<string, object?>(typed.Count);
+                        foreach (var kvp in typed)
+                        {
+                            if (!UnsafeTemplateKeys.Contains(kvp.Key))
+                                map[kvp.Key] = SanitizeValue(kvp.Value, seen);
+                        }
+                        return map;
                     }
-                    return map;
-                }
                 case IDictionary raw:
-                {
-                    var map = new Dictionary<string, object?>(raw.Count);
-                    foreach (DictionaryEntry entry in raw)
                     {
-                        var key = entry.Key?.ToString();
-                        if (key is not null && !UnsafeTemplateKeys.Contains(key))
-                            map[key] = SanitizeValue(entry.Value, seen);
+                        var map = new Dictionary<string, object?>(raw.Count);
+                        foreach (DictionaryEntry entry in raw)
+                        {
+                            var key = entry.Key?.ToString();
+                            if (key is not null && !UnsafeTemplateKeys.Contains(key))
+                                map[key] = SanitizeValue(entry.Value, seen);
+                        }
+                        return map;
                     }
-                    return map;
-                }
                 case IEnumerable sequence:
-                {
-                    var list = new List<object?>();
-                    foreach (var item in sequence)
-                        list.Add(SanitizeValue(item, seen));
-                    return list;
-                }
+                    {
+                        var list = new List<object?>();
+                        foreach (var item in sequence)
+                            list.Add(SanitizeValue(item, seen));
+                        return list;
+                    }
                 default:
                     // Non-collection reference types (e.g. Message) carry no
                     // template-reachable string-keyed members, so pass them through.

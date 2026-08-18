@@ -5,10 +5,7 @@
 import { LoadContext, SaveContext } from "../../context";
 
 export type SessionEndStatus =
-  | "success"
-  | "error"
-  | "cancelled"
-  | "interrupted";
+  "success" | "error" | "cancelled" | "interrupted";
 
 export class SessionEndPayload {
   static readonly shorthandProperty: string | undefined = undefined;

@@ -1,0 +1,265 @@
+name: schema generated-code reproducibility
+
+# Asserts that the generated code committed under runtime/* is exactly what the
+# pinned @typra/emitter (schema/package.json) plus the repo's formatters produce.
+#
+# Nothing enforced this before. Every runtime workflow is paths-filtered to
+# runtime/<lang>/**, so a commit touching only schema/ — including one that bumps
+# the emitter pin — triggered ZERO CI. That is not hypothetical: 00a040fb (0.4.26)
+# and 38c7a5a0 (0.4.27) both moved the pin with no regeneration and no job. Both
+# happened to be no-ops, but nothing checked, and the ambiguity cost real time to
+# settle because the only way to know was to run the generator.
+#
+# The trigger paths deliberately extend past schema/**. The drift this gate found
+# on its first run did not come from the emitter at all: #465 regenerated
+# runtime/typescript/package-lock.json for a security audit, which moved prettier
+# 3.8.3 -> 3.9.6, and 3.9.6 formats short union type aliases differently. The
+# generated code was formatted by 3.8.3 and no existing job could see the
+# difference (packages/core's `lint` is `tsc --noEmit`, not a format check). If
+# this gate only watched schema/**, that bump would have landed silently and then
+# failed the next unrelated schema PR, blaming the wrong change. So the manifests
+# that pin the formatters are watched too.
+on:
+  pull_request:
+    paths:
+      # schema/** covers the highest-value trigger of all, schema/package-lock.json:
+      # that is the @typra/emitter pin itself, the thing this gate exists to police.
+      - 'schema/**'
+      - '.github/workflows/schema-repro-check.yml'
+      # Formatter-defining manifests: a bump here changes generated output just as
+      # surely as an emitter bump does, so it must be caught in the PR that causes it.
+      - 'runtime/typescript/package.json'       # prettier / eslint range
+      - 'runtime/typescript/package-lock.json'  # prettier / eslint resolved versions
+      - 'runtime/python/prompty/pyproject.toml' # ruff version + [tool.ruff] config
+      - 'runtime/python/prompty/uv.lock'
+      - 'runtime/go/prompty/go.mod'             # gofmt is toolchain-tied; go-version-file below
+      - '.editorconfig'                         # consumed by dotnet format
+      # Hand-written C# is a real input to this check, unlike the other languages.
+      # The C# driver runs `dotnet format <csproj>` over the WHOLE project, so every
+      # file in these two projects must already be dotnet format-clean or regeneration
+      # rewrites it. (Python/Go/TypeScript drivers only format their emitted output
+      # directories, so hand-written code in those runtimes cannot dirty this check.)
+      # These are the two projects the emitter emits into, per schema/tspconfig.yaml.
+      # Without these paths a C# PR could merge non-format-clean and then redden the
+      # next unrelated schema PR — which is exactly what happened during this PR:
+      # #472 landed on main and the gate correctly failed on the merge commit.
+      - 'runtime/csharp/Prompty.Core/**'
+      - 'runtime/csharp/Prompty.Core.Tests/**'
+
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regenerate-is-idempotent:
+    name: regeneration produces no diff
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # runtime/python/prompty/uv.lock is tracked and the Python emitter shells out
+      # to `uv run ruff`, which may otherwise re-lock and dirty the tree — which
+      # would report here as generated-code staleness. Frozen turns that into an
+      # explicit lockfile error instead of a misattributed diff.
+      UV_FROZEN: '1'
+    steps:
+      - uses: actions/checkout@v7
+
+      # EVERY toolchain below is pinned to an exact version, deliberately.
+      # Path triggers can only catch formatter versions pinned by files in the repo.
+      # A floating toolchain (`@stable`, `9.0.x`, `node-version: 22`) drifts with no
+      # repo change at all, so no path filter can catch it — it would just fail on
+      # some unrelated contributor's schema PR and blame the wrong change, which is
+      # the exact misattribution this gate exists to prevent. Pinned, a formatter
+      # bump becomes a deliberate one-line change that arrives WITH its regeneration
+      # commit. Please do not "helpfully" restore floating versions here.
+      # These values are the ones that produced the verified-green first run.
+      #
+      # KNOWN LIMITATION, accepted deliberately. Pinning here fixes CI-side drift but
+      # introduces a second-order skew: a developer running `cargo fmt` on rustup
+      # stable, or `dotnet format` on whichever SDK they have, can produce output this
+      # job rejects. Workflow pins bind CI only. The durable instrument is a root
+      # `rust-toolchain.toml` plus a committed `global.json`, which rustup, rustc,
+      # `dtolnay/rust-toolchain` and the .NET CLI all honour — making local and CI
+      # agree by construction instead of by coincidence. That changes the toolchain
+      # for every Rust and C# developer in this repo, so it belongs in its own PR
+      # with its own review, not as a rider on a CI change. Until then, if this gate
+      # disagrees with your local formatter, check these versions first.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22.23.2'
+
+      # Generation is only reproducible when EVERY formatter the emitter shells out
+      # to is present. Each one degrades to a console warning when missing rather
+      # than failing, and the resulting unformatted output is indistinguishable in a
+      # diff from stale generated code. Measured on this repo at emitter 0.8.7:
+      # regenerating with prettier, uv, dotnet and Go hidden from PATH produced
+      # 1121 changed files / 47434 insertions, versus 5 files for the genuine drift.
+      # A previous version of this gate was misread exactly that way.
+      #
+      # @typra/emitter 0.8.7 invokes, per emit target in schema/tspconfig.yaml:
+      #   rustfmt   schema's `generate` script ends in `npm run format:rust`
+      #             (`cargo fmt --all`). The Rust driver's own `cargo fmt` never
+      #             runs here — it looks for <output-dir>/../Cargo.toml, i.e.
+      #             runtime/rust/prompty/src/Cargo.toml, which does not exist — and
+      #             it is silent about that. It does not matter: measured with cargo
+      #             removed from PATH, `npm run generate` exits 1 ("'cargo' is not
+      #             recognized") before anything is compared, so rustfmt is the one
+      #             formatter that CANNOT produce silent false staleness. (Had it
+      #             degraded quietly it would have been worth 295 unformatted Rust
+      #             files.) It is still in the warning grep below, harmlessly.
+      #   prettier  typescript/driver.js walks up from the TypeScript project root
+      #             for node_modules/prettier/bin/prettier.cjs, then `npx eslint --fix`
+      #   ruff      python/driver.js runs `uv run ruff check --fix` and `uv run ruff format`
+      #   dotnet    csharp/driver.js runs `dotnet format <csproj>`
+      #   gofmt     go/driver.js runs `gofmt -w` (and `goimports -w` if present)
+      - name: Install Rust toolchain (provides rustfmt)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.97.1'
+          components: rustfmt
+
+      - name: Set up Go (provides gofmt)
+        uses: actions/setup-go@v7
+        with:
+          # Pinned via go.mod rather than a literal here: go.mod is the single source
+          # of truth for the Go toolchain and is itself a trigger path above, so a
+          # bump is still deliberate and reviewable, without a second copy to drift.
+          go-version-file: runtime/go/prompty/go.mod
+          cache: false
+
+      - name: Set up .NET (provides dotnet format)
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '9.0.317'
+
+      - name: Install TypeScript workspace (provides prettier and eslint)
+        working-directory: runtime/typescript
+        run: npm ci
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+
+      - name: Install Python dev tooling (provides ruff)
+        working-directory: runtime/python/prompty
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+
+      - name: Install schema dependencies
+        working-directory: schema
+        run: npm ci
+
+      # setup-dotnet's `dotnet-version` installs an SDK, it does NOT select one.
+      # Measured on the previous run of this workflow: with `dotnet-version: 9.0.317`
+      # the image still resolved `dotnet --version` to 10.0.302, because it carries
+      # eleven SDKs (8.0.129 through 10.0.302) and absent a global.json the highest
+      # wins. The pin alone was doing nothing for `dotnet format`, leaving it the one
+      # formatter that could still float with no repo change at all.
+      #
+      # 9.0.317, matching the net9.0 target of every csproj under runtime/csharp/ and
+      # the `9.0.x` that prompty-csharp-check.yml, prompty-csharp.yml and
+      # docs-examples.yml already pin, so this gate does not disagree with the rest of
+      # the repo about which SDK is authoritative.
+      #
+      # Honest caveat, measured: no SDK-dependent difference has been observed on this
+      # tree. 9.0.317, 10.0.111 and 10.0.302 all produced byte-identical output (the
+      # same git blob) for the one file where formatting was ever in question. The pin
+      # is therefore precautionary — it makes the SDK an explicit, reviewable input
+      # rather than a property of whatever image the runner happens to boot.
+      #
+      # This global.json is written here and deleted before the diff assertion — it is
+      # deliberately NOT committed, because a repo-root global.json would constrain
+      # every other .NET job and build in the repo, which is a much larger decision.
+      # rollForward: disable means a future image that drops 9.0.317 fails loudly with
+      # "requested SDK not found" — unambiguous and attributable — rather than silently
+      # formatting with a new SDK and reporting the result as generated-code drift.
+
+      # Pin the SDK that dotnet format will use
+      - name: Pin the SDK that dotnet format will use
+        shell: bash
+        run: |
+          cat > global.json <<'JSON'
+          {
+            "sdk": {
+              "version": "9.0.317",
+              "rollForward": "disable"
+            }
+          }
+          JSON
+
+      # Record every version that can change the output. When this gate goes red,
+      # formatter?" — this makes that answerable from the log alone instead of by
+      # bisecting. It is also where the SDK actually selected by `dotnet format`
+      # becomes visible, which is how the pin above was found to be a no-op.
+      - name: Record toolchain versions
+        shell: bash
+        run: |
+          echo "node      $(node --version)"
+          echo "rustc     $(rustc --version)"
+          echo "rustfmt   $(rustfmt --version)"
+          echo "go        $(go version)"
+          echo "dotnet    $(dotnet --version)"
+          dotnet --list-sdks
+          echo "uv        $(uv --version)"
+          ( cd runtime/python/prompty && echo "ruff      $(uv run ruff --version)" )
+          ( cd runtime/typescript && echo "prettier  $(node node_modules/prettier/bin/prettier.cjs --version)" )
+          echo "emitter   $(node -p "require('./schema/package.json').dependencies['@typra/emitter']")"
+
+      - name: Regenerate from the pinned emitter
+        working-directory: schema
+        shell: bash
+        run: |
+          set -o pipefail
+          # The log goes to RUNNER_TEMP, never anywhere under the repo: a log file
+          # inside schema/ would itself show up in `git status --porcelain` below
+          # and fail the very assertion it exists to explain.
+          npm run generate 2>&1 | tee "$RUNNER_TEMP/generate.log"
+
+          # A missing formatter produces a warning and unformatted output, which is
+          # indistinguishable from stale generated code in the diff step below. Fail
+          # here, with the real cause, rather than reporting false staleness.
+          # These strings were verified by running 0.8.7 with the formatters removed.
+          if grep -Eq 'Warning: (prettier|ruff|gofmt|goimports|dotnet format|cargo fmt|Could not find)' "$RUNNER_TEMP/generate.log"; then
+            echo "::error::A formatter was unavailable during generation, so the output is not comparable to the committed tree."
+            echo "This is an environment problem in this job, not stale generated code."
+            echo "Do not 'fix' it by regenerating and committing — that would commit unformatted output."
+            echo ""
+            echo "--- formatter warnings ---"
+            grep -E 'Warning: ' "$RUNNER_TEMP/generate.log" || true
+            exit 1
+          fi
+
+      # Must run before the assertion below: global.json is untracked, and
+      # `git status --porcelain` reports untracked files, so leaving it in place
+      # would fail the very check it exists to make trustworthy. `if: always()`
+      # so a failed generate still cleans up rather than confusing the failure log.
+      - name: Remove the temporary global.json
+        if: always()
+        shell: bash
+        run: rm -f global.json
+
+      - name: Assert the tree is unchanged
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Regenerating changed the tree: the committed generated code does not match the pinned emitter and formatters."
+            echo "Fix: run 'npm run generate' in schema/ and commit the result."
+            echo "(The step above already proved every formatter was present, so this is real drift, not a missing formatter.)"
+            echo ""
+            echo "--- changed files ---"
+            git status --porcelain
+            echo ""
+            echo "--- diff ---"
+            git --no-pager diff --stat
+            echo ""
+            # The patch itself, capped so a whole-tree formatter failure does not
+            # bury the log. --stat alone cannot tell you WHICH tool changed the file;
+            # the actual hunks can (whitespace vs content vs line endings).
+            echo "--- patch (first 300 lines) ---"
+            git --no-pager diff | head -300
+            exit 1
+          fi
+          echo "Generated code matches the pinned emitter exactly."
