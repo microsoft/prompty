@@ -216,7 +216,7 @@ use std::collections::BTreeMap;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use prompty::types::{StreamChunk, Usage};
+use prompty::types::{StreamChunk, StreamFailure, Usage};
 
 /// Anthropic stream processor — converts SSE JSON events into `StreamChunk` items.
 ///
@@ -270,6 +270,27 @@ impl futures::Stream for AnthropicStreamProcessor {
             AnthropicStreamPhase::Streaming => {
                 match this.inner.as_mut().poll_next(cx) {
                     Poll::Ready(Some(event)) => {
+                        if let Some(error) = event.get("error").and_then(Value::as_object) {
+                            this.phase = AnthropicStreamPhase::Done;
+                            let error_type =
+                                error.get("type").and_then(Value::as_str).unwrap_or("");
+                            let provider_message = error
+                                .get("message")
+                                .and_then(Value::as_str)
+                                .unwrap_or("Anthropic stream failed");
+                            let message = if error_type.is_empty() {
+                                provider_message.to_string()
+                            } else {
+                                format!("Anthropic stream error ({error_type}): {provider_message}")
+                            };
+                            let failure = if error_type.starts_with("sse_") {
+                                StreamFailure::Indeterminate(message)
+                            } else {
+                                StreamFailure::Determinate(message)
+                            };
+                            return Poll::Ready(Some(StreamChunk::Failure(failure)));
+                        }
+
                         let event_type = event.get("type").and_then(Value::as_str).unwrap_or("");
 
                         match event_type {
@@ -491,6 +512,68 @@ mod tests {
                 total_tokens: 15,
             })
         );
+    }
+
+    #[tokio::test]
+    async fn test_stream_provider_error_is_determinate() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({
+                "type": "content_block_delta",
+                "delta": {"type": "text_delta", "text": "partial"}
+            }),
+            json!({
+                "type": "error",
+                "error": {
+                    "type": "overloaded_error",
+                    "message": "Overloaded"
+                }
+            }),
+            json!({"type": "message_delta", "usage": {"output_tokens": 5}}),
+        ];
+        let mut stream = AnthropicStreamProcessor::new(futures::stream::iter(chunks));
+
+        assert!(matches!(
+            stream.next().await,
+            Some(StreamChunk::Text(value)) if value == "partial"
+        ));
+        assert!(matches!(
+            stream.next().await,
+            Some(StreamChunk::Failure(StreamFailure::Determinate(message)))
+                if message.contains("overloaded_error") && message.contains("Overloaded")
+        ));
+        assert!(stream.next().await.is_none());
+    }
+
+    #[tokio::test]
+    async fn test_stream_transport_error_is_indeterminate() {
+        use futures::StreamExt;
+
+        let chunks = vec![
+            json!({
+                "type": "content_block_delta",
+                "delta": {"type": "text_delta", "text": "partial"}
+            }),
+            json!({
+                "error": {
+                    "type": "sse_transport_error",
+                    "message": "connection reset"
+                }
+            }),
+        ];
+        let mut stream = AnthropicStreamProcessor::new(futures::stream::iter(chunks));
+
+        assert!(matches!(
+            stream.next().await,
+            Some(StreamChunk::Text(value)) if value == "partial"
+        ));
+        assert!(matches!(
+            stream.next().await,
+            Some(StreamChunk::Failure(StreamFailure::Indeterminate(message)))
+                if message.contains("connection reset")
+        ));
+        assert!(stream.next().await.is_none());
     }
 
     #[tokio::test]

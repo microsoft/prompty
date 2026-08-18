@@ -21,13 +21,7 @@ const ANTHROPIC_VERSION: &str = "2023-06-01";
 
 /// Build the models endpoint URL from a connection JSON value.
 fn build_models_url(connection: &Value) -> String {
-    let endpoint = connection
-        .get("endpoint")
-        .and_then(|e| e.as_str())
-        .unwrap_or("https://api.anthropic.com");
-
-    let base = endpoint.trim_end_matches('/');
-    format!("{base}/v1/models")
+    crate::endpoint::build_api_url(connection, "models")
 }
 
 /// Extract the API key from the connection or fall back to `ANTHROPIC_API_KEY`.
@@ -280,7 +274,9 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_build_models_url_default() {
+        let _env = RemovedEnv::new("ANTHROPIC_BASE_URL");
         let conn = serde_json::json!({});
         let url = build_models_url(&conn);
         assert_eq!(url, "https://api.anthropic.com/v1/models");
