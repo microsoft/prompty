@@ -63,7 +63,7 @@ asyncio_default_fixture_loop_scope = "function"
 show_missing = true
 
 [build-system]
-requires = ["flit_core >=3.11,<4"]
+requires = ["flit_core >=3.11,<5"]
 build-backend = "flit_core.buildapi"
 
 [project.scripts]
