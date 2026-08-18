@@ -80,9 +80,6 @@ public struct TextChunk: TypraModel {
     } else {
       instance.kind = "text"
     }
-    if object["value"] == nil || object["value"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("value").path + ": missing required field")
-    }
     if let value = object["value"] {
       instance.value = try TypraRuntime.string(value, field: "value")
     }
@@ -136,9 +133,6 @@ public struct ThinkingChunk: TypraModel {
       instance.kind = try TypraRuntime.string(value, field: "kind")
     } else {
       instance.kind = "thinking"
-    }
-    if object["value"] == nil || object["value"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("value").path + ": missing required field")
     }
     if let value = object["value"] {
       instance.value = try TypraRuntime.string(value, field: "value")
@@ -306,9 +300,6 @@ public struct ErrorChunk: TypraModel {
       instance.kind = try TypraRuntime.string(value, field: "kind")
     } else {
       instance.kind = "error"
-    }
-    if object["message"] == nil || object["message"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("message").path + ": missing required field")
     }
     if let value = object["message"] {
       instance.message = try TypraRuntime.string(value, field: "message")

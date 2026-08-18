@@ -289,9 +289,6 @@ public struct CustomTool: TypraModel {
     if let value = object["connection"] {
       instance.connection = try Connection.load(value, context: context.at("connection"))
     }
-    if object["options"] == nil || object["options"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("options").path + ": missing required field")
-    }
     if let value = object["options"] {
       instance.options = try TypraRuntime.dictionary(value, field: "options")
     }
@@ -437,10 +434,6 @@ public struct McpTool: TypraModel {
     }
     if let value = object["connection"] {
       instance.connection = try Connection.load(value, context: context.at("connection"))
-    }
-    if object["serverName"] == nil || object["serverName"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("serverName").path + ": missing required field")
     }
     if let value = object["serverName"] {
       instance.serverName = try TypraRuntime.string(value, field: "serverName")
@@ -600,10 +593,6 @@ public struct OpenApiTool: TypraModel {
     if let value = object["connection"] {
       instance.connection = try Connection.load(value, context: context.at("connection"))
     }
-    if object["specification"] == nil || object["specification"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("specification").path + ": missing required field")
-    }
     if let value = object["specification"] {
       instance.specification = try TypraRuntime.string(value, field: "specification")
     }
@@ -734,9 +723,6 @@ public struct PromptyTool: TypraModel {
     }
     if let value = object["bindings"] {
       instance.bindings = try loadBindings(value, context: context.at("bindings"))
-    }
-    if object["path"] == nil || object["path"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("path").path + ": missing required field")
     }
     if let value = object["path"] {
       instance.path = try TypraRuntime.string(value, field: "path")

@@ -119,9 +119,6 @@ public struct ReferenceConnection: TypraModel {
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
     }
-    if object["name"] == nil || object["name"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("name").path + ": missing required field")
-    }
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
     }
@@ -207,14 +204,8 @@ public struct RemoteConnection: TypraModel {
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
     }
-    if object["name"] == nil || object["name"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("name").path + ": missing required field")
-    }
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    }
-    if object["endpoint"] == nil || object["endpoint"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("endpoint").path + ": missing required field")
     }
     if let value = object["endpoint"] {
       instance.endpoint = try TypraRuntime.string(value, field: "endpoint")
@@ -296,14 +287,8 @@ public struct ApiKeyConnection: TypraModel {
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
     }
-    if object["endpoint"] == nil || object["endpoint"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("endpoint").path + ": missing required field")
-    }
     if let value = object["endpoint"] {
       instance.endpoint = try TypraRuntime.string(value, field: "endpoint")
-    }
-    if object["apiKey"] == nil || object["apiKey"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("apiKey").path + ": missing required field")
     }
     if let value = object["apiKey"] {
       instance.apiKey = try TypraRuntime.string(value, field: "apiKey")
@@ -381,9 +366,6 @@ public struct AnonymousConnection: TypraModel {
     }
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
-    }
-    if object["endpoint"] == nil || object["endpoint"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("endpoint").path + ": missing required field")
     }
     if let value = object["endpoint"] {
       instance.endpoint = try TypraRuntime.string(value, field: "endpoint")
@@ -471,27 +453,14 @@ public struct OAuthConnection: TypraModel {
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
     }
-    if object["endpoint"] == nil || object["endpoint"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("endpoint").path + ": missing required field")
-    }
     if let value = object["endpoint"] {
       instance.endpoint = try TypraRuntime.string(value, field: "endpoint")
-    }
-    if object["clientId"] == nil || object["clientId"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("clientId").path + ": missing required field")
     }
     if let value = object["clientId"] {
       instance.clientId = try TypraRuntime.string(value, field: "clientId")
     }
-    if object["clientSecret"] == nil || object["clientSecret"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("clientSecret").path + ": missing required field")
-    }
     if let value = object["clientSecret"] {
       instance.clientSecret = try TypraRuntime.string(value, field: "clientSecret")
-    }
-    if object["tokenUrl"] == nil || object["tokenUrl"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("tokenUrl").path + ": missing required field")
     }
     if let value = object["tokenUrl"] {
       instance.tokenUrl = try TypraRuntime.string(value, field: "tokenUrl")
@@ -585,9 +554,6 @@ public struct FoundryConnection: TypraModel {
     }
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
-    }
-    if object["endpoint"] == nil || object["endpoint"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("endpoint").path + ": missing required field")
     }
     if let value = object["endpoint"] {
       instance.endpoint = try TypraRuntime.string(value, field: "endpoint")

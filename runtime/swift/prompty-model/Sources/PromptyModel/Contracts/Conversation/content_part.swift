@@ -77,9 +77,6 @@ public struct TextPart: TypraModel {
     } else {
       instance.kind = "text"
     }
-    if object["value"] == nil || object["value"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("value").path + ": missing required field")
-    }
     if let value = object["value"] {
       instance.value = try TypraRuntime.string(value, field: "value")
     }
@@ -138,9 +135,6 @@ public struct ImagePart: TypraModel {
       instance.kind = try TypraRuntime.string(value, field: "kind")
     } else {
       instance.kind = "image"
-    }
-    if object["source"] == nil || object["source"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("source").path + ": missing required field")
     }
     if let value = object["source"] {
       instance.source = try TypraRuntime.string(value, field: "source")
@@ -209,9 +203,6 @@ public struct FilePart: TypraModel {
     } else {
       instance.kind = "file"
     }
-    if object["source"] == nil || object["source"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("source").path + ": missing required field")
-    }
     if let value = object["source"] {
       instance.source = try TypraRuntime.string(value, field: "source")
     }
@@ -272,9 +263,6 @@ public struct AudioPart: TypraModel {
       instance.kind = try TypraRuntime.string(value, field: "kind")
     } else {
       instance.kind = "audio"
-    }
-    if object["source"] == nil || object["source"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("source").path + ": missing required field")
     }
     if let value = object["source"] {
       instance.source = try TypraRuntime.string(value, field: "source")

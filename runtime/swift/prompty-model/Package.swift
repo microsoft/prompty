@@ -11,6 +11,8 @@ let package = Package(
   targets: [
     .target(
       name: "PromptyModel", dependencies: [.product(name: "Yams", package: "Yams")],
-      path: "Sources/PromptyModel")
+      path: "Sources/PromptyModel"),
+    .testTarget(
+      name: "PromptyModelTests", dependencies: ["PromptyModel"], path: "Tests/PromptyModelTests"),
   ]
 )
