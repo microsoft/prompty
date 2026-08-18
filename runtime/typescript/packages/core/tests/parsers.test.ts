@@ -59,6 +59,29 @@ Hello!`;
     expect(messages[0].metadata.name).toBe("Alice");
   });
 
+  it("parses multiple unquoted attributes", async () => {
+    const rendered = `user[name=Bob, id=7]:
+Hi`;
+
+    const messages = await parser.parse(agent, rendered);
+    expect(messages).toHaveLength(1);
+    expect(messages[0].role).toBe("user");
+    expect(messages[0].metadata.name).toBe("Bob");
+    expect(messages[0].metadata.id).toBe(7);
+  });
+
+  it("is not vulnerable to ReDoS on adversarial role attributes (#446)", async () => {
+    // Unterminated-quote / unbounded attribute run that triggered catastrophic
+    // backtracking in the old `"?[^"]*"?` value class. Must complete near-instantly.
+    const evil = `user[${"name=a".repeat(24)}"`;
+    const start = performance.now();
+    const messages = await parser.parse(agent, `${evil}:\nHi`);
+    const elapsed = performance.now() - start;
+    expect(elapsed).toBeLessThan(1000);
+    // The adversarial line is not a valid boundary, so it stays as content.
+    expect(messages).toHaveLength(1);
+  });
+
   it("preserves inline markdown images as text", async () => {
     const rendered = `user:
 Look at this ![photo](https://example.com/img.png)`;

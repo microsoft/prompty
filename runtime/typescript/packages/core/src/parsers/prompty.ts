@@ -21,9 +21,18 @@ import {
 import type { Parser } from "../core/interfaces.js";
 
 // Role boundary regex — matches lines like `system:` or `user[name="Alice"]:`
+//
+// ReDoS hardening: the previous body `((\w+\s*=\s*"?[^"]*"?\s*,?\s*)+)` nested a
+// repetition whose value class overlapped the `\w+=` iteration starter and the
+// separators, so a long attribute run (e.g. `name=aname=a...`) could be partitioned
+// exponentially — catastrophic backtracking. JavaScript has no possessive quantifiers
+// (unlike the Python fix in #457), so instead we remove the nested `+`: require an
+// attribute-like start (`key=`) and then swallow the remainder of the bracket with a
+// single `[^\]]*` class that cannot overlap the closing `]`. This is structurally
+// linear. Individual attributes are still split later by ATTR_RE. See #446.
 const ROLE_NAMES = [...ROLES].filter((r) => r !== "tool").sort().join("|");
 const BOUNDARY_RE = new RegExp(
-  `^\\s*#?\\s*(${ROLE_NAMES})(\\[((\\w+\\s*=\\s*"?[^"]*"?\\s*,?\\s*)+)\\])?\\s*:\\s*$`,
+  `^\\s*#?\\s*(${ROLE_NAMES})(\\[\\w+\\s*=\\s*[^\\]]*\\])?\\s*:\\s*$`,
   "i",
 );
 
