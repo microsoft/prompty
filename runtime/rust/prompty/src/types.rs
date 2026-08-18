@@ -299,7 +299,7 @@ pub enum StreamChunk {
 /// Transport failures after a response has opened are indeterminate: the provider
 /// may have accepted or completed the invocation even though the local stream
 /// ended before a terminal response was received.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StreamFailure {
     /// The stream failed deterministically (for example, a model refusal).
     Determinate(String),
@@ -318,6 +318,47 @@ impl StreamFailure {
     /// Whether this failure requires reconciliation instead of retry or commit.
     pub fn outcome_unknown(&self) -> bool {
         matches!(self, Self::Indeterminate(_))
+    }
+
+    /// Convert this compatibility type to the canonical generated model.
+    pub fn to_model(&self) -> crate::model::StreamFailure {
+        self.into()
+    }
+
+    /// Convert a canonical generated model into the compatibility type.
+    pub fn from_model(failure: crate::model::StreamFailure) -> Self {
+        failure.into()
+    }
+}
+
+impl From<&StreamFailure> for crate::model::StreamFailure {
+    fn from(failure: &StreamFailure) -> Self {
+        let outcome = if failure.outcome_unknown() {
+            crate::model::StreamFailureOutcome::Indeterminate
+        } else {
+            crate::model::StreamFailureOutcome::Determinate
+        };
+        Self {
+            outcome,
+            message: failure.message().to_string(),
+        }
+    }
+}
+
+impl From<StreamFailure> for crate::model::StreamFailure {
+    fn from(failure: StreamFailure) -> Self {
+        (&failure).into()
+    }
+}
+
+impl From<crate::model::StreamFailure> for StreamFailure {
+    fn from(failure: crate::model::StreamFailure) -> Self {
+        match failure.outcome {
+            crate::model::StreamFailureOutcome::Determinate => Self::Determinate(failure.message),
+            crate::model::StreamFailureOutcome::Indeterminate => {
+                Self::Indeterminate(failure.message)
+            }
+        }
     }
 }
 

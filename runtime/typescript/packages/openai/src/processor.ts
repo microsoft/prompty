@@ -9,6 +9,7 @@
 import type { Agent } from "@prompty/core";
 import type { Processor } from "@prompty/core";
 import type { ToolCall } from "@prompty/core";
+import { FailureChunk, StreamFailure } from "@prompty/core";
 import { traceSpan } from "@prompty/core";
 import { createStructuredResult } from "@prompty/core";
 
@@ -73,9 +74,7 @@ export function processResponse(agent: Agent, response: unknown): unknown {
 /** Type guard for async iterables (PromptyStream or raw SDK stream). */
 function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    Symbol.asyncIterator in value
+    typeof value === "object" && value !== null && Symbol.asyncIterator in value
   );
 }
 
@@ -86,57 +85,122 @@ function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
  * - `delta.content` — yields content strings
  * - `delta.tool_calls` — accumulates partial tool call chunks,
  *   yields ToolCall objects when the stream ends
- * - `delta.refusal` — throws Error with the refusal message
+ * - `delta.refusal` — yields a determinate FailureChunk
  *
  * Matches the Python `_stream_generator` / `_async_stream_generator`.
  */
 async function* streamGenerator(
   response: AsyncIterable<unknown>,
-): AsyncGenerator<string | ToolCall> {
-  const toolCallAcc: Map<number, { id: string; name: string; arguments: string }> = new Map();
+): AsyncGenerator<string | ToolCall | FailureChunk> {
+  const toolCallAcc: Map<
+    number,
+    { id: string; name: string; arguments: string }
+  > = new Map();
+  const iterator = response[Symbol.asyncIterator]();
+  let iteratorClosed = false;
+  let iteratorExhausted = false;
 
-  for await (const chunk of response) {
-    const c = chunk as Record<string, unknown>;
-    const choices = c.choices as Record<string, unknown>[] | undefined;
-    if (!choices || choices.length === 0) continue;
+  const close = async (): Promise<void> => {
+    if (iteratorClosed) return;
+    iteratorClosed = true;
+    await closeIterator(iterator);
+  };
 
-    const delta = (choices[0] as Record<string, unknown>).delta as Record<string, unknown> | undefined;
-    if (!delta) continue;
+  try {
+    while (true) {
+      let next: IteratorResult<unknown>;
+      try {
+        next = await iterator.next();
+      } catch (error) {
+        await close();
+        yield failureChunk("indeterminate", errorMessage(error));
+        return;
+      }
+      if (next.done) {
+        iteratorExhausted = true;
+        break;
+      }
 
-    // Content
-    if (delta.content != null) {
-      yield delta.content as string;
-    }
+      const chunk = next.value;
+      const c = chunk as Record<string, unknown>;
+      const choices = c.choices as Record<string, unknown>[] | undefined;
+      if (!choices || choices.length === 0) continue;
 
-    // Tool call deltas — accumulate index-keyed partial chunks
-    const tcDeltas = delta.tool_calls as Record<string, unknown>[] | undefined;
-    if (tcDeltas) {
-      for (const tcDelta of tcDeltas) {
-        const idx = tcDelta.index as number;
-        if (!toolCallAcc.has(idx)) {
-          toolCallAcc.set(idx, { id: "", name: "", arguments: "" });
+      const delta = (choices[0] as Record<string, unknown>).delta as
+        | Record<string, unknown>
+        | undefined;
+      if (!delta) continue;
+
+      // Content
+      if (delta.content != null) {
+        yield delta.content as string;
+      }
+
+      // Tool call deltas — accumulate index-keyed partial chunks
+      const tcDeltas = delta.tool_calls as
+        | Record<string, unknown>[]
+        | undefined;
+      if (tcDeltas) {
+        for (const tcDelta of tcDeltas) {
+          const idx = tcDelta.index as number;
+          if (!toolCallAcc.has(idx)) {
+            toolCallAcc.set(idx, { id: "", name: "", arguments: "" });
+          }
+          const acc = toolCallAcc.get(idx)!;
+          if (tcDelta.id) acc.id = tcDelta.id as string;
+          const fn = tcDelta.function as Record<string, unknown> | undefined;
+          if (fn) {
+            if (fn.name) acc.name = fn.name as string;
+            if (fn.arguments) acc.arguments += fn.arguments as string;
+          }
         }
-        const acc = toolCallAcc.get(idx)!;
-        if (tcDelta.id) acc.id = tcDelta.id as string;
-        const fn = tcDelta.function as Record<string, unknown> | undefined;
-        if (fn) {
-          if (fn.name) acc.name = fn.name as string;
-          if (fn.arguments) acc.arguments += fn.arguments as string;
-        }
+      }
+
+      // Refusal
+      if (delta.refusal != null) {
+        await close();
+        yield failureChunk("determinate", `Model refused: ${delta.refusal}`);
+        return;
       }
     }
 
-    // Refusal
-    if (delta.refusal != null) {
-      throw new Error(`Model refused: ${delta.refusal}`);
+    // Yield accumulated tool calls at the end of the stream
+    const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
+    for (const idx of sortedIndices) {
+      const tc = toolCallAcc.get(idx)!;
+      yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
+    }
+  } finally {
+    if (!iteratorExhausted) {
+      await close();
     }
   }
+}
 
-  // Yield accumulated tool calls at the end of the stream
-  const sortedIndices = [...toolCallAcc.keys()].sort((a, b) => a - b);
-  for (const idx of sortedIndices) {
-    const tc = toolCallAcc.get(idx)!;
-    yield { id: tc.id, name: tc.name, arguments: tc.arguments } as ToolCall;
+function failureChunk(
+  outcome: "determinate" | "indeterminate",
+  message: string,
+): FailureChunk {
+  return new FailureChunk({
+    failure: new StreamFailure({ outcome, message }),
+  });
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function closeIterator(iterator: AsyncIterator<unknown>): Promise<void> {
+  if (!iterator.return) return;
+  try {
+    await iterator.return();
+  } catch (error) {
+    if (typeof globalThis.console?.debug === "function") {
+      globalThis.console.debug(
+        "Failed to close OpenAI response stream:",
+        error,
+      );
+    }
   }
 }
 
@@ -180,7 +244,10 @@ function processResponsesApi(
     // Structured output — JSON parse when outputs schema exists
     if (agent.outputs && agent.outputs.length > 0) {
       try {
-        return createStructuredResult(JSON.parse(outputText) as Record<string, unknown>, outputText);
+        return createStructuredResult(
+          JSON.parse(outputText) as Record<string, unknown>,
+          outputText,
+        );
       } catch {
         return outputText;
       }
@@ -207,7 +274,10 @@ function processResponsesApi(
     const text = texts.join("");
     if (agent.outputs && agent.outputs.length > 0) {
       try {
-        return createStructuredResult(JSON.parse(text) as Record<string, unknown>, text);
+        return createStructuredResult(
+          JSON.parse(text) as Record<string, unknown>,
+          text,
+        );
       } catch {
         return text;
       }
@@ -259,7 +329,10 @@ function processChatCompletion(
   // Structured output — JSON parse when outputs schema exists
   if (agent.outputs && agent.outputs.length > 0) {
     try {
-      return createStructuredResult(JSON.parse(content) as Record<string, unknown>, content);
+      return createStructuredResult(
+        JSON.parse(content) as Record<string, unknown>,
+        content,
+      );
     } catch {
       return content;
     }
