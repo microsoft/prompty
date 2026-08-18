@@ -34,6 +34,10 @@ on:
       - 'runtime/python/prompty/uv.lock'
       - 'runtime/go/prompty/go.mod'             # gofmt is toolchain-tied; go-version-file below
       - '.editorconfig'                         # consumed by dotnet format
+      # Committed toolchain pins: bumping either changes the rustfmt / dotnet format
+      # version the emitter shells out to, so a change here alters generated output.
+      - 'rust-toolchain.toml'                   # rustfmt (cargo fmt) toolchain
+      - 'global.json'                           # .NET SDK dotnet format selects
       # Hand-written C# is a real input to this check, unlike the other languages.
       # The C# driver runs `dotnet format <csproj>` over the WHOLE project, so every
       # file in these two projects must already be dotnet format-clean or regeneration
@@ -48,6 +52,16 @@ on:
 
   workflow_call:
   workflow_dispatch:
+
+  # Defence in depth. Path triggers only catch inputs pinned by a file in the repo;
+  # they cannot see a floating input that drifts with no commit at all — a runner
+  # image rotating its default SDK, a transitive formatter dependency resolving to a
+  # new version, a base image bump. A weekly run on the default branch surfaces that
+  # class of drift on a fixed cadence instead of on some unrelated contributor's next
+  # schema PR, where it would fail red and blame the wrong change. Largely subsumed by
+  # the committed toolchain pins, kept as a backstop for what those pins cannot bind.
+  schedule:
+    - cron: '17 9 * * 1'   # Mondays 09:17 UTC
 
 permissions:
   contents: read
