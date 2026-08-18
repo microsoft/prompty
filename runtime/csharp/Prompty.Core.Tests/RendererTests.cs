@@ -201,8 +201,126 @@ public class Jinja2RendererTests
 }
 
 // -----------------------------------------------------------------------
-// MustacheRenderer Tests
+// Input Sanitization Tests (issue #432 — sibling of GHSA-w28w-gp39-m4p6)
 // -----------------------------------------------------------------------
+
+public class RenderInputSanitizationTests
+{
+    private readonly Jinja2Renderer _renderer = new();
+
+    [Theory]
+    [InlineData("__proto__")]
+    [InlineData("constructor")]
+    [InlineData("prototype")]
+    public void SanitizeInputs_StripsUnsafeTopLevelKeys(string unsafeKey)
+    {
+        var inputs = new Dictionary<string, object?>
+        {
+            [unsafeKey] = "attack",
+            ["name"] = "Jane",
+        };
+
+        var result = RenderHelpers.SanitizeInputs(inputs);
+
+        Assert.False(result.ContainsKey(unsafeKey));
+        Assert.Equal("Jane", result["name"]);
+    }
+
+    [Fact]
+    public void SanitizeInputs_StripsUnsafeKeysInNestedDictionaries()
+    {
+        var inputs = new Dictionary<string, object?>
+        {
+            ["profile"] = new Dictionary<string, object?>
+            {
+                ["constructor"] = "attack",
+                ["displayName"] = "Jane",
+            },
+        };
+
+        var result = RenderHelpers.SanitizeInputs(inputs);
+
+        var profile = Assert.IsType<Dictionary<string, object?>>(result["profile"]);
+        Assert.False(profile.ContainsKey("constructor"));
+        Assert.Equal("Jane", profile["displayName"]);
+    }
+
+    [Fact]
+    public void SanitizeInputs_StripsUnsafeKeysInsideCollections()
+    {
+        var inputs = new Dictionary<string, object?>
+        {
+            ["items"] = new List<object?>
+            {
+                new Dictionary<string, object?> { ["__proto__"] = "attack", ["value"] = 1 },
+            },
+        };
+
+        var result = RenderHelpers.SanitizeInputs(inputs);
+
+        var list = Assert.IsType<List<object?>>(result["items"]);
+        var entry = Assert.IsType<Dictionary<string, object?>>(list[0]);
+        Assert.False(entry.ContainsKey("__proto__"));
+        Assert.Equal(1, entry["value"]);
+    }
+
+    [Fact]
+    public void SanitizeInputs_DoesNotMutateOriginal()
+    {
+        var inputs = new Dictionary<string, object?> { ["__proto__"] = "attack", ["name"] = "Jane" };
+
+        RenderHelpers.SanitizeInputs(inputs);
+
+        Assert.True(inputs.ContainsKey("__proto__"));
+    }
+
+    [Fact]
+    public void SanitizeInputs_HandlesCyclicReferences()
+    {
+        var cyclic = new Dictionary<string, object?> { ["name"] = "Jane" };
+        cyclic["self"] = cyclic;
+        var inputs = new Dictionary<string, object?> { ["node"] = cyclic };
+
+        var result = RenderHelpers.SanitizeInputs(inputs);
+
+        var node = Assert.IsType<Dictionary<string, object?>>(result["node"]);
+        Assert.Equal("Jane", node["name"]);
+        Assert.Null(node["self"]); // cycle broken, not infinite recursion
+    }
+
+    [Fact]
+    public async Task Render_DoesNotExposeConstructorMember()
+    {
+        var agent = CreateAgentBase();
+        // Without sanitization, {{ obj.constructor }} could reach the prototype chain.
+        var result = await _renderer.RenderAsync(
+            agent,
+            "{{ obj.constructor }}",
+            new() { ["obj"] = new Dictionary<string, object?> { ["constructor"] = "leaked" } });
+
+        Assert.DoesNotContain("leaked", result);
+    }
+
+    [Fact]
+    public async Task Render_NormalInputsStillWork()
+    {
+        var agent = CreateAgentBase();
+        var result = await _renderer.RenderAsync(agent, "Hello {{ name }}!", new() { ["name"] = "Jane" });
+        Assert.Equal("Hello Jane!", result);
+    }
+
+    private static Agent CreateAgentBase()
+    {
+        var data = new Dictionary<string, object?>
+        {
+            ["kind"] = "prompt",
+            ["name"] = "test",
+            ["instructions"] = "",
+            ["model"] = "gpt-4",
+        };
+        return Agent.Load(data, new LoadContext());
+    }
+}
 
 public class MustacheRendererTests
 {
