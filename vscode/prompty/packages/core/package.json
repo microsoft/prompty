@@ -13,24 +13,24 @@
 		"vscode": "^1.98.0"
 	},
 	"dependencies": {
-		"@anthropic-ai/sdk": "^0.117.1",
-		"@azure/ai-projects": "^2.4.0",
+		"@anthropic-ai/sdk": "^0.39.0",
+		"@azure/ai-projects": "^2.0.1",
 		"@azure/identity": "^4.6.0",
-		"@prompty/anthropic": "^2.0.0-beta.5",
+		"@prompty/anthropic": "^2.0.0-beta.1",
 		"@prompty/core": "^2.0.0-beta.1",
-		"@prompty/foundry": "^2.0.0-beta.5",
+		"@prompty/foundry": "^2.0.0-beta.1",
 		"@prompty/openai": "^2.0.0-beta.1",
 		"@types/js-yaml": "^4.0.9",
-		"glob": "^13.0.6",
-		"js-yaml": "^5.3.0",
-		"openai": "^7.4.0",
-		"vscode-languageclient": "^10.1.0"
+		"glob": "^11.1.0",
+		"js-yaml": "^4.1.1",
+		"openai": "^4.80.0",
+		"vscode-languageclient": "^9.0.1"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.125.0",
-		"@vscode/test-electron": "^3.1.0",
-		"prettier": "^3.9.6",
+		"@types/vscode": "^1.98.0",
+		"@vscode/test-electron": "^2.5.2",
+		"prettier": "^3.8.1",
 		"rimraf": "^6.1.3",
-		"typescript": "^7.0.2"
+		"typescript": "^5.9.3"
 	}
 }

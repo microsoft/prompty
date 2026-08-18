@@ -362,17 +362,17 @@
     "publish-pre": "vsce publish --pre-release"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@stylistic/eslint-plugin": "^5.10.0",
+    "@eslint/js": "^9.13.0",
+    "@stylistic/eslint-plugin": "^2.9.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^26",
-    "@vscode/vsce": "^3.9.2",
-    "esbuild": "^0.28.2",
-    "eslint": "^10.8.1",
-    "js-yaml": "^5.3.0",
-    "mocha": "^11.8.0",
-    "typescript": "^7.0.2",
-    "typescript-eslint": "^8.67.0"
+    "@types/node": "^20",
+    "@vscode/vsce": "^3.7.1",
+    "esbuild": "^0.28.1",
+    "eslint": "^9.13.0",
+    "js-yaml": "^4.1.1",
+    "mocha": "^10.3.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.1"
   },
   "overrides": {
     "mocha": {
@@ -383,6 +383,6 @@
     }
   },
   "dependencies": {
-    "marked": "^18.0.9"
+    "marked": "^17.0.5"
   }
 }
