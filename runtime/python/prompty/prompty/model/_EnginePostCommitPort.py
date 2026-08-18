@@ -7,8 +7,7 @@
 
 from typing import Protocol, runtime_checkable
 
-from prompty.core.cancellation import CancellationToken
-
+from ..core.cancellation import CancellationToken
 from .contracts.pipeline._TurnCommit import TurnCommit
 
 

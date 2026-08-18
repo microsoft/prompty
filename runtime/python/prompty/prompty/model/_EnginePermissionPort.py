@@ -7,8 +7,7 @@
 
 from typing import Protocol, runtime_checkable
 
-from prompty.core.cancellation import CancellationToken
-
+from ..core.cancellation import CancellationToken
 from .contracts.pipeline._EnginePermissionDecision import EnginePermissionDecision
 from .contracts.pipeline._ModelToolRequest import ModelToolRequest
 
