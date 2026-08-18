@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 import pytest
 
 from prompty.core.types import Message, TextPart
@@ -255,6 +257,47 @@ class TestInlineImagesPreservedAsText:
         result = self.parser.parse(self.agent, rendered)
         assert len(result[0].parts) == 1
         assert isinstance(result[0].parts[0], TextPart)
+
+
+# ---------------------------------------------------------------------------
+# ReDoS regression (issue #446)
+# ---------------------------------------------------------------------------
+
+
+class TestRoleBoundaryReDoS:
+    """Parsing must stay roughly linear in input size on adversarial input.
+
+    Unquoted, unterminated attributes used to let the value class overlap
+    with the `,` separator and closing `]`, giving the backtracking engine
+    an exponential number of equivalent splits to try before failing.
+    The assertion is mostly relative (runtime at 40 reps vs. 20 reps) so it
+    stays robust on a slow/contended CI runner; the small absolute floor
+    only keeps the relative bound from collapsing to noise when `small`
+    itself measures near zero on a very fast run — it is not the budget
+    being enforced.
+    """
+
+    def setup_method(self):
+        self.parser = PromptyChatParser()
+        self.agent = _make_agent()
+
+    def _time_adversarial_parse(self, reps: int, samples: int = 20) -> float:
+        """Best-of-`samples` timing to smooth out scheduler/CPU jitter."""
+        payload = "user[" + "a=b," * reps + "!"
+        best = float("inf")
+        for _ in range(samples):
+            start = time.perf_counter()
+            self.parser.parse(self.agent, payload)
+            best = min(best, time.perf_counter() - start)
+        return best
+
+    def test_doubling_input_does_not_blow_up_runtime(self):
+        small = self._time_adversarial_parse(20)
+        large = self._time_adversarial_parse(40)
+        # Exponential (catastrophic-backtracking) behavior would roughly
+        # square the runtime when the repeat count doubles; linear-time
+        # matching keeps it within a small constant factor.
+        assert large < max(small * 20, 0.1)
 
 
 # ---------------------------------------------------------------------------
