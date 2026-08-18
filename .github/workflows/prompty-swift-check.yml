@@ -1,0 +1,41 @@
+name: prompty Swift build and test
+on:
+  pull_request:
+    paths:
+      - 'runtime/swift/**'
+      - 'schema/**'
+      - '.github/workflows/prompty-swift-check.yml'
+
+  workflow_call:
+
+jobs:
+  swift-tests:
+    name: test Swift on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Swift toolchain
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '6.0'
+
+      - name: Report Swift version
+        run: swift --version
+
+      # The generated model package is standalone (no remote dependencies) and
+      # is the source of truth for the runtime contract, so it is built first.
+      - name: Build and test prompty-model
+        working-directory: runtime/swift/prompty-model
+        run: swift test
+
+      # The hand-written runtime depends on prompty-model (local path) and Yams.
+      - name: Build and test prompty runtime
+        working-directory: runtime/swift/prompty
+        run: swift test
