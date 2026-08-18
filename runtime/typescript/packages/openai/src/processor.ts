@@ -127,8 +127,7 @@ async function* streamGenerator(
       if (!choices || choices.length === 0) continue;
 
       const delta = (choices[0] as Record<string, unknown>).delta as
-        | Record<string, unknown>
-        | undefined;
+        Record<string, unknown> | undefined;
       if (!delta) continue;
 
       // Content
@@ -138,8 +137,7 @@ async function* streamGenerator(
 
       // Tool call deltas — accumulate index-keyed partial chunks
       const tcDeltas = delta.tool_calls as
-        | Record<string, unknown>[]
-        | undefined;
+        Record<string, unknown>[] | undefined;
       if (tcDeltas) {
         for (const tcDelta of tcDeltas) {
           const idx = tcDelta.index as number;

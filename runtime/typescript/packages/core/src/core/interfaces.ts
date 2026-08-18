@@ -21,7 +21,11 @@ import type { Message } from "./types.js";
  * Discovered by: `agent.template.format.kind` (e.g., "nunjucks", "mustache").
  */
 export interface Renderer {
-  render(agent: Agent, template: string, inputs: Record<string, unknown>): Promise<string>;
+  render(
+    agent: Agent,
+    template: string,
+    inputs: Record<string, unknown>,
+  ): Promise<string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -36,7 +40,11 @@ export interface Renderer {
  * Optionally implements `preRender()` for nonce injection (strict mode).
  */
 export interface Parser {
-  parse(agent: Agent, rendered: string, context?: Record<string, unknown>): Promise<Message[]>;
+  parse(
+    agent: Agent,
+    rendered: string,
+    context?: Record<string, unknown>,
+  ): Promise<Message[]>;
 
   /**
    * Optional hook called before rendering to sanitize the template

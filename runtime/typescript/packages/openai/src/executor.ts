@@ -8,11 +8,22 @@
 
 import OpenAI from "openai";
 import type { Agent } from "@prompty/core";
-import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text } from "@prompty/core";
+import {
+  ApiKeyConnection,
+  ReferenceConnection,
+  PromptyStream,
+  Message,
+  text,
+} from "@prompty/core";
 import type { Executor } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { traceSpan, sanitizeValue } from "@prompty/core";
-import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "./wire.js";
+import {
+  buildChatArgs,
+  buildEmbeddingArgs,
+  buildImageArgs,
+  buildResponsesArgs,
+} from "./wire.js";
 
 export class OpenAIExecutor implements Executor {
   async execute(agent: Agent, messages: Message[]): Promise<unknown> {
@@ -36,7 +47,13 @@ export class OpenAIExecutor implements Executor {
       });
 
       const apiType = agent.model?.apiType ?? "chat";
-      const result = await this.executeApiCall(client, clientName, agent, messages, apiType);
+      const result = await this.executeApiCall(
+        client,
+        clientName,
+        agent,
+        messages,
+        apiType,
+      );
       emit("result", result);
       return result;
     });
@@ -58,12 +75,17 @@ export class OpenAIExecutor implements Executor {
           callEmit("signature", `${clientName}.chat.completions.create`);
           callEmit("inputs", sanitizeValue("create", args));
           const result = await client.chat.completions.create(
-            args as unknown as Parameters<typeof client.chat.completions.create>[0],
+            args as unknown as Parameters<
+              typeof client.chat.completions.create
+            >[0],
           );
           if (isStreaming) {
             // Wrap streaming response for tracing — don't emit result yet,
             // PromptyStream will trace on exhaustion
-            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+            return new PromptyStream(
+              `${clientName}Executor`,
+              result as unknown as AsyncIterable<unknown>,
+            );
           }
           callEmit("result", result);
           return result;
@@ -103,7 +125,10 @@ export class OpenAIExecutor implements Executor {
             args as unknown as Parameters<typeof client.responses.create>[0],
           );
           if (isStreaming) {
-            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+            return new PromptyStream(
+              `${clientName}Executor`,
+              result as unknown as AsyncIterable<unknown>,
+            );
           }
           callEmit("result", result);
           return result;
@@ -124,28 +149,37 @@ export class OpenAIExecutor implements Executor {
 
     // Detect Responses API by checking for call_id on tool calls
     const isResponses =
-      toolCalls.length > 0 && "call_id" in (toolCalls[0] as Record<string, unknown>);
+      toolCalls.length > 0 &&
+      "call_id" in (toolCalls[0] as Record<string, unknown>);
 
     if (isResponses) {
       // Responses API: individual function_call items
       for (const tc of toolCalls) {
         messages.push(
-          new Message({ role: "assistant", parts: [], metadata: {
-            responses_function_call: {
-              type: "function_call",
-              call_id: tc.id,
-              name: tc.name,
-              arguments: tc.arguments,
+          new Message({
+            role: "assistant",
+            parts: [],
+            metadata: {
+              responses_function_call: {
+                type: "function_call",
+                call_id: tc.id,
+                name: tc.name,
+                arguments: tc.arguments,
+              },
             },
-          } }),
+          }),
         );
       }
       for (let i = 0; i < toolCalls.length; i++) {
         messages.push(
-          new Message({ role: "tool", parts: [text(toolResults[i])], metadata: {
-            tool_call_id: toolCalls[i].id,
-            name: toolCalls[i].name,
-          } }),
+          new Message({
+            role: "tool",
+            parts: [text(toolResults[i])],
+            metadata: {
+              tool_call_id: toolCalls[i].id,
+              name: toolCalls[i].name,
+            },
+          }),
         );
       }
     } else {
@@ -156,16 +190,24 @@ export class OpenAIExecutor implements Executor {
         function: { name: tc.name, arguments: tc.arguments },
       }));
       messages.push(
-        new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: {
-          tool_calls: rawToolCalls,
-        } }),
+        new Message({
+          role: "assistant",
+          parts: textContent ? [text(textContent)] : [],
+          metadata: {
+            tool_calls: rawToolCalls,
+          },
+        }),
       );
       for (let i = 0; i < toolCalls.length; i++) {
         messages.push(
-          new Message({ role: "tool", parts: [text(toolResults[i])], metadata: {
-            tool_call_id: toolCalls[i].id,
-            name: toolCalls[i].name,
-          } }),
+          new Message({
+            role: "tool",
+            parts: [text(toolResults[i])],
+            metadata: {
+              tool_call_id: toolCalls[i].id,
+              name: toolCalls[i].name,
+            },
+          }),
         );
       }
     }

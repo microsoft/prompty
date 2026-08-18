@@ -1,4 +1,11 @@
-export { Tracer, trace, traceMethod, traceSpan, sanitizeValue, toSerializable } from "./tracer.js";
+export {
+  Tracer,
+  trace,
+  traceMethod,
+  traceSpan,
+  sanitizeValue,
+  toSerializable,
+} from "./tracer.js";
 export type { TracerBackend, TracerFactory, SpanEmitter } from "./tracer.js";
 export { consoleTracer } from "./console.js";
 export { PromptyTracer, PKG_VERSION } from "./promptyTracer.js";

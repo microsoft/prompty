@@ -77,7 +77,11 @@ export function defaultSaveContext(
 // Internal pipeline
 // ---------------------------------------------------------------------------
 
-function buildAgent(raw: string, filePath: string, options: LoadOptions): Agent {
+function buildAgent(
+  raw: string,
+  filePath: string,
+  options: LoadOptions,
+): Agent {
   // 1. Split frontmatter + body
   const { data, content } = matter(raw, {
     engines: {
@@ -94,7 +98,9 @@ function buildAgent(raw: string, filePath: string, options: LoadOptions): Agent 
 
   // 2. Load via Prompty.load() with preProcess for ${protocol:value} expansion
   const ctx = new LoadContext({
-    preProcess: makePreProcess(filePath, options) as (data: Record<string, unknown>) => Record<string, unknown>,
+    preProcess: makePreProcess(filePath, options) as (
+      data: Record<string, unknown>,
+    ) => Record<string, unknown>,
   });
   const agent = Agent.load(frontmatter, ctx);
 
@@ -127,11 +133,16 @@ function rejectExecutableFrontmatter(): never {
  * File references are limited to the prompt directory by default. Callers may
  * provide additional allowed roots via `allowedFileRoots`.
  */
-function makePreProcess(agentFile: string, options: LoadOptions): (data: unknown) => unknown {
+function makePreProcess(
+  agentFile: string,
+  options: LoadOptions,
+): (data: unknown) => unknown {
   const agentDir = realpathSync(dirname(agentFile));
   const allowedRoots = [
     agentDir,
-    ...(options.allowedFileRoots ?? []).map((root) => canonicalizeExistingPath(resolve(root))),
+    ...(options.allowedFileRoots ?? []).map((root) =>
+      canonicalizeExistingPath(resolve(root)),
+    ),
   ];
 
   return (data: unknown): unknown => {
@@ -141,7 +152,11 @@ function makePreProcess(agentFile: string, options: LoadOptions): (data: unknown
 
     const record = data as Record<string, unknown>;
     for (const [key, value] of Object.entries(record)) {
-      if (typeof value !== "string" || !value.startsWith("${") || !value.endsWith("}")) {
+      if (
+        typeof value !== "string" ||
+        !value.startsWith("${") ||
+        !value.endsWith("}")
+      ) {
         continue;
       }
 
@@ -156,7 +171,8 @@ function makePreProcess(agentFile: string, options: LoadOptions): (data: unknown
         // Support ${env:VAR:default}
         const nextColon = val.indexOf(":");
         const varName = nextColon === -1 ? val : val.slice(0, nextColon);
-        const defaultVal = nextColon === -1 ? undefined : val.slice(nextColon + 1);
+        const defaultVal =
+          nextColon === -1 ? undefined : val.slice(nextColon + 1);
 
         const envVal = process.env[varName];
         if (envVal !== undefined) {
@@ -178,15 +194,24 @@ function makePreProcess(agentFile: string, options: LoadOptions): (data: unknown
   };
 }
 
-function resolveFileReference(agentDir: string, reference: string, allowedRoots: string[], key: string): string {
-  const candidate = isAbsolute(reference) ? resolve(reference) : resolve(agentDir, reference);
+function resolveFileReference(
+  agentDir: string,
+  reference: string,
+  allowedRoots: string[],
+  key: string,
+): string {
+  const candidate = isAbsolute(reference)
+    ? resolve(reference)
+    : resolve(agentDir, reference);
   if (!isWithinAnyRoot(candidate, allowedRoots)) {
     throw new Error(
       `File reference '${reference}' resolves outside allowed roots for key '${key}'. Allowed roots: ${allowedRoots.join(", ")}`,
     );
   }
   if (!existsSync(candidate)) {
-    throw new Error(`Referenced file '${reference}' not found for key '${key}' (resolved to ${candidate})`);
+    throw new Error(
+      `Referenced file '${reference}' not found for key '${key}' (resolved to ${candidate})`,
+    );
   }
 
   const resolved = realpathSync(candidate);

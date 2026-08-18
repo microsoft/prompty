@@ -41,7 +41,12 @@ import {
   dictToMessage,
   text,
 } from "./types.js";
-import { getRenderer, getParser, getExecutor, getProcessor } from "./registry.js";
+import {
+  getRenderer,
+  getParser,
+  getExecutor,
+  getProcessor,
+} from "./registry.js";
 import { getLastNonces, clearLastNonces } from "../renderers/common.js";
 import { traceSpan, sanitizeValue } from "../tracing/tracer.js";
 import { load } from "./loader.js";
@@ -132,7 +137,7 @@ function sanitizeNonces(value: unknown): unknown {
   }
 
   if (Array.isArray(value)) {
-    return value.map(v => sanitizeNonces(v));
+    return value.map((v) => sanitizeNonces(v));
   }
 
   if (typeof value === "object" && value !== null) {
@@ -214,23 +219,26 @@ function serializeAgent(agent: Agent): Record<string, unknown> {
       provider: model?.provider ?? "",
       connection: model?.connection ?? {},
     },
-    inputs: agent.inputs?.map(p => ({
-      name: p.name ?? "",
-      kind: p.kind ?? "",
-      description: p.description ?? "",
-      required: p.required ?? false,
-      default: p.default,
-      example: p.example,
-    })) ?? [],
-    outputs: agent.outputs?.map(p => ({
-      name: p.name ?? "",
-      kind: p.kind ?? "",
-      description: p.description ?? "",
-    })) ?? [],
-    tools: agent.tools?.map(t => ({
-      name: t.name ?? "",
-      kind: t.kind ?? "",
-    })) ?? [],
+    inputs:
+      agent.inputs?.map((p) => ({
+        name: p.name ?? "",
+        kind: p.kind ?? "",
+        description: p.description ?? "",
+        required: p.required ?? false,
+        default: p.default,
+        example: p.example,
+      })) ?? [],
+    outputs:
+      agent.outputs?.map((p) => ({
+        name: p.name ?? "",
+        kind: p.kind ?? "",
+        description: p.description ?? "",
+      })) ?? [],
+    tools:
+      agent.tools?.map((t) => ({
+        name: t.name ?? "",
+        kind: t.kind ?? "",
+      })) ?? [],
     template: {
       format: agent.template?.format?.kind ?? DEFAULT_FORMAT,
       parser: agent.template?.parser?.kind ?? DEFAULT_PARSER,
@@ -241,7 +249,7 @@ function serializeAgent(agent: Agent): Record<string, unknown> {
 
 /** Serialize messages for trace output, matching Python's parser result. */
 function serializeMessages(messages: Message[]): unknown[] {
-  return messages.map(m => ({
+  return messages.map((m) => ({
     role: m.role,
     content: m.text,
   }));
@@ -266,7 +274,10 @@ export async function render(
   return traceSpan(renderer.constructor?.name ?? "Renderer", async (emit) => {
     const template = agent.instructions ?? "";
 
-    emit("signature", `prompty.renderers.${renderer.constructor?.name ?? "Renderer"}.render`);
+    emit(
+      "signature",
+      `prompty.renderers.${renderer.constructor?.name ?? "Renderer"}.render`,
+    );
     emit("inputs", { data: inputs });
     const result = await renderer.render(agent, template, inputs);
     emit("result", sanitizeNonces(result));
@@ -288,7 +299,10 @@ export async function parse(
   const parser = getParser(parserKind);
 
   return traceSpan(parser.constructor?.name ?? "Parser", async (emit) => {
-    emit("signature", `prompty.parsers.${parser.constructor?.name ?? "Parser"}.parse`);
+    emit(
+      "signature",
+      `prompty.parsers.${parser.constructor?.name ?? "Parser"}.parse`,
+    );
     emit("inputs", sanitizeNonces(rendered));
     const messages = await parser.parse(agent, rendered, context);
     emit("result", sanitizeNonces(serializeMessages(messages)));
@@ -461,16 +475,17 @@ export async function invoke<T = unknown>(
   options?: InvokeOptions & { validator?: (data: unknown) => T },
 ): Promise<T> {
   return traceSpan("invoke", async (emit) => {
-    const agent = typeof prompt === "string"
-      ? await traceSpan("load", async (loadEmit) => {
-          loadEmit("signature", "prompty.load");
-          loadEmit("description", "Load a prompty file.");
-          loadEmit("inputs", { prompty_file: prompt });
-          const loaded = load(prompt);
-          loadEmit("result", serializeAgent(loaded));
-          return loaded;
-        })
-      : prompt;
+    const agent =
+      typeof prompt === "string"
+        ? await traceSpan("load", async (loadEmit) => {
+            loadEmit("signature", "prompty.load");
+            loadEmit("description", "Load a prompty file.");
+            loadEmit("inputs", { prompty_file: prompt });
+            const loaded = load(prompt);
+            loadEmit("result", serializeAgent(loaded));
+            return loaded;
+          })
+        : prompt;
 
     emit("signature", "prompty.invoke");
     emit("description", "Invoke a prompty");
@@ -550,7 +565,9 @@ async function invokeWithRetry(
         if (signal) {
           const onAbort = () => {
             clearTimeout(timer);
-            reject(new CancelledError("Operation cancelled during retry backoff"));
+            reject(
+              new CancelledError("Operation cancelled during retry backoff"),
+            );
           };
           signal.addEventListener("abort", onAbort, { once: true });
         }
@@ -604,11 +621,16 @@ function replaceSummaryMessage(messages: Message[], summary: string): void {
     (m) =>
       m.role === "user" &&
       m.parts.some(
-        (p) => p.kind === "text" && (p as { value: string }).value.includes("[Context summary:"),
+        (p) =>
+          p.kind === "text" &&
+          (p as { value: string }).value.includes("[Context summary:"),
       ),
   );
   if (idx >= 0) {
-    messages[idx] = new Message({ role: "user", parts: [text(`[Context summary: ${summary}]`)] });
+    messages[idx] = new Message({
+      role: "user",
+      parts: [text(`[Context summary: ${summary}]`)],
+    });
   }
 }
 
@@ -632,12 +654,16 @@ async function applyCompaction(
     } else {
       const result = compaction(dropped);
       summary =
-        typeof result === "string" ? result : String(await (result as Promise<string>));
+        typeof result === "string"
+          ? result
+          : String(await (result as Promise<string>));
     }
 
     if (summary && summary.trim()) {
       replaceSummaryMessage(messages, summary);
-      emitEvent(onEvent, "compaction_complete", { summary_length: summary.length });
+      emitEvent(onEvent, "compaction_complete", {
+        summary_length: summary.length,
+      });
     } else {
       emitEvent(onEvent, "compaction_failed", { reason: "empty result" });
     }
@@ -688,16 +714,17 @@ export async function turn<T = unknown>(
 ): Promise<T> {
   const label = options?.turn != null ? `turn ${options.turn}` : "turn";
   const rawResult = await traceSpan(label, async (emit) => {
-    const agent = typeof prompt === "string"
-      ? await traceSpan("load", async (loadEmit) => {
-          loadEmit("signature", "prompty.load");
-          loadEmit("description", "Load a prompty file.");
-          loadEmit("inputs", { prompty_file: prompt });
-          const loaded = load(prompt);
-          loadEmit("result", serializeAgent(loaded));
-          return loaded;
-        })
-      : prompt;
+    const agent =
+      typeof prompt === "string"
+        ? await traceSpan("load", async (loadEmit) => {
+            loadEmit("signature", "prompty.load");
+            loadEmit("description", "Load a prompty file.");
+            loadEmit("inputs", { prompty_file: prompt });
+            const loaded = load(prompt);
+            loadEmit("result", serializeAgent(loaded));
+            return loaded;
+          })
+        : prompt;
 
     emit("signature", "prompty.turn");
     emit("description", label);
@@ -733,11 +760,19 @@ export async function turn<T = unknown>(
 
       // §13.3 — Trim context window
       if (options?.contextBudget !== undefined) {
-        const [droppedCount, droppedMsgs] = trimToContextWindow(messages, options.contextBudget);
+        const [droppedCount, droppedMsgs] = trimToContextWindow(
+          messages,
+          options.contextBudget,
+        );
         if (droppedCount > 0) {
           emitEvent(onEvent, "messages_updated", { messages });
           if (options.compaction != null) {
-            await applyCompaction(options.compaction, droppedMsgs, messages, onEvent);
+            await applyCompaction(
+              options.compaction,
+              droppedMsgs,
+              messages,
+              onEvent,
+            );
           }
         }
       }
@@ -746,8 +781,14 @@ export async function turn<T = unknown>(
       if (options?.guardrails) {
         const result = options.guardrails.checkInput(messages);
         if (!result.allowed) {
-          emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
-          emitFailedTurnEnd(onEvent, new GuardrailError(result.reason ?? "Input guardrail denied"), 0);
+          emitEvent(onEvent, "error", {
+            message: `Input guardrail denied: ${result.reason}`,
+          });
+          emitFailedTurnEnd(
+            onEvent,
+            new GuardrailError(result.reason ?? "Input guardrail denied"),
+            0,
+          );
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
         if (result.rewrite) messages = result.rewrite;
@@ -781,7 +822,11 @@ export async function turn<T = unknown>(
 
       if (options?.raw) {
         emit("result", response);
-        emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response });
+        emitEvent(onEvent, "turn_end", {
+          iterations: 0,
+          status: "success",
+          response,
+        });
         return response;
       }
       let processed: unknown;
@@ -809,25 +854,44 @@ export async function turn<T = unknown>(
 
       // §13.4 — Output guardrail on final response
       if (options?.guardrails) {
-        const contentStr = typeof processed === "string" ? processed : JSON.stringify(processed);
-        const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
+        const contentStr =
+          typeof processed === "string" ? processed : JSON.stringify(processed);
+        const assistantMsg = new Message({
+          role: "assistant",
+          parts: [text(contentStr)],
+        });
         const gr = options.guardrails.checkOutput(assistantMsg);
         if (!gr.allowed) {
-          emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
-          emitFailedTurnEnd(onEvent, new GuardrailError(gr.reason ?? "Output guardrail denied"), 0, processed);
+          emitEvent(onEvent, "error", {
+            message: `Output guardrail denied: ${gr.reason}`,
+          });
+          emitFailedTurnEnd(
+            onEvent,
+            new GuardrailError(gr.reason ?? "Output guardrail denied"),
+            0,
+            processed,
+          );
           throw new GuardrailError(gr.reason ?? "Output guardrail denied");
         }
         if (gr.rewrite !== undefined) {
           emit("result", gr.rewrite);
           emitEvent(onEvent, "done", { response: gr.rewrite, messages });
-          emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response: gr.rewrite });
+          emitEvent(onEvent, "turn_end", {
+            iterations: 0,
+            status: "success",
+            response: gr.rewrite,
+          });
           return gr.rewrite;
         }
       }
 
       emit("result", sanitizeValue("result", processed));
       emitEvent(onEvent, "done", { response: processed, messages });
-      emitEvent(onEvent, "turn_end", { iterations: 0, status: "success", response: processed });
+      emitEvent(onEvent, "turn_end", {
+        iterations: 0,
+        status: "success",
+        response: processed,
+      });
       return processed;
     }
 
@@ -870,18 +934,30 @@ export async function turn<T = unknown>(
         if (pending.length > 0) {
           messages.push(...pending);
           emitEvent(onEvent, "messages_updated", { messages });
-          emitEvent(onEvent, "status", { message: `Injected ${pending.length} steering message(s)` });
+          emitEvent(onEvent, "status", {
+            message: `Injected ${pending.length} steering message(s)`,
+          });
         }
       }
 
       // §13.3 — Trim context window
       if (contextBudget !== undefined) {
-        const [droppedCount, droppedMsgs] = trimToContextWindow(messages, contextBudget);
+        const [droppedCount, droppedMsgs] = trimToContextWindow(
+          messages,
+          contextBudget,
+        );
         if (droppedCount > 0) {
           emitEvent(onEvent, "messages_updated", { messages });
-          emitEvent(onEvent, "status", { message: `Trimmed ${droppedCount} messages for context budget` });
+          emitEvent(onEvent, "status", {
+            message: `Trimmed ${droppedCount} messages for context budget`,
+          });
           if (options?.compaction != null) {
-            await applyCompaction(options.compaction, droppedMsgs, messages, onEvent);
+            await applyCompaction(
+              options.compaction,
+              droppedMsgs,
+              messages,
+              onEvent,
+            );
           }
         }
       }
@@ -890,8 +966,14 @@ export async function turn<T = unknown>(
       if (guardrails) {
         const result = guardrails.checkInput(messages);
         if (!result.allowed) {
-          emitEvent(onEvent, "error", { message: `Input guardrail denied: ${result.reason}` });
-          emitFailedTurnEnd(onEvent, new GuardrailError(result.reason ?? "Input guardrail denied"), iteration);
+          emitEvent(onEvent, "error", {
+            message: `Input guardrail denied: ${result.reason}`,
+          });
+          emitFailedTurnEnd(
+            onEvent,
+            new GuardrailError(result.reason ?? "Input guardrail denied"),
+            iteration,
+          );
           throw new GuardrailError(result.reason ?? "Input guardrail denied");
         }
         if (result.rewrite) messages = result.rewrite;
@@ -915,7 +997,14 @@ export async function turn<T = unknown>(
         iteration,
       });
       try {
-        response = await invokeWithRetry(executor, agent, messages, maxLlmRetries, onEvent, signal);
+        response = await invokeWithRetry(
+          executor,
+          agent,
+          messages,
+          maxLlmRetries,
+          onEvent,
+          signal,
+        );
       } catch (err) {
         emitFailedTurnEnd(onEvent, err, iteration);
         throw err;
@@ -945,11 +1034,21 @@ export async function turn<T = unknown>(
 
         // §13.4 — Output guardrail
         if (guardrails && content) {
-          const assistantMsg = new Message({ role: "assistant", parts: [text(content)] });
+          const assistantMsg = new Message({
+            role: "assistant",
+            parts: [text(content)],
+          });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
-            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
-            emitFailedTurnEnd(onEvent, new GuardrailError(gr.reason ?? "Output guardrail denied"), iteration, content);
+            emitEvent(onEvent, "error", {
+              message: `Output guardrail denied: ${gr.reason}`,
+            });
+            emitFailedTurnEnd(
+              onEvent,
+              new GuardrailError(gr.reason ?? "Output guardrail denied"),
+              iteration,
+              content,
+            );
             throw new GuardrailError(gr.reason ?? "Output guardrail denied");
           }
         }
@@ -958,16 +1057,24 @@ export async function turn<T = unknown>(
           emit("iterations", iteration);
           emit("result", content);
           emitEvent(onEvent, "done", { response: content, messages });
-          emitEvent(onEvent, "turn_end", { iterations: iteration, status: "success", response: content });
+          emitEvent(onEvent, "turn_end", {
+            iterations: iteration,
+            status: "success",
+            response: content,
+          });
           return content;
         }
 
         iteration++;
         if (iteration > maxIterations) {
-          emitFailedTurnEnd(onEvent, new Error("Agent loop exceeded maxIterations"), iteration);
+          emitFailedTurnEnd(
+            onEvent,
+            new Error("Agent loop exceeded maxIterations"),
+            iteration,
+          );
           throw new Error(
             `Agent loop exceeded maxIterations (${maxIterations}). ` +
-            `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
+              `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
           );
         }
 
@@ -977,10 +1084,24 @@ export async function turn<T = unknown>(
             toolEmit("signature", "prompty.turn.toolCalls");
             toolEmit("description", `Tool call round ${iteration}`);
             const result = await buildToolMessagesFromCallsWithExtensions(
-              toolCalls, content, tools, agent, parentInputs, toolEmit,
+              toolCalls,
+              content,
+              tools,
+              agent,
+              parentInputs,
+              toolEmit,
               { onEvent, signal, guardrails, parallel: parallelToolCalls },
             );
-            toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+            toolEmit(
+              "result",
+              result.map((m) => ({
+                role: m.role,
+                content: m.parts
+                  .map((p) => (p as { value?: string }).value ?? "")
+                  .join(""),
+                metadata: m.metadata,
+              })),
+            );
             return result;
           });
         } catch (err) {
@@ -997,32 +1118,55 @@ export async function turn<T = unknown>(
       if (!hasToolCalls(response)) {
         let finalResult: unknown;
         try {
-          finalResult = options?.raw ? response : await process(agent, response);
+          finalResult = options?.raw
+            ? response
+            : await process(agent, response);
         } catch (err) {
           emitFailedTurnEnd(onEvent, err, iteration, response);
           throw err;
         }
         if (guardrails) {
-          const contentStr = typeof finalResult === "string" ? finalResult : JSON.stringify(finalResult);
-          const assistantMsg = new Message({ role: "assistant", parts: [text(contentStr)] });
+          const contentStr =
+            typeof finalResult === "string"
+              ? finalResult
+              : JSON.stringify(finalResult);
+          const assistantMsg = new Message({
+            role: "assistant",
+            parts: [text(contentStr)],
+          });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
-            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
-            emitFailedTurnEnd(onEvent, new GuardrailError(gr.reason ?? "Output guardrail denied"), iteration, finalResult);
+            emitEvent(onEvent, "error", {
+              message: `Output guardrail denied: ${gr.reason}`,
+            });
+            emitFailedTurnEnd(
+              onEvent,
+              new GuardrailError(gr.reason ?? "Output guardrail denied"),
+              iteration,
+              finalResult,
+            );
             throw new GuardrailError(gr.reason ?? "Output guardrail denied");
           }
           if (gr.rewrite !== undefined) {
             emit("iterations", iteration);
             emit("result", gr.rewrite);
             emitEvent(onEvent, "done", { response: gr.rewrite, messages });
-            emitEvent(onEvent, "turn_end", { iterations: iteration, status: "success", response: gr.rewrite });
+            emitEvent(onEvent, "turn_end", {
+              iterations: iteration,
+              status: "success",
+              response: gr.rewrite,
+            });
             return gr.rewrite;
           }
         }
         emit("iterations", iteration);
         emit("result", finalResult);
         emitEvent(onEvent, "done", { response: finalResult, messages });
-        emitEvent(onEvent, "turn_end", { iterations: iteration, status: "success", response: finalResult });
+        emitEvent(onEvent, "turn_end", {
+          iterations: iteration,
+          status: "success",
+          response: finalResult,
+        });
         return finalResult;
       }
 
@@ -1030,11 +1174,21 @@ export async function turn<T = unknown>(
       if (guardrails) {
         const { textContent } = extractToolInfo(response);
         if (textContent) {
-          const assistantMsg = new Message({ role: "assistant", parts: [text(textContent)] });
+          const assistantMsg = new Message({
+            role: "assistant",
+            parts: [text(textContent)],
+          });
           const gr = guardrails.checkOutput(assistantMsg);
           if (!gr.allowed) {
-            emitEvent(onEvent, "error", { message: `Output guardrail denied: ${gr.reason}` });
-            emitFailedTurnEnd(onEvent, new GuardrailError(gr.reason ?? "Output guardrail denied"), iteration, textContent);
+            emitEvent(onEvent, "error", {
+              message: `Output guardrail denied: ${gr.reason}`,
+            });
+            emitFailedTurnEnd(
+              onEvent,
+              new GuardrailError(gr.reason ?? "Output guardrail denied"),
+              iteration,
+              textContent,
+            );
             throw new GuardrailError(gr.reason ?? "Output guardrail denied");
           }
         }
@@ -1042,10 +1196,14 @@ export async function turn<T = unknown>(
 
       iteration++;
       if (iteration > maxIterations) {
-        emitFailedTurnEnd(onEvent, new Error("Agent loop exceeded maxIterations"), iteration);
+        emitFailedTurnEnd(
+          onEvent,
+          new Error("Agent loop exceeded maxIterations"),
+          iteration,
+        );
         throw new Error(
           `Agent loop exceeded maxIterations (${maxIterations}). ` +
-          `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
+            `The model kept requesting tool calls. Increase maxIterations or check your tools.`,
         );
       }
 
@@ -1055,10 +1213,23 @@ export async function turn<T = unknown>(
           toolEmit("signature", "prompty.turn.toolCalls");
           toolEmit("description", `Tool call round ${iteration}`);
           const result = await buildToolResultMessagesWithExtensions(
-            response, tools, agent, parentInputs, toolEmit,
+            response,
+            tools,
+            agent,
+            parentInputs,
+            toolEmit,
             { onEvent, signal, guardrails, parallel: parallelToolCalls },
           );
-          toolEmit("result", result.map((m) => ({ role: m.role, content: m.parts.map((p) => (p as { value?: string }).value ?? "").join(""), metadata: m.metadata })));
+          toolEmit(
+            "result",
+            result.map((m) => ({
+              role: m.role,
+              content: m.parts
+                .map((p) => (p as { value?: string }).value ?? "")
+                .join(""),
+              metadata: m.metadata,
+            })),
+          );
           return result;
         });
       } catch (err) {
@@ -1095,7 +1266,8 @@ export function resolveBindings(
   if (!parentInputs || !agent.tools || agent.tools.length === 0) return args;
 
   const toolDef = agent.tools.find((t) => t.name === toolName);
-  if (!toolDef || !toolDef.bindings || toolDef.bindings.length === 0) return args;
+  if (!toolDef || !toolDef.bindings || toolDef.bindings.length === 0)
+    return args;
 
   const merged = { ...args };
   for (const binding of toolDef.bindings) {
@@ -1112,7 +1284,9 @@ export function resolveBindings(
 
 /** Check if a value is an async iterable (i.e. a stream). */
 function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
-  return value != null && typeof value === "object" && Symbol.asyncIterator in value;
+  return (
+    value != null && typeof value === "object" && Symbol.asyncIterator in value
+  );
 }
 
 /** Check if an item looks like a ToolCall from the processor. */
@@ -1169,12 +1343,15 @@ function streamFailureFrom(item: unknown): StreamFailure | undefined {
   }
 
   const chunk = item as Record<string, unknown>;
-  if (chunk.kind !== "failure" || typeof chunk.failure !== "object" || chunk.failure === null) {
+  if (
+    chunk.kind !== "failure" ||
+    typeof chunk.failure !== "object" ||
+    chunk.failure === null
+  ) {
     return undefined;
   }
   return StreamFailure.load(chunk.failure as Record<string, unknown>);
 }
-
 
 // ---------------------------------------------------------------------------
 // Thread marker helpers
@@ -1212,10 +1389,18 @@ function expandThreads(
         if (part.value.includes(nonce)) {
           // Split text around the nonce
           const before = part.value.slice(0, part.value.indexOf(nonce)).trim();
-          const after = part.value.slice(part.value.indexOf(nonce) + nonce.length).trim();
+          const after = part.value
+            .slice(part.value.indexOf(nonce) + nonce.length)
+            .trim();
 
           if (before) {
-            result.push(new Message({ role: msg.role, parts: [text(before)], metadata: { ...msg.metadata } }));
+            result.push(
+              new Message({
+                role: msg.role,
+                parts: [text(before)],
+                metadata: { ...msg.metadata },
+              }),
+            );
           }
 
           // Insert thread messages from input
@@ -1231,7 +1416,13 @@ function expandThreads(
           }
 
           if (after) {
-            result.push(new Message({ role: msg.role, parts: [text(after)], metadata: { ...msg.metadata } }));
+            result.push(
+              new Message({
+                role: msg.role,
+                parts: [text(after)],
+                metadata: { ...msg.metadata },
+              }),
+            );
           }
 
           expanded = true;
@@ -1291,7 +1482,12 @@ function hasToolCalls(response: unknown): boolean {
  * Returns a uniform array of `{id, name, arguments}` and any text content.
  */
 function extractToolInfo(response: unknown): {
-  toolCalls: { id: string; name: string; arguments: string; [key: string]: string }[];
+  toolCalls: {
+    id: string;
+    name: string;
+    arguments: string;
+    [key: string]: string;
+  }[];
   textContent: string;
 } {
   if (typeof response !== "object" || response === null) {
@@ -1322,8 +1518,8 @@ function extractToolInfo(response: unknown): {
       (item) => item.type === "function_call",
     );
     const toolCalls = funcCalls.map((fc) => ({
-      id: ((fc.call_id ?? fc.id ?? "") as string),
-      call_id: ((fc.call_id ?? fc.id ?? "") as string),
+      id: (fc.call_id ?? fc.id ?? "") as string,
+      call_id: (fc.call_id ?? fc.id ?? "") as string,
       name: fc.name as string,
       arguments: (fc.arguments as string) ?? "{}",
     }));
@@ -1336,14 +1532,16 @@ function extractToolInfo(response: unknown): {
     const choice = choices[0] as Record<string, unknown>;
     const message = choice.message as Record<string, unknown> | undefined;
     if (message && Array.isArray(message.tool_calls)) {
-      const toolCalls = (message.tool_calls as Record<string, unknown>[]).map((tc) => {
-        const fn = tc.function as Record<string, unknown>;
-        return {
-          id: tc.id as string,
-          name: fn.name as string,
-          arguments: fn.arguments as string,
-        };
-      });
+      const toolCalls = (message.tool_calls as Record<string, unknown>[]).map(
+        (tc) => {
+          const fn = tc.function as Record<string, unknown>;
+          return {
+            id: tc.id as string,
+            name: fn.name as string,
+            arguments: fn.arguments as string,
+          };
+        },
+      );
       return { toolCalls, textContent: (message.content as string) ?? "" };
     }
   }
@@ -1384,7 +1582,11 @@ async function dispatchOneToolWithExtensions(
   }
 
   // §13.1 — Emit tool_call_start
-  emitEvent(onEvent, "tool_call_start", { id: tc.id, name: tc.name, arguments: tc.arguments });
+  emitEvent(onEvent, "tool_call_start", {
+    id: tc.id,
+    name: tc.name,
+    arguments: tc.arguments,
+  });
   const started = performance.now();
 
   // §13.4 — Tool guardrail
@@ -1405,7 +1607,13 @@ async function dispatchOneToolWithExtensions(
       return deniedMsg;
     }
     if (gr.rewrite !== undefined) {
-      tc = { ...tc, arguments: typeof gr.rewrite === "string" ? gr.rewrite : JSON.stringify(gr.rewrite) };
+      tc = {
+        ...tc,
+        arguments:
+          typeof gr.rewrite === "string"
+            ? gr.rewrite
+            : JSON.stringify(gr.rewrite),
+      };
     }
   }
 
@@ -1417,7 +1625,10 @@ async function dispatchOneToolWithExtensions(
     parsedArgs = resilientJsonParse(tc.arguments);
     if (parsedArgs === null) {
       result = `Error: Tool '${tc.name}' received unparseable arguments`;
-      emitEvent(onEvent, "error", { tool: tc.name, error: "Unparseable tool arguments" });
+      emitEvent(onEvent, "error", {
+        tool: tc.name,
+        error: "Unparseable tool arguments",
+      });
       emitEvent(onEvent, "tool_result", { name: tc.name, result });
       emitEvent(onEvent, "tool_call_complete", {
         id: tc.id,
@@ -1429,17 +1640,34 @@ async function dispatchOneToolWithExtensions(
       });
       return result;
     }
-    if (agent && parentInputs && typeof parsedArgs === "object" && parsedArgs !== null && !Array.isArray(parsedArgs)) {
-      parsedArgs = resolveBindings(agent, tc.name, parsedArgs as Record<string, unknown>, parentInputs);
+    if (
+      agent &&
+      parentInputs &&
+      typeof parsedArgs === "object" &&
+      parsedArgs !== null &&
+      !Array.isArray(parsedArgs)
+    ) {
+      parsedArgs = resolveBindings(
+        agent,
+        tc.name,
+        parsedArgs as Record<string, unknown>,
+        parentInputs,
+      );
     }
-    result = await traceSpan(tc.name, async (toolEmit) => {
+    result = (await traceSpan(tc.name, async (toolEmit) => {
       toolEmit("signature", `prompty.tool.${tc.name}`);
       toolEmit("description", `Execute tool: ${tc.name}`);
       toolEmit("inputs", { arguments: parsedArgs, id: tc.id });
-      const r = await dispatchTool(tc.name, parsedArgs as Record<string, unknown>, tools, agent, parentInputs);
+      const r = await dispatchTool(
+        tc.name,
+        parsedArgs as Record<string, unknown>,
+        tools,
+        agent,
+        parentInputs,
+      );
       toolEmit("result", r);
       return r;
-    }) as string;
+    })) as string;
   } catch (err) {
     // Re-throw cancellation errors
     if (err instanceof CancelledError) throw err;
@@ -1472,7 +1700,12 @@ async function dispatchOneToolWithExtensions(
  * Dispatch tool calls with §13 extensions, supporting parallel execution.
  */
 async function dispatchToolsWithExtensions(
-  toolCalls: { id: string; name: string; arguments: string; [key: string]: string }[],
+  toolCalls: {
+    id: string;
+    name: string;
+    arguments: string;
+    [key: string]: string;
+  }[],
   tools: Record<string, (...args: unknown[]) => unknown>,
   agent: Agent,
   parentInputs: Record<string, unknown>,
@@ -1481,14 +1714,18 @@ async function dispatchToolsWithExtensions(
   if (ext.parallel && toolCalls.length > 1) {
     // §13.6 — Parallel tool execution via Promise.all
     return Promise.all(
-      toolCalls.map((tc) => dispatchOneToolWithExtensions(tc, tools, agent, parentInputs, ext)),
+      toolCalls.map((tc) =>
+        dispatchOneToolWithExtensions(tc, tools, agent, parentInputs, ext),
+      ),
     );
   }
 
   // Sequential execution
   const results: string[] = [];
   for (const tc of toolCalls) {
-    results.push(await dispatchOneToolWithExtensions(tc, tools, agent, parentInputs, ext));
+    results.push(
+      await dispatchOneToolWithExtensions(tc, tools, agent, parentInputs, ext),
+    );
   }
   return results;
 }
@@ -1506,17 +1743,33 @@ async function buildToolResultMessagesWithExtensions(
 ): Promise<Message[]> {
   const { toolCalls, textContent } = extractToolInfo(response);
 
-  const toolResults = await dispatchToolsWithExtensions(toolCalls, tools, agent, parentInputs, ext);
+  const toolResults = await dispatchToolsWithExtensions(
+    toolCalls,
+    tools,
+    agent,
+    parentInputs,
+    ext,
+  );
 
   if (parentEmit) {
     parentEmit("inputs", {
-      tool_calls: toolCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResults[i] })),
+      tool_calls: toolCalls.map((tc, i) => ({
+        name: tc.name,
+        arguments: tc.arguments,
+        id: tc.id,
+        result: toolResults[i],
+      })),
     });
   }
 
   const provider = resolveProvider(agent);
   const executor = getExecutor(provider);
-  return executor.formatToolMessages(response, toolCalls, toolResults, textContent);
+  return executor.formatToolMessages(
+    response,
+    toolCalls,
+    toolResults,
+    textContent,
+  );
 }
 
 /**
@@ -1531,17 +1784,37 @@ async function buildToolMessagesFromCallsWithExtensions(
   parentEmit: ((key: string, value: unknown) => void) | undefined,
   ext: ToolExtensionOptions,
 ): Promise<Message[]> {
-  const normalizedCalls = toolCalls.map((tc) => ({ id: tc.id, name: tc.name, arguments: tc.arguments }));
+  const normalizedCalls = toolCalls.map((tc) => ({
+    id: tc.id,
+    name: tc.name,
+    arguments: tc.arguments,
+  }));
 
-  const toolResults = await dispatchToolsWithExtensions(normalizedCalls, tools, agent, parentInputs, ext);
+  const toolResults = await dispatchToolsWithExtensions(
+    normalizedCalls,
+    tools,
+    agent,
+    parentInputs,
+    ext,
+  );
 
   if (parentEmit) {
     parentEmit("inputs", {
-      tool_calls: normalizedCalls.map((tc, i) => ({ name: tc.name, arguments: tc.arguments, id: tc.id, result: toolResults[i] })),
+      tool_calls: normalizedCalls.map((tc, i) => ({
+        name: tc.name,
+        arguments: tc.arguments,
+        id: tc.id,
+        result: toolResults[i],
+      })),
     });
   }
 
   const provider = resolveProvider(agent);
   const executor = getExecutor(provider);
-  return executor.formatToolMessages(null, normalizedCalls, toolResults, textContent);
+  return executor.formatToolMessages(
+    null,
+    normalizedCalls,
+    toolResults,
+    textContent,
+  );
 }

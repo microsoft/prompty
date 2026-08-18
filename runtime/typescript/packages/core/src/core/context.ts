@@ -48,7 +48,9 @@ export function summarizeDropped(messages: Message[]): string {
       if (Array.isArray(toolCalls)) {
         const names = toolCalls.map(
           (tc: Record<string, unknown>) =>
-            (tc.name as string) ?? ((tc.function as Record<string, string>)?.name ?? "?"),
+            (tc.name as string) ??
+            (tc.function as Record<string, string>)?.name ??
+            "?",
         );
         lines.push(`  Called tools: ${names.join(", ")}`);
       }
@@ -83,8 +85,14 @@ export function formatDroppedMessages(messages: Message[]): string {
     if (Array.isArray(toolCalls)) {
       for (const tc of toolCalls) {
         const tcObj = tc as Record<string, unknown>;
-        const name = (tcObj.name as string) ?? ((tcObj.function as Record<string, string>)?.name ?? "?");
-        const args = (tcObj.arguments as string) ?? ((tcObj.function as Record<string, string>)?.arguments ?? "");
+        const name =
+          (tcObj.name as string) ??
+          (tcObj.function as Record<string, string>)?.name ??
+          "?";
+        const args =
+          (tcObj.arguments as string) ??
+          (tcObj.function as Record<string, string>)?.arguments ??
+          "";
         lines.push(`Called: ${name}(${args})`);
       }
     }
@@ -119,7 +127,10 @@ export function trimToContextWindow(
   const summaryBudget = Math.min(5000, Math.floor(budgetChars * 0.05));
   const dropped: Message[] = [];
 
-  while (estimateChars([...systemMsgs, ...rest]) > budgetChars - summaryBudget && rest.length > 2) {
+  while (
+    estimateChars([...systemMsgs, ...rest]) > budgetChars - summaryBudget &&
+    rest.length > 2
+  ) {
     dropped.push(rest.shift()!);
   }
 
@@ -132,7 +143,12 @@ export function trimToContextWindow(
   if (droppedCount > 0) {
     const summaryText = summarizeDropped(dropped);
     if (summaryText) {
-      messages.push(new Message({ role: "user", parts: [{ kind: "text", value: summaryText }] }));
+      messages.push(
+        new Message({
+          role: "user",
+          parts: [{ kind: "text", value: summaryText }],
+        }),
+      );
     }
   }
 

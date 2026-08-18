@@ -6,10 +6,19 @@
 
 import OpenAI, { AzureOpenAI } from "openai";
 import type { Agent, Message } from "@prompty/core";
-import { ApiKeyConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
+import {
+  ApiKeyConnection,
+  ReferenceConnection,
+  PromptyStream,
+} from "@prompty/core";
 import { getConnection, traceSpan, sanitizeValue } from "@prompty/core";
 import { OpenAIExecutor } from "@prompty/openai";
-import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "@prompty/openai";
+import {
+  buildChatArgs,
+  buildEmbeddingArgs,
+  buildImageArgs,
+  buildResponsesArgs,
+} from "@prompty/openai";
 
 export class AzureExecutor extends OpenAIExecutor {
   override async execute(agent: Agent, messages: Message[]): Promise<unknown> {
@@ -33,7 +42,13 @@ export class AzureExecutor extends OpenAIExecutor {
       });
 
       const apiType = agent.model?.apiType ?? "chat";
-      const result = await this.dispatchApiCall(client, clientName, agent, messages, apiType);
+      const result = await this.dispatchApiCall(
+        client,
+        clientName,
+        agent,
+        messages,
+        apiType,
+      );
       emit("result", result);
       return result;
     });
@@ -54,10 +69,15 @@ export class AzureExecutor extends OpenAIExecutor {
           callEmit("signature", `${clientName}.chat.completions.create`);
           callEmit("inputs", sanitizeValue("create", args));
           const result = await client.chat.completions.create(
-            args as unknown as Parameters<typeof client.chat.completions.create>[0],
+            args as unknown as Parameters<
+              typeof client.chat.completions.create
+            >[0],
           );
           if (isStreaming) {
-            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+            return new PromptyStream(
+              `${clientName}Executor`,
+              result as unknown as AsyncIterable<unknown>,
+            );
           }
           callEmit("result", result);
           return result;
@@ -97,7 +117,10 @@ export class AzureExecutor extends OpenAIExecutor {
             args as unknown as Parameters<typeof client.responses.create>[0],
           );
           if (isStreaming) {
-            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+            return new PromptyStream(
+              `${clientName}Executor`,
+              result as unknown as AsyncIterable<unknown>,
+            );
           }
           callEmit("result", result);
           return result;
@@ -116,7 +139,9 @@ export class AzureExecutor extends OpenAIExecutor {
     }
 
     const kwargs = this.clientKwargs(agent);
-    return new AzureOpenAI(kwargs as ConstructorParameters<typeof AzureOpenAI>[0]);
+    return new AzureOpenAI(
+      kwargs as ConstructorParameters<typeof AzureOpenAI>[0],
+    );
   }
 
   protected override clientKwargs(agent: Agent): Record<string, unknown> {

@@ -9,7 +9,9 @@ import {
 
 export { ReplayVerificationRequest, ReplayVerificationResult };
 
-function comparable(record: ReplayJournalRecord | undefined): string | undefined {
+function comparable(
+  record: ReplayJournalRecord | undefined,
+): string | undefined {
   return record === undefined ? undefined : JSON.stringify(record.save());
 }
 
@@ -30,11 +32,12 @@ export class ReferenceReplayVerifier {
             index,
             expected: expectedRecord,
             actual: actualRecord,
-            message: expectedRecord === undefined
-              ? "Unexpected extra replay record"
-              : actualRecord === undefined
-                ? "Missing replay record"
-                : "Replay record mismatch",
+            message:
+              expectedRecord === undefined
+                ? "Unexpected extra replay record"
+                : actualRecord === undefined
+                  ? "Missing replay record"
+                  : "Replay record mismatch",
           }),
         );
       }

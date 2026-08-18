@@ -31,7 +31,7 @@ export function getConnection(name: string): unknown {
   if (c === undefined) {
     throw new Error(
       `Connection "${name}" is not registered. ` +
-      `Call registerConnection("${name}", client) first.`,
+        `Call registerConnection("${name}", client) first.`,
     );
   }
   return c;

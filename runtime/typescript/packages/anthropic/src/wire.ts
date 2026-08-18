@@ -33,7 +33,8 @@ export function messageToWire(msg: Message): Record<string, unknown> {
 
   // Legacy single tool result messages (backward compat)
   if (msg.metadata.tool_use_id || msg.metadata.tool_call_id) {
-    const toolUseId = (msg.metadata.tool_use_id ?? msg.metadata.tool_call_id) as string;
+    const toolUseId = (msg.metadata.tool_use_id ??
+      msg.metadata.tool_call_id) as string;
     wire.role = "user";
     wire.content = [
       {
@@ -46,7 +47,11 @@ export function messageToWire(msg: Message): Record<string, unknown> {
   }
 
   // Assistant messages with raw content blocks (tool_use) — preserve them
-  if (msg.role === "assistant" && msg.metadata.content && Array.isArray(msg.metadata.content)) {
+  if (
+    msg.role === "assistant" &&
+    msg.metadata.content &&
+    Array.isArray(msg.metadata.content)
+  ) {
     wire.content = msg.metadata.content;
     return wire;
   }
@@ -83,7 +88,8 @@ function partToWire(part: ContentPart): Record<string, unknown> {
         // Extract MIME type between "data:" and ";" without regex backtracking
         const mimeStart = header?.indexOf("data:") === 0 ? 5 : 0;
         const mimeEnd = header?.indexOf(";", mimeStart) ?? -1;
-        const mediaType = mimeEnd > mimeStart ? header!.slice(mimeStart, mimeEnd) : "image/png";
+        const mediaType =
+          mimeEnd > mimeStart ? header!.slice(mimeStart, mimeEnd) : "image/png";
         return {
           type: "image",
           source: {
@@ -200,9 +206,12 @@ function buildOptions(agent: Agent): Record<string, unknown> {
 }
 
 function modelOptionsToWire(
-  opts: Record<string, unknown> & { toWire?: (provider: string) => Record<string, unknown> },
+  opts: Record<string, unknown> & {
+    toWire?: (provider: string) => Record<string, unknown>;
+  },
 ): Record<string, unknown> {
-  const result = typeof opts.toWire === "function" ? opts.toWire("anthropic") : {};
+  const result =
+    typeof opts.toWire === "function" ? opts.toWire("anthropic") : {};
 
   const mappings: Record<string, string> = {
     maxOutputTokens: "max_tokens",
@@ -215,7 +224,8 @@ function modelOptionsToWire(
   for (const [key, target] of Object.entries(mappings)) {
     const value = opts[key];
     if (value === undefined || value === null) continue;
-    if (key === "stopSequences" && Array.isArray(value) && value.length === 0) continue;
+    if (key === "stopSequences" && Array.isArray(value) && value.length === 0)
+      continue;
     result[target] = value;
   }
 
@@ -231,7 +241,11 @@ function schemaToWire(properties: unknown[]): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   const required: string[] = [];
 
-  for (const p of properties as Array<{ name?: string; required?: boolean } & Parameters<typeof propertyToJsonSchema>[0]>) {
+  for (const p of properties as Array<
+    { name?: string; required?: boolean } & Parameters<
+      typeof propertyToJsonSchema
+    >[0]
+  >) {
     if (!p.name) continue;
     props[p.name] = propertyToJsonSchema(p);
     if (p.required) required.push(p.name);
@@ -258,7 +272,8 @@ function propertyToJsonSchema(prop: {
   const schema: Record<string, unknown> = jsonType ? { type: jsonType } : {};
 
   if (prop.description) schema.description = prop.description;
-  if (prop.enumValues && prop.enumValues.length > 0) schema.enum = prop.enumValues;
+  if (prop.enumValues && prop.enumValues.length > 0)
+    schema.enum = prop.enumValues;
 
   if (prop.kind === "array") {
     schema.items = prop.items
@@ -270,7 +285,9 @@ function propertyToJsonSchema(prop: {
     if (prop.properties) {
       const nested: Record<string, unknown> = {};
       const req: string[] = [];
-      for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
+      for (const p of prop.properties as Array<
+        { name?: string } & typeof prop
+      >) {
         if (!p.name) continue;
         nested[p.name] = propertyToJsonSchema(p);
         if (p.required) req.push(p.name);
@@ -343,7 +360,9 @@ export function toolsToWire(agent: Agent): Record<string, unknown>[] {
     let params = (t as { parameters?: unknown[] }).parameters;
     if (params && Array.isArray(params)) {
       if (boundNames.size > 0) {
-        params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
+        params = params.filter(
+          (p) => !boundNames.has((p as Record<string, unknown>).name as string),
+        );
       }
       tool.input_schema = schemaToWire(params);
     } else {

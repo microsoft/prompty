@@ -15,10 +15,19 @@
 import OpenAI from "openai";
 import { DefaultAzureCredential } from "@azure/identity";
 import type { Agent, Message } from "@prompty/core";
-import { FoundryConnection, ReferenceConnection, PromptyStream } from "@prompty/core";
+import {
+  FoundryConnection,
+  ReferenceConnection,
+  PromptyStream,
+} from "@prompty/core";
 import { getConnection, traceSpan, sanitizeValue } from "@prompty/core";
 import { OpenAIExecutor } from "@prompty/openai";
-import { buildChatArgs, buildEmbeddingArgs, buildImageArgs, buildResponsesArgs } from "@prompty/openai";
+import {
+  buildChatArgs,
+  buildEmbeddingArgs,
+  buildImageArgs,
+  buildResponsesArgs,
+} from "@prompty/openai";
 
 /**
  * Convert a Foundry project endpoint into the OpenAI/v1 base URL.
@@ -55,17 +64,28 @@ export class FoundryExecutor extends OpenAIExecutor {
         if (conn instanceof ReferenceConnection) {
           ctorEmit("inputs", { source: "reference", name: conn.name });
         } else if (conn instanceof FoundryConnection) {
-          ctorEmit("inputs", sanitizeValue("ctor", {
-            baseURL: conn.endpoint ? getOpenAIBaseURL(conn.endpoint) : undefined,
-            deployment: agent.model?.id,
-            auth: "DefaultAzureCredential",
-          }));
+          ctorEmit(
+            "inputs",
+            sanitizeValue("ctor", {
+              baseURL: conn.endpoint
+                ? getOpenAIBaseURL(conn.endpoint)
+                : undefined,
+              deployment: agent.model?.id,
+              auth: "DefaultAzureCredential",
+            }),
+          );
         }
         ctorEmit("result", clientName);
       });
 
       const apiType = agent.model?.apiType ?? "chat";
-      const result = await this.dispatchApiCall(client, clientName, agent, messages, apiType);
+      const result = await this.dispatchApiCall(
+        client,
+        clientName,
+        agent,
+        messages,
+        apiType,
+      );
       emit("result", result);
       return result;
     });
@@ -86,10 +106,15 @@ export class FoundryExecutor extends OpenAIExecutor {
           callEmit("signature", `${clientName}.chat.completions.create`);
           callEmit("inputs", sanitizeValue("create", args));
           const result = await client.chat.completions.create(
-            args as unknown as Parameters<typeof client.chat.completions.create>[0],
+            args as unknown as Parameters<
+              typeof client.chat.completions.create
+            >[0],
           );
           if (isStreaming) {
-            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+            return new PromptyStream(
+              `${clientName}Executor`,
+              result as unknown as AsyncIterable<unknown>,
+            );
           }
           callEmit("result", result);
           return result;
@@ -129,7 +154,10 @@ export class FoundryExecutor extends OpenAIExecutor {
             args as unknown as Parameters<typeof client.responses.create>[0],
           );
           if (isStreaming) {
-            return new PromptyStream(`${clientName}Executor`, result as unknown as AsyncIterable<unknown>);
+            return new PromptyStream(
+              `${clientName}Executor`,
+              result as unknown as AsyncIterable<unknown>,
+            );
           }
           callEmit("result", result);
           return result;
@@ -153,7 +181,7 @@ export class FoundryExecutor extends OpenAIExecutor {
       if (!conn.endpoint) {
         throw new Error(
           "FoundryConnection requires a non-empty 'endpoint'. " +
-          "Set model.connection.endpoint to your Foundry project endpoint.",
+            "Set model.connection.endpoint to your Foundry project endpoint.",
         );
       }
       const credential = new DefaultAzureCredential();
@@ -162,10 +190,15 @@ export class FoundryExecutor extends OpenAIExecutor {
       return new OpenAI({
         baseURL,
         apiKey: "unused",
-        fetch: async (url: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]): ReturnType<typeof fetch> => {
+        fetch: async (
+          url: Parameters<typeof fetch>[0],
+          init?: Parameters<typeof fetch>[1],
+        ): ReturnType<typeof fetch> => {
           const token = await credential.getToken(FOUNDRY_TOKEN_SCOPE);
           if (!token?.token) {
-            throw new Error("DefaultAzureCredential did not return an access token.");
+            throw new Error(
+              "DefaultAzureCredential did not return an access token.",
+            );
           }
           const headers = new Headers(init?.headers);
           headers.set("Authorization", `Bearer ${token.token}`);
@@ -177,8 +210,8 @@ export class FoundryExecutor extends OpenAIExecutor {
     const kind = conn?.kind ?? "unknown";
     throw new Error(
       `Connection kind '${kind}' is not supported by the Foundry executor. ` +
-      "Use 'foundry' (with endpoint + DefaultAzureCredential) or " +
-      "'reference' (with registerConnection()) for pre-configured clients.",
+        "Use 'foundry' (with endpoint + DefaultAzureCredential) or " +
+        "'reference' (with registerConnection()) for pre-configured clients.",
     );
   }
 }
