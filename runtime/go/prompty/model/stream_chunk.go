@@ -43,6 +43,8 @@ func LoadStreamChunk(data interface{}, ctx *LoadContext) (interface{}, error) {
 					return LoadUsageChunk(data, ctx)
 				case "error":
 					return LoadErrorChunk(data, ctx)
+				case "failure":
+					return LoadFailureChunk(data, ctx)
 				default:
 					return nil, fmt.Errorf("unknown StreamChunk discriminator field 'kind' value: %s", discriminator)
 				}
@@ -483,4 +485,88 @@ func ErrorChunkFromYAML(yamlStr string) (ErrorChunk, error) {
 	}
 	ctx := NewLoadContext()
 	return LoadErrorChunk(data, ctx)
+}
+
+// FailureChunk represents A classified failure chunk from the LLM response stream.
+
+type FailureChunk struct {
+	Kind    string        `json:"kind" yaml:"kind"`
+	Failure StreamFailure `json:"failure" yaml:"failure"`
+}
+
+// LoadFailureChunk creates a FailureChunk from a map[string]interface{}
+func LoadFailureChunk(data interface{}, ctx *LoadContext) (FailureChunk, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := FailureChunk{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if requiredValue, exists := m["failure"]; !exists || requiredValue == nil {
+			return result, fmt.Errorf("%s: missing required field", ctx.At("failure").Path)
+		}
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["failure"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, err := LoadStreamFailure(m, ctx.At("failure"))
+				if err != nil {
+					return result, err
+				}
+				result.Failure = loaded
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes FailureChunk to map[string]interface{}
+func (obj FailureChunk) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+
+	result["failure"] = obj.Failure.Save(ctx)
+
+	return result
+}
+
+// ToJSON serializes FailureChunk to JSON string
+func (obj *FailureChunk) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes FailureChunk to YAML string
+func (obj *FailureChunk) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates FailureChunk from JSON string
+func FailureChunkFromJSON(jsonStr string) (FailureChunk, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return FailureChunk{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadFailureChunk(data, ctx)
+}
+
+// FromYAML creates FailureChunk from YAML string
+func FailureChunkFromYAML(yamlStr string) (FailureChunk, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return FailureChunk{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadFailureChunk(data, ctx)
 }

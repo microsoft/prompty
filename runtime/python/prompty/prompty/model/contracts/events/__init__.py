@@ -36,12 +36,14 @@ from ._SessionWarningPayload import SessionWarningPayload
 from ._StatusEventPayload import StatusEventPayload
 from ._StreamChunk import (
     ErrorChunk,
+    FailureChunk,
     StreamChunk,
     TextChunk,
     ThinkingChunk,
     ToolChunk,
     UsageChunk,
 )
+from ._StreamFailure import StreamFailure
 from ._ThinkingEventPayload import ThinkingEventPayload
 from ._TokenEventPayload import TokenEventPayload
 from ._ToolCallCompletePayload import ToolCallCompletePayload
@@ -100,10 +102,12 @@ __all__ = [
     "SessionRef",
     "SessionSummary",
     "SessionTrace",
+    "StreamFailure",
     "StreamChunk",
     "TextChunk",
     "ThinkingChunk",
     "ToolChunk",
     "UsageChunk",
     "ErrorChunk",
+    "FailureChunk",
 ]

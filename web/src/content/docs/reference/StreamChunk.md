@@ -49,6 +49,11 @@ classDiagram
         +string message
     }
     StreamChunk <|-- ErrorChunk
+    class FailureChunk {
+        +string kind
+        +StreamFailure failure
+    }
+    StreamChunk <|-- FailureChunk
 ```
 
 ## Properties
@@ -66,3 +71,4 @@ The following types extend `StreamChunk`:
 - [ToolChunk](../toolchunk/)
 - [UsageChunk](../usagechunk/)
 - [ErrorChunk](../errorchunk/)
+- [FailureChunk](../failurechunk/)
